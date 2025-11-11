@@ -1,0 +1,19 @@
+{
+  "name": "claude-subagents",
+  "version": "1.0.0",
+  "description": "WIP subagents system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vincentbollaert/claude-subagents.git"
+  },
+  "author": "Vincent Bollaert",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vincentbollaert/claude-subagents/issues"
+  },
+  "homepage": "https://github.com/vincentbollaert/claude-subagents#readme"
+}
