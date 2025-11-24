@@ -164,8 +164,8 @@ CRITICAL: Make minimal and necessary changes only. Do not modify anything outsid
 
 This command should be available to:
 
-- **You** (the PM) when writing specs for Auggie
-- **Auggie** when creating detailed specifications for Claude Code
+- **You** (the PM) when writing specs for
+- **Claude Code subagents** when creating detailed specifications for Claude Code
 - **Claude Code subagents** when they need to generate structured prompts for each other
 
 The output can be saved directly to a markdown file and passed to any agent.
