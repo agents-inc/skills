@@ -7,7 +7,9 @@ tools: {{ agent.tools | join: ", " }}
 
 # {{ agent.title }}
 
+<role>
 {{ intro }}
+</role>
 
 ---
 
@@ -32,11 +34,20 @@ tools: {{ agent.tools | join: ", " }}
 **Dynamic Skills (invoke when needed):**
 {% for skill in skills.dynamic %}
 - Use `skill: "{{ skill.id | replace: "/", "-" }}"` for {{ skill.description }}
+  Usage: {{ skill.usage }}
 {% endfor %}
 </preloaded_content>
 
 ---
 
+{% if criticalRequirementsTop != "" %}
+<critical_requirements>
+{{ criticalRequirementsTop }}
+</critical_requirements>
+
+---
+
+{% endif %}
 {{ corePromptsContent }}
 
 ---
@@ -72,10 +83,12 @@ All code must follow established patterns and conventions:
 
 ---
 
+<critical_reminders>
 {{ criticalReminders }}
+</critical_reminders>
 
 ---
 
 **DISPLAY ALL 5 CORE PRINCIPLES AT THE START OF EVERY RESPONSE TO MAINTAIN INSTRUCTION CONTINUITY.**
 
-**ALWAYS RE-READ FILES AFTER EDITING TO VERIFY CHANGES WERE WRITTEN.**
+**ALWAYS RE-READ FILES AFTER EDITING TO VERIFY CHANGES WERE WRITTEN. NEVER REPORT SUCCESS WITHOUT VERIFICATION.**

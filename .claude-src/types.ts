@@ -7,6 +7,7 @@ export interface Skill {
   path?: string;
   name: string;
   description: string;
+  usage: string; // Required for dynamic skills - describes when to invoke
   content?: string; // Populated at compile time for precompiled skills
 }
 
@@ -45,7 +46,8 @@ export interface CompiledAgentData {
   intro: string;
   workflow: string;
   examples: string;
-  criticalReminders: string;
+  criticalRequirementsTop: string; // <critical_requirements> at TOP
+  criticalReminders: string; // <critical_reminders> at BOTTOM
   corePromptNames: string[];
   corePromptsContent: string;
   outputFormat: string;

@@ -16,9 +16,26 @@ core_prompt_sets:
   reviewer:
     - core-principles
     - investigation-requirement
+    - write-verification
   pm:
     - core-principles
     - investigation-requirement
+    - write-verification
+  scout:
+    - core-principles
+    - investigation-requirement
+    - write-verification
+    - anti-over-engineering
+  summoner:
+    - core-principles
+    - investigation-requirement
+    - write-verification
+    - anti-over-engineering
+  critique:
+    - core-principles
+    - investigation-requirement
+    - write-verification
+    - anti-over-engineering
 
 # Which prompts appear at the END of the agent (after skills/examples)
 # These are typically shared across all agent types
@@ -30,6 +47,15 @@ ending_prompt_sets:
     - context-management
     - improvement-protocol
   pm:
+    - context-management
+    - improvement-protocol
+  scout:
+    - context-management
+    - improvement-protocol
+  summoner:
+    - context-management
+    - improvement-protocol
+  critique:
     - context-management
     - improvement-protocol
 
@@ -56,24 +82,776 @@ agents:
           path: skills/frontend/react.md
           name: React
           description: Component architecture, hooks, patterns
+          usage: when implementing React components
         - id: frontend/styling
           path: skills/frontend/styling.md
           name: Styling
           description: SCSS Modules, cva, design tokens
+          usage: when implementing styles
       dynamic:
         - id: frontend/api
           path: skills/frontend/api.md
           name: API Integration
           description: REST APIs, React Query, data fetching
+          usage: when implementing data fetching, API calls, or React Query integrations
         - id: frontend/client-state
           path: skills/frontend/client-state.md
           name: Client State
           description: Zustand stores, React Query integration
+          usage: when implementing Zustand stores or complex client-side state
         - id: frontend/accessibility
           path: skills/frontend/accessibility.md
           name: Accessibility
           description: WCAG, ARIA, keyboard navigation
+          usage: when implementing accessible components or ARIA patterns
         - id: frontend/performance
           path: skills/frontend/performance.md
           name: Performance
           description: Bundle optimization, render performance
+          usage: when optimizing renders or bundle size
+
+  backend-developer:
+    name: backend-developer
+    title: Backend Developer Agent
+    description: Implements backend features from detailed specs - API routes, database operations, server utilities, authentication, middleware - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer          # References core_prompt_sets (beginning)
+    ending_prompts: developer         # References ending_prompt_sets (end)
+    output_format: output-formats-developer
+    skills:
+      precompiled:
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: Hono routes, OpenAPI, Zod validation
+          usage: when implementing API routes
+      dynamic:
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: Drizzle ORM, queries, migrations
+          usage: when implementing database queries or migrations
+        - id: backend/ci-cd
+          path: skills/backend/ci-cd.md
+          name: CI/CD
+          description: Pipelines, deployment, GitHub Actions
+          usage: when implementing deployment pipelines or GitHub Actions
+        - id: backend/performance
+          path: skills/backend/performance.md
+          name: Performance
+          description: Query optimization, caching, indexing
+          usage: when optimizing queries, caching, or indexing
+        - id: security/security
+          path: skills/security/security.md
+          name: Security
+          description: Authentication, authorization, secrets
+          usage: when implementing authentication, authorization, or secrets handling
+
+  agent-migrator:
+    name: agent-migrator
+    title: Agent Migrator
+    description: Migrates agents from old .src.md preprocessor format to new TypeScript + LiquidJS modular format - extracts content into intro/workflow/examples/critical-reminders files
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-developer
+    skills:
+      precompiled: []
+      dynamic: []
+
+  pattern-scout:
+    name: pattern-scout
+    title: Pattern Scout Agent
+    description: Extracts ALL patterns from monorepo (15+ categories - code, architecture, testing, design, build, CI/CD, env, security) - creates comprehensive standards - invoke for new codebases
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: scout
+    ending_prompts: scout
+    output_format: output-formats-developer
+    skills:
+      precompiled: []
+      dynamic:
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: comparing frontend patterns
+          usage: when comparing React component architecture patterns
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: comparing CSS/styling patterns
+          usage: when comparing CSS methodology or design token patterns
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: comparing API route patterns
+          usage: when comparing API route or endpoint patterns
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: comparing database patterns
+          usage: when comparing database schema or query patterns
+
+  pattern-critique:
+    name: pattern-critique
+    title: Pattern Critique Agent
+    description: Critiques extracted patterns against industry standards (Airbnb, Stripe, Meta, Vercel) - frontend/React architecture focus - invoke AFTER pattern-scout extracts patterns
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: critique
+    ending_prompts: critique
+    output_format: output-formats-reviewer
+    skills:
+      precompiled: []
+      dynamic:
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: comparing React patterns
+          usage: when critiquing React patterns against industry standards
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: comparing styling patterns
+          usage: when critiquing styling patterns against industry standards
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: comparing state management patterns
+          usage: when critiquing state management patterns against industry standards
+
+  skill-summoner:
+    name: skill-summoner
+    title: Skill Summoner Agent
+    description: Creates technology-specific skills by researching best practices and comparing with codebase standards - use for MobX, Tailwind, Hono, and other technology skills
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - WebSearch
+      - WebFetch
+    core_prompts: summoner
+    ending_prompts: summoner
+    output_format: output-formats-developer
+    skills:
+      precompiled: []
+      dynamic:
+        # Frontend skills (8)
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: understanding React patterns when creating React-related skills
+          usage: when creating or improving skills related to React components or hooks
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: understanding SCSS/cva patterns when creating styling skills
+          usage: when creating or improving skills related to CSS or styling patterns
+        - id: frontend/api
+          path: skills/frontend/api.md
+          name: Frontend API
+          description: understanding API integration patterns when creating data fetching skills
+          usage: when creating or improving skills related to data fetching or API integration
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: understanding Zustand/state patterns when creating state management skills
+          usage: when creating or improving skills related to state management
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: understanding a11y patterns when creating accessibility skills
+          usage: when creating or improving skills related to accessibility
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Frontend Performance
+          description: understanding render optimization when creating performance skills
+          usage: when creating or improving skills related to frontend performance
+        - id: frontend/testing
+          path: skills/frontend/testing.md
+          name: Frontend Testing
+          description: understanding React testing patterns when creating testing skills
+          usage: when creating or improving skills related to React testing
+        - id: frontend/mocking
+          path: skills/frontend/mocking.md
+          name: Mocking
+          description: understanding MSW/mock patterns when creating testing skills
+          usage: when creating or improving skills related to mocking or test data
+        # Backend skills (5)
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: understanding Hono/API patterns when creating API skills
+          usage: when creating or improving skills related to API routes or endpoints
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: understanding Drizzle/DB patterns when creating database skills
+          usage: when creating or improving skills related to database operations
+        - id: backend/ci-cd
+          path: skills/backend/ci-cd.md
+          name: CI/CD
+          description: understanding pipeline patterns when creating CI/CD skills
+          usage: when creating or improving skills related to CI/CD pipelines
+        - id: backend/performance
+          path: skills/backend/performance.md
+          name: Backend Performance
+          description: understanding query optimization when creating performance skills
+          usage: when creating or improving skills related to backend performance
+        - id: backend/testing
+          path: skills/backend/testing.md
+          name: Backend Testing
+          description: understanding API testing patterns when creating backend testing skills
+          usage: when creating or improving skills related to API testing
+        # Security skills (1)
+        - id: security/security
+          path: skills/security/security.md
+          name: Security
+          description: understanding auth/security patterns when creating security skills
+          usage: when creating or improving skills related to authentication or security
+        # Shared skills (1)
+        - id: shared/reviewing
+          path: skills/shared/reviewing.md
+          name: Reviewing
+          description: understanding code review patterns when creating reviewer skills
+          usage: when creating or improving skills related to code review
+        # Setup skills (4)
+        - id: setup/monorepo
+          path: skills/setup/monorepo.md
+          name: Monorepo
+          description: understanding Turborepo patterns when creating monorepo skills
+          usage: when creating or improving skills related to monorepo structure
+        - id: setup/package
+          path: skills/setup/package.md
+          name: Package
+          description: understanding package conventions when creating package skills
+          usage: when creating or improving skills related to package conventions
+        - id: setup/env
+          path: skills/setup/env.md
+          name: Environment
+          description: understanding env configuration when creating environment skills
+          usage: when creating or improving skills related to environment configuration
+        - id: setup/tooling
+          path: skills/setup/tooling.md
+          name: Tooling
+          description: understanding build tooling when creating tooling skills
+          usage: when creating or improving skills related to build tooling
+
+  agent-summoner:
+    name: agent-summoner
+    title: Agent Summoner Agent
+    description: Expert in creating agents and skills - understands agent architecture deeply - invoke when you need to create, improve, or analyze agents/skills
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: summoner
+    ending_prompts: summoner
+    output_format: output-formats-developer
+    skills:
+      precompiled: []
+      dynamic:
+        # Frontend skills (8)
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: creating/improving frontend agents - React component patterns
+          usage: when creating or improving agents that work with React components
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: creating/improving frontend agents - SCSS/cva patterns
+          usage: when creating or improving agents that work with styling
+        - id: frontend/api
+          path: skills/frontend/api.md
+          name: Frontend API
+          description: creating/improving frontend agents - API integration patterns
+          usage: when creating or improving agents that work with API integration
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: creating/improving frontend agents - Zustand/state patterns
+          usage: when creating or improving agents that work with state management
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: creating/improving frontend agents - a11y patterns
+          usage: when creating or improving agents that work with accessibility
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Frontend Performance
+          description: creating/improving frontend agents - render optimization
+          usage: when creating or improving agents that work with frontend performance
+        - id: frontend/testing
+          path: skills/frontend/testing.md
+          name: Frontend Testing
+          description: creating/improving tester agents - React testing patterns
+          usage: when creating or improving agents that work with React testing
+        - id: frontend/mocking
+          path: skills/frontend/mocking.md
+          name: Mocking
+          description: creating/improving tester agents - MSW/mock patterns
+          usage: when creating or improving agents that work with mocking
+        # Backend skills (5)
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: creating/improving backend agents - Hono/API patterns
+          usage: when creating or improving agents that work with API routes
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: creating/improving backend agents - Drizzle/DB patterns
+          usage: when creating or improving agents that work with databases
+        - id: backend/ci-cd
+          path: skills/backend/ci-cd.md
+          name: CI/CD
+          description: creating/improving backend agents - pipeline patterns
+          usage: when creating or improving agents that work with CI/CD
+        - id: backend/performance
+          path: skills/backend/performance.md
+          name: Backend Performance
+          description: creating/improving backend agents - query optimization
+          usage: when creating or improving agents that work with backend performance
+        - id: backend/testing
+          path: skills/backend/testing.md
+          name: Backend Testing
+          description: creating/improving tester agents - API testing patterns
+          usage: when creating or improving agents that work with API testing
+        # Security skills (1)
+        - id: security/security
+          path: skills/security/security.md
+          name: Security
+          description: creating/improving agents handling auth/security
+          usage: when creating or improving agents that work with authentication or security
+        # Shared skills (1)
+        - id: shared/reviewing
+          path: skills/shared/reviewing.md
+          name: Reviewing
+          description: creating/improving reviewer agents - code review patterns
+          usage: when creating or improving reviewer agents
+        # Setup skills (4)
+        - id: setup/monorepo
+          path: skills/setup/monorepo.md
+          name: Monorepo
+          description: creating/improving documentor agents - Turborepo patterns
+          usage: when creating or improving agents that work with monorepo structure
+        - id: setup/package
+          path: skills/setup/package.md
+          name: Package
+          description: creating/improving documentor agents - package conventions
+          usage: when creating or improving agents that work with package conventions
+        - id: setup/env
+          path: skills/setup/env.md
+          name: Environment
+          description: creating/improving agents handling env configuration
+          usage: when creating or improving agents that work with environment configuration
+        - id: setup/tooling
+          path: skills/setup/tooling.md
+          name: Tooling
+          description: creating/improving agents handling build tooling
+          usage: when creating or improving agents that work with build tooling
+
+  frontend-reviewer:
+    name: frontend-reviewer
+    title: Frontend Reviewer Agent
+    description: Reviews React code ONLY (*.tsx/*.jsx with JSX) - components, hooks, props, state, performance, a11y patterns - NOT for API routes, configs, or server code (use backend-reviewer)
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: reviewer
+    ending_prompts: reviewer
+    output_format: output-formats-reviewer
+    skills:
+      precompiled:
+        - id: shared/reviewing
+          path: skills/shared/reviewing.md
+          name: Reviewing
+          description: Code review patterns, feedback principles
+          usage: when reviewing code
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: Component architecture, hooks, patterns
+          usage: when reviewing React components
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: SCSS Modules, cva, design tokens
+          usage: when reviewing styles
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: WCAG, ARIA, keyboard navigation
+          usage: when reviewing accessibility
+      dynamic:
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Performance
+          description: Render performance, memoization
+          usage: when reviewing code with potential performance issues
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: Zustand stores, React Query integration
+          usage: when reviewing state management implementations
+
+  backend-reviewer:
+    name: backend-reviewer
+    title: Backend Reviewer Agent
+    description: Reviews non-React code - API routes, server utils, configs (*.config.*), build tooling, CI/CD (*.yml), security, env management - defers *.tsx React components to frontend-reviewer
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: reviewer
+    ending_prompts: reviewer
+    output_format: output-formats-reviewer
+    skills:
+      precompiled:
+        - id: shared/reviewing
+          path: skills/shared/reviewing.md
+          name: Reviewing
+          description: Code review patterns, feedback principles
+          usage: when reviewing code
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: Hono routes, OpenAPI, Zod validation
+          usage: when reviewing API routes
+        - id: security/security
+          path: skills/security/security.md
+          name: Security
+          description: Authentication, authorization, secrets
+          usage: when reviewing security implementations
+      dynamic:
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: Drizzle ORM, queries, migrations
+          usage: when reviewing database queries or schema changes
+        - id: backend/ci-cd
+          path: skills/backend/ci-cd.md
+          name: CI/CD
+          description: Pipelines, deployment, GitHub Actions
+          usage: when reviewing CI/CD configurations or deployment code
+
+  pm:
+    name: pm
+    title: PM and Architect Agent
+    description: Creates detailed implementation specs by researching codebase patterns - architectural planning and requirements gathering - invoke BEFORE developer for any new feature
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: pm
+    ending_prompts: pm
+    output_format: output-formats-pm
+    skills:
+      precompiled: []
+      dynamic:
+        # Frontend skills (8)
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: component architecture for spec scoping
+          usage: when scoping features that involve React components
+        - id: frontend/api
+          path: skills/frontend/api.md
+          name: API Integration
+          description: REST APIs, data fetching for spec scoping
+          usage: when scoping features that involve data fetching or API integration
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: design tokens, theming for spec scoping
+          usage: when scoping features that involve styling or theming
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: a11y requirements for spec scoping
+          usage: when scoping features that require accessibility considerations
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: state management for spec scoping
+          usage: when scoping features that involve client-side state
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Performance
+          description: performance requirements for spec scoping
+          usage: when scoping features with performance requirements
+        - id: frontend/testing
+          path: skills/frontend/testing.md
+          name: Frontend Testing
+          description: React testing requirements for spec scoping
+          usage: when scoping features that require React testing
+        - id: frontend/mocking
+          path: skills/frontend/mocking.md
+          name: Mocking
+          description: MSW/mock requirements for spec scoping
+          usage: when scoping features that require mocking or test data
+        # Backend skills (5)
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: API routes for spec scoping
+          usage: when scoping features that involve API routes
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: database schema for spec scoping
+          usage: when scoping features that require database schema changes
+        - id: backend/ci-cd
+          path: skills/backend/ci-cd.md
+          name: CI/CD
+          description: deployment pipelines for spec scoping
+          usage: when scoping features that affect CI/CD pipelines
+        - id: backend/performance
+          path: skills/backend/performance.md
+          name: Backend Performance
+          description: query optimization for spec scoping
+          usage: when scoping features with backend performance requirements
+        - id: backend/testing
+          path: skills/backend/testing.md
+          name: Backend Testing
+          description: API testing requirements for spec scoping
+          usage: when scoping features that require API testing
+        # Security skills (1)
+        - id: security/security
+          path: skills/security/security.md
+          name: Security
+          description: auth and security for spec scoping
+          usage: when scoping features that involve authentication or security
+        # Shared skills (1)
+        - id: shared/reviewing
+          path: skills/shared/reviewing.md
+          name: Reviewing
+          description: code review requirements for spec scoping
+          usage: when scoping features that require code review considerations
+        # Setup skills (4)
+        - id: setup/monorepo
+          path: skills/setup/monorepo.md
+          name: Monorepo
+          description: Turborepo structure for spec scoping
+          usage: when scoping features that affect monorepo structure
+        - id: setup/package
+          path: skills/setup/package.md
+          name: Package
+          description: package conventions for spec scoping
+          usage: when scoping features that require new packages
+        - id: setup/env
+          path: skills/setup/env.md
+          name: Environment
+          description: env configuration for spec scoping
+          usage: when scoping features that require environment configuration
+        - id: setup/tooling
+          path: skills/setup/tooling.md
+          name: Tooling
+          description: build tooling for spec scoping
+          usage: when scoping features that affect build tooling
+
+  tester:
+    name: tester
+    title: Tester Agent
+    description: Writes tests BEFORE implementation - all test types (*.test.*, *.spec.*, E2E) - Tester red-green-refactor - invoke BEFORE developer implements feature
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-tester
+    skills:
+      precompiled:
+        - id: frontend/testing
+          path: skills/frontend/testing.md
+          name: Frontend Testing
+          description: React Testing Library, Vitest, component tests
+          usage: when writing React component tests
+        - id: backend/testing
+          path: skills/backend/testing.md
+          name: Backend Testing
+          description: API tests, integration tests
+          usage: when writing API or integration tests
+        - id: frontend/mocking
+          path: skills/frontend/mocking.md
+          name: Mocking
+          description: MSW, test data, API mocks
+          usage: when setting up mocks
+      dynamic:
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: Accessibility testing patterns
+          usage: when writing accessibility-focused tests
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Performance
+          description: Performance testing patterns
+          usage: when writing performance benchmark tests
+
+  documentor:
+    name: documentor
+    title: Documentor Agent
+    description: Creates AI-focused documentation that helps other agents understand where and how to implement features. Works incrementally, tracking progress over time.
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Glob
+      - Grep
+      - Bash
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-documentor
+    skills:
+      precompiled:
+        - id: setup/monorepo
+          path: skills/setup/monorepo.md
+          name: Monorepo
+          description: Turborepo, workspaces, package architecture
+          usage: when documenting monorepo structure
+        - id: setup/package
+          path: skills/setup/package.md
+          name: Package
+          description: Internal package conventions, exports
+          usage: when documenting package conventions
+      dynamic:
+        # Frontend skills (8)
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: documenting React patterns
+          usage: when documenting React component architecture or patterns
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: documenting CSS patterns
+          usage: when documenting styling architecture or patterns
+        - id: frontend/api
+          path: skills/frontend/api.md
+          name: API Integration
+          description: documenting API integration patterns
+          usage: when documenting API integration architecture
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: documenting state management patterns
+          usage: when documenting state management architecture
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: documenting a11y patterns
+          usage: when documenting accessibility patterns
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Frontend Performance
+          description: documenting render optimization patterns
+          usage: when documenting frontend performance patterns
+        - id: frontend/testing
+          path: skills/frontend/testing.md
+          name: Frontend Testing
+          description: documenting React testing patterns
+          usage: when documenting React testing patterns
+        - id: frontend/mocking
+          path: skills/frontend/mocking.md
+          name: Mocking
+          description: documenting MSW/mock patterns
+          usage: when documenting mocking patterns
+        # Backend skills (5)
+        - id: backend/api
+          path: skills/backend/api.md
+          name: Backend API
+          description: documenting API routes
+          usage: when documenting API route architecture
+        - id: backend/database
+          path: skills/backend/database.md
+          name: Database
+          description: documenting database patterns
+          usage: when documenting database architecture
+        - id: backend/ci-cd
+          path: skills/backend/ci-cd.md
+          name: CI/CD
+          description: documenting pipeline patterns
+          usage: when documenting CI/CD patterns
+        - id: backend/performance
+          path: skills/backend/performance.md
+          name: Backend Performance
+          description: documenting query optimization patterns
+          usage: when documenting backend performance patterns
+        - id: backend/testing
+          path: skills/backend/testing.md
+          name: Backend Testing
+          description: documenting API testing patterns
+          usage: when documenting API testing patterns
+        # Security skills (1)
+        - id: security/security
+          path: skills/security/security.md
+          name: Security
+          description: documenting security patterns
+          usage: when documenting security architecture
+        # Shared skills (1)
+        - id: shared/reviewing
+          path: skills/shared/reviewing.md
+          name: Reviewing
+          description: documenting code review patterns
+          usage: when documenting code review processes
+        # Setup skills (2) - remaining after precompiled
+        - id: setup/env
+          path: skills/setup/env.md
+          name: Environment
+          description: documenting env configuration patterns
+          usage: when documenting environment configuration
+        - id: setup/tooling
+          path: skills/setup/tooling.md
+          name: Tooling
+          description: documenting build tooling patterns
+          usage: when documenting build tooling

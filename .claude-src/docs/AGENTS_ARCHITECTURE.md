@@ -1,5 +1,17 @@
 # Agents Architecture
 
+> **DEPRECATED** - This document is superseded by [CLAUDE_ARCHITECTURE_BIBLE.md](./CLAUDE_ARCHITECTURE_BIBLE.md).
+>
+> **Redirect:** For the current source of truth on creating and maintaining agents, see **CLAUDE_ARCHITECTURE_BIBLE.md** which combines:
+> - All content from this document (HOW the system works)
+> - Technique compliance from PROMPT_BIBLE.md (WHY techniques work)
+> - Model-specific guidance for Opus/Sonnet 4.5
+> - Runnable validation commands
+>
+> This file is preserved for historical reference only. Do not update this file.
+
+---
+
 > How the agent system is built, organized, and extended.
 
 **Purpose:** This document covers the mechanical/plumbing aspects of this specific agent system. For universal prompt engineering techniques (the WHY), see [PROMPT_BIBLE.md](./PROMPT_BIBLE.md). For skill definitions and agent-to-skill mappings (the WHAT), see [SKILLS_ARCHITECTURE.md](./SKILLS_ARCHITECTURE.md).

@@ -6,7 +6,7 @@
 
 **Purpose:** This document provides universal prompt engineering techniques that work for any Claude agent system. These techniques are validated by Anthropic research, production systems achieving 72.7%+ on SWE-bench, academic research, and community consensus.
 
-> **Note:** This document covers universal prompt engineering techniques that work for any Claude agent system. For implementation-specific details about THIS system (directory structure, build system, adding agents), see [AGENTS_ARCHITECTURE.md](./AGENTS_ARCHITECTURE.md).
+> **Note:** This document covers universal prompt engineering techniques that work for any Claude agent system. For implementation-specific details about THIS system (directory structure, build system, adding agents), see [CLAUDE_ARCHITECTURE_BIBLE.md](./CLAUDE_ARCHITECTURE_BIBLE.md).
 
 ---
 
@@ -1632,7 +1632,7 @@ This structure represents the convergence of:
 ---
 
 **Version History:**
-- v2.0 (November 2025): Separated implementation-specific content to AGENTS_ARCHITECTURE.md. Made document portable and universal. Updated emphatic repetition to use `<critical_requirements>` and `<critical_reminders>` pattern. Added dual final reminder (principles + write verification).
+- v2.0 (November 2025): Separated implementation-specific content to CLAUDE_ARCHITECTURE_BIBLE.md (formerly AGENTS_ARCHITECTURE.md). Made document portable and universal. Updated emphatic repetition to use `<critical_requirements>` and `<critical_reminders>` pattern. Added dual final reminder (principles + write verification).
 - v1.2 (November 2025): Added Technique #13 (Write Verification Protocol), updated to 13 essential techniques
 - v1.1 (November 2025): Added 6 new techniques (self-correction triggers, post-action reflection, progress tracking, positive framing, "think" alternatives, just-in-time loading), Opus 4.5-specific guidance, updated to 12 essential techniques
 - v1.0 (November 2025): Initial comprehensive guide for Sonnet 4.5

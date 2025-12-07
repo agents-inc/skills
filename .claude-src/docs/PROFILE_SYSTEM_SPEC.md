@@ -69,10 +69,11 @@ Agents define structure and behavior. They never change between profiles.
 ```
 agents/
 └── frontend-developer/
-    ├── intro.md              # Agent identity and role
-    ├── workflow.md           # Agent-specific workflow steps
-    ├── examples.md           # Example outputs
-    └── critical-reminders.md # Agent-specific reminders
+    ├── intro.md                  # Agent identity and role
+    ├── workflow.md               # Agent-specific workflow steps
+    ├── examples.md               # Example outputs
+    ├── critical-requirements.md  # <critical_requirements> at TOP (PROMPT_BIBLE)
+    └── critical-reminders.md     # <critical_reminders> at BOTTOM (PROMPT_BIBLE)
 ```
 
 ### 3. Skills are profile-specific
@@ -134,11 +135,13 @@ profiles/
 │   │   ├── intro.md                    # Agent identity/role
 │   │   ├── workflow.md                 # Development workflow steps
 │   │   ├── examples.md                 # Example outputs
-│   │   └── critical-reminders.md       # Agent-specific reminders
+│   │   ├── critical-requirements.md    # <critical_requirements> at TOP
+│   │   └── critical-reminders.md       # <critical_reminders> at BOTTOM
 │   ├── backend-developer/
 │   │   ├── intro.md
 │   │   ├── workflow.md
 │   │   ├── examples.md
+│   │   ├── critical-requirements.md
 │   │   └── critical-reminders.md
 │   ├── pm/
 │   ├── tester/
@@ -211,7 +214,7 @@ profiles/
 │               └── security.md
 │
 └── docs/
-    ├── AGENTS_ARCHITECTURE.md          # How agents work
+    ├── CLAUDE_ARCHITECTURE_BIBLE.md    # How agents work (source of truth)
     ├── SKILLS_ARCHITECTURE.md          # Skill definitions (update for new system)
     ├── PROMPT_BIBLE.md                 # Prompt engineering techniques
     └── PROFILE_SYSTEM_SPEC.md          # This file
@@ -1028,7 +1031,7 @@ For each agent in current `agents/`:
 
 1. Remove old `.claude-src/agents/*.src.md` files
 2. Remove old `.claude-src/skills/` (flat structure)
-3. Update documentation (AGENTS_ARCHITECTURE.md, SKILLS_ARCHITECTURE.md)
+3. Update documentation (CLAUDE_ARCHITECTURE_BIBLE.md, SKILLS_ARCHITECTURE.md)
 4. Update any scripts that reference old paths
 5. Update `.gitignore` if needed
 

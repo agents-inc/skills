@@ -101,7 +101,7 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
     }
 
     // Optional agent files (warn if missing)
-    const optionalFiles = ["examples.md", "critical-reminders.md"];
+    const optionalFiles = ["examples.md", "critical-requirements.md", "critical-reminders.md"];
     for (const file of optionalFiles) {
       if (!(await Bun.file(`${agentDir}/${file}`).exists())) {
         warnings.push(`Optional file missing for ${name}: ${file}`);
@@ -141,6 +141,15 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
       if (!skill.path) {
         warnings.push(
           `Dynamic skill missing path (won't be compiled): ${skill.id} (agent: ${name})`
+        );
+      }
+    }
+
+    // Validate dynamic skills have usage property
+    for (const skill of agent.skills.dynamic) {
+      if (!skill.usage) {
+        errors.push(
+          `Dynamic skill missing required "usage" property: ${skill.id} (agent: ${name})`
         );
       }
     }
@@ -218,6 +227,10 @@ async function compileAgent(
     `${agentDir}/examples.md`,
     "## Examples\n\n_No examples defined._"
   );
+  const criticalRequirementsTop = await readFileOptional(
+    `${agentDir}/critical-requirements.md`,
+    ""
+  );
   const criticalReminders = await readFileOptional(
     `${agentDir}/critical-reminders.md`,
     ""
@@ -258,6 +271,7 @@ async function compileAgent(
     intro,
     workflow,
     examples,
+    criticalRequirementsTop,
     criticalReminders,
     corePromptNames: formattedCorePromptNames,
     corePromptsContent,
