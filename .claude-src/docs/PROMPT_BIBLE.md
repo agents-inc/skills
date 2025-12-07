@@ -152,7 +152,8 @@ Always include investigation requirements BEFORE task-specific instructions. Thi
 **Formatting that Works:**
 - **Bold** for emphasis
 - **(Bold + parentheses)** for ultra-critical rules using "You MUST" format
-- ALL CAPS for section headers
+- ALL CAPS for section headers only
+- `code` for file names, commands, and XML tags (e.g., `intro.md`, `npm run build`, `<role>`)
 - Repeat critical rules at start AND end using `<critical_requirements>` and `<critical_reminders>` tags
 
 **Why It Works:**
@@ -844,6 +845,17 @@ This ordering is based on:
 
 ## 4. Sonnet 4.5 Specific Optimizations
 
+### Sonnet 4.5 vs Opus 4.5 Quick Comparison
+
+| Characteristic | Sonnet 4.5 | Opus 4.5 |
+|----------------|------------|----------|
+| Default behavior | Conservative, minimal | Over-engineering tendency |
+| Instruction following | Very literal | More interpretive |
+| Expansion modifiers | **Required** to unlock capability | Helpful but less critical |
+| "Think" sensitivity | Low | **High** (avoid in prompts) |
+| System prompt responsiveness | Standard | **More responsive** |
+| Parallel tool execution | Standard | **Excels** at parallel ops |
+
 ### Critical Differences from Sonnet 3.5
 
 1. **More Conservative by Default**
@@ -863,6 +875,19 @@ This ordering is based on:
    - Needs explicit permission vs implicit understanding
    - Less "reading between the lines"
    - More precise instruction adherence
+
+   **Example - Be Explicit with Sonnet:**
+   ```markdown
+   # ❌ Vague (Sonnet may under-deliver)
+   Add a user profile feature
+
+   # ✅ Explicit (Sonnet delivers fully)
+   Add a user profile feature with:
+   - Avatar upload with preview
+   - Bio field (markdown supported)
+   - Social links section
+   - Form validation with inline errors
+   ```
 
 4. **Improved Multi-Turn Coherence**
    - Better at maintaining context across conversations
@@ -940,7 +965,15 @@ Opus 4.5 is more responsive to the system prompt than previous models. This mean
 For image-related tasks, giving Opus 4.5 a "crop tool" or ability to zoom on regions provides consistent uplift on image evaluations.
 
 **5. Parallel Tool Execution**
-Opus 4.5 excels at parallel tool execution. Structure prompts to allow simultaneous operations when possible.
+Opus 4.5 excels at parallel tool execution. Structure prompts to allow simultaneous operations when possible:
+
+```markdown
+# ✅ Good - Opus can parallelize
+Read these 3 files and compare their patterns: file1.ts, file2.ts, file3.ts
+
+# ❌ Less optimal - forces sequential
+Read file1.ts. Then read file2.ts. Then read file3.ts.
+```
 
 ---
 
