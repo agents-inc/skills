@@ -44,6 +44,12 @@
 - Dark mode implementation (`.dark` class with mixin pattern)
 - Component structure and organization
 
+**When NOT to use:**
+
+- One-off prototypes without design system needs (use inline styles or basic CSS)
+- External component libraries with their own theming (Material-UI, Chakra)
+- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
+
 ---
 
 <philosophy>
@@ -59,20 +65,6 @@ The design system follows a **self-contained, two-tier token architecture** wher
 - **HSL-first:** Use modern CSS color functions, not Sass color manipulation
 - **Layer-based:** CSS Cascade Layers ensure predictable style precedence across monorepo
 - **Theme-agnostic components:** Components use semantic tokens and adapt automatically to light/dark mode
-
-**When to use this design system:**
-
-- Building UI components in the `packages/ui` workspace
-- Implementing consistent spacing, colors, and typography across apps
-- Creating theme-aware components (light/dark mode)
-- Styling with SCSS Modules and CSS Cascade Layers
-- Needing predictable CSS precedence in a monorepo
-
-**When NOT to use:**
-
-- One-off prototypes without design system needs (use inline styles or basic CSS)
-- External component libraries with their own theming (Material-UI, Chakra)
-- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
 
 </philosophy>
 
@@ -1302,6 +1294,88 @@ Need to size text?
 ```
 
 </decision_framework>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Using Core Tokens Directly in Components
+
+Never use Tier 1 core tokens (`--color-gray-900`, `--core-space-4`) in component styles. Components must use Tier 2 semantic tokens (`--color-primary`, `--space-md`) to maintain theme flexibility.
+
+```scss
+// ❌ WRONG - Using core token
+.button {
+  background: var(--color-gray-900);
+}
+
+// ✅ CORRECT - Using semantic token
+.button {
+  background: var(--color-surface-base);
+}
+```
+
+### ❌ Component Styles Without Layer Wrapper
+
+All UI package component styles must be wrapped in `@layer components {}`. Missing the layer wrapper causes loading order dependencies and makes app-level overrides unpredictable.
+
+```scss
+// ❌ WRONG - No layer wrapper
+.button {
+  padding: var(--space-md);
+}
+
+// ✅ CORRECT - Wrapped in layer
+@layer components {
+  .button {
+    padding: var(--space-md);
+  }
+}
+```
+
+### ❌ Sass Color Functions
+
+Avoid `darken()`, `lighten()`, `transparentize()` and other Sass color functions. These require build-time processing and prevent runtime theming. Use CSS color functions instead.
+
+```scss
+// ❌ WRONG - Sass function
+.hover {
+  background: darken($primary, 10%);
+}
+
+// ✅ CORRECT - CSS color function
+.hover {
+  background: color-mix(in srgb, var(--color-primary), black 10%);
+}
+```
+
+### ❌ Theme Logic in Components
+
+Don't add conditional theme checks in component code. Components should use semantic tokens only and remain theme-agnostic. The `.dark` class and token overrides handle theming automatically.
+
+### ❌ Hardcoded Values
+
+Never use hardcoded pixel values, hex colors, or raw numbers. All design values must come from design tokens to ensure consistency and enable theming.
+
+```scss
+// ❌ WRONG - Hardcoded values
+.card {
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+// ✅ CORRECT - Design tokens
+.card {
+  padding: var(--space-lg);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-md);
+}
+```
+
+</anti_patterns>
 
 ---
 

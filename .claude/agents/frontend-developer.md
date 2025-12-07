@@ -887,6 +887,12 @@ All code must follow established patterns and conventions:
 - Custom hooks for common patterns
 - Error boundaries with retry
 
+**When NOT to use:**
+
+- Simple one-off components without variants (skip cva, use SCSS Modules only)
+- Components that don't need refs (skip forwardRef)
+- Static content without interactivity (consider static HTML)
+
 ---
 
 <philosophy>
@@ -894,19 +900,6 @@ All code must follow established patterns and conventions:
 ## Philosophy
 
 React components follow a tiered architecture from low-level primitives to high-level templates. Components should be composable, type-safe, and expose necessary customization points (`className`, refs). Use `cva` only when components have multiple variants to avoid over-engineering.
-
-**When to use React patterns:**
-
-- Building reusable UI components
-- Creating type-safe component variants with cva
-- Need ref forwarding for DOM manipulation or focus management
-- Implementing polymorphic components with asChild pattern
-
-**When NOT to use React patterns:**
-
-- Simple one-off components without variants (skip cva, use SCSS Modules only)
-- Components that don't need refs (skip forwardRef)
-- Static content without interactivity (consider static HTML)
 
 </philosophy>
 
@@ -1883,6 +1876,83 @@ Is this reusable logic?
 
 ---
 
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Missing forwardRef on Interactive Components
+
+Components that expose DOM elements MUST use forwardRef. Without it, parent components cannot manage focus, trigger animations, or integrate with form libraries like react-hook-form.
+
+```typescript
+// ❌ WRONG - Parent cannot access input ref
+export const Input = ({ ...props }) => <input {...props} />;
+
+// ✅ CORRECT - Parent can forward refs
+export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => (
+  <input ref={ref} {...props} />
+));
+Input.displayName = "Input";
+```
+
+### ❌ Default Exports in Component Libraries
+
+Default exports prevent tree-shaking and violate project conventions. They also make imports inconsistent across the codebase.
+
+```typescript
+// ❌ WRONG - Default export
+export default function Button() { ... }
+
+// ✅ CORRECT - Named export
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(...);
+```
+
+### ❌ Magic Numbers Without Named Constants
+
+All numeric values must be named constants. Magic numbers are unmaintainable, undocumented, and error-prone.
+
+```typescript
+// ❌ WRONG - Magic number
+setTimeout(() => {}, 300);
+
+// ✅ CORRECT - Named constant
+const DEBOUNCE_DELAY_MS = 300;
+setTimeout(() => {}, DEBOUNCE_DELAY_MS);
+```
+
+### ❌ Missing className Prop on Reusable Components
+
+All reusable components must expose a className prop. Without it, consumers cannot apply custom styles or override defaults.
+
+```typescript
+// ❌ WRONG - No className prop
+export const Card = ({ children }) => (
+  <div className={styles.card}>{children}</div>
+);
+
+// ✅ CORRECT - className prop merged
+export const Card = ({ children, className }) => (
+  <div className={clsx(styles.card, className)}>{children}</div>
+);
+```
+
+### ❌ Using cva for Components Without Variants
+
+cva adds unnecessary complexity for simple components. Only use when you have 2+ variant dimensions.
+
+```typescript
+// ❌ WRONG - cva for single-style component
+const cardStyles = cva("card", { variants: {} });
+
+// ✅ CORRECT - SCSS Modules only
+import styles from "./card.module.scss";
+<div className={styles.card}>...</div>
+```
+
+</anti_patterns>
+
+---
+
 <critical_reminders>
 
 ## ⚠️ CRITICAL REMINDERS
@@ -1955,6 +2025,12 @@ Is this reusable logic?
 - Dark mode implementation (`.dark` class with mixin pattern)
 - Component structure and organization
 
+**When NOT to use:**
+
+- One-off prototypes without design system needs (use inline styles or basic CSS)
+- External component libraries with their own theming (Material-UI, Chakra)
+- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
+
 ---
 
 <philosophy>
@@ -1970,20 +2046,6 @@ The design system follows a **self-contained, two-tier token architecture** wher
 - **HSL-first:** Use modern CSS color functions, not Sass color manipulation
 - **Layer-based:** CSS Cascade Layers ensure predictable style precedence across monorepo
 - **Theme-agnostic components:** Components use semantic tokens and adapt automatically to light/dark mode
-
-**When to use this design system:**
-
-- Building UI components in the `packages/ui` workspace
-- Implementing consistent spacing, colors, and typography across apps
-- Creating theme-aware components (light/dark mode)
-- Styling with SCSS Modules and CSS Cascade Layers
-- Needing predictable CSS precedence in a monorepo
-
-**When NOT to use:**
-
-- One-off prototypes without design system needs (use inline styles or basic CSS)
-- External component libraries with their own theming (Material-UI, Chakra)
-- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
 
 </philosophy>
 
@@ -3213,6 +3275,88 @@ Need to size text?
 ```
 
 </decision_framework>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Using Core Tokens Directly in Components
+
+Never use Tier 1 core tokens (`--color-gray-900`, `--core-space-4`) in component styles. Components must use Tier 2 semantic tokens (`--color-primary`, `--space-md`) to maintain theme flexibility.
+
+```scss
+// ❌ WRONG - Using core token
+.button {
+  background: var(--color-gray-900);
+}
+
+// ✅ CORRECT - Using semantic token
+.button {
+  background: var(--color-surface-base);
+}
+```
+
+### ❌ Component Styles Without Layer Wrapper
+
+All UI package component styles must be wrapped in `@layer components {}`. Missing the layer wrapper causes loading order dependencies and makes app-level overrides unpredictable.
+
+```scss
+// ❌ WRONG - No layer wrapper
+.button {
+  padding: var(--space-md);
+}
+
+// ✅ CORRECT - Wrapped in layer
+@layer components {
+  .button {
+    padding: var(--space-md);
+  }
+}
+```
+
+### ❌ Sass Color Functions
+
+Avoid `darken()`, `lighten()`, `transparentize()` and other Sass color functions. These require build-time processing and prevent runtime theming. Use CSS color functions instead.
+
+```scss
+// ❌ WRONG - Sass function
+.hover {
+  background: darken($primary, 10%);
+}
+
+// ✅ CORRECT - CSS color function
+.hover {
+  background: color-mix(in srgb, var(--color-primary), black 10%);
+}
+```
+
+### ❌ Theme Logic in Components
+
+Don't add conditional theme checks in component code. Components should use semantic tokens only and remain theme-agnostic. The `.dark` class and token overrides handle theming automatically.
+
+### ❌ Hardcoded Values
+
+Never use hardcoded pixel values, hex colors, or raw numbers. All design values must come from design tokens to ensure consistency and enable theming.
+
+```scss
+// ❌ WRONG - Hardcoded values
+.card {
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+// ✅ CORRECT - Design tokens
+.card {
+  padding: var(--space-lg);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-md);
+}
+```
+
+</anti_patterns>
 
 ---
 

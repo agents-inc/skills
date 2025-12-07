@@ -33,6 +33,13 @@
 - Securing secrets (never commit, use .env.local and CI secrets)
 - Implementing environment-based feature flags
 
+**When NOT to use:**
+
+- Runtime configuration changes (use external feature flag services like LaunchDarkly)
+- User-specific settings (use database or user preferences)
+- Frequently changing values (use configuration API or database)
+- Complex A/B testing with gradual rollouts (use dedicated feature flag services)
+
 **Key patterns covered:**
 
 - Per-app .env files (not root-level, prevents conflicts)
@@ -678,6 +685,67 @@ Need environment configuration?
 - Turborepo cache is NOT invalidated by env changes unless declared in turbo.json env array
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Committing Secrets to Repository
+
+```bash
+# ❌ ANTI-PATTERN: Real secrets in committed .env
+DATABASE_URL=postgresql://admin:SuperSecret123@prod.example.com:5432/mydb
+STRIPE_SECRET_KEY=sk_live_actual_secret_key
+```
+
+**Why it's wrong:** Exposes secrets permanently in git history, anyone with repo access can extract credentials.
+
+**What to do instead:** Use .env.local (gitignored) for secrets, CI/CD secrets for production.
+
+---
+
+### No Zod Validation
+
+```typescript
+// ❌ ANTI-PATTERN: Direct env access without validation
+const API_URL = import.meta.env.VITE_API_URL; // Could be undefined!
+const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT); // Could be NaN!
+```
+
+**Why it's wrong:** Missing variables cause runtime failures with unclear errors, type coercion fails silently.
+
+**What to do instead:** Validate all env vars with Zod at application startup.
+
+---
+
+### Using NEXT_PUBLIC_* for Secrets
+
+```bash
+# ❌ ANTI-PATTERN: Secret with client-side prefix
+NEXT_PUBLIC_DATABASE_URL=postgresql://user:pass@host/db
+NEXT_PUBLIC_API_SECRET_KEY=sk_secret_12345
+```
+
+**Why it's wrong:** NEXT_PUBLIC_* variables are embedded in client bundle, visible to anyone.
+
+**What to do instead:** Use non-prefixed variables for server-side secrets only.
+
+---
+
+### Root-Level .env in Monorepo
+
+```
+# ❌ ANTI-PATTERN: Root-level .env
+/.env  ← Variables for all apps (conflicts!)
+```
+
+**Why it's wrong:** Shared variables cause conflicts across apps with different needs, unclear ownership.
+
+**What to do instead:** Use per-app .env files in each app directory.
+
+</anti_patterns>
 
 ---
 

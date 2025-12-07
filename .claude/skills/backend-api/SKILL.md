@@ -31,6 +31,14 @@
 - Need public or multi-client API with documentation
 - Production APIs requiring rate limiting, CORS, health checks
 
+**When NOT to use:**
+
+- Simple CRUD operations with no external consumers (use Server Actions instead)
+- Internal-only APIs without documentation requirements (simpler approaches exist)
+- Forms that don't need complex validation (React Hook Form + Server Actions)
+- When building GraphQL APIs (use Apollo Server or similar)
+- Single-use endpoints with no schema reuse (over-engineering)
+
 **Key patterns covered:**
 
 - Hono API route setup with OpenAPI integration
@@ -1648,6 +1656,90 @@ app.openapi(getJobsRoute, async (c) => {
 - Correlation IDs: Forward from client if present (`X-Correlation-ID` header)
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Inline Route Handlers Without Modularization
+
+```typescript
+// ❌ ANTI-PATTERN: All routes in one file
+const app = new OpenAPIHono();
+
+app.get("/jobs", async (c) => { /* 100+ lines */ });
+app.get("/jobs/:id", async (c) => { /* 100+ lines */ });
+app.get("/companies", async (c) => { /* 100+ lines */ });
+app.get("/users", async (c) => { /* 100+ lines */ });
+// ... 1000+ line file
+```
+
+**Why it's wrong:** Creates God files that are unmaintainable, no separation of concerns, hard to test individual routes.
+
+**What to do instead:** Use `app.route()` to mount modular route files.
+
+---
+
+### Missing OpenAPI Schema Registration
+
+```typescript
+// ❌ ANTI-PATTERN: Zod schema without .openapi()
+const JobSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1).max(255),
+});
+
+app.get("/jobs", async (c) => {
+  return c.json({ jobs: [] });
+});
+```
+
+**Why it's wrong:** No OpenAPI spec generation, no auto-documentation, loses type safety benefits.
+
+**What to do instead:** Always use `extendZodWithOpenApi(z)` first, then `.openapi()` on schemas.
+
+---
+
+### Magic Numbers in API Code
+
+```typescript
+// ❌ ANTI-PATTERN: Magic numbers everywhere
+const results = await db.select().from(jobs).limit(100);
+
+if (count > 50) {
+  return c.json({ error: "Rate limited" }, 429);
+}
+
+c.header("Cache-Control", "max-age=3600");
+```
+
+**Why it's wrong:** Numbers scattered across code, impossible to tune, no documentation of intent.
+
+**What to do instead:** Use named constants like `DEFAULT_QUERY_LIMIT = 100`, `CACHE_MAX_AGE_SECONDS = 3600`.
+
+---
+
+### Validation Bypass
+
+```typescript
+// ❌ ANTI-PATTERN: Reading params directly without validation
+app.get("/jobs/:id", async (c) => {
+  const id = c.req.param("id"); // No validation!
+  const country = c.req.query("country"); // Could be undefined
+
+  const job = await db.query.jobs.findFirst({
+    where: eq(jobs.id, id),
+  });
+});
+```
+
+**Why it's wrong:** Bypasses Zod validation, no type safety, crashes on bad input.
+
+**What to do instead:** Always use `c.req.valid("param")` and `c.req.valid("query")` with createRoute.
+
+</anti_patterns>
 
 ---
 

@@ -674,6 +674,13 @@ All code must follow established patterns and conventions:
 - Making approval/rejection decisions
 - Ensuring codebase standards are maintained
 
+**When NOT to use:**
+
+- When implementing code (use developer skills instead)
+- For automated linting/type-checking (use tooling, CI/CD)
+- For security audits (use security/security skill for deep security analysis)
+- For high-level architecture decisions (use planning tools instead)
+
 **Key patterns covered:**
 
 - Self-correction checkpoints for reviewers
@@ -1080,6 +1087,75 @@ Is this a blocking issue?
 
 ---
 
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Reviewing Without Reading Full Files
+
+```markdown
+# ❌ ANTI-PATTERN: Feedback based on partial reading
+"The validation logic seems incomplete"  ← Didn't read the whole file
+
+# Later in file (line 145):
+const { validateEmail, validatePhone } = useValidation();  ← Missed this
+```
+
+**Why it's wrong:** Incomplete context leads to incorrect feedback, wastes author time addressing non-issues.
+
+**What to do instead:** Read ALL files completely before providing any feedback.
+
+---
+
+### Vague Feedback Without References
+
+```markdown
+# ❌ ANTI-PATTERN: No specific location
+"This code needs improvement"
+"There are some issues with the types"
+"The error handling could be better"
+```
+
+**Why it's wrong:** Author doesn't know what to fix, feedback is not actionable.
+
+**What to do instead:** Provide specific file:line references for every issue.
+
+---
+
+### All Issues Same Severity
+
+```markdown
+# ❌ ANTI-PATTERN: Everything treated as blocker
+- Fix the typo in comment
+- Add security validation  ← Critical!
+- Use more descriptive variable name
+- Fix XSS vulnerability  ← Critical!
+```
+
+**Why it's wrong:** Critical issues get lost among trivial ones, PR blocked by minor issues.
+
+**What to do instead:** Clearly distinguish Must Fix vs Should Fix vs Nice to Have.
+
+---
+
+### Only Negative Feedback
+
+```markdown
+# ❌ ANTI-PATTERN: No acknowledgment of good work
+- Fix line 23
+- Fix line 45
+- Fix line 67
+- LGTM (after author fixes everything)
+```
+
+**Why it's wrong:** Demotivates author, misses teaching opportunity about what to repeat.
+
+**What to do instead:** Acknowledge what was done well alongside issues.
+
+</anti_patterns>
+
+---
+
 <critical_reminders>
 
 ## ⚠️ CRITICAL REMINDERS
@@ -1140,6 +1216,14 @@ Is this a blocking issue?
 - Implementing filtering, pagination, and sorting patterns
 - Need public or multi-client API with documentation
 - Production APIs requiring rate limiting, CORS, health checks
+
+**When NOT to use:**
+
+- Simple CRUD operations with no external consumers (use Server Actions instead)
+- Internal-only APIs without documentation requirements (simpler approaches exist)
+- Forms that don't need complex validation (React Hook Form + Server Actions)
+- When building GraphQL APIs (use Apollo Server or similar)
+- Single-use endpoints with no schema reuse (over-engineering)
 
 **Key patterns covered:**
 
@@ -2761,6 +2845,90 @@ app.openapi(getJobsRoute, async (c) => {
 
 ---
 
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Inline Route Handlers Without Modularization
+
+```typescript
+// ❌ ANTI-PATTERN: All routes in one file
+const app = new OpenAPIHono();
+
+app.get("/jobs", async (c) => { /* 100+ lines */ });
+app.get("/jobs/:id", async (c) => { /* 100+ lines */ });
+app.get("/companies", async (c) => { /* 100+ lines */ });
+app.get("/users", async (c) => { /* 100+ lines */ });
+// ... 1000+ line file
+```
+
+**Why it's wrong:** Creates God files that are unmaintainable, no separation of concerns, hard to test individual routes.
+
+**What to do instead:** Use `app.route()` to mount modular route files.
+
+---
+
+### Missing OpenAPI Schema Registration
+
+```typescript
+// ❌ ANTI-PATTERN: Zod schema without .openapi()
+const JobSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1).max(255),
+});
+
+app.get("/jobs", async (c) => {
+  return c.json({ jobs: [] });
+});
+```
+
+**Why it's wrong:** No OpenAPI spec generation, no auto-documentation, loses type safety benefits.
+
+**What to do instead:** Always use `extendZodWithOpenApi(z)` first, then `.openapi()` on schemas.
+
+---
+
+### Magic Numbers in API Code
+
+```typescript
+// ❌ ANTI-PATTERN: Magic numbers everywhere
+const results = await db.select().from(jobs).limit(100);
+
+if (count > 50) {
+  return c.json({ error: "Rate limited" }, 429);
+}
+
+c.header("Cache-Control", "max-age=3600");
+```
+
+**Why it's wrong:** Numbers scattered across code, impossible to tune, no documentation of intent.
+
+**What to do instead:** Use named constants like `DEFAULT_QUERY_LIMIT = 100`, `CACHE_MAX_AGE_SECONDS = 3600`.
+
+---
+
+### Validation Bypass
+
+```typescript
+// ❌ ANTI-PATTERN: Reading params directly without validation
+app.get("/jobs/:id", async (c) => {
+  const id = c.req.param("id"); // No validation!
+  const country = c.req.query("country"); // Could be undefined
+
+  const job = await db.query.jobs.findFirst({
+    where: eq(jobs.id, id),
+  });
+});
+```
+
+**Why it's wrong:** Bypasses Zod validation, no type safety, crashes on bad input.
+
+**What to do instead:** Always use `c.req.valid("param")` and `c.req.valid("query")` with createRoute.
+
+</anti_patterns>
+
+---
+
 <critical_reminders>
 
 ## ⚠️ CRITICAL REMINDERS
@@ -2820,6 +2988,13 @@ app.openapi(getJobsRoute, async (c) => {
 - Preventing XSS attacks (React escaping, DOMPurify, CSP headers)
 - Configuring CODEOWNERS for security-sensitive code
 - Implementing secure authentication and token storage
+
+**When NOT to use:**
+
+- For general code quality (use reviewing skill instead)
+- For performance optimization (use performance skills)
+- For CI/CD pipeline setup (use ci-cd skill - security patterns here are for code, not pipelines)
+- When security review would delay critical hotfixes (document for follow-up)
 
 **Key patterns covered:**
 
@@ -3567,6 +3742,70 @@ Is it a secret (API key, password, token)?
 - Branch protection "enforce_admins" can lock out admins during emergencies - plan hotfix process
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Committing Secrets to Repository
+
+```typescript
+// ❌ ANTI-PATTERN: Hardcoded secrets
+const API_KEY = "sk_live_1234567890abcdef";
+const DATABASE_URL = "postgresql://admin:password@prod.example.com:5432/db";
+```
+
+**Why it's wrong:** Secrets in git history are exposed forever even after deletion, anyone with repo access can extract credentials.
+
+**What to do instead:** Use .env.local (gitignored) for development, CI/CD secrets for production.
+
+---
+
+### Storing Tokens in localStorage
+
+```typescript
+// ❌ ANTI-PATTERN: localStorage for auth tokens
+function storeAuthToken(token: string) {
+  localStorage.setItem("authToken", token);
+}
+```
+
+**Why it's wrong:** localStorage is accessible to any JavaScript including XSS attacks, tokens persist indefinitely enabling session hijacking.
+
+**What to do instead:** Use HttpOnly cookies for authentication tokens (server-set).
+
+---
+
+### Unsanitized HTML Rendering
+
+```typescript
+// ❌ ANTI-PATTERN: dangerouslySetInnerHTML without sanitization
+function UserComment({ comment }: { comment: string }) {
+  return <div dangerouslySetInnerHTML={{ __html: comment }} />;
+}
+```
+
+**Why it's wrong:** Allows arbitrary script execution via user input, XSS attacks can steal cookies/tokens or perform actions as user.
+
+**What to do instead:** Use DOMPurify to sanitize before rendering, or use React's default text escaping.
+
+---
+
+### Individual CODEOWNERS Instead of Teams
+
+```
+# ❌ ANTI-PATTERN: Individual owners
+.env.example @john-developer
+packages/auth/* @jane-engineer
+```
+
+**Why it's wrong:** Single points of failure during vacations/departures, no backup reviewers available.
+
+**What to do instead:** Use team-based ownership: `@security-team @backend-team`.
+
+</anti_patterns>
 
 ---
 

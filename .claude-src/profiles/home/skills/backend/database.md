@@ -28,6 +28,13 @@
 - Schema-first development with migrations
 - Building Next.js apps with API routes
 
+**When NOT to use:**
+
+- Simple apps using Next.js server actions directly (overhead not justified)
+- Apps needing traditional TCP connection pooling only (use standard Postgres clients)
+- Non-TypeScript projects (lose primary benefit of type safety)
+- Edge functions requiring WebSocket connections (not supported in edge runtime)
+
 **Key patterns covered:**
 
 - Neon serverless connection (HTTP and WebSocket)
@@ -908,6 +915,74 @@ return { jobs: results, total: count };
 - Transaction callbacks receive `tx` parameter - using `db` bypasses transaction
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Using `db` Instead of `tx` in Transactions
+
+```typescript
+// ❌ ANTI-PATTERN: Bypassing transaction context
+await db.transaction(async (tx) => {
+  const [company] = await db.insert(companies).values({...}); // Using db!
+  await db.insert(jobs).values({ companyId: company.id }); // Using db!
+});
+```
+
+**Why it's wrong:** Using `db` instead of `tx` bypasses transaction context, operations succeed/fail independently, data becomes inconsistent.
+
+**What to do instead:** Always use the `tx` parameter passed to the callback.
+
+---
+
+### N+1 Query Problem
+
+```typescript
+// ❌ ANTI-PATTERN: Separate queries for related data
+const job = await db.query.jobs.findFirst({ where: eq(jobs.id, jobId) });
+const company = await db.query.companies.findFirst({ where: eq(companies.id, job.companyId) });
+const locations = await db.query.companyLocations.findMany({ where: eq(companyLocations.companyId, company.id) });
+```
+
+**Why it's wrong:** Multiple database round-trips degrade performance, each query adds latency, doesn't scale with data size.
+
+**What to do instead:** Use `.with()` to fetch all related data in a single query.
+
+---
+
+### Missing casing Configuration
+
+```typescript
+// ❌ ANTI-PATTERN: No casing config
+const db = drizzle(sql, { schema });
+// camelCase JS fields won't match snake_case SQL columns
+```
+
+**Why it's wrong:** Field name mismatches between JavaScript camelCase and SQL snake_case cause silent failures.
+
+**What to do instead:** Always set `casing: 'snake_case'` in Drizzle config.
+
+---
+
+### Queries Without Soft Delete Checks
+
+```typescript
+// ❌ ANTI-PATTERN: No soft delete filter
+const results = await db
+  .select()
+  .from(jobs)
+  .where(eq(jobs.companyId, companyId));
+// Returns deleted records!
+```
+
+**Why it's wrong:** Returns records that were soft-deleted, users see data that should be hidden.
+
+**What to do instead:** Always include `isNull(jobs.deletedAt)` in WHERE conditions.
+
+</anti_patterns>
 
 ---
 

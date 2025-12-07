@@ -34,6 +34,13 @@
 - Configuring CODEOWNERS for security-sensitive code
 - Implementing secure authentication and token storage
 
+**When NOT to use:**
+
+- For general code quality (use reviewing skill instead)
+- For performance optimization (use performance skills)
+- For CI/CD pipeline setup (use ci-cd skill - security patterns here are for code, not pipelines)
+- When security review would delay critical hotfixes (document for follow-up)
+
 **Key patterns covered:**
 
 - Never commit secrets (.gitignore, CI secrets, rotation policies quarterly)
@@ -780,6 +787,70 @@ Is it a secret (API key, password, token)?
 - Branch protection "enforce_admins" can lock out admins during emergencies - plan hotfix process
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Committing Secrets to Repository
+
+```typescript
+// ❌ ANTI-PATTERN: Hardcoded secrets
+const API_KEY = "sk_live_1234567890abcdef";
+const DATABASE_URL = "postgresql://admin:password@prod.example.com:5432/db";
+```
+
+**Why it's wrong:** Secrets in git history are exposed forever even after deletion, anyone with repo access can extract credentials.
+
+**What to do instead:** Use .env.local (gitignored) for development, CI/CD secrets for production.
+
+---
+
+### Storing Tokens in localStorage
+
+```typescript
+// ❌ ANTI-PATTERN: localStorage for auth tokens
+function storeAuthToken(token: string) {
+  localStorage.setItem("authToken", token);
+}
+```
+
+**Why it's wrong:** localStorage is accessible to any JavaScript including XSS attacks, tokens persist indefinitely enabling session hijacking.
+
+**What to do instead:** Use HttpOnly cookies for authentication tokens (server-set).
+
+---
+
+### Unsanitized HTML Rendering
+
+```typescript
+// ❌ ANTI-PATTERN: dangerouslySetInnerHTML without sanitization
+function UserComment({ comment }: { comment: string }) {
+  return <div dangerouslySetInnerHTML={{ __html: comment }} />;
+}
+```
+
+**Why it's wrong:** Allows arbitrary script execution via user input, XSS attacks can steal cookies/tokens or perform actions as user.
+
+**What to do instead:** Use DOMPurify to sanitize before rendering, or use React's default text escaping.
+
+---
+
+### Individual CODEOWNERS Instead of Teams
+
+```
+# ❌ ANTI-PATTERN: Individual owners
+.env.example @john-developer
+packages/auth/* @jane-engineer
+```
+
+**Why it's wrong:** Single points of failure during vacations/departures, no backup reviewers available.
+
+**What to do instead:** Use team-based ownership: `@security-team @backend-team`.
+
+</anti_patterns>
 
 ---
 

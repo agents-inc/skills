@@ -31,6 +31,13 @@
 - Setting up shared configuration packages (@repo/eslint-config, @repo/typescript-config)
 - Understanding import/export conventions
 
+**When NOT to use:**
+
+- For app-specific code that won't be shared (keep in app directory)
+- When a single file would suffice (don't over-abstract)
+- For external dependencies (use npm packages instead)
+- When the overhead of package management exceeds benefits
+
 **Key patterns covered:**
 
 - Package structure and naming conventions
@@ -452,6 +459,78 @@ Importing from packages?
 - Package.json `exports` field is strict - missing exports cannot be imported
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Default Exports in Library Packages
+
+```typescript
+// ❌ ANTI-PATTERN: Default export
+// packages/ui/src/components/button/button.tsx
+export default Button;
+```
+
+**Why it's wrong:** Breaks tree-shaking, naming conflicts across packages, inconsistent imports.
+
+**What to do instead:** Use named exports: `export { Button }`
+
+---
+
+### Missing exports Field
+
+```json
+// ❌ ANTI-PATTERN: No exports field
+{
+  "name": "@repo/ui",
+  "main": "./src/index.ts"
+}
+```
+
+**Why it's wrong:** Allows importing internal paths (`@repo/ui/src/internal/utils`), breaks encapsulation.
+
+**What to do instead:** Define explicit exports for each public API path.
+
+---
+
+### Hardcoded Internal Package Versions
+
+```json
+// ❌ ANTI-PATTERN: Hardcoded versions
+{
+  "dependencies": {
+    "@repo/ui": "^1.0.0",
+    "@repo/types": "1.2.3"
+  }
+}
+```
+
+**Why it's wrong:** Creates version conflicts when local package changes, may install from npm instead of using local.
+
+**What to do instead:** Use workspace protocol: `"@repo/ui": "workspace:*"`
+
+---
+
+### React in Dependencies (Not peerDependencies)
+
+```json
+// ❌ ANTI-PATTERN: React as dependency
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
+```
+
+**Why it's wrong:** Causes React version duplication, "hooks can only be called inside body of function component" errors.
+
+**What to do instead:** Mark React as peerDependencies in component packages.
+
+</anti_patterns>
 
 ---
 

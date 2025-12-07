@@ -32,6 +32,13 @@
 - Testing different API scenarios (success, empty, error)
 - Simulating network latency and error conditions
 
+**When NOT to use:**
+
+- Integration tests that need real backend validation (use test database instead)
+- Production builds (MSW should never ship to production)
+- Simple unit tests of pure functions (no network calls to mock)
+- When you need to test actual network failure modes (use test containers)
+
 **Key patterns covered:**
 
 - Centralized mock package structure with handlers and data separation
@@ -654,6 +661,81 @@ export default defineConfig({
 - Dynamic imports in Next.js are required for browser-only code to avoid SSR bundling issues
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Wrong MSW API for Environment
+
+```typescript
+// ❌ ANTI-PATTERN: setupServer in browser
+import { setupServer } from "msw/node";
+export const browserWorker = setupServer(...handlers);
+
+// ❌ ANTI-PATTERN: setupWorker in Node tests
+import { setupWorker } from "msw/browser";
+export const serverWorker = setupWorker(...handlers);
+```
+
+**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs - wrong API causes cryptic runtime errors.
+
+**What to do instead:** Use `setupWorker` from `msw/browser` for browser, `setupServer` from `msw/node` for tests.
+
+---
+
+### Missing Handler Reset Between Tests
+
+```typescript
+// ❌ ANTI-PATTERN: No resetHandlers
+import { afterAll, beforeAll } from "vitest";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+beforeAll(() => serverWorker.listen());
+afterAll(() => serverWorker.close());
+// Missing: afterEach(() => serverWorker.resetHandlers());
+```
+
+**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent.
+
+**What to do instead:** Always include `afterEach(() => serverWorker.resetHandlers())`.
+
+---
+
+### Mock Data Embedded in Handlers
+
+```typescript
+// ❌ ANTI-PATTERN: Data inside handler
+export const getFeaturesHandler = http.get("api/v1/features", () => {
+  return HttpResponse.json({
+    features: [{ id: "1", name: "Dark mode" }],
+  });
+});
+```
+
+**Why it's wrong:** Mock data cannot be reused in other tests or handlers, no type checking against API schema.
+
+**What to do instead:** Separate mock data into `mocks/` directory with proper types from `@repo/api/types`.
+
+---
+
+### Rendering Before MSW Ready
+
+```typescript
+// ❌ ANTI-PATTERN: Missing await
+if (import.meta.env.DEV) {
+  browserWorker.start({ onUnhandledRequest: "bypass" }); // No await!
+}
+createRoot(document.getElementById("root")!).render(<App />);
+```
+
+**Why it's wrong:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably.
+
+**What to do instead:** Await worker start before rendering: `await browserWorker.start(...)`.
+
+</anti_patterns>
 
 ---
 

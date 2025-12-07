@@ -38,6 +38,12 @@
 - URL params for shareable/bookmarkable state (filters, search)
 - Form patterns with controlled components and Zod validation
 
+**When NOT to use:**
+
+- Server/API data (use React Query instead)
+- State that should be shareable via URL (use searchParams)
+- Any Context-based state management approach
+
 ---
 
 <philosophy>
@@ -46,18 +52,7 @@
 
 React provides multiple tools for managing client state, but each has a specific purpose. The key principle: **use the right tool for the right job**. Server data belongs in React Query with caching and synchronization. Local UI state stays in useState. Shared UI state lives in Zustand for performance. URL state makes filters shareable. Context is ONLY for dependency injection, never state management.
 
-**When to use client state management:**
-
-- Managing UI interactions (expanded/collapsed, open/closed)
-- Storing user preferences (theme, language, layout settings)
-- Shopping carts, filters, selections shared across routes
-- Form input values and validation state
-
-**When NOT to use client state:**
-
-- Server/API data (use React Query)
-- Frequently changing Context values (performance nightmare)
-- State that should be shareable via URL (use searchParams)
+The decision tree at the top of this skill guides you to the right solution based on your specific use case. Follow it strictly to avoid common pitfalls like using Context for state or putting server data in client state.
 
 </philosophy>
 
@@ -728,6 +723,68 @@ Simple form (1-3 fields, minimal validation)?
 - Persisting modal/sidebar state across sessions confuses users - only persist preferences
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Context for State Management
+
+Using React Context with useState/useReducer for state management causes every consumer to re-render when ANY value changes. This creates a performance nightmare at scale with no way to select specific values.
+
+```typescript
+// ❌ WRONG - Context causes full re-renders
+const AppContext = createContext({ user: null, theme: 'light', cart: [] });
+
+// ✅ CORRECT - Zustand with selectors
+const useStore = create((set) => ({ user: null, theme: 'light', cart: [] }));
+const theme = useStore((s) => s.theme); // Only re-renders when theme changes
+```
+
+### ❌ Server Data in Client State
+
+Storing API/server data in useState, Zustand, or Context causes stale data, no caching, and manual synchronization complexity.
+
+```typescript
+// ❌ WRONG - Server data in useState
+const [users, setUsers] = useState([]);
+useEffect(() => { fetchUsers().then(setUsers); }, []);
+
+// ✅ CORRECT - React Query handles caching, refetch, sync
+const { data: users } = useQuery(getUsersOptions());
+```
+
+### ❌ Prop Drilling for Shared State
+
+Using useState and passing props through 3+ levels creates tight coupling and refactoring difficulty.
+
+```typescript
+// ❌ WRONG - Prop drilling
+<Parent isOpen={isOpen} setIsOpen={setIsOpen}>
+  <Child isOpen={isOpen} setIsOpen={setIsOpen}>
+    <GrandChild isOpen={isOpen} setIsOpen={setIsOpen} />
+
+// ✅ CORRECT - Zustand accessed directly
+const isOpen = useUIStore((s) => s.isOpen);
+```
+
+### ❌ Magic Numbers in State Logic
+
+Using raw numbers for validation thresholds, timeouts, or initial values.
+
+```typescript
+// ❌ WRONG - Magic numbers
+if (password.length < 8) { ... }
+setTimeout(save, 300);
+
+// ✅ CORRECT - Named constants
+const MIN_PASSWORD_LENGTH = 8;
+const DEBOUNCE_DELAY_MS = 300;
+```
+
+</anti_patterns>
 
 ---
 

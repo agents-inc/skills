@@ -22,10 +22,6 @@
 
 ---
 
-**CURRENT STATE: NO EXPLICIT PERFORMANCE BUDGETS DEFINED**
-
-This document outlines **recommended best practices** for performance standards in modern web applications.
-
 **Auto-detection:** Core Web Vitals, bundle size optimization, LCP, FID, CLS, lazy loading, memoization, performance monitoring, web-vitals library, Turborepo caching, bundle budget, virtualization
 
 **When to use:**
@@ -35,6 +31,13 @@ This document outlines **recommended best practices** for performance standards 
 - Implementing React performance patterns (strategic memo, lazy loading, virtualization)
 - Monitoring performance with web-vitals library in production
 - Configuring Turborepo caching for build performance (> 80% cache hit rate)
+
+**When NOT to use:**
+
+- Before measuring (premature optimization adds complexity without benefit)
+- For simple components (memoizing cheap renders adds overhead)
+- Internal admin tools with < 10 users (ROI too low)
+- Prototypes and MVPs (optimize after validating product-market fit)
 
 **Key patterns covered:**
 
@@ -59,21 +62,6 @@ Performance is a feature, not an afterthought. Fast applications improve user ex
 - **Monitor real users** - Lab metrics (Lighthouse) differ from real-world performance (RUM)
 - **Optimize strategically** - Memoize expensive operations, not everything
 - **Lazy load by default** - Load code when needed, not upfront
-
-**When to use performance optimization:**
-
-- Building user-facing applications (Core Web Vitals impact SEO and UX)
-- Large monorepo builds (Turborepo caching reduces build times by 80%+)
-- Data-heavy interfaces (virtual scrolling for 100+ items prevents DOM bloat)
-- Image-heavy pages (WebP/AVIF reduce bandwidth by 30-50%)
-- Complex client state (strategic memoization prevents unnecessary re-renders)
-
-**When NOT to use performance optimization:**
-
-- Before measuring (premature optimization adds complexity without benefit)
-- For simple components (memoizing cheap renders adds overhead)
-- Internal admin tools with < 10 users (ROI too low)
-- Prototypes and MVPs (optimize after validating product-market fit)
 
 </philosophy>
 
@@ -1482,6 +1470,85 @@ Performance optimization integrates across the entire stack.
 - Next.js Image requires width/height or fill prop - prevents CLS
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Premature Optimization
+
+Optimizing before measuring leads to complexity without benefit. Always profile first with Chrome DevTools, React Profiler, or Lighthouse.
+
+```typescript
+// ❌ WRONG - Memoizing without measuring
+const MemoizedComponent = React.memo(SimpleComponent);
+const value = useMemo(() => a + b, [a, b]); // Simple math doesn't need memo
+
+// ✅ CORRECT - Profile first, optimize measured bottlenecks
+// React Profiler shows Component takes 50ms to render
+const MemoizedComponent = React.memo(ExpensiveComponent);
+```
+
+### ❌ Memoizing Everything
+
+Wrapping every component in `React.memo` and every callback in `useCallback` adds overhead and complexity.
+
+```typescript
+// ❌ WRONG - Memo overhead exceeds render cost
+const handleClick = useCallback(() => setCount(c => c + 1), []);
+const label = useMemo(() => `Count: ${count}`, [count]);
+
+// ✅ CORRECT - Only memoize when passing to memoized children
+const MemoizedChild = React.memo(ExpensiveChild);
+const handleClick = useCallback(() => setCount(c => c + 1), []);
+<MemoizedChild onClick={handleClick} />
+```
+
+### ❌ Importing Full Libraries
+
+Using full library imports bundles everything, even unused code.
+
+```typescript
+// ❌ WRONG - Imports entire lodash (~70KB)
+import _ from 'lodash';
+_.debounce(fn, 300);
+
+// ✅ CORRECT - Modular import (~2KB)
+import { debounce } from 'lodash-es';
+debounce(fn, 300);
+```
+
+### ❌ Lazy Loading Above-Fold Content
+
+Using `loading="lazy"` on hero images delays LCP. Critical content should load eagerly.
+
+```tsx
+// ❌ WRONG - Hero image lazy loaded
+<img src="/hero.jpg" loading="lazy" />
+
+// ✅ CORRECT - Hero loads eagerly, below-fold lazy
+<img src="/hero.jpg" loading="eager" fetchpriority="high" />
+<img src="/below-fold.jpg" loading="lazy" />
+```
+
+### ❌ Ignoring Real User Monitoring
+
+Lab metrics (Lighthouse) differ from real-world performance. Always track production metrics.
+
+```typescript
+// ❌ WRONG - Only checking Lighthouse scores
+// "Lighthouse says 95, ship it!"
+
+// ✅ CORRECT - Track real user metrics
+import { onLCP, onFID, onCLS } from 'web-vitals';
+onLCP(sendToAnalytics);
+onFID(sendToAnalytics);
+onCLS(sendToAnalytics);
+```
+
+</anti_patterns>
 
 ---
 

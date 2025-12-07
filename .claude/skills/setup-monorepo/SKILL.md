@@ -31,6 +31,14 @@
 - Enabling remote caching for team/CI cache sharing
 - Synchronizing dependency versions across workspace packages
 
+**When NOT to use:**
+
+- Single application projects (use standard build tools directly)
+- Projects without shared packages (no monorepo benefits)
+- Very small projects where setup overhead exceeds caching benefits
+- Polyrepo architecture is preferred over monorepo
+- Projects already using Nx or Lerna (don't mix monorepo tools)
+
 **Key patterns covered:**
 
 - Turborepo 2.4.2 task pipeline (dependsOn, outputs, inputs, cache)
@@ -645,6 +653,90 @@ New code to write?
 - `--filter=...[HEAD^]` syntax requires fetch-depth: 2 in GitHub Actions checkout
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Missing dependsOn for Build Tasks
+
+```json
+// ❌ ANTI-PATTERN: No dependency ordering
+{
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**"]
+      // Missing dependsOn: ["^build"]
+    }
+  }
+}
+```
+
+**Why it's wrong:** Dependencies may not build first causing build failures, topological ordering broken.
+
+**What to do instead:** Always use `dependsOn: ["^build"]` for build tasks.
+
+---
+
+### Hardcoded Package Versions
+
+```json
+// ❌ ANTI-PATTERN: Hardcoded versions for workspace packages
+{
+  "dependencies": {
+    "@repo/ui": "1.0.0",
+    "@repo/types": "^2.1.0"
+  }
+}
+```
+
+**Why it's wrong:** Breaks local package linking (installs from npm instead), version mismatches cause duplicate dependencies.
+
+**What to do instead:** Use workspace protocol: `"@repo/ui": "workspace:*"`
+
+---
+
+### Missing Environment Variable Declarations
+
+```json
+// ❌ ANTI-PATTERN: Env vars not declared
+{
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**"]
+      // Missing env array - DATABASE_URL changes won't invalidate cache
+    }
+  }
+}
+```
+
+**Why it's wrong:** Environment variable changes don't invalidate cache, stale builds with wrong config get reused.
+
+**What to do instead:** Declare all env vars in the `env` array.
+
+---
+
+### Caching Side-Effect Tasks
+
+```json
+// ❌ ANTI-PATTERN: Dev server gets cached
+{
+  "tasks": {
+    "dev": {
+      "persistent": true
+      // Missing cache: false
+    }
+  }
+}
+```
+
+**Why it's wrong:** Dev servers and code generation should not be cached, causes incorrect cached outputs to be reused.
+
+**What to do instead:** Set `cache: false` for dev servers and code generation tasks.
+
+</anti_patterns>
 
 ---
 

@@ -931,6 +931,14 @@ All code must follow established patterns and conventions:
 - Setting up MSW for integration tests (current codebase approach)
 - Organizing tests in feature-based structure (co-located tests)
 
+**When NOT to use:**
+
+- Unit testing React components (use E2E tests instead)
+- Unit testing hooks with side effects (use E2E tests or integration tests)
+- Testing third-party library behavior (library already has tests)
+- Testing TypeScript compile-time guarantees (TypeScript already enforces)
+- Creating stories for app-specific features (stories are for design system only)
+
 **Key patterns covered:**
 
 - E2E tests for user workflows (primary - inverted testing pyramid)
@@ -1917,6 +1925,83 @@ Component documentation decision:
 
 ---
 
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Unit Testing React Components
+
+```typescript
+// ❌ ANTI-PATTERN: Unit testing component rendering
+import { render, screen } from "@testing-library/react";
+import { Button } from "./button";
+
+test("renders button with text", () => {
+  render(<Button>Click me</Button>);
+  expect(screen.getByText("Click me")).toBeInTheDocument();
+});
+```
+
+**Why it's wrong:** E2E tests provide more value by testing real user interaction, unit tests for components break easily on refactoring, doesn't test real integration with the rest of the app.
+
+**What to do instead:** Write E2E tests that verify user workflows involving the component.
+
+---
+
+### Module-Level Mocking
+
+```typescript
+// ❌ ANTI-PATTERN: Mocking at module level
+import { vi } from "vitest";
+vi.mock("../api", () => ({
+  getFeatures: vi.fn().mockResolvedValue({ features: [] }),
+}));
+```
+
+**Why it's wrong:** Module mocks break when import structure changes, defeats purpose of integration testing, doesn't test network layer or serialization.
+
+**What to do instead:** Use MSW to mock at network level.
+
+---
+
+### Testing Implementation Details
+
+```typescript
+// ❌ ANTI-PATTERN: Testing internal state
+test("counter state increments", () => {
+  const { result } = renderHook(() => useCounter());
+  expect(result.current.count).toBe(1);
+});
+```
+
+**Why it's wrong:** Testing internal state breaks when refactoring, not testing what users see, fragile and coupled to implementation.
+
+**What to do instead:** Test observable user behavior through E2E or integration tests.
+
+---
+
+### Only Happy Path Testing
+
+```typescript
+// ❌ ANTI-PATTERN: No error state testing
+test("user can login", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/password/i).fill("password123");
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await expect(page).toHaveURL("/dashboard");
+  // Missing: validation errors, invalid credentials, network errors
+});
+```
+
+**Why it's wrong:** Users will encounter errors but the app's error handling has no test coverage, production bugs in error states will go undetected.
+
+**What to do instead:** Test error states alongside happy paths - validation, authentication failure, network issues.
+
+</anti_patterns>
+
+---
+
 <critical_reminders>
 
 ## ⚠️ CRITICAL REMINDERS
@@ -1983,6 +2068,13 @@ Component documentation decision:
 - Sharing mocks between browser (dev) and Node (tests)
 - Testing different API scenarios (success, empty, error)
 - Simulating network latency and error conditions
+
+**When NOT to use:**
+
+- Integration tests that need real backend validation (use test database instead)
+- Production builds (MSW should never ship to production)
+- Simple unit tests of pure functions (no network calls to mock)
+- When you need to test actual network failure modes (use test containers)
 
 **Key patterns covered:**
 
@@ -2606,6 +2698,81 @@ export default defineConfig({
 - Dynamic imports in Next.js are required for browser-only code to avoid SSR bundling issues
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Wrong MSW API for Environment
+
+```typescript
+// ❌ ANTI-PATTERN: setupServer in browser
+import { setupServer } from "msw/node";
+export const browserWorker = setupServer(...handlers);
+
+// ❌ ANTI-PATTERN: setupWorker in Node tests
+import { setupWorker } from "msw/browser";
+export const serverWorker = setupWorker(...handlers);
+```
+
+**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs - wrong API causes cryptic runtime errors.
+
+**What to do instead:** Use `setupWorker` from `msw/browser` for browser, `setupServer` from `msw/node` for tests.
+
+---
+
+### Missing Handler Reset Between Tests
+
+```typescript
+// ❌ ANTI-PATTERN: No resetHandlers
+import { afterAll, beforeAll } from "vitest";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+beforeAll(() => serverWorker.listen());
+afterAll(() => serverWorker.close());
+// Missing: afterEach(() => serverWorker.resetHandlers());
+```
+
+**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent.
+
+**What to do instead:** Always include `afterEach(() => serverWorker.resetHandlers())`.
+
+---
+
+### Mock Data Embedded in Handlers
+
+```typescript
+// ❌ ANTI-PATTERN: Data inside handler
+export const getFeaturesHandler = http.get("api/v1/features", () => {
+  return HttpResponse.json({
+    features: [{ id: "1", name: "Dark mode" }],
+  });
+});
+```
+
+**Why it's wrong:** Mock data cannot be reused in other tests or handlers, no type checking against API schema.
+
+**What to do instead:** Separate mock data into `mocks/` directory with proper types from `@repo/api/types`.
+
+---
+
+### Rendering Before MSW Ready
+
+```typescript
+// ❌ ANTI-PATTERN: Missing await
+if (import.meta.env.DEV) {
+  browserWorker.start({ onUnhandledRequest: "bypass" }); // No await!
+}
+createRoot(document.getElementById("root")!).render(<App />);
+```
+
+**Why it's wrong:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably.
+
+**What to do instead:** Await worker start before rendering: `await browserWorker.start(...)`.
+
+</anti_patterns>
 
 ---
 

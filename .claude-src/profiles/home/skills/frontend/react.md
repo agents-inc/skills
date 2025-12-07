@@ -41,6 +41,12 @@
 - Custom hooks for common patterns
 - Error boundaries with retry
 
+**When NOT to use:**
+
+- Simple one-off components without variants (skip cva, use SCSS Modules only)
+- Components that don't need refs (skip forwardRef)
+- Static content without interactivity (consider static HTML)
+
 ---
 
 <philosophy>
@@ -48,19 +54,6 @@
 ## Philosophy
 
 React components follow a tiered architecture from low-level primitives to high-level templates. Components should be composable, type-safe, and expose necessary customization points (`className`, refs). Use `cva` only when components have multiple variants to avoid over-engineering.
-
-**When to use React patterns:**
-
-- Building reusable UI components
-- Creating type-safe component variants with cva
-- Need ref forwarding for DOM manipulation or focus management
-- Implementing polymorphic components with asChild pattern
-
-**When NOT to use React patterns:**
-
-- Simple one-off components without variants (skip cva, use SCSS Modules only)
-- Components that don't need refs (skip forwardRef)
-- Static content without interactivity (consider static HTML)
 
 </philosophy>
 
@@ -1034,6 +1027,83 @@ Is this reusable logic?
 - SSR requires checking `typeof window !== "undefined"` before accessing browser APIs
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Missing forwardRef on Interactive Components
+
+Components that expose DOM elements MUST use forwardRef. Without it, parent components cannot manage focus, trigger animations, or integrate with form libraries like react-hook-form.
+
+```typescript
+// ❌ WRONG - Parent cannot access input ref
+export const Input = ({ ...props }) => <input {...props} />;
+
+// ✅ CORRECT - Parent can forward refs
+export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => (
+  <input ref={ref} {...props} />
+));
+Input.displayName = "Input";
+```
+
+### ❌ Default Exports in Component Libraries
+
+Default exports prevent tree-shaking and violate project conventions. They also make imports inconsistent across the codebase.
+
+```typescript
+// ❌ WRONG - Default export
+export default function Button() { ... }
+
+// ✅ CORRECT - Named export
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(...);
+```
+
+### ❌ Magic Numbers Without Named Constants
+
+All numeric values must be named constants. Magic numbers are unmaintainable, undocumented, and error-prone.
+
+```typescript
+// ❌ WRONG - Magic number
+setTimeout(() => {}, 300);
+
+// ✅ CORRECT - Named constant
+const DEBOUNCE_DELAY_MS = 300;
+setTimeout(() => {}, DEBOUNCE_DELAY_MS);
+```
+
+### ❌ Missing className Prop on Reusable Components
+
+All reusable components must expose a className prop. Without it, consumers cannot apply custom styles or override defaults.
+
+```typescript
+// ❌ WRONG - No className prop
+export const Card = ({ children }) => (
+  <div className={styles.card}>{children}</div>
+);
+
+// ✅ CORRECT - className prop merged
+export const Card = ({ children, className }) => (
+  <div className={clsx(styles.card, className)}>{children}</div>
+);
+```
+
+### ❌ Using cva for Components Without Variants
+
+cva adds unnecessary complexity for simple components. Only use when you have 2+ variant dimensions.
+
+```typescript
+// ❌ WRONG - cva for single-style component
+const cardStyles = cva("card", { variants: {} });
+
+// ✅ CORRECT - SCSS Modules only
+import styles from "./card.module.scss";
+<div className={styles.card}>...</div>
+```
+
+</anti_patterns>
 
 ---
 

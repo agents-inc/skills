@@ -36,6 +36,13 @@
 - Setting up automated secrets rotation
 - Monitoring CI/CD performance and reliability
 
+**When NOT to use:**
+
+- Single-package projects (simpler CI tools like GitHub Actions without Turborepo may suffice)
+- No monorepo architecture (standard CI pipelines without affected detection)
+- Real-time deployment requirements (use feature flags + trunk-based development instead)
+- Simple static sites with no build step (direct hosting without CI/CD)
+
 **Key patterns covered:**
 
 - GitHub Actions with Bun 1.2.2 and Turborepo caching
@@ -1506,6 +1513,82 @@ CI/CD pipelines integrate with multiple parts of the stack:
 - **Environment secrets override repository secrets** with same name (can cause confusion)
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Running Full Test Suite on PRs
+
+```yaml
+# ❌ ANTI-PATTERN: Full test suite on every PR
+jobs:
+  test:
+    steps:
+      - run: bunx turbo run test  # Runs ALL tests
+```
+
+**Why it's wrong:** PRs should get fast feedback (< 5 min), full test suite takes 10+ minutes, wastes CI resources on unchanged code.
+
+**What to do instead:** Use affected detection: `bunx turbo run test --filter=...[origin/main]`
+
+---
+
+### No Caching Strategy
+
+```yaml
+# ❌ ANTI-PATTERN: No caching
+jobs:
+  test:
+    steps:
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install  # Reinstalls every time
+      - run: bun run test
+```
+
+**Why it's wrong:** Reinstalling dependencies wastes 2-3 minutes per run, rebuilding unchanged packages wastes 60-70% of CI time.
+
+**What to do instead:** Cache `~/.bun/install/cache/` and `.turbo/` directories, use Vercel remote cache.
+
+---
+
+### Static Cloud Credentials
+
+```yaml
+# ❌ ANTI-PATTERN: Static AWS credentials
+jobs:
+  deploy:
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+```
+
+**Why it's wrong:** Static credentials never expire creating permanent security risk, no audit trail linking to specific commit.
+
+**What to do instead:** Use OIDC authentication with `role-to-assume` and `id-token: write` permission.
+
+---
+
+### Magic Numbers in Workflows
+
+```yaml
+# ❌ ANTI-PATTERN: Magic numbers everywhere
+jobs:
+  test:
+    timeout-minutes: 15  # Why 15?
+    steps:
+      - run: bun run test -- --coverage --coverageThreshold='{"global":{"statements":80}}'
+```
+
+**Why it's wrong:** Magic numbers scattered across workflows, impossible to tune centrally, no documentation of intent.
+
+**What to do instead:** Define constants in `ci-config.ts` and reference them in workflows.
+
+</anti_patterns>
 
 ---
 

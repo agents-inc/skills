@@ -1685,6 +1685,14 @@ All code must follow established patterns and conventions:
 - Enabling remote caching for team/CI cache sharing
 - Synchronizing dependency versions across workspace packages
 
+**When NOT to use:**
+
+- Single application projects (use standard build tools directly)
+- Projects without shared packages (no monorepo benefits)
+- Very small projects where setup overhead exceeds caching benefits
+- Polyrepo architecture is preferred over monorepo
+- Projects already using Nx or Lerna (don't mix monorepo tools)
+
 **Key patterns covered:**
 
 - Turborepo 2.4.2 task pipeline (dependsOn, outputs, inputs, cache)
@@ -2302,6 +2310,90 @@ New code to write?
 
 ---
 
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Missing dependsOn for Build Tasks
+
+```json
+// ❌ ANTI-PATTERN: No dependency ordering
+{
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**"]
+      // Missing dependsOn: ["^build"]
+    }
+  }
+}
+```
+
+**Why it's wrong:** Dependencies may not build first causing build failures, topological ordering broken.
+
+**What to do instead:** Always use `dependsOn: ["^build"]` for build tasks.
+
+---
+
+### Hardcoded Package Versions
+
+```json
+// ❌ ANTI-PATTERN: Hardcoded versions for workspace packages
+{
+  "dependencies": {
+    "@repo/ui": "1.0.0",
+    "@repo/types": "^2.1.0"
+  }
+}
+```
+
+**Why it's wrong:** Breaks local package linking (installs from npm instead), version mismatches cause duplicate dependencies.
+
+**What to do instead:** Use workspace protocol: `"@repo/ui": "workspace:*"`
+
+---
+
+### Missing Environment Variable Declarations
+
+```json
+// ❌ ANTI-PATTERN: Env vars not declared
+{
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**"]
+      // Missing env array - DATABASE_URL changes won't invalidate cache
+    }
+  }
+}
+```
+
+**Why it's wrong:** Environment variable changes don't invalidate cache, stale builds with wrong config get reused.
+
+**What to do instead:** Declare all env vars in the `env` array.
+
+---
+
+### Caching Side-Effect Tasks
+
+```json
+// ❌ ANTI-PATTERN: Dev server gets cached
+{
+  "tasks": {
+    "dev": {
+      "persistent": true
+      // Missing cache: false
+    }
+  }
+}
+```
+
+**Why it's wrong:** Dev servers and code generation should not be cached, causes incorrect cached outputs to be reused.
+
+**What to do instead:** Set `cache: false` for dev servers and code generation tasks.
+
+</anti_patterns>
+
+---
+
 <critical_reminders>
 
 ## ⚠️ CRITICAL REMINDERS
@@ -2374,6 +2466,13 @@ New code to write?
 - Configuring package.json exports for tree-shaking
 - Setting up shared configuration packages (@repo/eslint-config, @repo/typescript-config)
 - Understanding import/export conventions
+
+**When NOT to use:**
+
+- For app-specific code that won't be shared (keep in app directory)
+- When a single file would suffice (don't over-abstract)
+- For external dependencies (use npm packages instead)
+- When the overhead of package management exceeds benefits
 
 **Key patterns covered:**
 
@@ -2796,6 +2895,78 @@ Importing from packages?
 - Package.json `exports` field is strict - missing exports cannot be imported
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Default Exports in Library Packages
+
+```typescript
+// ❌ ANTI-PATTERN: Default export
+// packages/ui/src/components/button/button.tsx
+export default Button;
+```
+
+**Why it's wrong:** Breaks tree-shaking, naming conflicts across packages, inconsistent imports.
+
+**What to do instead:** Use named exports: `export { Button }`
+
+---
+
+### Missing exports Field
+
+```json
+// ❌ ANTI-PATTERN: No exports field
+{
+  "name": "@repo/ui",
+  "main": "./src/index.ts"
+}
+```
+
+**Why it's wrong:** Allows importing internal paths (`@repo/ui/src/internal/utils`), breaks encapsulation.
+
+**What to do instead:** Define explicit exports for each public API path.
+
+---
+
+### Hardcoded Internal Package Versions
+
+```json
+// ❌ ANTI-PATTERN: Hardcoded versions
+{
+  "dependencies": {
+    "@repo/ui": "^1.0.0",
+    "@repo/types": "1.2.3"
+  }
+}
+```
+
+**Why it's wrong:** Creates version conflicts when local package changes, may install from npm instead of using local.
+
+**What to do instead:** Use workspace protocol: `"@repo/ui": "workspace:*"`
+
+---
+
+### React in Dependencies (Not peerDependencies)
+
+```json
+// ❌ ANTI-PATTERN: React as dependency
+{
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
+```
+
+**Why it's wrong:** Causes React version duplication, "hooks can only be called inside body of function component" errors.
+
+**What to do instead:** Mark React as peerDependencies in component packages.
+
+</anti_patterns>
 
 ---
 

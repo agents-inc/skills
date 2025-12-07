@@ -22,11 +22,9 @@
 
 ---
 
-<philosophy>
+**Auto-detection:** Accessibility (a11y), WCAG compliance, ARIA patterns, keyboard navigation, screen reader support, Radix UI, focus management
 
-## When to Use This Skill
-
-**Use this skill when:**
+**When to use:**
 
 - Implementing keyboard navigation and focus management
 - Using Radix UI for accessible component patterns (built-in a11y)
@@ -35,7 +33,7 @@
 - Building interactive components (buttons, forms, modals, tables)
 - Adding dynamic content updates (live regions, status messages)
 
-**Do NOT use this skill when:**
+**When NOT to use:**
 
 - Working on backend/API code with no UI
 - Writing build scripts or configuration files
@@ -51,11 +49,21 @@
 - WCAG AA compliance minimum (contrast ratios, semantic HTML, touch targets 44×44px)
 - Screen reader support (role-based queries, hidden content, live regions)
 
-</philosophy>
-
 ---
 
-**Auto-detection:** Accessibility (a11y), WCAG compliance, ARIA patterns, keyboard navigation, screen reader support, Radix UI, focus management
+<philosophy>
+
+## Philosophy
+
+Accessibility ensures digital products are usable by everyone, including users with disabilities. This skill applies the principle that **accessibility is a requirement, not a feature** - it should be built in from the start, not retrofitted.
+
+Key philosophy:
+- **Semantic HTML first** - Use native elements for built-in accessibility
+- **Radix UI for complex patterns** - Leverage tested, accessible component primitives
+- **Progressive enhancement** - Start with keyboard, add mouse interactions on top
+- **WCAG as baseline** - Meet AA minimum, aim for AAA where feasible
+
+</philosophy>
 
 ---
 
@@ -1477,6 +1485,84 @@ lhci autorun
 - **`role="button"` on `<div>` doesn't add keyboard support** - Still need to handle Enter/Space keys manually
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Removing Focus Outlines
+
+Never remove focus outlines (`outline: none`) without providing a visible replacement. This makes the site unusable for keyboard users and violates WCAG 2.4.7.
+
+```css
+/* ❌ WRONG - Removes focus visibility */
+button:focus {
+  outline: none;
+}
+
+/* ✅ CORRECT - Custom focus indicator */
+button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+```
+
+### ❌ Using Divs for Buttons
+
+Using `<div onclick>` instead of `<button>` removes semantic meaning, keyboard support, and screen reader identification.
+
+```tsx
+// ❌ WRONG - No keyboard support, no semantics
+<div onClick={handleClick}>Click me</div>
+
+// ✅ CORRECT - Native button with all a11y built-in
+<button onClick={handleClick}>Click me</button>
+```
+
+### ❌ Color-Only Information
+
+Never convey information using color alone. Color-blind users cannot distinguish between success/error states.
+
+```tsx
+// ❌ WRONG - Color only
+<span className={isError ? "text-red" : "text-green"}>Status</span>
+
+// ✅ CORRECT - Color + icon
+<span className={isError ? "text-red" : "text-green"}>
+  {isError ? <XIcon /> : <CheckIcon />} Status
+</span>
+```
+
+### ❌ Placeholder as Label
+
+Placeholders disappear on input and are not reliably announced by screen readers.
+
+```tsx
+// ❌ WRONG - No visible label
+<input placeholder="Email" />
+
+// ✅ CORRECT - Visible label
+<label htmlFor="email">Email</label>
+<input id="email" placeholder="user@example.com" />
+```
+
+### ❌ Manual ARIA Instead of Radix UI
+
+Don't manually implement complex ARIA patterns when Radix UI provides tested, accessible alternatives.
+
+```tsx
+// ❌ WRONG - Manual ARIA implementation
+<div role="dialog" aria-modal="true" aria-labelledby="title">...</div>
+
+// ✅ CORRECT - Radix handles ARIA automatically
+<Dialog.Root>
+  <Dialog.Content>...</Dialog.Content>
+</Dialog.Root>
+```
+
+</anti_patterns>
 
 ---
 

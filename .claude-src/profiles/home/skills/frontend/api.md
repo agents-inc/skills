@@ -30,6 +30,13 @@
 - Using generated React Query query options (getFeaturesOptions pattern)
 - Troubleshooting API type generation or regeneration
 
+**When NOT to use:**
+
+- No OpenAPI spec available (consider writing one or using tRPC)
+- GraphQL API (use Apollo or urql instead)
+- Real-time WebSocket APIs (use socket.io or similar)
+- Simple REST APIs where manual fetch calls suffice
+
 **Key patterns covered:**
 
 - OpenAPI-first development with hey-api (@hey-api/openapi-ts)
@@ -44,19 +51,11 @@
 
 OpenAPI-first development ensures a single source of truth for your API contract. The hey-api code generator (@hey-api/openapi-ts) transforms your OpenAPI schema into fully typed client code, React Query hooks, and query options—eliminating manual type definitions and reducing bugs.
 
-**When to use this approach:**
-
-- Backend provides OpenAPI/Swagger specification
-- Need type-safe API client with automatic React Query integration
-- Want centralized API mocking for development and testing
-- Require consistent patterns across all API calls
-
-**When NOT to use:**
-
-- No OpenAPI spec available (consider writing one or using tRPC)
-- GraphQL API (use Apollo or urql instead)
-- Real-time WebSocket APIs (use socket.io or similar)
-- Simple REST APIs where manual fetch calls suffice
+This approach prioritizes:
+- **Single source of truth**: OpenAPI schema drives types, client code, and mocks
+- **Zero manual typing**: Generated code eliminates type drift
+- **Consistent patterns**: All API calls use the same generated query options
+- **Centralized configuration**: One place to configure client behavior
 
 </philosophy>
 
@@ -1201,6 +1200,73 @@ How to handle errors?
 - **Redux for server state**: React Query handles server state, use Zustand for client state only
 
 </integration>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Manual Type Definitions
+
+Do not write manual TypeScript interfaces for API responses. They drift from the backend schema and cause runtime errors.
+
+```typescript
+// ❌ WRONG - Manual types drift from backend
+interface Feature {
+  id: string;
+  name: string;
+  // Missing fields = runtime errors
+}
+
+// ✅ CORRECT - Use generated types
+import type { Feature } from "@repo/api";
+```
+
+### ❌ Custom React Query Hooks
+
+Do not write custom useQuery wrappers for API calls. Use generated query options from hey-api.
+
+```typescript
+// ❌ WRONG - Custom hook duplicates generated code
+function useFeatures() {
+  return useQuery({
+    queryKey: ["features"],
+    queryFn: () => fetch("/api/v1/features"),
+  });
+}
+
+// ✅ CORRECT - Use generated query options
+import { getFeaturesOptions } from "@repo/api";
+const { data } = useQuery(getFeaturesOptions());
+```
+
+### ❌ Hardcoded API URLs
+
+Do not hardcode API URLs. Use environment variables.
+
+```typescript
+// ❌ WRONG - Hardcoded URL
+client.setConfig({ baseUrl: "http://localhost:3000" });
+
+// ✅ CORRECT - Environment variable
+client.setConfig({ baseUrl: process.env.NEXT_PUBLIC_API_URL });
+```
+
+### ❌ Magic Numbers for Timeouts
+
+Do not use raw numbers for timeouts, retries, or intervals. Use named constants.
+
+```typescript
+// ❌ WRONG - Magic number
+staleTime: 300000,
+
+// ✅ CORRECT - Named constant
+const STALE_TIME_MS = 5 * 60 * 1000; // 5 minutes
+staleTime: STALE_TIME_MS,
+```
+
+</anti_patterns>
 
 ---
 

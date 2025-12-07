@@ -33,6 +33,13 @@
 - Setting up pre-commit hooks with lint-staged
 - Configuring commit message validation (commitlint)
 
+**When NOT to use:**
+
+- Runtime code (this is build-time tooling only)
+- CI/CD pipelines (see backend/ci-cd skill instead)
+- Production deployment configuration
+- Server-side build processes (e.g., Docker builds)
+
 **Key patterns covered:**
 
 - ESLint 9 flat config with only-warn plugin (errors become warnings for better DX)
@@ -664,6 +671,80 @@ Setting up linting/formatting?
 - Biome is not a drop-in replacement for ESLint - some plugins don't exist yet
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Legacy .eslintrc Format
+
+```javascript
+// ❌ ANTI-PATTERN: Legacy .eslintrc.json
+{
+  "extends": ["eslint:recommended", "prettier"],
+  "plugins": ["@typescript-eslint"],
+  "rules": {}
+}
+```
+
+**Why it's wrong:** Legacy .eslintrc format is being phased out in ESLint 9+, harder to compose and extend.
+
+**What to do instead:** Use ESLint 9 flat config with `export default [...]` array syntax.
+
+---
+
+### Missing only-warn Plugin
+
+```javascript
+// ❌ ANTI-PATTERN: Errors block developers
+export default [
+  js.configs.recommended,
+  // Missing only-warn plugin
+  // ESLint errors block development
+];
+```
+
+**Why it's wrong:** Error severity blocks developers during active development, reducing productivity.
+
+**What to do instead:** Include eslint-plugin-only-warn to convert errors to warnings.
+
+---
+
+### Disabled TypeScript Strict Mode
+
+```json
+// ❌ ANTI-PATTERN: Loose TypeScript config
+{
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false
+  }
+}
+```
+
+**Why it's wrong:** Allows implicit any types leading to runtime errors, no null checks cause crashes.
+
+**What to do instead:** Enable TypeScript strict mode in ALL tsconfig.json files.
+
+---
+
+### Duplicated Configs Per Package
+
+```
+// ❌ ANTI-PATTERN: Different configs per package
+apps/client-react/.prettierrc → printWidth: 80
+apps/client-next/.prettierrc → printWidth: 120
+packages/ui/.eslintrc → different rules
+```
+
+**Why it's wrong:** Inconsistent formatting across monorepo, code reviews show formatting noise.
+
+**What to do instead:** Use shared config packages (@repo/eslint-config, @repo/prettier-config).
+
+</anti_patterns>
 
 ---
 

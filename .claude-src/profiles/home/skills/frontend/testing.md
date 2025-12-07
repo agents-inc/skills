@@ -33,6 +33,14 @@
 - Setting up MSW for integration tests (current codebase approach)
 - Organizing tests in feature-based structure (co-located tests)
 
+**When NOT to use:**
+
+- Unit testing React components (use E2E tests instead)
+- Unit testing hooks with side effects (use E2E tests or integration tests)
+- Testing third-party library behavior (library already has tests)
+- Testing TypeScript compile-time guarantees (TypeScript already enforces)
+- Creating stories for app-specific features (stories are for design system only)
+
 **Key patterns covered:**
 
 - E2E tests for user workflows (primary - inverted testing pyramid)
@@ -1016,6 +1024,83 @@ Component documentation decision:
 - Test files named `*.test.ts` run with Vitest, `*.spec.ts` run with Playwright - mixing these up causes wrong test runner to execute tests
 
 </red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Unit Testing React Components
+
+```typescript
+// ❌ ANTI-PATTERN: Unit testing component rendering
+import { render, screen } from "@testing-library/react";
+import { Button } from "./button";
+
+test("renders button with text", () => {
+  render(<Button>Click me</Button>);
+  expect(screen.getByText("Click me")).toBeInTheDocument();
+});
+```
+
+**Why it's wrong:** E2E tests provide more value by testing real user interaction, unit tests for components break easily on refactoring, doesn't test real integration with the rest of the app.
+
+**What to do instead:** Write E2E tests that verify user workflows involving the component.
+
+---
+
+### Module-Level Mocking
+
+```typescript
+// ❌ ANTI-PATTERN: Mocking at module level
+import { vi } from "vitest";
+vi.mock("../api", () => ({
+  getFeatures: vi.fn().mockResolvedValue({ features: [] }),
+}));
+```
+
+**Why it's wrong:** Module mocks break when import structure changes, defeats purpose of integration testing, doesn't test network layer or serialization.
+
+**What to do instead:** Use MSW to mock at network level.
+
+---
+
+### Testing Implementation Details
+
+```typescript
+// ❌ ANTI-PATTERN: Testing internal state
+test("counter state increments", () => {
+  const { result } = renderHook(() => useCounter());
+  expect(result.current.count).toBe(1);
+});
+```
+
+**Why it's wrong:** Testing internal state breaks when refactoring, not testing what users see, fragile and coupled to implementation.
+
+**What to do instead:** Test observable user behavior through E2E or integration tests.
+
+---
+
+### Only Happy Path Testing
+
+```typescript
+// ❌ ANTI-PATTERN: No error state testing
+test("user can login", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/password/i).fill("password123");
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await expect(page).toHaveURL("/dashboard");
+  // Missing: validation errors, invalid credentials, network errors
+});
+```
+
+**Why it's wrong:** Users will encounter errors but the app's error handling has no test coverage, production bugs in error states will go undetected.
+
+**What to do instead:** Test error states alongside happy paths - validation, authentication failure, network issues.
+
+</anti_patterns>
 
 ---
 
