@@ -1,0 +1,79 @@
+# Profile metadata
+name: home
+description: Personal projects (SCSS/cva, Zustand, React Query)
+
+# Profile-specific CLAUDE.md
+claude_md: ./CLAUDE.md
+
+# Which core prompts to include for each agent type
+# These appear at the BEGINNING of the agent (before workflow)
+core_prompt_sets:
+  developer:
+    - core-principles
+    - investigation-requirement
+    - write-verification
+    - anti-over-engineering
+  reviewer:
+    - core-principles
+    - investigation-requirement
+  pm:
+    - core-principles
+    - investigation-requirement
+
+# Which prompts appear at the END of the agent (after skills/examples)
+# These are typically shared across all agent types
+ending_prompt_sets:
+  developer:
+    - context-management
+    - improvement-protocol
+  reviewer:
+    - context-management
+    - improvement-protocol
+  pm:
+    - context-management
+    - improvement-protocol
+
+# Agent configurations
+agents:
+  frontend-developer:
+    name: frontend-developer
+    title: Frontend Developer Agent
+    description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer          # References core_prompt_sets (beginning)
+    ending_prompts: developer         # References ending_prompt_sets (end)
+    output_format: output-formats-developer
+    skills:
+      precompiled:
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: Component architecture, hooks, patterns
+        - id: frontend/styling
+          path: skills/frontend/styling.md
+          name: Styling
+          description: SCSS Modules, cva, design tokens
+      dynamic:
+        - id: frontend/api
+          path: skills/frontend/api.md
+          name: API Integration
+          description: REST APIs, React Query, data fetching
+        - id: frontend/client-state
+          path: skills/frontend/client-state.md
+          name: Client State
+          description: Zustand stores, React Query integration
+        - id: frontend/accessibility
+          path: skills/frontend/accessibility.md
+          name: Accessibility
+          description: WCAG, ARIA, keyboard navigation
+        - id: frontend/performance
+          path: skills/frontend/performance.md
+          name: Performance
+          description: Bundle optimization, render performance

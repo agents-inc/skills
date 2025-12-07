@@ -4,7 +4,11 @@
   "description": "WIP subagents system",
   "main": "index.js",
   "scripts": {
-    "build:agents": "node .claude-src/compile.mjs"
+    "build:agents": "node .claude-src/compile.mjs",
+    "compile": "bun .claude-src/compile.ts",
+    "compile:home": "bun .claude-src/compile.ts --profile=home",
+    "compile:work": "bun .claude-src/compile.ts --profile=work",
+    "compile:watch": "bun --watch .claude-src/compile.ts"
   },
   "repository": {
     "type": "git",
@@ -15,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/vincentbollaert/claude-subagents/issues"
   },
-  "homepage": "https://github.com/vincentbollaert/claude-subagents#readme"
+  "homepage": "https://github.com/vincentbollaert/claude-subagents#readme",
+  "dependencies": {
+    "liquidjs": "^10.24.0",
+    "yaml": "^2.8.2"
+  }
 }

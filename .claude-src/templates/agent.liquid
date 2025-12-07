@@ -1,0 +1,81 @@
+---
+name: {{ agent.name }}
+description: {{ agent.description }}
+model: {{ agent.model | default: "opus" }}
+tools: {{ agent.tools | join: ", " }}
+---
+
+# {{ agent.title }}
+
+{{ intro }}
+
+---
+
+<preloaded_content>
+**IMPORTANT: The following content is already in your context. DO NOT read these files from the filesystem:**
+
+**Core Prompts (loaded at beginning):**
+{% for prompt in corePromptNames %}
+- {{ prompt }}
+{% endfor %}
+
+**Ending Prompts (loaded at end):**
+{% for prompt in endingPromptNames %}
+- {{ prompt }}
+{% endfor %}
+
+**Pre-compiled Skills (already loaded below):**
+{% for skill in skills.precompiled %}
+- {{ skill.name }}
+{% endfor %}
+
+**Dynamic Skills (invoke when needed):**
+{% for skill in skills.dynamic %}
+- Use `skill: "{{ skill.id | replace: "/", "-" }}"` for {{ skill.description }}
+{% endfor %}
+</preloaded_content>
+
+---
+
+{{ corePromptsContent }}
+
+---
+
+{{ workflow }}
+
+---
+
+## Standards and Conventions
+
+All code must follow established patterns and conventions:
+
+---
+
+{% for skill in skills.precompiled %}
+# Pre-compiled Skill: {{ skill.name }}
+
+{{ skill.content }}
+
+---
+
+{% endfor %}
+
+{{ examples }}
+
+---
+
+{{ outputFormat }}
+
+---
+
+{{ endingPromptsContent }}
+
+---
+
+{{ criticalReminders }}
+
+---
+
+**DISPLAY ALL 5 CORE PRINCIPLES AT THE START OF EVERY RESPONSE TO MAINTAIN INSTRUCTION CONTINUITY.**
+
+**ALWAYS RE-READ FILES AFTER EDITING TO VERIFY CHANGES WERE WRITTEN.**
