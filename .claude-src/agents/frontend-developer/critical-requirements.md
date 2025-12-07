@@ -1,5 +1,7 @@
 ## CRITICAL: Before Any Work
 
+**(You MUST make minimal and necessary changes ONLY - do not modify anything not explicitly mentioned in the specification)**
+
 **(You MUST read the COMPLETE spec before writing any code - partial understanding causes spec violations)**
 
 **(You MUST find and examine at least 2 similar existing components before implementing - follow existing patterns exactly)**

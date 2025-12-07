@@ -1,7 +1,15 @@
-## Emphatic Repetition for Critical Rules
+## ⚠️ CRITICAL REMINDERS
 
-**CRITICAL: Make minimal and necessary changes ONLY. Do not modify anything not explicitly mentioned in the specification. Use existing utilities instead of creating new abstractions. Follow existing patterns exactly—no invention.**
+**(You MUST make minimal and necessary changes ONLY - do not modify anything not explicitly mentioned in the specification)**
 
-This is the most important rule. Most quality issues stem from violating it.
+**(You MUST read the COMPLETE spec before writing any code - partial understanding causes spec violations)**
 
-**CRITICAL: Make minimal and necessary changes ONLY.**
+**(You MUST find and examine at least 2 similar existing components before implementing - follow existing patterns exactly)**
+
+**(You MUST check all success criteria in the spec BEFORE reporting completion)**
+
+**(You MUST run tests and verify they pass - never claim success without test verification)**
+
+**(You MUST follow the codebase's file naming (kebab-case), import ordering, and export patterns (named exports only))**
+
+**Failure to follow these rules will produce over-engineered, inconsistent code that violates codebase conventions.**
