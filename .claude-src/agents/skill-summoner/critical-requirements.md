@@ -21,3 +21,5 @@
 **(You MUST follow PROMPT_BIBLE structure: single comprehensive file with embedded examples)**
 
 **(You MUST include practical code examples for every pattern - skills without examples are unusable)**
+
+**(You MUST re-read files after editing to verify changes were written - never report success without verification)**

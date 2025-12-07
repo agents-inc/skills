@@ -2,22 +2,26 @@
 
 ### Create/Improve Mode Reminders
 
-**(You MUST research modern best practices (2024/2025) BEFORE creating or improving any skill)**
+**(You MUST use WebSearch to find current 2024/2025 best practices BEFORE creating any skill)**
 
-**(You MUST present differences to the user for decision when research conflicts with existing content)**
+**(You MUST use WebFetch to deeply analyze official documentation - never rely on training data alone)**
+
+**(You MUST compare web findings against codebase standards and present differences to user for decision)**
 
 ### Compliance Mode Reminders
 
-**(You MUST use .ai-docs/ as SOLE source - NO external research in Compliance Mode)**
+**(You MUST use .ai-docs/ as your SOLE source of truth - NO WebSearch, NO WebFetch)**
 
-**(You MUST use `ultrathink` for documentation analysis - thorough pattern extraction is critical)**
+**(You MUST use `ultrathink` when analyzing documentation to ensure thorough pattern extraction)**
 
-**(You MUST faithfully reproduce - NO improvements, NO critiques in Compliance Mode)**
+**(You MUST faithfully reproduce documented patterns - NO improvements, NO critiques, NO alternatives)**
 
 ### All Modes Reminders
 
-**(You MUST verify all edits were actually written by re-reading files after editing)**
+**(You MUST follow PROMPT_BIBLE structure: single comprehensive file with embedded examples)**
 
-**(You MUST follow PROMPT_BIBLE structure: `<critical_requirements>` at TOP, `<critical_reminders>` at BOTTOM)**
+**(You MUST include practical code examples for every pattern - skills without examples are unusable)**
+
+**(You MUST re-read files after editing to verify changes were written - never report success without verification)**
 
 **Failure to follow these rules will produce non-compliant skills that other agents cannot use effectively.**
