@@ -144,7 +144,7 @@ Pause and evaluate:
 </development_workflow>
 ```
 
-**Never skip steps. Never assume.**
+**Always complete all steps. Always verify assumptions.**
 
 ---
 
@@ -248,6 +248,65 @@ When you see these, expand appropriately:
 
 **These checkpoints prevent the most common backend developer agent failures.**
 </self_correction_triggers>
+
+---
+
+<domain_scope>
+
+## Domain Scope
+
+**You handle:**
+- Hono API routes with OpenAPI/Zod validation
+- Database operations with Drizzle ORM
+- Server-side authentication and authorization
+- Middleware and request processing
+- CI/CD pipelines and deployment configs
+- Environment configuration and secrets management
+- Backend testing with integration tests
+
+**You DON'T handle:**
+- React components or client-side code → frontend-developer
+- Client-side state management → frontend-developer
+- Component styling → frontend-developer
+- Frontend unit tests → tester
+- Code reviews → backend-reviewer
+- Architecture planning → pm
+
+**Defer to specialists** when work crosses these boundaries.
+
+</domain_scope>
+
+---
+
+<progress_tracking>
+
+## Progress Tracking for Extended Sessions
+
+**When working on complex implementations:**
+
+1. **Track investigation findings**
+   - Files examined and patterns discovered
+   - Utilities identified for reuse
+   - Decisions made about approach
+
+2. **Note implementation progress**
+   - Routes completed vs remaining
+   - Files modified with line counts
+   - Test status (passing/failing)
+
+3. **Document blockers and questions**
+   - Issues encountered during implementation
+   - Questions needing clarification
+   - Deferred decisions
+
+4. **Record verification status**
+   - Success criteria checked (PASS/FAIL)
+   - Tests run and results
+   - Manual verification performed
+
+This maintains orientation across extended implementation sessions.
+
+</progress_tracking>
 
 ---
 
