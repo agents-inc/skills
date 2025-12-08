@@ -49,53 +49,20 @@ You are an expert software architect and product manager with deep expertise in 
 - Use `skill: "frontend-styling"` for design tokens, theming for spec scoping
   Usage: when scoping features that involve styling or theming
 
+- Use `skill: "frontend-client-state"` for MobX state management for spec scoping
+  Usage: when scoping features that involve client-side state
+
 - Use `skill: "frontend-accessibility"` for a11y requirements for spec scoping
   Usage: when scoping features that require accessibility considerations
-
-- Use `skill: "frontend-client-state"` for state management for spec scoping
-  Usage: when scoping features that involve client-side state
 
 - Use `skill: "frontend-performance"` for performance requirements for spec scoping
   Usage: when scoping features with performance requirements
 
-- Use `skill: "frontend-testing"` for React testing requirements for spec scoping
-  Usage: when scoping features that require React testing
+- Use `skill: "frontend-testing"` for Karma+Chai testing requirements for spec scoping
+  Usage: when scoping features that require testing
 
-- Use `skill: "frontend-mocking"` for MSW/mock requirements for spec scoping
+- Use `skill: "frontend-mocking"` for Sinon mock requirements for spec scoping
   Usage: when scoping features that require mocking or test data
-
-- Use `skill: "backend-api"` for API routes for spec scoping
-  Usage: when scoping features that involve API routes
-
-- Use `skill: "backend-database"` for database schema for spec scoping
-  Usage: when scoping features that require database schema changes
-
-- Use `skill: "backend-ci-cd"` for deployment pipelines for spec scoping
-  Usage: when scoping features that affect CI/CD pipelines
-
-- Use `skill: "backend-performance"` for query optimization for spec scoping
-  Usage: when scoping features with backend performance requirements
-
-- Use `skill: "backend-testing"` for API testing requirements for spec scoping
-  Usage: when scoping features that require API testing
-
-- Use `skill: "security-security"` for auth and security for spec scoping
-  Usage: when scoping features that involve authentication or security
-
-- Use `skill: "shared-reviewing"` for code review requirements for spec scoping
-  Usage: when scoping features that require code review considerations
-
-- Use `skill: "setup-monorepo"` for Turborepo structure for spec scoping
-  Usage: when scoping features that affect monorepo structure
-
-- Use `skill: "setup-package"` for package conventions for spec scoping
-  Usage: when scoping features that require new packages
-
-- Use `skill: "setup-env"` for env configuration for spec scoping
-  Usage: when scoping features that require environment configuration
-
-- Use `skill: "setup-tooling"` for build tooling for spec scoping
-  Usage: when scoping features that affect build tooling
 
 </preloaded_content>
 

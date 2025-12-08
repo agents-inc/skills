@@ -6,6 +6,10 @@
  * - TypeScript handles file reading, path resolution, template composition, and validation
  * - LiquidJS handles simple variable interpolation and loops within templates
  *
+ * Architecture:
+ * - agents.yaml: Single source of truth for all agent definitions
+ * - profiles/{profile}/config.yaml: References agents by name + adds profile-specific skills
+ *
  * Usage:
  *   bun .claude-src/compile.ts --profile=home
  *   bun .claude-src/compile.ts --profile=work --verbose
@@ -15,9 +19,12 @@ import { Liquid } from "liquidjs";
 import { parse as parseYaml } from "yaml";
 import type {
   AgentConfig,
+  AgentDefinition,
+  AgentsConfig,
   CompiledAgentData,
   ProfileConfig,
   Skill,
+  SkillAssignment,
   ValidationResult,
 } from "./types";
 
@@ -69,15 +76,60 @@ function log(message: string): void {
 }
 
 // =============================================================================
+// Agent Resolution (merge agents.yaml + profile skills)
+// =============================================================================
+
+function resolveAgents(
+  agentsConfig: AgentsConfig,
+  profileConfig: ProfileConfig
+): Record<string, AgentConfig> {
+  const resolved: Record<string, AgentConfig> = {};
+
+  // Derive agents to compile from agent_skills keys
+  const agentNames = Object.keys(profileConfig.agent_skills);
+
+  for (const agentName of agentNames) {
+    const definition = agentsConfig.agents[agentName];
+    if (!definition) {
+      throw new Error(
+        `Agent "${agentName}" in agent_skills but not found in agents.yaml`
+      );
+    }
+
+    // Get profile-specific skills
+    const skills = profileConfig.agent_skills[agentName];
+
+    // Merge definition with skills
+    resolved[agentName] = {
+      name: agentName,
+      title: definition.title,
+      description: definition.description,
+      model: definition.model,
+      tools: definition.tools,
+      core_prompts: definition.core_prompts,
+      ending_prompts: definition.ending_prompts,
+      output_format: definition.output_format,
+      skills,
+    };
+  }
+
+  return resolved;
+}
+
+// =============================================================================
 // Validation
 // =============================================================================
 
-async function validate(config: ProfileConfig): Promise<ValidationResult> {
+async function validate(
+  agentsConfig: AgentsConfig,
+  profileConfig: ProfileConfig,
+  resolvedAgents: Record<string, AgentConfig>
+): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Check CLAUDE.md
-  const claudePath = `${ROOT}/profiles/${PROFILE}/${config.claude_md}`;
+  const claudePath = `${ROOT}/profiles/${PROFILE}/${profileConfig.claude_md}`;
   if (!(await Bun.file(claudePath).exists())) {
     errors.push(`CLAUDE.md not found: ${claudePath}`);
   }
@@ -88,9 +140,9 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
     errors.push(`Core prompts directory missing or empty: ${corePromptsDir}`);
   }
 
-  // Check each agent
-  for (const [name, agent] of Object.entries(config.agents)) {
-    const agentDir = `${ROOT}/agents/${name}`;
+  // Check each resolved agent
+  for (const [name, agent] of Object.entries(resolvedAgents)) {
+    const agentDir = `${ROOT}/agent-sources/${name}`;
 
     // Required agent files
     const requiredFiles = ["intro.md", "workflow.md"];
@@ -101,7 +153,11 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
     }
 
     // Optional agent files (warn if missing)
-    const optionalFiles = ["examples.md", "critical-requirements.md", "critical-reminders.md"];
+    const optionalFiles = [
+      "examples.md",
+      "critical-requirements.md",
+      "critical-reminders.md",
+    ];
     for (const file of optionalFiles) {
       if (!(await Bun.file(`${agentDir}/${file}`).exists())) {
         warnings.push(`Optional file missing for ${name}: ${file}`);
@@ -109,14 +165,17 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
     }
 
     // Check core_prompts reference
-    if (!config.core_prompt_sets[agent.core_prompts]) {
+    if (!profileConfig.core_prompt_sets[agent.core_prompts]) {
       errors.push(
         `Invalid core_prompts reference "${agent.core_prompts}" for agent: ${name}`
       );
     }
 
     // Check ending_prompts reference
-    if (agent.ending_prompts && !config.ending_prompt_sets[agent.ending_prompts]) {
+    if (
+      agent.ending_prompts &&
+      !profileConfig.ending_prompt_sets[agent.ending_prompts]
+    ) {
       errors.push(
         `Invalid ending_prompts reference "${agent.ending_prompts}" for agent: ${name}`
       );
@@ -157,7 +216,7 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
 
   // Check core prompt files exist
   const allCorePrompts = new Set<string>();
-  for (const prompts of Object.values(config.core_prompt_sets)) {
+  for (const prompts of Object.values(profileConfig.core_prompt_sets)) {
     prompts.forEach((p) => allCorePrompts.add(p));
   }
   for (const prompt of allCorePrompts) {
@@ -169,7 +228,7 @@ async function validate(config: ProfileConfig): Promise<ValidationResult> {
 
   // Check ending prompt files exist
   const allEndingPrompts = new Set<string>();
-  for (const prompts of Object.values(config.ending_prompt_sets || {})) {
+  for (const prompts of Object.values(profileConfig.ending_prompt_sets || {})) {
     prompts.forEach((p) => allEndingPrompts.add(p));
   }
   for (const prompt of allEndingPrompts) {
@@ -220,7 +279,7 @@ async function compileAgent(
   log(`Reading agent files for ${name}...`);
 
   // Read agent-specific files
-  const agentDir = `${ROOT}/agents/${name}`;
+  const agentDir = `${ROOT}/agent-sources/${name}`;
   const intro = await readFile(`${agentDir}/intro.md`);
   const workflow = await readFile(`${agentDir}/workflow.md`);
   const examples = await readFileOptional(
@@ -289,10 +348,13 @@ async function compileAgent(
   return engine.renderFile("agent", data);
 }
 
-async function compileAllAgents(config: ProfileConfig): Promise<void> {
+async function compileAllAgents(
+  resolvedAgents: Record<string, AgentConfig>,
+  config: ProfileConfig
+): Promise<void> {
   await Bun.$`mkdir -p ${OUT}/agents`;
 
-  for (const [name, agent] of Object.entries(config.agents)) {
+  for (const [name, agent] of Object.entries(resolvedAgents)) {
     try {
       const output = await compileAgent(name, agent, config);
       await Bun.write(`${OUT}/agents/${name}.md`, output);
@@ -308,9 +370,11 @@ async function compileAllAgents(config: ProfileConfig): Promise<void> {
 // Skills Compilation
 // =============================================================================
 
-async function compileAllSkills(config: ProfileConfig): Promise<void> {
+async function compileAllSkills(
+  resolvedAgents: Record<string, AgentConfig>
+): Promise<void> {
   // Collect all unique skills with paths
-  const allSkills = Object.values(config.agents)
+  const allSkills = Object.values(resolvedAgents)
     .flatMap((a) => [...a.skills.precompiled, ...a.skills.dynamic])
     .filter((s) => s.path);
 
@@ -353,21 +417,46 @@ async function copyClaude(config: ProfileConfig): Promise<void> {
 async function main(): Promise<void> {
   console.log(`\n🚀 Compiling profile: ${PROFILE}\n`);
 
-  // Load config
-  const configPath = `${ROOT}/profiles/${PROFILE}/config.yaml`;
-  let config: ProfileConfig;
+  // Load agents.yaml (single source of truth)
+  const agentsPath = `${ROOT}/agents.yaml`;
+  let agentsConfig: AgentsConfig;
 
   try {
-    config = parseYaml(await readFile(configPath));
+    agentsConfig = parseYaml(await readFile(agentsPath));
+    log(`Loaded ${Object.keys(agentsConfig.agents).length} agent definitions`);
+  } catch (error) {
+    console.error(`❌ Failed to load agents.yaml: ${agentsPath}`);
+    console.error(`   ${error}`);
+    process.exit(1);
+  }
+
+  // Load profile config
+  const configPath = `${ROOT}/profiles/${PROFILE}/config.yaml`;
+  let profileConfig: ProfileConfig;
+
+  try {
+    profileConfig = parseYaml(await readFile(configPath));
+    log(`Loaded profile config with ${Object.keys(profileConfig.agent_skills).length} agents`);
   } catch (error) {
     console.error(`❌ Failed to load config: ${configPath}`);
     console.error(`   ${error}`);
     process.exit(1);
   }
 
+  // Resolve agents (merge definitions with profile skills)
+  let resolvedAgents: Record<string, AgentConfig>;
+  try {
+    resolvedAgents = resolveAgents(agentsConfig, profileConfig);
+    log(`Resolved ${Object.keys(resolvedAgents).length} agents for profile`);
+  } catch (error) {
+    console.error(`❌ Failed to resolve agents:`);
+    console.error(`   ${error}`);
+    process.exit(1);
+  }
+
   // Validate
   console.log("🔍 Validating configuration...");
-  const validation = await validate(config);
+  const validation = await validate(agentsConfig, profileConfig, resolvedAgents);
 
   if (validation.warnings.length > 0) {
     console.log("\n⚠️  Warnings:");
@@ -387,13 +476,13 @@ async function main(): Promise<void> {
 
   // Compile
   console.log("📄 Compiling agents...");
-  await compileAllAgents(config);
+  await compileAllAgents(resolvedAgents, profileConfig);
 
   console.log("\n📦 Compiling skills...");
-  await compileAllSkills(config);
+  await compileAllSkills(resolvedAgents);
 
   console.log("\n📋 Copying CLAUDE.md...");
-  await copyClaude(config);
+  await copyClaude(profileConfig);
 
   console.log("\n✨ Done!\n");
 }

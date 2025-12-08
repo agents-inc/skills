@@ -1,6 +1,6 @@
-# API Mocking with MSW
+# Frontend Mocking Patterns (Photoroom Webapp)
 
-> **Quick Guide:** Centralized mocks in `@repo/api-mocks`. Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Type-safe using generated types from `@repo/api/types`.
+> **Quick Guide:** Use Sinon sandbox pattern for test isolation. Create mock store factories with partial dependencies via dependency injection. Use TestFirebaseAuth for auth mocking, ampliMock for analytics, and MobX `when()` for async assertions. Always restore sandbox in afterEach.
 
 ---
 
@@ -8,44 +8,49 @@
 
 ## ⚠️ CRITICAL: Before Using This Skill
 
-**(You MUST separate mock data from handlers - handlers in `handlers/`, data in `mocks/`)**
+> **All code must follow project conventions in CLAUDE.md** (PascalCase stores, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `setupWorker` for browser/development and `setupServer` for Node/tests - NEVER swap them)**
+**(You MUST create a Sinon sandbox in describe scope and call sandbox.restore() in afterEach - prevents test pollution)**
 
-**(You MUST reset handlers after each test with `serverWorker.resetHandlers()` in `afterEach`)**
+**(You MUST use mock store factories with partial dependencies - never instantiate stores directly in tests)**
 
-**(You MUST use generated types from `@repo/api/types` - NEVER manually define API response types)**
+**(You MUST use TestFirebaseAuth for Firebase auth mocking - never mock Firebase SDK directly)**
 
-**(You MUST use named constants for HTTP status codes and delays - NO magic numbers)**
+**(You MUST use MobX when() for async assertions - never use arbitrary timeouts or setTimeout)**
+
+**(You MUST use Chai assertion syntax (to.equal, to.be.true) - NOT Jest syntax (toBe, toEqual))**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** MSW setup, mock handlers, mock data, API mocking, testing mocks, development mocks, setupWorker, setupServer
+**Auto-detection:** sinon sandbox, mock store, TestFirebaseAuth, ampliMock, test factory, MobX when, NotificationsStore mock, dependency injection testing
 
 **When to use:**
 
-- Setting up MSW for development and testing
-- Creating centralized mock handlers with variant switching
-- Sharing mocks between browser (dev) and Node (tests)
-- Testing different API scenarios (success, empty, error)
-- Simulating network latency and error conditions
+- Writing unit tests for MobX stores
+- Mocking Firebase authentication in tests
+- Creating test doubles for analytics (ampli)
+- Testing stores with injected dependencies
+- Waiting for async MobX state changes in tests
+- Isolating tests with sandbox pattern
 
 **When NOT to use:**
 
-- Integration tests that need real backend validation (use test database instead)
-- Production builds (MSW should never ship to production)
-- Simple unit tests of pure functions (no network calls to mock)
-- When you need to test actual network failure modes (use test containers)
+- E2E tests (use Playwright fixtures instead)
+- Testing React components with DOM (use React Testing Library)
+- Integration tests with real backend (use test environment)
 
 **Key patterns covered:**
 
-- Centralized mock package structure with handlers and data separation
-- Variant-based handlers (default, empty, error scenarios)
-- Browser worker for development, server worker for tests
-- Per-test handler overrides for specific scenarios
-- Runtime variant switching for UI development
+- Sinon sandbox pattern for stub isolation
+- Mock store factories with partial dependencies
+- TestFirebaseAuth for Firebase auth testing
+- ampliMock for analytics mocking
+- NotificationsStore mocking
+- MobX when() for async state assertions
+- Cleanup patterns (sandbox.restore())
+- Dependency injection enabling testability
 
 ---
 
@@ -53,22 +58,44 @@
 
 ## Philosophy
 
-MSW (Mock Service Worker) intercepts network requests at the service worker level, providing realistic API mocking without changing application code. This skill enforces a centralized approach where mocks live in a dedicated package (`@repo/api-mocks`), enabling consistent behavior across development and testing environments.
+The Photoroom webapp testing approach leverages **dependency injection** in MobX stores to enable clean mocking. Each store receives its dependencies via constructor, making it easy to inject test doubles.
 
-**When to use MSW:**
+**Core Testing Principles:**
 
-- Developing frontend features before backend API is ready
-- Testing different API response scenarios (success, empty, error states)
-- Simulating network conditions (latency, timeouts)
-- Creating a consistent development environment across team
-- End-to-end testing with controlled API responses
+1. **Sandbox Isolation**: Every test suite creates a Sinon sandbox. Stubs are restored in afterEach to prevent cross-test pollution.
+2. **Factory Pattern**: Mock store factories accept partial dependencies, providing sensible defaults for unmocked dependencies.
+3. **Test Doubles Over Mocking SDK**: Use pre-built test doubles (TestFirebaseAuth, ampliMock) instead of stubbing complex SDKs.
+4. **Async Assertions with when()**: MobX `when()` waits for observable conditions, eliminating flaky timeout-based tests.
 
-**When NOT to use MSW:**
+**Why Dependency Injection Matters:**
 
-- Integration tests that need real backend validation (use test database)
-- Production builds (MSW should never ship to production)
-- Simple unit tests of pure functions (no network calls)
-- When you need to test actual network failure modes (use test containers)
+```typescript
+// Testable: dependencies injected via constructor
+class AuthStore {
+  constructor(dependencies: AuthStoreDependencies) {
+    this.#dependencies = dependencies;
+  }
+}
+
+// In tests: inject mocks
+const authStore = new AuthStore({
+  firebaseAuth: new TestFirebaseAuth(), // Test double
+  fetchAppStartup: async () => ({ courierToken: "test-token" }), // Mock function
+});
+```
+
+**When to mock:**
+
+- External services (Firebase, Analytics)
+- API calls (provide mock functions)
+- Side effects (notifications, logging)
+- Time-dependent operations
+
+**When NOT to mock:**
+
+- The code under test itself
+- Simple utility functions
+- MobX reactivity (let it work naturally)
 
 </philosophy>
 
@@ -78,493 +105,895 @@ MSW (Mock Service Worker) intercepts network requests at the service worker leve
 
 ## Core Patterns
 
-### Pattern 1: Centralized Mock Package Structure
+### Pattern 1: Sinon Sandbox for Test Isolation
 
-Organize all mocks in a dedicated workspace package with clear separation between handlers (MSW request handlers) and mock data (static response data).
+Create a Sinon sandbox at describe scope. Call sandbox.restore() in afterEach to clean up stubs between tests.
 
-#### Package Structure
-
-```
-packages/api-mocks/
-├── src/
-│   ├── handlers/
-│   │   ├── index.ts              # Export all handlers
-│   │   └── features/
-│   │       └── get-features.ts   # MSW handlers with variants
-│   ├── mocks/
-│   │   ├── index.ts              # Export all mock data
-│   │   └── features.ts           # Mock data
-│   ├── browser-worker.ts         # Browser MSW worker (development)
-│   ├── server-worker.ts          # Node.js MSW server (tests)
-│   └── manage-mock-selection.ts  # Variant switching logic
-└── package.json
-```
-
-#### Package Configuration
-
-```json
-// packages/api-mocks/package.json
-// ✅ Good Example
-{
-  "name": "@repo/api-mocks",
-  "exports": {
-    "./handlers": "./src/handlers/index.ts",
-    "./mocks": "./src/mocks/index.ts",
-    "./browserWorker": "./src/browser-worker.ts",
-    "./serverWorker": "./src/server-worker.ts"
-  }
-}
-```
-
-**Why good:** Separate entry points prevent bundling unnecessary code (browser worker won't bundle in tests), explicit exports make dependencies clear, kebab-case file names follow project conventions
-
-```json
-// ❌ Bad Example
-{
-  "name": "@repo/api-mocks",
-  "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  }
-}
-```
-
-**Why bad:** Single entry point bundles everything together causing browser worker to load in Node tests (performance hit), mixing concerns violates separation of environments, harder to tree-shake unused code
-
----
-
-### Pattern 2: Separate Mock Data from Handlers
-
-Define mock data as typed constants in `mocks/` directory, completely separate from MSW handlers.
-
-#### Mock Data Definition
+#### Test Structure
 
 ```typescript
-// packages/api-mocks/src/mocks/features.ts
-// ✅ Good Example
-import type { GetFeaturesResponse } from "@repo/api/types";
+// src/tests/MyStore.test.ts
+import sinon from "sinon";
+import { expect } from "chai";
+import { when } from "mobx";
 
-export const defaultFeatures: GetFeaturesResponse = {
-  features: [
-    {
-      id: "1",
-      name: "Dark mode",
-      description: "Toggle dark mode",
-      status: "done",
-    },
-    {
-      id: "2",
-      name: "User authentication",
-      description: "JWT-based auth",
-      status: "in progress",
-    },
-  ],
-};
+import { MyStore } from "stores/MyStore";
 
-export const emptyFeatures: GetFeaturesResponse = {
-  features: [],
-};
-```
+describe("MyStore", () => {
+  // Create sandbox at describe scope
+  const sandbox = sinon.createSandbox();
 
-**Why good:** Type safety from generated API types catches schema mismatches at compile time, reusable across multiple handlers, easy to update centrally when API changes, `import type` optimizes bundle size
+  // Clean up after each test
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-```typescript
-// ❌ Bad Example
-import { http, HttpResponse } from "msw";
+  it("should handle async operation", async () => {
+    const fetchStub = sandbox.stub().resolves({ data: "test" });
+    const store = new MyStore({ fetch: fetchStub });
 
-export const getFeaturesHandler = http.get("api/v1/features", () => {
-  return HttpResponse.json({
-    features: [
-      { id: "1", name: "Dark mode", description: "Toggle dark mode", status: "done" },
-    ],
+    await store.loadData();
+
+    expect(fetchStub).to.have.been.calledOnce;
+    expect(store.data).to.equal("test");
+  });
+
+  it("should track calls with args", () => {
+    const callbackStub = sandbox.stub();
+    const store = new MyStore({ callback: callbackStub });
+
+    store.doSomething("arg1", "arg2");
+
+    expect(callbackStub).to.have.been.calledWith("arg1", "arg2");
   });
 });
 ```
 
-**Why bad:** Mock data embedded in handler cannot be reused in other tests or handlers, no type checking against API schema causes runtime errors when schema changes, harder to test edge cases with different data variants
+**Why good:** Sandbox groups related stubs for easy cleanup, afterEach ensures stubs are restored even if test fails, prevents test pollution where one test's stubs affect another
 
-**When not to use:** When mock data is truly one-off and specific to a single test case (use inline data in the test instead).
+```typescript
+// ❌ Bad Example - Missing sandbox cleanup
+describe("MyStore", () => {
+  it("should work", () => {
+    sinon.stub(api, "fetch").resolves({ data: "test" });
+    // Missing restore - pollutes other tests!
+  });
+
+  it("another test", () => {
+    // api.fetch is still stubbed from previous test!
+  });
+});
+
+// ❌ Bad Example - Cleanup in wrong place
+describe("MyStore", () => {
+  const sandbox = sinon.createSandbox();
+
+  afterAll(() => {
+    sandbox.restore(); // Too late! Should be afterEach
+  });
+});
+```
+
+**Why bad:** Missing restore leaves stubs active for subsequent tests causing flaky failures, afterAll cleanup isolates the suite but not individual tests within it
 
 ---
 
-### Pattern 3: Handlers with Variant Switching
+### Pattern 2: Mock Store Factories with Partial Dependencies
 
-Create handlers that support multiple response scenarios (default, empty, error) with runtime switching for development and explicit overrides for testing.
+Create factory functions that accept partial dependencies and provide sensible defaults. This enables focused testing of specific behaviors.
 
-#### Handler Implementation
+#### Factory Implementation
 
 ```typescript
-// packages/api-mocks/src/handlers/features/get-features.ts
-// ✅ Good Example
-import { http, HttpResponse } from "msw";
-import type { GetFeaturesResponse } from "@repo/api/types";
-import { mockVariantsByEndpoint } from "../../manage-mock-selection";
-import { defaultFeatures, emptyFeatures } from "../../mocks/features";
+// src/tests/AuthStore.test.ts
+import { when } from "mobx";
+import { expect } from "chai";
 
-const API_ENDPOINT = "api/v1/features";
-const HTTP_STATUS_OK = 200;
-const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
+import { AuthStore } from "stores/AuthStore";
+import type { AuthStoreDependencies } from "stores/AuthStore";
+import { TestFirebaseAuth } from "tests/mocks/TestFirebaseAuth";
+import { ampliMock } from "tests/mocks/ampliMock";
+import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
 
-// Response factories
-const defaultResponse = () => HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
-const emptyResponse = () => HttpResponse.json(emptyFeatures, { status: HTTP_STATUS_OK });
-const errorResponse = () => new HttpResponse("General error", { status: HTTP_STATUS_INTERNAL_SERVER_ERROR });
+import type { Ampli } from "@photoroom/shared";
 
-// Default handler with variant switching (for development)
-const defaultHandler = () =>
-  http.get(API_ENDPOINT, async () => {
-    switch (mockVariantsByEndpoint.features) {
-      case "empty": {
-        return emptyResponse();
-      }
-      case "error": {
-        return errorResponse();
-      }
-      default: {
-        return defaultResponse();
-      }
+// Factory accepts partial dependencies
+const makeTestAuthStore = (
+  partialDependencies: Partial<AuthStoreDependencies> = {}
+): AuthStore => {
+  return new AuthStore({
+    // Default test doubles for external services
+    firebaseAuth: partialDependencies.firebaseAuth ?? new TestFirebaseAuth(),
+
+    // Default mock functions for API calls
+    fetchAppStartup: partialDependencies.fetchAppStartup ??
+      (async () => ({ courierToken: "test-courier-token" })),
+
+    fetchMagicCode: partialDependencies.fetchMagicCode ??
+      (async () => ({ token: "test-magic-code", expiresAt: "2025-12-31" })),
+
+    // Default mocks for services
+    ampli: partialDependencies.ampli ?? (ampliMock as Ampli),
+
+    // Create fresh notification store for each test
+    notificationsStore: partialDependencies.notificationsStore ??
+      new NotificationsStore({
+        defaultDuration: 3000,
+        maxNotifications: 5,
+      }),
+  });
+};
+
+describe("AuthStore", () => {
+  const sandbox = sinon.createSandbox();
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it("state is in sync with Firebase SDK", async () => {
+    // Use default test doubles
+    const firebaseAuth = new TestFirebaseAuth();
+    const authStore = makeTestAuthStore({ firebaseAuth });
+
+    // Initial state
+    expect(authStore.isLoading).to.be.true;
+    expect(authStore.isLoggedIn).to.be.false;
+    expect(authStore.firebaseUser).to.be.null;
+
+    // Wait for async initialization
+    await when(() => !authStore.isLoading);
+
+    expect(authStore.isLoading).to.be.false;
+  });
+
+  it("calls fetchAppStartup on login", async () => {
+    const fetchAppStartup = sandbox.stub().resolves({ courierToken: "token-123" });
+    const firebaseAuth = new TestFirebaseAuth();
+    const authStore = makeTestAuthStore({ firebaseAuth, fetchAppStartup });
+
+    // Simulate user login
+    firebaseAuth.simulateSignIn({ uid: "user-123", isAnonymous: false });
+
+    await when(() => authStore.courierToken !== null);
+
+    expect(fetchAppStartup).to.have.been.calledOnce;
+    expect(authStore.courierToken).to.equal("token-123");
+  });
+});
+```
+
+**Why good:** Partial dependencies allow tests to override only what they need, defaults provide working test doubles for unrelated dependencies, each test gets fresh instances preventing state leakage, factory pattern centralizes test setup logic
+
+```typescript
+// ❌ Bad Example - Inline store creation with all dependencies
+it("should work", () => {
+  // Must specify ALL dependencies even if not relevant to test
+  const store = new AuthStore({
+    firebaseAuth: new TestFirebaseAuth(),
+    fetchAppStartup: async () => ({ courierToken: "token" }),
+    fetchMagicCode: async () => ({ token: "code", expiresAt: "2025" }),
+    ampli: ampliMock,
+    notificationsStore: new NotificationsStore({ ... }),
+    // 10 more dependencies...
+  });
+});
+
+// ❌ Bad Example - Reusing store instances
+const sharedStore = makeTestAuthStore();
+
+it("test 1", () => {
+  sharedStore.setValue("value1"); // Modifies shared state
+});
+
+it("test 2", () => {
+  // sharedStore still has "value1" from previous test!
+});
+```
+
+**Why bad:** Inline creation with all dependencies is verbose and obscures test intent, shared store instances cause test pollution and ordering dependencies
+
+---
+
+### Pattern 3: TestFirebaseAuth for Authentication Testing
+
+Use TestFirebaseAuth class to simulate Firebase auth states without the real Firebase SDK.
+
+#### TestFirebaseAuth Implementation
+
+```typescript
+// src/tests/mocks/TestFirebaseAuth.ts
+import type { TFirebaseAuth, FirebaseUser } from "stores/FirebaseAuth";
+
+type AuthStateCallback = (user: FirebaseUser | null) => void;
+
+export class TestFirebaseAuth implements TFirebaseAuth {
+  #currentUser: FirebaseUser | null = null;
+  #listeners: AuthStateCallback[] = [];
+  #initialized = false;
+
+  // Simulate auth state listener
+  onAuthStateChanged = (callback: AuthStateCallback): (() => void) => {
+    this.#listeners.push(callback);
+
+    // Firebase fires immediately with current state
+    if (this.#initialized) {
+      callback(this.#currentUser);
+    } else {
+      // Simulate async initialization
+      setTimeout(() => {
+        this.#initialized = true;
+        callback(this.#currentUser);
+      }, 0);
+    }
+
+    // Return unsubscribe function
+    return () => {
+      this.#listeners = this.#listeners.filter((l) => l !== callback);
+    };
+  };
+
+  // Test helper: simulate sign in
+  simulateSignIn = (user: Partial<FirebaseUser> & { uid: string }) => {
+    this.#currentUser = {
+      uid: user.uid,
+      email: user.email ?? `${user.uid}@test.com`,
+      displayName: user.displayName ?? "Test User",
+      isAnonymous: user.isAnonymous ?? false,
+      getIdToken: async () => `firebase-token-${user.uid}`,
+      ...user,
+    } as FirebaseUser;
+    this.#initialized = true;
+    this.#notifyListeners();
+  };
+
+  // Test helper: simulate sign out
+  simulateSignOut = () => {
+    this.#currentUser = null;
+    this.#notifyListeners();
+  };
+
+  // Test helper: simulate anonymous user
+  simulateAnonymousUser = (uid: string = "anon-123") => {
+    this.simulateSignIn({ uid, isAnonymous: true });
+  };
+
+  signOut = async () => {
+    this.simulateSignOut();
+  };
+
+  signInWithPopup = async () => {
+    this.simulateSignIn({ uid: "google-user-123" });
+    return { user: this.#currentUser };
+  };
+
+  #notifyListeners = () => {
+    this.#listeners.forEach((callback) => callback(this.#currentUser));
+  };
+}
+```
+
+#### Usage in Tests
+
+```typescript
+describe("AuthStore", () => {
+  it("should handle sign out", async () => {
+    const firebaseAuth = new TestFirebaseAuth();
+    const authStore = makeTestAuthStore({ firebaseAuth });
+
+    // Start signed in
+    firebaseAuth.simulateSignIn({ uid: "user-123" });
+    await when(() => authStore.isLoggedIn);
+
+    expect(authStore.isLoggedIn).to.be.true;
+
+    // Sign out
+    await authStore.logOut();
+
+    expect(authStore.isLoggedIn).to.be.false;
+    expect(authStore.firebaseUser).to.be.null;
+  });
+
+  it("should identify anonymous users", async () => {
+    const firebaseAuth = new TestFirebaseAuth();
+    const authStore = makeTestAuthStore({ firebaseAuth });
+
+    firebaseAuth.simulateAnonymousUser();
+    await when(() => !authStore.isLoading);
+
+    expect(authStore.isAnonymous).to.be.true;
+    expect(authStore.isLoggedIn).to.be.false; // Anonymous != logged in
+  });
+});
+```
+
+**Why good:** TestFirebaseAuth provides full control over auth state, simulateSignIn/simulateSignOut allow testing state transitions, implements same interface as real Firebase auth, no need to mock complex Firebase SDK internals
+
+```typescript
+// ❌ Bad Example - Stubbing Firebase SDK directly
+it("should work", () => {
+  sandbox.stub(firebase.auth(), "onAuthStateChanged").callsFake((cb) => {
+    cb({ uid: "123" }); // Incomplete user object
+    return () => {};
+  });
+  // Complex, fragile, incomplete
+});
+
+// ❌ Bad Example - Not waiting for async auth
+it("should handle login", () => {
+  const firebaseAuth = new TestFirebaseAuth();
+  const authStore = makeTestAuthStore({ firebaseAuth });
+
+  firebaseAuth.simulateSignIn({ uid: "123" });
+
+  // BUG: Auth state may not have propagated yet!
+  expect(authStore.isLoggedIn).to.be.true; // May fail randomly
+});
+```
+
+**Why bad:** Direct SDK stubbing is fragile and requires deep knowledge of Firebase internals, not waiting for async state propagation causes flaky tests
+
+---
+
+### Pattern 4: ampliMock for Analytics Testing
+
+Use ampliMock to verify analytics events without sending real data.
+
+#### ampliMock Implementation
+
+```typescript
+// src/tests/mocks/ampliMock.ts
+import type { Ampli } from "@photoroom/shared";
+
+type EventCall = {
+  name: string;
+  properties?: Record<string, unknown>;
+};
+
+export const createAmpliMock = (): Ampli & {
+  getCalls: () => EventCall[];
+  reset: () => void;
+} => {
+  const calls: EventCall[] = [];
+
+  return {
+    // Common event methods
+    track: (name: string, properties?: Record<string, unknown>) => {
+      calls.push({ name, properties });
+    },
+
+    identify: (userId: string, properties?: Record<string, unknown>) => {
+      calls.push({ name: "identify", properties: { userId, ...properties } });
+    },
+
+    // Add other Ampli methods as needed...
+
+    // Test helpers
+    getCalls: () => [...calls],
+    reset: () => {
+      calls.length = 0;
+    },
+  } as Ampli & { getCalls: () => EventCall[]; reset: () => void };
+};
+
+// Default singleton for simple cases
+export const ampliMock = createAmpliMock();
+```
+
+#### Usage in Tests
+
+```typescript
+describe("UserStore", () => {
+  const sandbox = sinon.createSandbox();
+  let ampli: ReturnType<typeof createAmpliMock>;
+
+  beforeEach(() => {
+    ampli = createAmpliMock();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+    ampli.reset();
+  });
+
+  it("should track sign up event", async () => {
+    const userStore = makeTestUserStore({ ampli });
+
+    await userStore.signUp({ email: "test@example.com" });
+
+    const calls = ampli.getCalls();
+    expect(calls).to.have.length(1);
+    expect(calls[0].name).to.equal("user_signed_up");
+    expect(calls[0].properties).to.deep.equal({
+      email: "test@example.com",
+      method: "email",
+    });
+  });
+
+  it("should track multiple events in order", async () => {
+    const userStore = makeTestUserStore({ ampli });
+
+    await userStore.completeOnboarding();
+
+    const calls = ampli.getCalls();
+    expect(calls.map((c) => c.name)).to.deep.equal([
+      "onboarding_started",
+      "onboarding_step_completed",
+      "onboarding_finished",
+    ]);
+  });
+});
+```
+
+**Why good:** ampliMock captures event calls for verification, getCalls() returns copy preventing mutation, reset() in afterEach ensures clean state, verifies event order and properties
+
+```typescript
+// ❌ Bad Example - Not verifying analytics
+it("should sign up user", async () => {
+  const userStore = makeTestUserStore({ ampli: ampliMock });
+  await userStore.signUp({ email: "test@example.com" });
+  expect(userStore.isSignedUp).to.be.true;
+  // Missing: analytics verification!
+});
+
+// ❌ Bad Example - Not resetting between tests
+it("test 1", async () => {
+  await store.action1();
+  expect(ampliMock.getCalls()).to.have.length(1);
+});
+
+it("test 2", async () => {
+  await store.action2();
+  // BUG: getCalls() returns 2 because test 1's call is still there!
+  expect(ampliMock.getCalls()).to.have.length(1); // Fails!
+});
+```
+
+**Why bad:** Skipping analytics verification misses tracking bugs that break product metrics, not resetting mock between tests causes false positives/negatives
+
+---
+
+### Pattern 5: MobX when() for Async Assertions
+
+Use MobX `when()` to wait for observable conditions instead of arbitrary timeouts.
+
+#### Correct Async Testing
+
+```typescript
+import { when } from "mobx";
+
+describe("TeamsStore", () => {
+  it("should load teams", async () => {
+    const fetchTeams = sandbox.stub().resolves([
+      { id: "team-1", name: "Team One" },
+      { id: "team-2", name: "Team Two" },
+    ]);
+    const teamsStore = makeTestTeamsStore({ fetchTeams });
+
+    // Start loading
+    teamsStore.loadTeams();
+    expect(teamsStore.isLoading).to.be.true;
+
+    // Wait for loading to complete using when()
+    await when(() => !teamsStore.isLoading);
+
+    expect(teamsStore.teams).to.have.length(2);
+    expect(teamsStore.teams[0]?.name).to.equal("Team One");
+  });
+
+  it("should handle error state", async () => {
+    const fetchTeams = sandbox.stub().rejects(new Error("Network error"));
+    const teamsStore = makeTestTeamsStore({ fetchTeams });
+
+    teamsStore.loadTeams();
+
+    // Wait for error state
+    await when(() => teamsStore.error !== null);
+
+    expect(teamsStore.error).to.equal("Network error");
+    expect(teamsStore.isLoading).to.be.false;
+  });
+
+  it("should wait with timeout", async () => {
+    const teamsStore = makeTestTeamsStore({
+      fetchTeams: () => new Promise((resolve) => setTimeout(resolve, 5000)),
+    });
+
+    teamsStore.loadTeams();
+
+    // when() with timeout option
+    try {
+      await when(() => !teamsStore.isLoading, { timeout: 100 });
+      expect.fail("Should have timed out");
+    } catch (error) {
+      expect(error.message).to.include("WHEN_TIMEOUT");
     }
   });
-
-// Export handlers for different scenarios
-export const getFeaturesHandlers = {
-  defaultHandler,
-  emptyHandler: () => http.get(API_ENDPOINT, async () => emptyResponse()),
-  errorHandler: () => http.get(API_ENDPOINT, async () => errorResponse()),
-};
-```
-
-**Why good:** Named constants eliminate magic numbers for maintainability, response factories reduce duplication and ensure consistency, variant switching enables UI development without code changes, explicit handler exports allow per-test overrides
-
-```typescript
-// ❌ Bad Example
-import { http, HttpResponse } from "msw";
-
-export const getFeaturesHandler = http.get("api/v1/features", () => {
-  return HttpResponse.json({ features: [] }, { status: 200 });
 });
 ```
 
-**Why bad:** Hardcoded 200 status is a magic number, only supports one scenario (empty) making error state testing impossible, no variant switching forces code changes to test different states, single export prevents flexible test scenarios
+**Why good:** when() waits for exact observable condition, no arbitrary delays or flaky timing, timeout option catches stuck states, works naturally with MobX reactivity
+
+```typescript
+// ❌ Bad Example - Using setTimeout
+it("should load teams", async () => {
+  teamsStore.loadTeams();
+
+  // BAD: Arbitrary delay - flaky!
+  await new Promise((r) => setTimeout(r, 100));
+
+  expect(teamsStore.teams).to.have.length(2); // May fail if load takes > 100ms
+});
+
+// ❌ Bad Example - Polling with setInterval
+it("should load teams", async () => {
+  teamsStore.loadTeams();
+
+  // BAD: Polling - wasteful and still flaky
+  await new Promise((resolve) => {
+    const interval = setInterval(() => {
+      if (!teamsStore.isLoading) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 10);
+  });
+});
+
+// ❌ Bad Example - Missing async/await
+it("should load teams", () => {
+  teamsStore.loadTeams();
+  when(() => !teamsStore.isLoading); // Missing await - test passes immediately!
+  expect(teamsStore.teams).to.have.length(0); // Wrong assertion passes
+});
+```
+
+**Why bad:** setTimeout-based waits are flaky and slow (must wait worst-case time), polling is wasteful and still subject to timing issues, missing await causes test to pass before async operation completes
 
 ---
 
-### Pattern 4: Browser Worker for Development
+### Pattern 6: NotificationsStore Mocking
 
-Set up MSW browser worker to intercept requests during development, enabling the app to work without a real backend.
-
-#### Browser Worker Setup
-
-```typescript
-// packages/api-mocks/src/browser-worker.ts
-// ✅ Good Example
-import { setupWorker } from "msw/browser";
-import { handlers } from "./handlers";
-
-export const browserWorker = setupWorker(...handlers);
-```
-
-**Why good:** Uses `setupWorker` from `msw/browser` for browser environment, spreads handlers array for clean syntax, single responsibility (just worker setup)
-
-```typescript
-// ❌ Bad Example - Wrong MSW API for environment
-import { setupServer } from "msw/node";
-import { handlers } from "./handlers";
-
-export const browserWorker = setupServer(...handlers);
-```
-
-**Why bad:** `setupServer` is for Node.js environment and will fail in browser, causes cryptic runtime errors about service worker not being available
-
-#### App Integration (Vite/React)
-
-```typescript
-// apps/client-react/src/main.tsx
-// ✅ Good Example
-import { createRoot } from "react-dom/client";
-import { browserWorker } from "@repo/api-mocks/browserWorker";
-import { App } from "./app";
-
-const UNHANDLED_REQUEST_STRATEGY = "bypass";
-
-async function enableMocking() {
-  if (import.meta.env.DEV) {
-    await browserWorker.start({
-      onUnhandledRequest: UNHANDLED_REQUEST_STRATEGY, // Allow real requests to pass through
-    });
-  }
-}
-
-enableMocking().then(() => {
-  createRoot(document.getElementById("root")!).render(<App />);
-});
-```
-
-**Why good:** Awaits worker start before rendering prevents race conditions, `onUnhandledRequest: "bypass"` allows unmocked requests to real APIs, only runs in development (no production impact), named constant for configuration clarity
-
-```typescript
-// ❌ Bad Example - Rendering before mocking ready
-import { createRoot } from "react-dom/client";
-import { browserWorker } from "@repo/api-mocks/browserWorker";
-import { App } from "./app";
-
-if (import.meta.env.DEV) {
-  browserWorker.start({ onUnhandledRequest: "bypass" }); // Missing await
-}
-
-createRoot(document.getElementById("root")!).render(<App />);
-```
-
-**Why bad:** Race condition where app renders before MSW is ready causes first requests to fail, no async/await means initial API calls might bypass mocks unpredictably, hard-to-debug intermittent failures in development
-
-#### App Integration (Next.js App Router)
-
-```typescript
-// apps/client-next/app/layout.tsx
-// ✅ Good Example
-import type { ReactNode } from "react";
-
-const UNHANDLED_REQUEST_STRATEGY = "bypass";
-const NODE_ENV_DEVELOPMENT = "development";
-
-async function enableMocking() {
-  if (process.env.NODE_ENV === NODE_ENV_DEVELOPMENT) {
-    const { browserWorker } = await import("@repo/api-mocks/browserWorker");
-    return browserWorker.start({
-      onUnhandledRequest: UNHANDLED_REQUEST_STRATEGY,
-    });
-  }
-}
-
-export default async function RootLayout({ children }: { children: ReactNode }) {
-  if (process.env.NODE_ENV === NODE_ENV_DEVELOPMENT) {
-    await enableMocking();
-  }
-
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-**Why good:** Dynamic import in Next.js prevents server-side bundling of browser-only code, awaiting in async component ensures MSW ready before render, named constants for magic strings
-
-```typescript
-// ❌ Bad Example - Importing browser worker at top level
-import type { ReactNode } from "react";
-import { browserWorker } from "@repo/api-mocks/browserWorker";
-
-export default function RootLayout({ children }: { children: ReactNode }) {
-  if (process.env.NODE_ENV === "development") {
-    browserWorker.start({ onUnhandledRequest: "bypass" });
-  }
-
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-**Why bad:** Top-level import bundles browser-only service worker code in server bundle causing SSR build failures, sync function cannot await worker start causing race conditions, magic string "development" instead of named constant
-
----
-
-### Pattern 5: Server Worker for Tests
-
-Set up MSW server worker for Node.js test environment with proper lifecycle management.
-
-#### Server Worker Setup
-
-```typescript
-// packages/api-mocks/src/server-worker.ts
-// ✅ Good Example
-import { setupServer } from "msw/node";
-import { handlers } from "./handlers";
-
-export const serverWorker = setupServer(...handlers);
-```
-
-**Why good:** Uses `setupServer` from `msw/node` for Node environment, matches browser worker pattern for consistency
-
-```typescript
-// ❌ Bad Example
-import { setupWorker } from "msw/browser";
-import { handlers } from "./handlers";
-
-export const serverWorker = setupWorker(...handlers);
-```
-
-**Why bad:** `setupWorker` requires browser APIs (service worker) that don't exist in Node causing test failures, will throw "navigator is not defined" errors in test environment
-
-#### Test Setup
-
-```typescript
-// apps/client-react/src/setup-tests.ts
-// ✅ Good Example
-import { afterAll, afterEach, beforeAll } from "vitest";
-import { serverWorker } from "@repo/api-mocks/serverWorker";
-
-beforeAll(() => serverWorker.listen());
-afterEach(() => serverWorker.resetHandlers());
-afterAll(() => serverWorker.close());
-```
-
-**Why good:** `beforeAll` starts server once for all tests (performance), `afterEach` resets handlers preventing test pollution from overrides, `afterAll` cleans up resources, follows MSW recommended lifecycle
-
-```typescript
-// ❌ Bad Example - Missing resetHandlers
-import { afterAll, beforeAll } from "vitest";
-import { serverWorker } from "@repo/api-mocks/serverWorker";
-
-beforeAll(() => serverWorker.listen());
-afterAll(() => serverWorker.close());
-```
-
-**Why bad:** Missing `resetHandlers` in `afterEach` means handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent breaking test isolation
-
----
-
-### Pattern 6: Per-Test Handler Overrides
-
-Override default handlers in specific tests to simulate different API scenarios.
-
-#### Test Implementation
-
-```typescript
-// apps/client-react/src/__tests__/features.test.tsx
-// ✅ Good Example
-import { expect, it } from "vitest";
-import { screen } from "@testing-library/react";
-import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
-import { serverWorker } from "@repo/api-mocks/serverWorker";
-
-it("should render features", async () => {
-  // Uses default handler
-  renderApp();
-  await expect(screen.findByText("Dark mode")).resolves.toBeInTheDocument();
-});
-
-it("should render empty state", async () => {
-  // Override with empty handler for this test
-  serverWorker.use(getFeaturesHandlers.emptyHandler());
-  renderApp();
-
-  await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
-});
-
-it("should handle errors", async () => {
-  // Override with error handler for this test
-  serverWorker.use(getFeaturesHandlers.errorHandler());
-  renderApp();
-
-  await expect(screen.findByText(/error/i)).resolves.toBeInTheDocument();
-});
-```
-
-**Why good:** `serverWorker.use()` scoped to individual test for isolation, explicit handler names make test intent clear, tests all scenarios (success, empty, error) for comprehensive coverage, `afterEach` reset ensures overrides don't leak
-
-```typescript
-// ❌ Bad Example - Only testing happy path
-import { expect, it } from "vitest";
-import { screen } from "@testing-library/react";
-
-it("should render features", async () => {
-  renderApp();
-  await expect(screen.findByText("Dark mode")).resolves.toBeInTheDocument();
-});
-```
-
-**Why bad:** Only tests default success scenario, empty and error states go untested causing bugs to reach production, no validation that error handling works, incomplete test coverage
-
-**When not to use:** For integration tests that need real backend validation (use test database instead of mocks).
-
----
-
-### Pattern 7: Runtime Variant Switching for Development
-
-Enable developers to switch between mock variants (default, empty, error) at runtime without code changes.
-
-#### Variant Management
-
-```typescript
-// packages/api-mocks/src/manage-mock-selection.ts
-// ✅ Good Example
-export type MockVariant = "default" | "empty" | "error";
-
-export const mockVariantsByEndpoint: Record<string, MockVariant> = {
-  features: "default",
-  users: "default",
-  // Add more endpoints as needed
-};
-
-// Optional: UI for switching variants in development
-export function setMockVariant(endpoint: string, variant: MockVariant) {
-  mockVariantsByEndpoint[endpoint] = variant;
-}
-```
-
-**Why good:** Type-safe variant names prevent typos, centralized state for all endpoint variants, mutation function allows runtime changes, enables testing UI states without restarting app
-
-```typescript
-// ❌ Bad Example - Using strings without type safety
-export const mockVariants = {
-  features: "default",
-  users: "defualt", // Typo not caught
-};
-
-export function setMockVariant(endpoint, variant) {
-  mockVariants[endpoint] = variant;
-}
-```
-
-**Why bad:** No TypeScript validation allows typos ("defualt") to slip through, any parameters accept anything causing runtime errors, no autocomplete or IDE support for variant names
-
-**When not to use:** In test environment (use explicit handler overrides instead for deterministic behavior).
-
----
-
-### Pattern 8: Simulating Network Latency
-
-Add realistic delays to mock responses to test loading states and race conditions.
+Create fresh NotificationsStore instances for each test to verify user feedback.
 
 #### Implementation
 
 ```typescript
-// ✅ Good Example
-import { http, HttpResponse, delay } from "msw";
+import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
 
-const MOCK_NETWORK_LATENCY_MS = 500;
-const HTTP_STATUS_OK = 200;
+describe("ExportStore", () => {
+  it("should show success notification", async () => {
+    const notificationsStore = new NotificationsStore({
+      defaultDuration: 3000,
+      maxNotifications: 5,
+    });
+    const exportStore = makeTestExportStore({ notificationsStore });
 
-const defaultHandler = () =>
-  http.get(API_ENDPOINT, async () => {
-    await delay(MOCK_NETWORK_LATENCY_MS);
-    return HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
+    await exportStore.exportImage();
+
+    expect(notificationsStore.notifications).to.have.length(1);
+    expect(notificationsStore.notifications[0]?.type).to.equal("success");
+    expect(notificationsStore.notifications[0]?.label).to.include("export");
   });
+
+  it("should show error notification on failure", async () => {
+    const notificationsStore = new NotificationsStore({
+      defaultDuration: 3000,
+      maxNotifications: 5,
+    });
+    const exportStore = makeTestExportStore({
+      notificationsStore,
+      exportApi: sandbox.stub().rejects(new Error("Export failed")),
+    });
+
+    await exportStore.exportImage();
+
+    expect(notificationsStore.notifications).to.have.length(1);
+    expect(notificationsStore.notifications[0]?.type).to.equal("danger");
+  });
+});
 ```
 
-**Why good:** Named constant makes latency configurable and self-documenting, realistic delay reveals loading state bugs, using MSW's `delay` utility is clean and cancellable
+**Why good:** Fresh NotificationsStore per test prevents notification leakage, can verify notification type, label, and count, tests user feedback not just internal state
 
 ```typescript
-// ❌ Bad Example
-import { http, HttpResponse } from "msw";
+// ❌ Bad Example - Using shared notification store
+const sharedNotifications = new NotificationsStore({ ... });
 
-const defaultHandler = () =>
-  http.get(API_ENDPOINT, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return HttpResponse.json(defaultFeatures, { status: 200 });
-  });
+it("test 1", async () => {
+  await store1.action();
+  expect(sharedNotifications.notifications).to.have.length(1);
+});
+
+it("test 2", async () => {
+  await store2.action();
+  // BUG: Has 2 notifications (1 from test 1 + 1 from test 2)!
+  expect(sharedNotifications.notifications).to.have.length(1); // Fails
+});
+
+// ❌ Bad Example - Not verifying notifications
+it("should handle error", async () => {
+  await store.failingAction();
+  expect(store.error).to.exist;
+  // Missing: Did user get feedback about the error?
+});
 ```
 
-**Why bad:** Magic number 300ms without context or configurability, manual Promise wrapper instead of MSW utility, magic number 200 status code repeated, harder to disable delay when needed
+**Why bad:** Shared notification store accumulates notifications across tests, not verifying notifications means users might see silent failures in production
 
-**When not to use:** In tests where speed matters more than loading state validation (omit delay for faster test execution).
+---
+
+### Pattern 7: Complete Test File Structure
+
+Following the established patterns, here's a complete test file structure:
+
+#### Complete Example
+
+```typescript
+// src/tests/AuthStore.test.ts
+import sinon from "sinon";
+import { expect } from "chai";
+import { when } from "mobx";
+
+import { AuthStore } from "stores/AuthStore";
+import type { AuthStoreDependencies } from "stores/AuthStore";
+import { TestFirebaseAuth } from "tests/mocks/TestFirebaseAuth";
+import { createAmpliMock } from "tests/mocks/ampliMock";
+import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
+
+import type { Ampli } from "@photoroom/shared";
+
+// Factory with defaults
+const makeTestAuthStore = (
+  partialDependencies: Partial<AuthStoreDependencies> = {}
+): AuthStore => {
+  return new AuthStore({
+    firebaseAuth: partialDependencies.firebaseAuth ?? new TestFirebaseAuth(),
+    fetchAppStartup: partialDependencies.fetchAppStartup ??
+      (async () => ({ courierToken: "test-courier-token" })),
+    fetchMagicCode: partialDependencies.fetchMagicCode ??
+      (async () => ({ token: "test-magic-code", expiresAt: "2025-12-31" })),
+    ampli: partialDependencies.ampli ?? (createAmpliMock() as Ampli),
+    notificationsStore: partialDependencies.notificationsStore ??
+      new NotificationsStore({ defaultDuration: 3000, maxNotifications: 5 }),
+  });
+};
+
+describe("AuthStore", () => {
+  // Sandbox at describe scope
+  const sandbox = sinon.createSandbox();
+
+  // Clean up after each test
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  describe("initialization", () => {
+    it("should start in loading state", () => {
+      const authStore = makeTestAuthStore();
+
+      expect(authStore.isLoading).to.be.true;
+      expect(authStore.isLoggedIn).to.be.false;
+    });
+
+    it("should sync with Firebase auth state", async () => {
+      const firebaseAuth = new TestFirebaseAuth();
+      const authStore = makeTestAuthStore({ firebaseAuth });
+
+      // Wait for initialization
+      await when(() => !authStore.isLoading);
+
+      expect(authStore.isLoading).to.be.false;
+      expect(authStore.firebaseUser).to.be.null;
+    });
+  });
+
+  describe("sign in", () => {
+    it("should update state when user signs in", async () => {
+      const firebaseAuth = new TestFirebaseAuth();
+      const authStore = makeTestAuthStore({ firebaseAuth });
+
+      firebaseAuth.simulateSignIn({ uid: "user-123", email: "test@example.com" });
+
+      await when(() => authStore.isLoggedIn);
+
+      expect(authStore.isLoggedIn).to.be.true;
+      expect(authStore.firebaseUser?.email).to.equal("test@example.com");
+    });
+
+    it("should fetch app startup data on sign in", async () => {
+      const firebaseAuth = new TestFirebaseAuth();
+      const fetchAppStartup = sandbox.stub().resolves({ courierToken: "token-abc" });
+      const authStore = makeTestAuthStore({ firebaseAuth, fetchAppStartup });
+
+      firebaseAuth.simulateSignIn({ uid: "user-123" });
+
+      await when(() => authStore.courierToken !== null);
+
+      expect(fetchAppStartup).to.have.been.calledOnce;
+      expect(authStore.courierToken).to.equal("token-abc");
+    });
+
+    it("should track sign in analytics", async () => {
+      const firebaseAuth = new TestFirebaseAuth();
+      const ampli = createAmpliMock();
+      const authStore = makeTestAuthStore({ firebaseAuth, ampli: ampli as Ampli });
+
+      firebaseAuth.simulateSignIn({ uid: "user-123" });
+
+      await when(() => authStore.isLoggedIn);
+
+      const calls = ampli.getCalls();
+      expect(calls.some((c) => c.name === "user_signed_in")).to.be.true;
+    });
+  });
+
+  describe("sign out", () => {
+    it("should clear state on sign out", async () => {
+      const firebaseAuth = new TestFirebaseAuth();
+      const authStore = makeTestAuthStore({ firebaseAuth });
+
+      // Start signed in
+      firebaseAuth.simulateSignIn({ uid: "user-123" });
+      await when(() => authStore.isLoggedIn);
+
+      // Sign out
+      await authStore.logOut();
+
+      expect(authStore.isLoggedIn).to.be.false;
+      expect(authStore.firebaseUser).to.be.null;
+      expect(authStore.courierToken).to.be.null;
+    });
+  });
+
+  describe("error handling", () => {
+    it("should handle fetchAppStartup failure", async () => {
+      const firebaseAuth = new TestFirebaseAuth();
+      const notificationsStore = new NotificationsStore({
+        defaultDuration: 3000,
+        maxNotifications: 5,
+      });
+      const fetchAppStartup = sandbox.stub().rejects(new Error("Network error"));
+      const authStore = makeTestAuthStore({
+        firebaseAuth,
+        notificationsStore,
+        fetchAppStartup,
+      });
+
+      firebaseAuth.simulateSignIn({ uid: "user-123" });
+
+      // Wait for error handling
+      await when(() => !authStore.isLoading);
+
+      // User should still be logged in despite API error
+      expect(authStore.isLoggedIn).to.be.true;
+      // Courier token should remain null
+      expect(authStore.courierToken).to.be.null;
+    });
+  });
+});
+```
+
+**Why good:** Clear organization with describe blocks, each test creates fresh dependencies, sandbox.restore() in afterEach, when() for all async assertions, verifies both state and side effects (analytics, notifications)
 
 </patterns>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Missing Sandbox Cleanup
+
+Stubs created without sandbox cleanup leak to other tests, causing flaky failures that are difficult to diagnose.
+
+```typescript
+// ❌ Anti-pattern
+describe("MyStore", () => {
+  it("test one", () => {
+    sinon.stub(api, "fetch").resolves({ data: "test" });
+    // No restore - stub persists!
+  });
+
+  it("test two", () => {
+    // api.fetch still stubbed from test one!
+    // Test may pass or fail depending on execution order
+  });
+});
+```
+
+**Correct approach:** Create sandbox at describe scope, call sandbox.restore() in afterEach.
+
+---
+
+### ❌ setTimeout-Based Async Assertions
+
+Using arbitrary timeouts for async assertions creates flaky tests that pass locally but fail in CI, or vice versa.
+
+```typescript
+// ❌ Anti-pattern
+it("should load data", async () => {
+  store.loadData();
+  await new Promise((r) => setTimeout(r, 100)); // Arbitrary delay
+  expect(store.data).to.exist; // May fail if load takes > 100ms
+});
+```
+
+**Correct approach:** Use MobX `when()` to wait for observable conditions.
+
+---
+
+### ❌ Shared Store Instances
+
+Reusing store instances between tests causes state leakage and order-dependent test failures.
+
+```typescript
+// ❌ Anti-pattern
+const sharedStore = makeTestStore(); // Created once
+
+it("test 1", () => {
+  sharedStore.setValue("a");
+  expect(sharedStore.value).to.equal("a");
+});
+
+it("test 2", () => {
+  // sharedStore still has "a" from test 1!
+  expect(sharedStore.value).to.be.undefined; // Fails
+});
+```
+
+**Correct approach:** Create fresh store instances within each test using factory functions.
+
+---
+
+### ❌ Direct Firebase SDK Mocking
+
+Stubbing Firebase SDK internals is fragile, incomplete, and requires deep knowledge of Firebase implementation details.
+
+```typescript
+// ❌ Anti-pattern
+sandbox.stub(firebase.auth(), "onAuthStateChanged").callsFake((cb) => {
+  cb({ uid: "123" }); // Incomplete user object
+  return () => {};
+});
+```
+
+**Correct approach:** Use TestFirebaseAuth test double that implements the same interface.
+
+---
+
+### ❌ Jest Syntax in Karma/Mocha Tests
+
+Using Jest assertion syntax (toBe, toEqual, jest.fn()) in a Karma/Mocha/Chai environment causes compilation errors.
+
+```typescript
+// ❌ Anti-pattern
+expect(value).toBe(5);        // Jest syntax
+expect(array).toEqual([1,2]); // Jest syntax
+const mock = jest.fn();       // Jest mocking
+```
+
+**Correct approach:** Use Chai assertions (to.equal, to.deep.equal) and Sinon for mocking.
+
+---
+
+### ❌ Missing await with when()
+
+Forgetting to await MobX `when()` causes tests to pass before async operations complete, leading to false positives.
+
+```typescript
+// ❌ Anti-pattern
+it("should load", () => {
+  store.loadData();
+  when(() => store.isLoaded); // Missing await!
+  expect(store.data).to.exist; // Runs immediately, likely fails
+});
+```
+
+**Correct approach:** Always await when() calls.
+
+</anti_patterns>
 
 ---
 
@@ -572,29 +1001,86 @@ const defaultHandler = () =>
 
 ## Decision Framework
 
+### What to Mock
+
 ```
-Need API mocking?
-├─ Is it for development?
-│   ├─ YES → Browser worker + variant switching
-│   └─ NO → Server worker in tests
-├─ Testing different scenarios?
-│   ├─ YES → Per-test handler overrides
-│   └─ NO → Default handlers sufficient
-├─ Need to change mock behavior without restarting?
-│   ├─ YES → Variant switching + runtime control
-│   └─ NO → Static handlers fine
-└─ Need realistic network conditions?
-    ├─ YES → Add delay() to handlers
-    └─ NO → Instant responses
+What am I testing?
+|
++-- External service (Firebase, Analytics)?
+|   |
+|   +-- Use dedicated test double (TestFirebaseAuth, ampliMock)
+|
++-- API call?
+|   |
+|   +-- Inject mock function via factory
+|   |   sandbox.stub().resolves({ ... })
+|
++-- Store dependency?
+|   |
+|   +-- Create via factory, provide partial overrides
+|
++-- Side effect (notifications, logging)?
+    |
+    +-- Create fresh instance per test
+    +-- Verify calls/state after action
 ```
 
-**Choosing between approaches:**
+### Async Assertion Strategy
 
-- **Centralized package**: Always use for shared mocks across apps
-- **Handler variants**: Use when testing multiple scenarios (empty, error states)
-- **Per-test overrides**: Use when specific tests need different responses
-- **Runtime switching**: Use in development for UI exploration
-- **Network delay**: Use when testing loading states or race conditions
+```
+Waiting for async behavior?
+|
++-- Is it MobX observable state?
+|   |
+|   +-- YES --> Use when(() => condition)
+|   |
+|   +-- NO --> Is it a Promise?
+|       |
+|       +-- YES --> await the Promise directly
+|       |
+|       +-- NO --> Is it a callback?
+|           |
+|           +-- Use sinon.stub().callsFake()
+```
+
+### Stub vs Spy vs Mock
+
+```
+What behavior do I need?
+|
++-- Replace implementation entirely?
+|   |
+|   +-- sandbox.stub().resolves({ ... })
+|
++-- Track calls but keep original?
+|   |
+|   +-- sandbox.spy(object, "method")
+|
++-- Verify specific call pattern?
+    |
+    +-- sandbox.stub() with expect().to.have.been.calledWith()
+```
+
+### Test Isolation
+
+```
+Creating test instance?
+|
++-- Is it a store?
+|   |
+|   +-- Use factory function with partial dependencies
+|   +-- Create fresh instance in each test
+|
++-- Is it a mock?
+|   |
+|   +-- Create in beforeEach or inside test
+|   +-- Reset/restore in afterEach
+|
++-- Is it a stub?
+    |
+    +-- Create via sandbox.stub()
+    +-- sandbox.restore() handles cleanup
+```
 
 </decision_framework>
 
@@ -606,22 +1092,33 @@ Need API mocking?
 
 **Works with:**
 
-- **React Query / TanStack Query**: MSW intercepts fetch calls, React Query sees normal responses
-- **Vitest**: Server worker integrates via test setup file (`setup-tests.ts`)
-- **React Testing Library**: Works seamlessly, no special configuration needed
-- **Vite/Next.js**: Browser worker integrates via app entry point
+- **MobX Stores**: Test stores via dependency injection; use when() for async assertions
+- **Sinon**: sandbox.stub() for function mocking; sandbox.restore() for cleanup
+- **Chai**: Assertion library with to.equal, to.be.true syntax (NOT Jest)
+- **Firebase Auth**: TestFirebaseAuth simulates auth state changes
+- **Analytics (Ampli)**: ampliMock captures event calls for verification
+- **NotificationsStore**: Fresh instances per test to verify user feedback
 
-**Configuration with other tools:**
+**Test Framework:**
+
+- **Karma + Mocha**: Test runner (NOT Jest/Vitest)
+- **Chai**: Assertions (to.equal NOT toBe)
+- **Sinon**: Mocking (createSandbox NOT jest.fn())
+
+**Common Test Imports:**
 
 ```typescript
-// Vitest config
-// vitest.config.ts
-export default defineConfig({
-  test: {
-    setupFiles: ["./src/setup-tests.ts"], // Loads serverWorker
-  },
-});
+import sinon from "sinon";
+import { expect } from "chai";
+import { when } from "mobx";
 ```
+
+**Use these patterns:**
+
+- Chai assertion syntax (to.equal, to.be.true)
+- MobX when() for async assertions
+- Fresh store instances per test
+- TestFirebaseAuth for auth testing
 
 </integration>
 
@@ -633,109 +1130,34 @@ export default defineConfig({
 
 **High Priority Issues:**
 
-- ❌ **Using `setupWorker` in Node tests or `setupServer` in browser** - Wrong API for environment causes cryptic failures
-- ❌ **Manual API type definitions instead of generated types** - Types drift from real API schema causing runtime errors
-- ❌ **Not resetting handlers between tests** - Test pollution and order-dependent failures
-- ❌ **Mixing handlers and mock data in same file** - Reduces reusability and violates separation of concerns
-- ❌ **Missing `await` when starting browser worker before render** - Race conditions cause intermittent failures
+- Missing sandbox.restore() in afterEach - stubs leak to other tests causing flaky failures
+- Using setTimeout for async assertions - flaky tests that pass/fail randomly
+- Missing await with when() - test passes before async operation completes
+- Jest assertion syntax (toBe, toEqual) - wrong test framework, tests won't compile
 
 **Medium Priority Issues:**
 
-- ⚠️ **Only testing happy path (missing empty/error variants)** - Incomplete test coverage
-- ⚠️ **Hardcoded HTTP status codes (magic numbers)** - Use named constants
-- ⚠️ **Top-level import of browser worker in Next.js** - SSR build failures
-- ⚠️ **No `onUnhandledRequest` configuration** - Unclear which requests are mocked vs real
+- Shared store instances between tests - state leakage causes order-dependent tests
+- Not resetting ampliMock between tests - event counts accumulate incorrectly
+- Not verifying notifications in error paths - silent failures in production
+- Direct Firebase SDK stubbing - fragile, incomplete mocks
 
 **Common Mistakes:**
 
-- Forgetting to call `serverWorker.resetHandlers()` in `afterEach`
-- Using default exports instead of named exports
-- Embedding mock data inside handlers instead of separating into `mocks/` directory
-- Not providing variant handlers (only `defaultHandler`)
+- Forgetting to await async store methods before assertions
+- Not providing all required dependencies to factory (check for undefined errors)
+- Using regular methods instead of arrow functions in test stores
+- Not cleaning up MobxQuery in store dispose (memory leaks in tests)
 
 **Gotchas & Edge Cases:**
 
-- MSW requires async/await for browser worker start - rendering before ready causes race conditions
-- Handler overrides with `serverWorker.use()` persist until `resetHandlers()` is called
-- Browser worker doesn't work in Node environment and vice versa - check your imports
-- Dynamic imports in Next.js are required for browser-only code to avoid SSR bundling issues
+- TestFirebaseAuth fires onAuthStateChanged async - first callback is delayed via setTimeout(0)
+- when() with timeout throws error, must wrap in try/catch
+- Sinon stubs on class methods need the class instance, not prototype
+- NotificationsStore maxNotifications affects test assertions
+- ampliMock.getCalls() returns copy - safe to filter/map without mutation
 
 </red_flags>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns to Avoid
-
-### Wrong MSW API for Environment
-
-```typescript
-// ❌ ANTI-PATTERN: setupServer in browser
-import { setupServer } from "msw/node";
-export const browserWorker = setupServer(...handlers);
-
-// ❌ ANTI-PATTERN: setupWorker in Node tests
-import { setupWorker } from "msw/browser";
-export const serverWorker = setupWorker(...handlers);
-```
-
-**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs - wrong API causes cryptic runtime errors.
-
-**What to do instead:** Use `setupWorker` from `msw/browser` for browser, `setupServer` from `msw/node` for tests.
-
----
-
-### Missing Handler Reset Between Tests
-
-```typescript
-// ❌ ANTI-PATTERN: No resetHandlers
-import { afterAll, beforeAll } from "vitest";
-import { serverWorker } from "@repo/api-mocks/serverWorker";
-
-beforeAll(() => serverWorker.listen());
-afterAll(() => serverWorker.close());
-// Missing: afterEach(() => serverWorker.resetHandlers());
-```
-
-**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent.
-
-**What to do instead:** Always include `afterEach(() => serverWorker.resetHandlers())`.
-
----
-
-### Mock Data Embedded in Handlers
-
-```typescript
-// ❌ ANTI-PATTERN: Data inside handler
-export const getFeaturesHandler = http.get("api/v1/features", () => {
-  return HttpResponse.json({
-    features: [{ id: "1", name: "Dark mode" }],
-  });
-});
-```
-
-**Why it's wrong:** Mock data cannot be reused in other tests or handlers, no type checking against API schema.
-
-**What to do instead:** Separate mock data into `mocks/` directory with proper types from `@repo/api/types`.
-
----
-
-### Rendering Before MSW Ready
-
-```typescript
-// ❌ ANTI-PATTERN: Missing await
-if (import.meta.env.DEV) {
-  browserWorker.start({ onUnhandledRequest: "bypass" }); // No await!
-}
-createRoot(document.getElementById("root")!).render(<App />);
-```
-
-**Why it's wrong:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably.
-
-**What to do instead:** Await worker start before rendering: `await browserWorker.start(...)`.
-
-</anti_patterns>
 
 ---
 
@@ -743,16 +1165,18 @@ createRoot(document.getElementById("root")!).render(<App />);
 
 ## ⚠️ CRITICAL REMINDERS
 
-**(You MUST separate mock data from handlers - handlers in `handlers/`, data in `mocks/`)**
+> **All code must follow project conventions in CLAUDE.md** (PascalCase stores, named exports, import ordering)
 
-**(You MUST use `setupWorker` for browser/development and `setupServer` for Node/tests - NEVER swap them)**
+**(You MUST create a Sinon sandbox in describe scope and call sandbox.restore() in afterEach - prevents test pollution)**
 
-**(You MUST reset handlers after each test with `serverWorker.resetHandlers()` in `afterEach`)**
+**(You MUST use mock store factories with partial dependencies - never instantiate stores directly in tests)**
 
-**(You MUST use generated types from `@repo/api/types` - NEVER manually define API response types)**
+**(You MUST use TestFirebaseAuth for Firebase auth mocking - never mock Firebase SDK directly)**
 
-**(You MUST use named constants for HTTP status codes and delays - NO magic numbers)**
+**(You MUST use MobX when() for async assertions - never use arbitrary timeouts or setTimeout)**
 
-**Failure to follow these rules will cause test pollution, type drift from real API, environment-specific failures, and hard-to-debug race conditions.**
+**(You MUST use Chai assertion syntax (to.equal, to.be.true) - NOT Jest syntax (toBe, toEqual))**
+
+**Failure to follow these rules will cause flaky tests, test pollution, and false positives/negatives.**
 
 </critical_reminders>
