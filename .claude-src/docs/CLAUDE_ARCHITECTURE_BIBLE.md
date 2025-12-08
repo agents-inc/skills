@@ -7,14 +7,54 @@
 This system compiles modular source files into standalone agent/skill markdown files using:
 - **TypeScript compiler**: `.claude-src/compile.ts`
 - **LiquidJS templates**: `.claude-src/templates/agent.liquid`
-- **YAML configuration**: `.claude-src/profiles/{profile}/config.yaml`
+- **Agent definitions**: `.claude-src/agents.yaml` (single source of truth)
+- **Profile configuration**: `.claude-src/profiles/{profile}/config.yaml` (skill assignments)
+
+## Core Architecture Principle
+
+**Agents are GENERIC. Skills are PROFILE-SPECIFIC.**
+
+| Layer | Location | Purpose | Changes Per Profile |
+|-------|----------|---------|---------------------|
+| **Agents** | `.claude-src/agent-sources/` | Define *role* + *workflow* | NO - single source |
+| **Skills** | `.claude-src/profiles/{profile}/skills/` | Define *implementation patterns* | YES - vary by tech stack |
+| **Config** | `.claude-src/profiles/{profile}/config.yaml` | Control which agents/skills compile | YES - profile-specific |
+
+**Example:**
+- `frontend-developer` agent (generic): "You implement React components following patterns"
+- `frontend/react` skill (home): "Use Zustand, SCSS Modules, React Query"
+- `frontend/react` skill (work): "Use MobX, Tailwind, observer() pattern"
+
+## Profile Switching Workflow
+
+Switching profiles is a single command. The compiler **clears all output** and regenerates:
+
+```bash
+# Switch to work profile (Photoroom - MobX, Tailwind)
+npm run compile:work
+
+# Switch to home profile (Personal - Zustand, SCSS)
+npm run compile:home
+```
+
+**What happens:**
+1. `.claude/agents/` is **cleared completely**
+2. `.claude/skills/` is **cleared completely**
+3. Only agents defined in the profile's `config.yaml` are compiled
+4. Each agent gets bundled with that profile's skills
+5. `CLAUDE.md` is copied from the profile
+
+**Result:** Only the active profile's agents are visible to Claude Code.
 
 ## Directory Structure
 
 ```
 .claude-src/
-├── agents/                    # Agent source files (modular)
-│   └── {agent-name}/
+├── agents.yaml                # Single source of truth for ALL agent definitions
+│                              # Contains: title, description, model, tools, core_prompts, output_format
+│
+├── agent-sources/             # Agent source files (GENERIC - shared across profiles)
+│   └── {agent-name}/          # Named "agent-sources" to avoid Claude Code auto-detection
 │       ├── intro.md           # Role definition (NO <role> tags - template adds them)
 │       ├── workflow.md        # Agent-specific workflow and processes
 │       ├── critical-requirements.md  # Top-of-file MUST rules
@@ -32,16 +72,28 @@ This system compiles modular source files into standalone agent/skill markdown f
 │
 ├── profiles/                  # Profile-specific configuration
 │   └── {profile}/
-│       ├── config.yaml        # Agent and skill configuration
-│       └── skills/            # Profile-specific skills
+│       ├── config.yaml        # use_agents list + agent_skills assignments
+│       ├── CLAUDE.md          # Profile-specific project instructions
+│       └── skills/            # Profile-specific implementation patterns
 │           └── {category}/
 │               └── {skill}.md
 │
 ├── templates/
 │   └── agent.liquid           # Main agent template
 │
+├── types.ts                   # TypeScript type definitions
+│
+├── compile.ts                 # Compiler (loads agents.yaml + merges with profile skills)
+│
 └── docs/
-    └── MODULAR_ARCHITECTURE.md  # This file
+    └── CLAUDE_ARCHITECTURE_BIBLE.md  # This file
+
+.claude/                       # Compiled output (gitignored or committed)
+├── agents/                    # Compiled agents (CLEARED on each compile)
+│   └── {agent-name}.md        # No profile suffix - clean names
+└── skills/                    # Compiled skills (CLEARED on each compile)
+    └── {skill-id}/
+        └── SKILL.md
 ```
 
 ## Agent Source File Structure
@@ -588,14 +640,17 @@ When making requests TO Claude Code (not in agent prompts), use these trigger wo
 
 ---
 
-## Config.yaml Structure
+## agents.yaml Structure
+
+The `agents.yaml` file is the **single source of truth** for all agent definitions. It lives at `.claude-src/agents.yaml` and contains agent metadata that is shared across all profiles.
 
 ```yaml
+# .claude-src/agents.yaml
 agents:
-  - name: agent-name
-    title: "Agent Title"
-    description: "One-line description for Claude Code"
-    model: opus  # or sonnet, haiku
+  frontend-developer:
+    title: Frontend Developer Agent
+    description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
     tools:
       - Read
       - Write
@@ -603,31 +658,112 @@ agents:
       - Grep
       - Glob
       - Bash
-    core_prompts: developer  # References core_prompt_sets below
-    output_format: output-formats-developer  # File in core-prompts/
-    ending_prompts:
-      - context-management
-      - improvement-protocol
-    skills:
-      precompiled:
-        - category/skill-name  # Bundled into agent
-      dynamic:
-        - id: category/skill-name
-          description: "Short description"
-          usage: "When to invoke"
+    core_prompts: developer      # References core_prompt_sets in profile config
+    ending_prompts: developer    # References ending_prompt_sets in profile config
+    output_format: output-formats-developer
 
+  backend-developer:
+    title: Backend Developer Agent
+    description: Implements backend features from detailed specs - API routes, database operations, server utilities
+    model: opus
+    tools: [Read, Write, Edit, Grep, Glob, Bash]
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-developer
+
+  # ... more agent definitions
+```
+
+**Key points:**
+- Agent definitions do NOT include skills - skills are profile-specific
+- All agents available across all profiles are defined here
+- Profile configs reference these agents by name
+
+## Config.yaml Structure (Simplified)
+
+Each profile's `config.yaml` specifies:
+1. **Which agents** to use from `agents.yaml` (`use_agents`)
+2. **Which skills** each agent gets (`agent_skills`)
+3. **Profile metadata** (name, description, CLAUDE.md path)
+4. **Prompt sets** (core and ending prompts for each agent type)
+
+```yaml
+# .claude-src/profiles/work/config.yaml
+
+# Profile metadata
+name: work
+description: Photoroom webapp (MobX, Tailwind, React Query, Karma+Chai)
+claude_md: ./CLAUDE.md
+
+# Core prompt sets (shared logic, referenced by agents)
 core_prompt_sets:
   developer:
     - core-principles
     - investigation-requirement
     - write-verification
     - anti-over-engineering
+  reviewer:
+    - core-principles
+    - investigation-requirement
+    - write-verification
 
-skills:
-  - id: category/skill-name
-    name: "Skill Display Name"
-    path: skills/category/skill-name.md
+# Ending prompt sets (appended after skills/examples)
+ending_prompt_sets:
+  developer:
+    - context-management
+    - improvement-protocol
+  reviewer:
+    - context-management
+    - improvement-protocol
+
+# Which agents this profile uses (references agents.yaml)
+use_agents:
+  - frontend-developer
+  - frontend-reviewer
+  - tester
+  - pm
+  - skill-summoner
+
+# Profile-specific skill assignments per agent
+agent_skills:
+  frontend-developer:
+    precompiled:               # Bundled directly into agent
+      - id: frontend/react
+        path: skills/frontend/react.md
+        name: React
+        description: Component architecture, MobX observer, hooks
+        usage: when implementing React components
+      - id: frontend/styling
+        path: skills/frontend/styling.md
+        name: Styling
+        description: Tailwind, clsx, design tokens
+        usage: when implementing styles
+    dynamic:                   # Available via skill invocation
+      - id: frontend/api
+        path: skills/frontend/api.md
+        name: API Integration
+        description: REST APIs, React Query, Zod validation
+        usage: when implementing data fetching or API calls
+
+  frontend-reviewer:
+    precompiled:
+      - id: frontend/react
+        path: skills/frontend/react.md
+        # ...
+    dynamic: []
+
+  # ... more agent skill assignments
 ```
+
+### Profile Differences
+
+The same agent can have different skill configurations per profile:
+
+| Agent | Home Profile | Work Profile |
+|-------|--------------|--------------|
+| `frontend-developer` | Zustand, SCSS Modules | MobX, Tailwind |
+| `tester` | Vitest, MSW | Karma, Mocha, Chai, Sinon |
+| `backend-developer` | ✅ Available | ❌ Not in use_agents |
 
 ## Skill File Structure
 
@@ -727,30 +863,160 @@ This closes:
 
 ## Creating a New Agent
 
-1. Create directory: `.claude-src/agents/{agent-name}/`
-2. Create required files:
-   - `intro.md` - Role definition (no `<role>` tags)
-   - `workflow.md` - Agent-specific processes with XML tags
-   - `critical-requirements.md` - Top MUST rules (no XML wrapper)
-   - `critical-reminders.md` - Bottom reminders (no XML wrapper)
-   - `examples.md` - Optional example outputs
-3. Add to `config.yaml`:
-   - Agent definition with name, title, description, model, tools
-   - Assign core_prompts set
-   - Assign output_format
-   - Configure precompiled and dynamic skills
-4. Run `npm run compile:{profile}`
-5. Verify compiled output has all required XML tags
+Agents are **generic** - define them once in `agents.yaml`, then enable them in whichever profiles need them.
+
+### Step 1: Create Agent Source Files
+
+Create directory: `.claude-src/agent-sources/{agent-name}/`
+
+```
+.claude-src/agent-sources/my-new-agent/
+├── intro.md                  # Role definition (no <role> tags)
+├── workflow.md               # Agent-specific processes with XML tags
+├── critical-requirements.md  # Top MUST rules (no XML wrapper)
+├── critical-reminders.md     # Bottom reminders (no XML wrapper)
+└── examples.md               # Optional example outputs
+```
+
+### Step 2: Add Agent Definition to agents.yaml
+
+Add the agent to `.claude-src/agents.yaml` (single source of truth):
+
+```yaml
+# .claude-src/agents.yaml
+agents:
+  # ... existing agents ...
+
+  my-new-agent:
+    title: My New Agent
+    description: "What this agent does - one-line for Claude Code"
+    model: opus  # or sonnet, haiku
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer      # References core_prompt_sets in profile config
+    ending_prompts: developer    # References ending_prompt_sets in profile config
+    output_format: output-formats-developer
+```
+
+### Step 3: Enable Agent in Profile Config(s)
+
+Add the agent to each profile's `use_agents` list and assign skills:
+
+```yaml
+# .claude-src/profiles/work/config.yaml
+
+# Add to use_agents list
+use_agents:
+  - frontend-developer
+  - my-new-agent  # NEW
+
+# Add skill assignments
+agent_skills:
+  # ... existing agents ...
+
+  my-new-agent:
+    precompiled:
+      - id: frontend/react
+        path: skills/frontend/react.md   # Uses WORK profile's skill
+        name: React
+        description: MobX patterns
+        usage: when implementing components
+    dynamic: []
+```
+
+### Step 4: Compile and Verify
+
+```bash
+npm run compile:work
+# Output: .claude/agents/my-new-agent.md
+```
+
+### Key Points
+
+- **Agent definitions** live in `.claude-src/agents.yaml` (single source of truth)
+- **Agent source files** live in `.claude-src/agent-sources/` (shared across all profiles)
+- **Skill assignments** live in each profile's `config.yaml`
+- Same agent can have **different skill bundles** per profile
+- Agents **not listed** in a profile's `use_agents` won't be compiled for that profile
 
 ## Creating a New Skill
 
-1. Create file: `.claude-src/profiles/{profile}/skills/{category}/{skill}.md`
-2. Follow skill file structure with:
-   - Quick guide summary
-   - `<critical_requirements>` section
-   - `<philosophy>` section
-   - `<patterns>` with good/bad examples
-   - `<anti_patterns>` section
-3. Add to `config.yaml` skills list
-4. Assign to agents as precompiled or dynamic
-5. Run compilation and verify
+Skills are **profile-specific** - they contain implementation patterns that vary by tech stack.
+
+### Step 1: Create Skill File
+
+Create in the appropriate profile: `.claude-src/profiles/{profile}/skills/{category}/{skill}.md`
+
+```
+# For work profile (MobX, Tailwind)
+.claude-src/profiles/work/skills/frontend/react.md
+
+# For home profile (Zustand, SCSS)
+.claude-src/profiles/home/skills/frontend/react.md
+```
+
+### Step 2: Follow Skill Structure
+
+```markdown
+# [Skill Name]
+
+> **Quick Guide:** [One-line summary]
+
+---
+
+<critical_requirements>
+## ⚠️ CRITICAL: Before Using This Skill
+
+**(You MUST [requirement])**
+</critical_requirements>
+
+---
+
+<philosophy>
+## Philosophy
+[Why this approach matters]
+</philosophy>
+
+---
+
+<patterns>
+## Core Patterns
+
+### Pattern 1: [Name]
+[Good/bad examples with explanations]
+</patterns>
+
+---
+
+<anti_patterns>
+## Anti-Patterns
+[What to avoid]
+</anti_patterns>
+```
+
+### Step 3: Assign to Agents in Config
+
+```yaml
+# In profile's config.yaml
+agents:
+  frontend-developer:
+    skills:
+      precompiled:
+        - id: frontend/react
+          path: skills/frontend/react.md
+          name: React
+          description: Component patterns
+          usage: when implementing React components
+```
+
+### Key Points
+
+- **Same skill ID** can exist in multiple profiles with different content
+- `frontend/react` in work profile → MobX patterns
+- `frontend/react` in home profile → Zustand patterns
+- Skills are bundled from the **active profile's** `skills/` directory

@@ -1,0 +1,180 @@
+# Single source of truth for all agent definitions
+# Profile configs reference these by name and add profile-specific skill assignments
+
+agents:
+  frontend-developer:
+    title: Frontend Developer Agent
+    description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-developer
+
+  backend-developer:
+    title: Backend Developer Agent
+    description: Implements backend features from detailed specs - API routes, database operations, server utilities, authentication, middleware - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-developer
+
+  frontend-reviewer:
+    title: Frontend Reviewer Agent
+    description: Reviews React code ONLY (*.tsx/*.jsx with JSX) - components, hooks, props, state, performance, a11y patterns - NOT for API routes, configs, or server code (use backend-reviewer)
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: reviewer
+    ending_prompts: reviewer
+    output_format: output-formats-reviewer
+
+  backend-reviewer:
+    title: Backend Reviewer Agent
+    description: Reviews non-React code - API routes, server utils, configs (*.config.*), build tooling, CI/CD (*.yml), security, env management - defers *.tsx React components to frontend-reviewer
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: reviewer
+    ending_prompts: reviewer
+    output_format: output-formats-reviewer
+
+  tester:
+    title: Tester Agent
+    description: Writes tests BEFORE implementation - all test types (*.test.*, *.spec.*, E2E) - Tester red-green-refactor - invoke BEFORE developer implements feature
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-tester
+
+  pm:
+    title: PM and Architect Agent
+    description: Creates detailed implementation specs by researching codebase patterns - architectural planning and requirements gathering - invoke BEFORE developer for any new feature
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: pm
+    ending_prompts: pm
+    output_format: output-formats-pm
+
+  skill-summoner:
+    title: Skill Summoner Agent
+    description: Creates technology-specific skills by researching best practices and comparing with codebase standards - use for MobX, Tailwind, Hono, and other technology skills
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - WebSearch
+      - WebFetch
+    core_prompts: summoner
+    ending_prompts: summoner
+    output_format: output-formats-developer
+
+  agent-summoner:
+    title: Agent Summoner Agent
+    description: Expert in creating agents and skills - understands agent architecture deeply - invoke when you need to create, improve, or analyze agents/skills
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: summoner
+    ending_prompts: summoner
+    output_format: output-formats-developer
+
+  agent-migrator:
+    title: Agent Migrator
+    description: Migrates agents from old .src.md preprocessor format to new TypeScript + LiquidJS modular format - extracts content into intro/workflow/examples/critical-reminders files
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-developer
+
+  pattern-scout:
+    title: Pattern Scout Agent
+    description: Extracts ALL patterns from monorepo (15+ categories - code, architecture, testing, design, build, CI/CD, env, security) - creates comprehensive standards - invoke for new codebases
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: scout
+    ending_prompts: scout
+    output_format: output-formats-developer
+
+  pattern-critique:
+    title: Pattern Critique Agent
+    description: Critiques extracted patterns against industry standards (Airbnb, Stripe, Meta, Vercel) - frontend/React architecture focus - invoke AFTER pattern-scout extracts patterns
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: reviewer
+    ending_prompts: reviewer
+    output_format: output-formats-critique
+
+  documentor:
+    title: Documentor Agent
+    description: Creates AI-focused documentation that helps other agents understand where and how to implement features. Works incrementally, tracking progress over time.
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Glob
+      - Grep
+      - Bash
+    core_prompts: developer
+    ending_prompts: developer
+    output_format: output-formats-documentor

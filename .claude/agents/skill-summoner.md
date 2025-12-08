@@ -66,13 +66,13 @@ You produce production-ready skills as **single comprehensive files** with embed
 - Use `skill: "frontend-react"` for understanding React patterns when creating React-related skills
   Usage: when creating or improving skills related to React components or hooks
 
-- Use `skill: "frontend-styling"` for understanding SCSS/cva patterns when creating styling skills
+- Use `skill: "frontend-styling"` for understanding Tailwind patterns when creating styling skills
   Usage: when creating or improving skills related to CSS or styling patterns
 
 - Use `skill: "frontend-api"` for understanding API integration patterns when creating data fetching skills
   Usage: when creating or improving skills related to data fetching or API integration
 
-- Use `skill: "frontend-client-state"` for understanding Zustand/state patterns when creating state management skills
+- Use `skill: "frontend-client-state"` for understanding MobX patterns when creating state management skills
   Usage: when creating or improving skills related to state management
 
 - Use `skill: "frontend-accessibility"` for understanding a11y patterns when creating accessibility skills
@@ -81,44 +81,11 @@ You produce production-ready skills as **single comprehensive files** with embed
 - Use `skill: "frontend-performance"` for understanding render optimization when creating performance skills
   Usage: when creating or improving skills related to frontend performance
 
-- Use `skill: "frontend-testing"` for understanding React testing patterns when creating testing skills
+- Use `skill: "frontend-testing"` for understanding Karma+Chai testing patterns when creating testing skills
   Usage: when creating or improving skills related to React testing
 
-- Use `skill: "frontend-mocking"` for understanding MSW/mock patterns when creating testing skills
+- Use `skill: "frontend-mocking"` for understanding Sinon/mock patterns when creating testing skills
   Usage: when creating or improving skills related to mocking or test data
-
-- Use `skill: "backend-api"` for understanding Hono/API patterns when creating API skills
-  Usage: when creating or improving skills related to API routes or endpoints
-
-- Use `skill: "backend-database"` for understanding Drizzle/DB patterns when creating database skills
-  Usage: when creating or improving skills related to database operations
-
-- Use `skill: "backend-ci-cd"` for understanding pipeline patterns when creating CI/CD skills
-  Usage: when creating or improving skills related to CI/CD pipelines
-
-- Use `skill: "backend-performance"` for understanding query optimization when creating performance skills
-  Usage: when creating or improving skills related to backend performance
-
-- Use `skill: "backend-testing"` for understanding API testing patterns when creating backend testing skills
-  Usage: when creating or improving skills related to API testing
-
-- Use `skill: "security-security"` for understanding auth/security patterns when creating security skills
-  Usage: when creating or improving skills related to authentication or security
-
-- Use `skill: "shared-reviewing"` for understanding code review patterns when creating reviewer skills
-  Usage: when creating or improving skills related to code review
-
-- Use `skill: "setup-monorepo"` for understanding Turborepo patterns when creating monorepo skills
-  Usage: when creating or improving skills related to monorepo structure
-
-- Use `skill: "setup-package"` for understanding package conventions when creating package skills
-  Usage: when creating or improving skills related to package conventions
-
-- Use `skill: "setup-env"` for understanding env configuration when creating environment skills
-  Usage: when creating or improving skills related to environment configuration
-
-- Use `skill: "setup-tooling"` for understanding build tooling when creating tooling skills
-  Usage: when creating or improving skills related to build tooling
 
 </preloaded_content>
 
