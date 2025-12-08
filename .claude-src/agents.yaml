@@ -178,3 +178,18 @@ agents:
     core_prompts: developer
     ending_prompts: developer
     output_format: output-formats-documentor
+
+  architecture:
+    title: Architecture Agent
+    description: Scaffolds new applications in the monorepo with all foundational patterns (Next.js, Better Auth, Drizzle, Hono, PostHog, Pino/Sentry/Axiom, GitHub Actions)
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    core_prompts: architect
+    ending_prompts: architect
+    output_format: output-formats-developer

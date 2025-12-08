@@ -36,6 +36,11 @@ core_prompt_sets:
     - investigation-requirement
     - write-verification
     - anti-over-engineering
+  architect:
+    - core-principles
+    - investigation-requirement
+    - write-verification
+    - anti-over-engineering
 
 # Which prompts appear at the END of the agent (after skills/examples)
 # These are typically shared across all agent types
@@ -56,6 +61,9 @@ ending_prompt_sets:
     - context-management
     - improvement-protocol
   critique:
+    - context-management
+    - improvement-protocol
+  architect:
     - context-management
     - improvement-protocol
 
@@ -959,3 +967,92 @@ agent_skills:
         name: Observability Setup
         description: documenting observability setup
         usage: when documenting observability setup procedures
+
+  architecture:
+    precompiled:
+      - id: setup/monorepo
+        path: skills/setup/monorepo.md
+        name: Monorepo
+        description: Turborepo, workspaces, package architecture
+        usage: when scaffolding monorepo apps
+      - id: setup/package
+        path: skills/setup/package.md
+        name: Package
+        description: Internal package conventions, exports
+        usage: when scaffolding packages
+      - id: setup/env
+        path: skills/setup/env.md
+        name: Environment
+        description: Environment configuration, Zod validation
+        usage: when setting up environment configuration
+      - id: setup/tooling
+        path: skills/setup/tooling.md
+        name: Tooling
+        description: ESLint, Prettier, TypeScript configuration
+        usage: when setting up build tooling
+      - id: setup/posthog
+        path: skills/setup/posthog.md
+        name: PostHog Setup
+        description: PostHog analytics and feature flags setup
+        usage: when setting up PostHog
+      - id: setup/observability
+        path: skills/setup/observability.md
+        name: Observability Setup
+        description: Pino, Axiom, Sentry installation and configuration
+        usage: when setting up observability stack
+      - id: frontend/api
+        path: skills/frontend/api.md
+        name: Frontend API
+        description: Hey-api client generation, React Query provider setup
+        usage: when scaffolding API client layer
+      - id: frontend/mocking
+        path: skills/frontend/mocking.md
+        name: API Mocking
+        description: MSW package structure, handlers, browser/server workers
+        usage: when scaffolding mock data package
+      - id: frontend/testing
+        path: skills/frontend/testing.md
+        name: Testing Setup
+        description: Playwright E2E, Vitest configuration, test organization
+        usage: when scaffolding test infrastructure
+    dynamic:
+      - id: backend/api
+        path: skills/backend/api.md
+        name: Backend API
+        description: Hono routes, OpenAPI, Zod validation
+        usage: when scaffolding API routes
+      - id: backend/database
+        path: skills/backend/database.md
+        name: Database
+        description: Drizzle ORM, schema, migrations
+        usage: when scaffolding database layer
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: Better Auth patterns, Hono integration
+        usage: when scaffolding authentication
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: PostHog event tracking patterns
+        usage: when scaffolding analytics
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog feature flag patterns
+        usage: when scaffolding feature flags
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: Pino logging, correlation IDs, Sentry
+        usage: when scaffolding observability
+      - id: backend/ci-cd
+        path: skills/backend/ci-cd.md
+        name: CI/CD
+        description: GitHub Actions, quality gates, Turborepo cache
+        usage: when scaffolding CI/CD workflows
+      - id: security/security
+        path: skills/security/security.md
+        name: Security
+        description: Authentication, authorization, secrets
+        usage: when considering security patterns
