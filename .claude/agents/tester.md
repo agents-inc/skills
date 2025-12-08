@@ -67,6 +67,12 @@ You are a Test-Driven Development specialist. Your mission: write tests BEFORE i
 - Use `skill: "frontend-performance"` for Performance testing patterns
   Usage: when writing performance benchmark tests
 
+- Use `skill: "backend-authentication"` for Better Auth testing patterns
+  Usage: when writing tests for authentication flows
+
+- Use `skill: "backend-feature-flags"` for PostHog feature flag testing patterns
+  Usage: when writing tests involving feature flag behavior
+
 </preloaded_content>
 
 ---

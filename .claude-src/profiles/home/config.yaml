@@ -95,6 +95,21 @@ agent_skills:
         name: Performance
         description: Bundle optimization, render performance
         usage: when optimizing renders or bundle size
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: Better Auth client-side integration, useSession, signIn/Out
+        usage: when implementing client-side authentication flows or protected routes
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: PostHog client-side tracking, usePostHog, identify
+        usage: when implementing client-side analytics tracking or user identification
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog client-side feature flags, useFeatureFlagEnabled
+        usage: when implementing client-side feature flag evaluation or experiments
 
   backend-developer:
     precompiled:
@@ -103,6 +118,11 @@ agent_skills:
         name: Backend API
         description: Hono routes, OpenAPI, Zod validation
         usage: when implementing API routes
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: Better Auth patterns, Hono integration, sessions, OAuth
+        usage: when implementing authentication features
     dynamic:
       - id: backend/database
         path: skills/backend/database.md
@@ -124,6 +144,41 @@ agent_skills:
         name: Security
         description: Authentication, authorization, secrets
         usage: when implementing authentication, authorization, or secrets handling
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: PostHog event tracking, user identification, group analytics
+        usage: when implementing analytics event tracking or user identification
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog feature flags, rollouts, A/B testing
+        usage: when implementing feature flags, gradual rollouts, or experiments
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: Resend + React Email templates, sending, tracking
+        usage: when implementing email sending, templates, or notifications
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: Pino logging, correlation IDs, Sentry error handling, Axiom monitors
+        usage: when implementing logging, error tracking, or monitoring patterns
+      - id: setup/posthog
+        path: skills/setup/posthog.md
+        name: PostHog Setup
+        description: One-time PostHog client/server setup, env vars
+        usage: when setting up PostHog for the first time in a project
+      - id: setup/resend
+        path: skills/setup/resend.md
+        name: Resend Setup
+        description: One-time Resend setup, domain verification, React Email package
+        usage: when setting up Resend/email for the first time in a project
+      - id: setup/observability
+        path: skills/setup/observability.md
+        name: Observability Setup
+        description: One-time Pino, Axiom, Sentry installation and configuration
+        usage: when setting up observability stack for the first time in a project
 
   frontend-reviewer:
     precompiled:
@@ -158,6 +213,16 @@ agent_skills:
         name: Client State
         description: Zustand stores, React Query integration
         usage: when reviewing state management implementations
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: PostHog client-side tracking patterns
+        usage: when reviewing client-side analytics implementations
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog client-side feature flag patterns
+        usage: when reviewing client-side feature flag implementations
 
   backend-reviewer:
     precompiled:
@@ -187,6 +252,31 @@ agent_skills:
         name: CI/CD
         description: Pipelines, deployment, GitHub Actions
         usage: when reviewing CI/CD configurations or deployment code
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: Better Auth patterns, security considerations
+        usage: when reviewing authentication implementations
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: PostHog server-side tracking patterns
+        usage: when reviewing analytics implementations
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog server-side feature flag patterns
+        usage: when reviewing feature flag implementations
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: Resend + React Email patterns
+        usage: when reviewing email sending implementations
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: Logging, error tracking, monitoring patterns
+        usage: when reviewing logging or error handling implementations
 
   tester:
     precompiled:
@@ -216,6 +306,16 @@ agent_skills:
         name: Performance
         description: Performance testing patterns
         usage: when writing performance benchmark tests
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: Better Auth testing patterns
+        usage: when writing tests for authentication flows
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog feature flag testing patterns
+        usage: when writing tests involving feature flag behavior
 
   pm:
     precompiled: []
@@ -319,6 +419,47 @@ agent_skills:
         name: Tooling
         description: build tooling for spec scoping
         usage: when scoping features that affect build tooling
+      # New production skills
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: Better Auth patterns for spec scoping
+        usage: when scoping features that involve authentication
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: PostHog analytics for spec scoping
+        usage: when scoping features that require analytics tracking
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: PostHog feature flags for spec scoping
+        usage: when scoping features with rollout or experimentation requirements
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: Resend email for spec scoping
+        usage: when scoping features that require email communication
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: Logging and monitoring for spec scoping
+        usage: when scoping features that require logging or monitoring
+      - id: setup/posthog
+        path: skills/setup/posthog.md
+        name: PostHog Setup
+        description: PostHog setup for spec scoping
+        usage: when scoping features that require initial PostHog setup
+      - id: setup/resend
+        path: skills/setup/resend.md
+        name: Resend Setup
+        description: Resend setup for spec scoping
+        usage: when scoping features that require initial email setup
+      - id: setup/observability
+        path: skills/setup/observability.md
+        name: Observability Setup
+        description: Observability setup for spec scoping
+        usage: when scoping features that require initial observability setup
 
   skill-summoner:
     precompiled: []
@@ -422,6 +563,32 @@ agent_skills:
         name: Tooling
         description: understanding build tooling when creating tooling skills
         usage: when creating or improving skills related to build tooling
+      # New production skills
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: understanding Better Auth patterns when creating auth skills
+        usage: when creating or improving skills related to authentication
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: understanding PostHog patterns when creating analytics skills
+        usage: when creating or improving skills related to analytics
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: understanding PostHog flag patterns when creating feature flag skills
+        usage: when creating or improving skills related to feature flags
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: understanding Resend patterns when creating email skills
+        usage: when creating or improving skills related to email
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: understanding logging/monitoring patterns when creating observability skills
+        usage: when creating or improving skills related to observability
 
   agent-summoner:
     precompiled: []
@@ -525,6 +692,32 @@ agent_skills:
         name: Tooling
         description: creating/improving agents handling build tooling
         usage: when creating or improving agents that work with build tooling
+      # New production skills
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: creating/improving agents handling authentication
+        usage: when creating or improving agents that work with authentication
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: creating/improving agents handling analytics
+        usage: when creating or improving agents that work with analytics
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: creating/improving agents handling feature flags
+        usage: when creating or improving agents that work with feature flags
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: creating/improving agents handling email
+        usage: when creating or improving agents that work with email
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: creating/improving agents handling observability
+        usage: when creating or improving agents that work with logging or monitoring
 
   agent-migrator:
     precompiled: []
@@ -553,6 +746,31 @@ agent_skills:
         name: Database
         description: comparing database patterns
         usage: when comparing database schema or query patterns
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: recognizing Better Auth patterns
+        usage: when identifying authentication patterns in codebases
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: recognizing PostHog analytics patterns
+        usage: when identifying analytics tracking patterns in codebases
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: recognizing PostHog feature flag patterns
+        usage: when identifying feature flag patterns in codebases
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: recognizing email sending patterns
+        usage: when identifying email infrastructure patterns in codebases
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: recognizing logging and monitoring patterns
+        usage: when identifying observability patterns in codebases
 
   pattern-critique:
     precompiled: []
@@ -572,6 +790,31 @@ agent_skills:
         name: Client State
         description: comparing state management patterns
         usage: when critiquing state management patterns against industry standards
+      - id: backend/api
+        path: skills/backend/api.md
+        name: Backend API
+        description: critiquing API patterns
+        usage: when critiquing API route patterns against industry standards
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: critiquing Better Auth patterns
+        usage: when critiquing authentication patterns against industry standards
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: critiquing PostHog analytics patterns
+        usage: when critiquing analytics tracking patterns against industry standards
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: critiquing PostHog feature flag patterns
+        usage: when critiquing feature flag patterns against industry standards
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: critiquing logging and monitoring patterns
+        usage: when critiquing observability patterns against industry standards
 
   documentor:
     precompiled:
@@ -675,3 +918,44 @@ agent_skills:
         name: Tooling
         description: documenting build tooling patterns
         usage: when documenting build tooling
+      # New production skills
+      - id: backend/authentication
+        path: skills/backend/authentication.md
+        name: Authentication
+        description: documenting Better Auth patterns
+        usage: when documenting authentication architecture
+      - id: backend/analytics
+        path: skills/backend/analytics.md
+        name: Analytics
+        description: documenting PostHog analytics patterns
+        usage: when documenting analytics architecture
+      - id: backend/feature-flags
+        path: skills/backend/feature-flags.md
+        name: Feature Flags
+        description: documenting PostHog feature flag patterns
+        usage: when documenting feature flag architecture
+      - id: backend/email
+        path: skills/backend/email.md
+        name: Email
+        description: documenting Resend email patterns
+        usage: when documenting email infrastructure
+      - id: backend/observability
+        path: skills/backend/observability.md
+        name: Observability
+        description: documenting logging and monitoring patterns
+        usage: when documenting observability architecture
+      - id: setup/posthog
+        path: skills/setup/posthog.md
+        name: PostHog Setup
+        description: documenting PostHog setup
+        usage: when documenting PostHog setup procedures
+      - id: setup/resend
+        path: skills/setup/resend.md
+        name: Resend Setup
+        description: documenting Resend setup
+        usage: when documenting email setup procedures
+      - id: setup/observability
+        path: skills/setup/observability.md
+        name: Observability Setup
+        description: documenting observability setup
+        usage: when documenting observability setup procedures

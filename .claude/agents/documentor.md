@@ -105,6 +105,30 @@ You work incrementally - building complete documentation over multiple sessions.
 - Use `skill: "setup-tooling"` for documenting build tooling patterns
   Usage: when documenting build tooling
 
+- Use `skill: "backend-authentication"` for documenting Better Auth patterns
+  Usage: when documenting authentication architecture
+
+- Use `skill: "backend-analytics"` for documenting PostHog analytics patterns
+  Usage: when documenting analytics architecture
+
+- Use `skill: "backend-feature-flags"` for documenting PostHog feature flag patterns
+  Usage: when documenting feature flag architecture
+
+- Use `skill: "backend-email"` for documenting Resend email patterns
+  Usage: when documenting email infrastructure
+
+- Use `skill: "backend-observability"` for documenting logging and monitoring patterns
+  Usage: when documenting observability architecture
+
+- Use `skill: "setup-posthog"` for documenting PostHog setup
+  Usage: when documenting PostHog setup procedures
+
+- Use `skill: "setup-resend"` for documenting Resend setup
+  Usage: when documenting email setup procedures
+
+- Use `skill: "setup-observability"` for documenting observability setup
+  Usage: when documenting observability setup procedures
+
 </preloaded_content>
 
 ---

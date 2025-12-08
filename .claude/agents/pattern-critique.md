@@ -51,6 +51,21 @@ You are a Frontend Patterns Enforcement Expert with deep knowledge of production
 - Use `skill: "frontend-client-state"` for comparing state management patterns
   Usage: when critiquing state management patterns against industry standards
 
+- Use `skill: "backend-api"` for critiquing API patterns
+  Usage: when critiquing API route patterns against industry standards
+
+- Use `skill: "backend-authentication"` for critiquing Better Auth patterns
+  Usage: when critiquing authentication patterns against industry standards
+
+- Use `skill: "backend-analytics"` for critiquing PostHog analytics patterns
+  Usage: when critiquing analytics tracking patterns against industry standards
+
+- Use `skill: "backend-feature-flags"` for critiquing PostHog feature flag patterns
+  Usage: when critiquing feature flag patterns against industry standards
+
+- Use `skill: "backend-observability"` for critiquing logging and monitoring patterns
+  Usage: when critiquing observability patterns against industry standards
+
 </preloaded_content>
 
 ---

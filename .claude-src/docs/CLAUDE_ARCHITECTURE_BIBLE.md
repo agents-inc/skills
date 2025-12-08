@@ -55,11 +55,11 @@ npm run compile:home
 │
 ├── agent-sources/             # Agent source files (GENERIC - shared across profiles)
 │   └── {agent-name}/          # Named "agent-sources" to avoid Claude Code auto-detection
-│       ├── intro.md           # Role definition (NO <role> tags - template adds them)
-│       ├── workflow.md        # Agent-specific workflow and processes
-│       ├── critical-requirements.md  # Top-of-file MUST rules
-│       ├── critical-reminders.md     # Bottom-of-file MUST reminders
-│       └── examples.md        # Example outputs (optional)
+│       ├── intro.md           # REQUIRED: Role definition (NO <role> tags - template adds them)
+│       ├── workflow.md        # REQUIRED: Agent-specific workflow and processes
+│       ├── critical-requirements.md  # OPTIONAL: Top-of-file MUST rules
+│       ├── critical-reminders.md     # OPTIONAL: Bottom-of-file MUST reminders
+│       └── examples.md        # OPTIONAL: Example outputs
 │
 ├── core-prompts/              # Shared prompts included in all agents
 │   ├── core-principles.md     # 5 core principles with self-reminder loop
@@ -72,7 +72,7 @@ npm run compile:home
 │
 ├── profiles/                  # Profile-specific configuration
 │   └── {profile}/
-│       ├── config.yaml        # use_agents list + agent_skills assignments
+│       ├── config.yaml        # agent_skills (keys determine which agents compile)
 │       ├── CLAUDE.md          # Profile-specific project instructions
 │       └── skills/            # Profile-specific implementation patterns
 │           └── {category}/
@@ -404,12 +404,13 @@ Use this checklist to verify an agent is 100% compliant:
 
 ```markdown
 ## Structural Compliance
-- [ ] Has all 5 required source files in agents/{name}/ directory
+- [ ] Has REQUIRED source files: intro.md, workflow.md
+- [ ] Has OPTIONAL source files (recommended): critical-requirements.md, critical-reminders.md, examples.md
 - [ ] intro.md includes expansion modifiers ("comprehensive and thorough")
 - [ ] workflow.md includes <self_correction_triggers>
 - [ ] workflow.md includes <post_action_reflection>
-- [ ] critical-requirements.md uses **(You MUST ...)** format
-- [ ] critical-reminders.md repeats rules from critical-requirements.md
+- [ ] If present: critical-requirements.md uses **(You MUST ...)** format
+- [ ] If present: critical-reminders.md repeats rules from critical-requirements.md
 
 ## Template Output Compliance (verify after compilation)
 - [ ] Compiled agent has all 13 Required XML Tags
@@ -463,7 +464,7 @@ grep -q "ALWAYS RE-READ FILES AFTER EDITING" .claude/agents/$AGENT.md && echo "�
 # Find bare "think" usage in source files (should be 0 for Opus agents)
 AGENT="{agent}"
 echo "=== 'Think' Usage Check for $AGENT ==="
-grep -n -w "think" .claude-src/agents/$AGENT/*.md | grep -v "ultrathink\|megathink" | wc -l
+grep -n -w "think" .claude-src/agent-sources/$AGENT/*.md | grep -v "ultrathink\|megathink" | wc -l
 # If count > 0, review matches and replace with consider/evaluate/analyze
 ```
 
@@ -473,17 +474,17 @@ grep -n -w "think" .claude-src/agents/$AGENT/*.md | grep -v "ultrathink\|megathi
 # Check intro.md has expansion modifiers
 AGENT="{agent}"
 echo "=== Expansion Modifier Check for $AGENT ==="
-grep -q "comprehensive\|thorough" .claude-src/agents/$AGENT/intro.md && echo "✅ Expansion modifiers found" || echo "❌ Add 'comprehensive and thorough' to intro.md"
+grep -q "comprehensive\|thorough" .claude-src/agent-sources/$AGENT/intro.md && echo "✅ Expansion modifiers found" || echo "❌ Add 'comprehensive and thorough' to intro.md"
 ```
 
-**5. Verify Critical Rules Repetition:**
+**5. Verify Critical Rules Repetition (if optional files exist):**
 
 ```bash
 # Check that critical-reminders repeats rules from critical-requirements
 AGENT="{agent}"
 echo "=== Critical Rules Repetition Check for $AGENT ==="
-REQ_COUNT=$(grep -c "You MUST" .claude-src/agents/$AGENT/critical-requirements.md)
-REM_COUNT=$(grep -c "You MUST" .claude-src/agents/$AGENT/critical-reminders.md)
+REQ_COUNT=$(grep -c "You MUST" .claude-src/agent-sources/$AGENT/critical-requirements.md 2>/dev/null || echo 0)
+REM_COUNT=$(grep -c "You MUST" .claude-src/agent-sources/$AGENT/critical-reminders.md 2>/dev/null || echo 0)
 echo "critical-requirements.md: $REQ_COUNT rules"
 echo "critical-reminders.md: $REM_COUNT rules"
 [ "$REQ_COUNT" -eq "$REM_COUNT" ] && echo "✅ Rule counts match" || echo "⚠️ Rule counts differ - ensure key rules are repeated"
@@ -501,19 +502,25 @@ echo "========================================"
 echo "Verifying agent: $AGENT"
 echo "========================================"
 
-# Source files check
-echo -e "\n--- Source Files ---"
-for f in intro.md workflow.md critical-requirements.md critical-reminders.md; do
-  [ -f ".claude-src/agents/$AGENT/$f" ] && echo "✅ $f" || echo "❌ $f MISSING"
+# REQUIRED source files check
+echo -e "\n--- Required Source Files ---"
+for f in intro.md workflow.md; do
+  [ -f ".claude-src/agent-sources/$AGENT/$f" ] && echo "✅ $f" || echo "❌ $f MISSING (REQUIRED)"
+done
+
+# OPTIONAL source files check
+echo -e "\n--- Optional Source Files ---"
+for f in critical-requirements.md critical-reminders.md examples.md; do
+  [ -f ".claude-src/agent-sources/$AGENT/$f" ] && echo "✅ $f" || echo "⚠️ $f (optional, recommended)"
 done
 
 # Expansion modifiers
 echo -e "\n--- Expansion Modifiers ---"
-grep -q "comprehensive\|thorough" .claude-src/agents/$AGENT/intro.md 2>/dev/null && echo "✅ Found" || echo "❌ MISSING in intro.md"
+grep -q "comprehensive\|thorough" .claude-src/agent-sources/$AGENT/intro.md 2>/dev/null && echo "✅ Found" || echo "❌ MISSING in intro.md"
 
 # Think usage
 echo -e "\n--- 'Think' Usage (should be 0) ---"
-THINK_COUNT=$(grep -rw "think" .claude-src/agents/$AGENT/*.md 2>/dev/null | grep -v "ultrathink\|megathink" | wc -l)
+THINK_COUNT=$(grep -rw "think" .claude-src/agent-sources/$AGENT/*.md 2>/dev/null | grep -v "ultrathink\|megathink" | wc -l)
 echo "Count: $THINK_COUNT"
 
 # Compiled agent checks (only if compiled file exists)
@@ -682,10 +689,11 @@ agents:
 ## Config.yaml Structure (Simplified)
 
 Each profile's `config.yaml` specifies:
-1. **Which agents** to use from `agents.yaml` (`use_agents`)
-2. **Which skills** each agent gets (`agent_skills`)
-3. **Profile metadata** (name, description, CLAUDE.md path)
-4. **Prompt sets** (core and ending prompts for each agent type)
+1. **Profile metadata** (name, description, CLAUDE.md path)
+2. **Prompt sets** (core and ending prompts for each agent type)
+3. **Agent skills** (`agent_skills`) — **keys determine which agents to compile**
+
+**Important:** There is no `use_agents` list. Which agents to compile is derived automatically from the keys of `agent_skills`. If an agent has an entry in `agent_skills`, it gets compiled for that profile.
 
 ```yaml
 # .claude-src/profiles/work/config.yaml
@@ -716,17 +724,10 @@ ending_prompt_sets:
     - context-management
     - improvement-protocol
 
-# Which agents this profile uses (references agents.yaml)
-use_agents:
-  - frontend-developer
-  - frontend-reviewer
-  - tester
-  - pm
-  - skill-summoner
-
-# Profile-specific skill assignments per agent
+# Agent skill assignments (keys determine which agents are compiled!)
+# If an agent is listed here, it will be compiled for this profile
 agent_skills:
-  frontend-developer:
+  frontend-developer:          # This agent WILL be compiled
     precompiled:               # Bundled directly into agent
       - id: frontend/react
         path: skills/frontend/react.md
@@ -745,14 +746,14 @@ agent_skills:
         description: REST APIs, React Query, Zod validation
         usage: when implementing data fetching or API calls
 
-  frontend-reviewer:
+  frontend-reviewer:           # This agent WILL be compiled
     precompiled:
       - id: frontend/react
         path: skills/frontend/react.md
         # ...
     dynamic: []
 
-  # ... more agent skill assignments
+  # Agents NOT listed here will NOT be compiled for this profile
 ```
 
 ### Profile Differences
@@ -763,7 +764,7 @@ The same agent can have different skill configurations per profile:
 |-------|--------------|--------------|
 | `frontend-developer` | Zustand, SCSS Modules | MobX, Tailwind |
 | `tester` | Vitest, MSW | Karma, Mocha, Chai, Sinon |
-| `backend-developer` | ✅ Available | ❌ Not in use_agents |
+| `backend-developer` | ✅ In agent_skills | ❌ Not in agent_skills |
 
 ## Skill File Structure
 
@@ -871,12 +872,14 @@ Create directory: `.claude-src/agent-sources/{agent-name}/`
 
 ```
 .claude-src/agent-sources/my-new-agent/
-├── intro.md                  # Role definition (no <role> tags)
-├── workflow.md               # Agent-specific processes with XML tags
-├── critical-requirements.md  # Top MUST rules (no XML wrapper)
-├── critical-reminders.md     # Bottom reminders (no XML wrapper)
-└── examples.md               # Optional example outputs
+├── intro.md                  # REQUIRED: Role definition (no <role> tags)
+├── workflow.md               # REQUIRED: Agent-specific processes with XML tags
+├── critical-requirements.md  # OPTIONAL: Top MUST rules (no XML wrapper)
+├── critical-reminders.md     # OPTIONAL: Bottom reminders (no XML wrapper)
+└── examples.md               # OPTIONAL: Example outputs
 ```
+
+**Note:** Only `intro.md` and `workflow.md` are required. The optional files enhance agent behavior but compilation will succeed without them.
 
 ### Step 2: Add Agent Definition to agents.yaml
 
@@ -905,21 +908,17 @@ agents:
 
 ### Step 3: Enable Agent in Profile Config(s)
 
-Add the agent to each profile's `use_agents` list and assign skills:
+Add the agent to each profile's `agent_skills`. **The agent will be compiled because it has an entry in `agent_skills`** — no separate list needed:
 
 ```yaml
 # .claude-src/profiles/work/config.yaml
 
-# Add to use_agents list
-use_agents:
-  - frontend-developer
-  - my-new-agent  # NEW
-
-# Add skill assignments
+# Add skill assignments for your new agent
+# Adding it here automatically includes it in compilation
 agent_skills:
   # ... existing agents ...
 
-  my-new-agent:
+  my-new-agent:                          # Adding this key enables the agent
     precompiled:
       - id: frontend/react
         path: skills/frontend/react.md   # Uses WORK profile's skill
@@ -940,9 +939,10 @@ npm run compile:work
 
 - **Agent definitions** live in `.claude-src/agents.yaml` (single source of truth)
 - **Agent source files** live in `.claude-src/agent-sources/` (shared across all profiles)
-- **Skill assignments** live in each profile's `config.yaml`
+- **Skill assignments** live in each profile's `config.yaml` under `agent_skills`
+- **Which agents compile** is determined by the keys in `agent_skills` (no separate list)
 - Same agent can have **different skill bundles** per profile
-- Agents **not listed** in a profile's `use_agents` won't be compiled for that profile
+- Agents **not listed** in a profile's `agent_skills` won't be compiled for that profile
 
 ## Creating a New Skill
 

@@ -54,6 +54,21 @@ You are an expert code archaeologist specializing in extracting complete, produc
 - Use `skill: "backend-database"` for comparing database patterns
   Usage: when comparing database schema or query patterns
 
+- Use `skill: "backend-authentication"` for recognizing Better Auth patterns
+  Usage: when identifying authentication patterns in codebases
+
+- Use `skill: "backend-analytics"` for recognizing PostHog analytics patterns
+  Usage: when identifying analytics tracking patterns in codebases
+
+- Use `skill: "backend-feature-flags"` for recognizing PostHog feature flag patterns
+  Usage: when identifying feature flag patterns in codebases
+
+- Use `skill: "backend-email"` for recognizing email sending patterns
+  Usage: when identifying email infrastructure patterns in codebases
+
+- Use `skill: "backend-observability"` for recognizing logging and monitoring patterns
+  Usage: when identifying observability patterns in codebases
+
 </preloaded_content>
 
 ---

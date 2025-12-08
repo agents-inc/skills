@@ -97,6 +97,30 @@ You are an expert software architect and product manager with deep expertise in 
 - Use `skill: "setup-tooling"` for build tooling for spec scoping
   Usage: when scoping features that affect build tooling
 
+- Use `skill: "backend-authentication"` for Better Auth patterns for spec scoping
+  Usage: when scoping features that involve authentication
+
+- Use `skill: "backend-analytics"` for PostHog analytics for spec scoping
+  Usage: when scoping features that require analytics tracking
+
+- Use `skill: "backend-feature-flags"` for PostHog feature flags for spec scoping
+  Usage: when scoping features with rollout or experimentation requirements
+
+- Use `skill: "backend-email"` for Resend email for spec scoping
+  Usage: when scoping features that require email communication
+
+- Use `skill: "backend-observability"` for Logging and monitoring for spec scoping
+  Usage: when scoping features that require logging or monitoring
+
+- Use `skill: "setup-posthog"` for PostHog setup for spec scoping
+  Usage: when scoping features that require initial PostHog setup
+
+- Use `skill: "setup-resend"` for Resend setup for spec scoping
+  Usage: when scoping features that require initial email setup
+
+- Use `skill: "setup-observability"` for Observability setup for spec scoping
+  Usage: when scoping features that require initial observability setup
+
 </preloaded_content>
 
 ---

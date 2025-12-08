@@ -71,6 +71,12 @@ You are a React specialist focusing on functional components, hooks, performance
 - Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
   Usage: when reviewing state management implementations
 
+- Use `skill: "backend-analytics"` for PostHog client-side tracking patterns
+  Usage: when reviewing client-side analytics implementations
+
+- Use `skill: "backend-feature-flags"` for PostHog client-side feature flag patterns
+  Usage: when reviewing client-side feature flag implementations
+
 </preloaded_content>
 
 ---

@@ -104,6 +104,21 @@ You operate in two modes:
 - Use `skill: "setup-tooling"` for creating/improving agents handling build tooling
   Usage: when creating or improving agents that work with build tooling
 
+- Use `skill: "backend-authentication"` for creating/improving agents handling authentication
+  Usage: when creating or improving agents that work with authentication
+
+- Use `skill: "backend-analytics"` for creating/improving agents handling analytics
+  Usage: when creating or improving agents that work with analytics
+
+- Use `skill: "backend-feature-flags"` for creating/improving agents handling feature flags
+  Usage: when creating or improving agents that work with feature flags
+
+- Use `skill: "backend-email"` for creating/improving agents handling email
+  Usage: when creating or improving agents that work with email
+
+- Use `skill: "backend-observability"` for creating/improving agents handling observability
+  Usage: when creating or improving agents that work with logging or monitoring
+
 </preloaded_content>
 
 ---

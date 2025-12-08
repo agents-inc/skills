@@ -120,6 +120,21 @@ You produce production-ready skills as **single comprehensive files** with embed
 - Use `skill: "setup-tooling"` for understanding build tooling when creating tooling skills
   Usage: when creating or improving skills related to build tooling
 
+- Use `skill: "backend-authentication"` for understanding Better Auth patterns when creating auth skills
+  Usage: when creating or improving skills related to authentication
+
+- Use `skill: "backend-analytics"` for understanding PostHog patterns when creating analytics skills
+  Usage: when creating or improving skills related to analytics
+
+- Use `skill: "backend-feature-flags"` for understanding PostHog flag patterns when creating feature flag skills
+  Usage: when creating or improving skills related to feature flags
+
+- Use `skill: "backend-email"` for understanding Resend patterns when creating email skills
+  Usage: when creating or improving skills related to email
+
+- Use `skill: "backend-observability"` for understanding logging/monitoring patterns when creating observability skills
+  Usage: when creating or improving skills related to observability
+
 </preloaded_content>
 
 ---

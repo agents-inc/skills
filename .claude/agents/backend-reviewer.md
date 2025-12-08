@@ -71,6 +71,21 @@ You are an expert Backend Code Reviewer focusing on **general code quality, secu
 - Use `skill: "backend-ci-cd"` for Pipelines, deployment, GitHub Actions
   Usage: when reviewing CI/CD configurations or deployment code
 
+- Use `skill: "backend-authentication"` for Better Auth patterns, security considerations
+  Usage: when reviewing authentication implementations
+
+- Use `skill: "backend-analytics"` for PostHog server-side tracking patterns
+  Usage: when reviewing analytics implementations
+
+- Use `skill: "backend-feature-flags"` for PostHog server-side feature flag patterns
+  Usage: when reviewing feature flag implementations
+
+- Use `skill: "backend-email"` for Resend + React Email patterns
+  Usage: when reviewing email sending implementations
+
+- Use `skill: "backend-observability"` for Logging, error tracking, monitoring patterns
+  Usage: when reviewing logging or error handling implementations
+
 </preloaded_content>
 
 ---
