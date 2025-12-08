@@ -54,79 +54,79 @@ You work incrementally - building complete documentation over multiple sessions.
 
 **Dynamic Skills (invoke when needed):**
 
-- Use `skill: "frontend-react"` for documenting React patterns
+- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
   Usage: when documenting React component architecture or patterns
 
-- Use `skill: "frontend-styling"` for documenting CSS patterns
+- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
   Usage: when documenting styling architecture or patterns
 
-- Use `skill: "frontend-api"` for documenting API integration patterns
+- Use `skill: "frontend-api"` for REST APIs, React Query, data fetching
   Usage: when documenting API integration architecture
 
-- Use `skill: "frontend-client-state"` for documenting state management patterns
+- Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
   Usage: when documenting state management architecture
 
-- Use `skill: "frontend-accessibility"` for documenting a11y patterns
+- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
   Usage: when documenting accessibility patterns
 
-- Use `skill: "frontend-performance"` for documenting render optimization patterns
+- Use `skill: "frontend-performance"` for Bundle optimization, render performance
   Usage: when documenting frontend performance patterns
 
-- Use `skill: "frontend-testing"` for documenting React testing patterns
+- Use `skill: "frontend-testing"` for Playwright E2E, Vitest, React Testing Library
   Usage: when documenting React testing patterns
 
-- Use `skill: "frontend-mocking"` for documenting MSW/mock patterns
+- Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
   Usage: when documenting mocking patterns
 
-- Use `skill: "backend-api"` for documenting API routes
+- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
   Usage: when documenting API route architecture
 
-- Use `skill: "backend-database"` for documenting database patterns
+- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when documenting database architecture
 
-- Use `skill: "backend-ci-cd"` for documenting pipeline patterns
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
   Usage: when documenting CI/CD patterns
 
-- Use `skill: "backend-performance"` for documenting query optimization patterns
+- Use `skill: "backend-performance"` for Query optimization, caching, indexing
   Usage: when documenting backend performance patterns
 
-- Use `skill: "backend-testing"` for documenting API testing patterns
+- Use `skill: "backend-testing"` for API tests, integration tests
   Usage: when documenting API testing patterns
 
-- Use `skill: "security-security"` for documenting security patterns
+- Use `skill: "security-security"` for Authentication, authorization, secrets
   Usage: when documenting security architecture
 
-- Use `skill: "shared-reviewing"` for documenting code review patterns
+- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
   Usage: when documenting code review processes
 
-- Use `skill: "setup-env"` for documenting env configuration patterns
+- Use `skill: "setup-env"` for Environment configuration, Zod validation
   Usage: when documenting environment configuration
 
-- Use `skill: "setup-tooling"` for documenting build tooling patterns
+- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
   Usage: when documenting build tooling
 
-- Use `skill: "backend-authentication"` for documenting Better Auth patterns
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when documenting authentication architecture
 
-- Use `skill: "backend-analytics"` for documenting PostHog analytics patterns
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when documenting analytics architecture
 
-- Use `skill: "backend-feature-flags"` for documenting PostHog feature flag patterns
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when documenting feature flag architecture
 
-- Use `skill: "backend-email"` for documenting Resend email patterns
+- Use `skill: "backend-email"` for Resend + React Email templates
   Usage: when documenting email infrastructure
 
-- Use `skill: "backend-observability"` for documenting logging and monitoring patterns
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when documenting observability architecture
 
-- Use `skill: "setup-posthog"` for documenting PostHog setup
+- Use `skill: "setup-posthog"` for PostHog analytics and feature flags setup
   Usage: when documenting PostHog setup procedures
 
-- Use `skill: "setup-resend"` for documenting Resend setup
+- Use `skill: "setup-resend"` for Resend email setup, domain verification
   Usage: when documenting email setup procedures
 
-- Use `skill: "setup-observability"` for documenting observability setup
+- Use `skill: "setup-observability"` for Pino, Axiom, Sentry installation
   Usage: when documenting observability setup procedures
 
 </preloaded_content>

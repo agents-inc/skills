@@ -47,76 +47,76 @@ You operate in two modes:
 
 **Dynamic Skills (invoke when needed):**
 
-- Use `skill: "frontend-react"` for creating/improving frontend agents - React component patterns
+- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
   Usage: when creating or improving agents that work with React components
 
-- Use `skill: "frontend-styling"` for creating/improving frontend agents - SCSS/cva patterns
+- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
   Usage: when creating or improving agents that work with styling
 
-- Use `skill: "frontend-api"` for creating/improving frontend agents - API integration patterns
+- Use `skill: "frontend-api"` for REST APIs, React Query, data fetching
   Usage: when creating or improving agents that work with API integration
 
-- Use `skill: "frontend-client-state"` for creating/improving frontend agents - Zustand/state patterns
+- Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
   Usage: when creating or improving agents that work with state management
 
-- Use `skill: "frontend-accessibility"` for creating/improving frontend agents - a11y patterns
+- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
   Usage: when creating or improving agents that work with accessibility
 
-- Use `skill: "frontend-performance"` for creating/improving frontend agents - render optimization
+- Use `skill: "frontend-performance"` for Bundle optimization, render performance
   Usage: when creating or improving agents that work with frontend performance
 
-- Use `skill: "frontend-testing"` for creating/improving tester agents - React testing patterns
+- Use `skill: "frontend-testing"` for Playwright E2E, Vitest, React Testing Library
   Usage: when creating or improving agents that work with React testing
 
-- Use `skill: "frontend-mocking"` for creating/improving tester agents - MSW/mock patterns
+- Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
   Usage: when creating or improving agents that work with mocking
 
-- Use `skill: "backend-api"` for creating/improving backend agents - Hono/API patterns
+- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
   Usage: when creating or improving agents that work with API routes
 
-- Use `skill: "backend-database"` for creating/improving backend agents - Drizzle/DB patterns
+- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when creating or improving agents that work with databases
 
-- Use `skill: "backend-ci-cd"` for creating/improving backend agents - pipeline patterns
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
   Usage: when creating or improving agents that work with CI/CD
 
-- Use `skill: "backend-performance"` for creating/improving backend agents - query optimization
+- Use `skill: "backend-performance"` for Query optimization, caching, indexing
   Usage: when creating or improving agents that work with backend performance
 
-- Use `skill: "backend-testing"` for creating/improving tester agents - API testing patterns
+- Use `skill: "backend-testing"` for API tests, integration tests
   Usage: when creating or improving agents that work with API testing
 
-- Use `skill: "security-security"` for creating/improving agents handling auth/security
+- Use `skill: "security-security"` for Authentication, authorization, secrets
   Usage: when creating or improving agents that work with authentication or security
 
-- Use `skill: "shared-reviewing"` for creating/improving reviewer agents - code review patterns
+- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
   Usage: when creating or improving reviewer agents
 
-- Use `skill: "setup-monorepo"` for creating/improving documentor agents - Turborepo patterns
+- Use `skill: "setup-monorepo"` for Turborepo, workspaces, package architecture
   Usage: when creating or improving agents that work with monorepo structure
 
-- Use `skill: "setup-package"` for creating/improving documentor agents - package conventions
+- Use `skill: "setup-package"` for Internal package conventions, exports
   Usage: when creating or improving agents that work with package conventions
 
-- Use `skill: "setup-env"` for creating/improving agents handling env configuration
+- Use `skill: "setup-env"` for Environment configuration, Zod validation
   Usage: when creating or improving agents that work with environment configuration
 
-- Use `skill: "setup-tooling"` for creating/improving agents handling build tooling
+- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
   Usage: when creating or improving agents that work with build tooling
 
-- Use `skill: "backend-authentication"` for creating/improving agents handling authentication
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when creating or improving agents that work with authentication
 
-- Use `skill: "backend-analytics"` for creating/improving agents handling analytics
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when creating or improving agents that work with analytics
 
-- Use `skill: "backend-feature-flags"` for creating/improving agents handling feature flags
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when creating or improving agents that work with feature flags
 
-- Use `skill: "backend-email"` for creating/improving agents handling email
+- Use `skill: "backend-email"` for Resend + React Email templates
   Usage: when creating or improving agents that work with email
 
-- Use `skill: "backend-observability"` for creating/improving agents handling observability
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when creating or improving agents that work with logging or monitoring
 
 </preloaded_content>

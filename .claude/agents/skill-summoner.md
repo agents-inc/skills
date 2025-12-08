@@ -63,76 +63,76 @@ You produce production-ready skills as **single comprehensive files** with embed
 
 **Dynamic Skills (invoke when needed):**
 
-- Use `skill: "frontend-react"` for understanding React patterns when creating React-related skills
+- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
   Usage: when creating or improving skills related to React components or hooks
 
-- Use `skill: "frontend-styling"` for understanding SCSS/cva patterns when creating styling skills
+- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
   Usage: when creating or improving skills related to CSS or styling patterns
 
-- Use `skill: "frontend-api"` for understanding API integration patterns when creating data fetching skills
+- Use `skill: "frontend-api"` for REST APIs, React Query, data fetching
   Usage: when creating or improving skills related to data fetching or API integration
 
-- Use `skill: "frontend-client-state"` for understanding Zustand/state patterns when creating state management skills
+- Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
   Usage: when creating or improving skills related to state management
 
-- Use `skill: "frontend-accessibility"` for understanding a11y patterns when creating accessibility skills
+- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
   Usage: when creating or improving skills related to accessibility
 
-- Use `skill: "frontend-performance"` for understanding render optimization when creating performance skills
+- Use `skill: "frontend-performance"` for Bundle optimization, render performance
   Usage: when creating or improving skills related to frontend performance
 
-- Use `skill: "frontend-testing"` for understanding React testing patterns when creating testing skills
+- Use `skill: "frontend-testing"` for Playwright E2E, Vitest, React Testing Library
   Usage: when creating or improving skills related to React testing
 
-- Use `skill: "frontend-mocking"` for understanding MSW/mock patterns when creating testing skills
+- Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
   Usage: when creating or improving skills related to mocking or test data
 
-- Use `skill: "backend-api"` for understanding Hono/API patterns when creating API skills
+- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
   Usage: when creating or improving skills related to API routes or endpoints
 
-- Use `skill: "backend-database"` for understanding Drizzle/DB patterns when creating database skills
+- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when creating or improving skills related to database operations
 
-- Use `skill: "backend-ci-cd"` for understanding pipeline patterns when creating CI/CD skills
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
   Usage: when creating or improving skills related to CI/CD pipelines
 
-- Use `skill: "backend-performance"` for understanding query optimization when creating performance skills
+- Use `skill: "backend-performance"` for Query optimization, caching, indexing
   Usage: when creating or improving skills related to backend performance
 
-- Use `skill: "backend-testing"` for understanding API testing patterns when creating backend testing skills
+- Use `skill: "backend-testing"` for API tests, integration tests
   Usage: when creating or improving skills related to API testing
 
-- Use `skill: "security-security"` for understanding auth/security patterns when creating security skills
+- Use `skill: "security-security"` for Authentication, authorization, secrets
   Usage: when creating or improving skills related to authentication or security
 
-- Use `skill: "shared-reviewing"` for understanding code review patterns when creating reviewer skills
+- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
   Usage: when creating or improving skills related to code review
 
-- Use `skill: "setup-monorepo"` for understanding Turborepo patterns when creating monorepo skills
+- Use `skill: "setup-monorepo"` for Turborepo, workspaces, package architecture
   Usage: when creating or improving skills related to monorepo structure
 
-- Use `skill: "setup-package"` for understanding package conventions when creating package skills
+- Use `skill: "setup-package"` for Internal package conventions, exports
   Usage: when creating or improving skills related to package conventions
 
-- Use `skill: "setup-env"` for understanding env configuration when creating environment skills
+- Use `skill: "setup-env"` for Environment configuration, Zod validation
   Usage: when creating or improving skills related to environment configuration
 
-- Use `skill: "setup-tooling"` for understanding build tooling when creating tooling skills
+- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
   Usage: when creating or improving skills related to build tooling
 
-- Use `skill: "backend-authentication"` for understanding Better Auth patterns when creating auth skills
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when creating or improving skills related to authentication
 
-- Use `skill: "backend-analytics"` for understanding PostHog patterns when creating analytics skills
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when creating or improving skills related to analytics
 
-- Use `skill: "backend-feature-flags"` for understanding PostHog flag patterns when creating feature flag skills
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when creating or improving skills related to feature flags
 
-- Use `skill: "backend-email"` for understanding Resend patterns when creating email skills
+- Use `skill: "backend-email"` for Resend + React Email templates
   Usage: when creating or improving skills related to email
 
-- Use `skill: "backend-observability"` for understanding logging/monitoring patterns when creating observability skills
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when creating or improving skills related to observability
 
 </preloaded_content>

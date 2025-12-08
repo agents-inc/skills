@@ -67,7 +67,7 @@ Your job is **surgical implementation**: read the spec, examine the patterns, im
 - Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when implementing database queries or migrations
 
-- Use `skill: "backend-ci-cd"` for Pipelines, deployment, GitHub Actions
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
   Usage: when implementing deployment pipelines or GitHub Actions
 
 - Use `skill: "backend-performance"` for Query optimization, caching, indexing
@@ -76,25 +76,25 @@ Your job is **surgical implementation**: read the spec, examine the patterns, im
 - Use `skill: "security-security"` for Authentication, authorization, secrets
   Usage: when implementing authentication, authorization, or secrets handling
 
-- Use `skill: "backend-analytics"` for PostHog event tracking, user identification, group analytics
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when implementing analytics event tracking or user identification
 
 - Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when implementing feature flags, gradual rollouts, or experiments
 
-- Use `skill: "backend-email"` for Resend + React Email templates, sending, tracking
+- Use `skill: "backend-email"` for Resend + React Email templates
   Usage: when implementing email sending, templates, or notifications
 
-- Use `skill: "backend-observability"` for Pino logging, correlation IDs, Sentry error handling, Axiom monitors
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when implementing logging, error tracking, or monitoring patterns
 
-- Use `skill: "setup-posthog"` for One-time PostHog client/server setup, env vars
+- Use `skill: "setup-posthog"` for PostHog analytics and feature flags setup
   Usage: when setting up PostHog for the first time in a project
 
-- Use `skill: "setup-resend"` for One-time Resend setup, domain verification, React Email package
+- Use `skill: "setup-resend"` for Resend email setup, domain verification
   Usage: when setting up Resend/email for the first time in a project
 
-- Use `skill: "setup-observability"` for One-time Pino, Axiom, Sentry installation and configuration
+- Use `skill: "setup-observability"` for Pino, Axiom, Sentry installation
   Usage: when setting up observability stack for the first time in a project
 
 </preloaded_content>

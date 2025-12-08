@@ -6,18 +6,57 @@
 // Skill Types
 // =============================================================================
 
-export interface Skill {
-  id: string;
-  path?: string;
+/**
+ * Skill definition from skills.yaml (single source of truth)
+ * Contains static metadata that doesn't change per-agent
+ */
+export interface SkillDefinition {
+  path: string;
   name: string;
   description: string;
-  usage: string; // Required for dynamic skills - describes when to invoke
+}
+
+/**
+ * Skill reference in config.yaml (agent-specific)
+ * References a skill by ID and provides context-specific usage
+ */
+export interface SkillReference {
+  id: string;
+  usage: string; // Context-specific description of when to use this skill
+}
+
+/**
+ * Skills config from skills.yaml
+ */
+export interface SkillsConfig {
+  skills: Record<string, SkillDefinition>;
+}
+
+/**
+ * Fully resolved skill (merged from skills.yaml + config.yaml)
+ * This is what the compiler uses after merging
+ */
+export interface Skill {
+  id: string;
+  path: string;
+  name: string;
+  description: string;
+  usage: string;
   content?: string; // Populated at compile time for precompiled skills
 }
 
 export interface SkillAssignment {
   precompiled: Skill[];
   dynamic: Skill[];
+}
+
+/**
+ * Skill assignment in config.yaml (before resolution)
+ * Contains references, not full skills
+ */
+export interface SkillReferenceAssignment {
+  precompiled: SkillReference[];
+  dynamic: SkillReference[];
 }
 
 // =============================================================================
@@ -60,7 +99,7 @@ export interface ProfileConfig {
   claude_md: string;
   core_prompt_sets: Record<string, string[]>;
   ending_prompt_sets: Record<string, string[]>;
-  agent_skills: Record<string, SkillAssignment>; // Keys determine which agents to compile
+  agent_skills: Record<string, SkillReferenceAssignment>; // Keys determine which agents to compile
 }
 
 // =============================================================================

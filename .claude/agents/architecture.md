@@ -72,11 +72,11 @@ Your job is **foundational scaffolding**: verify the app name, check existing pa
 
 - Observability Setup
 
-- Frontend API
+- API Integration
 
-- API Mocking
+- Mocking
 
-- Testing Setup
+- Frontend Testing
 
 
 **Dynamic Skills (invoke when needed):**
@@ -84,22 +84,22 @@ Your job is **foundational scaffolding**: verify the app name, check existing pa
 - Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
   Usage: when scaffolding API routes
 
-- Use `skill: "backend-database"` for Drizzle ORM, schema, migrations
+- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when scaffolding database layer
 
-- Use `skill: "backend-authentication"` for Better Auth patterns, Hono integration
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when scaffolding authentication
 
-- Use `skill: "backend-analytics"` for PostHog event tracking patterns
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when scaffolding analytics
 
-- Use `skill: "backend-feature-flags"` for PostHog feature flag patterns
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when scaffolding feature flags
 
-- Use `skill: "backend-observability"` for Pino logging, correlation IDs, Sentry
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when scaffolding observability
 
-- Use `skill: "backend-ci-cd"` for GitHub Actions, quality gates, Turborepo cache
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
   Usage: when scaffolding CI/CD workflows
 
 - Use `skill: "security-security"` for Authentication, authorization, secrets
@@ -5587,7 +5587,7 @@ NEXT_PUBLIC_AXIOM_DATASET=myapp
 ---
 
 
-# Pre-compiled Skill: Frontend API
+# Pre-compiled Skill: API Integration
 
 # API Client Architecture
 
@@ -6924,7 +6924,7 @@ staleTime: STALE_TIME_MS,
 ---
 
 
-# Pre-compiled Skill: API Mocking
+# Pre-compiled Skill: Mocking
 
 # API Mocking with MSW
 
@@ -7689,7 +7689,7 @@ createRoot(document.getElementById("root")!).render(<App />);
 ---
 
 
-# Pre-compiled Skill: Testing Setup
+# Pre-compiled Skill: Frontend Testing
 
 # Testing Standards
 

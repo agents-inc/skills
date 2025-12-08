@@ -67,262 +67,125 @@ ending_prompt_sets:
     - context-management
     - improvement-protocol
 
-# Agents to compile and their skill assignments
+# =============================================================================
+# Agent Skill Assignments
+# =============================================================================
 # Keys determine which agents from agents.yaml are compiled for this profile
+# Each skill reference has: id (from skills.yaml) + usage (context-specific)
+
 agent_skills:
   frontend-developer:
     precompiled:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: Component architecture, hooks, patterns
         usage: when implementing React components
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: SCSS Modules, cva, design tokens
         usage: when implementing styles
     dynamic:
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: REST APIs, React Query, data fetching
         usage: when implementing data fetching, API calls, or React Query integrations
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: Zustand stores, React Query integration
         usage: when implementing Zustand stores or complex client-side state
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: WCAG, ARIA, keyboard navigation
         usage: when implementing accessible components or ARIA patterns
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: Bundle optimization, render performance
         usage: when optimizing renders or bundle size
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: Better Auth client-side integration, useSession, signIn/Out
         usage: when implementing client-side authentication flows or protected routes
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: PostHog client-side tracking, usePostHog, identify
         usage: when implementing client-side analytics tracking or user identification
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog client-side feature flags, useFeatureFlagEnabled
         usage: when implementing client-side feature flag evaluation or experiments
 
   backend-developer:
     precompiled:
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: Hono routes, OpenAPI, Zod validation
         usage: when implementing API routes
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: Better Auth patterns, Hono integration, sessions, OAuth
         usage: when implementing authentication features
     dynamic:
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: Drizzle ORM, queries, migrations
         usage: when implementing database queries or migrations
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: Pipelines, deployment, GitHub Actions
         usage: when implementing deployment pipelines or GitHub Actions
       - id: backend/performance
-        path: skills/backend/performance.md
-        name: Performance
-        description: Query optimization, caching, indexing
         usage: when optimizing queries, caching, or indexing
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: Authentication, authorization, secrets
         usage: when implementing authentication, authorization, or secrets handling
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: PostHog event tracking, user identification, group analytics
         usage: when implementing analytics event tracking or user identification
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog feature flags, rollouts, A/B testing
         usage: when implementing feature flags, gradual rollouts, or experiments
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: Resend + React Email templates, sending, tracking
         usage: when implementing email sending, templates, or notifications
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: Pino logging, correlation IDs, Sentry error handling, Axiom monitors
         usage: when implementing logging, error tracking, or monitoring patterns
       - id: setup/posthog
-        path: skills/setup/posthog.md
-        name: PostHog Setup
-        description: One-time PostHog client/server setup, env vars
         usage: when setting up PostHog for the first time in a project
       - id: setup/resend
-        path: skills/setup/resend.md
-        name: Resend Setup
-        description: One-time Resend setup, domain verification, React Email package
         usage: when setting up Resend/email for the first time in a project
       - id: setup/observability
-        path: skills/setup/observability.md
-        name: Observability Setup
-        description: One-time Pino, Axiom, Sentry installation and configuration
         usage: when setting up observability stack for the first time in a project
 
   frontend-reviewer:
     precompiled:
       - id: shared/reviewing
-        path: skills/shared/reviewing.md
-        name: Reviewing
-        description: Code review patterns, feedback principles
         usage: when reviewing code
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: Component architecture, hooks, patterns
         usage: when reviewing React components
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: SCSS Modules, cva, design tokens
         usage: when reviewing styles
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: WCAG, ARIA, keyboard navigation
         usage: when reviewing accessibility
     dynamic:
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: Render performance, memoization
         usage: when reviewing code with potential performance issues
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: Zustand stores, React Query integration
         usage: when reviewing state management implementations
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: PostHog client-side tracking patterns
         usage: when reviewing client-side analytics implementations
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog client-side feature flag patterns
         usage: when reviewing client-side feature flag implementations
 
   backend-reviewer:
     precompiled:
       - id: shared/reviewing
-        path: skills/shared/reviewing.md
-        name: Reviewing
-        description: Code review patterns, feedback principles
         usage: when reviewing code
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: Hono routes, OpenAPI, Zod validation
         usage: when reviewing API routes
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: Authentication, authorization, secrets
         usage: when reviewing security implementations
     dynamic:
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: Drizzle ORM, queries, migrations
         usage: when reviewing database queries or schema changes
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: Pipelines, deployment, GitHub Actions
         usage: when reviewing CI/CD configurations or deployment code
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: Better Auth patterns, security considerations
         usage: when reviewing authentication implementations
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: PostHog server-side tracking patterns
         usage: when reviewing analytics implementations
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog server-side feature flag patterns
         usage: when reviewing feature flag implementations
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: Resend + React Email patterns
         usage: when reviewing email sending implementations
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: Logging, error tracking, monitoring patterns
         usage: when reviewing logging or error handling implementations
 
   tester:
     precompiled:
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: React Testing Library, Vitest, component tests
         usage: when writing React component tests
       - id: backend/testing
-        path: skills/backend/testing.md
-        name: Backend Testing
-        description: API tests, integration tests
         usage: when writing API or integration tests
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: MSW, test data, API mocks
         usage: when setting up mocks
     dynamic:
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: Accessibility testing patterns
         usage: when writing accessibility-focused tests
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: Performance testing patterns
         usage: when writing performance benchmark tests
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: Better Auth testing patterns
         usage: when writing tests for authentication flows
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog feature flag testing patterns
         usage: when writing tests involving feature flag behavior
 
   pm:
@@ -330,143 +193,62 @@ agent_skills:
     dynamic:
       # Frontend skills
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: component architecture for spec scoping
         usage: when scoping features that involve React components
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: REST APIs, data fetching for spec scoping
         usage: when scoping features that involve data fetching or API integration
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: design tokens, theming for spec scoping
         usage: when scoping features that involve styling or theming
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: a11y requirements for spec scoping
         usage: when scoping features that require accessibility considerations
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: state management for spec scoping
         usage: when scoping features that involve client-side state
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: performance requirements for spec scoping
         usage: when scoping features with performance requirements
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: React testing requirements for spec scoping
         usage: when scoping features that require React testing
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: MSW/mock requirements for spec scoping
         usage: when scoping features that require mocking or test data
       # Backend skills
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: API routes for spec scoping
         usage: when scoping features that involve API routes
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: database schema for spec scoping
         usage: when scoping features that require database schema changes
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: deployment pipelines for spec scoping
         usage: when scoping features that affect CI/CD pipelines
       - id: backend/performance
-        path: skills/backend/performance.md
-        name: Backend Performance
-        description: query optimization for spec scoping
         usage: when scoping features with backend performance requirements
       - id: backend/testing
-        path: skills/backend/testing.md
-        name: Backend Testing
-        description: API testing requirements for spec scoping
         usage: when scoping features that require API testing
       # Security and shared
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: auth and security for spec scoping
         usage: when scoping features that involve authentication or security
       - id: shared/reviewing
-        path: skills/shared/reviewing.md
-        name: Reviewing
-        description: code review requirements for spec scoping
         usage: when scoping features that require code review considerations
       # Setup skills
       - id: setup/monorepo
-        path: skills/setup/monorepo.md
-        name: Monorepo
-        description: Turborepo structure for spec scoping
         usage: when scoping features that affect monorepo structure
       - id: setup/package
-        path: skills/setup/package.md
-        name: Package
-        description: package conventions for spec scoping
         usage: when scoping features that require new packages
       - id: setup/env
-        path: skills/setup/env.md
-        name: Environment
-        description: env configuration for spec scoping
         usage: when scoping features that require environment configuration
       - id: setup/tooling
-        path: skills/setup/tooling.md
-        name: Tooling
-        description: build tooling for spec scoping
         usage: when scoping features that affect build tooling
-      # New production skills
+      # Production skills
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: Better Auth patterns for spec scoping
         usage: when scoping features that involve authentication
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: PostHog analytics for spec scoping
         usage: when scoping features that require analytics tracking
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog feature flags for spec scoping
         usage: when scoping features with rollout or experimentation requirements
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: Resend email for spec scoping
         usage: when scoping features that require email communication
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: Logging and monitoring for spec scoping
         usage: when scoping features that require logging or monitoring
       - id: setup/posthog
-        path: skills/setup/posthog.md
-        name: PostHog Setup
-        description: PostHog setup for spec scoping
         usage: when scoping features that require initial PostHog setup
       - id: setup/resend
-        path: skills/setup/resend.md
-        name: Resend Setup
-        description: Resend setup for spec scoping
         usage: when scoping features that require initial email setup
       - id: setup/observability
-        path: skills/setup/observability.md
-        name: Observability Setup
-        description: Observability setup for spec scoping
         usage: when scoping features that require initial observability setup
 
   skill-summoner:
@@ -474,128 +256,56 @@ agent_skills:
     dynamic:
       # Frontend skills
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: understanding React patterns when creating React-related skills
         usage: when creating or improving skills related to React components or hooks
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: understanding SCSS/cva patterns when creating styling skills
         usage: when creating or improving skills related to CSS or styling patterns
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: Frontend API
-        description: understanding API integration patterns when creating data fetching skills
         usage: when creating or improving skills related to data fetching or API integration
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: understanding Zustand/state patterns when creating state management skills
         usage: when creating or improving skills related to state management
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: understanding a11y patterns when creating accessibility skills
         usage: when creating or improving skills related to accessibility
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Frontend Performance
-        description: understanding render optimization when creating performance skills
         usage: when creating or improving skills related to frontend performance
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: understanding React testing patterns when creating testing skills
         usage: when creating or improving skills related to React testing
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: understanding MSW/mock patterns when creating testing skills
         usage: when creating or improving skills related to mocking or test data
       # Backend skills
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: understanding Hono/API patterns when creating API skills
         usage: when creating or improving skills related to API routes or endpoints
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: understanding Drizzle/DB patterns when creating database skills
         usage: when creating or improving skills related to database operations
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: understanding pipeline patterns when creating CI/CD skills
         usage: when creating or improving skills related to CI/CD pipelines
       - id: backend/performance
-        path: skills/backend/performance.md
-        name: Backend Performance
-        description: understanding query optimization when creating performance skills
         usage: when creating or improving skills related to backend performance
       - id: backend/testing
-        path: skills/backend/testing.md
-        name: Backend Testing
-        description: understanding API testing patterns when creating backend testing skills
         usage: when creating or improving skills related to API testing
       # Security and shared
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: understanding auth/security patterns when creating security skills
         usage: when creating or improving skills related to authentication or security
       - id: shared/reviewing
-        path: skills/shared/reviewing.md
-        name: Reviewing
-        description: understanding code review patterns when creating reviewer skills
         usage: when creating or improving skills related to code review
       # Setup skills
       - id: setup/monorepo
-        path: skills/setup/monorepo.md
-        name: Monorepo
-        description: understanding Turborepo patterns when creating monorepo skills
         usage: when creating or improving skills related to monorepo structure
       - id: setup/package
-        path: skills/setup/package.md
-        name: Package
-        description: understanding package conventions when creating package skills
         usage: when creating or improving skills related to package conventions
       - id: setup/env
-        path: skills/setup/env.md
-        name: Environment
-        description: understanding env configuration when creating environment skills
         usage: when creating or improving skills related to environment configuration
       - id: setup/tooling
-        path: skills/setup/tooling.md
-        name: Tooling
-        description: understanding build tooling when creating tooling skills
         usage: when creating or improving skills related to build tooling
-      # New production skills
+      # Production skills
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: understanding Better Auth patterns when creating auth skills
         usage: when creating or improving skills related to authentication
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: understanding PostHog patterns when creating analytics skills
         usage: when creating or improving skills related to analytics
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: understanding PostHog flag patterns when creating feature flag skills
         usage: when creating or improving skills related to feature flags
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: understanding Resend patterns when creating email skills
         usage: when creating or improving skills related to email
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: understanding logging/monitoring patterns when creating observability skills
         usage: when creating or improving skills related to observability
 
   agent-summoner:
@@ -603,128 +313,56 @@ agent_skills:
     dynamic:
       # Frontend skills
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: creating/improving frontend agents - React component patterns
         usage: when creating or improving agents that work with React components
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: creating/improving frontend agents - SCSS/cva patterns
         usage: when creating or improving agents that work with styling
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: Frontend API
-        description: creating/improving frontend agents - API integration patterns
         usage: when creating or improving agents that work with API integration
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: creating/improving frontend agents - Zustand/state patterns
         usage: when creating or improving agents that work with state management
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: creating/improving frontend agents - a11y patterns
         usage: when creating or improving agents that work with accessibility
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Frontend Performance
-        description: creating/improving frontend agents - render optimization
         usage: when creating or improving agents that work with frontend performance
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: creating/improving tester agents - React testing patterns
         usage: when creating or improving agents that work with React testing
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: creating/improving tester agents - MSW/mock patterns
         usage: when creating or improving agents that work with mocking
       # Backend skills
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: creating/improving backend agents - Hono/API patterns
         usage: when creating or improving agents that work with API routes
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: creating/improving backend agents - Drizzle/DB patterns
         usage: when creating or improving agents that work with databases
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: creating/improving backend agents - pipeline patterns
         usage: when creating or improving agents that work with CI/CD
       - id: backend/performance
-        path: skills/backend/performance.md
-        name: Backend Performance
-        description: creating/improving backend agents - query optimization
         usage: when creating or improving agents that work with backend performance
       - id: backend/testing
-        path: skills/backend/testing.md
-        name: Backend Testing
-        description: creating/improving tester agents - API testing patterns
         usage: when creating or improving agents that work with API testing
       # Security and shared
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: creating/improving agents handling auth/security
         usage: when creating or improving agents that work with authentication or security
       - id: shared/reviewing
-        path: skills/shared/reviewing.md
-        name: Reviewing
-        description: creating/improving reviewer agents - code review patterns
         usage: when creating or improving reviewer agents
       # Setup skills
       - id: setup/monorepo
-        path: skills/setup/monorepo.md
-        name: Monorepo
-        description: creating/improving documentor agents - Turborepo patterns
         usage: when creating or improving agents that work with monorepo structure
       - id: setup/package
-        path: skills/setup/package.md
-        name: Package
-        description: creating/improving documentor agents - package conventions
         usage: when creating or improving agents that work with package conventions
       - id: setup/env
-        path: skills/setup/env.md
-        name: Environment
-        description: creating/improving agents handling env configuration
         usage: when creating or improving agents that work with environment configuration
       - id: setup/tooling
-        path: skills/setup/tooling.md
-        name: Tooling
-        description: creating/improving agents handling build tooling
         usage: when creating or improving agents that work with build tooling
-      # New production skills
+      # Production skills
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: creating/improving agents handling authentication
         usage: when creating or improving agents that work with authentication
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: creating/improving agents handling analytics
         usage: when creating or improving agents that work with analytics
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: creating/improving agents handling feature flags
         usage: when creating or improving agents that work with feature flags
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: creating/improving agents handling email
         usage: when creating or improving agents that work with email
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: creating/improving agents handling observability
         usage: when creating or improving agents that work with logging or monitoring
 
   agent-migrator:
@@ -735,324 +373,141 @@ agent_skills:
     precompiled: []
     dynamic:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: comparing frontend patterns
         usage: when comparing React component architecture patterns
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: comparing CSS/styling patterns
         usage: when comparing CSS methodology or design token patterns
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: comparing API route patterns
         usage: when comparing API route or endpoint patterns
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: comparing database patterns
         usage: when comparing database schema or query patterns
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: recognizing Better Auth patterns
         usage: when identifying authentication patterns in codebases
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: recognizing PostHog analytics patterns
         usage: when identifying analytics tracking patterns in codebases
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: recognizing PostHog feature flag patterns
         usage: when identifying feature flag patterns in codebases
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: recognizing email sending patterns
         usage: when identifying email infrastructure patterns in codebases
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: recognizing logging and monitoring patterns
         usage: when identifying observability patterns in codebases
 
   pattern-critique:
     precompiled: []
     dynamic:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: comparing React patterns
         usage: when critiquing React patterns against industry standards
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: comparing styling patterns
         usage: when critiquing styling patterns against industry standards
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: comparing state management patterns
         usage: when critiquing state management patterns against industry standards
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: critiquing API patterns
         usage: when critiquing API route patterns against industry standards
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: critiquing Better Auth patterns
         usage: when critiquing authentication patterns against industry standards
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: critiquing PostHog analytics patterns
         usage: when critiquing analytics tracking patterns against industry standards
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: critiquing PostHog feature flag patterns
         usage: when critiquing feature flag patterns against industry standards
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: critiquing logging and monitoring patterns
         usage: when critiquing observability patterns against industry standards
 
   documentor:
     precompiled:
       - id: setup/monorepo
-        path: skills/setup/monorepo.md
-        name: Monorepo
-        description: Turborepo, workspaces, package architecture
         usage: when documenting monorepo structure
       - id: setup/package
-        path: skills/setup/package.md
-        name: Package
-        description: Internal package conventions, exports
         usage: when documenting package conventions
     dynamic:
       # Frontend skills
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: documenting React patterns
         usage: when documenting React component architecture or patterns
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: documenting CSS patterns
         usage: when documenting styling architecture or patterns
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: documenting API integration patterns
         usage: when documenting API integration architecture
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: documenting state management patterns
         usage: when documenting state management architecture
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: documenting a11y patterns
         usage: when documenting accessibility patterns
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Frontend Performance
-        description: documenting render optimization patterns
         usage: when documenting frontend performance patterns
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: documenting React testing patterns
         usage: when documenting React testing patterns
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: documenting MSW/mock patterns
         usage: when documenting mocking patterns
       # Backend skills
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: documenting API routes
         usage: when documenting API route architecture
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: documenting database patterns
         usage: when documenting database architecture
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: documenting pipeline patterns
         usage: when documenting CI/CD patterns
       - id: backend/performance
-        path: skills/backend/performance.md
-        name: Backend Performance
-        description: documenting query optimization patterns
         usage: when documenting backend performance patterns
       - id: backend/testing
-        path: skills/backend/testing.md
-        name: Backend Testing
-        description: documenting API testing patterns
         usage: when documenting API testing patterns
       # Security and shared
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: documenting security patterns
         usage: when documenting security architecture
       - id: shared/reviewing
-        path: skills/shared/reviewing.md
-        name: Reviewing
-        description: documenting code review patterns
         usage: when documenting code review processes
       # Setup skills
       - id: setup/env
-        path: skills/setup/env.md
-        name: Environment
-        description: documenting env configuration patterns
         usage: when documenting environment configuration
       - id: setup/tooling
-        path: skills/setup/tooling.md
-        name: Tooling
-        description: documenting build tooling patterns
         usage: when documenting build tooling
-      # New production skills
+      # Production skills
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: documenting Better Auth patterns
         usage: when documenting authentication architecture
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: documenting PostHog analytics patterns
         usage: when documenting analytics architecture
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: documenting PostHog feature flag patterns
         usage: when documenting feature flag architecture
       - id: backend/email
-        path: skills/backend/email.md
-        name: Email
-        description: documenting Resend email patterns
         usage: when documenting email infrastructure
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: documenting logging and monitoring patterns
         usage: when documenting observability architecture
       - id: setup/posthog
-        path: skills/setup/posthog.md
-        name: PostHog Setup
-        description: documenting PostHog setup
         usage: when documenting PostHog setup procedures
       - id: setup/resend
-        path: skills/setup/resend.md
-        name: Resend Setup
-        description: documenting Resend setup
         usage: when documenting email setup procedures
       - id: setup/observability
-        path: skills/setup/observability.md
-        name: Observability Setup
-        description: documenting observability setup
         usage: when documenting observability setup procedures
 
   architecture:
     precompiled:
       - id: setup/monorepo
-        path: skills/setup/monorepo.md
-        name: Monorepo
-        description: Turborepo, workspaces, package architecture
         usage: when scaffolding monorepo apps
       - id: setup/package
-        path: skills/setup/package.md
-        name: Package
-        description: Internal package conventions, exports
         usage: when scaffolding packages
       - id: setup/env
-        path: skills/setup/env.md
-        name: Environment
-        description: Environment configuration, Zod validation
         usage: when setting up environment configuration
       - id: setup/tooling
-        path: skills/setup/tooling.md
-        name: Tooling
-        description: ESLint, Prettier, TypeScript configuration
         usage: when setting up build tooling
       - id: setup/posthog
-        path: skills/setup/posthog.md
-        name: PostHog Setup
-        description: PostHog analytics and feature flags setup
         usage: when setting up PostHog
       - id: setup/observability
-        path: skills/setup/observability.md
-        name: Observability Setup
-        description: Pino, Axiom, Sentry installation and configuration
         usage: when setting up observability stack
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: Frontend API
-        description: Hey-api client generation, React Query provider setup
         usage: when scaffolding API client layer
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: API Mocking
-        description: MSW package structure, handlers, browser/server workers
         usage: when scaffolding mock data package
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Testing Setup
-        description: Playwright E2E, Vitest configuration, test organization
         usage: when scaffolding test infrastructure
     dynamic:
       - id: backend/api
-        path: skills/backend/api.md
-        name: Backend API
-        description: Hono routes, OpenAPI, Zod validation
         usage: when scaffolding API routes
       - id: backend/database
-        path: skills/backend/database.md
-        name: Database
-        description: Drizzle ORM, schema, migrations
         usage: when scaffolding database layer
       - id: backend/authentication
-        path: skills/backend/authentication.md
-        name: Authentication
-        description: Better Auth patterns, Hono integration
         usage: when scaffolding authentication
       - id: backend/analytics
-        path: skills/backend/analytics.md
-        name: Analytics
-        description: PostHog event tracking patterns
         usage: when scaffolding analytics
       - id: backend/feature-flags
-        path: skills/backend/feature-flags.md
-        name: Feature Flags
-        description: PostHog feature flag patterns
         usage: when scaffolding feature flags
       - id: backend/observability
-        path: skills/backend/observability.md
-        name: Observability
-        description: Pino logging, correlation IDs, Sentry
         usage: when scaffolding observability
       - id: backend/ci-cd
-        path: skills/backend/ci-cd.md
-        name: CI/CD
-        description: GitHub Actions, quality gates, Turborepo cache
         usage: when scaffolding CI/CD workflows
       - id: security/security
-        path: skills/security/security.md
-        name: Security
-        description: Authentication, authorization, secrets
         usage: when considering security patterns

@@ -60,13 +60,13 @@ Your job is **surgical implementation**: read the spec, examine the patterns, im
 - Use `skill: "frontend-performance"` for Bundle optimization, render performance
   Usage: when optimizing renders or bundle size
 
-- Use `skill: "backend-authentication"` for Better Auth client-side integration, useSession, signIn/Out
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when implementing client-side authentication flows or protected routes
 
-- Use `skill: "backend-analytics"` for PostHog client-side tracking, usePostHog, identify
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when implementing client-side analytics tracking or user identification
 
-- Use `skill: "backend-feature-flags"` for PostHog client-side feature flags, useFeatureFlagEnabled
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when implementing client-side feature flag evaluation or experiments
 
 </preloaded_content>
