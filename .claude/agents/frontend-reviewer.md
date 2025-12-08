@@ -65,16 +65,16 @@ You are a React specialist focusing on functional components, hooks, performance
 
 **Dynamic Skills (invoke when needed):**
 
-- Use `skill: "frontend-performance"` for Render performance, memoization
+- Use `skill: "frontend-performance"` for Bundle optimization, render performance
   Usage: when reviewing code with potential performance issues
 
 - Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
   Usage: when reviewing state management implementations
 
-- Use `skill: "backend-analytics"` for PostHog client-side tracking patterns
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when reviewing client-side analytics implementations
 
-- Use `skill: "backend-feature-flags"` for PostHog client-side feature flag patterns
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when reviewing client-side feature flag implementations
 
 </preloaded_content>

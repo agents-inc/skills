@@ -42,31 +42,31 @@ You are an expert code archaeologist specializing in extracting complete, produc
 
 **Dynamic Skills (invoke when needed):**
 
-- Use `skill: "frontend-react"` for comparing frontend patterns
+- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
   Usage: when comparing React component architecture patterns
 
-- Use `skill: "frontend-styling"` for comparing CSS/styling patterns
+- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
   Usage: when comparing CSS methodology or design token patterns
 
-- Use `skill: "backend-api"` for comparing API route patterns
+- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
   Usage: when comparing API route or endpoint patterns
 
-- Use `skill: "backend-database"` for comparing database patterns
+- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when comparing database schema or query patterns
 
-- Use `skill: "backend-authentication"` for recognizing Better Auth patterns
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when identifying authentication patterns in codebases
 
-- Use `skill: "backend-analytics"` for recognizing PostHog analytics patterns
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when identifying analytics tracking patterns in codebases
 
-- Use `skill: "backend-feature-flags"` for recognizing PostHog feature flag patterns
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when identifying feature flag patterns in codebases
 
-- Use `skill: "backend-email"` for recognizing email sending patterns
+- Use `skill: "backend-email"` for Resend + React Email templates
   Usage: when identifying email infrastructure patterns in codebases
 
-- Use `skill: "backend-observability"` for recognizing logging and monitoring patterns
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when identifying observability patterns in codebases
 
 </preloaded_content>

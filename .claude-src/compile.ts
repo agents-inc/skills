@@ -25,6 +25,9 @@ import type {
   ProfileConfig,
   Skill,
   SkillAssignment,
+  SkillReference,
+  SkillReferenceAssignment,
+  SkillsConfig,
   ValidationResult,
 } from "./types";
 
@@ -76,12 +79,46 @@ function log(message: string): void {
 }
 
 // =============================================================================
+// Skill Resolution (merge skills.yaml + profile skill references)
+// =============================================================================
+
+function resolveSkillReference(
+  ref: SkillReference,
+  skillsConfig: SkillsConfig
+): Skill {
+  const definition = skillsConfig.skills[ref.id];
+  if (!definition) {
+    throw new Error(`Skill "${ref.id}" not found in skills.yaml`);
+  }
+  return {
+    id: ref.id,
+    path: definition.path,
+    name: definition.name,
+    description: definition.description,
+    usage: ref.usage,
+  };
+}
+
+function resolveSkillReferences(
+  refs: SkillReferenceAssignment,
+  skillsConfig: SkillsConfig
+): SkillAssignment {
+  return {
+    precompiled: refs.precompiled.map((ref) =>
+      resolveSkillReference(ref, skillsConfig)
+    ),
+    dynamic: refs.dynamic.map((ref) => resolveSkillReference(ref, skillsConfig)),
+  };
+}
+
+// =============================================================================
 // Agent Resolution (merge agents.yaml + profile skills)
 // =============================================================================
 
 function resolveAgents(
   agentsConfig: AgentsConfig,
-  profileConfig: ProfileConfig
+  profileConfig: ProfileConfig,
+  skillsConfig: SkillsConfig
 ): Record<string, AgentConfig> {
   const resolved: Record<string, AgentConfig> = {};
 
@@ -96,10 +133,11 @@ function resolveAgents(
       );
     }
 
-    // Get profile-specific skills
-    const skills = profileConfig.agent_skills[agentName];
+    // Get profile-specific skill references and resolve them
+    const skillRefs = profileConfig.agent_skills[agentName];
+    const skills = resolveSkillReferences(skillRefs, skillsConfig);
 
-    // Merge definition with skills
+    // Merge definition with resolved skills
     resolved[agentName] = {
       name: agentName,
       title: definition.title,
@@ -417,7 +455,7 @@ async function copyClaude(config: ProfileConfig): Promise<void> {
 async function main(): Promise<void> {
   console.log(`\n🚀 Compiling profile: ${PROFILE}\n`);
 
-  // Load agents.yaml (single source of truth)
+  // Load agents.yaml (single source of truth for agent definitions)
   const agentsPath = `${ROOT}/agents.yaml`;
   let agentsConfig: AgentsConfig;
 
@@ -426,6 +464,19 @@ async function main(): Promise<void> {
     log(`Loaded ${Object.keys(agentsConfig.agents).length} agent definitions`);
   } catch (error) {
     console.error(`❌ Failed to load agents.yaml: ${agentsPath}`);
+    console.error(`   ${error}`);
+    process.exit(1);
+  }
+
+  // Load skills.yaml (single source of truth for skill definitions)
+  const skillsPath = `${ROOT}/skills.yaml`;
+  let skillsConfig: SkillsConfig;
+
+  try {
+    skillsConfig = parseYaml(await readFile(skillsPath));
+    log(`Loaded ${Object.keys(skillsConfig.skills).length} skill definitions`);
+  } catch (error) {
+    console.error(`❌ Failed to load skills.yaml: ${skillsPath}`);
     console.error(`   ${error}`);
     process.exit(1);
   }
@@ -446,7 +497,7 @@ async function main(): Promise<void> {
   // Resolve agents (merge definitions with profile skills)
   let resolvedAgents: Record<string, AgentConfig>;
   try {
-    resolvedAgents = resolveAgents(agentsConfig, profileConfig);
+    resolvedAgents = resolveAgents(agentsConfig, profileConfig, skillsConfig);
     log(`Resolved ${Object.keys(resolvedAgents).length} agents for profile`);
   } catch (error) {
     console.error(`❌ Failed to resolve agents:`);

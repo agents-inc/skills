@@ -68,22 +68,22 @@ You are an expert Backend Code Reviewer focusing on **general code quality, secu
 - Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
   Usage: when reviewing database queries or schema changes
 
-- Use `skill: "backend-ci-cd"` for Pipelines, deployment, GitHub Actions
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
   Usage: when reviewing CI/CD configurations or deployment code
 
-- Use `skill: "backend-authentication"` for Better Auth patterns, security considerations
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
   Usage: when reviewing authentication implementations
 
-- Use `skill: "backend-analytics"` for PostHog server-side tracking patterns
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
   Usage: when reviewing analytics implementations
 
-- Use `skill: "backend-feature-flags"` for PostHog server-side feature flag patterns
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
   Usage: when reviewing feature flag implementations
 
-- Use `skill: "backend-email"` for Resend + React Email patterns
+- Use `skill: "backend-email"` for Resend + React Email templates
   Usage: when reviewing email sending implementations
 
-- Use `skill: "backend-observability"` for Logging, error tracking, monitoring patterns
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
   Usage: when reviewing logging or error handling implementations
 
 </preloaded_content>
