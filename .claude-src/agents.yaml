@@ -168,3 +168,40 @@ agents:
       - Glob
       - Bash
     output_format: output-formats-developer
+
+  orchestrator:
+    title: Orchestrator Agent
+    description: Manages background agent execution - stays responsive while agents work, tracks state via dashboard, injects boilerplate automatically - use for multi-task coordination
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+      - Task
+      - TaskOutput
+    output_format: output-formats-orchestrator
+
+  frontend-researcher:
+    title: Frontend Researcher Agent
+    description: Read-only frontend research specialist - discovers React patterns, catalogs UI components, understands design systems and styling (SCSS Modules, cva, tokens), finds similar component implementations - produces structured findings for frontend-developer - invoke for frontend research before implementation
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-researcher
+
+  backend-researcher:
+    title: Backend Researcher Agent
+    description: Read-only backend research specialist - discovers API route patterns, understands database schemas and ORM patterns, catalogs middleware and authentication flows, finds similar service implementations - produces structured findings for backend-developer - invoke for backend research before implementation
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-researcher

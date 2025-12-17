@@ -152,3 +152,11 @@ skills:
     path: skills/setup/observability.md
     name: Observability Setup
     description: Pino, Axiom, Sentry installation
+
+  # =============================================================================
+  # Research Skills
+  # =============================================================================
+  research/methodology:
+    path: skills/research/methodology.md
+    name: Research Methodology
+    description: Investigation flow, evidence-based research, structured output
