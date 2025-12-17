@@ -69,7 +69,9 @@
         "Glob",
         "Bash",
         "WebSearch",
-        "WebFetch"
+        "WebFetch",
+        "Task",
+        "TaskOutput"
       ]
     },
     "OutputFormat": {
@@ -81,7 +83,9 @@
         "output-formats-tester",
         "output-formats-pm",
         "output-formats-critique",
-        "output-formats-documentor"
+        "output-formats-documentor",
+        "output-formats-orchestrator",
+        "output-formats-researcher"
       ]
     }
   }

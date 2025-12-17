@@ -319,7 +319,7 @@ async function compileAgent(
 
   // Read output format
   const outputFormat = await readFileOptional(
-    `${ROOT}/core-prompts/${agent.output_format}.md`,
+    `${ROOT}/agent-outputs/${agent.output_format}.md`,
     ""
   );
 
@@ -426,6 +426,54 @@ async function copyClaude(config: ProfileConfig): Promise<void> {
 }
 
 // =============================================================================
+// Commands Compilation
+// =============================================================================
+
+async function compileAllCommands(): Promise<void> {
+  const commandsDir = `${ROOT}/commands`;
+  const outDir = `${OUT}/commands`;
+
+  // Check if commands directory exists
+  const dirExists = await Bun.file(`${commandsDir}`).exists();
+  if (!dirExists) {
+    // Try to check if it's a directory by listing it
+    try {
+      const glob = new Bun.Glob("*.md");
+      const files = await Array.fromAsync(glob.scan({ cwd: commandsDir }));
+      if (files.length === 0) {
+        console.log("  - No commands found, skipping...");
+        return;
+      }
+    } catch {
+      console.log("  - No commands directory found, skipping...");
+      return;
+    }
+  }
+
+  // Check if directory has any .md files
+  const glob = new Bun.Glob("*.md");
+  const files = await Array.fromAsync(glob.scan({ cwd: commandsDir }));
+
+  if (files.length === 0) {
+    console.log("  - No commands found, skipping...");
+    return;
+  }
+
+  await Bun.$`mkdir -p ${outDir}`;
+
+  for (const file of files) {
+    try {
+      const content = await readFile(`${commandsDir}/${file}`);
+      await Bun.write(`${outDir}/${file}`, content);
+      console.log(`  ✓ ${file}`);
+    } catch (error) {
+      console.error(`  ✗ ${file} - ${error}`);
+      throw error;
+    }
+  }
+}
+
+// =============================================================================
 // Main
 // =============================================================================
 
@@ -506,7 +554,7 @@ async function main(): Promise<void> {
   console.log("✅ Validation passed\n");
 
   // Clean output directory
-  await Bun.$`rm -rf ${OUT}/agents ${OUT}/skills`;
+  await Bun.$`rm -rf ${OUT}/agents ${OUT}/skills ${OUT}/commands`;
 
   // Compile
   console.log("📄 Compiling agents...");
@@ -514,6 +562,9 @@ async function main(): Promise<void> {
 
   console.log("\n📦 Compiling skills...");
   await compileAllSkills(resolvedAgents);
+
+  console.log("\n📋 Compiling commands...");
+  await compileAllCommands();
 
   console.log("\n📋 Copying CLAUDE.md...");
   await copyClaude(profileConfig);
