@@ -549,3 +549,77 @@ agents:
         usage: when scaffolding CI/CD workflows
       - id: security/security
         usage: when considering security patterns
+
+  orchestrator:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    precompiled: []
+    dynamic: []
+
+  frontend-researcher:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    precompiled:
+      - id: research/methodology
+        usage: when conducting any research task
+    dynamic:
+      # Frontend skills only - this is a frontend-focused researcher
+      - id: frontend/react
+        usage: when researching React component patterns or architecture
+      - id: frontend/styling
+        usage: when researching styling patterns, tokens, or theming
+      - id: frontend/api
+        usage: when researching data fetching or API integration patterns
+      - id: frontend/client-state
+        usage: when researching state management patterns
+      - id: frontend/accessibility
+        usage: when researching accessibility patterns
+      - id: frontend/performance
+        usage: when researching performance patterns
+      - id: frontend/testing
+        usage: when researching testing patterns
+      - id: frontend/mocking
+        usage: when researching mocking patterns
+
+  backend-researcher:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    precompiled:
+      - id: research/methodology
+        usage: when conducting any research task
+    dynamic:
+      # Backend skills only - this is a backend-focused researcher
+      - id: backend/api
+        usage: when researching API route patterns
+      - id: backend/database
+        usage: when researching database schema or query patterns
+      - id: backend/authentication
+        usage: when researching authentication or session patterns
+      - id: backend/analytics
+        usage: when researching analytics tracking patterns
+      - id: backend/feature-flags
+        usage: when researching feature flag patterns
+      - id: backend/observability
+        usage: when researching logging or monitoring patterns
+      - id: backend/email
+        usage: when researching email sending patterns
+      # Setup skills useful for backend research
+      - id: setup/monorepo
+        usage: when researching service architecture in monorepo
+      - id: setup/env
+        usage: when researching environment configuration patterns
