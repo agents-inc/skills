@@ -1,6 +1,6 @@
-# React Components
+# React Component Patterns - Photoroom Webapp
 
-> **Quick Guide:** Tiered components (Primitives → Components → Patterns → Templates). Use `forwardRef` for ref forwarding. `cva` for type-safe variants. `asChild` pattern for polymorphic components. Expose `className` prop. lucide-react for icons.
+> **Quick Guide:** Functional components with explicit TypeScript types. Use `observer()` for MobX reactivity. Use `type` for props (not interface). Use `useTranslation()` for i18n. Access stores via `stores` singleton. Named exports only (except App.tsx). Add `displayName` for React DevTools.
 
 ---
 
@@ -8,44 +8,47 @@
 
 ## ⚠️ CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+> **All code must follow project conventions in CLAUDE.md** (PascalCase component files, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `forwardRef` on ALL components that expose refs to DOM elements)**
+**(You MUST wrap ALL components that read MobX observables with `observer()`)**
 
-**(You MUST expose `className` prop on ALL reusable components for customization)**
+**(You MUST use `type` for props - NOT `interface` (ESLint enforced))**
 
-**(You MUST use named constants for ALL numeric values - NO magic numbers)**
+**(You MUST use `useTranslation()` hook for ALL user-facing text)**
 
-**(You MUST use named exports - NO default exports in component libraries)**
+**(You MUST access stores via `stores` singleton - NEVER pass stores as props)**
 
-**(You MUST add `displayName` to ALL forwardRef components for React DevTools)**
+**(You MUST use named exports - NO default exports except App.tsx)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** React components, component patterns, icon usage, cva, forwardRef
+**Auto-detection:** React components, observer, MobX, useTranslation, functional components, component patterns, props type
 
 **When to use:**
 
-- Building React components
-- Implementing component variants with cva
-- Working with icons in components
-- Understanding component architecture
+- Building React components in the Photoroom webapp
+- Components that read MobX observable state
+- Components with user-facing text requiring translation
+- Custom hooks that access stores
+- Modal and confirmation patterns
 
 **Key patterns covered:**
 
-- Component architecture tiers
-- forwardRef and cva patterns
-- Icon usage with lucide-react
-- Custom hooks for common patterns
-- Error boundaries with retry
+- Component structure with TypeScript types
+- MobX observer wrapper for reactivity
+- Props extending HTML attributes
+- useTranslation for i18n
+- Custom hooks with stores
+- Promise-based modal pattern
+- displayName convention
 
 **When NOT to use:**
 
-- Simple one-off components without variants (skip cva, use SCSS Modules only)
-- Components that don't need refs (skip forwardRef)
-- Static content without interactivity (consider static HTML)
+- Building stores (use `skill: frontend-mobx-state-work`)
+- API integration (use `skill: frontend-api-work`)
+- Styling patterns (use `skill: frontend-styling-work`)
 
 ---
 
@@ -53,7 +56,15 @@
 
 ## Philosophy
 
-React components follow a tiered architecture from low-level primitives to high-level templates. Components should be composable, type-safe, and expose necessary customization points (`className`, refs). Use `cva` only when components have multiple variants to avoid over-engineering.
+React components in the Photoroom webapp are functional components with explicit TypeScript typing. MobX provides reactive state management - components reading observables must be wrapped with `observer()`. All user-facing text uses i18next translations. Stores are accessed via a singleton, never passed as props.
+
+**Core principles:**
+
+1. **Explicit typing** - Use `type` for props, not `interface`
+2. **Reactive by design** - `observer()` wrapper for MobX integration
+3. **Internationalized** - All text through `useTranslation()`
+4. **Singleton stores** - Access via `stores` import, never props
+5. **Named exports** - Tree-shakeable, consistent imports
 
 </philosophy>
 
@@ -63,855 +74,745 @@ React components follow a tiered architecture from low-level primitives to high-
 
 ## Core Patterns
 
-### Pattern 1: Component Architecture Tiers
+### Pattern 1: Basic Component Structure
 
-React components are organized in a tiered hierarchy from low-level building blocks to high-level page layouts.
+Functional components with explicit TypeScript types and proper exports.
 
-#### Tier Structure
-
-1. **Primitives** (`src/primitives/`) - Low-level building blocks (skeleton)
-2. **Components** (`src/components/`) - Reusable UI (button, switch, select)
-3. **Patterns** (`src/patterns/`) - Composed patterns (feature, navigation)
-4. **Templates** (`src/templates/`) - Page layouts (frame)
-
-#### Implementation Guidelines
+#### Type Definition
 
 ```typescript
-// ✅ Good Example - Component follows tier conventions
-// packages/ui/src/components/button/button.tsx
-import { forwardRef } from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import clsx from "clsx";
-import styles from "./button.module.scss";
+// ✅ Good Example - Using type for props
+export type AlertProps = {
+  severity?: AlertSeverity;
+  children: React.ReactNode;
+};
 
-const buttonVariants = cva("btn", {
-  variants: {
-    variant: {
-      default: clsx(styles.btn, styles.btnDefault),
-      ghost: clsx(styles.btn, styles.btnGhost),
-      link: clsx(styles.btn, styles.btnLink),
-    },
-    size: {
-      default: clsx(styles.btn, styles.btnSizeDefault),
-      large: clsx(styles.btn, styles.btnSizeLarge),
-      icon: clsx(styles.btn, styles.btnSizeIcon),
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
-  },
+export const Alert = ({ severity = "warning", children }: AlertProps) => {
+  const { outerClassNames, icon: Icon } = severityVariants[severity];
+
+  return (
+    <div className={clsx("flex w-full items-center gap-2", outerClassNames)}>
+      <Icon className="h-4 w-4 shrink-0" />
+      <div>{children}</div>
+    </div>
+  );
+};
+```
+
+**Why good:** `type` is enforced by ESLint, explicit props typing enables autocomplete and compile-time checking, default parameter value documents expected behavior, named export enables tree-shaking
+
+```typescript
+// ❌ Bad Example - Using interface
+export interface AlertProps {
+  severity?: AlertSeverity;
+  children: React.ReactNode;
+}
+
+export default function Alert({ severity, children }) { ... }
+```
+
+**Why bad:** `interface` violates ESLint rule `@typescript-eslint/consistent-type-definitions`, default export prevents tree-shaking and violates project conventions, missing type annotations on function parameters
+
+---
+
+### Pattern 2: MobX Observer Wrapper
+
+All components reading MobX observables MUST be wrapped with `observer()`.
+
+#### Observer Implementation
+
+```typescript
+// ✅ Good Example - Component with observer wrapper
+import { observer } from "mobx-react-lite";
+
+import { stores } from "stores";
+
+export const UserStatus = observer(() => {
+  const { authStore } = stores;
+
+  return (
+    <div>
+      {authStore.isLoggedIn ? "Logged in" : "Guest"}
+    </div>
+  );
+});
+```
+
+**Why good:** `observer()` enables MobX reactivity so component re-renders when `isLoggedIn` changes, stores accessed via singleton maintains reactive chain, no need for useEffect to sync state
+
+```typescript
+// ❌ Bad Example - Missing observer wrapper
+import { stores } from "stores";
+
+export const UserStatus = () => {
+  const { authStore } = stores;
+
+  return (
+    <div>
+      {authStore.isLoggedIn ? "Logged in" : "Guest"}
+    </div>
+  );
+};
+// Component won't re-render when isLoggedIn changes!
+```
+
+**Why bad:** without `observer()`, React doesn't know to re-render when MobX observables change, component will show stale data, requires page reload to see updated state
+
+#### Observer with displayName
+
+```typescript
+// ✅ Good Example - Observer with displayName for DevTools
+import { observer } from "mobx-react-lite";
+
+import { stores } from "stores";
+
+export const LightPromoBanner = observer(() => {
+  const { authStore, entitlementsStore } = stores;
+
+  if (entitlementsStore.isPro) return null;
+
+  return (
+    <div className="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-4">
+      <h3>Upgrade to Pro</h3>
+      {/* Banner content */}
+    </div>
+  );
 });
 
-export type ButtonProps = React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
+LightPromoBanner.displayName = "LightPromoBanner";
+```
+
+**Why good:** `displayName` makes component identifiable in React DevTools, observer components don't infer name automatically, helps debugging in production builds where names are minified
+
+---
+
+### Pattern 3: Props Extending HTML Attributes
+
+Extend native HTML attributes for composability and prop spreading.
+
+#### Props Extension Pattern
+
+```typescript
+// ✅ Good Example - Props extending HTML attributes
+export type LightPromoBannerProps = {
+  title?: string;
+  subtitle?: string;
+  image?: React.ReactNode;
+  className?: string;
+  cta?: React.ReactNode;
+  onClick?: () => void;
+  onDismiss?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+export const LightPromoBanner = ({
+  title,
+  subtitle,
+  className,
+  ...rest
+}: LightPromoBannerProps) => {
+  return (
+    <div className={clsx("base-classes", className)} {...rest}>
+      {/* content */}
+    </div>
+  );
+};
+```
+
+**Why good:** extending `HTMLAttributes` allows consumers to pass any valid div props, `className` prop enables custom styling, rest spread passes through HTML attributes like `id`, `data-*`, `aria-*`
+
+```typescript
+// ❌ Bad Example - Not extending HTML attributes
+export type LightPromoBannerProps = {
+  title?: string;
+  className?: string;
+};
+
+export const LightPromoBanner = ({ title, className }: LightPromoBannerProps) => {
+  return (
+    <div className={className}>
+      {title}
+    </div>
+  );
+};
+// Can't pass id, data-testid, aria-label, etc.
+```
+
+**Why bad:** consumers can't pass standard HTML attributes, breaks accessibility by blocking `aria-*` props, prevents testing by blocking `data-testid`
+
+---
+
+### Pattern 4: useTranslation for i18n
+
+All user-facing text must use translation keys via `useTranslation()` hook.
+
+#### Basic Translation Usage
+
+```typescript
+// ✅ Good Example - Using useTranslation hook
+import { useTranslation } from "react-i18next";
+
+export const SaveButton = observer(() => {
+  const { t } = useTranslation();
+
+  return (
+    <button>
+      {t("common.save")}
+    </button>
+  );
+});
+```
+
+**Why good:** `useTranslation()` hook reacts to language changes, text will update when user changes language, follows i18next conventions
+
+```typescript
+// ❌ Bad Example - Hardcoded user-facing text
+export const SaveButton = () => {
+  return (
+    <button>Save</button>
+  );
+};
+```
+
+**Why bad:** hardcoded text won't be translated for international users, ESLint `i18next/no-literal-string` rule will warn
+
+#### Translation with Parameters
+
+```typescript
+// ✅ Good Example - Translation with interpolation
+import { useTranslation } from "react-i18next";
+
+export const ExportProgress = observer(({ count }: { count: number }) => {
+  const { t } = useTranslation();
+
+  return (
+    <span>
+      {t("export.notification.loading", { count })}
+    </span>
+  );
+});
+```
+
+**Why good:** translation key with interpolation allows dynamic values, count parameter is properly typed
+
+#### Inline t() for Non-Component Code
+
+```typescript
+// ✅ Good Example - Direct t() import in hooks/utilities
+import { t } from "i18next";
+
+import { stores } from "stores";
+
+export const useExport = () => {
+  const { notificationsStore } = stores;
+
+  const showError = () => {
+    notificationsStore.addNotification({
+      type: "danger",
+      label: t("export.error.failed"),
+    });
   };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant, size, className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return (
-      <Comp
-        className={clsx(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
+  return { showError };
+};
+```
+
+**Why good:** direct `t` import works in non-component code where hooks can't be used, appropriate for utilities and notification messages
+
+**When not to use:** In React components, always prefer `useTranslation()` hook as it reacts to language changes.
+
+---
+
+### Pattern 5: Custom Hooks with Stores
+
+Extract reusable logic into custom hooks that access stores.
+
+#### Hook with Store Access
+
+```typescript
+// ✅ Good Example - Custom hook accessing stores
+import { useRef, useState } from "react";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+
+import { stores } from "stores";
+
+import { createTeamApi } from "lib/APIs";
+
+export const useCreateTeam = () => {
+  const { notificationsStore, teamsStore, authStore } = stores;
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const originRef = useRef<CreateTeamOrigin | null>(null);
+  const [teamNameSuggestion, setTeamNameSuggestion] = useState<string>();
+
+  const {
+    data: team,
+    mutateAsync: createTeam,
+    isPending: createTeamIsLoading,
+    reset: resetCreateTeamMutation,
+  } = useMutation({
+    mutationFn: async (name: string) => createTeamApi(name),
+    onError: () => {
+      notificationsStore.addNotification({
+        type: "danger",
+        label: t("team.create.error"),
+      });
+    },
+  });
+
+  return {
+    team,
+    startCreateTeam,
+    createTeam,
+    createTeamIsLoading,
+    completeCreateTeam,
+    teamNameSuggestion,
+    origin: originRef.current,
+  };
+};
+```
+
+**Why good:** stores accessed via singleton maintains MobX reactivity, React Query handles server state, notifications integrated for user feedback, translation for error messages
+
+```typescript
+// ❌ Bad Example - Passing stores as parameters
+export const useCreateTeam = (notificationsStore, teamsStore) => {
+  // ...
+};
+
+// In component:
+const createTeam = useCreateTeam(stores.notificationsStore, stores.teamsStore);
+```
+
+**Why bad:** passing stores as parameters breaks MobX reactive chain, creates unnecessary coupling, harder to test, violates stores singleton pattern
+
+---
+
+### Pattern 6: Promise-Based Modal Pattern
+
+Use `useConfirmModal` for confirmation flows that return promises.
+
+#### useConfirmModal Implementation
+
+```typescript
+// ✅ Good Example - Promise-based confirmation modal
+import { useCallback, useMemo, useRef, useState } from "react";
+
+import { noop } from "lodash";
+
+export type UseConfirmModalProps<T> = {
+  defaultConfirmValue?: T;
+  defaultCancelValue?: T;
+  defaultIsOpen?: boolean;
+};
+
+export const useConfirmModal = <T,>({
+  defaultConfirmValue,
+  defaultCancelValue,
+  defaultIsOpen = false,
+}: UseConfirmModalProps<T> = {}) => {
+  const [isOpen, setIsOpen] = useState(defaultIsOpen);
+  const resolveRef = useRef<(value: [boolean, T | undefined]) => void>(noop);
+
+  const openConfirmModal = useCallback(() => {
+    return new Promise<[boolean, T | undefined]>((resolve) => {
+      setIsOpen(true);
+      resolveRef.current = resolve;
+    });
+  }, []);
+
+  return useMemo(() => [
+    openConfirmModal,
+    {
+      isOpen,
+      onConfirm: (value?: T) => {
+        resolveRef.current([true, value ?? defaultConfirmValue]);
+        setIsOpen(false);
+      },
+      onCancel: (value?: T) => {
+        resolveRef.current([false, value ?? defaultCancelValue]);
+        setIsOpen(false);
+      },
+    },
+  ] as const, [openConfirmModal, isOpen, defaultConfirmValue, defaultCancelValue]);
+};
+```
+
+**Why good:** async/await flow for modal confirmation, generic type enables custom return values, tuple return with `as const` preserves types
+
+#### useConfirmModal Usage
+
+```typescript
+// ✅ Good Example - Using confirm modal in a flow
+import { useTranslation } from "react-i18next";
+
+import { ConfirmModal } from "components/ConfirmModal";
+
+import { useConfirmModal } from "hooks/useConfirmModal";
+
+export const DeleteButton = observer(() => {
+  const { t } = useTranslation();
+  const [openConfirm, confirmProps] = useConfirmModal();
+
+  const handleDelete = async () => {
+    const [confirmed] = await openConfirm();
+
+    if (confirmed) {
+      await deleteItem();
+    }
+  };
+
+  return (
+    <>
+      <button onClick={handleDelete}>
+        {t("common.delete")}
+      </button>
+      <ConfirmModal
+        {...confirmProps}
+        title={t("delete.confirm.title")}
+        message={t("delete.confirm.message")}
       />
+    </>
+  );
+});
+```
+
+**Why good:** clean async/await flow, modal state encapsulated in hook, spread props pattern for modal configuration
+
+---
+
+### Pattern 7: displayName Convention
+
+Add `displayName` to components for React DevTools debugging.
+
+#### displayName Pattern
+
+```typescript
+// ✅ Good Example - displayName on observer component
+export const LightPromoBanner = observer(() => {
+  // Component implementation
+});
+
+LightPromoBanner.displayName = "LightPromoBanner";
+```
+
+**Why good:** observer HOC obscures component name in DevTools, displayName restores proper identification, helps debugging in production
+
+```typescript
+// ❌ Bad Example - Missing displayName
+export const LightPromoBanner = observer(() => {
+  // Component implementation
+});
+// Shows as "Observer" in React DevTools
+```
+
+**Why bad:** component shows as generic "Observer" in React DevTools, makes debugging difficult, can't identify component in component tree
+
+#### displayName for forwardRef
+
+```typescript
+// ✅ Good Example - displayName with forwardRef
+import { forwardRef } from "react";
+
+export type InputProps = {
+  label?: string;
+} & React.InputHTMLAttributes<HTMLInputElement>;
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, className, ...props }, ref) => {
+    return (
+      <div>
+        {label && <label>{label}</label>}
+        <input ref={ref} className={clsx("input-base", className)} {...props} />
+      </div>
     );
   }
 );
 
-Button.displayName = "Button";
+Input.displayName = "Input";
 ```
 
-**Why good:** forwardRef enables ref forwarding for focus management and DOM access, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, displayName improves debugging in React DevTools
-
-```typescript
-// ❌ Bad Example - Missing critical patterns
-export default function Button({ variant, size, onClick, children }) {
-  return (
-    <button className={`btn btn-${variant} btn-${size}`} onClick={onClick}>
-      {children}
-    </button>
-  );
-}
-```
-
-**Why bad:** default export prevents tree-shaking and violates project conventions, no ref forwarding breaks focus management and third-party library integrations, no className prop prevents customization, string interpolation for classes is not type-safe and prone to runtime errors, no TypeScript types means no compile-time safety
-
-#### SCSS Module Structure
-
-```scss
-// ✅ Good Example - Uses design tokens and data-attributes
-// packages/ui/src/components/button/button.module.scss
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: var(--text-size-body);
-  font-weight: 600;
-
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.btnDefault {
-  background-color: var(--color-surface-base);
-  color: var(--color-text-default);
-  border-color: var(--color-surface-subtle);
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-surface-subtle);
-  }
-
-  &[data-active="true"] {
-    color: var(--color-text-muted);
-    background: var(--color-surface-strong);
-  }
-}
-
-.btnGhost {
-  background-color: transparent;
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-surface-subtle);
-  }
-}
-
-.btnSizeDefault {
-  padding: var(--space-md);
-}
-
-.btnSizeLarge {
-  padding: var(--space-xlg) var(--space-xxlg);
-}
-
-.btnSizeIcon {
-  padding: var(--space-md);
-  aspect-ratio: 1;
-}
-```
-
-**Why good:** design tokens ensure consistency across components, data-attributes for state styling separate state from presentation, scoped styles prevent global namespace pollution
-
-```scss
-// ❌ Bad Example - Hardcoded values and inline styles
-.button {
-  padding: 12px 24px; // Magic numbers
-  background: #3b82f6; // Hardcoded color
-  border-radius: 8px; // Magic number
-}
-
-.button.active {
-  background: #2563eb; // className toggling for state
-}
-```
-
-**Why bad:** hardcoded values prevent theme switching and break design system consistency, magic numbers are unmaintainable and inconsistent across components, className toggling for state is harder to manage than data-attributes
-
-**When to use:** All reusable React components in the component library.
+**Why good:** forwardRef also obscures component name, displayName required for proper DevTools identification
 
 ---
 
-### Pattern 2: Component Variants with cva
+### Pattern 8: Component File Naming
 
-Use `cva` (class-variance-authority) for type-safe component variants. Only use when component has multiple variants (size, color, etc.).
+PascalCase for component files, matching component name.
 
-#### When to Use cva
+#### File Naming Convention
 
-- Component has 2+ visual variants (default, ghost, outline)
-- Component has 2+ size variants (sm, md, lg)
-- Need type-safe variant props
-- Need compound variants (combinations of variants)
+```
+src/
+├── components/
+│   ├── Alert.tsx              # Component file - PascalCase
+│   ├── ConfirmModal.tsx       # Multi-word component
+│   └── LightPromoBanner/
+│       ├── LightPromoBanner.tsx
+│       └── LightPromoBanner.stories.tsx
+├── hooks/
+│   ├── useExport.ts           # Hook file - camelCase with use prefix
+│   └── useCreateTeam.ts
+└── utils/
+    ├── array.ts               # Utility file - camelCase
+    └── date.ts
+```
 
-#### Implementation
+**Why good:** PascalCase matches React component naming convention, easy to identify components vs utilities, stories colocated with component
+
+---
+
+### Pattern 9: Avoiding useEffect with MobX
+
+Use MobX reactions in stores instead of useEffect in components.
+
+#### MobX Reaction Pattern
 
 ```typescript
-// ✅ Good Example - Using cva for components with variants
-import { cva, type VariantProps } from "class-variance-authority";
-import clsx from "clsx";
-import styles from "./alert.module.scss";
+// ✅ Good Example - Reaction in store, not useEffect
+// In store constructor:
+class Store {
+  constructor() {
+    makeAutoObservable(this);
 
-const ANIMATION_DURATION_MS = 200;
+    reaction(
+      () => this.isLoaded,
+      (isLoaded) => {
+        if (isLoaded) {
+          this.doSomething();
+        }
+      }
+    );
+  }
+}
 
-const alertVariants = cva("alert", {
-  variants: {
-    variant: {
-      info: clsx(styles.alert, styles.alertInfo),
-      warning: clsx(styles.alert, styles.alertWarning),
-      error: clsx(styles.alert, styles.alertError),
-      success: clsx(styles.alert, styles.alertSuccess),
-    },
-    size: {
-      sm: clsx(styles.alert, styles.alertSm),
-      md: clsx(styles.alert, styles.alertMd),
-      lg: clsx(styles.alert, styles.alertLg),
-    },
-  },
-  defaultVariants: {
-    variant: "info",
-    size: "md",
-  },
+// In component - just read state:
+export const MyComponent = observer(() => {
+  const { myStore } = stores;
+
+  return <div>{myStore.isLoaded ? "Ready" : "Loading"}</div>;
 });
-
-export type AlertProps = React.ComponentProps<"div"> &
-  VariantProps<typeof alertVariants>;
-
-export const Alert = ({ variant, size, className, ...props }: AlertProps) => {
-  return (
-    <div
-      className={clsx(alertVariants({ variant, size, className }))}
-      style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease` }}
-      {...props}
-    />
-  );
-};
 ```
 
-**Why good:** cva provides type-safe variant props with autocomplete, defaultVariants prevent undefined behavior, named constant for animation duration prevents magic numbers, VariantProps extracts correct TypeScript types from cva definition
+**Why good:** side effects handled in store where logic belongs, component stays simple and declarative, no duplicate reactive systems
 
 ```typescript
-// ❌ Bad Example - Not using cva when component has variants
-export const Alert = ({ variant = "info", size = "md", className, ...props }) => {
-  return (
-    <div
-      className={`alert alert-${variant} alert-${size} ${className}`}
-      style={{ transition: 'all 200ms ease' }}
-      {...props}
-    />
-  );
-};
-```
-
-**Why bad:** no type safety means typos compile but break at runtime, string interpolation is error-prone and hard to refactor, magic number 200 is not discoverable or maintainable, no TypeScript autocomplete for variant values
-
-**When not to use:** Simple components without variants (overkill - use SCSS Modules only).
-
----
-
-### Pattern 3: Icon Usage with lucide-react
-
-Use `lucide-react` for consistent, tree-shakeable icons. Icons inherit color from parent by default.
-
-#### Constants
-
-```typescript
-// Design token for icon sizing (defined in design system)
-// --text-size-icon: 16px
-```
-
-#### Basic Icon Usage
-
-```tsx
-// ✅ Good Example - Icon in button with accessibility
-import { ChevronDown } from "lucide-react";
-import { Button } from "@repo/ui/button";
-
-<Button size="icon" title="Expand details" aria-label="Expand details">
-  <ChevronDown />
-</Button>
-```
-
-**Why good:** lucide-react provides tree-shakeable imports reducing bundle size, title attribute shows tooltip on hover, aria-label provides accessible name for screen readers, icon inherits color from button reducing CSS duplication
-
-```tsx
-// ❌ Bad Example - Icon without accessibility
-import { ChevronDown } from "lucide-react";
-import { Button } from "@repo/ui/button";
-
-<Button size="icon">
-  <ChevronDown />
-</Button>
-```
-
-**Why bad:** missing title means no tooltip for sighted users, missing aria-label means screen readers announce "button" with no context, unusable for keyboard-only and screen reader users
-
-#### Icon in Component Pattern
-
-```typescript
-// ✅ Good Example - Conditional icon rendering
-// packages/ui/src/patterns/feature/feature.tsx
-import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "../../components/button/button";
-import styles from "./feature.module.scss";
-
-export const Feature = ({ id, title, description, status }: FeatureProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <li onClick={() => setIsExpanded(!isExpanded)}>
-      <h2>{title}</h2>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={styles.expandButton}
-        aria-label={isExpanded ? "Collapse details" : "Expand details"}
-      >
-        {isExpanded ? (
-          <ChevronUp className={styles.icon} />
-        ) : (
-          <ChevronDown className={styles.icon} />
-        )}
-      </Button>
-      {isExpanded && <p>{description}</p>}
-    </li>
-  );
-};
-```
-
-**Why good:** dynamic aria-label accurately describes current state, conditional icon rendering provides visual feedback, className prop on icon enables consistent sizing via design tokens
-
-#### Icon Styling
-
-```scss
-// ✅ Good Example - Icon sizing with design tokens
-// packages/ui/src/patterns/feature/feature.module.scss
-.expandButton {
-  // Button already has proper sizing
-  // Icon inherits color from button
-}
-
-.icon {
-  // Use design token for consistent sizing
-  width: var(--text-size-icon); // 16px
-  height: var(--text-size-icon);
-}
-```
-
-**Why good:** design token ensures consistent icon sizing across all components, color inheritance via currentColor keeps icons synced with text color
-
-```scss
-// ❌ Bad Example - Hardcoded icon sizing and colors
-.icon {
-  width: 16px; // Magic number
-  height: 16px; // Magic number
-  color: #3b82f6; // Hardcoded color
-}
-```
-
-**Why bad:** magic numbers prevent consistent sizing across components, hardcoded colors break when theme changes, manual color management duplicates effort and causes inconsistencies
-
-#### Icon-Only Buttons with Accessibility
-
-```typescript
-// ✅ Good Example - Accessible icon-only buttons
-import { CircleUserRound, CodeXml } from "lucide-react";
-import { Button } from "../../components/button/button";
-
-const GITHUB_URL = "https://github.com/username";
-const BLOG_URL = "https://blog.example.com";
-
-export const Socials = () => {
-  return (
-    <ul>
-      <li>
-        <Button
-          size="icon"
-          title="View GitHub profile"
-          aria-label="View GitHub profile"
-          onClick={() => window.open(GITHUB_URL, "_blank")}
-        >
-          <CodeXml />
-        </Button>
-      </li>
-      <li>
-        <Button
-          size="icon"
-          title="Visit blog"
-          aria-label="Visit blog"
-          onClick={() => window.open(BLOG_URL, "_blank")}
-        >
-          <CircleUserRound />
-        </Button>
-      </li>
-    </ul>
-  );
-};
-```
-
-**Why good:** both title and aria-label provide accessibility for different user needs, named constants for URLs prevent magic strings, title shows tooltip on hover, aria-label provides context for screen readers
-
-#### Icon Color Inheritance
-
-```tsx
-// ✅ Good Example - Icons inherit color from parent
-<Button className={styles.successButton}>
-  <CheckCircle />  {/* Icon inherits green color */}
-  Save
-</Button>
-
-<Button className={styles.errorButton}>
-  <XCircle />  {/* Icon inherits red color */}
-  Delete
-</Button>
-```
-
-**Why good:** using currentColor keeps icon colors synced with text, reduces CSS duplication, automatic color consistency across themes
-
-```tsx
-// ❌ Bad Example - Manually setting icon colors
-<Button className={styles.successButton}>
-  <CheckCircle className={styles.greenIcon} />
-  Save
-</Button>
-```
-
-**Why bad:** manual color classes create maintenance burden, icons can get out of sync with text color, breaks color consistency in themes
-
----
-
-### Pattern 4: Event Handler Naming Conventions
-
-Use descriptive event handler names with `handle` prefix for internal handlers and `on` prefix for callback props.
-
-#### Naming Rules
-
-- `handle` prefix for internal handlers: `handleClick`, `handleSubmit`, `handleChange`
-- `on` prefix for callback props: `onClick`, `onSubmit`, `onChange`
-- Include the element or action: `handleNameChange`, `handlePriceBlur`
-- Type events explicitly: `FormEvent<HTMLFormElement>`, `ChangeEvent<HTMLInputElement>`
-
-#### Implementation
-
-```typescript
-// ✅ Good Example - Descriptive event handler names
-import type { FormEvent, ChangeEvent } from "react";
-
-const MIN_PRICE = 0;
-
-function ProductForm() {
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Submit logic
-  };
-
-  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-  };
-
-  const handlePriceBlur = () => {
-    if (price < MIN_PRICE) {
-      setPrice(MIN_PRICE);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input onChange={handleNameChange} />
-      <input onBlur={handlePriceBlur} />
-    </form>
-  );
-}
-```
-
-**Why good:** descriptive names make code self-documenting, explicit event types catch errors at compile time, named constant MIN_PRICE prevents magic number, handle prefix clearly identifies internal event handlers
-
-```typescript
-// ❌ Bad Example - Generic names, unclear purpose
-function ProductForm() {
-  const submit = (e) => { /* ... */ };
-  const change = (e) => { /* ... */ };
-  const blur = () => {
-    if (price < 0) { // Magic number
-      setPrice(0);
-    }
-  };
-
-  return (
-    <form onSubmit={submit}>
-      <input onChange={change} />
-      <input onBlur={blur} />
-    </form>
-  );
-}
-```
-
-**Why bad:** generic names don't describe what changes or what submits, no event types means runtime errors only, magic number 0 has no context, missing handle prefix creates ambiguity about function purpose
-
-#### useCallback for Handlers with Memoized Children
-
-```typescript
-// ✅ Good Example - useCallback with memoized component
-import { useCallback } from "react";
-import type { Job } from "./types";
-
-const MemoizedJobList = React.memo(JobList);
-
-function JobBoard() {
-  const handleJobClick = useCallback((job: Job) => {
-    openDrawer(job.id);
-  }, [openDrawer]);
-
-  return <MemoizedJobList jobs={jobs} onJobClick={handleJobClick} />;
-}
-```
-
-**Why good:** useCallback prevents function recreation on every render, memoized child component won't re-render unnecessarily, performance optimization has measurable impact with memoized children
-
-```typescript
-// ❌ Bad Example - useCallback without memoized child
-function SearchBar() {
-  const handleSearch = useCallback((value: string) => {
-    setQuery(value);
-  }, []);
-
-  // Input is not memoized, useCallback provides no benefit
-  return <input onChange={handleSearch} />;
-}
-```
-
-**Why bad:** useCallback adds overhead without benefit when child is not memoized, premature optimization that adds complexity, input element re-renders regardless of callback identity
-
-**When to use:** Only use useCallback when passing handlers to memoized components or expensive child trees.
-
----
-
-### Pattern 5: Custom Hooks
-
-Extract reusable logic into custom hooks following the `use` prefix convention.
-
-#### usePagination Hook
-
-```typescript
-// ✅ Good Example - Reusable pagination hook
-import { useState, useMemo } from "react";
-
-const DEFAULT_INITIAL_PAGE = 1;
-
-interface UsePaginationProps {
-  totalItems: number;
-  itemsPerPage: number;
-  initialPage?: number;
-}
-
-export function usePagination({
-  totalItems,
-  itemsPerPage,
-  initialPage = DEFAULT_INITIAL_PAGE
-}: UsePaginationProps) {
-  const [currentPage, setCurrentPage] = useState(initialPage);
-
-  const totalPages = useMemo(
-    () => Math.ceil(totalItems / itemsPerPage),
-    [totalItems, itemsPerPage]
-  );
-
-  const startIndex = useMemo(
-    () => (currentPage - 1) * itemsPerPage,
-    [currentPage, itemsPerPage]
-  );
-
-  const endIndex = useMemo(
-    () => Math.min(startIndex + itemsPerPage, totalItems),
-    [startIndex, itemsPerPage, totalItems]
-  );
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  return {
-    currentPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    goToPage,
-    goToNextPage,
-    goToPrevPage,
-    goToFirstPage: () => setCurrentPage(1),
-    goToLastPage: () => setCurrentPage(totalPages),
-    hasNextPage: currentPage < totalPages,
-    hasPrevPage: currentPage > 1,
-  };
-}
-```
-
-**Why good:** encapsulates pagination logic for reuse across components, memoized calculations prevent unnecessary re-computation, complete API with all common pagination operations, named constant for default page value
-
-#### Hook Usage
-
-```typescript
-// ✅ Good Example - Using pagination hook
-import type { Product } from "./types";
-
-const ITEMS_PER_PAGE = 10;
-
-function ProductList({ products }: { products: Product[] }) {
-  const {
-    currentPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    goToPage,
-    hasNextPage,
-    hasPrevPage
-  } = usePagination({
-    totalItems: products.length,
-    itemsPerPage: ITEMS_PER_PAGE,
-  });
-
-  const visibleProducts = products.slice(startIndex, endIndex);
-
-  return (
-    <div>
-      <ul>
-        {visibleProducts.map((product) => (
-          <li key={product.id}>{product.name}</li>
-        ))}
-      </ul>
-      <div>
-        <button onClick={() => goToPage(currentPage - 1)} disabled={!hasPrevPage}>
-          Previous
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button onClick={() => goToPage(currentPage + 1)} disabled={!hasNextPage}>
-          Next
-        </button>
-      </div>
-    </div>
-  );
-}
-```
-
-**Why good:** hook extracts all pagination complexity from component, named constant for items per page, declarative API makes component code readable
-
-#### useDebounce Hook
-
-```typescript
-// ✅ Good Example - Debounce hook for search inputs
-import { useEffect, useState } from "react";
-
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+// ❌ Bad Example - useEffect to react to MobX changes
+export const MyComponent = observer(() => {
+  const { myStore } = stores;
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-```
-
-**Why good:** generic type parameter makes hook reusable with any value type, cleanup function prevents memory leaks, proper dependency array ensures correct behavior
-
-#### useDebounce Usage with React Query
-
-```typescript
-// ✅ Good Example - Debounced search with React Query
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-
-const DEBOUNCE_DELAY_MS = 500;
-const MIN_SEARCH_LENGTH = 0;
-
-function SearchComponent() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY_MS);
-
-  const { data } = useQuery({
-    queryKey: ["search", debouncedSearchTerm],
-    queryFn: () => searchAPI(debouncedSearchTerm),
-    enabled: debouncedSearchTerm.length > MIN_SEARCH_LENGTH,
-  });
-
-  return <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />;
-}
-```
-
-**Why good:** debounce prevents excessive API calls, named constants for delay and minimum length, enabled option prevents unnecessary queries for empty search
-
-#### useLocalStorage Hook
-
-```typescript
-// ✅ Good Example - Type-safe localStorage persistence
-import { useState, useEffect } from "react";
-
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") return initialValue;
-
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
+    if (myStore.isLoaded) {
+      doSomething();
     }
-  });
+  }, [myStore.isLoaded]);
 
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return [storedValue, setValue] as const;
-}
+  return <div>{myStore.isLoaded ? "Ready" : "Loading"}</div>;
+});
 ```
 
-**Why good:** SSR-safe with window check, error handling prevents crashes, supports functional updates like useState, generic type provides type safety
+**Why bad:** creates duplicate reactive system (MobX + useEffect), side effect logic scattered across components, harder to test and maintain
 
-#### useLocalStorage Usage
+**When useEffect IS appropriate:**
 
-```typescript
-// ✅ Good Example - Theme persistence
-function Settings() {
-  const [theme, setTheme] = useLocalStorage("theme", "light");
-
-  return (
-    <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-      Toggle theme: {theme}
-    </button>
-  );
-}
-```
-
-**Why good:** theme persists across page reloads, type-safe theme values, simple API matches useState
+- URL parameter handling
+- Focus management after renders
+- Integration with non-MobX libraries
+- Browser API cleanup (resize observers, intersection observers)
 
 ---
 
-### Pattern 6: Error Boundaries with Retry
+### Pattern 10: useMemo with MobX
 
-Use Error Boundaries to catch React render errors and provide retry capability.
+Use MobX computed values instead of useMemo for derived state.
 
-#### Implementation
-
-```typescript
-// ✅ Good Example - Error boundary with retry and logging
-import { Component, ErrorInfo, ReactNode } from "react";
-import { Button } from "./button";
-
-interface Props {
-  children: ReactNode;
-  fallback?: (error: Error, reset: () => void) => ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Error boundary caught:", error, errorInfo);
-    this.props.onError?.(error, errorInfo);
-  }
-
-  reset = () => {
-    this.setState({ hasError: false, error: null });
-  };
-
-  render() {
-    if (this.state.hasError && this.state.error) {
-      if (this.props.fallback) {
-        return this.props.fallback(this.state.error, this.reset);
-      }
-
-      return (
-        <div role="alert" style={{ padding: "2rem", textAlign: "center" }}>
-          <h2>Something went wrong</h2>
-          <pre style={{ color: "red", marginTop: "1rem" }}>{this.state.error.message}</pre>
-          <Button onClick={this.reset} style={{ marginTop: "1rem" }}>
-            Try again
-          </Button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-```
-
-**Why good:** catches render errors preventing full app crashes, retry capability allows recovery from transient errors, custom fallback prop enables branded error UI, onError callback enables error tracking integration
-
-#### Error Boundary Usage
+#### Computed in Store Pattern
 
 ```typescript
-// ✅ Good Example - Error boundary with custom fallback and logging
-<ErrorBoundary
-  fallback={(error, reset) => (
-    <div>
-      <h1>Oops!</h1>
-      <p>{error.message}</p>
-      <button onClick={reset}>Retry</button>
-    </div>
-  )}
-  onError={(error) => {
-    // Send to error tracking service (Sentry, LogRocket, etc.)
-    console.error("Error tracked:", error);
-  }}
->
-  <App />
-</ErrorBoundary>
+// ✅ Good Example - Computed value in store
+class Store {
+  items: Item[] = [];
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  get activeItems() {
+    return this.items.filter(item => item.active);
+  }
+}
+
+// In component - read computed directly:
+export const ItemList = observer(() => {
+  const { store } = stores;
+
+  return (
+    <ul>
+      {store.activeItems.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+});
 ```
 
-**Why good:** custom fallback provides branded error experience, onError integration sends errors to monitoring service, retry button improves UX for transient failures
+**Why good:** MobX `computed` values are automatically cached and only recalculate when dependencies change, no need for dependency array management
 
 ```typescript
-// ❌ Bad Example - No error boundary
-function App() {
-  return <MainContent />; // One error crashes entire app
-}
+// ❌ Bad Example - useMemo for MobX derived state
+export const ItemList = observer(() => {
+  const { store } = stores;
+
+  const activeItems = useMemo(() => {
+    return store.items.filter(item => item.active);
+  }, [store.items]);
+
+  return (
+    <ul>
+      {activeItems.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+});
 ```
 
-**Why bad:** unhandled render errors crash entire React app, no user feedback when errors occur, no way to recover without page reload
-
-**When to use:** Place error boundaries around feature sections, not just the root. Use React Query's error boundaries for data fetching errors.
-
-**When not to use:** Error boundaries don't catch event handler errors, async errors, or SSR errors - use try/catch for those.
+**Why bad:** useMemo with MobX creates redundant memoization, MobX already tracks dependencies and caches computed values, dependency array management is error-prone
 
 </patterns>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Missing observer() Wrapper
+
+Components that read MobX observables without `observer()` will not re-render when state changes.
+
+```typescript
+// ❌ Anti-pattern - No observer wrapper
+export const UserStatus = () => {
+  const { authStore } = stores;
+  return <div>{authStore.isLoggedIn ? "Logged in" : "Guest"}</div>;
+};
+// Component shows stale data - requires page reload to update
+```
+
+**Fix:** Wrap with `observer()` from `mobx-react-lite`.
+
+---
+
+### ❌ Using interface for Props
+
+ESLint enforces `type` for props definitions via `@typescript-eslint/consistent-type-definitions`.
+
+```typescript
+// ❌ Anti-pattern - interface for props
+export interface ButtonProps {
+  label: string;
+}
+```
+
+**Fix:** Use `type` instead:
+```typescript
+export type ButtonProps = {
+  label: string;
+};
+```
+
+---
+
+### ❌ Passing Stores as Props
+
+Passing stores as props breaks the MobX reactive chain and creates unnecessary coupling.
+
+```typescript
+// ❌ Anti-pattern - Stores as props
+export const useCreateTeam = (notificationsStore, teamsStore) => { ... };
+const hook = useCreateTeam(stores.notificationsStore, stores.teamsStore);
+```
+
+**Fix:** Access stores via the singleton:
+```typescript
+export const useCreateTeam = () => {
+  const { notificationsStore, teamsStore } = stores;
+  // ...
+};
+```
+
+---
+
+### ❌ useEffect for MobX State Changes
+
+Using useEffect to react to MobX observable changes creates a duplicate reactive system.
+
+```typescript
+// ❌ Anti-pattern - useEffect with MobX
+useEffect(() => {
+  if (myStore.isLoaded) doSomething();
+}, [myStore.isLoaded]);
+```
+
+**Fix:** Use `reaction()` in the store constructor instead.
+
+---
+
+### ❌ useMemo for MobX Derived State
+
+MobX computed values already cache and track dependencies automatically.
+
+```typescript
+// ❌ Anti-pattern - useMemo with MobX
+const activeItems = useMemo(() => store.items.filter(i => i.active), [store.items]);
+```
+
+**Fix:** Create a computed getter in the store:
+```typescript
+get activeItems() {
+  return this.items.filter(item => item.active);
+}
+```
+
+---
+
+### ❌ Hardcoded User-Facing Text
+
+All user-facing strings must use translation keys for internationalization.
+
+```typescript
+// ❌ Anti-pattern - Hardcoded text
+<button>Save</button>
+```
+
+**Fix:** Use `useTranslation()`:
+```typescript
+const { t } = useTranslation();
+<button>{t("common.save")}</button>
+```
+
+---
+
+### ❌ Default Exports
+
+Default exports prevent tree-shaking and violate project conventions.
+
+```typescript
+// ❌ Anti-pattern - Default export
+export default function Button() { ... }
+```
+
+**Fix:** Use named exports:
+```typescript
+export const Button = () => { ... };
+```
+
+**Exception:** `App.tsx` may use default export.
+
+</anti_patterns>
 
 ---
 
@@ -919,46 +820,52 @@ function App() {
 
 ## Decision Framework
 
-### When to Use forwardRef
+### When to Use observer()
 
 ```
-Does component need ref access?
-├─ YES → Does it expose a DOM element?
-│   ├─ YES → Use forwardRef ✓
-│   └─ NO → Use useImperativeHandle to expose custom methods
-└─ NO → Don't use forwardRef (unnecessary)
+Does component read MobX observable state?
+├─ YES → Wrap with observer() ✓
+└─ NO → Standard component (no wrapper needed)
 ```
 
-### When to Use cva
+### When to Use useTranslation vs t()
 
 ```
-Does component have variants?
-├─ YES → Are there 2+ variant dimensions (color, size)?
-│   ├─ YES → Use cva ✓
-│   └─ NO → Consider cva only if 3+ values in single dimension
-└─ NO → Don't use cva (use SCSS Modules only)
+Is this a React component?
+├─ YES → Use useTranslation() hook ✓
+└─ NO → Is it a hook that could be in component context?
+    ├─ YES → Use useTranslation() hook ✓
+    └─ NO → Use direct t() import
 ```
 
-### When to Use useCallback
+### When to Use useEffect
 
 ```
-Are you passing handler to child?
-├─ YES → Is child memoized with React.memo?
-│   ├─ YES → Use useCallback ✓
-│   └─ NO → Don't use useCallback (no benefit)
-└─ NO → Don't use useCallback (unnecessary overhead)
+Is the side effect in response to MobX state change?
+├─ YES → Use reaction() in store instead
+└─ NO → Is it synchronizing with external system?
+    ├─ YES → useEffect is appropriate ✓
+    └─ NO → Is it cleanup (event listeners, subscriptions)?
+        ├─ YES → useEffect is appropriate ✓
+        └─ NO → Evaluate if effect is needed at all
 ```
 
-### Custom Hook vs Component
+### When to Add displayName
 
 ```
-Is this reusable logic?
-├─ YES → Does it render UI?
-│   ├─ YES → Component
-│   └─ NO → Does it use React hooks?
-│       ├─ YES → Custom hook ✓
-│       └─ NO → Utility function
-└─ NO → Keep inline in component
+Is component wrapped with observer()?
+├─ YES → Add displayName ✓
+└─ NO → Is component wrapped with forwardRef()?
+    ├─ YES → Add displayName ✓
+    └─ NO → displayName optional (name inferred)
+```
+
+### Type vs Interface
+
+```
+Defining props or local types?
+├─ Use type ✓ (ESLint enforced)
+└─ Exception: Declaration merging in .d.ts files → interface allowed
 ```
 
 </decision_framework>
@@ -971,18 +878,35 @@ Is this reusable logic?
 
 **Works with:**
 
-- **SCSS Modules**: All React components use SCSS Modules for styling
-- **cva**: Type-safe variant management for components with multiple variants
-- **Radix UI**: Primitives like `Slot` for polymorphic components
-- **lucide-react**: Icon library for consistent iconography
-- **React Query**: State management for server data (separate from component state)
-- **Zustand**: Global client state management (separate from local component state)
+- **MobX**: Components reading observables must use `observer()` wrapper
+- **React Query**: Use for server state, integrated in custom hooks with stores
+- **i18next**: All user-facing text via `useTranslation()` or `t()`
+- **Tailwind + clsx**: Primary styling approach for class composition
+- **@photoroom/ui**: Design system components from shared package
+- **@photoroom/icons**: Icon components (not lucide-react)
 
-**Component State vs Global State:**
+**Store Access:**
 
-- Use local component state (`useState`) for UI-only state
-- Use Zustand for global client state needed across components
-- Use React Query for all server data
+```typescript
+import { stores } from "stores";
+
+const { authStore, teamsStore, notificationsStore } = stores;
+```
+
+**Icon Usage:**
+
+```typescript
+import { ExclamationTriangleIcon } from "@photoroom/icons/lib/monochromes";
+
+<ExclamationTriangleIcon className="h-4 w-4" />
+```
+
+**Replaces / Conflicts with:**
+
+- **useState for derived state**: Use MobX computed values in stores
+- **useEffect for MobX reactions**: Use `reaction()` in store constructors
+- **useMemo for MobX derived data**: Use MobX computed (automatic caching)
+- **interface for props**: Use `type` (ESLint enforced)
 
 </integration>
 
@@ -994,116 +918,36 @@ Is this reusable logic?
 
 **High Priority Issues:**
 
-- ❌ Missing `forwardRef` on components that expose refs (breaks ref usage in parent components)
-- ❌ Not exposing `className` prop on reusable components (prevents customization and composition)
-- ❌ Using default exports in component libraries (prevents tree-shaking and violates project conventions)
-- ❌ Magic numbers in code (use named constants: `const MAX_ITEMS = 100`)
-- ❌ Missing `displayName` on forwardRef components (breaks React DevTools debugging)
+- ❌ Missing `observer()` wrapper on components reading MobX state (component won't re-render)
+- ❌ Using `interface` for props (ESLint error - use `type`)
+- ❌ Hardcoded user-facing text without translation (blocks internationalization)
+- ❌ Passing stores as props instead of using singleton (breaks reactive chain)
+- ❌ Default exports except App.tsx (prevents tree-shaking)
 
 **Medium Priority Issues:**
 
-- ⚠️ Using cva for components without variants (over-engineering - use SCSS Modules only)
-- ⚠️ Hardcoding styles instead of using design tokens (breaks theme consistency)
-- ⚠️ Using useCallback on every handler regardless of child memoization (premature optimization)
-- ⚠️ Inline event handlers in JSX when passing to memoized children (causes unnecessary re-renders)
-- ⚠️ Generic event handler names (`click`, `change`) instead of descriptive names
+- Missing `displayName` on observer/forwardRef components (breaks DevTools debugging)
+- Using `useEffect` to sync MobX state (creates duplicate reactive system)
+- Using `useMemo` for MobX derived state (redundant - use computed in store)
+- Using `t` import in components instead of `useTranslation()` hook (won't react to language changes)
+- Using lucide-react instead of @photoroom/icons (inconsistent with design system)
 
 **Common Mistakes:**
 
-- Not typing event handlers explicitly (leads to runtime errors)
-- Using string interpolation for class names instead of `clsx` (error-prone and not type-safe)
-- Missing accessibility attributes on icon-only buttons (`title`, `aria-label`)
-- Hardcoding icon colors instead of using `currentColor` inheritance
-- No error boundaries around features (one error crashes entire app)
+- Syncing MobX state to local state with useState (unnecessary - read directly)
+- Forgetting to destructure stores from singleton
+- Missing translation keys for dynamic content
+- Not extending HTML attributes on wrapper components
 
 **Gotchas & Edge Cases:**
 
-- `forwardRef` components need `displayName` set manually (not inferred like regular components)
-- Error boundaries don't catch errors in event handlers or async code (use try/catch for those)
-- `useCallback` without memoized children adds overhead without benefit
-- Icons inherit `currentColor` by default - explicitly setting color breaks theming
-- SCSS Module class names must be applied via `className` prop, not spread into component
-- Data-attributes (`data-active="true"`) are better than className toggling for state styling
-- SSR requires checking `typeof window !== "undefined"` before accessing browser APIs
+- `observer()` components don't infer displayName - must set manually
+- Direct `t()` import doesn't react to language changes - use in hooks/utilities only
+- MobX observables lose reactivity when destructured to primitives outside observer
+- `useTranslation()` returns stable `t` function - no need to memoize
+- Stories files exempt from `i18next/no-literal-string` rule
 
 </red_flags>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns
-
-### ❌ Missing forwardRef on Interactive Components
-
-Components that expose DOM elements MUST use forwardRef. Without it, parent components cannot manage focus, trigger animations, or integrate with form libraries like react-hook-form.
-
-```typescript
-// ❌ WRONG - Parent cannot access input ref
-export const Input = ({ ...props }) => <input {...props} />;
-
-// ✅ CORRECT - Parent can forward refs
-export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => (
-  <input ref={ref} {...props} />
-));
-Input.displayName = "Input";
-```
-
-### ❌ Default Exports in Component Libraries
-
-Default exports prevent tree-shaking and violate project conventions. They also make imports inconsistent across the codebase.
-
-```typescript
-// ❌ WRONG - Default export
-export default function Button() { ... }
-
-// ✅ CORRECT - Named export
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(...);
-```
-
-### ❌ Magic Numbers Without Named Constants
-
-All numeric values must be named constants. Magic numbers are unmaintainable, undocumented, and error-prone.
-
-```typescript
-// ❌ WRONG - Magic number
-setTimeout(() => {}, 300);
-
-// ✅ CORRECT - Named constant
-const DEBOUNCE_DELAY_MS = 300;
-setTimeout(() => {}, DEBOUNCE_DELAY_MS);
-```
-
-### ❌ Missing className Prop on Reusable Components
-
-All reusable components must expose a className prop. Without it, consumers cannot apply custom styles or override defaults.
-
-```typescript
-// ❌ WRONG - No className prop
-export const Card = ({ children }) => (
-  <div className={styles.card}>{children}</div>
-);
-
-// ✅ CORRECT - className prop merged
-export const Card = ({ children, className }) => (
-  <div className={clsx(styles.card, className)}>{children}</div>
-);
-```
-
-### ❌ Using cva for Components Without Variants
-
-cva adds unnecessary complexity for simple components. Only use when you have 2+ variant dimensions.
-
-```typescript
-// ❌ WRONG - cva for single-style component
-const cardStyles = cva("card", { variants: {} });
-
-// ✅ CORRECT - SCSS Modules only
-import styles from "./card.module.scss";
-<div className={styles.card}>...</div>
-```
-
-</anti_patterns>
 
 ---
 
@@ -1113,16 +957,16 @@ import styles from "./card.module.scss";
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use `forwardRef` on ALL components that expose refs to DOM elements)**
+**(You MUST wrap ALL components that read MobX observables with `observer()`)**
 
-**(You MUST expose `className` prop on ALL reusable components for customization)**
+**(You MUST use `type` for props - NOT `interface` (ESLint enforced))**
 
-**(You MUST use named constants for ALL numeric values - NO magic numbers)**
+**(You MUST use `useTranslation()` hook for ALL user-facing text)**
 
-**(You MUST use named exports - NO default exports in component libraries)**
+**(You MUST access stores via `stores` singleton - NEVER pass stores as props)**
 
-**(You MUST add `displayName` to ALL forwardRef components for React DevTools)**
+**(You MUST use named exports - NO default exports except App.tsx)**
 
-**Failure to follow these rules will break component composition, prevent tree-shaking, and reduce code maintainability.**
+**Failure to follow these rules will break MobX reactivity, fail ESLint checks, and block internationalization.**
 
 </critical_reminders>

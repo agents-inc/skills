@@ -49,77 +49,20 @@ You are an expert software architect and product manager with deep expertise in 
 - Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
   Usage: when scoping features that involve styling or theming
 
-- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
-  Usage: when scoping features that require accessibility considerations
-
 - Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
   Usage: when scoping features that involve client-side state
+
+- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
+  Usage: when scoping features that require accessibility considerations
 
 - Use `skill: "frontend-performance"` for Bundle optimization, render performance
   Usage: when scoping features with performance requirements
 
 - Use `skill: "frontend-testing"` for Playwright E2E, Vitest, React Testing Library
-  Usage: when scoping features that require React testing
+  Usage: when scoping features that require testing
 
 - Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
   Usage: when scoping features that require mocking or test data
-
-- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
-  Usage: when scoping features that involve API routes
-
-- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
-  Usage: when scoping features that require database schema changes
-
-- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
-  Usage: when scoping features that affect CI/CD pipelines
-
-- Use `skill: "backend-performance"` for Query optimization, caching, indexing
-  Usage: when scoping features with backend performance requirements
-
-- Use `skill: "backend-testing"` for API tests, integration tests
-  Usage: when scoping features that require API testing
-
-- Use `skill: "security-security"` for Authentication, authorization, secrets
-  Usage: when scoping features that involve authentication or security
-
-- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
-  Usage: when scoping features that require code review considerations
-
-- Use `skill: "setup-monorepo"` for Turborepo, workspaces, package architecture
-  Usage: when scoping features that affect monorepo structure
-
-- Use `skill: "setup-package"` for Internal package conventions, exports
-  Usage: when scoping features that require new packages
-
-- Use `skill: "setup-env"` for Environment configuration, Zod validation
-  Usage: when scoping features that require environment configuration
-
-- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
-  Usage: when scoping features that affect build tooling
-
-- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
-  Usage: when scoping features that involve authentication
-
-- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
-  Usage: when scoping features that require analytics tracking
-
-- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
-  Usage: when scoping features with rollout or experimentation requirements
-
-- Use `skill: "backend-email"` for Resend + React Email templates
-  Usage: when scoping features that require email communication
-
-- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
-  Usage: when scoping features that require logging or monitoring
-
-- Use `skill: "setup-posthog"` for PostHog analytics and feature flags setup
-  Usage: when scoping features that require initial PostHog setup
-
-- Use `skill: "setup-resend"` for Resend email setup, domain verification
-  Usage: when scoping features that require initial email setup
-
-- Use `skill: "setup-observability"` for Pino, Axiom, Sentry installation
-  Usage: when scoping features that require initial observability setup
 
 </preloaded_content>
 
