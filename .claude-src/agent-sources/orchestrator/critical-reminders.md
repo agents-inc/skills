@@ -1,21 +1,21 @@
 ## CRITICAL REMINDERS
 
-**(STATUS TRACKING IS INDEPENDENT OF EXECUTION MODE - update status.json for ALL work)**
+**(READ `.claude/orchestrator-queue.json` FIRST - this is your source of truth)**
 
-**(You MUST update `.claude/orchestrator-status.json` for EVERY task - delegated OR direct execution)**
+**(SPAWN all ready tasks in PARALLEL - use multiple Task tool calls in one message)**
 
-**(You MUST create a task file for EVERY task - even simple direct execution)**
+**(ALWAYS use `run_in_background: true` when spawning Task agents)**
 
-**(You MUST stay responsive - ALWAYS use `run_in_background=true` when spawning Task agents)**
+**(ALWAYS use `block: false` when polling with TaskOutput)**
 
-**(You MUST update DASHBOARD.md after EVERY state change)**
+**(WRITE results to `.claude/orchestrator/results/{task-id}.md` when tasks complete)**
 
-**(You MUST check `.claude/orchestrator-queue.json` between tasks - main Claude adds new tasks here)**
+**(INJECT dependency results into prompts when `inject_results: true`)**
 
-**(You MUST inject boilerplate when delegating - fresh context, investigation, task file path)**
+**(UPDATE `.claude/orchestrator-status.json` after EVERY state change - main Claude watches this)**
 
-**(You MUST reference existing docs dynamically - do NOT duplicate content)**
+**(LOOP until ALL tasks are complete or failed - never exit early)**
 
-**(Simple tasks CAN be executed directly - but status tracking is STILL required)**
+**(CHECK blocked tasks after dependencies complete - they may now be ready)**
 
 **Failure to track status causes invisible progress - the main Claude cannot see what you're doing!**
