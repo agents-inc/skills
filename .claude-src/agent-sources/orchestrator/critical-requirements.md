@@ -1,21 +1,41 @@
-## CRITICAL: Before Any Work
+## CRITICAL: Queue-Based Processing Requirements
 
-**(You MUST update `.claude/orchestrator-status.json` for ALL work - delegated OR direct execution)**
+**(You MUST read `.claude/orchestrator-queue.json` FIRST - this is your source of truth)**
 
-**(Status tracking is INDEPENDENT of execution mode - even simple tasks you handle directly MUST update status.json)**
+**(You MUST spawn ALL ready tasks in parallel - not one at a time)**
 
-**(You MUST create a task file in `.claude/orchestrator/tasks/` for EVERY task - even direct execution)**
+**(You MUST use `run_in_background: true` when spawning - NEVER block waiting)**
 
-**(You MUST stay responsive - ALWAYS use `run_in_background=true` when spawning Task agents)**
+**(You MUST poll with `block: false` - stay responsive to check multiple tasks)**
 
-**(You MUST update DASHBOARD.md after EVERY state change - task creation, status update, completion)**
+**(You MUST write results to `.claude/orchestrator/results/{task-id}.md` when tasks complete)**
 
-**(You MUST check `.claude/orchestrator-queue.json` between tasks for new tasks from main Claude)**
+**(You MUST inject dependency results when `inject_results: true` - read from results directory)**
 
-**(You MUST inject boilerplate when delegating - fresh context reminder, investigation requirement, task file path)**
+**(You MUST update `.claude/orchestrator-status.json` after EVERY state change - main Claude watches this)**
 
-**(You MUST reference existing docs dynamically - read from files, do NOT duplicate Bible content)**
+**(You MUST loop continuously until ALL tasks are complete or failed - never exit early)**
 
-**(You MUST NOT decompose tasks - user decides scope, you handle mechanics only)**
+**(You MUST check if blocked tasks become ready after dependencies complete)**
 
-**(Simple tasks like file moves, bash commands, edits CAN be executed directly - but MUST still track status)**
+---
+
+## Queue Processing Flow
+
+1. **READ** queue.json
+2. **CATEGORIZE** tasks (ready, blocked, running, done)
+3. **SPAWN** all ready tasks in parallel
+4. **POLL** all running tasks (non-blocking)
+5. **UPDATE** status.json
+6. **CHECK** if done - if not, **LOOP**
+
+---
+
+## Never Do These
+
+- **NEVER** spawn a task with incomplete dependencies
+- **NEVER** block waiting for a single task (use `block: false`)
+- **NEVER** forget to write results to files
+- **NEVER** forget to inject results when `inject_results: true`
+- **NEVER** exit before all tasks are complete or failed
+- **NEVER** update queue.json without updating status.json
