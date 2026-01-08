@@ -1,3 +1,8 @@
+---
+name: Authentication
+description: Better Auth patterns, sessions, OAuth
+---
+
 # Authentication with Better Auth
 
 > **Quick Guide:** Use Better Auth for type-safe, self-hosted authentication in TypeScript apps. It provides email/password, OAuth, 2FA, sessions, and organization multi-tenancy out of the box. Integrates seamlessly with Hono and Drizzle ORM.

@@ -1,3 +1,8 @@
+---
+name: Mocking
+description: Sinon sandbox, mock stores for Photoroom webapp
+---
+
 # Frontend Mocking Patterns (Photoroom Webapp)
 
 > **Quick Guide:** Use Sinon sandbox pattern for test isolation. Create mock store factories with partial dependencies via dependency injection. Use TestFirebaseAuth for auth mocking, ampliMock for analytics, and MobX `when()` for async assertions. Always restore sandbox in afterEach.

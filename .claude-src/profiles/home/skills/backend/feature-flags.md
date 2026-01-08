@@ -1,3 +1,8 @@
+---
+name: Feature Flags
+description: PostHog feature flags, rollouts, A/B testing
+---
+
 # Feature Flags with PostHog
 
 > **Quick Guide:** Use PostHog feature flags for gradual rollouts, A/B testing, and remote configuration. Client-side: `useFeatureFlagEnabled` hook. Server-side: `posthog-node` with local evaluation. Always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` for experiments.

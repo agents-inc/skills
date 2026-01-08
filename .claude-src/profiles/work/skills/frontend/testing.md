@@ -1,3 +1,8 @@
+---
+name: Frontend Testing
+description: Karma, Mocha, Chai, Playwright for Photoroom webapp
+---
+
 # Frontend Testing Patterns - Photoroom Webapp
 
 > **Quick Guide:** Unit tests use Karma + Mocha + Chai (NOT Jest/Vitest). Use Chai assertion syntax (`to.equal`, `to.deep.equal`, `to.have.been.called`). Sinon for mocking with mandatory sandbox cleanup. Mock store factories for dependency injection. E2E tests use Playwright with custom fixtures and Page Object Model. Import from `fixtures` not `@playwright/test`.

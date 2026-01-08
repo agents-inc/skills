@@ -1,3 +1,8 @@
+---
+name: Performance
+description: MobX computed, observer, WebGL cleanup for Photoroom webapp
+---
+
 # Frontend Performance Patterns - Photoroom Webapp
 
 > **Quick Guide:** Use MobX computed for derived state (NOT useMemo). Use `observer()` for fine-grained reactivity. Use `.lazy.tsx` suffix for route code-splitting. Always call `stage.destroy()` for WebGL cleanup. Dispose MobxQuery instances to prevent memory leaks. Avoid premature optimization - measure first.

@@ -1,3 +1,8 @@
+---
+name: PostHog Setup
+description: PostHog analytics and feature flags setup
+---
+
 # PostHog Analytics & Feature Flags Setup
 
 > **Quick Guide:** One-time setup for PostHog in Next.js App Router monorepo. Covers `posthog-js` client provider, `posthog-node` server client, environment variables, and Vercel deployment. PostHog handles both analytics AND feature flags with a generous free tier (1M events + 1M flag requests/month).

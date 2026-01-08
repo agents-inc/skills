@@ -1,3 +1,8 @@
+---
+name: CI/CD
+description: GitHub Actions, pipelines, deployment
+---
+
 # CI/CD Pipelines
 
 > **Quick Guide:** GitHub Actions with Bun 1.2.2 for CI. Turborepo affected detection for monorepo optimization. Vercel remote cache (free). Quality gates: lint + type-check + test + build + coverage. Multi-environment deployments (preview/staging/prod). Secret scanning and dependency audits.

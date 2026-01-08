@@ -1,3 +1,8 @@
+---
+name: Frontend Testing
+description: Playwright E2E, Vitest, React Testing Library
+---
+
 # Testing Standards
 
 > **Quick Guide:** E2E for user flows (Playwright). Unit for pure functions (Vitest). Integration tests okay but not primary (Vitest + RTL + MSW). Current app uses MSW integration tests.

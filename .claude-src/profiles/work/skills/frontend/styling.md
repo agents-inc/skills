@@ -1,3 +1,8 @@
+---
+name: Styling
+description: Tailwind CSS, clsx, design tokens for Photoroom webapp
+---
+
 # Styling Patterns
 
 > **Quick Guide:** Tailwind CSS is the primary styling approach. Use `clsx` for class composition. Design tokens from `@photoroom/ui` preset. SCSS is minimal (global styles only). Always expose `className` prop on components for composability.
