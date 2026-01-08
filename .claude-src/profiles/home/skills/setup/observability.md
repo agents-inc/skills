@@ -1,3 +1,8 @@
+---
+name: Observability Setup
+description: Pino, Axiom, Sentry installation
+---
+
 # Observability Setup (Pino + Axiom + Sentry)
 
 > **Quick Guide:** One-time project setup for observability. Install `pino`, `next-axiom`, `@sentry/nextjs`. Configure Axiom dataset + Vercel integration. Set up Sentry DSN and config files. Wrap `next.config.js` with `withAxiom`. Add source maps upload to GitHub Actions.

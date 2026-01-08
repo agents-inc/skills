@@ -1,3 +1,8 @@
+---
+name: Accessibility
+description: WCAG, ARIA, keyboard navigation
+---
+
 # Accessibility
 
 > **Quick Guide:** All interactive elements keyboard accessible. Use Radix UI for ARIA patterns. WCAG AA minimum (4.5:1 text contrast). Proper form labels and error handling. Test with axe DevTools and screen readers.

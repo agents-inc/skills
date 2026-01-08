@@ -1,3 +1,8 @@
+---
+name: Database
+description: Drizzle ORM, queries, migrations
+---
+
 # Database with Drizzle ORM + Neon
 
 > **Quick Guide:** Use Drizzle ORM for type-safe queries, Neon serverless Postgres for edge-compatible connections. Schema-first design with automatic TypeScript types. Relational queries with `.with()` avoid N+1 problems. Use transactions for atomic operations.

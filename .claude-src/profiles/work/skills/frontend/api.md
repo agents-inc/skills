@@ -1,3 +1,8 @@
+---
+name: API Integration
+description: React Query, Axios, API classes for Photoroom webapp
+---
+
 # API & Data Fetching Patterns (Photoroom Webapp)
 
 > **Quick Guide:** Use React Query for server state, djangoBackend axios instance for HTTP calls, static API classes for URL construction, and Zod for response validation. Bridge to MobX stores with MobxQuery when needed.

@@ -1,3 +1,8 @@
+---
+name: Performance
+description: Bundle optimization, render performance
+---
+
 # Performance Standards
 
 > **Quick Guide:** Build performance? Turborepo caching with >80% hit rate. Bundle budgets? < 200KB main bundle. Core Web Vitals? LCP < 2.5s, FID < 100ms, CLS < 0.1. React patterns? Strategic memo/useMemo, lazy loading, virtualization for 100+ items. Monitoring? Real User Monitoring with web-vitals library.

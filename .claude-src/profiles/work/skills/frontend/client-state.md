@@ -1,3 +1,8 @@
+---
+name: Client State
+description: MobX stores, RootStore pattern for Photoroom webapp
+---
+
 # MobX Client State Management Patterns
 
 > **Quick Guide:** Use MobX for reactive client state management. RootStore pattern for orchestration. Arrow function methods for `this` binding. `makeAutoObservable` by default. `runInAction` after all `await` calls. `observer()` on ALL components reading MobX state. React Query for server data only.

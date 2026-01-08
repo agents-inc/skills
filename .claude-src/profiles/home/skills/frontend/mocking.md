@@ -1,3 +1,8 @@
+---
+name: Mocking
+description: MSW handlers, browser/server workers, test data
+---
+
 # API Mocking with MSW
 
 > **Quick Guide:** Centralized mocks in `@repo/api-mocks`. Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Type-safe using generated types from `@repo/api/types`.

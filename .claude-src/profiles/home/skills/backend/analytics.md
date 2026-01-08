@@ -1,3 +1,8 @@
+---
+name: Analytics
+description: PostHog event tracking, user identification
+---
+
 # PostHog Analytics Patterns
 
 > **Quick Guide:** Use PostHog for product analytics with structured event naming (category:object_action), server-side tracking for reliability, and proper user identification integrated with Better Auth. Client-side for UI interactions, server-side for business events.

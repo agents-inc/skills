@@ -1,3 +1,8 @@
+---
+name: Accessibility
+description: i18n labels, ARIA patterns for Photoroom webapp
+---
+
 # Accessibility Patterns - Photoroom Webapp
 
 > **Quick Guide:** All interactive elements need accessible names. Use `useTranslation()` for ALL accessibility labels. Icon buttons require `title` + `aria-label`. Error states use `role="alert"`. Focus management required for modals/dialogs. Extend HTML attributes to preserve `aria-*` prop passthrough.

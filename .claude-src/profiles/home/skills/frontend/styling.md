@@ -1,3 +1,8 @@
+---
+name: Styling
+description: SCSS Modules, cva, design tokens
+---
+
 # Styling & Design System
 
 > **Quick Guide:** Two-tier token system (Core primitives → Semantic tokens). Foreground/background color pairs. Components use semantic tokens only. SCSS Modules + CSS Cascade Layers. HSL format. Dark mode via `.dark` class with mixin. Data-attributes for state. Self-contained (no external dependencies).

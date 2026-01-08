@@ -1,3 +1,8 @@
+---
+name: Environment
+description: Environment configuration, Zod validation
+---
+
 # Environment Management
 
 > **Quick Guide:** Per-app .env files (apps/client-next/.env). Framework-specific prefixes (NEXT*PUBLIC*\_, VITE\_\_). Zod validation at startup. Maintain .env.example templates. Never commit secrets (.gitignore). Environment-based feature flags.

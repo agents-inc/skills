@@ -1,3 +1,8 @@
+---
+name: Package
+description: Internal package conventions, exports
+---
+
 # Internal Package Conventions
 
 > **Quick Guide:** Internal packages live in `packages/`. Use `@repo/*` naming convention. Define explicit exports in `package.json`. Named exports only (no default exports). kebab-case for all files and directories. Use `workspace:*` for internal dependencies.

@@ -1,3 +1,8 @@
+---
+name: API Integration
+description: REST APIs, React Query, data fetching
+---
+
 # API Client Architecture
 
 > **Quick Guide:** Using OpenAPI? Need type safety? Integrating with React Query? Use hey-api for automatic client generation with type-safe React Query hooks.

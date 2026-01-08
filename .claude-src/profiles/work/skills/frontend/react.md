@@ -1,3 +1,8 @@
+---
+name: React
+description: MobX observer, stores, i18n for Photoroom webapp
+---
+
 # React Component Patterns - Photoroom Webapp
 
 > **Quick Guide:** Functional components with explicit TypeScript types. Use `observer()` for MobX reactivity. Use `type` for props (not interface). Use `useTranslation()` for i18n. Access stores via `stores` singleton. Named exports only (except App.tsx). Add `displayName` for React DevTools.
