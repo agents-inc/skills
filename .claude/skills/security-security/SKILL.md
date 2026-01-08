@@ -1,3 +1,8 @@
+---
+name: Security
+description: Authentication, authorization, secrets
+---
+
 # Security Patterns
 
 > **Quick Guide:** Managing secrets? Use .env.local (gitignored), CI secrets (GitHub/Vercel), rotate quarterly. Dependency security? Enable Dependabot, audit weekly, patch critical vulns within 24hrs. XSS prevention? React escapes by default - never use dangerouslySetInnerHTML with user input. Sanitize with DOMPurify if needed. Set CSP headers. CODEOWNERS? Require security team review for auth/, .env.example, workflows.

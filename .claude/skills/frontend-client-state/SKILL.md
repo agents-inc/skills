@@ -1,3 +1,8 @@
+---
+name: Client State
+description: Zustand stores, React Query integration
+---
+
 # Client State Management Patterns
 
 > **Quick Guide:** Local UI state? useState. Shared UI (2+ components)? Zustand. Server data? React Query. URL-appropriate filters? searchParams. NEVER use Context for state management.

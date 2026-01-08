@@ -1,3 +1,8 @@
+---
+name: Resend Setup
+description: Resend email setup, domain verification
+---
+
 # Resend Email & React Email Setup
 
 > **Quick Guide:** One-time setup for Resend email API with React Email templates in a Next.js App Router monorepo. Covers package installation, environment variables, domain verification, React Email project structure, preview server, and Better Auth integration.

@@ -1,3 +1,8 @@
+---
+name: Research Methodology
+description: Investigation flow, evidence-based research, structured output
+---
+
 # Research Methodology
 
 > **Quick Guide:** Investigation flow is Glob -> Grep -> Read. All claims require file:line evidence. Structured output format for AI consumption. Read-only operations only. Verify every path before reporting.

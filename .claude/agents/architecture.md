@@ -1037,6 +1037,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Monorepo
 
+---
+name: Monorepo
+description: Turborepo, workspaces, package architecture
+---
+
 # Monorepo Orchestration with Turborepo
 
 > **Quick Guide:** Turborepo 2.4.2 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency.
@@ -1819,6 +1824,11 @@ New code to write?
 
 # Pre-compiled Skill: Package
 
+---
+name: Package
+description: Internal package conventions, exports
+---
+
 # Internal Package Conventions
 
 > **Quick Guide:** Internal packages live in `packages/`. Use `@repo/*` naming convention. Define explicit exports in `package.json`. Named exports only (no default exports). kebab-case for all files and directories. Use `workspace:*` for internal dependencies.
@@ -2568,6 +2578,11 @@ bun add @repo/my-package
 
 
 # Pre-compiled Skill: Environment
+
+---
+name: Environment
+description: Environment configuration, Zod validation
+---
 
 # Environment Management
 
@@ -3347,6 +3362,11 @@ NEXT_PUBLIC_API_SECRET_KEY=sk_secret_12345
 
 # Pre-compiled Skill: Tooling
 
+---
+name: Tooling
+description: ESLint, Prettier, TypeScript configuration
+---
+
 # Build & Tooling
 
 > **Quick Guide:** ESLint 9 flat config with `only-warn` plugin. Prettier shared config. Shared TypeScript configs. Bun 1.2.2 package manager. Vite build configuration. Husky + lint-staged for git hooks.
@@ -4120,6 +4140,11 @@ packages/ui/.eslintrc → different rules
 
 
 # Pre-compiled Skill: PostHog Setup
+
+---
+name: PostHog Setup
+description: PostHog analytics and feature flags setup
+---
 
 # PostHog Analytics & Feature Flags Setup
 
@@ -4897,6 +4922,11 @@ POSTHOG_KEY=phc_xxx  # BAD: Won't be available in browser
 
 
 # Pre-compiled Skill: Observability Setup
+
+---
+name: Observability Setup
+description: Pino, Axiom, Sentry installation
+---
 
 # Observability Setup (Pino + Axiom + Sentry)
 
@@ -5806,6 +5836,11 @@ NEXT_PUBLIC_AXIOM_DATASET=myapp
 
 
 # Pre-compiled Skill: API Integration
+
+---
+name: API Integration
+description: REST APIs, React Query, data fetching
+---
 
 # API Client Architecture
 
@@ -7144,6 +7179,11 @@ staleTime: STALE_TIME_MS,
 
 # Pre-compiled Skill: Mocking
 
+---
+name: Mocking
+description: MSW handlers, browser/server workers, test data
+---
+
 # API Mocking with MSW
 
 > **Quick Guide:** Centralized mocks in `@repo/api-mocks`. Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Type-safe using generated types from `@repo/api/types`.
@@ -7908,6 +7948,11 @@ createRoot(document.getElementById("root")!).render(<App />);
 
 
 # Pre-compiled Skill: Frontend Testing
+
+---
+name: Frontend Testing
+description: Playwright E2E, Vitest, React Testing Library
+---
 
 # Testing Standards
 

@@ -499,6 +499,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Reviewing
 
+---
+name: Reviewing
+description: Code review patterns, feedback principles
+---
+
 # Reviewing Patterns
 
 > **Quick Guide:** Read ALL files completely before commenting. Provide specific file:line references for every issue. Distinguish severity (Must Fix vs Should Fix vs Nice to Have). Explain WHY, not just WHAT. Suggest solutions following existing patterns. Acknowledge good work - positive reinforcement teaches what to repeat.
@@ -1045,6 +1050,11 @@ const { validateEmail, validatePhone } = useValidation();  ← Missed this
 
 
 # Pre-compiled Skill: React
+
+---
+name: React
+description: Component architecture, hooks, patterns
+---
 
 # React Components
 
@@ -2180,6 +2190,11 @@ import styles from "./card.module.scss";
 
 
 # Pre-compiled Skill: Styling
+
+---
+name: Styling
+description: SCSS Modules, cva, design tokens
+---
 
 # Styling & Design System
 
@@ -3631,6 +3646,11 @@ Never use hardcoded pixel values, hex colors, or raw numbers. All design values 
 
 
 # Pre-compiled Skill: Accessibility
+
+---
+name: Accessibility
+description: WCAG, ARIA, keyboard navigation
+---
 
 # Accessibility
 

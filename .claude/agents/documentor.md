@@ -1676,6 +1676,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Monorepo
 
+---
+name: Monorepo
+description: Turborepo, workspaces, package architecture
+---
+
 # Monorepo Orchestration with Turborepo
 
 > **Quick Guide:** Turborepo 2.4.2 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency.
@@ -2457,6 +2462,11 @@ New code to write?
 
 
 # Pre-compiled Skill: Package
+
+---
+name: Package
+description: Internal package conventions, exports
+---
 
 # Internal Package Conventions
 

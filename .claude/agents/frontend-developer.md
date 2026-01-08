@@ -853,6 +853,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: React
 
+---
+name: React
+description: Component architecture, hooks, patterns
+---
+
 # React Components
 
 > **Quick Guide:** Tiered components (Primitives → Components → Patterns → Templates). Use `forwardRef` for ref forwarding. `cva` for type-safe variants. `asChild` pattern for polymorphic components. Expose `className` prop. lucide-react for icons.
@@ -1987,6 +1992,11 @@ import styles from "./card.module.scss";
 
 
 # Pre-compiled Skill: Styling
+
+---
+name: Styling
+description: SCSS Modules, cva, design tokens
+---
 
 # Styling & Design System
 

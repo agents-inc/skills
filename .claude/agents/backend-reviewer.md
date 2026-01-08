@@ -652,6 +652,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Reviewing
 
+---
+name: Reviewing
+description: Code review patterns, feedback principles
+---
+
 # Reviewing Patterns
 
 > **Quick Guide:** Read ALL files completely before commenting. Provide specific file:line references for every issue. Distinguish severity (Must Fix vs Should Fix vs Nice to Have). Explain WHY, not just WHAT. Suggest solutions following existing patterns. Acknowledge good work - positive reinforcement teaches what to repeat.
@@ -1198,6 +1203,11 @@ const { validateEmail, validatePhone } = useValidation();  ← Missed this
 
 
 # Pre-compiled Skill: Backend API
+
+---
+name: Backend API
+description: Hono routes, OpenAPI, Zod validation
+---
 
 # API Development with Hono + OpenAPI
 
@@ -2967,6 +2977,11 @@ app.get("/jobs/:id", async (c) => {
 
 
 # Pre-compiled Skill: Security
+
+---
+name: Security
+description: Authentication, authorization, secrets
+---
 
 # Security Patterns
 

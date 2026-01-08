@@ -1,3 +1,8 @@
+---
+name: Tooling
+description: ESLint, Prettier, TypeScript configuration
+---
+
 # Build & Tooling
 
 > **Quick Guide:** ESLint 9 flat config with `only-warn` plugin. Prettier shared config. Shared TypeScript configs. Bun 1.2.2 package manager. Vite build configuration. Husky + lint-staged for git hooks.

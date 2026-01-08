@@ -1,3 +1,8 @@
+---
+name: Observability
+description: Pino logging, Sentry error tracking, Axiom
+---
+
 # Observability Patterns (Logging, Tracing, Error Handling)
 
 > **Quick Guide:** Structured logging with Pino (debug/info/warn/error). Correlation IDs for request tracing. Sentry error boundaries in React. Attach user context after auth. Filter expected errors (404s). Create Axiom monitors for alerts.

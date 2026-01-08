@@ -851,6 +851,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Backend API
 
+---
+name: Backend API
+description: Hono routes, OpenAPI, Zod validation
+---
+
 # API Development with Hono + OpenAPI
 
 > **Quick Guide:** Use Hono with @hono/zod-openapi for type-safe REST APIs that auto-generate OpenAPI specs. Zod schemas provide validation AND documentation. Export your Hono app for spec generation with hey-api on the frontend.
@@ -2619,6 +2624,11 @@ app.get("/jobs/:id", async (c) => {
 
 
 # Pre-compiled Skill: Authentication
+
+---
+name: Authentication
+description: Better Auth patterns, sessions, OAuth
+---
 
 # Authentication with Better Auth
 

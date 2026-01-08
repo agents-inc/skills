@@ -902,6 +902,11 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Frontend Testing
 
+---
+name: Frontend Testing
+description: Playwright E2E, Vitest, React Testing Library
+---
+
 # Testing Standards
 
 > **Quick Guide:** E2E for user flows (Playwright). Unit for pure functions (Vitest). Integration tests okay but not primary (Vitest + RTL + MSW). Current app uses MSW integration tests.
@@ -2034,12 +2039,25 @@ test("user can login", async ({ page }) => {
 
 # Pre-compiled Skill: Backend Testing
 
+---
+name: Backend Testing
+description: API tests, integration tests
+---
+
+# Backend Testing
+
+> **Quick Guide:** TODO - Backend testing patterns to be documented.
 
 
 ---
 
 
 # Pre-compiled Skill: Mocking
+
+---
+name: Mocking
+description: MSW handlers, browser/server workers, test data
+---
 
 # API Mocking with MSW
 

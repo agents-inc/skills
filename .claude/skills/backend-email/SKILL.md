@@ -1,3 +1,8 @@
+---
+name: Email
+description: Resend + React Email templates
+---
+
 # Email Patterns with Resend and React Email
 
 > **Quick Guide:** Use Resend for transactional emails with React Email templates. Server-side sending for reliability, async for non-blocking requests, typed templates for safety. Always await render() before send, handle errors with retry logic, and include unsubscribe links for marketing emails.
