@@ -1,6 +1,6 @@
-# Styling Patterns
+# Styling & Design System
 
-> **Quick Guide:** Tailwind CSS is the primary styling approach. Use `clsx` for class composition. Design tokens from `@photoroom/ui` preset. SCSS is minimal (global styles only). Always expose `className` prop on components for composability.
+> **Quick Guide:** Two-tier token system (Core primitives → Semantic tokens). Foreground/background color pairs. Components use semantic tokens only. SCSS Modules + CSS Cascade Layers. HSL format. Dark mode via `.dark` class with mixin. Data-attributes for state. Self-contained (no external dependencies).
 
 ---
 
@@ -8,47 +8,47 @@
 
 ## ⚠️ CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (PascalCase components, named exports, import ordering, `import type`, named constants)
+> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use Tailwind CSS as the primary styling approach for all components)**
+**(You MUST wrap ALL UI package component styles in `@layer components {}` for proper cascade precedence)**
 
-**(You MUST use `clsx` for combining and conditionally applying classes - use this instead of template literals or string concatenation)**
+**(You MUST use semantic tokens ONLY in components - NEVER use core tokens directly)**
 
-**(You MUST use design tokens from `@photoroom/ui` preset via Tailwind - use these instead of hardcoded values)**
+**(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
 
-**(You MUST always expose `className` prop on components and merge it with internal classes using `clsx`)**
+**(You MUST use data-attributes for state styling - NOT className toggling)**
 
-**(You MUST use `@photoroom/icons` for icons - use this instead of external libraries like lucide-react or react-icons)**
+**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Tailwind CSS, clsx, className, styling, design tokens, SCSS, custom fonts, CSS composition
+**Auto-detection:** UI components, styling patterns, design tokens, SCSS modules, CSS Cascade Layers, dark mode theming
 
 **When to use:**
 
-- Styling React components in the webapp
-- Composing utility classes conditionally
-- Working with design tokens and theming
-- Extending components with custom styles
-- Implementing responsive designs
+- Implementing design tokens and theming
+- Building component styles with SCSS Modules
+- Ensuring visual consistency across applications
+- Working with colors, spacing, typography
+- Implementing dark mode with class-based theming
+- Setting up CSS Cascade Layers for predictable style precedence
 
 **Key patterns covered:**
 
-- Tailwind CSS utility-first styling
-- clsx for class composition
-- Design tokens from @photoroom/ui preset
-- SCSS usage (minimal - global styles only)
-- Custom font definitions (TT Photoroom)
-- Exposing className prop on components
-- Props extending HTML attributes
+- Two-tier token system (Core → Semantic)
+- SCSS Module patterns with CSS Cascade Layers
+- Color system (HSL format, semantic naming, foreground/background pairs)
+- Spacing and typography systems
+- Dark mode implementation (`.dark` class with mixin pattern)
+- Component structure and organization
 
 **When NOT to use:**
 
-- Refer to React skill for component structure
-- Refer to MobX skill for state-driven styling
-- Refer to Accessibility skill for focus states and ARIA
+- One-off prototypes without design system needs (use inline styles or basic CSS)
+- External component libraries with their own theming (Material-UI, Chakra)
+- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
 
 ---
 
@@ -56,28 +56,15 @@
 
 ## Philosophy
 
-The webapp follows a **Tailwind-first** styling approach where utility classes are the primary way to style components. This provides rapid development, consistent design tokens, and eliminates naming decisions.
+The design system follows a **self-contained, two-tier token architecture** where core primitives (raw HSL values, base sizes) map to semantic tokens (purpose-driven names). Components consume only semantic tokens, enabling theme changes without component modifications.
 
 **Core Principles:**
 
-- **Utility-first:** Tailwind classes are the default - no separate CSS files for components
-- **Design tokens:** Use the `@photoroom/ui` Tailwind preset for consistent spacing, colors, typography
-- **Composability:** Components expose `className` prop for easy customization
-- **Minimal SCSS:** Only for global styles and custom font definitions
-- **Internal icon library:** Use `@photoroom/icons` for design system compliance
-
-**When to use Tailwind CSS:**
-
-- All component styling
-- Responsive designs
-- Hover/focus/active states
-- Layout and spacing
-
-**When to use SCSS instead:**
-
-- Global font-face definitions
-- CSS animations that require keyframes
-- Third-party library style overrides
+- **Self-contained:** No external dependencies (no Open Props, no Tailwind for tokens)
+- **Two-tier system:** Core tokens provide raw values, semantic tokens provide meaning
+- **HSL-first:** Use modern CSS color functions, not Sass color manipulation
+- **Layer-based:** CSS Cascade Layers ensure predictable style precedence across monorepo
+- **Theme-agnostic components:** Components use semantic tokens and adapt automatically to light/dark mode
 
 </philosophy>
 
@@ -87,525 +74,1162 @@ The webapp follows a **Tailwind-first** styling approach where utility classes a
 
 ## Core Patterns
 
-### Pattern 1: Tailwind CSS Utility-First Styling
+### Pattern 1: Two-Tier Token System
 
-Tailwind is the primary styling approach. Use utility classes directly in JSX.
+The design system uses a two-tier token architecture: **Tier 1 (Core tokens)** provides raw values, **Tier 2 (Semantic tokens)** references core tokens with purpose-driven names.
+
+#### Token Architecture
+
+**Location:** `packages/ui/src/styles/design-tokens.scss`
+
+**Tier 1: Core tokens** - Raw HSL values, base sizes, primitives
+
+```scss
+--color-white: 0 0% 100%;
+--color-gray-900: 222 47% 11%;
+--color-red-500: 0 84% 60%;
+--space-unit: 0.2rem;
+```
+
+**Tier 2: Semantic tokens** - Reference core tokens with purpose-driven names
+
+```scss
+--color-background-base: var(--color-white);
+--color-text-default: var(--color-gray-500);
+--color-primary: var(--color-gray-900);
+--color-primary-foreground: var(--color-white);
+--color-destructive: var(--color-red-500);
+```
 
 #### Implementation
 
-```tsx
+```scss
+:root {
+  // TIER 1: CORE TOKENS (Raw values - building blocks)
+
+  // Colors - Raw HSL values
+  --color-white: 0 0% 100%;
+  --color-gray-50: 210 40% 98%;
+  --color-gray-100: 214 32% 91%;
+  --color-gray-500: 215 16% 47%;
+  --color-gray-900: 222 47% 11%;
+  --color-red-500: 0 84% 60%;
+
+  // Spacing - Calculated multiples
+  --space-unit: 0.2rem; // 2px
+  --space-1: calc(var(--space-unit) * 1); // 2px
+  --space-2: calc(var(--space-unit) * 2); // 4px
+  --space-6: calc(var(--space-unit) * 6); // 12px
+
+  // Typography - Core sizes
+  --font-size-0-1: 1.6rem; // 16px
+  --font-size-1: 2.56rem; // 25.6px
+
+  // Opacity
+  --opacity-subtle: 0.2;
+  --opacity-medium: 0.5;
+
+  // TIER 2: SEMANTIC TOKENS (Purpose-driven - use these in components)
+
+  // Background colors
+  --color-background-base: var(--color-white);
+  --color-background-surface: var(--color-gray-50);
+  --color-background-muted: var(--color-gray-100);
+
+  // Text colors
+  --color-text-default: var(--color-gray-500);
+  --color-text-inverted: var(--color-white);
+  --color-text-subtle: var(--color-gray-400);
+
+  // Border colors
+  --color-border-default: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+
+  // Interactive colors (with foreground pairs)
+  --color-primary: var(--color-gray-900);
+  --color-primary-foreground: var(--color-white);
+  --color-primary-hover: color-mix(in srgb, var(--color-primary), black 5%);
+
+  --color-destructive: var(--color-red-500);
+  --color-destructive-foreground: var(--color-white);
+  --color-destructive-hover: color-mix(in srgb, var(--color-destructive), black 5%);
+
+  // Input colors
+  --color-input: var(--color-gray-200);
+  --color-ring: var(--color-accent);
+
+  // Spacing - Semantic names
+  --space-sm: var(--space-2); // 4px
+  --space-md: var(--space-4); // 8px
+
+  // Typography - Semantic names
+  --font-size-body: var(--font-size-0-1);
+  --font-size-icon: var(--font-size-0-1);
+
+  // Transitions
+  --transition-default: all var(--duration-normal) ease;
+}
+
+// Dark mode overrides (Tier 2 semantic tokens only)
+.dark {
+  --color-background-base: var(--color-gray-600);
+  --color-text-default: var(--color-gray-200);
+  --color-primary: var(--color-gray-50);
+  --color-primary-foreground: var(--color-gray-950);
+}
+```
+
+#### Usage in Components
+
+```scss
 // ✅ Good Example
-export const Alert = ({ severity = "warning", children }: AlertProps) => {
-  const { outerClassNames, icon: Icon } = severityVariants[severity];
+// packages/ui/src/components/button/button.module.scss
 
-  return (
-    <div className="flex w-full items-center gap-2 rounded-400 p-2 text-500 text-black-alpha-8">
-      <Icon className="h-4 w-4 shrink-0" />
-      <div>{children}</div>
-    </div>
-  );
-};
+.btn {
+  // Use semantic tokens
+  font-size: var(--text-size-body);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+}
+
+.btnDefault {
+  background-color: var(--color-surface-base);
+  color: var(--color-text-default);
+}
+
+.btnSizeDefault {
+  padding: var(--space-md);
+}
+
+.btnSizeLarge {
+  padding: var(--space-xlg) var(--space-xxlg);
+}
 ```
 
-**Why good:** Utility classes are co-located with JSX, design tokens ensure consistency, no separate CSS files to manage, rapid iteration
+**Why good:** Semantic tokens make purpose clear (what the token is for), theme changes only update token values (not component code), components remain theme-agnostic
 
-```tsx
+```scss
 // ❌ Bad Example
-import styles from "./Alert.module.scss";
 
-export const Alert = ({ severity = "warning", children }: AlertProps) => {
-  return (
-    <div className={styles.alert}>
-      <Icon className={styles.icon} />
-      <div>{children}</div>
-    </div>
-  );
-};
+.btn {
+  // BAD: Using core tokens directly
+  padding: var(--core-space-4);
+  color: var(--gray-7);
+
+  // BAD: Hardcoded values
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+// BAD: Default export
+export default Button;
 ```
 
-**Why bad:** Separate CSS files add indirection, class names need to be invented, harder to see styling at component level, more files to maintain
+**Why bad:** Core tokens bypass semantic layer = theme changes require component edits, hardcoded values break design system consistency, default exports violate project conventions and prevent tree-shaking
+
+**When to use:** Always use semantic tokens in components for any design-related values (colors, spacing, typography).
+
+**When not to use:** Never use core tokens directly in components - they're building blocks for semantic tokens only.
 
 ---
 
-### Pattern 2: clsx for Class Composition
+### Pattern 2: HSL Color Format with CSS Color Functions
 
-Use `clsx` for combining and conditionally applying Tailwind classes.
+Store HSL values without the `hsl()` wrapper in tokens, apply `hsl()` wrapper when using tokens, and use modern CSS color functions for transparency and color mixing.
 
-#### Import
+#### Color Format Rules
+
+**Rules:**
+
+- Store HSL values without `hsl()` wrapper: `--color-gray-900: 222 47% 11%;`
+- Use `hsl()` wrapper when applying: `background-color: hsl(var(--color-primary))`
+- Use CSS color functions for derived colors:
+  - Transparency: `hsl(var(--color-primary) / 0.5)` or `hsl(from var(--color-primary) h s l / 0.5)`
+  - Color mixing: `color-mix(in srgb, hsl(var(--color-primary)), white 10%)`
+- **NEVER use Sass color functions:** No `darken()`, `lighten()`, `transparentize()`
+- Always use semantic color tokens (not raw HSL in components)
+
+#### Constants
 
 ```typescript
-import clsx from "clsx";
+const COLOR_OPACITY_SUBTLE = 0.5;
+const COLOR_MIX_HOVER_PERCENTAGE = 5;
 ```
 
-#### Basic Composition
+#### Implementation
 
-```tsx
-// ✅ Good Example - Combining multiple class sources
-<div
-  className={clsx(
-    "relative flex w-full max-w-[464px] items-center",
-    "rounded-lg border border-gray-200",
-    className,
-    isActive && "border-blue-500"
-  )}
->
+```scss
+// ✅ Good Example - Semantic tokens with CSS color functions
+
+.button {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+
+  // Transparency using relative color syntax
+  border: 1px solid rgb(from var(--color-primary) r g b / 0.5);
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--color-primary), black 5%);
+  }
+}
+
+// Semantic color categories
+.heading {
+  color: var(--color-text-default); // Primary text
+}
+
+.description {
+  color: var(--color-text-muted); // Secondary text
+}
+
+.label {
+  color: var(--color-text-subtle); // Tertiary text
+}
+
+.card {
+  background: var(--color-surface-base); // Default background
+}
+
+.card-hover {
+  background: var(--color-surface-subtle); // Subtle variation
+}
+
+.button-primary {
+  background: var(--color-primary); // Primary brand color
+}
 ```
 
-**Why good:** Clear separation of concerns (base classes, modifiers, passed className, conditionals), readable multi-line format, type-safe conditionals
+**Why good:** HSL format eliminates Sass dependencies, CSS color functions work natively in browsers, semantic naming clarifies purpose (not just value), theme changes update token values without touching components
 
-#### Conditional Classes
+```scss
+// ❌ Bad Example
 
-```tsx
-// ✅ Good Example - Conditional class application
-<button
-  className={clsx(
-    "px-4 py-2 rounded-md font-medium",
-    variant === "primary" && "bg-gray-900 text-white",
-    variant === "secondary" && "bg-gray-100 text-gray-900",
-    variant === "ghost" && "bg-transparent hover:bg-gray-50",
-    disabled && "opacity-50 cursor-not-allowed"
-  )}
->
+:root {
+  // BAD: Hex colors
+  --color-primary: #0f172a;
+
+  // BAD: HSL with wrapper
+  --color-secondary: hsl(222.2 84% 4.9%);
+}
+
+.button {
+  // BAD: Sass color functions
+  background: darken($primary-color, 10%);
+
+  // BAD: Hardcoded rgba
+  color: rgba(0, 0, 0, 0.8);
+
+  // BAD: Hex colors
+  border: 1px solid #ffffff;
+}
 ```
 
-**Why good:** Each variant is clearly defined, easy to add/remove variants, conditions are explicit and type-checked
-
-```tsx
-// ❌ Bad Example - Template literals
-<div className={`base-class ${isActive ? "active-class" : ""} ${className}`}>
-
-// ❌ Bad Example - String concatenation
-<div className={"base-class " + (isActive ? "active-class" : "") + " " + className}>
-```
-
-**Why bad:** Template literals produce trailing spaces when conditions are false, string concatenation is error-prone and hard to read, no type safety for class names
+**Why bad:** Hex colors harder to manipulate with CSS functions, Sass functions require build-time processing and create dependencies, hardcoded values break design system consistency, can't theme dynamically at runtime
 
 ---
 
-### Pattern 3: Design Tokens from @photoroom/ui Preset
+### Pattern 3: CSS Cascade Layers for Predictable Precedence
 
-Use the extended Tailwind config from `@photoroom/ui` for consistent design tokens.
+Use CSS Cascade Layers to control style precedence across the monorepo, ensuring UI package components have lower priority than app-specific overrides.
 
-#### Configuration
+#### Layer Hierarchy (lowest → highest priority)
 
-```javascript
-// tailwind.config.js
-module.exports = {
-  presets: [require("@photoroom/ui/tailwind.config.js")],
-  // Custom extensions...
+1. `@layer reset` - Browser resets and normalizations
+2. `@layer components` - Design system component styles (UI package)
+3. Unlayered styles - App-specific overrides (highest priority)
+
+#### Layer Declaration
+
+```scss
+// packages/ui/src/styles/layers.scss
+@layer reset, components;
+```
+
+#### Reset Layer
+
+```scss
+// packages/ui/src/styles/reset.scss
+@layer reset {
+  * {
+    margin: unset;
+    padding: unset;
+    border: unset;
+    background: unset;
+  }
+
+  html {
+    box-sizing: border-box;
+    font-size: 62.5%;
+  }
+
+  button {
+    all: unset;
+  }
+}
+```
+
+#### Component Layer
+
+```scss
+// ✅ Good Example - UI package component
+
+// packages/ui/src/components/button/button.module.scss
+@layer components {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
+  }
+
+  .destructive {
+    background-color: var(--color-destructive);
+    color: var(--color-destructive-foreground);
+  }
+}
+```
+
+**Why good:** Wrapping in `@layer components {}` ensures app styles can override without specificity wars, loading order becomes irrelevant, predictable precedence across monorepo
+
+#### App Override Pattern
+
+```scss
+// ✅ Good Example - App-specific override
+
+// apps/web/src/styles/custom.scss
+// NO @layer wrapper - unlayered = highest priority
+.my-custom-button {
+  // This overrides component layer styles automatically
+  background-color: var(--color-accent);
+  padding: var(--space-12);
+}
+```
+
+**Why good:** Unlayered app styles automatically override layered component styles, no specificity hacks needed, works regardless of CSS loading order
+
+```scss
+// ❌ Bad Example
+
+// BAD: Component styles not layered
+.button {
+  background: var(--color-primary); // Loading order determines precedence
+}
+
+// BAD: App styles wrapped in layer
+@layer components {
+  .my-custom-button {
+    // Stuck at component priority, can't override easily
+    background-color: var(--color-accent);
+  }
+}
+```
+
+**Why bad:** Unlayered component styles create loading order dependency, app styles in layers can't override component styles without specificity wars, defeats the purpose of cascade layers
+
+**When to use:** Always wrap UI package component styles in `@layer components {}`, never wrap app-specific styles in layers.
+
+---
+
+### Pattern 4: Dark Mode with `.dark` Class and Mixin
+
+Implement dark mode by adding `.dark` class to root element, which overrides semantic tokens. Use mixin pattern for organization.
+
+#### Implementation
+
+```scss
+// ✅ Good Example
+
+// packages/ui/src/styles/design-tokens.scss
+:root {
+  // Light mode (default) - Semantic tokens
+  --color-background-base: var(--color-white);
+  --color-background-muted: var(--color-gray-100);
+  --color-text-default: var(--color-gray-500);
+  --color-text-inverted: var(--color-white);
+  --color-primary: var(--color-gray-900);
+  --color-primary-foreground: var(--color-white);
+}
+
+// Dark mode overrides (mixin from mixins.scss)
+.dark {
+  @include dark-theme;
+}
+```
+
+```scss
+// packages/ui/src/styles/mixins.scss
+@mixin dark-theme {
+  // Override semantic tokens for dark mode
+  --color-background-base: var(--color-gray-600);
+  --color-background-muted: var(--color-gray-800);
+  --color-text-default: var(--color-gray-200);
+  --color-text-inverted: var(--color-gray-950);
+  --color-primary: var(--color-gray-50);
+  --color-primary-foreground: var(--color-gray-950);
+  --color-primary-hover: color-mix(in srgb, var(--color-primary), white 5%);
+}
+```
+
+#### Constants
+
+```typescript
+const THEME_STORAGE_KEY = "theme";
+const THEME_CLASS_NAME = "dark";
+const THEME_LIGHT = "light";
+const THEME_DARK = "dark";
+```
+
+#### Theme Toggle
+
+```typescript
+// Toggle dark mode
+const toggleDarkMode = () => {
+  document.documentElement.classList.toggle(THEME_CLASS_NAME);
+};
+
+// Set dark mode
+const setDarkMode = (isDark: boolean) => {
+  if (isDark) {
+    document.documentElement.classList.add(THEME_CLASS_NAME);
+  } else {
+    document.documentElement.classList.remove(THEME_CLASS_NAME);
+  }
+};
+
+// Persist preference
+const toggleDarkModeWithPersistence = () => {
+  const isDark = document.documentElement.classList.toggle(THEME_CLASS_NAME);
+  localStorage.setItem(THEME_STORAGE_KEY, isDark ? THEME_DARK : THEME_LIGHT);
+};
+
+// Initialize from localStorage
+const initTheme = () => {
+  const theme = localStorage.getItem(THEME_STORAGE_KEY);
+  if (theme === THEME_DARK) {
+    document.documentElement.classList.add(THEME_CLASS_NAME);
+  }
 };
 ```
 
-#### Token Categories
+#### Component Usage (Theme-Agnostic)
 
-**Spacing tokens:**
-- `p-2`, `gap-2`, `m-4` - Standard Tailwind spacing
-- Custom tokens from preset for consistent component sizing
+```scss
+@layer components {
+  .button {
+    // Use semantic tokens - automatically adapts to light/dark mode
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
 
-**Color tokens:**
-- `text-black-alpha-8` - Alpha-based text colors
-- `bg-gray-100`, `border-gray-200` - Gray scale
-- `text-500` - Typography-specific colors
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
 
-**Border radius tokens:**
-- `rounded-400` - Custom rounded values from preset
-- `rounded-lg` - Standard Tailwind rounded values
+    // No conditional logic needed
+    // No theme checks required
+    // Just use semantic tokens and they adapt automatically
+  }
+}
+```
+
+**Why good:** Components remain theme-agnostic (no theme logic), theme switching is instant (just CSS variable changes), semantic tokens provide indirection between theme and components, mixin keeps dark mode overrides organized
+
+```scss
+// ❌ Bad Example
+
+.button {
+  // BAD: Theme logic in component
+  background: var(--color-primary);
+
+  .dark & {
+    background: var(--color-dark-primary); // Don't do this
+  }
+}
+```
+
+```typescript
+// BAD: Conditional className based on theme
+const Button = () => {
+  const isDark = useTheme();
+  return <button className={isDark ? styles.dark : styles.light} />;
+};
+```
+
+**Why bad:** Theme logic in components couples them to theme implementation, conditional classNames add complexity and re-render overhead, defeats purpose of semantic tokens, harder to add new themes
+
+**When to use:** Always for dark mode implementation - keep components theme-agnostic by using semantic tokens only.
+
+---
+
+### Pattern 5: SCSS Module Structure with Cascade Layers
+
+Structure component SCSS modules consistently: Layer Wrapper → Base → Variants → Sizes. All UI package components must wrap in `@layer components {}`.
+
+#### Structure Pattern
+
+```scss
+// ✅ Good Example
+// button.module.scss
+
+@layer components {
+  // BASE CLASS
+  .button {
+    // Component-specific variables (if needed)
+    --button-accent-bg: transparent;
+    --button-focus-ring-width: 3px;
+    --button-border-width: 1px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+
+    // Use design tokens directly
+    border-radius: var(--space-3);
+    font-size: var(--font-size-body);
+    font-weight: 500;
+    color: var(--color-text-default);
+
+    &:disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    &:focus-visible {
+      border-color: var(--color-ring);
+    }
+
+    &[aria-invalid="true"] {
+      border-color: var(--color-destructive);
+    }
+  }
+
+  // VARIANT CLASSES
+  .default {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-light);
+
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
+  }
+
+  .destructive {
+    background-color: var(--color-destructive);
+    color: var(--color-destructive-foreground);
+
+    &:hover {
+      background-color: var(--color-destructive-hover);
+    }
+  }
+
+  .ghost {
+    background-color: transparent;
+
+    &:hover {
+      background-color: var(--color-background-muted);
+      color: var(--color-text-default);
+    }
+  }
+
+  .outline {
+    border: var(--button-border-width-hover) solid transparent;
+    box-shadow: 0 0 0 var(--button-border-width) var(--color-border-default);
+    background-color: var(--color-background-base);
+
+    &[data-state="open"],
+    &:hover {
+      background-color: var(--button-accent-bg);
+      box-shadow: none;
+      border: var(--button-border-width-hover) solid var(--color-border-darkish);
+      font-weight: bold;
+    }
+  }
+
+  // SIZE CLASSES
+  .sizeDefault {
+    height: var(--space-18);
+    padding: var(--space-6) var(--space-6);
+  }
+
+  .sizeSm {
+    height: var(--space-14);
+    padding: var(--space-1) var(--space-6);
+  }
+
+  .sizeLg {
+    height: var(--space-20);
+    padding: var(--space-6) var(--space-10);
+  }
+
+  .sizeIcon {
+    width: var(--space-18);
+    height: var(--space-18);
+  }
+}
+```
+
+**Why good:** Layer wrapper ensures predictable precedence, semantic tokens enable theming, data-attributes handle state cleanly, component variables only when needed for variant logic, consistent structure across all components
+
+```scss
+// ❌ Bad Example
+
+// BAD: No layer wrapper
+.button {
+  display: inline-flex;
+}
+
+// BAD: Redeclaring design tokens unnecessarily
+.card {
+  --card-border-width: 1px; // Used only once
+  --card-border-radius: 0.5rem; // Already have --radius-sm!
+
+  border: var(--card-border-width) solid var(--color-surface-subtle);
+  border-radius: var(--card-border-radius);
+}
+
+// BAD: Non-semantic class names
+.blueButton {
+  background: var(--color-primary); // What if primary isn't blue?
+}
+
+.bigText {
+  font-size: var(--text-size-heading); // Purpose unclear
+}
+```
+
+**Why bad:** Missing layer wrapper creates loading order dependency, redeclaring tokens wastes variables, non-semantic names become inaccurate when design changes (blueButton stops making sense if color changes to green)
+
+**When to use:** Every SCSS module in the `packages/ui` workspace must use this structure with layer wrapper.
+
+---
+
+### Pattern 6: Spacing System with Semantic Tokens
+
+Use a 2px base unit with calculated multiples for core spacing, mapped to semantic tokens with purpose-driven names.
+
+#### Base Unit and Scale
+
+**Location:** `packages/ui/src/styles/variables.scss`
+
+**Base unit:** `--core-space-unit: 0.2rem` (2px at default font size)
+
+**Core scale:**
+
+- `--core-space-2`: 4px
+- `--core-space-4`: 8px
+- `--core-space-6`: 12px
+- `--core-space-8`: 16px
+- `--core-space-10`: 20px
+- `--core-space-12`: 24px
+- `--core-space-16`: 32px
+
+**Semantic spacing tokens:**
+
+- `--space-sm`: 4px
+- `--space-md`: 8px
+- `--space-lg`: 12px
+- `--space-xlg`: 20px
+- `--space-xxlg`: 24px
+- `--space-xxxlg`: 32px
+
+#### Implementation
+
+```scss
+// ✅ Good Example - Consistent spacing
+
+.button {
+  padding: var(--space-md); // 8px
+}
+
+.container {
+  gap: var(--space-lg); // 12px
+}
+
+.compact-list {
+  gap: var(--space-sm); // 4px
+}
+
+.section {
+  margin-bottom: var(--space-xlg); // 20px
+}
+
+.card {
+  padding: var(--space-lg); // 12px all sides
+  margin-bottom: var(--space-xxlg); // 24px bottom
+}
+```
+
+**Why good:** Consistent spacing scale creates visual rhythm, semantic names clarify usage intent, design token changes update all components automatically
+
+```scss
+// ❌ Bad Example
+
+.button {
+  // BAD: Hardcoded values
+  padding: 8px;
+  margin: 12px;
+
+  // BAD: Using core tokens directly
+  gap: var(--core-space-4);
+}
+```
+
+**Why bad:** Hardcoded values break design system consistency and can't be themed, using core tokens bypasses semantic layer and makes purpose unclear
+
+---
+
+### Pattern 7: Typography System with REM-Based Sizing
+
+Use REM-based typography with semantic naming to respect user preferences and clarify usage.
+
+#### Core and Semantic Sizes
+
+**Location:** `packages/ui/src/styles/variables.scss`
+
+**Core font sizes:**
+
+- `--core-text-size-1`: 1.6rem (16px)
+- `--core-text-size-2`: 1.8rem (18px)
+- `--core-text-size-3`: 2rem (20px)
+
+**Semantic typography tokens:**
+
+- `--text-size-icon`: 16px
+- `--text-size-body`: 16px
+- `--text-size-body2`: 18px
+- `--text-size-heading`: 20px
+
+#### Implementation
+
+```scss
+// ✅ Good Example
+
+.button {
+  font-size: var(--text-size-body); // 16px
+}
+
+h1,
+h2,
+h3 {
+  font-size: var(--text-size-heading); // 20px
+}
+
+.text {
+  font-size: var(--text-size-body); // 16px
+}
+
+.intro {
+  font-size: var(--text-size-body2); // 18px
+}
+
+.icon {
+  font-size: var(--text-size-icon); // 16px
+  width: var(--text-size-icon);
+  height: var(--text-size-icon);
+}
+```
+
+**Why good:** REM-based sizing respects user browser preferences for accessibility, semantic names clarify usage (body vs heading vs icon), consistent scale across UI
+
+```scss
+// ❌ Bad Example
+
+.button {
+  // BAD: Hardcoded px values
+  font-size: 16px;
+}
+
+.heading {
+  // BAD: Using core tokens directly
+  font-size: var(--core-text-size-3);
+}
+```
+
+**Why bad:** Hardcoded px values ignore user preferences and break accessibility, using core tokens bypasses semantic layer and obscures purpose
+
+---
+
+### Pattern 8: Data-Attributes for State Styling
+
+Use data-attributes instead of className toggling for state-based styling. Cleaner than conditional classes, works naturally with CSS.
+
+#### Implementation
+
+```scss
+// ✅ Good Example
+
+.dropdown {
+  &[data-open="true"] {
+    display: block;
+  }
+
+  &[data-state="error"] {
+    border-color: var(--color-error);
+  }
+
+  &[data-size="large"][data-variant="primary"] {
+    padding: var(--space-xlg);
+  }
+}
+
+.button {
+  &[data-active="true"] {
+    color: var(--color-accent);
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--color-destructive);
+  }
+}
+
+.form:has(.inputError) {
+  border-color: var(--color-error);
+}
+
+.formGroup:has(input:focus) {
+  background: var(--color-surface-subtle);
+}
+```
+
+**Why good:** Data-attributes separate state from styling concerns, easier to debug in DevTools, works with :has() for parent-child relationships, no className concatenation in JSX
+
+```scss
+// ❌ Bad Example
+
+.dropdownOpen {
+  display: block;
+}
+
+.dropdownClosed {
+  display: none;
+}
+```
+
+```typescript
+// BAD: Conditional className in JSX
+<Dropdown className={isOpen ? styles.dropdownOpen : styles.dropdownClosed} />
+```
+
+**Why bad:** Requires separate classes for every state variation, className concatenation adds complexity, harder to combine multiple states, more JavaScript logic for what should be CSS
+
+**When to use:** Always prefer data-attributes for boolean states and enum-like states (open/closed, active/inactive, error/success).
+
+---
+
+### Pattern 9: SCSS Mixins for Reusable Patterns
+
+Create mixins for patterns used in 3+ components, complex CSS that's hard to remember, accessibility patterns, and browser-specific workarounds.
+
+#### Standard Mixins
+
+**Location:** `packages/ui/src/styles/mixins.scss`
+
+```scss
+// ✅ Good Example
+
+// Focus ring styling
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid hsl(var(--color-ring));
+    outline-offset: 2px;
+  }
+}
+
+// Disabled state
+@mixin disabled-state {
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Smooth transitions
+@mixin transition-colors {
+  transition: var(--transition-colors);
+}
+
+// Truncate text
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Visually hidden (for screen readers)
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+```
 
 #### Usage
 
-```tsx
-// ✅ Good Example - Using design tokens
-<div className="flex w-full items-center gap-2 rounded-400 p-2 text-500 text-black-alpha-8">
-  {children}
-</div>
-```
-
-**Why good:** Design tokens ensure visual consistency, preset values are pre-approved by design team, automatic dark mode support if configured
-
-```tsx
-// ❌ Bad Example - Hardcoded values
-<div style={{ padding: "8px", borderRadius: "4px", color: "rgba(0,0,0,0.8)" }}>
-  {children}
-</div>
-
-// ❌ Bad Example - Arbitrary values instead of tokens
-<div className="p-[8px] rounded-[4px] text-[rgba(0,0,0,0.8)]">
-  {children}
-</div>
-```
-
-**Why bad:** Hardcoded values break design system consistency, can't be themed, arbitrary values bypass design token system
-
----
-
-### Pattern 4: Exposing className Prop for Composability
-
-Always expose `className` prop on components and merge it with internal classes using `clsx`.
-
-#### Props Pattern
-
-```tsx
-// ✅ Good Example - Props extending HTML attributes
-export type LightPromoBannerProps = {
-  title?: string;
-  subtitle?: string;
-  image?: React.ReactNode;
-  className?: string;
-  cta?: React.ReactNode;
-  onClick?: () => void;
-  onDismiss?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-} & React.HTMLAttributes<HTMLDivElement>;
-
-export const LightPromoBanner = ({
-  title,
-  subtitle,
-  className,
-  ...rest
-}: LightPromoBannerProps) => {
-  return (
-    <div className={clsx("relative flex items-center gap-4 p-4", className)} {...rest}>
-      {/* content */}
-    </div>
-  );
-};
-```
-
-**Why good:** Component styles can be extended without wrapper divs, spread operator passes through all native HTML attributes, className is always last in clsx to allow overrides
-
-#### Consumer Usage
-
-```tsx
-// ✅ Good Example - Consumer overriding styles
-<LightPromoBanner
-  title="Welcome"
-  className="bg-blue-50 border-blue-200"
-/>
-```
-
-**Why good:** Consumer can add or override styles without forking the component
-
-```tsx
-// ❌ Bad Example - No className prop
-export type AlertProps = {
-  children: React.ReactNode;
-};
-
-export const Alert = ({ children }: AlertProps) => {
-  return (
-    <div className="fixed-styles-that-cannot-be-overridden">
-      {children}
-    </div>
-  );
-};
-```
-
-**Why bad:** Consumers cannot customize appearance, leads to wrapper divs with overriding styles, creates specificity wars
-
----
-
-### Pattern 5: SCSS Usage (Minimal - Global Styles Only)
-
-SCSS is minimal in the webapp - primarily for global styles and font definitions.
-
-#### File Locations
-
-- `src/index.scss` - Global font definitions and base styles
-- Component-specific SCSS is rare and discouraged
-
-#### Custom Font Definition
-
 ```scss
-// ✅ Good Example - src/index.scss
-@font-face {
-  font-family: "TT Photoroom";
-  src: url("https://font-cdn.photoroom.com/fonts/tt-photoroom/TT_Photoroom_Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "TT Photoroom";
-  src: url("https://font-cdn.photoroom.com/fonts/tt-photoroom/TT_Photoroom_Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "TT Photoroom";
-  src: url("https://font-cdn.photoroom.com/fonts/tt-photoroom/TT_Photoroom_Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
-```
-
-**Why good:** CDN-hosted fonts for performance, font-display swap for better LCP, custom brand font with system fallbacks
-
-```scss
-// ❌ Bad Example - Component-level SCSS
-// src/components/Button/Button.module.scss
 .button {
-  padding: 8px 16px;
-  border-radius: 4px;
+  @include focus-ring;
+  @include disabled-state;
+  @include transition-colors;
+}
+
+.long-text {
+  @include truncate;
 }
 ```
 
-**Why bad:** Creates parallel styling system, loses Tailwind benefits, harder to maintain consistency
+**Why good:** Mixins ensure consistency for accessibility patterns (focus, sr-only), reduce duplication across components, easier to maintain and update centrally
 
-**When to use SCSS:**
-- Global font-face definitions
-- CSS reset/normalize if needed
-- Third-party library style overrides
+**When to use:** Create mixins for patterns used in 3+ components, complex CSS that's hard to remember, accessibility patterns, browser-specific workarounds.
 
-**When to use Tailwind instead:**
-- Component styling
-- Responsive designs
-- Hover/focus states
+**When not to use:** Don't create mixins for simple one-liners better as design tokens, component-specific styles, or one-off patterns.
 
 ---
 
-### Pattern 6: Variant Objects with Tailwind
+### Pattern 10: Global Styles Organization
 
-Use objects to map variants to class names for consistent variant handling.
+Organize global styles in a consistent file structure with proper import order.
+
+#### File Structure
+
+**Location:** `packages/ui/src/styles/`
+
+```
+packages/ui/src/styles/
+├── design-tokens.scss   # All design tokens (colors, spacing, typography)
+├── mixins.scss          # Reusable SCSS mixins
+├── global.scss          # Global base styles with import order
+├── reset.scss           # CSS reset
+├── layers.scss          # Layer declarations
+└── utility-classes.scss # Minimal utility classes
+```
+
+#### Import Order
+
+```scss
+// packages/ui/src/styles/global.scss
+@use "layers"; // Declare layers FIRST
+@use "reset"; // Uses @layer reset
+@use "design-tokens"; // Unlayered (highest priority)
+@use "utility-classes"; // Unlayered (highest priority)
+```
+
+#### Minimal Utility Classes
+
+```scss
+// ✅ Good Example - utility-classes.scss
+
+// Screen reader only
+.sr-only {
+  @include sr-only;
+}
+
+// Focus ring
+.focus-ring {
+  @include focus-ring;
+}
+
+// Truncate text
+.truncate {
+  @include truncate;
+}
+```
+
+**Why good:** Minimal set (not comprehensive like Tailwind), extracted from mixins for consistency, used sparingly in components
+
+**Philosophy:**
+
+- Minimal set (not comprehensive)
+- Common patterns only
+- Extracted from mixins
+- Used sparingly in components
+
+**When not to use:** Don't create comprehensive utility library (use Tailwind instead), don't use utilities instead of component styles, don't create utilities without corresponding mixins.
+
+---
+
+### Pattern 11: Icon Styling with lucide-react
+
+Style icons consistently using design tokens for sizing and `currentColor` for color inheritance.
+
+#### Library
+
+`lucide-react` (installed in `packages/ui`)
+
+#### Key Principles
+
+- **Consistent sizing:** Icons use design tokens
+- **Color inheritance:** Icons use `currentColor` to inherit parent text color
 
 #### Implementation
 
-```tsx
-// ✅ Good Example - Variant mapping object
-const severityVariants = {
-  warning: {
-    outerClassNames: "bg-yellow-50 border-yellow-200",
-    icon: ExclamationTriangleIcon,
-  },
-  error: {
-    outerClassNames: "bg-red-50 border-red-200",
-    icon: XCircleIcon,
-  },
-  success: {
-    outerClassNames: "bg-green-50 border-green-200",
-    icon: CheckCircleIcon,
-  },
-  info: {
-    outerClassNames: "bg-blue-50 border-blue-200",
-    icon: InformationCircleIcon,
-  },
-} as const;
-
-export type AlertSeverity = keyof typeof severityVariants;
-
-export type AlertProps = {
-  severity?: AlertSeverity;
-  children: React.ReactNode;
-};
-
-export const Alert = ({ severity = "warning", children }: AlertProps) => {
-  const { outerClassNames, icon: Icon } = severityVariants[severity];
-
-  return (
-    <div className={clsx("flex w-full items-center gap-2", outerClassNames)}>
-      <Icon className="h-4 w-4 shrink-0" />
-      <div>{children}</div>
-    </div>
-  );
-};
-```
-
-**Why good:** Type-safe variants derived from object keys, centralized variant definitions, easy to add new variants, icon and styles co-located
-
-```tsx
-// ❌ Bad Example - Inline conditionals for many variants
-<div className={clsx(
-  "flex items-center",
-  severity === "warning" && "bg-yellow-50",
-  severity === "error" && "bg-red-50",
-  severity === "success" && "bg-green-50",
-  severity === "info" && "bg-blue-50",
-  // ... more conditions
-)}>
-```
-
-**Why bad:** Repetitive and verbose, harder to maintain, variant-specific logic scattered throughout
-
----
-
-### Pattern 7: Icons from @photoroom/icons
-
-Use the internal `@photoroom/icons` package for consistent icon styling.
-
-#### Import Pattern
-
-```tsx
+```scss
 // ✅ Good Example
-import { ExclamationTriangleIcon } from "@photoroom/icons/lib/monochromes";
-import { SaveIcon, TrashIcon } from "@photoroom/icons/lib/monochromes";
+
+.icon {
+  width: var(--text-size-icon); // 16px
+  height: var(--text-size-icon);
+}
+
+// Icons automatically inherit currentColor
+.successButton {
+  color: var(--color-text-default); // Icon inherits this
+
+  &:hover {
+    color: var(--color-accent); // Icon color changes on hover
+  }
+}
+
+.errorButton {
+  color: var(--color-text-muted); // Different icon color
+}
+
+.button {
+  color: var(--color-text-default); // Icon inherits this color
+}
 ```
 
-**Why good:** Design system compliance, consistent icon sizing and styling, smaller bundle size
+**Why good:** Using `currentColor` keeps icon colors in sync with text without duplication, design tokens ensure consistent sizing, fewer CSS rules needed
 
-```tsx
+```scss
 // ❌ Bad Example
-import { Save } from "lucide-react";
-import { FaSave } from "react-icons/fa";
+
+.icon {
+  // BAD: Hardcoded size
+  width: 16px;
+  height: 16px;
+
+  // BAD: Explicit color instead of inheritance
+  color: var(--color-text-default);
+}
+
+.button .icon {
+  // BAD: Duplicating parent color
+  color: var(--color-primary);
+}
 ```
 
-**Why bad:** External libraries have inconsistent styling, increase bundle size, do not match design system
-
-#### Icon Styling
-
-```tsx
-// ✅ Good Example - Icon with Tailwind classes
-<Icon className="h-4 w-4 shrink-0" />
-<Icon className="h-5 w-5 text-gray-500" />
-```
-
-**Why good:** Icons use currentColor by default for color inheritance, explicit sizing with Tailwind, shrink-0 prevents icon compression in flex containers
+**Why bad:** Hardcoded sizes break consistency, explicit icon colors create duplication and get out of sync with parent text color
 
 ---
 
-### Pattern 8: Responsive Design with Tailwind Breakpoints
+### Pattern 12: Advanced CSS Features
 
-Use Tailwind's responsive prefixes for mobile-first responsive design.
+Use modern CSS features like `:has()`, `:global()`, proper nesting, and data-attributes for cleaner, more powerful styling.
 
-#### Breakpoint Prefixes
+#### Supported Patterns
 
-- `sm:` - 640px and up
-- `md:` - 768px and up
-- `lg:` - 1024px and up
-- `xl:` - 1280px and up
-- `2xl:` - 1536px and up
+- **`:has()` for conditional styling:** Style parent based on child state
+- **`:global()` for handling global classes:** Escape CSS Modules scoping when needed
+- **Proper nesting with `&`:** SCSS nesting for modifiers and states
+- **CSS classes for variants:** Use `cva` for type-safe variant classes
+- **Data-attributes for state:** `&[data-state="open"]`, `&[data-active="true"]`
 
 #### Implementation
 
-```tsx
-// ✅ Good Example - Mobile-first responsive design
-<div className={clsx(
-  "flex flex-col gap-2",           // Mobile: stack vertically
-  "sm:flex-row sm:gap-4",          // Small+: horizontal layout
-  "lg:max-w-[800px] lg:mx-auto"    // Large+: constrain width
-)}>
-  <div className="w-full sm:w-1/2 lg:w-1/3">
-    {/* Content */}
-  </div>
-</div>
+```scss
+// ✅ Good Example
+
+// :has() for parent styling based on children
+.form:has(.inputError) {
+  border-color: var(--color-error);
+}
+
+.formGroup:has(input:focus) {
+  background: var(--color-surface-subtle);
+}
+
+// :global() for global class handling (minimal use)
+.component {
+  padding: var(--space-md);
+
+  :global(.dark-mode) & {
+    background: var(--color-surface-strong);
+  }
+}
+
+// Proper nesting with & (max 3 levels)
+.nav {
+  .navItem {
+    &:hover {
+      background: var(--color-surface-subtle);
+    }
+  }
+}
+
+// Data-attributes for state management
+.dropdown {
+  &[data-open="true"] {
+    display: block;
+  }
+
+  &[data-state="error"] {
+    border-color: var(--color-error);
+  }
+
+  &[data-size="large"][data-variant="primary"] {
+    padding: var(--space-xlg);
+  }
+}
+
+// Variants using CSS classes (used with cva)
+.btnDefault {
+  background: var(--color-surface-base);
+}
+
+.btnGhost {
+  background: transparent;
+}
 ```
 
-**Why good:** Mobile-first approach, clear progression through breakpoints, all responsive behavior visible in one place
+**Why good:** `:has()` eliminates JavaScript for parent-child styling, `:global()` enables third-party integration when needed, shallow nesting maintains readability, data-attributes separate state from style concerns
 
-```tsx
-// ❌ Bad Example - Desktop-first (harder to reason about)
-<div className="flex-row lg:flex-col">
+```scss
+// ❌ Bad Example
+
+// BAD: Deep nesting (4+ levels)
+.nav .navList .navItem .navLink .navIcon {
+  color: var(--color-primary);
+}
+
+// BAD: Overusing :global()
+.component {
+  :global {
+    .everything {
+      .is {
+        .global {
+          // Defeats CSS Modules purpose
+        }
+      }
+    }
+  }
+}
+
+// BAD: Inline styles in JavaScript instead of CSS classes
+<div style={{ color: isActive ? 'blue' : 'gray' }} />
 ```
 
-**Why bad:** Desktop-first is harder to maintain, mobile becomes afterthought
+**Why bad:** Deep nesting harder to maintain and increases specificity, overusing `:global()` defeats CSS Modules scoping purpose, inline styles in JavaScript bypass design system and theming
+
+**Best Practices:**
+
+- Use data-attributes for boolean states: `data-active`, `data-state`, `data-variant`
+- Prefer `:has()` over JavaScript for simple parent-child relationships
+- Use `:global()` sparingly, only when necessary for third-party integration
+- Keep nesting shallow (max 3 levels) for maintainability
 
 </patterns>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns
-
-### ❌ Using External Icon Libraries
-
-Using libraries like `lucide-react` or `react-icons` breaks design system compliance and increases bundle size.
-
-```tsx
-// ❌ Avoid
-import { Save } from "lucide-react";
-import { FaSave } from "react-icons/fa";
-
-// ✅ Instead use
-import { SaveIcon } from "@photoroom/icons/lib/monochromes";
-```
-
-**Why this matters:** External icons have inconsistent visual weight, sizing, and styling that disrupts the unified design language.
-
----
-
-### ❌ Template Literals for Class Composition
-
-Template literals create subtle bugs with trailing spaces and are harder to read.
-
-```tsx
-// ❌ Avoid
-<div className={`base-class ${isActive ? "active" : ""}`}>
-
-// ✅ Instead use
-<div className={clsx("base-class", isActive && "active")}>
-```
-
-**Why this matters:** Template literals produce `"base-class "` (trailing space) when conditions are false, which can cause styling issues.
-
----
-
-### ❌ Hardcoded Style Values
-
-Using inline styles or arbitrary Tailwind values bypasses the design token system.
-
-```tsx
-// ❌ Avoid
-<div style={{ padding: "8px", color: "rgba(0,0,0,0.8)" }}>
-<div className="p-[8px] text-[rgba(0,0,0,0.8)]">
-
-// ✅ Instead use
-<div className="p-2 text-black-alpha-8">
-```
-
-**Why this matters:** Hardcoded values cannot be themed, break visual consistency, and make design system updates impossible.
-
----
-
-### ❌ Component-Level SCSS Files
-
-Creating SCSS modules for individual components duplicates the styling system.
-
-```scss
-// ❌ Avoid - src/components/Button/Button.module.scss
-.button {
-  padding: 8px 16px;
-  border-radius: 4px;
-}
-```
-
-**Why this matters:** Maintains two parallel styling systems, loses Tailwind benefits like responsive utilities and design tokens.
-
----
-
-### ❌ Components Without className Prop
-
-Components that do not expose `className` cannot be customized by consumers.
-
-```tsx
-// ❌ Avoid
-export const Card = ({ children }: { children: React.ReactNode }) => {
-  return <div className="p-4 rounded-lg">{children}</div>;
-};
-
-// ✅ Instead use
-export const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  return <div className={clsx("p-4 rounded-lg", className)}>{children}</div>;
-};
-```
-
-**Why this matters:** Consumers must wrap components in extra divs to override styles, creating DOM bloat and specificity issues.
-
----
-
-### ❌ Desktop-First Responsive Design
-
-Starting with desktop styles and overriding for mobile is harder to maintain.
-
-```tsx
-// ❌ Avoid
-<div className="flex-row lg:flex-col">
-
-// ✅ Instead use
-<div className="flex-col lg:flex-row">
-```
-
-**Why this matters:** Mobile-first ensures the base experience works on all devices, with enhancements layered on for larger screens.
-
-</anti_patterns>
 
 ---
 
@@ -615,48 +1239,143 @@ Starting with desktop styles and overriding for mobile is harder to maintain.
 
 ```
 Need to style a component?
-|-- Use Tailwind CSS utility classes
-|   |-- Apply directly in className
-|   |-- Use clsx for composition
-|   |-- Use design tokens from preset
-|
-Need to combine multiple class sources?
-|-- Use clsx()
-|   |-- Base classes first
-|   |-- Conditional classes second
-|   |-- Passed className last (for overrides)
-|
-Need to create variants (primary/secondary/ghost)?
-|-- Create variant object mapping
-|   |-- Keys become type union
-|   |-- Values contain class strings
-|   |-- Apply with severityVariants[variant]
-|
-Need responsive behavior?
-|-- Use Tailwind breakpoint prefixes
-|   |-- Mobile-first: base, sm:, md:, lg:
-|   |-- Start with mobile styles
-|   |-- Add breakpoint overrides
-|
-Need icons?
-|-- Use @photoroom/icons
-|   |-- Import from lib/monochromes
-|   |-- Style with Tailwind classes
-|   |-- Use internal icons for design system compliance
-|
-Need to make component customizable?
-|-- Expose className prop
-|   |-- Extend HTML attributes
-|   |-- Merge with clsx, className last
-|   |-- Use spread for rest props
-|
-Need global styles or fonts?
-|-- Use SCSS (minimal)
-|   |-- src/index.scss for fonts
-|   |-- Keep component styles in Tailwind
+├─ Is it in packages/ui (design system)?
+│   ├─ YES → Wrap in @layer components {}
+│   │        Use semantic tokens only
+│   │        Use SCSS Modules
+│   │        Use data-attributes for state
+│   └─ NO → Is it in apps/* (application)?
+│       └─ YES → Don't wrap in layers (unlayered)
+│                Use semantic tokens
+│                Can override UI package styles
+│
+Need to reference a design value?
+├─ Color / Spacing / Typography?
+│   └─ Use semantic token (--color-primary, --space-md, --text-size-body)
+│       NEVER use core tokens directly
+│
+Need to show different states?
+├─ Boolean state (open/closed, active/inactive)?
+│   └─ Use data-attribute: &[data-open="true"]
+├─ Enum state (primary/secondary/ghost)?
+│   └─ Use CSS classes with cva for type-safety
+│
+Need to manipulate colors?
+├─ Transparency?
+│   └─ rgb(from var(--color-primary) r g b / 0.5)
+├─ Color mixing?
+│   └─ color-mix(in srgb, var(--color-primary), black 5%)
+├─ NEVER use Sass color functions (darken, lighten)
+│
+Need dark mode support?
+├─ In component styles?
+│   └─ Use semantic tokens (they adapt automatically)
+│       NO theme checks in component logic
+├─ In design-tokens.scss?
+│   └─ Override semantic tokens in .dark { @include dark-theme; }
+│
+Need to reuse a pattern?
+├─ Used in 3+ components?
+│   └─ Create SCSS mixin in mixins.scss
+├─ Used in 1-2 components?
+│   └─ Keep it in component (don't abstract early)
+│
+Need spacing between elements?
+├─ Small (4px)?  → --space-sm
+├─ Medium (8px)? → --space-md
+├─ Large (12px)? → --space-lg
+├─ Extra large?  → --space-xlg, --space-xxlg, --space-xxxlg
+│
+Need to size text?
+├─ Body text? → --text-size-body
+├─ Larger body? → --text-size-body2
+├─ Heading? → --text-size-heading
+├─ Icon? → --text-size-icon
 ```
 
 </decision_framework>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Using Core Tokens Directly in Components
+
+Never use Tier 1 core tokens (`--color-gray-900`, `--core-space-4`) in component styles. Components must use Tier 2 semantic tokens (`--color-primary`, `--space-md`) to maintain theme flexibility.
+
+```scss
+// ❌ WRONG - Using core token
+.button {
+  background: var(--color-gray-900);
+}
+
+// ✅ CORRECT - Using semantic token
+.button {
+  background: var(--color-surface-base);
+}
+```
+
+### ❌ Component Styles Without Layer Wrapper
+
+All UI package component styles must be wrapped in `@layer components {}`. Missing the layer wrapper causes loading order dependencies and makes app-level overrides unpredictable.
+
+```scss
+// ❌ WRONG - No layer wrapper
+.button {
+  padding: var(--space-md);
+}
+
+// ✅ CORRECT - Wrapped in layer
+@layer components {
+  .button {
+    padding: var(--space-md);
+  }
+}
+```
+
+### ❌ Sass Color Functions
+
+Avoid `darken()`, `lighten()`, `transparentize()` and other Sass color functions. These require build-time processing and prevent runtime theming. Use CSS color functions instead.
+
+```scss
+// ❌ WRONG - Sass function
+.hover {
+  background: darken($primary, 10%);
+}
+
+// ✅ CORRECT - CSS color function
+.hover {
+  background: color-mix(in srgb, var(--color-primary), black 10%);
+}
+```
+
+### ❌ Theme Logic in Components
+
+Don't add conditional theme checks in component code. Components should use semantic tokens only and remain theme-agnostic. The `.dark` class and token overrides handle theming automatically.
+
+### ❌ Hardcoded Values
+
+Never use hardcoded pixel values, hex colors, or raw numbers. All design values must come from design tokens to ensure consistency and enable theming.
+
+```scss
+// ❌ WRONG - Hardcoded values
+.card {
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+// ✅ CORRECT - Design tokens
+.card {
+  padding: var(--space-lg);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-md);
+}
+```
+
+</anti_patterns>
 
 ---
 
@@ -666,33 +1385,39 @@ Need global styles or fonts?
 
 **High Priority Issues:**
 
-- Using external icon libraries (lucide-react, react-icons) - use @photoroom/icons for design system compliance
-- Template literals for class composition - use clsx for clean composition and conditional classes
-- Hardcoded pixel/color values - use Tailwind design tokens from @photoroom/ui preset
-- Component-level SCSS files - use Tailwind for component styling
-- Components without className prop - expose for composability
+- ❌ **Using core tokens directly in components** - Components must use semantic tokens only (e.g., `--color-primary` not `--color-gray-900`), breaks theming
+- ❌ **Component styles not wrapped in `@layer components {}`** - UI package components must use layers for predictable precedence across monorepo
+- ❌ **Using Sass color functions** - No `darken()`, `lighten()`, `transparentize()` - use CSS color functions (`color-mix()`, relative color syntax)
+- ❌ **Hardcoded color/spacing values** - Must use design tokens, breaks consistency and theming
+- ❌ **Theme logic in components** - Components should use semantic tokens and remain theme-agnostic
 
 **Medium Priority Issues:**
 
-- Arbitrary Tailwind values like `p-[8px]` - Prefer preset tokens
-- Inline styles with style prop - Use Tailwind classes
-- Missing shrink-0 on flex icons - Icons may get crushed
-- Desktop-first responsive design - Use mobile-first approach
+- ⚠️ **Creating comprehensive utility class library** - Keep utilities minimal, use Tailwind if you need comprehensive utilities
+- ⚠️ **Not using mixins for focus states** - Inconsistent accessibility, use `@include focus-ring`
+- ⚠️ **Redeclaring design tokens as component variables** - Usually unnecessary, use semantic tokens directly
+- ⚠️ **App overrides wrapped in layers** - App styles should be unlayered for highest precedence
+- ⚠️ **Using hex colors instead of HSL** - Use HSL format for better CSS color function compatibility
 
 **Common Mistakes:**
 
-- Forgetting to spread `...rest` props after extracting className
-- Placing className before base classes in clsx (prevents consumer overrides)
-- Using string concatenation instead of clsx
-- Creating SCSS modules for components (use Tailwind)
-- Hardcoding colors instead of using token classes
+- Not importing `layers.scss` before layered content - Layer declarations must come first
+- Creating variables for values used only once - Use design tokens directly instead
+- Missing import of design-tokens or mixins in component SCSS - Components need access to tokens
+- Deep nesting (4+ levels) - Keep nesting shallow (max 3 levels) for maintainability
+- Conditional className for theme instead of semantic tokens - Let tokens handle theming
+- Using utilities instead of component styles - SCSS Modules are primary, utilities are supplementary
 
 **Gotchas & Edge Cases:**
 
-- **clsx order matters:** Base classes first, conditionals second, className prop last for proper override behavior
-- **Tailwind purge:** Dynamically constructed class names like `bg-${color}-500` are not included in build - use complete class names in variant objects
-- **Icon sizing:** @photoroom/icons use currentColor for fill - set color on parent or icon directly
-- **Arbitrary values:** Use sparingly and only for truly one-off values not in the design system
+- **CSS Cascade Layers loading order:** Unlayered styles always override layered styles, regardless of loading order. This is intentional for app overrides.
+- **Color format in tokens:** Store HSL without `hsl()` wrapper (`--color: 222 47% 11%`), apply wrapper when using (`hsl(var(--color))`)
+- **Mixin vs utility class:** Mixins are for use in SCSS, utility classes are for use in HTML/JSX. Extract utilities from mixins for consistency.
+- **Component variables timing:** Only create component-specific CSS variables when you need variant logic or runtime modification. Most components should use design tokens directly.
+- **Dark mode token overrides:** Only override Tier 2 semantic tokens in `.dark` class, never override Tier 1 core tokens
+- **Data-attribute syntax:** Use string values (`data-state="open"`) not boolean attributes, works better with CSS selectors
+- **:has() browser support:** Modern CSS feature, ensure you have fallbacks for older browsers if needed
+- **Layer precedence:** Within a layer, normal specificity rules apply. Layers only affect inter-layer precedence.
 
 </red_flags>
 
@@ -704,16 +1429,16 @@ Need global styles or fonts?
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use Tailwind CSS as the primary styling approach for all components)**
+**(You MUST wrap ALL UI package component styles in `@layer components {}` for proper cascade precedence)**
 
-**(You MUST use `clsx` for combining and conditionally applying classes - use this instead of template literals or string concatenation)**
+**(You MUST use semantic tokens ONLY in components - NEVER use core tokens directly)**
 
-**(You MUST use design tokens from `@photoroom/ui` preset via Tailwind - use these instead of hardcoded values)**
+**(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
 
-**(You MUST always expose `className` prop on components and merge it with internal classes using `clsx`)**
+**(You MUST use data-attributes for state styling - NOT className toggling)**
 
-**(You MUST use `@photoroom/icons` for icons - use this instead of external libraries like lucide-react or react-icons)**
+**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
 
-**Failure to follow these rules will break design system consistency and component composability.**
+**Failure to follow these rules will break theming, create cascade precedence issues, and violate design system conventions.**
 
 </critical_reminders>

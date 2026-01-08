@@ -1,54 +1,144 @@
-# Photoroom Webapp Profile
+# Project Memory for Claude
 
-This profile is configured for the Photoroom webapp codebase.
+## Decision Trees
 
-## Tech Stack
+### State Management
 
-- **Framework:** React with TypeScript
-- **State Management:** MobX with RootStore pattern
-- **Data Fetching:** React Query + Axios
-- **Styling:** Tailwind CSS + clsx
-- **Testing:** Karma + Mocha + Chai (unit), Playwright (E2E)
-- **Mocking:** Sinon with sandbox pattern
-- **Router:** TanStack Router
-- **Icons:** @photoroom/icons (internal package)
-- **UI Components:** @photoroom/ui (internal package)
-
-## Key Conventions
-
-### TypeScript
-- Use `type` instead of `interface` (ESLint enforced)
-- Named exports only (no default exports except App.tsx)
-- Strict mode enabled with `noUncheckedIndexedAccess`
-
-### MobX Stores
-- Arrow functions for ALL public store methods
-- `runInAction()` after all `await` calls
-- `reaction()` for side effects (NOT useEffect)
-- Dependency injection via constructor
-- Private `#` prefix for dependencies
-
-### React Components
-- Wrap with `observer()` when reading MobX state
-- Use `useTranslation()` for all user-facing text
-- Add `displayName` for debugging
-- Extend HTML attributes for composability
+```
+Is it server data (from API)?
+├─ YES → React Query
+└─ NO → Is it needed across multiple components?
+    ├─ YES → Zustand
+    └─ NO → Is it form data?
+        ├─ YES → React Hook Form
+        └─ NO → useState in component
+```
 
 ### Styling
-- Tailwind CSS as primary approach
-- `clsx()` for class composition
-- Design tokens from `@photoroom/ui` preset
-- `@photoroom/icons` for icons (NOT lucide-react)
+
+```
+Does component have variants (primary/secondary, sm/md/lg)?
+├─ YES → SCSS Modules + cva
+└─ NO → SCSS Modules only
+
+Are values dynamic (runtime values)?
+├─ YES → CSS custom properties or inline styles
+└─ NO → Design tokens in SCSS
+```
+
+### Memoization
+
+```
+Is it slow (> 5ms)?
+├─ YES → Use useMemo/useCallback
+└─ NO → Does it cause child re-renders?
+    ├─ YES → Use React.memo on child + useCallback for props
+    └─ NO → Don't memoize (premature optimization)
+```
 
 ### Testing
-- **Chai syntax:** `expect(x).to.equal(y)` (NOT Jest `.toBe()`)
-- Sinon sandbox with `afterEach` cleanup
-- Mock store factories with partial dependencies
-- Import from `fixtures` not `@playwright/test` for E2E
 
-## Documentation
+```
+Is it a component?
+├─ YES → React Testing Library + MSW
+└─ NO → Is it a hook?
+    ├─ YES → @testing-library/react-hooks
+    └─ NO → Is it a utility function?
+        ├─ YES → Vitest unit test
+        └─ NO → Integration test
+```
 
-For detailed patterns, see:
-- `apps/webapp/.ai-docs/WORK-STANDARDS.md` - Primary standards
-- `apps/webapp/.ai-docs/PITFALLS.md` - Anti-patterns
-- `apps/webapp/.ai-docs/_decisions/ADR-005-mobx-store-patterns.md` - MobX patterns
+## Code Conventions
+
+### File and Directory Naming
+
+**MANDATORY: kebab-case for ALL files and directories**
+
+- Component files: `button.tsx` (NOT `Button.tsx`)
+- Style files: `button.module.scss`
+- Test files: `button.test.tsx`
+- Utility files: `format-date.ts`
+- Directories: `client-next/`, `api-mocks/`
+
+### Import/Export Patterns
+
+**MANDATORY: Named exports ONLY (no default exports in libraries)**
+
+**Import ordering:**
+
+1. React imports
+2. External dependencies
+3. Internal workspace packages (`@repo/*`)
+4. Relative imports
+5. Styles (`.module.scss`)
+
+**Use `import type { }` for type-only imports**
+
+```typescript
+// Example
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@repo/ui/button";
+import { Shell } from "./shell";
+import styles from "./page.module.scss";
+```
+
+### Constants and Magic Numbers
+
+**RULE: No magic numbers anywhere in code**
+
+- All numbers must be named constants
+- Constant naming: `SCREAMING_SNAKE_CASE`
+- Configuration objects over scattered constants
+
+```typescript
+// GOOD
+export const API_TIMEOUT_MS = 30000;
+export const MAX_RETRY_ATTEMPTS = 3;
+
+// BAD
+setTimeout(() => {}, 300); // What's 300?
+```
+
+### TypeScript Enforcement
+
+- Zero `any` without explicit justification comment
+- No `@ts-ignore` or `@ts-expect-error` without explaining comment
+- All function parameters and return types explicit for public APIs
+- Null/undefined handling explicit
+
+---
+
+## Quick Checklists
+
+### Before Committing Code
+
+- [ ] No `any` without justification
+- [ ] No magic numbers (use named constants)
+- [ ] No hardcoded values (use config/env vars)
+- [ ] Named exports only (no default exports in libraries)
+- [ ] kebab-case file names
+- [ ] Ref forwarding on interactive components
+- [ ] className prop exposed
+- [ ] No God components (< 300 lines)
+- [ ] Data-attributes for state styling (not className toggling)
+- [ ] Design tokens (no hardcoded colors/spacing)
+- [ ] Tests written and passing
+- [ ] Type check passes (`bun tsc --noEmit`)
+- [ ] Lint passes (`bun eslint .`)
+- [ ] Format applied (`bun prettier --write .`)
+
+### Before Submitting PR
+
+- [ ] All tests pass
+- [ ] No TypeScript errors
+- [ ] No ESLint errors
+- [ ] Code formatted
+- [ ] Branch up to date with main
+- [ ] Meaningful commit messages
+- [ ] PR description explains changes
+- [ ] Screenshots/videos for UI changes
+- [ ] No console.logs left in code
+- [ ] No commented-out code
+- [ ] Bundle size checked (if applicable)
+- [ ] Accessibility tested (keyboard nav)
