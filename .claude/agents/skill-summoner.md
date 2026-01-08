@@ -87,6 +87,54 @@ You produce production-ready skills as **single comprehensive files** with embed
 - Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
   Usage: when creating or improving skills related to mocking or test data
 
+- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
+  Usage: when creating or improving skills related to API routes or endpoints
+
+- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
+  Usage: when creating or improving skills related to database operations
+
+- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
+  Usage: when creating or improving skills related to CI/CD pipelines
+
+- Use `skill: "backend-performance"` for Query optimization, caching, indexing
+  Usage: when creating or improving skills related to backend performance
+
+- Use `skill: "backend-testing"` for API tests, integration tests
+  Usage: when creating or improving skills related to API testing
+
+- Use `skill: "security-security"` for Authentication, authorization, secrets
+  Usage: when creating or improving skills related to authentication or security
+
+- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
+  Usage: when creating or improving skills related to code review
+
+- Use `skill: "setup-monorepo"` for Turborepo, workspaces, package architecture
+  Usage: when creating or improving skills related to monorepo structure
+
+- Use `skill: "setup-package"` for Internal package conventions, exports
+  Usage: when creating or improving skills related to package conventions
+
+- Use `skill: "setup-env"` for Environment configuration, Zod validation
+  Usage: when creating or improving skills related to environment configuration
+
+- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
+  Usage: when creating or improving skills related to build tooling
+
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
+  Usage: when creating or improving skills related to authentication
+
+- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
+  Usage: when creating or improving skills related to analytics
+
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
+  Usage: when creating or improving skills related to feature flags
+
+- Use `skill: "backend-email"` for Resend + React Email templates
+  Usage: when creating or improving skills related to email
+
+- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
+  Usage: when creating or improving skills related to observability
+
 </preloaded_content>
 
 ---

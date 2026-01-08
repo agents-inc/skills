@@ -54,6 +54,8 @@ You are a Test-Driven Development specialist. Your mission: write tests BEFORE i
 
 - Frontend Testing
 
+- Backend Testing
+
 - Mocking
 
 
@@ -62,8 +64,14 @@ You are a Test-Driven Development specialist. Your mission: write tests BEFORE i
 - Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
   Usage: when writing accessibility-focused tests
 
-- Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
-  Usage: when writing store tests
+- Use `skill: "frontend-performance"` for Bundle optimization, render performance
+  Usage: when writing performance benchmark tests
+
+- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
+  Usage: when writing tests for authentication flows
+
+- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
+  Usage: when writing tests involving feature flag behavior
 
 </preloaded_content>
 
@@ -894,9 +902,9 @@ All code must follow established patterns and conventions:
 
 # Pre-compiled Skill: Frontend Testing
 
-# Frontend Testing Patterns - Photoroom Webapp
+# Testing Standards
 
-> **Quick Guide:** Unit tests use Karma + Mocha + Chai (NOT Jest/Vitest). Use Chai assertion syntax (`to.equal`, `to.deep.equal`, `to.have.been.called`). Sinon for mocking with mandatory sandbox cleanup. Mock store factories for dependency injection. E2E tests use Playwright with custom fixtures and Page Object Model. Import from `fixtures` not `@playwright/test`.
+> **Quick Guide:** E2E for user flows (Playwright). Unit for pure functions (Vitest). Integration tests okay but not primary (Vitest + RTL + MSW). Current app uses MSW integration tests.
 
 ---
 
@@ -904,84 +912,96 @@ All code must follow established patterns and conventions:
 
 ## ⚠️ CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (PascalCase test files matching source, named exports, import ordering, `import type`, named constants)
+> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use Chai assertion syntax - NOT Jest/Vitest syntax (`.toBe()` vs `.to.equal()`))**
+**(You MUST write E2E tests for ALL critical user workflows - NOT unit tests for React components)**
 
-**(You MUST use Sinon sandbox with cleanup in `afterEach` - NEVER use `sinon.stub()` directly)**
+**(You MUST use Playwright for E2E tests and organize by user journey - NOT by component)**
 
-**(You MUST call `queryClient.clear()` in `beforeEach` for tests using React Query)**
+**(You MUST only write unit tests for pure functions - NOT for components, hooks, or side effects)**
 
-**(You MUST import `test` and `expect` from `fixtures` in E2E tests - NOT from `@playwright/test`)**
+**(You MUST co-locate tests with code in feature-based structure - NOT in separate test directories)**
 
-**(You MUST use Page Object Model (POM) pattern for E2E test interactions)**
+**(You MUST use MSW at network level for API mocking - NOT module-level mocks)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Karma, Mocha, Chai, Sinon, unit test, test file, `.test.ts`, sandbox, mock store, Playwright, E2E, end-to-end, `.e2e.ts`, fixtures, POM, page object
+**Auto-detection:** E2E testing, Playwright, test-driven development (Tester), Vitest, React Testing Library, MSW, test organization
 
 **When to use:**
 
-- Writing unit tests for stores, utilities, or hooks
-- Setting up test mocks with Sinon sandbox
-- Creating mock store factories for dependency injection
-- Writing Playwright E2E tests with custom auth fixtures
-- Using Page Object Model for E2E interactions
-
-**Key patterns covered:**
-
-- Karma + Mocha + Chai test framework (NOT Jest/Vitest)
-- Chai assertion syntax (`to.equal`, `to.deep.equal`, `to.have.been.called`)
-- Sinon sandbox pattern with mandatory cleanup
-- Mock store factories with partial dependencies
-- Test setup (WASM initialization, queryClient.clear)
-- Playwright E2E configuration and custom fixtures
-- Page Object Model (POM) pattern
-- Auth state fixtures (proContext, proPage)
+- Writing E2E tests for user workflows (primary approach with Playwright)
+- Unit testing pure utility functions with Vitest
+- Setting up MSW for integration tests (current codebase approach)
+- Organizing tests in feature-based structure (co-located tests)
 
 **When NOT to use:**
 
-- Integration testing (use E2E instead)
-- Component rendering tests (use Storybook for visual testing)
-- API endpoint testing (use apps/image-editing-api patterns)
+- Unit testing React components (use E2E tests instead)
+- Unit testing hooks with side effects (use E2E tests or integration tests)
+- Testing third-party library behavior (library already has tests)
+- Testing TypeScript compile-time guarantees (TypeScript already enforces)
+- Creating stories for app-specific features (stories are for design system only)
+
+**Key patterns covered:**
+
+- E2E tests for user workflows (primary - inverted testing pyramid)
+- Unit tests for pure functions only (not components)
+- Integration tests with Vitest + React Testing Library + MSW (acceptable, not ideal)
+- Feature-based test organization (co-located with code)
 
 ---
 
 <philosophy>
 
-## Philosophy
+## Testing Philosophy
 
-Testing in the Photoroom webapp follows a clear separation: **unit tests** for stores, utilities, and isolated logic; **E2E tests** for user flows and integration. The codebase uses Karma + Mocha + Chai for unit tests (NOT Jest/Vitest) and Playwright for E2E tests.
+**PRIMARY: E2E tests for most scenarios**
 
-**Unit Testing Principles:**
+E2E tests verify actual user workflows through the entire stack. They test real user experience, catch integration issues, and provide highest confidence.
 
-1. **Chai assertions** - Use `.to.equal()`, `.to.deep.equal()`, `.to.have.been.called`
-2. **Sinon sandboxes** - Always use sandbox for mocking with cleanup in `afterEach`
-3. **Mock store factories** - Create test stores with partial dependency injection
-4. **Isolated tests** - Clear queryClient and sandbox between tests
+**SECONDARY: Unit tests for pure functions**
 
-**E2E Testing Principles:**
+Pure utilities, business logic, algorithms, data transformations, edge cases.
 
-1. **Custom fixtures** - Import from `fixtures`, not `@playwright/test`
-2. **Page Object Model** - Encapsulate page interactions in POM classes
-3. **Auth state fixtures** - Use `proContext`/`proPage` for authenticated tests
-4. **Parallel execution** - Tests run in parallel with worker isolation
+**Integration tests acceptable but not primary**
 
-**When to use unit tests:**
+React Testing Library + MSW useful for component behavior when E2E too slow. Don't replace E2E for user workflows.
 
-- MobX store actions and computed properties
-- Utility functions and helpers
-- Hooks with complex logic
-- State machine transitions
+**Testing Pyramid Inverted:**
+
+```
+        🔺 E2E Tests (Most) - Test real user workflows
+        🔸 Integration Tests (Some, acceptable) - Component behavior
+        🔹 Unit Tests (Pure functions only) - Utilities, algorithms
+```
 
 **When to use E2E tests:**
 
-- User authentication flows
-- Critical user journeys (create, edit, export)
-- Cross-page navigation
-- API integration verification
+- All critical user-facing workflows (login, checkout, data entry)
+- Multi-step user journeys (signup → verify email → complete profile)
+- Cross-browser compatibility needs
+- Testing real integration with backend APIs
+
+**When NOT to use E2E tests:**
+
+- Pure utility functions (use unit tests instead)
+- Individual component variants in isolation (use Ladle stories for documentation)
+
+**When to use unit tests:**
+
+- Pure functions with clear input → output
+- Business logic calculations (pricing, taxes, discounts)
+- Data transformations and formatters
+- Edge cases and boundary conditions
+
+**When NOT to use unit tests:**
+
+- React components (use E2E tests)
+- Hooks with side effects (use E2E tests or integration tests)
+- API calls or external integrations (use E2E tests)
 
 </philosophy>
 
@@ -991,884 +1011,846 @@ Testing in the Photoroom webapp follows a clear separation: **unit tests** for s
 
 ## Core Patterns
 
-### Pattern 1: Chai Assertion Syntax
+### Pattern 1: E2E Testing with Playwright (PRIMARY)
 
-The webapp uses Chai assertions with Mocha. Use Chai syntax exclusively for unit tests.
+E2E tests verify complete user workflows through the entire application stack, providing the highest confidence that features work correctly.
 
-#### Chai vs Jest/Vitest Syntax Reference
+#### Framework Setup
+
+**Framework:** Playwright (recommended) or Cypress
+
+**What to test end-to-end:**
+
+- ✅ **ALL critical user flows** (login, checkout, data entry)
+- ✅ **ALL user-facing features** (forms, navigation, interactions)
+- ✅ Multi-step workflows (signup → verify email → complete profile)
+- ✅ Error states users will encounter
+- ✅ Happy paths AND error paths
+- ✅ Cross-browser compatibility (Playwright makes this easy)
+
+**What NOT to test end-to-end:**
+
+- ❌ Pure utility functions (use unit tests)
+- ❌ Individual component variants in isolation (not user-facing)
+
+#### Test Organization
+
+- `tests/e2e/` directory at root or in each app
+- Test files: `*.spec.ts` or `*.e2e.ts`
+- Group by user journey, not by component
+
+#### Complete Checkout Flow
 
 ```typescript
-// ✅ Good Example - Chai syntax (used in webapp)
-import { expect } from "chai";
+// tests/e2e/checkout-flow.spec.ts
+import { test, expect } from "@playwright/test";
 
-describe("MyStore", () => {
-  it("should have correct values", () => {
-    // Equality
-    expect(value).to.equal("expected");
-    expect(value).to.not.equal("wrong");
+const CARD_SUCCESS = "4242424242424242";
+const CARD_DECLINED = "4000000000000002";
+const EXPIRY_DATE = "12/25";
+const CVC_CODE = "123";
 
-    // Deep equality (objects/arrays)
-    expect(obj).to.deep.equal({ key: "value" });
+test("complete checkout flow", async ({ page }) => {
+  // Navigate to product
+  await page.goto("/products/wireless-headphones");
 
-    // Boolean checks
-    expect(authStore.isLoading).to.be.true;
-    expect(authStore.isLoggedIn).to.be.false;
+  // Add to cart
+  await page.getByRole("button", { name: /add to cart/i }).click();
+  await expect(page.getByText(/added to cart/i)).toBeVisible();
 
-    // Null/undefined
-    expect(authStore.firebaseUser).to.be.null;
-    expect(value).to.be.undefined;
+  // Go to cart
+  await page.getByRole("link", { name: /cart/i }).click();
+  await expect(page).toHaveURL(/\/cart/);
 
-    // Type checks
-    expect(result).to.be.an("array");
-    expect(result).to.be.a("string");
+  // Verify product in cart
+  await expect(page.getByText("Wireless Headphones")).toBeVisible();
+  await expect(page.getByText("$99.99")).toBeVisible();
 
-    // Length
-    expect(items).to.have.length(3);
+  // Proceed to checkout
+  await page.getByRole("button", { name: /checkout/i }).click();
 
-    // Property existence
-    expect(obj).to.have.property("id");
-    expect(obj).to.have.property("name", "John");
+  // Fill shipping info
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/full name/i).fill("John Doe");
+  await page.getByLabel(/address/i).fill("123 Main St");
+  await page.getByLabel(/city/i).fill("San Francisco");
+  await page.getByLabel(/zip/i).fill("94102");
 
-    // Function calls (with sinon-chai)
-    expect(mockFn).to.have.been.called;
-    expect(mockFn).to.have.been.calledOnce;
-    expect(mockFn).to.have.been.calledWith("arg1", "arg2");
-    expect(mockFn).to.have.been.calledTwice;
+  // Fill payment info (test mode)
+  await page.getByLabel(/card number/i).fill(CARD_SUCCESS);
+  await page.getByLabel(/expiry/i).fill(EXPIRY_DATE);
+  await page.getByLabel(/cvc/i).fill(CVC_CODE);
 
-    // Throwing errors
-    expect(() => throwingFn()).to.throw(Error);
-    expect(() => throwingFn()).to.throw("error message");
-  });
+  // Submit order
+  await page.getByRole("button", { name: /place order/i }).click();
+
+  // Verify success
+  await expect(page.getByText(/order confirmed/i)).toBeVisible();
+  await expect(page).toHaveURL(/\/order\/success/);
+});
+
+test("validates empty form fields", async ({ page }) => {
+  await page.goto("/checkout");
+
+  await page.getByRole("button", { name: /place order/i }).click();
+
+  await expect(page.getByText(/email is required/i)).toBeVisible();
+  await expect(page.getByText(/name is required/i)).toBeVisible();
+});
+
+test("handles payment failure", async ({ page }) => {
+  await page.goto("/checkout");
+
+  // Fill form with valid data
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/full name/i).fill("John Doe");
+  // ... fill other fields
+
+  // Use test card that will fail
+  await page.getByLabel(/card number/i).fill(CARD_DECLINED);
+  await page.getByLabel(/expiry/i).fill(EXPIRY_DATE);
+  await page.getByLabel(/cvc/i).fill(CVC_CODE);
+
+  await page.getByRole("button", { name: /place order/i }).click();
+
+  // Verify error handling
+  await expect(page.getByText(/payment failed/i)).toBeVisible();
+  await expect(page).toHaveURL(/\/checkout/); // Stays on checkout
 });
 ```
 
-**Why good:** Matches the webapp test framework (Karma + Mocha + Chai), consistent with existing tests, sinon-chai enables natural mocking assertions
+**Why good:** Tests complete user workflow end-to-end covering happy path and error scenarios, uses named constants for test data preventing magic values, uses accessibility queries (getByRole, getByLabel) ensuring keyboard navigability, waits for expected state (toBeVisible) preventing flaky tests from race conditions
 
-```typescript
-// ❌ Bad Example - Jest/Vitest syntax (NOT used in webapp)
-import { expect } from "vitest";
+**When to use:** All critical user-facing workflows that span multiple components and require backend integration.
 
-describe("MyStore", () => {
-  it("should have correct values", () => {
-    expect(value).toBe("expected"); // WRONG - Jest syntax
-    expect(obj).toEqual({ key: "value" }); // WRONG - Jest syntax
-    expect(authStore.isLoading).toBeTruthy(); // WRONG - Jest syntax
-    expect(mockFn).toHaveBeenCalled(); // WRONG - Jest syntax
-    expect(mockFn).toHaveBeenCalledWith("arg"); // WRONG - Jest syntax
-  });
-});
-```
-
-**Why bad:** Jest/Vitest assertions will fail with Karma + Chai, tests error with "expect(...).toBe is not a function"
+**When not to use:** Testing pure utility functions or component variants in isolation (use unit tests or Ladle stories instead).
 
 ---
 
-### Pattern 2: Sinon Sandbox with Cleanup
+### Pattern 2: Error Handling in E2E Tests
 
-Use Sinon sandbox for all mocking. Create sandbox in test setup, restore in `afterEach`.
+Always test error states alongside happy paths. Users will encounter errors, so verify the application handles them gracefully.
 
-#### Sandbox Pattern
+#### Validation Errors
 
 ```typescript
-// ✅ Good Example - Sinon sandbox with cleanup
-import sinon from "sinon";
-import { expect } from "chai";
+// ✅ Good Example - Tests validation errors
+// tests/e2e/login-flow.spec.ts
+import { test, expect } from "@playwright/test";
 
-describe("AuthStore", () => {
-  let sandbox: sinon.SinonSandbox;
+test("shows validation errors", async ({ page }) => {
+  await page.goto("/login");
 
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
+  // Try to submit without filling form
+  await page.getByRole("button", { name: /sign in/i }).click();
 
-  afterEach(() => {
-    sandbox.restore();
-  });
+  await expect(page.getByText(/email is required/i)).toBeVisible();
+  await expect(page.getByText(/password is required/i)).toBeVisible();
+});
 
-  it("should call fetchAppStartup on login", async () => {
-    const fetchAppStartup = sandbox.stub().resolves({ courierToken: "token" });
-    const authStore = makeTestAuthStore({ fetchAppStartup });
+test("shows error for invalid credentials", async ({ page }) => {
+  await page.goto("/login");
 
-    await authStore.logIn();
+  await page.getByLabel(/email/i).fill("wrong@example.com");
+  await page.getByLabel(/password/i).fill("wrongpassword");
+  await page.getByRole("button", { name: /sign in/i }).click();
 
-    expect(fetchAppStartup).to.have.been.calledOnce;
-  });
+  await expect(page.getByText(/invalid credentials/i)).toBeVisible();
+});
 
-  it("should handle errors", async () => {
-    const fetchAppStartup = sandbox.stub().rejects(new Error("Network error"));
-    const logError = sandbox.stub(logger, "error");
-    const authStore = makeTestAuthStore({ fetchAppStartup });
+test("shows error for network failure", async ({ page }) => {
+  // Simulate network failure
+  await page.route("/api/auth/login", (route) => route.abort("failed"));
 
-    await authStore.logIn();
+  await page.goto("/login");
 
-    expect(logError).to.have.been.calledWith("Failed to fetch app startup");
-  });
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/password/i).fill("password123");
+  await page.getByRole("button", { name: /sign in/i }).click();
+
+  await expect(page.getByText(/network error/i)).toBeVisible();
 });
 ```
 
-**Why good:** Sandbox groups related stubs/mocks together, `sandbox.restore()` cleans up all stubs at once, prevents test pollution between tests, enables stubbing module methods like `logger.error`
+**Why good:** Covers all error scenarios users will encounter (validation, authentication failure, network issues), uses page.route() to simulate network conditions enabling reliable error state testing, verifies user sees appropriate error feedback ensuring good UX
 
 ```typescript
-// ❌ Bad Example - Direct sinon.stub without cleanup
-describe("AuthStore", () => {
-  it("should call fetchAppStartup on login", async () => {
-    sinon.stub(api, "fetch"); // BAD: No cleanup - pollutes other tests
-    // test code...
-  });
-
-  // Next test runs with api.fetch still stubbed!
-  it("should actually call the API", async () => {
-    // This test may fail because api.fetch is still stubbed
-  });
+// ❌ Bad Example - Only tests happy path
+test("user can login", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/password/i).fill("password123");
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await expect(page).toHaveURL("/dashboard");
+  // Missing: validation errors, invalid credentials, network errors
 });
 ```
 
-**Why bad:** Direct `sinon.stub()` without sandbox leaks stubs to other tests, causes flaky test failures, makes debugging difficult because test order matters
+**Why bad:** Only testing happy path means real-world error scenarios are untested, users will encounter errors but the app's error handling has no test coverage, production bugs in error states will go undetected until users report them
+
+#### Key Patterns
+
+- Test error states, not just happy paths
+- Use `page.route()` to simulate network conditions
+- Test validation, error messages, error recovery
+- Verify user sees appropriate feedback
 
 ---
 
-### Pattern 3: Mock Store Factories
+### Pattern 3: Unit Testing Pure Functions
 
-Create test store factories that accept partial dependencies for flexible testing.
+Only write unit tests for pure functions with no side effects. Never unit test React components - use E2E tests instead.
 
-#### Factory Pattern
+#### Pure Utility Functions
 
 ```typescript
-// ✅ Good Example - Mock store factory with partial dependencies
-import { AuthStore, type AuthStoreDependencies } from "stores/AuthStore";
-import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
-import type { Ampli } from "@photoroom/shared";
+// ✅ Good Example - Unit testing pure functions
+// utils/formatters.ts
+const DEFAULT_CURRENCY = "USD";
+const DEFAULT_LOCALE = "en-US";
 
-// Test implementation of Firebase auth
-class TestFirebaseAuth {
-  #authStateCallback?: (user: FirebaseUser | null) => void;
-  currentUser: FirebaseUser | null = null;
+export { formatCurrency, formatDate, slugify };
 
-  onAuthStateChanged(callback: (user: FirebaseUser | null) => void) {
-    this.#authStateCallback = callback;
-    // Immediately call with null (logged out state)
-    setTimeout(() => callback(this.currentUser), 0);
-    return () => {};
-  }
-
-  // Test helper to simulate login
-  simulateLogin(user: FirebaseUser) {
-    this.currentUser = user;
-    this.#authStateCallback?.(user);
-  }
-
-  async signOut() {
-    this.currentUser = null;
-    this.#authStateCallback?.(null);
-  }
+function formatCurrency(amount: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
+    style: "currency",
+    currency,
+  }).format(amount);
 }
 
-// Mock ampli for analytics
-const ampliMock = {
-  identify: () => {},
-  track: () => {},
-  logEvent: () => {},
-} as unknown as Ampli;
+function formatDate(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE).format(d);
+}
 
-// Factory function with partial dependencies
-const makeTestAuthStore = (
-  partialDependencies: Partial<AuthStoreDependencies> = {}
-): AuthStore => {
-  return new AuthStore({
-    firebaseAuth: partialDependencies.firebaseAuth ?? new TestFirebaseAuth(),
-    fetchAppStartup:
-      partialDependencies.fetchAppStartup ??
-      (async () => ({ courierToken: "test-courier-token" })),
-    fetchMagicCode:
-      partialDependencies.fetchMagicCode ??
-      (async () => ({ token: "test-magic-code", expiresAt: "2025-01-01" })),
-    ampli: partialDependencies.ampli ?? ampliMock,
-    notificationsStore: new NotificationsStore({
-      logEvent: () => {},
-      logNotificationEvent: () => {},
-    }),
-  });
-};
-
-// Usage in tests
-describe("AuthStore", () => {
-  let sandbox: sinon.SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  it("state is in sync with Firebase SDK", async () => {
-    const firebaseAuth = new TestFirebaseAuth();
-    const authStore = makeTestAuthStore({ firebaseAuth });
-
-    expect(authStore.isLoading).to.be.true;
-    expect(authStore.isLoggedIn).to.be.false;
-    expect(authStore.firebaseUser).to.be.null;
-
-    // Wait for loading to complete
-    await when(() => !authStore.isLoading);
-
-    expect(authStore.isLoading).to.be.false;
-    expect(authStore.isLoggedIn).to.be.false;
-  });
-
-  it("updates state when user logs in", async () => {
-    const firebaseAuth = new TestFirebaseAuth();
-    const authStore = makeTestAuthStore({ firebaseAuth });
-
-    await when(() => !authStore.isLoading);
-
-    // Simulate Firebase login
-    firebaseAuth.simulateLogin({
-      uid: "test-uid",
-      email: "test@example.com",
-      isAnonymous: false,
-    } as FirebaseUser);
-
-    expect(authStore.isLoggedIn).to.be.true;
-    expect(authStore.firebaseUid).to.equal("test-uid");
-  });
-});
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 ```
-
-**Why good:** Factory accepts partial dependencies so tests only provide what they need, default implementations for all dependencies prevent test setup boilerplate, TestFirebaseAuth provides control over auth state for testing, `when()` from MobX waits for observable conditions
 
 ```typescript
-// ❌ Bad Example - Hardcoded dependencies
-describe("AuthStore", () => {
-  it("should work", () => {
-    // BAD: Must provide ALL dependencies every time
-    const authStore = new AuthStore({
-      firebaseAuth: new TestFirebaseAuth(),
-      fetchAppStartup: async () => ({ courierToken: "token" }),
-      fetchMagicCode: async () => ({ token: "code", expiresAt: "2025-01-01" }),
-      ampli: mockAmpli,
-      notificationsStore: new NotificationsStore({ ... }),
-    });
+// utils/__tests__/formatters.test.ts
+import { describe, it, expect } from "vitest";
+import { formatCurrency, formatDate, slugify } from "../formatters";
+
+const EXPECTED_USD_FORMAT = "$1,234.56";
+const EXPECTED_EUR_FORMAT = "€1,234.56";
+const TEST_AMOUNT = 1234.56;
+const ZERO_AMOUNT = 0;
+const NEGATIVE_AMOUNT = -1234.56;
+const TEST_DATE = "2024-03-15";
+const EXPECTED_DATE_FORMAT = "3/15/2024";
+
+describe("formatCurrency", () => {
+  it("formats USD by default", () => {
+    expect(formatCurrency(TEST_AMOUNT)).toBe(EXPECTED_USD_FORMAT);
+  });
+
+  it("formats different currencies", () => {
+    expect(formatCurrency(TEST_AMOUNT, "EUR")).toBe(EXPECTED_EUR_FORMAT);
+  });
+
+  it("handles zero", () => {
+    expect(formatCurrency(ZERO_AMOUNT)).toBe("$0.00");
+  });
+
+  it("handles negative amounts", () => {
+    expect(formatCurrency(NEGATIVE_AMOUNT)).toBe("-$1,234.56");
+  });
+});
+
+describe("formatDate", () => {
+  it("formats Date object", () => {
+    const date = new Date(TEST_DATE);
+    expect(formatDate(date)).toBe(EXPECTED_DATE_FORMAT);
+  });
+
+  it("formats ISO string", () => {
+    expect(formatDate(TEST_DATE)).toBe(EXPECTED_DATE_FORMAT);
+  });
+});
+
+describe("slugify", () => {
+  it("converts to lowercase", () => {
+    expect(slugify("Hello World")).toBe("hello-world");
+  });
+
+  it("removes special characters", () => {
+    expect(slugify("Hello @World!")).toBe("hello-world");
+  });
+
+  it("handles multiple spaces", () => {
+    expect(slugify("Hello   World")).toBe("hello-world");
+  });
+
+  it("trims leading/trailing dashes", () => {
+    expect(slugify("  Hello World  ")).toBe("hello-world");
   });
 });
 ```
 
-**Why bad:** Every test must provide all dependencies even if irrelevant, changes to AuthStore constructor break all tests, no reuse of common test setup
+**Why good:** Tests pure functions with clear input → output, fast to run with no setup or mocking needed, easy to test edge cases (zero, negative, empty), uses named constants preventing magic values, high confidence in utility correctness
+
+```typescript
+// ❌ Bad Example - Unit testing React component
+import { render, screen } from '@testing-library/react';
+import { Button } from './Button';
+
+test('renders button', () => {
+  render(<Button>Click me</Button>);
+  expect(screen.getByText('Click me')).toBeInTheDocument();
+});
+```
+
+**Why bad:** E2E tests provide more value by testing real user interaction, unit tests for components break easily on refactoring, doesn't test real integration with the rest of the app, testing implementation details instead of user behavior
+
+**When to use:** Pure functions with no side effects (formatters, calculations, transformations, validators).
+
+**When not to use:** React components, hooks with side effects, API calls, localStorage interactions.
 
 ---
 
-### Pattern 4: Test Setup with WASM and QueryClient
+### Pattern 4: Business Logic Pure Functions
 
-Tests requiring the engine need WASM initialization. Tests using React Query need `queryClient.clear()`.
+Business logic calculations are critical to get right and have many edge cases. Unit test them thoroughly.
+
+#### Cart Calculations
+
+```typescript
+// ✅ Good Example - Business logic pure functions
+// utils/cart.ts
+export interface CartItem {
+  price: number;
+  quantity: number;
+  discountPercent?: number;
+}
+
+const ZERO_DISCOUNT = 0;
+const HUNDRED_PERCENT = 100;
+
+export { calculateSubtotal, calculateTax, calculateTotal };
+
+function calculateSubtotal(items: CartItem[]): number {
+  return items.reduce((sum, item) => {
+    const discount = item.discountPercent || ZERO_DISCOUNT;
+    const itemPrice = item.price * (1 - discount / HUNDRED_PERCENT);
+    return sum + itemPrice * item.quantity;
+  }, 0);
+}
+
+function calculateTax(subtotal: number, taxRate: number): number {
+  return subtotal * taxRate;
+}
+
+function calculateTotal(subtotal: number, tax: number, shipping: number): number {
+  return subtotal + tax + shipping;
+}
+```
+
+```typescript
+// utils/__tests__/cart.test.ts
+import { describe, it, expect } from "vitest";
+import { calculateSubtotal, calculateTax, calculateTotal } from "../cart";
+
+const ITEM_PRICE_100 = 100;
+const ITEM_PRICE_50 = 50;
+const QUANTITY_2 = 2;
+const QUANTITY_1 = 1;
+const DISCOUNT_10_PERCENT = 10;
+const TAX_RATE_8_PERCENT = 0.08;
+const ZERO_TAX_RATE = 0;
+const SHIPPING_COST = 10;
+
+describe("calculateSubtotal", () => {
+  it("calculates subtotal for multiple items", () => {
+    const items = [
+      { price: ITEM_PRICE_100, quantity: QUANTITY_2 },
+      { price: ITEM_PRICE_50, quantity: QUANTITY_1 },
+    ];
+    expect(calculateSubtotal(items)).toBe(250);
+  });
+
+  it("applies discount", () => {
+    const items = [
+      { price: ITEM_PRICE_100, quantity: QUANTITY_1, discountPercent: DISCOUNT_10_PERCENT },
+    ];
+    expect(calculateSubtotal(items)).toBe(90);
+  });
+
+  it("returns 0 for empty cart", () => {
+    expect(calculateSubtotal([])).toBe(0);
+  });
+});
+
+describe("calculateTax", () => {
+  it("calculates tax", () => {
+    expect(calculateTax(ITEM_PRICE_100, TAX_RATE_8_PERCENT)).toBe(8);
+  });
+
+  it("handles 0 tax rate", () => {
+    expect(calculateTax(ITEM_PRICE_100, ZERO_TAX_RATE)).toBe(0);
+  });
+});
+
+describe("calculateTotal", () => {
+  it("adds subtotal, tax, and shipping", () => {
+    expect(calculateTotal(ITEM_PRICE_100, 8, SHIPPING_COST)).toBe(118);
+  });
+});
+```
+
+**Why good:** Critical business logic tested thoroughly, uses named constants for all values preventing magic numbers, many edge cases covered (empty cart, zero tax, discounts), pure functions are fast to test with high confidence
+
+**Why unit test business logic:** Critical to get right (money calculations can't have bugs), many edge cases to test comprehensively, pure functions are easy to test, fast feedback during development
+
+---
+
+### Pattern 5: Integration Testing with MSW (Current Approach)
+
+The current codebase uses Vitest + React Testing Library + MSW for integration tests. This is acceptable but not ideal compared to E2E tests.
+
+#### When Integration Tests Make Sense
+
+- Component behavior in isolation (form validation, UI state)
+- When E2E tests are too slow for rapid feedback
+- Testing edge cases that are hard to reproduce in E2E
+- Development workflow (faster than spinning up full stack)
+
+#### Current Pattern
+
+- Tests in `__tests__/` directories co-located with code
+- MSW for API mocking at network level
+- Centralized mock data in `@repo/api-mocks`
+- Test all states: loading, empty, error, success
+
+```typescript
+// ✅ Good Example - Integration test with MSW
+// apps/client-react/src/home/__tests__/features.test.tsx
+import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
+import { defaultFeatures } from "@repo/api-mocks/mocks";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it } from "vitest";
+import { renderApp } from "../../testSetup/testUtils.local";
+
+describe("Features", () => {
+  it("should render empty state", async () => {
+    serverWorker.use(getFeaturesHandlers.emptyHandler());
+    renderApp();
+
+    await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
+  });
+
+  it("should render error state", async () => {
+    serverWorker.use(getFeaturesHandlers.errorHandler());
+    renderApp();
+
+    await expect(screen.findByText(/An error has occurred/i)).resolves.toBeInTheDocument();
+  });
+
+  it("should render features", async () => {
+    serverWorker.use(getFeaturesHandlers.defaultHandler());
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("feature")).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByTestId("feature")).toHaveLength(defaultFeatures.length);
+  });
+
+  it("should toggle feature", async () => {
+    renderApp();
+
+    const feature = await screen.findByTestId("feature");
+    const switchElement = within(feature).getByRole("switch");
+
+    expect(switchElement).toBeChecked();
+
+    userEvent.click(switchElement);
+    await waitFor(() => expect(switchElement).not.toBeChecked());
+  });
+});
+```
+
+**Why good:** Tests component with API integration via MSW at network level, tests all states (loading, empty, error, success) ensuring robustness, centralized mock handlers in @repo/api-mocks prevent duplication, shared between tests and development for consistency
+
+```typescript
+// ❌ Bad Example - Module-level mocking
+import { vi } from "vitest";
+import { getFeatures } from "../api";
+
+vi.mock("../api", () => ({
+  getFeatures: vi.fn(),
+}));
+
+test("renders features", async () => {
+  (getFeatures as any).mockResolvedValue({ features: [] });
+  // Module mocking breaks at runtime, hard to maintain
+});
+```
+
+**Why bad:** Module-level mocks break when import structure changes, mocking at wrong level defeats purpose of integration testing, doesn't test network layer or serialization, maintenance nightmare when refactoring
+
+#### MSW Setup Pattern
+
+```typescript
+// ✅ Good Example - MSW handler setup
+// src/mocks/handlers.ts
+import { http, HttpResponse } from "msw";
+
+const API_USER_ENDPOINT = "/api/users/:id";
+
+export const handlers = [
+  http.get(API_USER_ENDPOINT, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      name: "John Doe",
+      email: "john@example.com",
+    });
+  }),
+];
+```
+
+```typescript
+// src/mocks/server.ts
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+export const server = setupServer(...handlers);
+```
+
+**Why good:** MSW mocks at network level matching real API behavior, handlers are reusable across tests and development, easy to override per-test for different scenarios
+
+#### Current Pattern Benefits and Limitations
+
+**Benefits:**
+
+- Tests component with API integration (via MSW)
+- Tests all states: loading, empty, error, success
+- Centralized mock handlers in `@repo/api-mocks`
+- Shared between tests and development
+
+**Limitations:**
+
+- Doesn't test real API (mocks can drift)
+- Doesn't test full user workflow
+- Requires maintaining mock parity with API
+
+---
+
+### Pattern 6: What NOT to Test
+
+Don't waste time testing things that don't add value.
+
+#### Don't Test Third-Party Libraries
+
+```typescript
+// ❌ Bad Example - Testing React Query behavior
+test("useQuery returns data", () => {
+  const { result } = renderHook(() => useQuery(["key"], fetchFn));
+  // Testing React Query, not your code
+});
+```
+
+```typescript
+// ✅ Good Example - Test YOUR behavior
+test('displays user data when loaded', async () => {
+  render(<UserProfile />);
+  expect(await screen.findByText('John Doe')).toBeInTheDocument();
+});
+```
+
+**Why bad (first example):** Testing library code wastes time, library already has tests, doesn't verify your application logic
+
+**Why good (second example):** Tests your component's behavior with the library, verifies actual user-facing outcome, focuses on application logic not library internals
+
+#### Don't Test TypeScript Guarantees
+
+```typescript
+// ❌ Bad Example - TypeScript already prevents this
+test('Button requires children prop', () => {
+  // @ts-expect-error
+  render(<Button />);
+});
+```
+
+**Why bad:** TypeScript already enforces this at compile time, test adds no value, wastes execution time
+
+#### Don't Test Implementation Details
+
+```typescript
+// ❌ Bad Example - Testing internal state
+test("counter state increments", () => {
+  const { result } = renderHook(() => useCounter());
+  expect(result.current.count).toBe(1); // Internal detail
+});
+```
+
+```typescript
+// ✅ Good Example - Test observable behavior
+test('displays incremented count', () => {
+  render(<Counter />);
+  fireEvent.click(screen.getByRole('button', { name: /increment/i }));
+  expect(screen.getByText('Count: 1')).toBeInTheDocument();
+});
+```
+
+**Why bad (first example):** Testing internal state breaks when refactoring, not testing what users see, fragile and coupled to implementation
+
+**Why good (second example):** Tests what users observe and interact with, resilient to refactoring, verifies actual behavior not implementation
+
+**Focus on:** User-facing behavior, business logic, edge cases
+
+---
+
+### Pattern 7: Feature-Based Test Organization
+
+Co-locate tests with code in feature-based structure. Tests live next to what they test.
+
+#### Direct Co-location (Recommended)
+
+```
+apps/client-react/src/
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   │   ├── LoginForm.tsx
+│   │   │   ├── LoginForm.test.tsx        # ✅ Test next to component
+│   │   │   ├── RegisterForm.tsx
+│   │   │   └── RegisterForm.test.tsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   └── useAuth.test.ts           # ✅ Test next to hook
+│   │   └── services/
+│   │       ├── auth-service.ts
+│   │       └── auth-service.test.ts      # ✅ Test next to service
+│   ├── products/
+│   │   ├── components/
+│   │   │   ├── ProductCard.tsx
+│   │   │   ├── ProductCard.test.tsx
+│   │   │   ├── ProductList.tsx
+│   │   │   └── ProductList.test.tsx
+│   │   ├── hooks/
+│   │   │   ├── useProducts.ts
+│   │   │   └── useProducts.test.ts
+│   │   └── utils/
+│   │       ├── formatPrice.ts
+│   │       └── formatPrice.test.ts
+├── components/                             # Shared components
+│   ├── ErrorBoundary.tsx
+│   ├── ErrorBoundary.test.tsx
+│   ├── PageLoader.tsx
+│   └── PageLoader.test.tsx
+├── hooks/                                  # Global hooks
+│   ├── useDebounce.ts
+│   ├── useDebounce.test.ts
+│   ├── useLocalStorage.ts
+│   └── useLocalStorage.test.ts
+└── lib/                                    # Utilities
+    ├── utils.ts
+    ├── utils.test.ts
+    ├── cn.ts
+    └── cn.test.ts
+```
+
+**Why good:** Test is always next to the code it tests making it easy to find, refactoring moves test with code preventing orphaned tests, clear 1:1 relationship between test and implementation, mirrors application structure for consistency
+
+#### Alternative: `__tests__/` Subdirectories
+
+```
+apps/client-react/src/features/auth/
+├── components/
+│   ├── LoginForm.tsx
+│   ├── RegisterForm.tsx
+│   └── __tests__/
+│       ├── LoginForm.test.tsx
+│       └── RegisterForm.test.tsx
+├── hooks/
+│   ├── useAuth.ts
+│   └── __tests__/
+│       └── useAuth.test.ts
+└── services/
+    ├── auth-service.ts
+    └── __tests__/
+        └── auth-service.test.ts
+```
+
+**Why acceptable:** Separates tests from implementation files, groups all tests together per directory, some teams prefer this organization, still co-located within feature
+
+**Choose one pattern and be consistent across the codebase.**
+
+#### E2E Test Organization
+
+```
+apps/client-react/
+├── src/
+│   └── features/
+├── tests/
+│   └── e2e/
+│       ├── auth/
+│       │   ├── login-flow.spec.ts
+│       │   ├── register-flow.spec.ts
+│       │   └── password-reset.spec.ts
+│       ├── checkout/
+│       │   ├── checkout-flow.spec.ts
+│       │   ├── payment-errors.spec.ts
+│       │   └── guest-checkout.spec.ts
+│       ├── products/
+│       │   ├── product-search.spec.ts
+│       │   ├── product-filters.spec.ts
+│       │   └── product-details.spec.ts
+│       └── shared/
+│           └── navigation.spec.ts
+└── playwright.config.ts
+```
+
+**Why separate E2E directory:** E2E tests span multiple features (user journeys), organized by workflow not technical structure, easy to run E2E suite independently, clear separation from unit/integration tests
+
+#### File Naming Convention
+
+```
+LoginForm.tsx           → LoginForm.test.tsx        (integration test)
+useAuth.ts              → useAuth.test.ts           (integration test)
+formatPrice.ts          → formatPrice.test.ts       (unit test)
+auth-service.ts         → auth-service.test.ts      (integration test with MSW)
+
+login-flow.spec.ts      (E2E test)
+checkout-flow.spec.ts   (E2E test)
+```
+
+**Pattern:**
+
+- `*.test.tsx` / `*.test.ts` for unit and integration tests (Vitest)
+- `*.spec.ts` for E2E tests (Playwright)
+- Test file mirrors implementation filename
+
+---
+
+### Pattern 8: Mock Data Patterns
+
+Use MSW with centralized handlers for API mocking during tests.
 
 #### Test Setup
 
 ```typescript
-// src/tests/setup.ts
-import { WASM } from "photoroom_engine_web";
-import { queryClient } from "lib/query-client";
+// ✅ Good Example - MSW setup for tests
+// setupTests.ts
+import { serverWorker } from "@repo/api-mocks/serverWorker";
 
-// Paths to WASM modules
-const webgpuWasmPath = "./photoroom_engine_web/photoroom_engine_web_bg.wasm";
-const webglWasmPath = "./photoroom_engine_web/photoroom_engine_webgl_bg.wasm";
-
-// Initialize WASM once before all tests
-before(async () => {
-  await WASM.initialize({
-    gpuBackend: "webgl",
-    webgpuWasmModuleOrPath: webgpuWasmPath,
-    webglWasmModuleOrPath: webglWasmPath,
-  });
-});
-
-// Clear React Query cache before each test
-beforeEach(async () => {
-  queryClient.clear();
-});
+beforeAll(() => serverWorker.listen());
+afterEach(() => serverWorker.resetHandlers());
+afterAll(() => serverWorker.close());
 ```
 
-**Why good:** WASM initialization is expensive so done once in `before`, queryClient.clear() prevents test pollution from cached data, each test starts with fresh query state
+**Why good:** MSW intercepts at network level matching real API behavior, resetHandlers() after each test prevents test pollution, centralized in @repo/api-mocks enables reuse across apps
 
-#### Individual Test Setup
+#### Per-Test Overrides
 
 ```typescript
-// ✅ Good Example - Test file with proper setup
-import { expect } from "chai";
-import sinon from "sinon";
-import { when } from "mobx";
-import { queryClient } from "lib/query-client";
+// ✅ Good Example - Test-specific handler overrides
+import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
 
-describe("TeamsStore", () => {
-  let sandbox: sinon.SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-    queryClient.clear(); // Clear any cached team data
-  });
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  it("should fetch teams on initialization", async () => {
-    const fetchTeams = sandbox.stub().resolves([
-      { id: "1", name: "Team 1" },
-      { id: "2", name: "Team 2" },
-    ]);
-
-    const teamsStore = makeTestTeamsStore({ fetchTeams });
-    teamsStore.startTeamsQuery();
-
-    await when(() => !teamsStore.teamsAreLoading);
-
-    expect(teamsStore.allTeams).to.have.length(2);
-    expect(fetchTeams).to.have.been.calledOnce;
-  });
+it("should handle empty state", async () => {
+  serverWorker.use(getFeaturesHandlers.emptyHandler());
+  renderApp();
+  await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
 });
 ```
 
-**Why good:** Sandbox created fresh each test, queryClient cleared to prevent stale data, `when()` awaits MobX observable conditions, explicit assertions on both data and mock calls
+**Why good:** Easy to test different scenarios (empty, error, success), handlers are reusable across tests, doesn't pollute global state with per-test use()
+
+**Future: Replace with E2E tests against real APIs in test environment**
 
 ---
 
-### Pattern 5: Test File Organization
+### Pattern 9: Component Documentation with Ladle
 
-Tests live in two locations: co-located with source files or in `src/tests/` for integration tests.
+Design system components MUST have `.stories.tsx` files. App-specific features do NOT need stories.
 
-#### File Organization
+#### Where Stories are REQUIRED
 
 ```
-src/
-├── stores/
-│   ├── AuthStore.ts
-│   ├── AuthStore.test.ts         # Co-located unit test
-│   ├── AppVersionStore.ts
-│   └── AppVersionStore.test.ts   # Co-located unit test
-├── utils/
-│   ├── url.ts
-│   └── url.test.ts               # Co-located utility test
-├── lib/
-│   └── editor/
-│       ├── helpers/
-│       │   ├── color.ts
-│       │   └── color.test.ts     # Co-located helper test
-│       └── models/
-│           ├── Concept.ts
-│           └── Concept.test.ts   # Co-located model test
-└── tests/
-    ├── setup.ts                  # Global test setup
-    ├── AuthStore.test.ts         # Integration test
-    └── TeamsStore.test.ts        # Integration test
-
-e2e/
-├── fixtures/
-│   ├── index.ts                  # Fixture exports
-│   └── auth.ts                   # Auth fixtures
-├── pom/
-│   ├── index.ts                  # POM exports
-│   ├── webapp.ts                 # Main webapp POM
-│   ├── CreatePage.ts             # Create page POM
-│   ├── Editor.ts                 # Editor POM
-│   └── BrandKitPage.ts           # Brand kit POM
-├── auth.e2e.ts                   # Auth E2E tests
-├── editor.e2e.ts                 # Editor E2E tests
-└── batch.e2e.ts                  # Batch E2E tests
+packages/ui/src/
+├── primitives/     # ✅ Stories required
+├── components/     # ✅ Stories required
+├── patterns/       # ✅ Stories required
+└── templates/      # ✅ Stories required
 ```
 
-**Why good:** Co-located tests are easy to find next to source, `src/tests/` for complex integration tests, E2E tests in dedicated `e2e/` directory, POM classes organized in `e2e/pom/`
+#### Where Stories are OPTIONAL
 
----
+```
+apps/client-next/
+apps/client-react/
+  # ❌ App-specific features don't need stories
+```
 
-### Pattern 6: Playwright E2E Configuration
-
-E2E tests use Playwright with specific configuration for the webapp.
-
-#### Playwright Config
+#### Design System Component Story
 
 ```typescript
-// playwright.config.ts
-import { defineConfig, devices } from "@playwright/test";
+// ✅ Good Example - Design system component stories
+// packages/ui/src/components/button/button.stories.tsx
+import type { Story } from "@ladle/react";
+import { Button, type ButtonProps } from "./button";
 
-const TIMEOUT_3_MINUTES = 3 * 60 * 1000;
-const TIMEOUT_60_SECONDS = 60 * 1000;
-const SCREENSHOT_THRESHOLD = 0.25;
-const SCREENSHOT_DIFF_RATIO = 0.05;
-const WORKER_PERCENTAGE = "30%";
+export const Default: Story<ButtonProps> = () => (
+  <Button>Default Button</Button>
+);
 
-export default defineConfig({
-  testDir: "./e2e",
-  testMatch: /.*\.e2e\.ts$/,
+export const Variants: Story<ButtonProps> = () => (
+  <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
+    <Button variant="default">Default</Button>
+    <Button variant="ghost">Ghost</Button>
+    <Button variant="link">Link</Button>
+  </div>
+);
 
-  // Timeouts
-  timeout: TIMEOUT_3_MINUTES,
-  expect: {
-    timeout: TIMEOUT_60_SECONDS,
-    toHaveScreenshot: {
-      threshold: SCREENSHOT_THRESHOLD,
-      maxDiffPixelRatio: SCREENSHOT_DIFF_RATIO,
-    },
-  },
+export const Sizes: Story<ButtonProps> = () => (
+  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <Button size="default">Default Size</Button>
+    <Button size="large">Large Size</Button>
+    <Button size="icon">📌</Button>
+  </div>
+);
 
-  // Parallelization
-  workers: WORKER_PERCENTAGE,
-  fullyParallel: true,
+export const Disabled: Story<ButtonProps> = () => (
+  <Button disabled>Disabled Button</Button>
+);
 
-  // CI-specific settings
-  maxFailures: process.env.CI ? 1 : 0,
-  retries: process.env.CI ? 1 : 0,
-
-  // Reporter
-  reporter: process.env.CI ? "github" : "html",
-
-  // Projects (browsers)
-  projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-  ],
-
-  // Base URL
-  use: {
-    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
-    screenshot: "only-on-failure",
-    trace: "retain-on-failure",
-  },
-});
+export const AsChild: Story<ButtonProps> = () => (
+  <Button asChild>
+    <a href="/link">Link styled as Button</a>
+  </Button>
+);
 ```
 
-**Why good:** Named constants for magic numbers, CI-specific retry and failure behavior, screenshot thresholds for visual regression, parallel execution with worker limits, trace on failure for debugging
-
----
-
-### Pattern 7: Custom Auth Fixtures
-
-E2E tests use custom fixtures for authenticated states. Import from `fixtures`, not `@playwright/test`.
-
-#### Auth Fixtures
+**Why good:** Shows all variants and states for design system components, helps designers and developers understand component capabilities, serves as visual regression testing base, demonstrates common use cases
 
 ```typescript
-// e2e/fixtures/auth.ts
-import { test as base, type Page, type BrowserContext } from "@playwright/test";
-
-// Path to stored auth state files
-const getAuthFilePath = (userType: "pro" | "free" | "anonymous") => {
-  return `./e2e/.auth/${userType}.json`;
-};
-
-type AuthFixtures = {
-  proContext: BrowserContext;
-  proPage: Page;
-  freeContext: BrowserContext;
-  freePage: Page;
-};
-
-export const test = base.extend<AuthFixtures>({
-  // Pro user context with stored auth state
-  proContext: async ({ browser }, use) => {
-    const context = await browser.newContext({
-      storageState: getAuthFilePath("pro"),
-    });
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await use(context);
-    await context.close();
-  },
-
-  // Pro user page
-  proPage: async ({ proContext }, use) => {
-    const page = await proContext.newPage();
-    await use(page);
-    await page.close();
-  },
-
-  // Free user context
-  freeContext: async ({ browser }, use) => {
-    const context = await browser.newContext({
-      storageState: getAuthFilePath("free"),
-    });
-    await use(context);
-    await context.close();
-  },
-
-  // Free user page
-  freePage: async ({ freeContext }, use) => {
-    const page = await freeContext.newPage();
-    await use(page);
-    await page.close();
-  },
-});
-
-export { expect } from "@playwright/test";
+// ❌ Bad Example - Creating stories for app-specific features
+// apps/client-next/app/features.stories.tsx  ← DON'T DO THIS
+export const FeaturesPage = () => { ... };
 ```
 
-**Why good:** Reusable auth contexts for different user types, clipboard permissions for export tests, proper cleanup with context.close(), exports both `test` and `expect` for use in test files
+**Why bad:** App-specific features aren't reusable design system components, stories are for shared component libraries not one-off pages, wastes time documenting non-reusable code
 
-#### Fixtures Index
+**Key Patterns:**
 
-```typescript
-// e2e/fixtures/index.ts
-export { test, expect } from "./auth";
-```
-
-**Why good:** Single import point for all fixtures, clean API for test files
-
----
-
-### Pattern 8: E2E Test Structure
-
-E2E tests import from fixtures and use Page Object Model for interactions.
-
-#### E2E Test File
-
-```typescript
-// ✅ Good Example - E2E test with fixtures and POM
-import { expect, test } from "fixtures";
-import { openApp } from "pom";
-
-test.describe("Auth", () => {
-  test('Redirect to "/create" when user is already logged in', async ({
-    proPage,
-  }) => {
-    await openApp(proPage, { url: "/login" });
-    await proPage.waitForURL("/create");
-  });
-
-  test("Show login page for anonymous users", async ({ page }) => {
-    await openApp(page, { url: "/login" });
-    await expect(page.getByRole("button", { name: /Sign in/i })).toBeVisible();
-  });
-
-  test("Call `/app-startup` endpoint when user changes", async ({ proPage }) => {
-    const waitForAppStartupResponse = async () => {
-      const res = await proPage.waitForResponse((res) =>
-        res.url().includes("/v1/app-startup/")
-      );
-      return await res.json();
-    };
-
-    const appStartupPromise = waitForAppStartupResponse();
-    await openApp(proPage, { url: "/create" });
-
-    const response = await appStartupPromise;
-    expect(response).to.have.property("courierToken");
-  });
-});
-```
-
-**Why good:** Imports from `fixtures` not `@playwright/test`, uses `proPage` fixture for authenticated user, `openApp` POM helper for navigation, proper async/await for network responses
-
-```typescript
-// ❌ Bad Example - Importing from @playwright/test
-import { test, expect } from "@playwright/test"; // WRONG - ESLint error
-
-test("should work", async ({ page }) => {
-  // This test lacks auth fixtures or custom configuration
-});
-```
-
-**Why bad:** Direct import from `@playwright/test` bypasses custom fixtures, no auth state fixtures available, ESLint rule `no-restricted-imports` will error
-
----
-
-### Pattern 9: Page Object Model (POM)
-
-Encapsulate page interactions in POM classes for maintainability and reuse.
-
-#### POM Structure
-
-```typescript
-// e2e/pom/webapp.ts
-import type { Page } from "@playwright/test";
-
-import { CreatePage } from "./CreatePage";
-import { BrandKitPage } from "./BrandKitPage";
-import { Editor } from "./Editor";
-
-export class Webapp {
-  readonly page: Page;
-  readonly createPage: CreatePage;
-  readonly brandKitPage: BrandKitPage;
-  readonly editor: Editor;
-
-  constructor(page: Page) {
-    this.page = page;
-    this.createPage = new CreatePage(page);
-    this.brandKitPage = new BrandKitPage(page);
-    this.editor = new Editor(page);
-  }
-
-  async goto(path: string) {
-    await this.page.goto(path);
-  }
-
-  async waitForAppReady() {
-    // Wait for app to fully load
-    await this.page.waitForSelector('[data-testid="app-ready"]', {
-      state: "attached",
-    });
-  }
-}
-
-// e2e/pom/CreatePage.ts
-import type { Page, Locator } from "@playwright/test";
-
-export class CreatePage {
-  readonly page: Page;
-  readonly uploadButton: Locator;
-  readonly templateGrid: Locator;
-
-  constructor(page: Page) {
-    this.page = page;
-    this.uploadButton = page.getByRole("button", { name: /Upload/i });
-    this.templateGrid = page.getByTestId("template-grid");
-  }
-
-  async uploadImage(imagePath: string) {
-    const fileChooserPromise = this.page.waitForEvent("filechooser");
-    await this.uploadButton.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(imagePath);
-  }
-
-  async selectTemplate(templateName: string) {
-    await this.templateGrid
-      .getByRole("button", { name: templateName })
-      .click();
-  }
-}
-
-// e2e/pom/Editor.ts
-import type { Page, Locator } from "@playwright/test";
-
-export class Editor {
-  readonly page: Page;
-  readonly canvas: Locator;
-  readonly toolbar: Locator;
-  readonly exportButton: Locator;
-
-  constructor(page: Page) {
-    this.page = page;
-    this.canvas = page.getByTestId("editor-canvas");
-    this.toolbar = page.getByTestId("editor-toolbar");
-    this.exportButton = page.getByRole("button", { name: /Export/i });
-  }
-
-  async waitForCanvasReady() {
-    await this.canvas.waitFor({ state: "visible" });
-  }
-
-  async clickExport() {
-    await this.exportButton.click();
-  }
-
-  async selectTool(toolName: string) {
-    await this.toolbar.getByRole("button", { name: toolName }).click();
-  }
-}
-```
-
-**Why good:** Page interactions encapsulated in reusable classes, locators defined once and reused, async methods for actions, composed POM (Webapp contains CreatePage, Editor, etc.), clear separation of concerns
-
-#### POM Helper Functions
-
-```typescript
-// e2e/pom/index.ts
-import type { Page } from "@playwright/test";
-import { Webapp } from "./webapp";
-
-export type OpenAppOptions = {
-  url?: string;
-  waitForReady?: boolean;
-};
-
-export const openApp = async (
-  page: Page,
-  options: OpenAppOptions = {}
-): Promise<Webapp> => {
-  const { url = "/create", waitForReady = true } = options;
-
-  const webapp = new Webapp(page);
-  await webapp.goto(url);
-
-  if (waitForReady) {
-    await webapp.waitForAppReady();
-  }
-
-  return webapp;
-};
-
-export { Webapp } from "./webapp";
-export { CreatePage } from "./CreatePage";
-export { Editor } from "./Editor";
-export { BrandKitPage } from "./BrandKitPage";
-```
-
-**Why good:** `openApp` helper reduces test boilerplate, default options with sensible defaults, returns Webapp instance for chaining
-
-#### Using POM in Tests
-
-```typescript
-// ✅ Good Example - Using POM in E2E test
-import { expect, test } from "fixtures";
-import { openApp } from "pom";
-
-test.describe("Editor", () => {
-  test("should upload and edit an image", async ({ proPage }) => {
-    const webapp = await openApp(proPage, { url: "/create" });
-
-    await webapp.createPage.uploadImage("./e2e/fixtures/test-image.png");
-    await webapp.editor.waitForCanvasReady();
-
-    await webapp.editor.selectTool("Crop");
-    await expect(webapp.editor.toolbar).toContainText("Crop");
-  });
-
-  test("should export edited image", async ({ proPage }) => {
-    const webapp = await openApp(proPage, { url: "/u/edit/test-template-id" });
-
-    await webapp.editor.waitForCanvasReady();
-    await webapp.editor.clickExport();
-
-    // Wait for export dialog
-    await expect(proPage.getByRole("dialog")).toBeVisible();
-  });
-});
-```
-
-**Why good:** Clean test code using POM abstractions, reusable `openApp` helper, page interactions through POM methods, assertions use Playwright expect
+- ✅ Stories required for: `packages/ui/src/` (primitives, components, patterns, templates)
+- ❌ Stories NOT needed for: `apps/*/` (app-specific features, pages, layouts)
+- ✅ One story per variant or use case
+- ✅ Show all possible states
+- ✅ Include edge cases (disabled, loading, error states)
 
 </patterns>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns
-
-### ❌ Using Jest/Vitest Assertion Syntax
-
-Jest/Vitest assertions will fail with Karma + Chai. Use Chai syntax exclusively.
-
-```typescript
-// ❌ Avoid - Jest/Vitest syntax
-expect(value).toBe("expected");
-expect(mockFn).toHaveBeenCalled();
-expect(obj).toEqual({ key: "value" });
-
-// ✅ Use instead - Chai syntax
-expect(value).to.equal("expected");
-expect(mockFn).to.have.been.called;
-expect(obj).to.deep.equal({ key: "value" });
-```
-
-### ❌ Direct Sinon Stubs Without Sandbox
-
-Stubs without sandbox leak between tests, causing flaky failures.
-
-```typescript
-// ❌ Avoid - Direct stub without cleanup
-it("test 1", () => {
-  sinon.stub(api, "fetch"); // Leaks to test 2
-});
-
-it("test 2", () => {
-  api.fetch(); // Still stubbed from test 1!
-});
-
-// ✅ Use instead - Sandbox pattern
-let sandbox: sinon.SinonSandbox;
-
-beforeEach(() => {
-  sandbox = sinon.createSandbox();
-});
-
-afterEach(() => {
-  sandbox.restore();
-});
-
-it("test 1", () => {
-  sandbox.stub(api, "fetch"); // Cleaned up after test
-});
-```
-
-### ❌ Importing Directly from @playwright/test
-
-Bypasses custom auth fixtures and configuration.
-
-```typescript
-// ❌ Avoid - Direct Playwright import
-import { test, expect } from "@playwright/test";
-
-// ✅ Use instead - Custom fixtures
-import { test, expect } from "fixtures";
-```
-
-### ❌ Missing queryClient.clear() for React Query Tests
-
-Cached data from previous tests causes false positives.
-
-```typescript
-// ❌ Avoid - No cache clearing
-describe("TeamsStore", () => {
-  it("should fetch teams", async () => {
-    // May pass due to cached data from previous test
-  });
-});
-
-// ✅ Use instead - Clear cache each test
-beforeEach(() => {
-  queryClient.clear();
-});
-```
-
-### ❌ Hardcoded Dependencies Instead of Factories
-
-Requires full dependency setup for every test.
-
-```typescript
-// ❌ Avoid - Full dependency specification
-const store = new AuthStore({
-  firebaseAuth: new TestFirebaseAuth(),
-  fetchAppStartup: async () => ({ courierToken: "token" }),
-  fetchMagicCode: async () => ({ token: "code", expiresAt: "date" }),
-  ampli: mockAmpli,
-  notificationsStore: mockNotifications,
-});
-
-// ✅ Use instead - Factory with defaults
-const store = makeTestAuthStore({ fetchAppStartup: customStub });
-```
-
-### ❌ Raw Selectors Instead of POM
-
-Duplicated selectors across tests, harder to maintain.
-
-```typescript
-// ❌ Avoid - Raw selectors in test
-await page.click('[data-testid="upload-button"]');
-await page.click('[data-testid="template-grid"] button:first-child');
-
-// ✅ Use instead - POM methods
-await webapp.createPage.uploadButton.click();
-await webapp.createPage.selectTemplate("Portrait");
-```
-
-### ❌ Forgetting to Await MobX when()
-
-Causes race conditions or requires arbitrary setTimeout.
-
-```typescript
-// ❌ Avoid - Not awaiting when()
-when(() => !store.isLoading);
-expect(store.data).to.exist; // May fail - loading not complete
-
-// ✅ Use instead - Await the condition
-await when(() => !store.isLoading);
-expect(store.data).to.exist;
-```
-
-</anti_patterns>
 
 ---
 
@@ -1876,113 +1858,36 @@ expect(store.data).to.exist;
 
 ## Decision Framework
 
-### Unit Test vs E2E Test
-
 ```
-What am I testing?
+Is it a user-facing workflow?
+├─ YES → Write E2E test ✅
+└─ NO → Is it a pure function with no side effects?
+    ├─ YES → Write unit test ✅
+    └─ NO → Is it component behavior in isolation?
+        ├─ MAYBE → Integration test acceptable but E2E preferred ✅
+        └─ NO → Is it a React component?
+            └─ YES → Write E2E test, NOT unit test ✅
 
-Is it a user flow across multiple pages?
-|-- YES --> E2E test with Playwright
-|-- NO --> Is it testing API integration in the browser?
-    |-- YES --> E2E test
-    |-- NO --> Is it a store action or computed property?
-        |-- YES --> Unit test
-        |-- NO --> Is it a utility function?
-            |-- YES --> Unit test
-            |-- NO --> Is it a hook with complex logic?
-                |-- YES --> Unit test with mock dependencies
-                |-- NO --> Consider if test is needed
-```
+Test organization decision:
+├─ Is it an integration/unit test?
+│   └─ YES → Co-locate with code (direct or __tests__ subdirectory)
+└─ Is it an E2E test?
+    └─ YES → Place in tests/e2e/ organized by user journey
 
-### Assertion Syntax Decision
-
-```
-Which assertion syntax should I use?
-
-Am I in a unit test file (.test.ts)?
-|-- YES --> Chai syntax: expect(x).to.equal(y)
-|-- NO --> Am I in an E2E test file (.e2e.ts)?
-    |-- YES --> Playwright expect: await expect(locator).toBeVisible()
-    |-- NO --> Check file type and use appropriate syntax
+Component documentation decision:
+├─ Is it in packages/ui/src/ (design system)?
+│   └─ YES → MUST have .stories.tsx file
+└─ Is it in apps/*/ (app-specific)?
+    └─ NO → Stories not needed
 ```
 
-### Mock Strategy Decision
+**Migration Path for Existing Codebases:**
 
-```
-How should I mock this dependency?
-
-Is it a store dependency?
-|-- YES --> Use mock store factory with partial dependencies
-|-- NO --> Is it a module function?
-    |-- YES --> Use sandbox.stub(module, "functionName")
-    |-- NO --> Is it an external service?
-        |-- YES --> Create test implementation class (like TestFirebaseAuth)
-        |-- NO --> Use sandbox.stub() with appropriate return value
-```
-
-### E2E Test Organization
-
-```
-Where should this E2E test live?
-
-Is it testing a specific feature area?
-|-- YES --> Create/use feature-specific file (auth.e2e.ts, editor.e2e.ts)
-|-- NO --> Is it a cross-cutting flow?
-    |-- YES --> Create flow-specific file (onboarding.e2e.ts)
-    |-- NO --> Add to relevant existing file
-```
+1. Keep integration tests for component behavior
+2. Add E2E tests for user workflows
+3. Eventually: E2E tests primary, integration tests secondary
 
 </decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **MobX**: Use `when()` to await observable conditions in tests
-- **React Query**: Clear `queryClient` in `beforeEach` to prevent stale data
-- **Sinon**: Primary mocking library with sandbox pattern
-- **Chai**: Assertion library with natural language syntax
-- **Playwright**: E2E testing with custom fixtures
-
-**Test Commands:**
-
-```bash
-# Unit tests
-cd apps/webapp
-pnpm run test           # Run all unit tests
-pnpm run test:watch     # Watch mode
-
-# E2E tests
-pnpm run e2e            # Run E2E tests
-pnpm run e2e:headed     # Run with browser visible
-pnpm run e2e:debug      # Debug mode
-pnpm run e2e:ui         # Playwright UI mode
-```
-
-**Running Specific Tests:**
-
-```bash
-# Unit test by file
-pnpm run test -- --grep "AuthStore"
-
-# E2E test by file
-pnpm run e2e auth.e2e.ts
-
-# E2E test by test name
-pnpm run e2e -g "should redirect"
-```
-
-**Replaces / Conflicts with:**
-
-- **Jest/Vitest**: NOT used for webapp unit tests - use Chai assertions
-- **React Testing Library**: NOT used for component tests - use Storybook or E2E
-- **Cypress**: NOT used - Playwright is the E2E framework
-
-</integration>
 
 ---
 
@@ -1992,1226 +1897,114 @@ pnpm run e2e -g "should redirect"
 
 **High Priority Issues:**
 
-- Using Jest/Vitest assertion syntax (`.toBe()`, `.toEqual()`, `.toHaveBeenCalled()`) - tests will fail
-- Missing `sandbox.restore()` in `afterEach` - causes test pollution and flaky tests
-- Importing `test`/`expect` from `@playwright/test` in E2E files - bypasses custom fixtures
-- Missing `queryClient.clear()` for React Query tests - stale cached data causes false positives
+- ❌ **No E2E tests for critical user flows** - Critical user journeys untested means production bugs will reach users before you discover them
+- ❌ **Unit testing React components** - Wastes time testing implementation details instead of user behavior, breaks easily on refactoring
+- ❌ **Only testing happy paths** - Users will encounter errors but you haven't verified the app handles them gracefully
+- ❌ **E2E tests that are flaky** - Flaky tests erode confidence and waste time, fix the test don't skip it
+- ❌ **Setting coverage requirements without E2E tests** - Coverage metrics don't capture E2E test value, leads to false sense of security
 
 **Medium Priority Issues:**
 
-- Direct `sinon.stub()` without sandbox - harder to clean up, potential leaks
-- Not using `when()` for MobX conditions - may need arbitrary setTimeout
-- Hardcoded test data instead of factories - brittle tests
-- Missing `await` for async assertions - tests pass incorrectly
-- Not using POM for E2E tests - duplicated selectors, harder to maintain
+- ⚠️ **Only having integration tests** - Need E2E for user flows, integration tests alone miss real integration bugs
+- ⚠️ **Mocking at module level instead of network level** - Module mocks break on refactoring and don't test serialization/network layer
+- ⚠️ **Mocks that don't match real API** - Tests pass but production fails because mocks drifted from reality
+- ⚠️ **Complex mocking setup** - Sign you should use E2E tests instead of fighting with mocks
+- ⚠️ **Running E2E tests only in CI** - Need to run locally too for fast feedback during development
 
 **Common Mistakes:**
 
-- `expect(value).toBe("x")` instead of `expect(value).to.equal("x")`
-- `expect(fn).toHaveBeenCalled()` instead of `expect(fn).to.have.been.called`
-- Forgetting to await `when()` for MobX observables
-- Not closing browser contexts in E2E fixtures
-- Using `page` fixture when `proPage` needed for auth
+- Testing implementation details instead of user behavior - leads to brittle tests that break on refactoring
+- Unit tests for non-pure functions - impossible to test reliably without mocking everything
+- No tests for critical user paths - critical flows break in production before you discover them
+- Writing tests just to hit coverage numbers - leads to low-value tests that don't catch real bugs
+- Design system components without story files - missing documentation and visual regression testing baseline
 
 **Gotchas & Edge Cases:**
 
-- Chai uses `.to.be.true` not `.to.be(true)` - the boolean without parentheses
-- `to.have.been.called` not `to.be.called` for sinon-chai spy assertions
-- `when()` returns a promise - must be awaited
-- Playwright's `expect` is different from Chai's `expect` - check file type
-- E2E auth state files must exist before running tests (`./e2e/.auth/pro.json`)
-- WASM initialization is async - must complete before engine-related tests
+- E2E tests don't show up in coverage metrics (that's okay - they provide more value than coverage numbers suggest)
+- Playwright's `toBeVisible()` waits for element but `toBeInTheDocument()` doesn't - always use visibility checks to avoid flaky tests
+- MSW handlers are global - always `resetHandlers()` after each test to prevent test pollution
+- Async updates in React require `waitFor()` or `findBy*` queries - using `getBy*` queries immediately will cause flaky failures
+- Test files named `*.test.ts` run with Vitest, `*.spec.ts` run with Playwright - mixing these up causes wrong test runner to execute tests
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use Chai assertion syntax - NOT Jest/Vitest syntax (`.toBe()` vs `.to.equal()`))**
-
-**(You MUST use Sinon sandbox with cleanup in `afterEach` - NEVER use `sinon.stub()` directly)**
-
-**(You MUST call `queryClient.clear()` in `beforeEach` for tests using React Query)**
-
-**(You MUST import `test` and `expect` from `fixtures` in E2E tests - NOT from `@playwright/test`)**
-
-**(You MUST use Page Object Model (POM) pattern for E2E test interactions)**
-
-**Failure to follow these rules will cause test failures, flaky tests from pollution, and missing auth fixtures in E2E tests.**
-
-</critical_reminders>
-
-
----
-
-
-# Pre-compiled Skill: Mocking
-
-# Frontend Mocking Patterns (Photoroom Webapp)
-
-> **Quick Guide:** Use Sinon sandbox pattern for test isolation. Create mock store factories with partial dependencies via dependency injection. Use TestFirebaseAuth for auth mocking, ampliMock for analytics, and MobX `when()` for async assertions. Always restore sandbox in afterEach.
-
----
-
-<critical_requirements>
-
-## ⚠️ CRITICAL: Before Using This Skill
-
-> **All code must follow project conventions in CLAUDE.md** (PascalCase stores, named exports, import ordering, `import type`, named constants)
-
-**(You MUST create a Sinon sandbox in describe scope and call sandbox.restore() in afterEach - prevents test pollution)**
-
-**(You MUST use mock store factories with partial dependencies - never instantiate stores directly in tests)**
-
-**(You MUST use TestFirebaseAuth for Firebase auth mocking - never mock Firebase SDK directly)**
-
-**(You MUST use MobX when() for async assertions - never use arbitrary timeouts or setTimeout)**
-
-**(You MUST use Chai assertion syntax (to.equal, to.be.true) - NOT Jest syntax (toBe, toEqual))**
-
-</critical_requirements>
-
----
-
-**Auto-detection:** sinon sandbox, mock store, TestFirebaseAuth, ampliMock, test factory, MobX when, NotificationsStore mock, dependency injection testing
-
-**When to use:**
-
-- Writing unit tests for MobX stores
-- Mocking Firebase authentication in tests
-- Creating test doubles for analytics (ampli)
-- Testing stores with injected dependencies
-- Waiting for async MobX state changes in tests
-- Isolating tests with sandbox pattern
-
-**When NOT to use:**
-
-- E2E tests (use Playwright fixtures instead)
-- Testing React components with DOM (use React Testing Library)
-- Integration tests with real backend (use test environment)
-
-**Key patterns covered:**
-
-- Sinon sandbox pattern for stub isolation
-- Mock store factories with partial dependencies
-- TestFirebaseAuth for Firebase auth testing
-- ampliMock for analytics mocking
-- NotificationsStore mocking
-- MobX when() for async state assertions
-- Cleanup patterns (sandbox.restore())
-- Dependency injection enabling testability
-
----
-
-<philosophy>
-
-## Philosophy
-
-The Photoroom webapp testing approach leverages **dependency injection** in MobX stores to enable clean mocking. Each store receives its dependencies via constructor, making it easy to inject test doubles.
-
-**Core Testing Principles:**
-
-1. **Sandbox Isolation**: Every test suite creates a Sinon sandbox. Stubs are restored in afterEach to prevent cross-test pollution.
-2. **Factory Pattern**: Mock store factories accept partial dependencies, providing sensible defaults for unmocked dependencies.
-3. **Test Doubles Over Mocking SDK**: Use pre-built test doubles (TestFirebaseAuth, ampliMock) instead of stubbing complex SDKs.
-4. **Async Assertions with when()**: MobX `when()` waits for observable conditions, eliminating flaky timeout-based tests.
-
-**Why Dependency Injection Matters:**
-
-```typescript
-// Testable: dependencies injected via constructor
-class AuthStore {
-  constructor(dependencies: AuthStoreDependencies) {
-    this.#dependencies = dependencies;
-  }
-}
-
-// In tests: inject mocks
-const authStore = new AuthStore({
-  firebaseAuth: new TestFirebaseAuth(), // Test double
-  fetchAppStartup: async () => ({ courierToken: "test-token" }), // Mock function
-});
-```
-
-**When to mock:**
-
-- External services (Firebase, Analytics)
-- API calls (provide mock functions)
-- Side effects (notifications, logging)
-- Time-dependent operations
-
-**When NOT to mock:**
-
-- The code under test itself
-- Simple utility functions
-- MobX reactivity (let it work naturally)
-
-</philosophy>
-
----
-
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Sinon Sandbox for Test Isolation
-
-Create a Sinon sandbox at describe scope. Call sandbox.restore() in afterEach to clean up stubs between tests.
-
-#### Test Structure
-
-```typescript
-// src/tests/MyStore.test.ts
-import sinon from "sinon";
-import { expect } from "chai";
-import { when } from "mobx";
-
-import { MyStore } from "stores/MyStore";
-
-describe("MyStore", () => {
-  // Create sandbox at describe scope
-  const sandbox = sinon.createSandbox();
-
-  // Clean up after each test
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  it("should handle async operation", async () => {
-    const fetchStub = sandbox.stub().resolves({ data: "test" });
-    const store = new MyStore({ fetch: fetchStub });
-
-    await store.loadData();
-
-    expect(fetchStub).to.have.been.calledOnce;
-    expect(store.data).to.equal("test");
-  });
-
-  it("should track calls with args", () => {
-    const callbackStub = sandbox.stub();
-    const store = new MyStore({ callback: callbackStub });
-
-    store.doSomething("arg1", "arg2");
-
-    expect(callbackStub).to.have.been.calledWith("arg1", "arg2");
-  });
-});
-```
-
-**Why good:** Sandbox groups related stubs for easy cleanup, afterEach ensures stubs are restored even if test fails, prevents test pollution where one test's stubs affect another
-
-```typescript
-// ❌ Bad Example - Missing sandbox cleanup
-describe("MyStore", () => {
-  it("should work", () => {
-    sinon.stub(api, "fetch").resolves({ data: "test" });
-    // Missing restore - pollutes other tests!
-  });
-
-  it("another test", () => {
-    // api.fetch is still stubbed from previous test!
-  });
-});
-
-// ❌ Bad Example - Cleanup in wrong place
-describe("MyStore", () => {
-  const sandbox = sinon.createSandbox();
-
-  afterAll(() => {
-    sandbox.restore(); // Too late! Should be afterEach
-  });
-});
-```
-
-**Why bad:** Missing restore leaves stubs active for subsequent tests causing flaky failures, afterAll cleanup isolates the suite but not individual tests within it
-
----
-
-### Pattern 2: Mock Store Factories with Partial Dependencies
-
-Create factory functions that accept partial dependencies and provide sensible defaults. This enables focused testing of specific behaviors.
-
-#### Factory Implementation
-
-```typescript
-// src/tests/AuthStore.test.ts
-import { when } from "mobx";
-import { expect } from "chai";
-
-import { AuthStore } from "stores/AuthStore";
-import type { AuthStoreDependencies } from "stores/AuthStore";
-import { TestFirebaseAuth } from "tests/mocks/TestFirebaseAuth";
-import { ampliMock } from "tests/mocks/ampliMock";
-import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
-
-import type { Ampli } from "@photoroom/shared";
-
-// Factory accepts partial dependencies
-const makeTestAuthStore = (
-  partialDependencies: Partial<AuthStoreDependencies> = {}
-): AuthStore => {
-  return new AuthStore({
-    // Default test doubles for external services
-    firebaseAuth: partialDependencies.firebaseAuth ?? new TestFirebaseAuth(),
-
-    // Default mock functions for API calls
-    fetchAppStartup: partialDependencies.fetchAppStartup ??
-      (async () => ({ courierToken: "test-courier-token" })),
-
-    fetchMagicCode: partialDependencies.fetchMagicCode ??
-      (async () => ({ token: "test-magic-code", expiresAt: "2025-12-31" })),
-
-    // Default mocks for services
-    ampli: partialDependencies.ampli ?? (ampliMock as Ampli),
-
-    // Create fresh notification store for each test
-    notificationsStore: partialDependencies.notificationsStore ??
-      new NotificationsStore({
-        defaultDuration: 3000,
-        maxNotifications: 5,
-      }),
-  });
-};
-
-describe("AuthStore", () => {
-  const sandbox = sinon.createSandbox();
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  it("state is in sync with Firebase SDK", async () => {
-    // Use default test doubles
-    const firebaseAuth = new TestFirebaseAuth();
-    const authStore = makeTestAuthStore({ firebaseAuth });
-
-    // Initial state
-    expect(authStore.isLoading).to.be.true;
-    expect(authStore.isLoggedIn).to.be.false;
-    expect(authStore.firebaseUser).to.be.null;
-
-    // Wait for async initialization
-    await when(() => !authStore.isLoading);
-
-    expect(authStore.isLoading).to.be.false;
-  });
-
-  it("calls fetchAppStartup on login", async () => {
-    const fetchAppStartup = sandbox.stub().resolves({ courierToken: "token-123" });
-    const firebaseAuth = new TestFirebaseAuth();
-    const authStore = makeTestAuthStore({ firebaseAuth, fetchAppStartup });
-
-    // Simulate user login
-    firebaseAuth.simulateSignIn({ uid: "user-123", isAnonymous: false });
-
-    await when(() => authStore.courierToken !== null);
-
-    expect(fetchAppStartup).to.have.been.calledOnce;
-    expect(authStore.courierToken).to.equal("token-123");
-  });
-});
-```
-
-**Why good:** Partial dependencies allow tests to override only what they need, defaults provide working test doubles for unrelated dependencies, each test gets fresh instances preventing state leakage, factory pattern centralizes test setup logic
-
-```typescript
-// ❌ Bad Example - Inline store creation with all dependencies
-it("should work", () => {
-  // Must specify ALL dependencies even if not relevant to test
-  const store = new AuthStore({
-    firebaseAuth: new TestFirebaseAuth(),
-    fetchAppStartup: async () => ({ courierToken: "token" }),
-    fetchMagicCode: async () => ({ token: "code", expiresAt: "2025" }),
-    ampli: ampliMock,
-    notificationsStore: new NotificationsStore({ ... }),
-    // 10 more dependencies...
-  });
-});
-
-// ❌ Bad Example - Reusing store instances
-const sharedStore = makeTestAuthStore();
-
-it("test 1", () => {
-  sharedStore.setValue("value1"); // Modifies shared state
-});
-
-it("test 2", () => {
-  // sharedStore still has "value1" from previous test!
-});
-```
-
-**Why bad:** Inline creation with all dependencies is verbose and obscures test intent, shared store instances cause test pollution and ordering dependencies
-
----
-
-### Pattern 3: TestFirebaseAuth for Authentication Testing
-
-Use TestFirebaseAuth class to simulate Firebase auth states without the real Firebase SDK.
-
-#### TestFirebaseAuth Implementation
-
-```typescript
-// src/tests/mocks/TestFirebaseAuth.ts
-import type { TFirebaseAuth, FirebaseUser } from "stores/FirebaseAuth";
-
-type AuthStateCallback = (user: FirebaseUser | null) => void;
-
-export class TestFirebaseAuth implements TFirebaseAuth {
-  #currentUser: FirebaseUser | null = null;
-  #listeners: AuthStateCallback[] = [];
-  #initialized = false;
-
-  // Simulate auth state listener
-  onAuthStateChanged = (callback: AuthStateCallback): (() => void) => {
-    this.#listeners.push(callback);
-
-    // Firebase fires immediately with current state
-    if (this.#initialized) {
-      callback(this.#currentUser);
-    } else {
-      // Simulate async initialization
-      setTimeout(() => {
-        this.#initialized = true;
-        callback(this.#currentUser);
-      }, 0);
-    }
-
-    // Return unsubscribe function
-    return () => {
-      this.#listeners = this.#listeners.filter((l) => l !== callback);
-    };
-  };
-
-  // Test helper: simulate sign in
-  simulateSignIn = (user: Partial<FirebaseUser> & { uid: string }) => {
-    this.#currentUser = {
-      uid: user.uid,
-      email: user.email ?? `${user.uid}@test.com`,
-      displayName: user.displayName ?? "Test User",
-      isAnonymous: user.isAnonymous ?? false,
-      getIdToken: async () => `firebase-token-${user.uid}`,
-      ...user,
-    } as FirebaseUser;
-    this.#initialized = true;
-    this.#notifyListeners();
-  };
-
-  // Test helper: simulate sign out
-  simulateSignOut = () => {
-    this.#currentUser = null;
-    this.#notifyListeners();
-  };
-
-  // Test helper: simulate anonymous user
-  simulateAnonymousUser = (uid: string = "anon-123") => {
-    this.simulateSignIn({ uid, isAnonymous: true });
-  };
-
-  signOut = async () => {
-    this.simulateSignOut();
-  };
-
-  signInWithPopup = async () => {
-    this.simulateSignIn({ uid: "google-user-123" });
-    return { user: this.#currentUser };
-  };
-
-  #notifyListeners = () => {
-    this.#listeners.forEach((callback) => callback(this.#currentUser));
-  };
-}
-```
-
-#### Usage in Tests
-
-```typescript
-describe("AuthStore", () => {
-  it("should handle sign out", async () => {
-    const firebaseAuth = new TestFirebaseAuth();
-    const authStore = makeTestAuthStore({ firebaseAuth });
-
-    // Start signed in
-    firebaseAuth.simulateSignIn({ uid: "user-123" });
-    await when(() => authStore.isLoggedIn);
-
-    expect(authStore.isLoggedIn).to.be.true;
-
-    // Sign out
-    await authStore.logOut();
-
-    expect(authStore.isLoggedIn).to.be.false;
-    expect(authStore.firebaseUser).to.be.null;
-  });
-
-  it("should identify anonymous users", async () => {
-    const firebaseAuth = new TestFirebaseAuth();
-    const authStore = makeTestAuthStore({ firebaseAuth });
-
-    firebaseAuth.simulateAnonymousUser();
-    await when(() => !authStore.isLoading);
-
-    expect(authStore.isAnonymous).to.be.true;
-    expect(authStore.isLoggedIn).to.be.false; // Anonymous != logged in
-  });
-});
-```
-
-**Why good:** TestFirebaseAuth provides full control over auth state, simulateSignIn/simulateSignOut allow testing state transitions, implements same interface as real Firebase auth, no need to mock complex Firebase SDK internals
-
-```typescript
-// ❌ Bad Example - Stubbing Firebase SDK directly
-it("should work", () => {
-  sandbox.stub(firebase.auth(), "onAuthStateChanged").callsFake((cb) => {
-    cb({ uid: "123" }); // Incomplete user object
-    return () => {};
-  });
-  // Complex, fragile, incomplete
-});
-
-// ❌ Bad Example - Not waiting for async auth
-it("should handle login", () => {
-  const firebaseAuth = new TestFirebaseAuth();
-  const authStore = makeTestAuthStore({ firebaseAuth });
-
-  firebaseAuth.simulateSignIn({ uid: "123" });
-
-  // BUG: Auth state may not have propagated yet!
-  expect(authStore.isLoggedIn).to.be.true; // May fail randomly
-});
-```
-
-**Why bad:** Direct SDK stubbing is fragile and requires deep knowledge of Firebase internals, not waiting for async state propagation causes flaky tests
-
----
-
-### Pattern 4: ampliMock for Analytics Testing
-
-Use ampliMock to verify analytics events without sending real data.
-
-#### ampliMock Implementation
-
-```typescript
-// src/tests/mocks/ampliMock.ts
-import type { Ampli } from "@photoroom/shared";
-
-type EventCall = {
-  name: string;
-  properties?: Record<string, unknown>;
-};
-
-export const createAmpliMock = (): Ampli & {
-  getCalls: () => EventCall[];
-  reset: () => void;
-} => {
-  const calls: EventCall[] = [];
-
-  return {
-    // Common event methods
-    track: (name: string, properties?: Record<string, unknown>) => {
-      calls.push({ name, properties });
-    },
-
-    identify: (userId: string, properties?: Record<string, unknown>) => {
-      calls.push({ name: "identify", properties: { userId, ...properties } });
-    },
-
-    // Add other Ampli methods as needed...
-
-    // Test helpers
-    getCalls: () => [...calls],
-    reset: () => {
-      calls.length = 0;
-    },
-  } as Ampli & { getCalls: () => EventCall[]; reset: () => void };
-};
-
-// Default singleton for simple cases
-export const ampliMock = createAmpliMock();
-```
-
-#### Usage in Tests
-
-```typescript
-describe("UserStore", () => {
-  const sandbox = sinon.createSandbox();
-  let ampli: ReturnType<typeof createAmpliMock>;
-
-  beforeEach(() => {
-    ampli = createAmpliMock();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
-    ampli.reset();
-  });
-
-  it("should track sign up event", async () => {
-    const userStore = makeTestUserStore({ ampli });
-
-    await userStore.signUp({ email: "test@example.com" });
-
-    const calls = ampli.getCalls();
-    expect(calls).to.have.length(1);
-    expect(calls[0].name).to.equal("user_signed_up");
-    expect(calls[0].properties).to.deep.equal({
-      email: "test@example.com",
-      method: "email",
-    });
-  });
-
-  it("should track multiple events in order", async () => {
-    const userStore = makeTestUserStore({ ampli });
-
-    await userStore.completeOnboarding();
-
-    const calls = ampli.getCalls();
-    expect(calls.map((c) => c.name)).to.deep.equal([
-      "onboarding_started",
-      "onboarding_step_completed",
-      "onboarding_finished",
-    ]);
-  });
-});
-```
-
-**Why good:** ampliMock captures event calls for verification, getCalls() returns copy preventing mutation, reset() in afterEach ensures clean state, verifies event order and properties
-
-```typescript
-// ❌ Bad Example - Not verifying analytics
-it("should sign up user", async () => {
-  const userStore = makeTestUserStore({ ampli: ampliMock });
-  await userStore.signUp({ email: "test@example.com" });
-  expect(userStore.isSignedUp).to.be.true;
-  // Missing: analytics verification!
-});
-
-// ❌ Bad Example - Not resetting between tests
-it("test 1", async () => {
-  await store.action1();
-  expect(ampliMock.getCalls()).to.have.length(1);
-});
-
-it("test 2", async () => {
-  await store.action2();
-  // BUG: getCalls() returns 2 because test 1's call is still there!
-  expect(ampliMock.getCalls()).to.have.length(1); // Fails!
-});
-```
-
-**Why bad:** Skipping analytics verification misses tracking bugs that break product metrics, not resetting mock between tests causes false positives/negatives
-
----
-
-### Pattern 5: MobX when() for Async Assertions
-
-Use MobX `when()` to wait for observable conditions instead of arbitrary timeouts.
-
-#### Correct Async Testing
-
-```typescript
-import { when } from "mobx";
-
-describe("TeamsStore", () => {
-  it("should load teams", async () => {
-    const fetchTeams = sandbox.stub().resolves([
-      { id: "team-1", name: "Team One" },
-      { id: "team-2", name: "Team Two" },
-    ]);
-    const teamsStore = makeTestTeamsStore({ fetchTeams });
-
-    // Start loading
-    teamsStore.loadTeams();
-    expect(teamsStore.isLoading).to.be.true;
-
-    // Wait for loading to complete using when()
-    await when(() => !teamsStore.isLoading);
-
-    expect(teamsStore.teams).to.have.length(2);
-    expect(teamsStore.teams[0]?.name).to.equal("Team One");
-  });
-
-  it("should handle error state", async () => {
-    const fetchTeams = sandbox.stub().rejects(new Error("Network error"));
-    const teamsStore = makeTestTeamsStore({ fetchTeams });
-
-    teamsStore.loadTeams();
-
-    // Wait for error state
-    await when(() => teamsStore.error !== null);
-
-    expect(teamsStore.error).to.equal("Network error");
-    expect(teamsStore.isLoading).to.be.false;
-  });
-
-  it("should wait with timeout", async () => {
-    const teamsStore = makeTestTeamsStore({
-      fetchTeams: () => new Promise((resolve) => setTimeout(resolve, 5000)),
-    });
-
-    teamsStore.loadTeams();
-
-    // when() with timeout option
-    try {
-      await when(() => !teamsStore.isLoading, { timeout: 100 });
-      expect.fail("Should have timed out");
-    } catch (error) {
-      expect(error.message).to.include("WHEN_TIMEOUT");
-    }
-  });
-});
-```
-
-**Why good:** when() waits for exact observable condition, no arbitrary delays or flaky timing, timeout option catches stuck states, works naturally with MobX reactivity
-
-```typescript
-// ❌ Bad Example - Using setTimeout
-it("should load teams", async () => {
-  teamsStore.loadTeams();
-
-  // BAD: Arbitrary delay - flaky!
-  await new Promise((r) => setTimeout(r, 100));
-
-  expect(teamsStore.teams).to.have.length(2); // May fail if load takes > 100ms
-});
-
-// ❌ Bad Example - Polling with setInterval
-it("should load teams", async () => {
-  teamsStore.loadTeams();
-
-  // BAD: Polling - wasteful and still flaky
-  await new Promise((resolve) => {
-    const interval = setInterval(() => {
-      if (!teamsStore.isLoading) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, 10);
-  });
-});
-
-// ❌ Bad Example - Missing async/await
-it("should load teams", () => {
-  teamsStore.loadTeams();
-  when(() => !teamsStore.isLoading); // Missing await - test passes immediately!
-  expect(teamsStore.teams).to.have.length(0); // Wrong assertion passes
-});
-```
-
-**Why bad:** setTimeout-based waits are flaky and slow (must wait worst-case time), polling is wasteful and still subject to timing issues, missing await causes test to pass before async operation completes
-
----
-
-### Pattern 6: NotificationsStore Mocking
-
-Create fresh NotificationsStore instances for each test to verify user feedback.
-
-#### Implementation
-
-```typescript
-import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
-
-describe("ExportStore", () => {
-  it("should show success notification", async () => {
-    const notificationsStore = new NotificationsStore({
-      defaultDuration: 3000,
-      maxNotifications: 5,
-    });
-    const exportStore = makeTestExportStore({ notificationsStore });
-
-    await exportStore.exportImage();
-
-    expect(notificationsStore.notifications).to.have.length(1);
-    expect(notificationsStore.notifications[0]?.type).to.equal("success");
-    expect(notificationsStore.notifications[0]?.label).to.include("export");
-  });
-
-  it("should show error notification on failure", async () => {
-    const notificationsStore = new NotificationsStore({
-      defaultDuration: 3000,
-      maxNotifications: 5,
-    });
-    const exportStore = makeTestExportStore({
-      notificationsStore,
-      exportApi: sandbox.stub().rejects(new Error("Export failed")),
-    });
-
-    await exportStore.exportImage();
-
-    expect(notificationsStore.notifications).to.have.length(1);
-    expect(notificationsStore.notifications[0]?.type).to.equal("danger");
-  });
-});
-```
-
-**Why good:** Fresh NotificationsStore per test prevents notification leakage, can verify notification type, label, and count, tests user feedback not just internal state
-
-```typescript
-// ❌ Bad Example - Using shared notification store
-const sharedNotifications = new NotificationsStore({ ... });
-
-it("test 1", async () => {
-  await store1.action();
-  expect(sharedNotifications.notifications).to.have.length(1);
-});
-
-it("test 2", async () => {
-  await store2.action();
-  // BUG: Has 2 notifications (1 from test 1 + 1 from test 2)!
-  expect(sharedNotifications.notifications).to.have.length(1); // Fails
-});
-
-// ❌ Bad Example - Not verifying notifications
-it("should handle error", async () => {
-  await store.failingAction();
-  expect(store.error).to.exist;
-  // Missing: Did user get feedback about the error?
-});
-```
-
-**Why bad:** Shared notification store accumulates notifications across tests, not verifying notifications means users might see silent failures in production
-
----
-
-### Pattern 7: Complete Test File Structure
-
-Following the established patterns, here's a complete test file structure:
-
-#### Complete Example
-
-```typescript
-// src/tests/AuthStore.test.ts
-import sinon from "sinon";
-import { expect } from "chai";
-import { when } from "mobx";
-
-import { AuthStore } from "stores/AuthStore";
-import type { AuthStoreDependencies } from "stores/AuthStore";
-import { TestFirebaseAuth } from "tests/mocks/TestFirebaseAuth";
-import { createAmpliMock } from "tests/mocks/ampliMock";
-import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
-
-import type { Ampli } from "@photoroom/shared";
-
-// Factory with defaults
-const makeTestAuthStore = (
-  partialDependencies: Partial<AuthStoreDependencies> = {}
-): AuthStore => {
-  return new AuthStore({
-    firebaseAuth: partialDependencies.firebaseAuth ?? new TestFirebaseAuth(),
-    fetchAppStartup: partialDependencies.fetchAppStartup ??
-      (async () => ({ courierToken: "test-courier-token" })),
-    fetchMagicCode: partialDependencies.fetchMagicCode ??
-      (async () => ({ token: "test-magic-code", expiresAt: "2025-12-31" })),
-    ampli: partialDependencies.ampli ?? (createAmpliMock() as Ampli),
-    notificationsStore: partialDependencies.notificationsStore ??
-      new NotificationsStore({ defaultDuration: 3000, maxNotifications: 5 }),
-  });
-};
-
-describe("AuthStore", () => {
-  // Sandbox at describe scope
-  const sandbox = sinon.createSandbox();
-
-  // Clean up after each test
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  describe("initialization", () => {
-    it("should start in loading state", () => {
-      const authStore = makeTestAuthStore();
-
-      expect(authStore.isLoading).to.be.true;
-      expect(authStore.isLoggedIn).to.be.false;
-    });
-
-    it("should sync with Firebase auth state", async () => {
-      const firebaseAuth = new TestFirebaseAuth();
-      const authStore = makeTestAuthStore({ firebaseAuth });
-
-      // Wait for initialization
-      await when(() => !authStore.isLoading);
-
-      expect(authStore.isLoading).to.be.false;
-      expect(authStore.firebaseUser).to.be.null;
-    });
-  });
-
-  describe("sign in", () => {
-    it("should update state when user signs in", async () => {
-      const firebaseAuth = new TestFirebaseAuth();
-      const authStore = makeTestAuthStore({ firebaseAuth });
-
-      firebaseAuth.simulateSignIn({ uid: "user-123", email: "test@example.com" });
-
-      await when(() => authStore.isLoggedIn);
-
-      expect(authStore.isLoggedIn).to.be.true;
-      expect(authStore.firebaseUser?.email).to.equal("test@example.com");
-    });
-
-    it("should fetch app startup data on sign in", async () => {
-      const firebaseAuth = new TestFirebaseAuth();
-      const fetchAppStartup = sandbox.stub().resolves({ courierToken: "token-abc" });
-      const authStore = makeTestAuthStore({ firebaseAuth, fetchAppStartup });
-
-      firebaseAuth.simulateSignIn({ uid: "user-123" });
-
-      await when(() => authStore.courierToken !== null);
-
-      expect(fetchAppStartup).to.have.been.calledOnce;
-      expect(authStore.courierToken).to.equal("token-abc");
-    });
-
-    it("should track sign in analytics", async () => {
-      const firebaseAuth = new TestFirebaseAuth();
-      const ampli = createAmpliMock();
-      const authStore = makeTestAuthStore({ firebaseAuth, ampli: ampli as Ampli });
-
-      firebaseAuth.simulateSignIn({ uid: "user-123" });
-
-      await when(() => authStore.isLoggedIn);
-
-      const calls = ampli.getCalls();
-      expect(calls.some((c) => c.name === "user_signed_in")).to.be.true;
-    });
-  });
-
-  describe("sign out", () => {
-    it("should clear state on sign out", async () => {
-      const firebaseAuth = new TestFirebaseAuth();
-      const authStore = makeTestAuthStore({ firebaseAuth });
-
-      // Start signed in
-      firebaseAuth.simulateSignIn({ uid: "user-123" });
-      await when(() => authStore.isLoggedIn);
-
-      // Sign out
-      await authStore.logOut();
-
-      expect(authStore.isLoggedIn).to.be.false;
-      expect(authStore.firebaseUser).to.be.null;
-      expect(authStore.courierToken).to.be.null;
-    });
-  });
-
-  describe("error handling", () => {
-    it("should handle fetchAppStartup failure", async () => {
-      const firebaseAuth = new TestFirebaseAuth();
-      const notificationsStore = new NotificationsStore({
-        defaultDuration: 3000,
-        maxNotifications: 5,
-      });
-      const fetchAppStartup = sandbox.stub().rejects(new Error("Network error"));
-      const authStore = makeTestAuthStore({
-        firebaseAuth,
-        notificationsStore,
-        fetchAppStartup,
-      });
-
-      firebaseAuth.simulateSignIn({ uid: "user-123" });
-
-      // Wait for error handling
-      await when(() => !authStore.isLoading);
-
-      // User should still be logged in despite API error
-      expect(authStore.isLoggedIn).to.be.true;
-      // Courier token should remain null
-      expect(authStore.courierToken).to.be.null;
-    });
-  });
-});
-```
-
-**Why good:** Clear organization with describe blocks, each test creates fresh dependencies, sandbox.restore() in afterEach, when() for all async assertions, verifies both state and side effects (analytics, notifications)
-
-</patterns>
 
 ---
 
 <anti_patterns>
 
-## Anti-Patterns
+## Anti-Patterns to Avoid
 
-### ❌ Missing Sandbox Cleanup
-
-Stubs created without sandbox cleanup leak to other tests, causing flaky failures that are difficult to diagnose.
+### Unit Testing React Components
 
 ```typescript
-// ❌ Anti-pattern
-describe("MyStore", () => {
-  it("test one", () => {
-    sinon.stub(api, "fetch").resolves({ data: "test" });
-    // No restore - stub persists!
-  });
+// ❌ ANTI-PATTERN: Unit testing component rendering
+import { render, screen } from "@testing-library/react";
+import { Button } from "./button";
 
-  it("test two", () => {
-    // api.fetch still stubbed from test one!
-    // Test may pass or fail depending on execution order
-  });
+test("renders button with text", () => {
+  render(<Button>Click me</Button>);
+  expect(screen.getByText("Click me")).toBeInTheDocument();
 });
 ```
 
-**Correct approach:** Create sandbox at describe scope, call sandbox.restore() in afterEach.
+**Why it's wrong:** E2E tests provide more value by testing real user interaction, unit tests for components break easily on refactoring, doesn't test real integration with the rest of the app.
+
+**What to do instead:** Write E2E tests that verify user workflows involving the component.
 
 ---
 
-### ❌ setTimeout-Based Async Assertions
-
-Using arbitrary timeouts for async assertions creates flaky tests that pass locally but fail in CI, or vice versa.
+### Module-Level Mocking
 
 ```typescript
-// ❌ Anti-pattern
-it("should load data", async () => {
-  store.loadData();
-  await new Promise((r) => setTimeout(r, 100)); // Arbitrary delay
-  expect(store.data).to.exist; // May fail if load takes > 100ms
-});
+// ❌ ANTI-PATTERN: Mocking at module level
+import { vi } from "vitest";
+vi.mock("../api", () => ({
+  getFeatures: vi.fn().mockResolvedValue({ features: [] }),
+}));
 ```
 
-**Correct approach:** Use MobX `when()` to wait for observable conditions.
+**Why it's wrong:** Module mocks break when import structure changes, defeats purpose of integration testing, doesn't test network layer or serialization.
+
+**What to do instead:** Use MSW to mock at network level.
 
 ---
 
-### ❌ Shared Store Instances
-
-Reusing store instances between tests causes state leakage and order-dependent test failures.
+### Testing Implementation Details
 
 ```typescript
-// ❌ Anti-pattern
-const sharedStore = makeTestStore(); // Created once
-
-it("test 1", () => {
-  sharedStore.setValue("a");
-  expect(sharedStore.value).to.equal("a");
-});
-
-it("test 2", () => {
-  // sharedStore still has "a" from test 1!
-  expect(sharedStore.value).to.be.undefined; // Fails
+// ❌ ANTI-PATTERN: Testing internal state
+test("counter state increments", () => {
+  const { result } = renderHook(() => useCounter());
+  expect(result.current.count).toBe(1);
 });
 ```
 
-**Correct approach:** Create fresh store instances within each test using factory functions.
+**Why it's wrong:** Testing internal state breaks when refactoring, not testing what users see, fragile and coupled to implementation.
+
+**What to do instead:** Test observable user behavior through E2E or integration tests.
 
 ---
 
-### ❌ Direct Firebase SDK Mocking
-
-Stubbing Firebase SDK internals is fragile, incomplete, and requires deep knowledge of Firebase implementation details.
+### Only Happy Path Testing
 
 ```typescript
-// ❌ Anti-pattern
-sandbox.stub(firebase.auth(), "onAuthStateChanged").callsFake((cb) => {
-  cb({ uid: "123" }); // Incomplete user object
-  return () => {};
+// ❌ ANTI-PATTERN: No error state testing
+test("user can login", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/password/i).fill("password123");
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await expect(page).toHaveURL("/dashboard");
+  // Missing: validation errors, invalid credentials, network errors
 });
 ```
 
-**Correct approach:** Use TestFirebaseAuth test double that implements the same interface.
+**Why it's wrong:** Users will encounter errors but the app's error handling has no test coverage, production bugs in error states will go undetected.
 
----
-
-### ❌ Jest Syntax in Karma/Mocha Tests
-
-Using Jest assertion syntax (toBe, toEqual, jest.fn()) in a Karma/Mocha/Chai environment causes compilation errors.
-
-```typescript
-// ❌ Anti-pattern
-expect(value).toBe(5);        // Jest syntax
-expect(array).toEqual([1,2]); // Jest syntax
-const mock = jest.fn();       // Jest mocking
-```
-
-**Correct approach:** Use Chai assertions (to.equal, to.deep.equal) and Sinon for mocking.
-
----
-
-### ❌ Missing await with when()
-
-Forgetting to await MobX `when()` causes tests to pass before async operations complete, leading to false positives.
-
-```typescript
-// ❌ Anti-pattern
-it("should load", () => {
-  store.loadData();
-  when(() => store.isLoaded); // Missing await!
-  expect(store.data).to.exist; // Runs immediately, likely fails
-});
-```
-
-**Correct approach:** Always await when() calls.
+**What to do instead:** Test error states alongside happy paths - validation, authentication failure, network issues.
 
 </anti_patterns>
-
----
-
-<decision_framework>
-
-## Decision Framework
-
-### What to Mock
-
-```
-What am I testing?
-|
-+-- External service (Firebase, Analytics)?
-|   |
-|   +-- Use dedicated test double (TestFirebaseAuth, ampliMock)
-|
-+-- API call?
-|   |
-|   +-- Inject mock function via factory
-|   |   sandbox.stub().resolves({ ... })
-|
-+-- Store dependency?
-|   |
-|   +-- Create via factory, provide partial overrides
-|
-+-- Side effect (notifications, logging)?
-    |
-    +-- Create fresh instance per test
-    +-- Verify calls/state after action
-```
-
-### Async Assertion Strategy
-
-```
-Waiting for async behavior?
-|
-+-- Is it MobX observable state?
-|   |
-|   +-- YES --> Use when(() => condition)
-|   |
-|   +-- NO --> Is it a Promise?
-|       |
-|       +-- YES --> await the Promise directly
-|       |
-|       +-- NO --> Is it a callback?
-|           |
-|           +-- Use sinon.stub().callsFake()
-```
-
-### Stub vs Spy vs Mock
-
-```
-What behavior do I need?
-|
-+-- Replace implementation entirely?
-|   |
-|   +-- sandbox.stub().resolves({ ... })
-|
-+-- Track calls but keep original?
-|   |
-|   +-- sandbox.spy(object, "method")
-|
-+-- Verify specific call pattern?
-    |
-    +-- sandbox.stub() with expect().to.have.been.calledWith()
-```
-
-### Test Isolation
-
-```
-Creating test instance?
-|
-+-- Is it a store?
-|   |
-|   +-- Use factory function with partial dependencies
-|   +-- Create fresh instance in each test
-|
-+-- Is it a mock?
-|   |
-|   +-- Create in beforeEach or inside test
-|   +-- Reset/restore in afterEach
-|
-+-- Is it a stub?
-    |
-    +-- Create via sandbox.stub()
-    +-- sandbox.restore() handles cleanup
-```
-
-</decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **MobX Stores**: Test stores via dependency injection; use when() for async assertions
-- **Sinon**: sandbox.stub() for function mocking; sandbox.restore() for cleanup
-- **Chai**: Assertion library with to.equal, to.be.true syntax (NOT Jest)
-- **Firebase Auth**: TestFirebaseAuth simulates auth state changes
-- **Analytics (Ampli)**: ampliMock captures event calls for verification
-- **NotificationsStore**: Fresh instances per test to verify user feedback
-
-**Test Framework:**
-
-- **Karma + Mocha**: Test runner (NOT Jest/Vitest)
-- **Chai**: Assertions (to.equal NOT toBe)
-- **Sinon**: Mocking (createSandbox NOT jest.fn())
-
-**Common Test Imports:**
-
-```typescript
-import sinon from "sinon";
-import { expect } from "chai";
-import { when } from "mobx";
-```
-
-**Use these patterns:**
-
-- Chai assertion syntax (to.equal, to.be.true)
-- MobX when() for async assertions
-- Fresh store instances per test
-- TestFirebaseAuth for auth testing
-
-</integration>
-
----
-
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- Missing sandbox.restore() in afterEach - stubs leak to other tests causing flaky failures
-- Using setTimeout for async assertions - flaky tests that pass/fail randomly
-- Missing await with when() - test passes before async operation completes
-- Jest assertion syntax (toBe, toEqual) - wrong test framework, tests won't compile
-
-**Medium Priority Issues:**
-
-- Shared store instances between tests - state leakage causes order-dependent tests
-- Not resetting ampliMock between tests - event counts accumulate incorrectly
-- Not verifying notifications in error paths - silent failures in production
-- Direct Firebase SDK stubbing - fragile, incomplete mocks
-
-**Common Mistakes:**
-
-- Forgetting to await async store methods before assertions
-- Not providing all required dependencies to factory (check for undefined errors)
-- Using regular methods instead of arrow functions in test stores
-- Not cleaning up MobxQuery in store dispose (memory leaks in tests)
-
-**Gotchas & Edge Cases:**
-
-- TestFirebaseAuth fires onAuthStateChanged async - first callback is delayed via setTimeout(0)
-- when() with timeout throws error, must wrap in try/catch
-- Sinon stubs on class methods need the class instance, not prototype
-- NotificationsStore maxNotifications affects test assertions
-- ampliMock.getCalls() returns copy - safe to filter/map without mutation
-
-</red_flags>
 
 ---
 
@@ -3219,19 +2012,791 @@ import { when } from "mobx";
 
 ## ⚠️ CRITICAL REMINDERS
 
-> **All code must follow project conventions in CLAUDE.md** (PascalCase stores, named exports, import ordering)
+> **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST create a Sinon sandbox in describe scope and call sandbox.restore() in afterEach - prevents test pollution)**
+**(You MUST write E2E tests for ALL critical user workflows - NOT unit tests for React components)**
 
-**(You MUST use mock store factories with partial dependencies - never instantiate stores directly in tests)**
+**(You MUST use Playwright for E2E tests and organize by user journey - NOT by component)**
 
-**(You MUST use TestFirebaseAuth for Firebase auth mocking - never mock Firebase SDK directly)**
+**(You MUST only write unit tests for pure functions - NOT for components, hooks, or side effects)**
 
-**(You MUST use MobX when() for async assertions - never use arbitrary timeouts or setTimeout)**
+**(You MUST co-locate tests with code in feature-based structure - NOT in separate test directories)**
 
-**(You MUST use Chai assertion syntax (to.equal, to.be.true) - NOT Jest syntax (toBe, toEqual))**
+**(You MUST use MSW at network level for API mocking - NOT module-level mocks)**
 
-**Failure to follow these rules will cause flaky tests, test pollution, and false positives/negatives.**
+**Failure to follow these rules will result in fragile tests that break on refactoring, untested critical user paths, and false confidence from high coverage of low-value tests.**
+
+</critical_reminders>
+
+
+---
+
+
+# Pre-compiled Skill: Backend Testing
+
+
+
+---
+
+
+# Pre-compiled Skill: Mocking
+
+# API Mocking with MSW
+
+> **Quick Guide:** Centralized mocks in `@repo/api-mocks`. Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Type-safe using generated types from `@repo/api/types`.
+
+---
+
+<critical_requirements>
+
+## ⚠️ CRITICAL: Before Using This Skill
+
+**(You MUST separate mock data from handlers - handlers in `handlers/`, data in `mocks/`)**
+
+**(You MUST use `setupWorker` for browser/development and `setupServer` for Node/tests - NEVER swap them)**
+
+**(You MUST reset handlers after each test with `serverWorker.resetHandlers()` in `afterEach`)**
+
+**(You MUST use generated types from `@repo/api/types` - NEVER manually define API response types)**
+
+**(You MUST use named constants for HTTP status codes and delays - NO magic numbers)**
+
+</critical_requirements>
+
+---
+
+**Auto-detection:** MSW setup, mock handlers, mock data, API mocking, testing mocks, development mocks, setupWorker, setupServer
+
+**When to use:**
+
+- Setting up MSW for development and testing
+- Creating centralized mock handlers with variant switching
+- Sharing mocks between browser (dev) and Node (tests)
+- Testing different API scenarios (success, empty, error)
+- Simulating network latency and error conditions
+
+**When NOT to use:**
+
+- Integration tests that need real backend validation (use test database instead)
+- Production builds (MSW should never ship to production)
+- Simple unit tests of pure functions (no network calls to mock)
+- When you need to test actual network failure modes (use test containers)
+
+**Key patterns covered:**
+
+- Centralized mock package structure with handlers and data separation
+- Variant-based handlers (default, empty, error scenarios)
+- Browser worker for development, server worker for tests
+- Per-test handler overrides for specific scenarios
+- Runtime variant switching for UI development
+
+---
+
+<philosophy>
+
+## Philosophy
+
+MSW (Mock Service Worker) intercepts network requests at the service worker level, providing realistic API mocking without changing application code. This skill enforces a centralized approach where mocks live in a dedicated package (`@repo/api-mocks`), enabling consistent behavior across development and testing environments.
+
+**When to use MSW:**
+
+- Developing frontend features before backend API is ready
+- Testing different API response scenarios (success, empty, error states)
+- Simulating network conditions (latency, timeouts)
+- Creating a consistent development environment across team
+- End-to-end testing with controlled API responses
+
+**When NOT to use MSW:**
+
+- Integration tests that need real backend validation (use test database)
+- Production builds (MSW should never ship to production)
+- Simple unit tests of pure functions (no network calls)
+- When you need to test actual network failure modes (use test containers)
+
+</philosophy>
+
+---
+
+<patterns>
+
+## Core Patterns
+
+### Pattern 1: Centralized Mock Package Structure
+
+Organize all mocks in a dedicated workspace package with clear separation between handlers (MSW request handlers) and mock data (static response data).
+
+#### Package Structure
+
+```
+packages/api-mocks/
+├── src/
+│   ├── handlers/
+│   │   ├── index.ts              # Export all handlers
+│   │   └── features/
+│   │       └── get-features.ts   # MSW handlers with variants
+│   ├── mocks/
+│   │   ├── index.ts              # Export all mock data
+│   │   └── features.ts           # Mock data
+│   ├── browser-worker.ts         # Browser MSW worker (development)
+│   ├── server-worker.ts          # Node.js MSW server (tests)
+│   └── manage-mock-selection.ts  # Variant switching logic
+└── package.json
+```
+
+#### Package Configuration
+
+```json
+// packages/api-mocks/package.json
+// ✅ Good Example
+{
+  "name": "@repo/api-mocks",
+  "exports": {
+    "./handlers": "./src/handlers/index.ts",
+    "./mocks": "./src/mocks/index.ts",
+    "./browserWorker": "./src/browser-worker.ts",
+    "./serverWorker": "./src/server-worker.ts"
+  }
+}
+```
+
+**Why good:** Separate entry points prevent bundling unnecessary code (browser worker won't bundle in tests), explicit exports make dependencies clear, kebab-case file names follow project conventions
+
+```json
+// ❌ Bad Example
+{
+  "name": "@repo/api-mocks",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
+```
+
+**Why bad:** Single entry point bundles everything together causing browser worker to load in Node tests (performance hit), mixing concerns violates separation of environments, harder to tree-shake unused code
+
+---
+
+### Pattern 2: Separate Mock Data from Handlers
+
+Define mock data as typed constants in `mocks/` directory, completely separate from MSW handlers.
+
+#### Mock Data Definition
+
+```typescript
+// packages/api-mocks/src/mocks/features.ts
+// ✅ Good Example
+import type { GetFeaturesResponse } from "@repo/api/types";
+
+export const defaultFeatures: GetFeaturesResponse = {
+  features: [
+    {
+      id: "1",
+      name: "Dark mode",
+      description: "Toggle dark mode",
+      status: "done",
+    },
+    {
+      id: "2",
+      name: "User authentication",
+      description: "JWT-based auth",
+      status: "in progress",
+    },
+  ],
+};
+
+export const emptyFeatures: GetFeaturesResponse = {
+  features: [],
+};
+```
+
+**Why good:** Type safety from generated API types catches schema mismatches at compile time, reusable across multiple handlers, easy to update centrally when API changes, `import type` optimizes bundle size
+
+```typescript
+// ❌ Bad Example
+import { http, HttpResponse } from "msw";
+
+export const getFeaturesHandler = http.get("api/v1/features", () => {
+  return HttpResponse.json({
+    features: [
+      { id: "1", name: "Dark mode", description: "Toggle dark mode", status: "done" },
+    ],
+  });
+});
+```
+
+**Why bad:** Mock data embedded in handler cannot be reused in other tests or handlers, no type checking against API schema causes runtime errors when schema changes, harder to test edge cases with different data variants
+
+**When not to use:** When mock data is truly one-off and specific to a single test case (use inline data in the test instead).
+
+---
+
+### Pattern 3: Handlers with Variant Switching
+
+Create handlers that support multiple response scenarios (default, empty, error) with runtime switching for development and explicit overrides for testing.
+
+#### Handler Implementation
+
+```typescript
+// packages/api-mocks/src/handlers/features/get-features.ts
+// ✅ Good Example
+import { http, HttpResponse } from "msw";
+import type { GetFeaturesResponse } from "@repo/api/types";
+import { mockVariantsByEndpoint } from "../../manage-mock-selection";
+import { defaultFeatures, emptyFeatures } from "../../mocks/features";
+
+const API_ENDPOINT = "api/v1/features";
+const HTTP_STATUS_OK = 200;
+const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
+
+// Response factories
+const defaultResponse = () => HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
+const emptyResponse = () => HttpResponse.json(emptyFeatures, { status: HTTP_STATUS_OK });
+const errorResponse = () => new HttpResponse("General error", { status: HTTP_STATUS_INTERNAL_SERVER_ERROR });
+
+// Default handler with variant switching (for development)
+const defaultHandler = () =>
+  http.get(API_ENDPOINT, async () => {
+    switch (mockVariantsByEndpoint.features) {
+      case "empty": {
+        return emptyResponse();
+      }
+      case "error": {
+        return errorResponse();
+      }
+      default: {
+        return defaultResponse();
+      }
+    }
+  });
+
+// Export handlers for different scenarios
+export const getFeaturesHandlers = {
+  defaultHandler,
+  emptyHandler: () => http.get(API_ENDPOINT, async () => emptyResponse()),
+  errorHandler: () => http.get(API_ENDPOINT, async () => errorResponse()),
+};
+```
+
+**Why good:** Named constants eliminate magic numbers for maintainability, response factories reduce duplication and ensure consistency, variant switching enables UI development without code changes, explicit handler exports allow per-test overrides
+
+```typescript
+// ❌ Bad Example
+import { http, HttpResponse } from "msw";
+
+export const getFeaturesHandler = http.get("api/v1/features", () => {
+  return HttpResponse.json({ features: [] }, { status: 200 });
+});
+```
+
+**Why bad:** Hardcoded 200 status is a magic number, only supports one scenario (empty) making error state testing impossible, no variant switching forces code changes to test different states, single export prevents flexible test scenarios
+
+---
+
+### Pattern 4: Browser Worker for Development
+
+Set up MSW browser worker to intercept requests during development, enabling the app to work without a real backend.
+
+#### Browser Worker Setup
+
+```typescript
+// packages/api-mocks/src/browser-worker.ts
+// ✅ Good Example
+import { setupWorker } from "msw/browser";
+import { handlers } from "./handlers";
+
+export const browserWorker = setupWorker(...handlers);
+```
+
+**Why good:** Uses `setupWorker` from `msw/browser` for browser environment, spreads handlers array for clean syntax, single responsibility (just worker setup)
+
+```typescript
+// ❌ Bad Example - Wrong MSW API for environment
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+export const browserWorker = setupServer(...handlers);
+```
+
+**Why bad:** `setupServer` is for Node.js environment and will fail in browser, causes cryptic runtime errors about service worker not being available
+
+#### App Integration (Vite/React)
+
+```typescript
+// apps/client-react/src/main.tsx
+// ✅ Good Example
+import { createRoot } from "react-dom/client";
+import { browserWorker } from "@repo/api-mocks/browserWorker";
+import { App } from "./app";
+
+const UNHANDLED_REQUEST_STRATEGY = "bypass";
+
+async function enableMocking() {
+  if (import.meta.env.DEV) {
+    await browserWorker.start({
+      onUnhandledRequest: UNHANDLED_REQUEST_STRATEGY, // Allow real requests to pass through
+    });
+  }
+}
+
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(<App />);
+});
+```
+
+**Why good:** Awaits worker start before rendering prevents race conditions, `onUnhandledRequest: "bypass"` allows unmocked requests to real APIs, only runs in development (no production impact), named constant for configuration clarity
+
+```typescript
+// ❌ Bad Example - Rendering before mocking ready
+import { createRoot } from "react-dom/client";
+import { browserWorker } from "@repo/api-mocks/browserWorker";
+import { App } from "./app";
+
+if (import.meta.env.DEV) {
+  browserWorker.start({ onUnhandledRequest: "bypass" }); // Missing await
+}
+
+createRoot(document.getElementById("root")!).render(<App />);
+```
+
+**Why bad:** Race condition where app renders before MSW is ready causes first requests to fail, no async/await means initial API calls might bypass mocks unpredictably, hard-to-debug intermittent failures in development
+
+#### App Integration (Next.js App Router)
+
+```typescript
+// apps/client-next/app/layout.tsx
+// ✅ Good Example
+import type { ReactNode } from "react";
+
+const UNHANDLED_REQUEST_STRATEGY = "bypass";
+const NODE_ENV_DEVELOPMENT = "development";
+
+async function enableMocking() {
+  if (process.env.NODE_ENV === NODE_ENV_DEVELOPMENT) {
+    const { browserWorker } = await import("@repo/api-mocks/browserWorker");
+    return browserWorker.start({
+      onUnhandledRequest: UNHANDLED_REQUEST_STRATEGY,
+    });
+  }
+}
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  if (process.env.NODE_ENV === NODE_ENV_DEVELOPMENT) {
+    await enableMocking();
+  }
+
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+**Why good:** Dynamic import in Next.js prevents server-side bundling of browser-only code, awaiting in async component ensures MSW ready before render, named constants for magic strings
+
+```typescript
+// ❌ Bad Example - Importing browser worker at top level
+import type { ReactNode } from "react";
+import { browserWorker } from "@repo/api-mocks/browserWorker";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  if (process.env.NODE_ENV === "development") {
+    browserWorker.start({ onUnhandledRequest: "bypass" });
+  }
+
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+**Why bad:** Top-level import bundles browser-only service worker code in server bundle causing SSR build failures, sync function cannot await worker start causing race conditions, magic string "development" instead of named constant
+
+---
+
+### Pattern 5: Server Worker for Tests
+
+Set up MSW server worker for Node.js test environment with proper lifecycle management.
+
+#### Server Worker Setup
+
+```typescript
+// packages/api-mocks/src/server-worker.ts
+// ✅ Good Example
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+export const serverWorker = setupServer(...handlers);
+```
+
+**Why good:** Uses `setupServer` from `msw/node` for Node environment, matches browser worker pattern for consistency
+
+```typescript
+// ❌ Bad Example
+import { setupWorker } from "msw/browser";
+import { handlers } from "./handlers";
+
+export const serverWorker = setupWorker(...handlers);
+```
+
+**Why bad:** `setupWorker` requires browser APIs (service worker) that don't exist in Node causing test failures, will throw "navigator is not defined" errors in test environment
+
+#### Test Setup
+
+```typescript
+// apps/client-react/src/setup-tests.ts
+// ✅ Good Example
+import { afterAll, afterEach, beforeAll } from "vitest";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+beforeAll(() => serverWorker.listen());
+afterEach(() => serverWorker.resetHandlers());
+afterAll(() => serverWorker.close());
+```
+
+**Why good:** `beforeAll` starts server once for all tests (performance), `afterEach` resets handlers preventing test pollution from overrides, `afterAll` cleans up resources, follows MSW recommended lifecycle
+
+```typescript
+// ❌ Bad Example - Missing resetHandlers
+import { afterAll, beforeAll } from "vitest";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+beforeAll(() => serverWorker.listen());
+afterAll(() => serverWorker.close());
+```
+
+**Why bad:** Missing `resetHandlers` in `afterEach` means handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent breaking test isolation
+
+---
+
+### Pattern 6: Per-Test Handler Overrides
+
+Override default handlers in specific tests to simulate different API scenarios.
+
+#### Test Implementation
+
+```typescript
+// apps/client-react/src/__tests__/features.test.tsx
+// ✅ Good Example
+import { expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+it("should render features", async () => {
+  // Uses default handler
+  renderApp();
+  await expect(screen.findByText("Dark mode")).resolves.toBeInTheDocument();
+});
+
+it("should render empty state", async () => {
+  // Override with empty handler for this test
+  serverWorker.use(getFeaturesHandlers.emptyHandler());
+  renderApp();
+
+  await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
+});
+
+it("should handle errors", async () => {
+  // Override with error handler for this test
+  serverWorker.use(getFeaturesHandlers.errorHandler());
+  renderApp();
+
+  await expect(screen.findByText(/error/i)).resolves.toBeInTheDocument();
+});
+```
+
+**Why good:** `serverWorker.use()` scoped to individual test for isolation, explicit handler names make test intent clear, tests all scenarios (success, empty, error) for comprehensive coverage, `afterEach` reset ensures overrides don't leak
+
+```typescript
+// ❌ Bad Example - Only testing happy path
+import { expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+
+it("should render features", async () => {
+  renderApp();
+  await expect(screen.findByText("Dark mode")).resolves.toBeInTheDocument();
+});
+```
+
+**Why bad:** Only tests default success scenario, empty and error states go untested causing bugs to reach production, no validation that error handling works, incomplete test coverage
+
+**When not to use:** For integration tests that need real backend validation (use test database instead of mocks).
+
+---
+
+### Pattern 7: Runtime Variant Switching for Development
+
+Enable developers to switch between mock variants (default, empty, error) at runtime without code changes.
+
+#### Variant Management
+
+```typescript
+// packages/api-mocks/src/manage-mock-selection.ts
+// ✅ Good Example
+export type MockVariant = "default" | "empty" | "error";
+
+export const mockVariantsByEndpoint: Record<string, MockVariant> = {
+  features: "default",
+  users: "default",
+  // Add more endpoints as needed
+};
+
+// Optional: UI for switching variants in development
+export function setMockVariant(endpoint: string, variant: MockVariant) {
+  mockVariantsByEndpoint[endpoint] = variant;
+}
+```
+
+**Why good:** Type-safe variant names prevent typos, centralized state for all endpoint variants, mutation function allows runtime changes, enables testing UI states without restarting app
+
+```typescript
+// ❌ Bad Example - Using strings without type safety
+export const mockVariants = {
+  features: "default",
+  users: "defualt", // Typo not caught
+};
+
+export function setMockVariant(endpoint, variant) {
+  mockVariants[endpoint] = variant;
+}
+```
+
+**Why bad:** No TypeScript validation allows typos ("defualt") to slip through, any parameters accept anything causing runtime errors, no autocomplete or IDE support for variant names
+
+**When not to use:** In test environment (use explicit handler overrides instead for deterministic behavior).
+
+---
+
+### Pattern 8: Simulating Network Latency
+
+Add realistic delays to mock responses to test loading states and race conditions.
+
+#### Implementation
+
+```typescript
+// ✅ Good Example
+import { http, HttpResponse, delay } from "msw";
+
+const MOCK_NETWORK_LATENCY_MS = 500;
+const HTTP_STATUS_OK = 200;
+
+const defaultHandler = () =>
+  http.get(API_ENDPOINT, async () => {
+    await delay(MOCK_NETWORK_LATENCY_MS);
+    return HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
+  });
+```
+
+**Why good:** Named constant makes latency configurable and self-documenting, realistic delay reveals loading state bugs, using MSW's `delay` utility is clean and cancellable
+
+```typescript
+// ❌ Bad Example
+import { http, HttpResponse } from "msw";
+
+const defaultHandler = () =>
+  http.get(API_ENDPOINT, async () => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return HttpResponse.json(defaultFeatures, { status: 200 });
+  });
+```
+
+**Why bad:** Magic number 300ms without context or configurability, manual Promise wrapper instead of MSW utility, magic number 200 status code repeated, harder to disable delay when needed
+
+**When not to use:** In tests where speed matters more than loading state validation (omit delay for faster test execution).
+
+</patterns>
+
+---
+
+<decision_framework>
+
+## Decision Framework
+
+```
+Need API mocking?
+├─ Is it for development?
+│   ├─ YES → Browser worker + variant switching
+│   └─ NO → Server worker in tests
+├─ Testing different scenarios?
+│   ├─ YES → Per-test handler overrides
+│   └─ NO → Default handlers sufficient
+├─ Need to change mock behavior without restarting?
+│   ├─ YES → Variant switching + runtime control
+│   └─ NO → Static handlers fine
+└─ Need realistic network conditions?
+    ├─ YES → Add delay() to handlers
+    └─ NO → Instant responses
+```
+
+**Choosing between approaches:**
+
+- **Centralized package**: Always use for shared mocks across apps
+- **Handler variants**: Use when testing multiple scenarios (empty, error states)
+- **Per-test overrides**: Use when specific tests need different responses
+- **Runtime switching**: Use in development for UI exploration
+- **Network delay**: Use when testing loading states or race conditions
+
+</decision_framework>
+
+---
+
+<integration>
+
+## Integration Guide
+
+**Works with:**
+
+- **React Query / TanStack Query**: MSW intercepts fetch calls, React Query sees normal responses
+- **Vitest**: Server worker integrates via test setup file (`setup-tests.ts`)
+- **React Testing Library**: Works seamlessly, no special configuration needed
+- **Vite/Next.js**: Browser worker integrates via app entry point
+
+**Configuration with other tools:**
+
+```typescript
+// Vitest config
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    setupFiles: ["./src/setup-tests.ts"], // Loads serverWorker
+  },
+});
+```
+
+</integration>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- ❌ **Using `setupWorker` in Node tests or `setupServer` in browser** - Wrong API for environment causes cryptic failures
+- ❌ **Manual API type definitions instead of generated types** - Types drift from real API schema causing runtime errors
+- ❌ **Not resetting handlers between tests** - Test pollution and order-dependent failures
+- ❌ **Mixing handlers and mock data in same file** - Reduces reusability and violates separation of concerns
+- ❌ **Missing `await` when starting browser worker before render** - Race conditions cause intermittent failures
+
+**Medium Priority Issues:**
+
+- ⚠️ **Only testing happy path (missing empty/error variants)** - Incomplete test coverage
+- ⚠️ **Hardcoded HTTP status codes (magic numbers)** - Use named constants
+- ⚠️ **Top-level import of browser worker in Next.js** - SSR build failures
+- ⚠️ **No `onUnhandledRequest` configuration** - Unclear which requests are mocked vs real
+
+**Common Mistakes:**
+
+- Forgetting to call `serverWorker.resetHandlers()` in `afterEach`
+- Using default exports instead of named exports
+- Embedding mock data inside handlers instead of separating into `mocks/` directory
+- Not providing variant handlers (only `defaultHandler`)
+
+**Gotchas & Edge Cases:**
+
+- MSW requires async/await for browser worker start - rendering before ready causes race conditions
+- Handler overrides with `serverWorker.use()` persist until `resetHandlers()` is called
+- Browser worker doesn't work in Node environment and vice versa - check your imports
+- Dynamic imports in Next.js are required for browser-only code to avoid SSR bundling issues
+
+</red_flags>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns to Avoid
+
+### Wrong MSW API for Environment
+
+```typescript
+// ❌ ANTI-PATTERN: setupServer in browser
+import { setupServer } from "msw/node";
+export const browserWorker = setupServer(...handlers);
+
+// ❌ ANTI-PATTERN: setupWorker in Node tests
+import { setupWorker } from "msw/browser";
+export const serverWorker = setupWorker(...handlers);
+```
+
+**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs - wrong API causes cryptic runtime errors.
+
+**What to do instead:** Use `setupWorker` from `msw/browser` for browser, `setupServer` from `msw/node` for tests.
+
+---
+
+### Missing Handler Reset Between Tests
+
+```typescript
+// ❌ ANTI-PATTERN: No resetHandlers
+import { afterAll, beforeAll } from "vitest";
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+beforeAll(() => serverWorker.listen());
+afterAll(() => serverWorker.close());
+// Missing: afterEach(() => serverWorker.resetHandlers());
+```
+
+**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent.
+
+**What to do instead:** Always include `afterEach(() => serverWorker.resetHandlers())`.
+
+---
+
+### Mock Data Embedded in Handlers
+
+```typescript
+// ❌ ANTI-PATTERN: Data inside handler
+export const getFeaturesHandler = http.get("api/v1/features", () => {
+  return HttpResponse.json({
+    features: [{ id: "1", name: "Dark mode" }],
+  });
+});
+```
+
+**Why it's wrong:** Mock data cannot be reused in other tests or handlers, no type checking against API schema.
+
+**What to do instead:** Separate mock data into `mocks/` directory with proper types from `@repo/api/types`.
+
+---
+
+### Rendering Before MSW Ready
+
+```typescript
+// ❌ ANTI-PATTERN: Missing await
+if (import.meta.env.DEV) {
+  browserWorker.start({ onUnhandledRequest: "bypass" }); // No await!
+}
+createRoot(document.getElementById("root")!).render(<App />);
+```
+
+**Why it's wrong:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably.
+
+**What to do instead:** Await worker start before rendering: `await browserWorker.start(...)`.
+
+</anti_patterns>
+
+---
+
+<critical_reminders>
+
+## ⚠️ CRITICAL REMINDERS
+
+**(You MUST separate mock data from handlers - handlers in `handlers/`, data in `mocks/`)**
+
+**(You MUST use `setupWorker` for browser/development and `setupServer` for Node/tests - NEVER swap them)**
+
+**(You MUST reset handlers after each test with `serverWorker.resetHandlers()` in `afterEach`)**
+
+**(You MUST use generated types from `@repo/api/types` - NEVER manually define API response types)**
+
+**(You MUST use named constants for HTTP status codes and delays - NO magic numbers)**
+
+**Failure to follow these rules will cause test pollution, type drift from real API, environment-specific failures, and hard-to-debug race conditions.**
 
 </critical_reminders>
 

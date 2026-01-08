@@ -1,6 +1,6 @@
-# API & Data Fetching Patterns (Photoroom Webapp)
+# API Client Architecture
 
-> **Quick Guide:** Use React Query for server state, djangoBackend axios instance for HTTP calls, static API classes for URL construction, and Zod for response validation. Bridge to MobX stores with MobxQuery when needed.
+> **Quick Guide:** Using OpenAPI? Need type safety? Integrating with React Query? Use hey-api for automatic client generation with type-safe React Query hooks.
 
 ---
 
@@ -8,48 +8,40 @@
 
 ## ⚠️ CRITICAL: Before Using This Skill
 
-> **All code must follow project conventions in CLAUDE.md** (PascalCase for components/stores, camelCase for hooks/utilities, named exports, import ordering, `import type`)
+**(You MUST use generated query options from @hey-api - NEVER write custom React Query hooks)**
 
-**(You MUST use djangoBackend axios instance for ALL API calls - NEVER create custom axios instances)**
+**(You MUST regenerate client code (`bun run build` in packages/api) when OpenAPI schema changes)**
 
-**(You MUST use static API classes (ContentAPI, TeamAPI, UserAPI) for URL construction - NEVER hardcode URLs)**
+**(You MUST use named constants for ALL timeout/retry values - NO magic numbers)**
 
-**(You MUST use Zod schemas with safeParse for ALL API response validation)**
+**(You MUST configure API client base URL via environment variables)**
 
-**(You MUST wrap ALL async state mutations after await in runInAction())**
-
-**(You MUST dispose MobxQuery instances when stores are destroyed)**
+**(You MUST use named exports only - NO default exports in libraries)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** djangoBackend, React Query, useMutation, useQuery, Zod schema, API classes, MobxQuery, queryClient, axios interceptor
+**Auto-detection:** OpenAPI schema, hey-api code generation, generated React Query hooks, API client configuration
 
 **When to use:**
 
-- Fetching data from Django backend (v2/v3 endpoints)
-- Creating mutations with React Query in custom hooks
-- Validating API responses with Zod schemas
-- Bridging React Query with MobX stores via MobxQuery
-- Constructing URLs with static API classes
+- Setting up hey-api to generate client from OpenAPI specs
+- Using generated React Query query options (getFeaturesOptions pattern)
+- Troubleshooting API type generation or regeneration
 
 **When NOT to use:**
 
-- Engine WASM operations (use EngineStore)
-- Firebase authentication (use AuthStore)
-- Local UI state (use useState or MobX)
-- WebSocket connections (not covered here)
+- No OpenAPI spec available (consider writing one or using tRPC)
+- GraphQL API (use Apollo or urql instead)
+- Real-time WebSocket APIs (use socket.io or similar)
+- Simple REST APIs where manual fetch calls suffice
 
 **Key patterns covered:**
 
-- Axios instance configuration with interceptors (djangoBackend)
-- Static API class URL construction (ContentAPI, TeamAPI, UserAPI)
-- Query key string constants for cache management
-- useMutation in custom hooks with notifications
-- Zod schema validation with safeParse
-- MobxQuery bridge for store integration
-- React Query conservative defaults
+- OpenAPI-first development with hey-api (@hey-api/openapi-ts)
+- Generated React Query hooks and query options (never custom hooks)
+- Type safety from generated types (never manual type definitions)
 
 ---
 
@@ -57,32 +49,13 @@
 
 ## Philosophy
 
-The Photoroom webapp uses a **layered API architecture** that separates concerns:
+OpenAPI-first development ensures a single source of truth for your API contract. The hey-api code generator (@hey-api/openapi-ts) transforms your OpenAPI schema into fully typed client code, React Query hooks, and query options—eliminating manual type definitions and reducing bugs.
 
-1. **Transport Layer**: `djangoBackend` axios instance handles all HTTP communication with configured interceptors for authentication and headers
-2. **URL Layer**: Static API classes (ContentAPI, TeamAPI, UserAPI) construct type-safe URLs with query parameters
-3. **Validation Layer**: Zod schemas validate API responses at runtime, catching contract changes early
-4. **State Layer**: React Query manages server state caching; MobxQuery bridges to MobX stores when needed
-
-**Why this approach:**
-
-- Centralized auth token injection via interceptors
-- Type-safe URL construction prevents typos
-- Runtime validation catches backend contract changes
-- React Query handles caching, retries, and deduplication
-- MobxQuery enables reactive store updates from server data
-
-**When to use React Query directly:**
-
-- Simple data fetching in components with useQuery
-- Mutations in custom hooks with useMutation
-- When data is only needed in React component tree
-
-**When to use MobxQuery:**
-
-- Data needs to be reactive in MobX stores
-- Multiple stores need to observe the same data
-- Complex state derivations depend on server data
+This approach prioritizes:
+- **Single source of truth**: OpenAPI schema drives types, client code, and mocks
+- **Zero manual typing**: Generated code eliminates type drift
+- **Consistent patterns**: All API calls use the same generated query options
+- **Centralized configuration**: One place to configure client behavior
 
 </philosophy>
 
@@ -92,772 +65,1073 @@ The Photoroom webapp uses a **layered API architecture** that separates concerns
 
 ## Core Patterns
 
-### Pattern 1: Static API Class for URL Construction
+### Pattern 1: OpenAPI Schema Definition and Code Generation
 
-Use static class methods to construct URLs with type-safe query parameters. URLs are built from `appEnv.photoroom.backendURL` base.
+Define your API contract in OpenAPI format, then use hey-api to generate TypeScript client code, types, and React Query hooks.
 
-#### Implementation
-
-```typescript
-// src/lib/APIs.ts
-import { appEnv } from "lib/appEnv";
-
-export class ContentAPI {
-  // Static URL for simple endpoints
-  static readonly lastOpenedProjectsURL = `${appEnv.photoroom.backendURL}/v3/projects/virtual-folders/last-opened/`;
-
-  // Method with query parameter handling
-  static userTemplatesURL(options?: {
-    page?: number;
-    pageSize?: number;
-    favorite?: boolean;
-    teamID?: string;
-  }) {
-    const url = new URL(`${appEnv.photoroom.backendURL}/v2/templates/`);
-
-    if (options?.page !== undefined) {
-      url.searchParams.set("page", options.page.toString());
-    }
-    if (options?.pageSize !== undefined) {
-      url.searchParams.set("page_size", options.pageSize.toString());
-    }
-    if (options?.favorite !== undefined) {
-      url.searchParams.set("favorite", options.favorite.toString());
-    }
-    if (options?.teamID !== undefined) {
-      url.searchParams.set("team_id", options.teamID);
-    }
-
-    return url.toString();
-  }
-
-  // Simple dynamic URL
-  static templateURL(templateID: string) {
-    return `${appEnv.photoroom.backendURL}/v2/templates/${templateID}/`;
-  }
-}
-
-export class TeamAPI {
-  static apiInfoURL(teamId: string) {
-    return `${appEnv.photoroom.backendURL}/v2/teams/${teamId}/api-info/`;
-  }
-
-  static membersURL(teamId: string) {
-    return `${appEnv.photoroom.backendURL}/v2/teams/${teamId}/members/`;
-  }
-}
-```
-
-**Why good:** Centralized URL construction prevents typos, URL class handles encoding automatically, type-safe options prevent invalid parameters, easy to update when API versions change
+#### Constants
 
 ```typescript
-// BAD Example - Hardcoded URLs
-const fetchTemplates = async (page: number) => {
-  // Hardcoded URL - breaks when base URL changes
-  const response = await djangoBackend.get(
-    `https://api.photoroom.com/v2/templates/?page=${page}`
-  );
-  return response.data;
-};
-
-// BAD Example - String concatenation
-const url = appEnv.photoroom.backendURL + "/v2/templates/?page=" + page + "&favorite=" + favorite;
+// packages/api/openapi-ts.config.ts
+const OUTPUT_PATH = "./src/apiClient";
 ```
 
-**Why bad:** Hardcoded URLs break across environments, string concatenation doesn't encode special characters properly, scattered URLs make version upgrades painful
+#### OpenAPI Schema
 
----
+```yaml
+# packages/api/openapi.yaml
+openapi: 3.1.0
+info:
+  title: Side project features API
+  description: API for managing side project features
+  version: 0.0.1
 
-### Pattern 2: Axios Instance with Interceptors
+servers:
+  - url: /api/v1
+    description: API routes
 
-Use the configured `djangoBackend` axios instance with auth and header interceptors. Never create custom axios instances.
+components:
+  schemas:
+    Feature:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Auto-generated ID for the feature
+        name:
+          type: string
+          description: Name of the feature
+        description:
+          type: string
+          description: Description of the feature
+        status:
+          type: string
+          description: Status 'not started' | 'in progress' | 'done'
+      required: [id, name, description, status]
+
+paths:
+  /features:
+    get:
+      summary: Get features
+      responses:
+        "200":
+          description: Features
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  features:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Feature"
+```
 
 #### Configuration
 
 ```typescript
-// src/lib/apiServices.ts
-import axios from "axios";
-import type { InternalAxiosRequestConfig } from "axios";
-import { appEnv } from "lib/appEnv";
+// packages/api/openapi-ts.config.ts
+import { defaultPlugins, defineConfig } from "@hey-api/openapi-ts";
 
-export const djangoBackend = axios.create({
-  baseURL: appEnv.photoroom.backendURL,
-});
+const OUTPUT_PATH = "./src/apiClient";
 
-// Auth interceptor injects Firebase token
-const authInterceptor = async (config: InternalAxiosRequestConfig) => {
-  const firebaseToken = await getIdToken();
-  if (config.headers && firebaseToken) {
-    config.headers.authorization = firebaseToken;
-  }
-  return config;
-};
-
-// Headers interceptor adds common headers
-const headersInterceptor = (config: InternalAxiosRequestConfig) => {
-  if (config.headers) {
-    config.headers["X-Client-Version"] = appEnv.clientVersion;
-    config.headers["X-Platform"] = "webapp";
-  }
-  return config;
-};
-
-djangoBackend.interceptors.request.use(authInterceptor);
-djangoBackend.interceptors.request.use(headersInterceptor);
-```
-
-#### Usage
-
-```typescript
-// In a fetch function
-import { djangoBackend } from "lib/apiServices";
-import { ContentAPI } from "lib/APIs";
-
-export const fetchUserTemplates = async (options: { page: number; teamID?: string }) => {
-  const response = await djangoBackend.get(ContentAPI.userTemplatesURL(options));
-  return response.data;
-};
-```
-
-**Why good:** Single axios instance means auth is always attached, interceptors handle cross-cutting concerns, consistent headers across all requests
-
-```typescript
-// BAD Example - Custom axios instance
-const myApi = axios.create({
-  baseURL: "https://api.photoroom.com",
-});
-// Missing auth token! Missing headers!
-const response = await myApi.get("/v2/templates/");
-
-// BAD Example - Manual token handling
-const response = await fetch(url, {
-  headers: {
-    authorization: await getIdToken(), // Easy to forget
+export default defineConfig({
+  input: "./openapi.yaml",
+  output: {
+    format: "prettier",
+    lint: "eslint",
+    path: OUTPUT_PATH,
   },
+  // Generate both fetch client AND React Query hooks
+  plugins: [...defaultPlugins, "@hey-api/client-fetch", "@tanstack/react-query"],
 });
 ```
 
-**Why bad:** Custom instances bypass auth interceptor causing 401 errors, manual token handling is error-prone and duplicates logic everywhere
+#### Package Configuration
+
+```json
+// packages/api/package.json
+{
+  "name": "@repo/api",
+  "scripts": {
+    "build": "openapi-ts"
+  },
+  "exports": {
+    "./types": "./src/apiClient/types.gen.ts",
+    "./client": "./src/apiClient/services.gen.ts",
+    "./reactQueries": "./src/apiClient/@tanstack/react-query.gen.ts"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.59.2",
+    "@hey-api/client-fetch": "^0.3.3",
+    "@tanstack/react-query": "^5.62.11"
+  }
+}
+```
+
+#### Generated Types (Auto-Generated)
+
+```typescript
+// packages/api/src/apiClient/types.gen.ts
+export type Feature = {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+};
+
+export type GetFeaturesResponse = {
+  features?: Feature[];
+};
+```
+
+#### Generated React Query Options (Auto-Generated)
+
+```typescript
+// packages/api/src/apiClient/@tanstack/react-query.gen.ts
+import type { QueryObserverOptions } from "@tanstack/react-query";
+import { getFeaturesQueryKey, getFeatures } from "./services.gen";
+import type { GetFeaturesResponse } from "./types.gen";
+
+// Auto-generated query options
+export const getFeaturesOptions = (): QueryObserverOptions<GetFeaturesResponse> => ({
+  queryKey: getFeaturesQueryKey(),
+  queryFn: () => getFeatures(),
+});
+```
+
+#### Usage in Apps
+
+```typescript
+// apps/client-next/app/features.tsx
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
+
+export function FeaturesPage() {
+  // Use generated query options - fully typed!
+  const { data, isPending, error } = useQuery(getFeaturesOptions());
+
+  if (isPending) return <Skeleton />;
+  if (error) return <Error message={error.message} />;
+
+  return (
+    <ul>
+      {data?.features?.map((feature) => (
+        <li key={feature.id}>{feature.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// Named export (project convention)
+export { FeaturesPage };
+```
+
+**Why good:** Single source of truth in OpenAPI eliminates type drift, automatic code generation removes manual typing errors, generated React Query hooks enforce consistent patterns, named exports enable tree-shaking
+
+**Why bad (Anti-pattern):**
+
+```typescript
+// ❌ Manual type definition - duplicates OpenAPI schema
+interface Feature {
+  id: string;
+  name: string;
+}
+
+// ❌ Custom React Query hook - should use generated getFeaturesOptions
+function useFeatures() {
+  return useQuery({
+    queryKey: ["features"], // Manual key prone to typos
+    queryFn: async () => {
+      const res = await fetch("/api/v1/features"); // Magic string
+      return res.json();
+    },
+  });
+}
+
+// ❌ Default export
+export default FeaturesPage;
+```
+
+**Why bad:** Manual types drift from OpenAPI schema causing runtime errors, custom hooks create inconsistent patterns across the codebase, magic strings cause refactoring mistakes, default exports prevent tree-shaking
+
+**When to use:** Always when backend provides OpenAPI specification.
 
 ---
 
-### Pattern 3: React Query Configuration
+### Pattern 2: Client Configuration with Environment Variables
 
-React Query is configured with conservative defaults - no automatic refetching.
+Configure the API client base URL and global settings before React Query initialization using environment variables and named constants.
 
-#### QueryClient Setup
+#### Constants
 
 ```typescript
-// src/lib/queryClient.ts
-import { QueryClient } from "@tanstack/react-query";
+// apps/client-next/lib/query-provider.tsx
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const DEFAULT_RETRY_ATTEMPTS = 3;
+```
 
-export const queryClient = new QueryClient({
+#### Environment Variables
+
+```bash
+# apps/client-next/.env
+NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+
+# apps/client-next/.env.production
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1
+```
+
+#### Basic Setup
+
+```typescript
+// apps/client-next/lib/query-provider.tsx
+"use client";
+
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { client } from "@repo/api/client";
+
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: FIVE_MINUTES_MS,
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
+
+  // Configure API client ONCE on initialization
+  client.setConfig({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "",
+  });
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+// Named export (project convention)
+export { QueryProvider };
+```
+
+#### Usage in Layout
+
+```typescript
+// apps/client-next/app/layout.tsx
+import type { ReactNode } from "react";
+import { QueryProvider } from "@/lib/query-provider";
+
+export function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
+    </html>
+  );
+}
+
+// Named export
+export { RootLayout };
+```
+
+**Why good:** Environment variables enable different URLs per environment without code changes, named constants make timeouts self-documenting, single configuration point prevents scattered setConfig calls, client configures before any queries run
+
+**Why bad (Anti-pattern):**
+
+```typescript
+// ❌ Magic numbers for timeouts
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      throwOnError: true, // Let error boundaries handle errors
-      refetchOnWindowFocus: false, // No automatic refetch
-      refetchOnMount: false, // No automatic refetch
-      refetchOnReconnect: false, // No automatic refetch
+      staleTime: 300000, // What's this?
+      refetchOnWindowFocus: false,
     },
+  },
+});
+
+// ❌ Hardcoded URL
+client.setConfig({
+  baseUrl: "http://localhost:3000/api/v1", // Breaks in production
+});
+```
+
+**Why bad:** Magic numbers require code diving to understand meaning, hardcoded URLs break when deploying to different environments, causes bugs when promoting code through environments
+
+---
+
+### Pattern 3: Advanced Configuration (Headers, Auth, Environment-Specific Settings)
+
+Configure global headers, authentication, and environment-specific behavior using named constants and conditional logic.
+
+#### Constants
+
+```typescript
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const TEN_MINUTES_MS = 10 * 60 * 1000;
+const THIRTY_SECONDS_MS = 30 * 1000;
+const DEFAULT_RETRY_ATTEMPTS = 3;
+```
+
+#### Headers and Authentication
+
+```typescript
+// apps/client-next/lib/query-provider.tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { client } from "@repo/api/client";
+
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const DEFAULT_RETRY_ATTEMPTS = 3;
+const CLIENT_VERSION = "1.0.0";
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: FIVE_MINUTES_MS,
+            refetchOnWindowFocus: false,
+            retry: DEFAULT_RETRY_ATTEMPTS,
+          },
+          mutations: {
+            retry: false, // Don't retry mutations
+          },
+        },
+      })
+  );
+
+  // Configure client with base URL and headers
+  client.setConfig({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Client-Version": CLIENT_VERSION,
+    },
+  });
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+// Named export
+export { QueryProvider };
+```
+
+#### Dynamic Authentication Headers
+
+```typescript
+// apps/client-next/components/authenticated-app.tsx
+import { useEffect } from "react";
+import type { ReactNode } from "react";
+import { client } from "@repo/api/client";
+import { useAuth } from "@/hooks/use-auth";
+
+export function AuthenticatedApp({ children }: { children: ReactNode }) {
+  const { token } = useAuth();
+
+  useEffect(() => {
+    // Update client config when auth token changes
+    if (token) {
+      client.setConfig({
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+  }, [token]);
+
+  return <div>{children}</div>;
+}
+
+// Named export
+export { AuthenticatedApp };
+```
+
+#### Environment-Specific Configuration
+
+```typescript
+// apps/client-next/lib/query-provider.tsx
+"use client";
+
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { client } from "@repo/api/client";
+
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const DEFAULT_RETRY_ATTEMPTS = 3;
+const ZERO_MS = 0;
+const isDevelopment = process.env.NODE_ENV === "development";
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // No cache in dev for fresh data, 5min in prod
+            staleTime: isDevelopment ? ZERO_MS : FIVE_MINUTES_MS,
+            refetchOnWindowFocus: !isDevelopment,
+            // No retry in dev (fail fast), retry in prod
+            retry: isDevelopment ? false : DEFAULT_RETRY_ATTEMPTS,
+          },
+        },
+      })
+  );
+
+  // Configure API client
+  client.setConfig({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "",
+    // Development-specific settings
+    ...(isDevelopment && {
+      headers: {
+        "X-Debug": "true",
+      },
+    }),
+  });
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+// Named export
+export { QueryProvider };
+```
+
+**Why good:** Named constants make configuration values self-documenting, environment-aware settings optimize for dev speed and prod performance, dynamic auth headers update when token changes without app restart, merge behavior preserves existing config
+
+**Why bad (Anti-pattern):**
+
+```typescript
+// ❌ Magic numbers everywhere
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 300000, // What is this?
+      retry: 3, // Why 3?
+    },
+  },
+});
+
+// ❌ Hardcoded values
+client.setConfig({
+  headers: {
+    "X-Client-Version": "1.0.0", // Should be const
   },
 });
 ```
 
-#### Query Key Constants
+**Why bad:** Magic numbers obscure intent requiring code archaeology, hardcoded versions get stale during refactoring, makes A/B testing timeout values impossible
+
+---
+
+### Pattern 4: Per-Request Configuration Override
+
+Override client configuration for specific requests without affecting global settings.
+
+#### Constants
 
 ```typescript
-// src/constants/queryKeys.ts
-export const teamsQueryIdentifier = "teams";
-export const courierTokenQueryIdentifier = "courierToken";
-export const templateCategoriesIdentifier = "templateCategories";
-export const entitlementsQueryIdentifier = "entitlements";
-export const subscriptionQueryIdentifier = "subscription";
-export const apiInfoQueryIdentifier = "apiInfo";
+const DEFAULT_TIMEOUT_MS = 10000;
 ```
 
-#### Usage with useQuery
+#### Per-Request Override
 
 ```typescript
 import { useQuery } from "@tanstack/react-query";
-import { teamsQueryIdentifier } from "constants/queryKeys";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
 
-export const useTeams = () => {
-  return useQuery({
-    queryKey: [teamsQueryIdentifier],
-    queryFn: fetchTeams,
-    staleTime: Infinity, // Teams rarely change
+const ALTERNATIVE_BASE_URL = "https://different-api.example.com/api/v1";
+
+export function Features() {
+  const { data } = useQuery({
+    ...getFeaturesOptions(),
+    // Override client for this request only
+    meta: {
+      client: {
+        baseUrl: ALTERNATIVE_BASE_URL,
+      },
+    },
   });
-};
+
+  return <div>{/* ... */}</div>;
+}
+
+// Named export
+export { Features };
 ```
 
-**Why good:** Conservative defaults prevent unexpected refetches that confuse users, string constants prevent typo bugs in cache keys, explicit staleTime makes caching policy clear
+**Why good:** Request-specific config doesn't affect other requests, clean separation between global and per-request settings, type-safe config options, named constants prevent magic URLs
+
+**Why bad (Anti-pattern):**
 
 ```typescript
-// BAD Example - Magic string query keys
-useQuery({
-  queryKey: ["teams"], // Typo risk: "team" vs "teams"
-  queryFn: fetchTeams,
-});
-
-// BAD Example - Aggressive refetching
-new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: true, // Causes UI flicker on tab switch
+// ❌ Mutating global config for single request
+function SpecialFeature() {
+  const { data } = useQuery({
+    queryKey: ["special"],
+    queryFn: async () => {
+      client.setConfig({
+        baseUrl: "https://other-api.com", // Affects ALL subsequent requests!
+      });
+      return client.get({ url: "/data" });
     },
-  },
-});
+  });
+}
 ```
 
-**Why bad:** String literals cause cache key mismatches when typos occur, aggressive refetching causes jarring UI updates when users switch tabs
+**Why bad:** Mutating global config creates race conditions in concurrent requests, causes flaky tests, breaks other components making API calls simultaneously
+
+**When to use:** Rarely needed—most apps use single API base URL. Useful for gradual API migrations or multi-tenant systems.
+
+**When not to use:** Don't use for auth headers (use global config with useEffect) or for retry/timeout (use query options).
 
 ---
 
-### Pattern 4: useMutation in Custom Hooks
+### Pattern 5: Timeout Configuration with Abort Controller
 
-Wrap useMutation in custom hooks that handle notifications and state coordination.
+Configure request timeout at the fetch level using AbortController with named constants.
+
+#### Constants
+
+```typescript
+const DEFAULT_TIMEOUT_MS = 10000;
+const THIRTY_SECONDS_MS = 30 * 1000;
+```
 
 #### Implementation
 
 ```typescript
-// src/hooks/useCreateTeam.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { stores } from "stores";
-import { teamsQueryIdentifier } from "constants/queryKeys";
-import { createTeamApi } from "lib/teamApi";
+// apps/client-next/lib/query-provider.tsx
+"use client";
 
-export const useCreateTeam = () => {
-  const { notificationsStore, teamsStore, authStore } = stores;
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { client } from "@repo/api/client";
 
-  const {
-    data: team,
-    mutateAsync: createTeam,
-    isPending: createTeamIsLoading,
-    reset: resetCreateTeamMutation,
-  } = useMutation({
-    mutationFn: async (name: string) => createTeamApi(name),
-    onSuccess: () => {
-      // Invalidate teams cache to refetch
-      queryClient.invalidateQueries({ queryKey: [teamsQueryIdentifier] });
-    },
-    onError: () => {
-      notificationsStore.addNotification({
-        type: "danger",
-        label: t("team.create.error"),
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const DEFAULT_TIMEOUT_MS = 10000;
+
+// Custom fetch with timeout
+const fetchWithTimeout = (timeoutMs: number = DEFAULT_TIMEOUT_MS) => {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(input, {
+        ...init,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  };
+};
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: FIVE_MINUTES_MS,
+          },
+        },
+      })
+  );
+
+  // Configure client with custom fetch
+  client.setConfig({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "",
+    fetch: fetchWithTimeout(DEFAULT_TIMEOUT_MS),
+  });
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+// Named export
+export { QueryProvider };
+```
+
+#### Per-Query Timeout
+
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
+
+const FIVE_SECONDS_MS = 5 * 1000;
+
+export function Features() {
+  const { data } = useQuery({
+    ...getFeaturesOptions(),
+    // React Query timeout (different from fetch timeout)
+    meta: {
+      timeout: FIVE_SECONDS_MS,
     },
   });
 
-  return {
-    team,
-    createTeam,
-    createTeamIsLoading,
-    resetCreateTeamMutation,
-  };
+  return <div>{/* ... */}</div>;
+}
+
+// Named export
+export { Features };
+```
+
+**Why good:** Prevents hanging requests from degrading UX, AbortController properly cancels in-flight requests, named constants make timeout policy clear, cleanup prevents memory leaks
+
+**Why bad (Anti-pattern):**
+
+```typescript
+// ❌ Magic timeout number
+setTimeout(() => controller.abort(), 10000); // Why 10 seconds?
+
+// ❌ No cleanup
+const controller = new AbortController();
+setTimeout(() => controller.abort(), timeout);
+// Missing clearTimeout on success path - memory leak!
+```
+
+**Why bad:** Magic timeout makes policy changes require grep, missing cleanup leaks timers causing performance degradation, timeout without abort just delays error without freeing resources
+
+**When not to use:** Don't set aggressive timeouts for file uploads, large downloads, or long-polling connections.
+
+---
+
+### Pattern 6: Type Safety with Generated Types
+
+All types are auto-generated from OpenAPI schema using @hey-api/openapi-ts—never write manual type definitions.
+
+#### Generated Types (Auto-Generated)
+
+```typescript
+// packages/api/src/apiClient/types.gen.ts (AUTO-GENERATED)
+export type Feature = {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+};
+
+export type GetFeaturesResponse = {
+  features?: Feature[];
 };
 ```
 
-#### Usage in Component
+#### Usage with Type Inference
 
 ```typescript
-import { observer } from "mobx-react-lite";
-import { useCreateTeam } from "hooks/useCreateTeam";
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
+import type { Feature } from "@repo/api/types";
 
-export const CreateTeamButton = observer(() => {
-  const { createTeam, createTeamIsLoading } = useCreateTeam();
+export function FeaturesPage() {
+  const { data } = useQuery(getFeaturesOptions());
 
-  const handleClick = async () => {
-    await createTeam("My New Team");
-  };
+  // data is typed as GetFeaturesResponse | undefined
+  // data.features is typed as Feature[] | undefined
+  const features: Feature[] | undefined = data?.features;
 
   return (
-    <button onClick={handleClick} disabled={createTeamIsLoading}>
-      {createTeamIsLoading ? t("common.loading") : t("team.create.button")}
-    </button>
+    <ul>
+      {features?.map((feature) => (
+        <li key={feature.id}>{feature.name}</li> // Full autocomplete!
+      ))}
+    </ul>
   );
-});
+}
+
+// Named export
+export { FeaturesPage };
 ```
 
-**Why good:** Custom hooks encapsulate mutation logic with error handling, cache invalidation keeps UI in sync, notifications inform users of success/failure, clear loading states
+**Why good:** Zero manual typing eliminates drift, types match backend exactly, breaking changes detected via TypeScript errors at compile time, full IDE autocomplete prevents typos
+
+**Why bad (Anti-pattern):**
 
 ```typescript
-// BAD Example - Inline mutation without error handling
-const Component = () => {
-  const mutation = useMutation({
-    mutationFn: createTeamApi,
-    // No onError - user gets no feedback!
-    // No cache invalidation - stale data!
-  });
+// ❌ Manual type definition - drifts from backend
+interface Feature {
+  id: string;
+  name: string;
+  // Missing 'description' and 'status' - causes runtime errors!
+}
 
-  return <button onClick={() => mutation.mutate("Team")}>Create</button>;
-};
-
-// BAD Example - Hardcoded error message
-onError: () => {
-  notificationsStore.addNotification({
-    type: "danger",
-    label: "Failed to create team", // Should use t() for translation
-  });
-};
+// ❌ Using 'any' - loses all type safety
+const features: any = data?.features;
 ```
 
-**Why bad:** Missing error handlers leave users confused when mutations fail, skipping cache invalidation shows stale data, hardcoded strings break i18n
+**Why bad:** Manual types drift from backend causing silent runtime errors, missing fields break UI, 'any' defeats TypeScript purpose creating production bugs
 
 ---
 
-### Pattern 5: Zod Schema Validation
+### Pattern 7: Error Handling with React Query
 
-Validate ALL API responses with Zod schemas using safeParse to catch contract changes.
+Handle errors at the component level using React Query's built-in error handling with exponential backoff retry logic.
 
-#### Schema Definition
+#### Constants
 
 ```typescript
-// src/lib/schemas/apiInfoSchema.ts
-import { z } from "zod";
-
-export const ApiKeySchema = z.object({
-  id: z.number(),
-  key: z.string(),
-  name: z.string(),
-});
-
-export const ApiInfoSchema = z.object({
-  apiKeys: z.array(ApiKeySchema),
-  availableCredits: z.number(),
-  isOnCustomPlan: z.boolean(),
-});
-
-export type ApiInfoResponse = z.infer<typeof ApiInfoSchema>;
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const MAX_RETRY_ATTEMPTS = 3;
+const INITIAL_RETRY_DELAY_MS = 1000;
+const MAX_RETRY_DELAY_MS = 30000;
 ```
 
-#### Fetch Function with Validation
+#### Component-Level Error Handling
 
 ```typescript
-// src/lib/teamApi.ts
-import { djangoBackend } from "lib/apiServices";
-import { TeamAPI } from "lib/APIs";
-import { ApiInfoSchema } from "lib/schemas/apiInfoSchema";
-import type { ApiInfoResponse } from "lib/schemas/apiInfoSchema";
-import { makeLogger } from "lib/logger";
+// apps/client-next/app/features/page.tsx
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
+import { Info } from "@repo/ui/info";
+import { Skeleton } from "@repo/ui/skeleton";
 
-const logger = makeLogger("TeamAPI");
+export function FeaturesPage() {
+  const { data, isPending, error, isSuccess } = useQuery(getFeaturesOptions());
 
-export const fetchApiInfo = async (teamId: string): Promise<ApiInfoResponse | null> => {
-  const response = await djangoBackend.get(TeamAPI.apiInfoURL(teamId));
-  const result = ApiInfoSchema.safeParse(response.data);
-
-  if (!result.success) {
-    logger.error("Failed to parse API info", { teamId, errors: result.error.issues });
-    return null;
+  // Handle pending state
+  if (isPending) {
+    return <Skeleton />;
   }
 
-  return result.data;
-};
+  // Handle error state
+  if (error) {
+    return <Info variant="error" message={`An error has occurred: ${error.message}`} />;
+  }
+
+  // Handle empty state
+  if (isSuccess && !data?.features?.length) {
+    return <Info variant="info" message="No features found" />;
+  }
+
+  // Handle success state
+  return (
+    <ul>
+      {data?.features?.map((feature) => (
+        <li key={feature.id}>{feature.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// Named export
+export { FeaturesPage };
 ```
 
-**Why good:** Zod catches backend contract changes at runtime before they cause UI errors, safeParse prevents crashes on invalid data, logger provides debugging context, type inference from schema ensures consistency
+#### Global Error Handling
 
 ```typescript
-// BAD Example - No validation
-export const fetchApiInfo = async (teamId: string) => {
-  const response = await djangoBackend.get(TeamAPI.apiInfoURL(teamId));
-  return response.data; // Could be anything! May crash component
-};
+// apps/client-next/lib/query-provider.tsx
+"use client";
 
-// BAD Example - Manual type assertion
-const data = response.data as ApiInfoResponse; // Lies to TypeScript, crashes at runtime
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { client } from "@repo/api/client";
+import { toast } from "@repo/ui/toast";
 
-// BAD Example - Using parse instead of safeParse
-const data = ApiInfoSchema.parse(response.data); // Throws on invalid data!
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const isDevelopment = process.env.NODE_ENV === "development";
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: !isDevelopment, // No retry in dev (fail fast)
+            staleTime: FIVE_MINUTES_MS,
+          },
+          mutations: {
+            onError: (error) => {
+              // Global error handling for mutations
+              console.error("Mutation error:", error);
+              toast.error("Something went wrong. Please try again.");
+            },
+          },
+        },
+      })
+  );
+
+  client.setConfig({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "",
+  });
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+// Named export
+export { QueryProvider };
 ```
 
-**Why bad:** Unvalidated responses cause cryptic "undefined is not an object" errors deep in components, type assertions bypass TypeScript safety, parse throws exceptions breaking the app
+#### Per-Query Error Handling with Retry
+
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
+import { toast } from "@repo/ui/toast";
+
+const MAX_RETRY_ATTEMPTS = 3;
+const INITIAL_RETRY_DELAY_MS = 1000;
+const MAX_RETRY_DELAY_MS = 30 * 1000;
+const EXPONENTIAL_BASE = 2;
+
+export function Features() {
+  const { data, error } = useQuery({
+    ...getFeaturesOptions(),
+    retry: MAX_RETRY_ATTEMPTS,
+    retryDelay: (attemptIndex) =>
+      Math.min(INITIAL_RETRY_DELAY_MS * EXPONENTIAL_BASE ** attemptIndex, MAX_RETRY_DELAY_MS),
+    onError: (error) => {
+      console.error("Failed to load features:", error);
+      toast.error("Failed to load features");
+    },
+  });
+
+  return <div>{/* ... */}</div>;
+}
+
+// Named export
+export { Features };
+```
+
+**Why good:** React Query handles retry with exponential backoff automatically, component-level control lets each UI decide error presentation, global defaults ensure consistency, no interceptors needed simplifies architecture, named constants make retry policy auditable
+
+**Why bad (Anti-pattern):**
+
+```typescript
+// ❌ Magic numbers in retry logic
+retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000);
+
+// ❌ Swallowing errors silently
+onError: () => {}, // User has no feedback!
+
+// ❌ Using retry: false in production
+retry: false, // Fails on transient network errors
+```
+
+**Why bad:** Magic numbers obscure retry policy making tuning difficult, silent errors leave users confused, disabling retry in production causes failures from temporary network blips
+
+**When not to use:** Don't use global onError for queries (handle at component level for better UX).
 
 ---
 
-### Pattern 6: MobxQuery Bridge for Store Integration
+### Pattern 8: Integration with React Query Generated Hooks
 
-Use MobxQuery to bridge React Query data into MobX stores for reactive updates.
+Use generated query options directly—never write custom React Query hooks.
 
-#### MobxQuery Setup
+#### Generated Query Options (Auto-Generated)
 
 ```typescript
-// src/stores/utils/mobx-query.ts
-import { QueryObserver } from "@tanstack/react-query";
-import type { QueryObserverOptions, QueryObserverResult, QueryKey } from "@tanstack/react-query";
-import { queryClient } from "lib/queryClient";
+// packages/api/src/apiClient/@tanstack/react-query.gen.ts (AUTO-GENERATED)
+import type { QueryObserverOptions } from "@tanstack/react-query";
+import { getFeaturesQueryKey, getFeatures } from "./services.gen";
+import type { GetFeaturesResponse } from "./types.gen";
 
-export class MobxQuery<
-  TQueryFnData = unknown,
-  TError = unknown,
-  TData = TQueryFnData,
-  TQueryData = TQueryFnData,
-  TQueryKey extends QueryKey = QueryKey,
-> {
-  private observer?: QueryObserver<TQueryFnData, TError, TData, TQueryData, TQueryKey>;
-  private unsubscribe?: () => void;
+export const getFeaturesOptions = (): QueryObserverOptions<GetFeaturesResponse> => ({
+  queryKey: getFeaturesQueryKey(),
+  queryFn: () => getFeatures(),
+});
 
-  constructor(
-    private options: QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey>,
-    private onResultChange?: (result: QueryObserverResult<TData, TError>) => void
-  ) {}
-
-  query = () => {
-    if (this.observer) return;
-
-    this.observer = new QueryObserver(queryClient, this.options);
-    this.unsubscribe = this.observer.subscribe((result) => {
-      this.onResultChange?.(result);
-    });
-  };
-
-  dispose = () => {
-    this.unsubscribe?.();
-    this.observer = undefined;
-    this.unsubscribe = undefined;
-  };
+// Query key is also generated
+export function getFeaturesQueryKey() {
+  return ["api", "v1", "features"] as const;
 }
 ```
 
-#### Usage in Store
+#### Customizing Generated Options
 
 ```typescript
-// src/stores/TeamsStore.ts
-import { makeAutoObservable, runInAction } from "mobx";
-import { MobxQuery } from "stores/utils/mobx-query";
-import { teamsQueryIdentifier } from "constants/queryKeys";
-import { fetchTeams } from "lib/teamApi";
-import type { Team } from "@customTypes/team";
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturesOptions } from "@repo/api/reactQueries";
 
-export class TeamsStore {
-  teams: Team[] = [];
-  isLoading = true;
+const TEN_MINUTES_MS = 10 * 60 * 1000;
+const THIRTY_SECONDS_MS = 30 * 1000;
 
-  #teamsQuery: MobxQuery<Team[]>;
+export function Features() {
+  const someCondition = true; // Your condition
 
-  constructor() {
-    makeAutoObservable(this);
+  const { data } = useQuery({
+    ...getFeaturesOptions(),
+    // Override defaults
+    staleTime: TEN_MINUTES_MS,
+    refetchInterval: THIRTY_SECONDS_MS,
+    enabled: someCondition, // Conditional fetching
+  });
 
-    this.#teamsQuery = new MobxQuery(
-      {
-        queryKey: [teamsQueryIdentifier],
-        queryFn: fetchTeams,
-      },
-      (result) => {
-        runInAction(() => {
-          this.isLoading = result.isLoading;
-          if (result.data) {
-            this.teams = result.data;
-          }
-        });
+  return <div>{/* ... */}</div>;
+}
+
+// Named export
+export { Features };
+```
+
+**Why good:** Zero boilerplate eliminates custom hook bugs, type-safe options prevent runtime errors, consistent patterns across all API calls, query keys automatically namespaced, easy to customize by spreading, named constants make policies visible
+
+**Why bad (Anti-pattern):**
+
+```typescript
+// ❌ Custom React Query hook - should use generated options
+function useFeatures() {
+  return useQuery({
+    queryKey: ["features"], // Manual key prone to typos
+    queryFn: async () => {
+      const res = await fetch("/api/v1/features"); // Magic URL
+      return res.json();
+    },
+    staleTime: 600000, // Magic number
+  });
+}
+```
+
+**Why bad:** Custom hooks create inconsistent patterns, manual query keys cause cache key collisions, magic URLs break on API changes, magic numbers hide caching policy
+
+---
+
+### Pattern 9: Client-Side Error Handling for Browser APIs
+
+Wrap browser APIs (localStorage, sessionStorage, IndexedDB) in try/catch—they fail in private browsing, storage limits, or SSR.
+
+#### Constants
+
+```typescript
+const DEFAULT_VALUE = "";
+```
+
+#### localStorage Wrapper
+
+```typescript
+// hooks/use-local-storage.ts
+import { useState, useEffect } from "react";
+
+export function useLocalStorage<T>(key: string, initialValue: T) {
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
+
+  // Try/catch around localStorage access
+  useEffect(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item) {
+        setStoredValue(JSON.parse(item));
       }
-    );
-  }
+    } catch (error) {
+      // Log with context
+      console.error(`Error reading localStorage key "${key}":`, error);
+    }
+  }, [key]);
 
-  initialize = () => {
-    this.#teamsQuery.query();
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.error(`Error setting localStorage key "${key}":`, error);
+    }
   };
 
-  // CRITICAL: Dispose on cleanup
-  dispose = () => {
-    this.#teamsQuery.dispose();
-  };
+  return [storedValue, setValue] as const;
+}
 
-  get activeTeam() {
-    return this.teams.find((team) => team.isActive);
+// Named export
+export { useLocalStorage };
+```
+
+#### Error Boundaries
+
+```typescript
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
+import type { ReactNode } from "react";
+
+export function App({ children }: { children: ReactNode }) {
+  return (
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary
+          onReset={reset}
+          fallbackRender={({ error, resetErrorBoundary }) => (
+            <div>
+              <p>Something went wrong: {error.message}</p>
+              <button onClick={resetErrorBoundary}>Try again</button>
+            </div>
+          )}
+        >
+          {children}
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
+  );
+}
+
+// Named export
+export { App };
+```
+
+#### Custom Error Classes
+
+```typescript
+// lib/errors.ts
+export class APIError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public endpoint: string
+  ) {
+    super(message);
+    this.name = "APIError";
+  }
+}
+
+// Named export
+export { APIError };
+
+// Usage
+import { APIError } from "@/lib/errors";
+
+try {
+  const response = await fetch("/api/users/123");
+  if (!response.ok) {
+    throw new APIError("User not found", response.status, "/api/users/123");
+  }
+} catch (error) {
+  if (error instanceof APIError) {
+    console.error(`API Error [${error.statusCode}] ${error.endpoint}:`, error.message);
   }
 }
 ```
 
-**Why good:** MobxQuery enables MobX reactivity for server data, runInAction ensures MobX tracks mutations correctly, dispose prevents memory leaks, computed getters derive state automatically
+**Why good:** Try/catch prevents crashes in private browsing mode, error context aids debugging, error boundaries prevent white screens, custom error classes provide structured error info, named exports follow project conventions
+
+**Why bad (Anti-pattern):**
 
 ```typescript
-// BAD Example - Missing runInAction after subscribe callback
-this.#teamsQuery = new MobxQuery(
-  { queryKey: [teamsQueryIdentifier], queryFn: fetchTeams },
-  (result) => {
-    // MobX warning! Mutating outside action
-    this.teams = result.data ?? [];
-  }
-);
+// ❌ No error handling - crashes in private browsing
+const value = JSON.parse(localStorage.getItem(key));
 
-// BAD Example - Missing dispose
-class Store {
-  #query = new MobxQuery(...);
-  // No dispose method - memory leak!
-}
+// ❌ Silent error - user has no feedback
+try {
+  localStorage.setItem(key, value);
+} catch {}
 
-// BAD Example - Using regular method instead of arrow function
-dispose() {
-  this.#teamsQuery.dispose(); // `this` is undefined when called externally
-}
+// ❌ Generic error message
+console.error(error); // What operation failed?
 ```
 
-**Why bad:** Missing runInAction causes MobX warnings and broken reactivity, undisposed queries leak memory and cause stale updates, regular methods lose `this` binding when destructured
-
----
-
-### Pattern 7: Error Handling with Logger
-
-Use module-specific loggers for API error tracking with structured context.
-
-#### Logger Creation
-
-```typescript
-// src/lib/logger.ts
-import * as Sentry from "@sentry/browser";
-
-export const makeLogger = (moduleName: string) => ({
-  error: (message: string, context: Record<string, unknown> = {}, error?: Error) => {
-    console.error(`[${moduleName}] ${message}`, context, error);
-    Sentry.captureException(error ?? new Error(message), {
-      tags: { module: moduleName },
-      extra: context,
-    });
-  },
-  info: (message: string, context: Record<string, unknown> = {}) => {
-    console.info(`[${moduleName}] ${message}`, context);
-  },
-  warn: (message: string, context: Record<string, unknown> = {}) => {
-    console.warn(`[${moduleName}] ${message}`, context);
-  },
-});
-```
-
-#### Usage in API Functions
-
-```typescript
-import { makeLogger } from "lib/logger";
-import { djangoBackend } from "lib/apiServices";
-import { ContentAPI } from "lib/APIs";
-
-const logger = makeLogger("ContentAPI");
-
-export const fetchTemplate = async (templateId: string) => {
-  try {
-    const response = await djangoBackend.get(ContentAPI.templateURL(templateId));
-    return response.data;
-  } catch (error) {
-    logger.error("Failed to fetch template", { templateId }, error as Error);
-    throw error; // Re-throw for React Query to handle
-  }
-};
-```
-
-**Why good:** Module name provides context for debugging, structured logging enables filtering in Sentry, Sentry integration catches errors in production, consistent pattern across codebase
-
-```typescript
-// BAD Example - No error context
-catch (error) {
-  console.error(error); // What operation failed? What ID?
-}
-
-// BAD Example - Swallowing errors
-catch (error) {
-  return null; // Caller doesn't know something went wrong!
-}
-```
-
-**Why bad:** Generic logs make debugging impossible in production, swallowed errors hide failures and cause silent bugs
-
----
-
-### Pattern 8: User Notifications for Mutations
-
-Show user feedback via NotificationsStore for mutation success/failure.
-
-#### Implementation
-
-```typescript
-import { useMutation } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { stores } from "stores";
-
-export const useDeleteTemplate = () => {
-  const { notificationsStore } = stores;
-  const { t } = useTranslation();
-
-  return useMutation({
-    mutationFn: deleteTemplateApi,
-    onSuccess: () => {
-      notificationsStore.addNotification({
-        type: "success",
-        label: t("template.delete.success"),
-      });
-    },
-    onError: () => {
-      notificationsStore.addNotification({
-        type: "danger",
-        label: t("template.delete.error"),
-      });
-    },
-  });
-};
-```
-
-**Why good:** Users get immediate feedback on actions, translated messages support i18n, consistent notification pattern across app
-
-```typescript
-// BAD Example - No user feedback
-useMutation({
-  mutationFn: deleteTemplateApi,
-  // User wonders: did it work?
-});
-
-// BAD Example - Alert instead of notification
-onSuccess: () => {
-  alert("Template deleted!"); // Blocks UI, not translatable
-};
-```
-
-**Why bad:** Silent mutations confuse users, alerts block the UI and aren't translated
+**Why bad:** Unhandled localStorage crashes app in private browsing, silent catch blocks hide bugs, generic logs make debugging impossible in production
 
 </patterns>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns
-
-### ❌ Creating Custom Axios Instances
-
-Custom axios instances bypass the configured `djangoBackend` interceptors, causing authentication failures and missing headers.
-
-```typescript
-// ❌ Anti-pattern
-const myApi = axios.create({ baseURL: "https://api.photoroom.com" });
-const response = await myApi.get("/v2/templates/"); // No auth token!
-
-// ✅ Correct approach
-import { djangoBackend } from "lib/apiServices";
-const response = await djangoBackend.get(ContentAPI.templatesURL());
-```
-
-**Why this matters:** The auth interceptor injects Firebase tokens automatically. Custom instances require manual token handling which is error-prone and duplicates logic.
-
----
-
-### ❌ Hardcoding API URLs
-
-Hardcoded URLs break across environments and make API version upgrades painful.
-
-```typescript
-// ❌ Anti-pattern
-await djangoBackend.get("https://api.photoroom.com/v2/templates/?page=1");
-await djangoBackend.get(`${baseUrl}/v2/templates/?page=${page}&favorite=${favorite}`);
-
-// ✅ Correct approach
-await djangoBackend.get(ContentAPI.userTemplatesURL({ page: 1 }));
-```
-
-**Why this matters:** Static API classes centralize URL construction, handle query parameter encoding automatically, and make version migrations a single-point change.
-
----
-
-### ❌ Using parse() Instead of safeParse()
-
-Zod's `parse()` throws exceptions on invalid data, crashing the application.
-
-```typescript
-// ❌ Anti-pattern
-const data = ApiInfoSchema.parse(response.data); // Throws on invalid data!
-
-// ✅ Correct approach
-const result = ApiInfoSchema.safeParse(response.data);
-if (!result.success) {
-  logger.error("Validation failed", { errors: result.error.issues });
-  return null;
-}
-return result.data;
-```
-
-**Why this matters:** Backend contract changes happen. `safeParse()` handles failures gracefully while `parse()` crashes the entire component tree.
-
----
-
-### ❌ Missing runInAction in MobxQuery Callbacks
-
-MobX requires state mutations to occur within actions. Callbacks from async operations run outside the action context.
-
-```typescript
-// ❌ Anti-pattern
-this.#teamsQuery = new MobxQuery(
-  { queryKey: [teamsQueryIdentifier], queryFn: fetchTeams },
-  (result) => {
-    this.teams = result.data ?? []; // MobX warning! Outside action
-  }
-);
-
-// ✅ Correct approach
-this.#teamsQuery = new MobxQuery(
-  { queryKey: [teamsQueryIdentifier], queryFn: fetchTeams },
-  (result) => {
-    runInAction(() => {
-      this.teams = result.data ?? [];
-    });
-  }
-);
-```
-
-**Why this matters:** MobX cannot track mutations that happen outside actions, breaking reactivity and causing stale UI.
-
----
-
-### ❌ Missing MobxQuery Dispose
-
-MobxQuery subscriptions create memory leaks if not properly cleaned up when stores are destroyed.
-
-```typescript
-// ❌ Anti-pattern
-class Store {
-  #query = new MobxQuery({ queryKey: ["data"], queryFn: fetchData });
-  // No dispose method - subscription lives forever!
-}
-
-// ✅ Correct approach
-class Store {
-  #query = new MobxQuery({ queryKey: ["data"], queryFn: fetchData });
-
-  dispose = () => {
-    this.#query.dispose();
-  };
-}
-```
-
-**Why this matters:** Undisposed queries continue running, causing memory leaks and stale data updates to unmounted components.
-
----
-
-### ❌ Using useEffect to Sync React Query with MobX
-
-Syncing React Query data to MobX via useEffect creates unnecessary rerenders and race conditions.
-
-```typescript
-// ❌ Anti-pattern
-const { data } = useQuery({ queryKey: ["teams"], queryFn: fetchTeams });
-useEffect(() => {
-  if (data) {
-    teamsStore.setTeams(data); // Race condition! Extra rerenders!
-  }
-}, [data]);
-
-// ✅ Correct approach
-// Use MobxQuery in the store instead
-class TeamsStore {
-  #query = new MobxQuery(
-    { queryKey: ["teams"], queryFn: fetchTeams },
-    (result) => runInAction(() => { this.teams = result.data ?? []; })
-  );
-}
-```
-
-**Why this matters:** MobxQuery bridges React Query to MobX properly, avoiding the component render cycle entirely.
-
-</anti_patterns>
 
 ---
 
@@ -865,74 +1139,42 @@ class TeamsStore {
 
 ## Decision Framework
 
-### Data Fetching Strategy
+### When to Use Generated vs Custom
 
 ```
-Need to fetch server data?
-|
-+-- Is it needed in MobX stores?
-|   |
-|   +-- YES --> Use MobxQuery bridge
-|   |           (Stores that need reactive server data)
-|   |
-|   +-- NO --> Use useQuery directly in component
-|              (Simple component-level data)
-|
-+-- Is it a mutation (POST/PUT/DELETE)?
-    |
-    +-- YES --> Use useMutation in custom hook
-    |           with notifications and cache invalidation
-    |
-    +-- NO --> Use useQuery with query key constants
+Need API integration?
+├─ Is OpenAPI spec available?
+│   ├─ YES → Use hey-api code generation ✓
+│   │   └─ Use generated query options (getFeaturesOptions)
+│   └─ NO → Do you control the backend?
+│       ├─ YES → Write OpenAPI spec, then use hey-api
+│       └─ NO → Consider tRPC or manual fetch with Zod
+└─ Is it GraphQL?
+    └─ Use Apollo or urql (not this skill)
 ```
 
-### URL Construction
+### Configuration Strategy
 
 ```
-Need to make API call?
-|
-+-- Does API class exist for this endpoint?
-|   |
-|   +-- YES --> Use static method (ContentAPI.templateURL(id))
-|   |
-|   +-- NO --> Add method to appropriate API class
-|              (ContentAPI, TeamAPI, UserAPI, etc.)
-|
-+-- Does URL have query parameters?
-    |
-    +-- YES --> Use URL class with searchParams.set()
-    |
-    +-- NO --> Use template literal with base URL
+Need to configure client?
+├─ Global config (base URL, default headers)?
+│   └─ Use client.setConfig() in QueryProvider ✓
+├─ Per-request override?
+│   └─ Use query meta options ✓
+└─ Dynamic auth headers?
+    └─ Use useEffect to update client.setConfig() ✓
 ```
 
-### Response Validation
+### Error Handling Strategy
 
 ```
-Processing API response?
-|
-+-- Is response structure critical?
-|   |
-|   +-- YES --> Use Zod schema with safeParse
-|   |           Log errors, return null on failure
-|   |
-|   +-- NO --> Still use Zod schema
-|              (All responses should be validated)
-```
-
-### Store vs Hook
-
-```
-Where to put data fetching logic?
-|
-+-- Is data needed by multiple stores?
-|   |
-|   +-- YES --> Use MobxQuery in store
-|   |
-|   +-- NO --> Is data needed in store computeds?
-|       |
-|       +-- YES --> Use MobxQuery in store
-|       |
-|       +-- NO --> Use useQuery in custom hook
+How to handle errors?
+├─ Component-level?
+│   └─ Use isPending, error states from useQuery ✓
+├─ Global mutations?
+│   └─ Use onError in QueryClient defaultOptions ✓
+└─ Browser APIs (localStorage)?
+    └─ Wrap in try/catch with context logging ✓
 ```
 
 </decision_framework>
@@ -945,21 +1187,86 @@ Where to put data fetching logic?
 
 **Works with:**
 
-- **MobX Stores**: MobxQuery bridges React Query to MobX reactivity; stores must use runInAction after await
-- **NotificationsStore (@photoroom/ui)**: Show success/error toasts via addNotification
-- **Firebase Auth**: djangoBackend interceptor injects Firebase token automatically
-- **i18next**: All user-facing messages use t() for translation
-- **Sentry**: makeLogger sends errors to Sentry with module context
-- **appEnv**: Base URLs come from environment configuration
+- **React Query (@tanstack/react-query)**: Generated query options integrate directly with useQuery/useMutation hooks for automatic data fetching and caching
+- **MSW (@repo/api-mocks)**: Mock handlers use generated types from `@repo/api/types` ensuring mocks match API contract (see API Mocking skill for MSW setup)
+- **TypeScript**: Generated types provide end-to-end type safety from OpenAPI schema to UI components
+- **Next.js**: Environment variables (NEXT_PUBLIC_API_URL) configure client per deployment environment
 
 **Replaces / Conflicts with:**
 
-- **Custom axios instances**: Always use djangoBackend, never create new axios.create()
-- **Direct fetch()**: Use djangoBackend for auth token injection
-- **Manual cache management**: React Query handles caching; don't store server data in MobX unless using MobxQuery
-- **console.log for errors**: Use makeLogger for structured error tracking
+- **Axios**: hey-api uses fetch-based client, no interceptors available—use React Query middleware instead
+- **Custom API hooks**: Generated query options replace manual useQuery wrappers
+- **Manual type definitions**: OpenAPI types replace hand-written interfaces
+- **Redux for server state**: React Query handles server state, use Zustand for client state only
 
 </integration>
+
+---
+
+<anti_patterns>
+
+## Anti-Patterns
+
+### ❌ Manual Type Definitions
+
+Do not write manual TypeScript interfaces for API responses. They drift from the backend schema and cause runtime errors.
+
+```typescript
+// ❌ WRONG - Manual types drift from backend
+interface Feature {
+  id: string;
+  name: string;
+  // Missing fields = runtime errors
+}
+
+// ✅ CORRECT - Use generated types
+import type { Feature } from "@repo/api";
+```
+
+### ❌ Custom React Query Hooks
+
+Do not write custom useQuery wrappers for API calls. Use generated query options from hey-api.
+
+```typescript
+// ❌ WRONG - Custom hook duplicates generated code
+function useFeatures() {
+  return useQuery({
+    queryKey: ["features"],
+    queryFn: () => fetch("/api/v1/features"),
+  });
+}
+
+// ✅ CORRECT - Use generated query options
+import { getFeaturesOptions } from "@repo/api";
+const { data } = useQuery(getFeaturesOptions());
+```
+
+### ❌ Hardcoded API URLs
+
+Do not hardcode API URLs. Use environment variables.
+
+```typescript
+// ❌ WRONG - Hardcoded URL
+client.setConfig({ baseUrl: "http://localhost:3000" });
+
+// ✅ CORRECT - Environment variable
+client.setConfig({ baseUrl: process.env.NEXT_PUBLIC_API_URL });
+```
+
+### ❌ Magic Numbers for Timeouts
+
+Do not use raw numbers for timeouts, retries, or intervals. Use named constants.
+
+```typescript
+// ❌ WRONG - Magic number
+staleTime: 300000,
+
+// ✅ CORRECT - Named constant
+const STALE_TIME_MS = 5 * 60 * 1000; // 5 minutes
+staleTime: STALE_TIME_MS,
+```
+
+</anti_patterns>
 
 ---
 
@@ -969,37 +1276,36 @@ Where to put data fetching logic?
 
 **High Priority Issues:**
 
-- Creating custom axios instances (use djangoBackend for auth injection)
-- Hardcoding API URLs (use static API classes)
-- Missing runInAction after await in MobX stores (breaks reactivity)
-- Missing Zod validation on API responses (causes cryptic runtime errors)
-- Using parse instead of safeParse (throws on invalid data)
-- Missing MobxQuery dispose (memory leak)
-- Regular methods instead of arrow functions in stores (loses this binding)
+- ❌ **Manual API type definitions** - should be generated from OpenAPI schema, causes type drift and runtime errors
+- ❌ **Custom React Query hooks for API calls** - should use generated query options like getFeaturesOptions(), creates inconsistent patterns
+- ❌ **Magic numbers for timeouts/retries** - use named constants (FIVE_MINUTES_MS, DEFAULT_RETRY_ATTEMPTS), makes policy opaque
+- ❌ **Hardcoded API URLs** - should use environment variables (NEXT_PUBLIC_API_URL), breaks multi-environment deploys
+- ❌ **Default exports in libraries** - should use named exports, prevents tree-shaking
+- ❌ **kebab-case violations** - file names must be kebab-case (features-page.tsx not FeaturesPage.tsx)
 
 **Medium Priority Issues:**
 
-- Missing onError in useMutation (user gets no feedback)
-- Missing cache invalidation after mutations (stale data)
-- Hardcoded notification messages (use t() for i18n)
-- Using alert() instead of NotificationsStore
-- Missing logger context in error handling
+- ⚠️ **Not using `import type` for type-only imports** - increases bundle size unnecessarily
+- ⚠️ **Incorrect import order** - should be React → external → @repo/* → relative → styles
+- ⚠️ **Mutating global client config in query functions** - causes race conditions, use per-request meta instead
+- ⚠️ **Missing error boundaries** - unhandled errors crash entire app, wrap with QueryErrorResetBoundary
+- ⚠️ **No try/catch around localStorage** - crashes in private browsing mode
 
 **Common Mistakes:**
 
-- Forgetting to add new query key constants (use existing pattern)
-- Using useEffect to sync React Query data to MobX (use MobxQuery instead)
-- Not re-throwing errors after logging (breaks React Query error handling)
-- Passing stores as props instead of using stores singleton
+- Forgetting to regenerate client after OpenAPI schema changes (`bun run build` in packages/api)
+- Using `retry: true` in development with mocks (should be `false` to fail fast)
+- Not cleaning up AbortController timeout (memory leak)
+- Using generic error messages ("Error occurred" instead of "Failed to load features")
 
 **Gotchas & Edge Cases:**
 
-- djangoBackend.get() returns { data: ... } - access response.data not response
-- API classes use trailing slashes on URLs (Django requires them)
-- Zod safeParse returns { success, data } or { success, error } - check success first
-- MobxQuery callback runs on every query state change (loading, success, error)
-- Query key arrays must be stable (use constants, not inline arrays)
-- authInterceptor is async - token may not be immediately available
+- When using MSW mocks, they must start before React Query provider mounts (see API Mocking skill)
+- `NEXT_PUBLIC_` prefix required for client-side env variables in Next.js
+- `client.setConfig()` merges with existing config, doesn't replace it
+- Generated query keys are immutable tuples (safe for React Query key equality)
+- Fetch timeout is different from React Query's staleTime/cacheTime
+- Generated types change when OpenAPI schema changes—commit generated files to catch breaking changes in code review
 
 </red_flags>
 
@@ -1009,18 +1315,16 @@ Where to put data fetching logic?
 
 ## ⚠️ CRITICAL REMINDERS
 
-> **All code must follow project conventions in CLAUDE.md**
+**(You MUST use generated query options from @hey-api - NEVER write custom React Query hooks)**
 
-**(You MUST use djangoBackend axios instance for ALL API calls - NEVER create custom axios instances)**
+**(You MUST regenerate client code (`bun run build` in packages/api) when OpenAPI schema changes)**
 
-**(You MUST use static API classes (ContentAPI, TeamAPI, UserAPI) for URL construction - NEVER hardcode URLs)**
+**(You MUST use named constants for ALL timeout/retry values - NO magic numbers)**
 
-**(You MUST use Zod schemas with safeParse for ALL API response validation)**
+**(You MUST configure API client base URL via environment variables)**
 
-**(You MUST wrap ALL async state mutations after await in runInAction())**
+**(You MUST use named exports only - NO default exports in libraries)**
 
-**(You MUST dispose MobxQuery instances when stores are destroyed)**
-
-**Failure to follow these rules will cause auth failures, runtime crashes, and memory leaks.**
+**Failure to follow these rules will cause type drift, bundle bloat, and production bugs.**
 
 </critical_reminders>
