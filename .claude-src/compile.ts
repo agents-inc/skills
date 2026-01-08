@@ -7,7 +7,7 @@
  * - LiquidJS handles simple variable interpolation and loops within templates
  *
  * Architecture:
- * - agents.yaml: Single source of truth for agent definitions (title, description, tools, output_format)
+ * - registry.yaml: Single source of truth for agent and skill definitions
  * - profiles/{profile}/config.yaml: Agent-centric config with prompts and skills per agent
  *
  * Usage:
@@ -20,14 +20,13 @@ import { parse as parseYaml } from "yaml";
 import type {
   AgentConfig,
   AgentDefinition,
-  AgentsConfig,
   CompiledAgentData,
   ProfileConfig,
   ProfileAgentConfig,
+  RegistryConfig,
   Skill,
   SkillAssignment,
   SkillReference,
-  SkillsConfig,
   ValidationResult,
 } from "./types";
 
@@ -79,16 +78,16 @@ function log(message: string): void {
 }
 
 // =============================================================================
-// Skill Resolution (merge skills.yaml + profile skill references)
+// Skill Resolution (merge registry.yaml skills + profile skill references)
 // =============================================================================
 
 function resolveSkillReference(
   ref: SkillReference,
-  skillsConfig: SkillsConfig
+  registry: RegistryConfig
 ): Skill {
-  const definition = skillsConfig.skills[ref.id];
+  const definition = registry.skills[ref.id];
   if (!definition) {
-    throw new Error(`Skill "${ref.id}" not found in skills.yaml`);
+    throw new Error(`Skill "${ref.id}" not found in registry.yaml`);
   }
   return {
     id: ref.id,
@@ -102,24 +101,23 @@ function resolveSkillReference(
 function resolveSkillReferences(
   precompiled: SkillReference[],
   dynamic: SkillReference[],
-  skillsConfig: SkillsConfig
+  registry: RegistryConfig
 ): SkillAssignment {
   return {
     precompiled: precompiled.map((ref) =>
-      resolveSkillReference(ref, skillsConfig)
+      resolveSkillReference(ref, registry)
     ),
-    dynamic: dynamic.map((ref) => resolveSkillReference(ref, skillsConfig)),
+    dynamic: dynamic.map((ref) => resolveSkillReference(ref, registry)),
   };
 }
 
 // =============================================================================
-// Agent Resolution (merge agents.yaml + profile config)
+// Agent Resolution (merge registry.yaml agents + profile config)
 // =============================================================================
 
 function resolveAgents(
-  agentsConfig: AgentsConfig,
-  profileConfig: ProfileConfig,
-  skillsConfig: SkillsConfig
+  registry: RegistryConfig,
+  profileConfig: ProfileConfig
 ): Record<string, AgentConfig> {
   const resolved: Record<string, AgentConfig> = {};
 
@@ -127,10 +125,10 @@ function resolveAgents(
   const agentNames = Object.keys(profileConfig.agents);
 
   for (const agentName of agentNames) {
-    const definition = agentsConfig.agents[agentName];
+    const definition = registry.agents[agentName];
     if (!definition) {
       throw new Error(
-        `Agent "${agentName}" in profile config but not found in agents.yaml`
+        `Agent "${agentName}" in profile config but not found in registry.yaml`
       );
     }
 
@@ -141,7 +139,7 @@ function resolveAgents(
     const skills = resolveSkillReferences(
       profileAgentConfig.precompiled,
       profileAgentConfig.dynamic,
-      skillsConfig
+      registry
     );
 
     // Merge definition with profile config
@@ -166,7 +164,7 @@ function resolveAgents(
 // =============================================================================
 
 async function validate(
-  agentsConfig: AgentsConfig,
+  registry: RegistryConfig,
   profileConfig: ProfileConfig,
   resolvedAgents: Record<string, AgentConfig>
 ): Promise<ValidationResult> {
@@ -480,28 +478,16 @@ async function compileAllCommands(): Promise<void> {
 async function main(): Promise<void> {
   console.log(`\n🚀 Compiling profile: ${PROFILE}\n`);
 
-  // Load agents.yaml (single source of truth for agent definitions)
-  const agentsPath = `${ROOT}/agents.yaml`;
-  let agentsConfig: AgentsConfig;
+  // Load registry.yaml (single source of truth for agent and skill definitions)
+  const registryPath = `${ROOT}/registry.yaml`;
+  let registry: RegistryConfig;
 
   try {
-    agentsConfig = parseYaml(await readFile(agentsPath));
-    log(`Loaded ${Object.keys(agentsConfig.agents).length} agent definitions`);
+    registry = parseYaml(await readFile(registryPath));
+    log(`Loaded ${Object.keys(registry.agents).length} agent definitions`);
+    log(`Loaded ${Object.keys(registry.skills).length} skill definitions`);
   } catch (error) {
-    console.error(`❌ Failed to load agents.yaml: ${agentsPath}`);
-    console.error(`   ${error}`);
-    process.exit(1);
-  }
-
-  // Load skills.yaml (single source of truth for skill definitions)
-  const skillsPath = `${ROOT}/skills.yaml`;
-  let skillsConfig: SkillsConfig;
-
-  try {
-    skillsConfig = parseYaml(await readFile(skillsPath));
-    log(`Loaded ${Object.keys(skillsConfig.skills).length} skill definitions`);
-  } catch (error) {
-    console.error(`❌ Failed to load skills.yaml: ${skillsPath}`);
+    console.error(`❌ Failed to load registry.yaml: ${registryPath}`);
     console.error(`   ${error}`);
     process.exit(1);
   }
@@ -524,7 +510,7 @@ async function main(): Promise<void> {
   // Resolve agents (merge definitions with profile config)
   let resolvedAgents: Record<string, AgentConfig>;
   try {
-    resolvedAgents = resolveAgents(agentsConfig, profileConfig, skillsConfig);
+    resolvedAgents = resolveAgents(registry, profileConfig);
     log(`Resolved ${Object.keys(resolvedAgents).length} agents for profile`);
   } catch (error) {
     console.error(`❌ Failed to resolve agents:`);
@@ -535,7 +521,7 @@ async function main(): Promise<void> {
   // Validate
   console.log("🔍 Validating configuration...");
   const validation = await validate(
-    agentsConfig,
+    registry,
     profileConfig,
     resolvedAgents
   );

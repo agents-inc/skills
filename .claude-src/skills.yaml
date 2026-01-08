@@ -1,3 +1,9 @@
+# =============================================================================
+# DEPRECATED: This file has been merged into registry.yaml
+# This file is kept for reference only and can be safely deleted.
+# All skill definitions are now in registry.yaml
+# =============================================================================
+
 # yaml-language-server: $schema=./schemas/skills.schema.json
 # Single source of truth for all skill definitions
 # Profile configs reference these by ID and add context-specific usage

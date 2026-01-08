@@ -7,7 +7,7 @@
 // =============================================================================
 
 /**
- * Skill definition from skills.yaml (single source of truth)
+ * Skill definition from registry.yaml
  * Contains static metadata that doesn't change per-agent
  */
 export interface SkillDefinition {
@@ -26,14 +26,23 @@ export interface SkillReference {
 }
 
 /**
- * Skills config from skills.yaml
+ * Skills config from skills.yaml (deprecated - use RegistryConfig)
  */
 export interface SkillsConfig {
   skills: Record<string, SkillDefinition>;
 }
 
 /**
- * Fully resolved skill (merged from skills.yaml + config.yaml)
+ * Registry config from registry.yaml
+ * Single source of truth for all agent and skill definitions
+ */
+export interface RegistryConfig {
+  agents: Record<string, AgentDefinition>;
+  skills: Record<string, SkillDefinition>;
+}
+
+/**
+ * Fully resolved skill (merged from registry.yaml + config.yaml)
  * This is what the compiler uses after merging
  */
 export interface Skill {
