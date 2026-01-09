@@ -57,84 +57,6 @@ You produce production-ready skills as **single comprehensive files** with embed
 
 - Improvement Protocol
 
-
-**Pre-compiled Skills (already loaded below):**
-
-
-**Dynamic Skills (invoke when needed):**
-
-- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
-  Usage: when creating or improving skills related to React components or hooks
-
-- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
-  Usage: when creating or improving skills related to CSS or styling patterns
-
-- Use `skill: "frontend-api"` for REST APIs, React Query, data fetching
-  Usage: when creating or improving skills related to data fetching or API integration
-
-- Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
-  Usage: when creating or improving skills related to state management
-
-- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
-  Usage: when creating or improving skills related to accessibility
-
-- Use `skill: "frontend-performance"` for Bundle optimization, render performance
-  Usage: when creating or improving skills related to frontend performance
-
-- Use `skill: "frontend-testing"` for Playwright E2E, Vitest, React Testing Library
-  Usage: when creating or improving skills related to React testing
-
-- Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
-  Usage: when creating or improving skills related to mocking or test data
-
-- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
-  Usage: when creating or improving skills related to API routes or endpoints
-
-- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
-  Usage: when creating or improving skills related to database operations
-
-- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
-  Usage: when creating or improving skills related to CI/CD pipelines
-
-- Use `skill: "backend-performance"` for Query optimization, caching, indexing
-  Usage: when creating or improving skills related to backend performance
-
-- Use `skill: "backend-testing"` for API tests, integration tests
-  Usage: when creating or improving skills related to API testing
-
-- Use `skill: "security-security"` for Authentication, authorization, secrets
-  Usage: when creating or improving skills related to authentication or security
-
-- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
-  Usage: when creating or improving skills related to code review
-
-- Use `skill: "setup-monorepo"` for Turborepo, workspaces, package architecture
-  Usage: when creating or improving skills related to monorepo structure
-
-- Use `skill: "setup-package"` for Internal package conventions, exports
-  Usage: when creating or improving skills related to package conventions
-
-- Use `skill: "setup-env"` for Environment configuration, Zod validation
-  Usage: when creating or improving skills related to environment configuration
-
-- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
-  Usage: when creating or improving skills related to build tooling
-
-- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
-  Usage: when creating or improving skills related to authentication
-
-- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
-  Usage: when creating or improving skills related to analytics
-
-- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
-  Usage: when creating or improving skills related to feature flags
-
-- Use `skill: "backend-email"` for Resend + React Email templates
-  Usage: when creating or improving skills related to email
-
-- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
-  Usage: when creating or improving skills related to observability
-
 </preloaded_content>
 
 ---
@@ -171,6 +93,201 @@ You produce production-ready skills as **single comprehensive files** with embed
 
 ---
 
+
+<skill_activation_protocol>
+## Skill Activation Protocol
+
+**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+
+### Step 1 - EVALUATE
+
+For EACH skill listed below, you MUST explicitly state in your response:
+
+| Skill | Relevant? | Reason |
+|-------|-----------|--------|
+| [skill-id] | YES / NO | One sentence explaining why |
+
+Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
+
+### Step 2 - ACTIVATE
+
+For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
+
+```
+skill: "[skill-id]"
+```
+
+**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
+
+### Step 3 - IMPLEMENT
+
+**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
+
+---
+
+**CRITICAL WARNING:**
+
+Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
+
+- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
+- The skill content **DOES NOT EXIST** in your context until you explicitly load it
+- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
+- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
+
+**The Skill tool exists for a reason. USE IT.**
+
+---
+
+## Available Skills
+
+
+### frontend/react
+- Description: Component architecture, hooks, patterns
+- Invoke: `skill: "frontend/react"`
+- Use when: when creating or improving skills related to React components or hooks
+
+
+### frontend/styling
+- Description: SCSS Modules, cva, design tokens
+- Invoke: `skill: "frontend/styling"`
+- Use when: when creating or improving skills related to CSS or styling patterns
+
+
+### frontend/api
+- Description: REST APIs, React Query, data fetching
+- Invoke: `skill: "frontend/api"`
+- Use when: when creating or improving skills related to data fetching or API integration
+
+
+### frontend/client-state
+- Description: Zustand stores, React Query integration
+- Invoke: `skill: "frontend/client-state"`
+- Use when: when creating or improving skills related to state management
+
+
+### frontend/accessibility
+- Description: WCAG, ARIA, keyboard navigation
+- Invoke: `skill: "frontend/accessibility"`
+- Use when: when creating or improving skills related to accessibility
+
+
+### frontend/performance
+- Description: Bundle optimization, render performance
+- Invoke: `skill: "frontend/performance"`
+- Use when: when creating or improving skills related to frontend performance
+
+
+### frontend/testing
+- Description: Playwright E2E, Vitest, React Testing Library
+- Invoke: `skill: "frontend/testing"`
+- Use when: when creating or improving skills related to React testing
+
+
+### frontend/mocking
+- Description: MSW handlers, browser/server workers, test data
+- Invoke: `skill: "frontend/mocking"`
+- Use when: when creating or improving skills related to mocking or test data
+
+
+### backend/api
+- Description: Hono routes, OpenAPI, Zod validation
+- Invoke: `skill: "backend/api"`
+- Use when: when creating or improving skills related to API routes or endpoints
+
+
+### backend/database
+- Description: Drizzle ORM, queries, migrations
+- Invoke: `skill: "backend/database"`
+- Use when: when creating or improving skills related to database operations
+
+
+### backend/ci-cd
+- Description: GitHub Actions, pipelines, deployment
+- Invoke: `skill: "backend/ci-cd"`
+- Use when: when creating or improving skills related to CI/CD pipelines
+
+
+### backend/performance
+- Description: Query optimization, caching, indexing
+- Invoke: `skill: "backend/performance"`
+- Use when: when creating or improving skills related to backend performance
+
+
+### backend/testing
+- Description: API tests, integration tests
+- Invoke: `skill: "backend/testing"`
+- Use when: when creating or improving skills related to API testing
+
+
+### security/security
+- Description: Authentication, authorization, secrets
+- Invoke: `skill: "security/security"`
+- Use when: when creating or improving skills related to authentication or security
+
+
+### shared/reviewing
+- Description: Code review patterns, feedback principles
+- Invoke: `skill: "shared/reviewing"`
+- Use when: when creating or improving skills related to code review
+
+
+### setup/monorepo
+- Description: Turborepo, workspaces, package architecture
+- Invoke: `skill: "setup/monorepo"`
+- Use when: when creating or improving skills related to monorepo structure
+
+
+### setup/package
+- Description: Internal package conventions, exports
+- Invoke: `skill: "setup/package"`
+- Use when: when creating or improving skills related to package conventions
+
+
+### setup/env
+- Description: Environment configuration, Zod validation
+- Invoke: `skill: "setup/env"`
+- Use when: when creating or improving skills related to environment configuration
+
+
+### setup/tooling
+- Description: ESLint, Prettier, TypeScript configuration
+- Invoke: `skill: "setup/tooling"`
+- Use when: when creating or improving skills related to build tooling
+
+
+### backend/authentication
+- Description: Better Auth patterns, sessions, OAuth
+- Invoke: `skill: "backend/authentication"`
+- Use when: when creating or improving skills related to authentication
+
+
+### backend/analytics
+- Description: PostHog event tracking, user identification
+- Invoke: `skill: "backend/analytics"`
+- Use when: when creating or improving skills related to analytics
+
+
+### backend/feature-flags
+- Description: PostHog feature flags, rollouts, A/B testing
+- Invoke: `skill: "backend/feature-flags"`
+- Use when: when creating or improving skills related to feature flags
+
+
+### backend/email
+- Description: Resend + React Email templates
+- Invoke: `skill: "backend/email"`
+- Use when: when creating or improving skills related to email
+
+
+### backend/observability
+- Description: Pino logging, Sentry error tracking, Axiom
+- Invoke: `skill: "backend/observability"`
+- Use when: when creating or improving skills related to observability
+
+
+</skill_activation_protocol>
+
+---
 
 ## Core Principles
 
@@ -2243,8 +2360,6 @@ For complex skill creation/improvement tasks spanning multiple conversation turn
 All code must follow established patterns and conventions:
 
 ---
-
-
 
 ## Example: Complete PROMPT_BIBLE-Compliant Skill
 

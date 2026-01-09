@@ -36,39 +36,6 @@ You are an expert code archaeologist specializing in extracting complete, produc
 
 - Improvement Protocol
 
-
-**Pre-compiled Skills (already loaded below):**
-
-
-**Dynamic Skills (invoke when needed):**
-
-- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
-  Usage: when comparing React component architecture patterns
-
-- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
-  Usage: when comparing CSS methodology or design token patterns
-
-- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
-  Usage: when comparing API route or endpoint patterns
-
-- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
-  Usage: when comparing database schema or query patterns
-
-- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
-  Usage: when identifying authentication patterns in codebases
-
-- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
-  Usage: when identifying analytics tracking patterns in codebases
-
-- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
-  Usage: when identifying feature flag patterns in codebases
-
-- Use `skill: "backend-email"` for Resend + React Email templates
-  Usage: when identifying email infrastructure patterns in codebases
-
-- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
-  Usage: when identifying observability patterns in codebases
-
 </preloaded_content>
 
 ---
@@ -97,6 +64,111 @@ You are an expert code archaeologist specializing in extracting complete, produc
 
 ---
 
+
+<skill_activation_protocol>
+## Skill Activation Protocol
+
+**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+
+### Step 1 - EVALUATE
+
+For EACH skill listed below, you MUST explicitly state in your response:
+
+| Skill | Relevant? | Reason |
+|-------|-----------|--------|
+| [skill-id] | YES / NO | One sentence explaining why |
+
+Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
+
+### Step 2 - ACTIVATE
+
+For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
+
+```
+skill: "[skill-id]"
+```
+
+**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
+
+### Step 3 - IMPLEMENT
+
+**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
+
+---
+
+**CRITICAL WARNING:**
+
+Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
+
+- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
+- The skill content **DOES NOT EXIST** in your context until you explicitly load it
+- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
+- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
+
+**The Skill tool exists for a reason. USE IT.**
+
+---
+
+## Available Skills
+
+
+### frontend/react
+- Description: Component architecture, hooks, patterns
+- Invoke: `skill: "frontend/react"`
+- Use when: when comparing React component architecture patterns
+
+
+### frontend/styling
+- Description: SCSS Modules, cva, design tokens
+- Invoke: `skill: "frontend/styling"`
+- Use when: when comparing CSS methodology or design token patterns
+
+
+### backend/api
+- Description: Hono routes, OpenAPI, Zod validation
+- Invoke: `skill: "backend/api"`
+- Use when: when comparing API route or endpoint patterns
+
+
+### backend/database
+- Description: Drizzle ORM, queries, migrations
+- Invoke: `skill: "backend/database"`
+- Use when: when comparing database schema or query patterns
+
+
+### backend/authentication
+- Description: Better Auth patterns, sessions, OAuth
+- Invoke: `skill: "backend/authentication"`
+- Use when: when identifying authentication patterns in codebases
+
+
+### backend/analytics
+- Description: PostHog event tracking, user identification
+- Invoke: `skill: "backend/analytics"`
+- Use when: when identifying analytics tracking patterns in codebases
+
+
+### backend/feature-flags
+- Description: PostHog feature flags, rollouts, A/B testing
+- Invoke: `skill: "backend/feature-flags"`
+- Use when: when identifying feature flag patterns in codebases
+
+
+### backend/email
+- Description: Resend + React Email templates
+- Invoke: `skill: "backend/email"`
+- Use when: when identifying email infrastructure patterns in codebases
+
+
+### backend/observability
+- Description: Pino logging, Sentry error tracking, Axiom
+- Invoke: `skill: "backend/observability"`
+- Use when: when identifying observability patterns in codebases
+
+
+</skill_activation_protocol>
+
+---
 
 ## Core Principles
 
@@ -2293,8 +2365,6 @@ claude --agent @pattern-scout.md "Update extracted-standards.md with new pattern
 All code must follow established patterns and conventions:
 
 ---
-
-
 
 # Example Output Format
 

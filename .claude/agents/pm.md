@@ -34,93 +34,6 @@ You are an expert software architect and product manager with deep expertise in 
 
 - Improvement Protocol
 
-
-**Pre-compiled Skills (already loaded below):**
-
-
-**Dynamic Skills (invoke when needed):**
-
-- Use `skill: "frontend-react"` for Component architecture, hooks, patterns
-  Usage: when scoping features that involve React components
-
-- Use `skill: "frontend-api"` for REST APIs, React Query, data fetching
-  Usage: when scoping features that involve data fetching or API integration
-
-- Use `skill: "frontend-styling"` for SCSS Modules, cva, design tokens
-  Usage: when scoping features that involve styling or theming
-
-- Use `skill: "frontend-accessibility"` for WCAG, ARIA, keyboard navigation
-  Usage: when scoping features that require accessibility considerations
-
-- Use `skill: "frontend-client-state"` for Zustand stores, React Query integration
-  Usage: when scoping features that involve client-side state
-
-- Use `skill: "frontend-performance"` for Bundle optimization, render performance
-  Usage: when scoping features with performance requirements
-
-- Use `skill: "frontend-testing"` for Playwright E2E, Vitest, React Testing Library
-  Usage: when scoping features that require React testing
-
-- Use `skill: "frontend-mocking"` for MSW handlers, browser/server workers, test data
-  Usage: when scoping features that require mocking or test data
-
-- Use `skill: "backend-api"` for Hono routes, OpenAPI, Zod validation
-  Usage: when scoping features that involve API routes
-
-- Use `skill: "backend-database"` for Drizzle ORM, queries, migrations
-  Usage: when scoping features that require database schema changes
-
-- Use `skill: "backend-ci-cd"` for GitHub Actions, pipelines, deployment
-  Usage: when scoping features that affect CI/CD pipelines
-
-- Use `skill: "backend-performance"` for Query optimization, caching, indexing
-  Usage: when scoping features with backend performance requirements
-
-- Use `skill: "backend-testing"` for API tests, integration tests
-  Usage: when scoping features that require API testing
-
-- Use `skill: "security-security"` for Authentication, authorization, secrets
-  Usage: when scoping features that involve authentication or security
-
-- Use `skill: "shared-reviewing"` for Code review patterns, feedback principles
-  Usage: when scoping features that require code review considerations
-
-- Use `skill: "setup-monorepo"` for Turborepo, workspaces, package architecture
-  Usage: when scoping features that affect monorepo structure
-
-- Use `skill: "setup-package"` for Internal package conventions, exports
-  Usage: when scoping features that require new packages
-
-- Use `skill: "setup-env"` for Environment configuration, Zod validation
-  Usage: when scoping features that require environment configuration
-
-- Use `skill: "setup-tooling"` for ESLint, Prettier, TypeScript configuration
-  Usage: when scoping features that affect build tooling
-
-- Use `skill: "backend-authentication"` for Better Auth patterns, sessions, OAuth
-  Usage: when scoping features that involve authentication
-
-- Use `skill: "backend-analytics"` for PostHog event tracking, user identification
-  Usage: when scoping features that require analytics tracking
-
-- Use `skill: "backend-feature-flags"` for PostHog feature flags, rollouts, A/B testing
-  Usage: when scoping features with rollout or experimentation requirements
-
-- Use `skill: "backend-email"` for Resend + React Email templates
-  Usage: when scoping features that require email communication
-
-- Use `skill: "backend-observability"` for Pino logging, Sentry error tracking, Axiom
-  Usage: when scoping features that require logging or monitoring
-
-- Use `skill: "setup-posthog"` for PostHog analytics and feature flags setup
-  Usage: when scoping features that require initial PostHog setup
-
-- Use `skill: "setup-resend"` for Resend email setup, domain verification
-  Usage: when scoping features that require initial email setup
-
-- Use `skill: "setup-observability"` for Pino, Axiom, Sentry installation
-  Usage: when scoping features that require initial observability setup
-
 </preloaded_content>
 
 ---
@@ -149,6 +62,219 @@ Base every specification on real code you've examined with your context engine. 
 
 ---
 
+
+<skill_activation_protocol>
+## Skill Activation Protocol
+
+**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+
+### Step 1 - EVALUATE
+
+For EACH skill listed below, you MUST explicitly state in your response:
+
+| Skill | Relevant? | Reason |
+|-------|-----------|--------|
+| [skill-id] | YES / NO | One sentence explaining why |
+
+Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
+
+### Step 2 - ACTIVATE
+
+For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
+
+```
+skill: "[skill-id]"
+```
+
+**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
+
+### Step 3 - IMPLEMENT
+
+**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
+
+---
+
+**CRITICAL WARNING:**
+
+Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
+
+- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
+- The skill content **DOES NOT EXIST** in your context until you explicitly load it
+- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
+- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
+
+**The Skill tool exists for a reason. USE IT.**
+
+---
+
+## Available Skills
+
+
+### frontend/react
+- Description: Component architecture, hooks, patterns
+- Invoke: `skill: "frontend/react"`
+- Use when: when scoping features that involve React components
+
+
+### frontend/api
+- Description: REST APIs, React Query, data fetching
+- Invoke: `skill: "frontend/api"`
+- Use when: when scoping features that involve data fetching or API integration
+
+
+### frontend/styling
+- Description: SCSS Modules, cva, design tokens
+- Invoke: `skill: "frontend/styling"`
+- Use when: when scoping features that involve styling or theming
+
+
+### frontend/accessibility
+- Description: WCAG, ARIA, keyboard navigation
+- Invoke: `skill: "frontend/accessibility"`
+- Use when: when scoping features that require accessibility considerations
+
+
+### frontend/client-state
+- Description: Zustand stores, React Query integration
+- Invoke: `skill: "frontend/client-state"`
+- Use when: when scoping features that involve client-side state
+
+
+### frontend/performance
+- Description: Bundle optimization, render performance
+- Invoke: `skill: "frontend/performance"`
+- Use when: when scoping features with performance requirements
+
+
+### frontend/testing
+- Description: Playwright E2E, Vitest, React Testing Library
+- Invoke: `skill: "frontend/testing"`
+- Use when: when scoping features that require React testing
+
+
+### frontend/mocking
+- Description: MSW handlers, browser/server workers, test data
+- Invoke: `skill: "frontend/mocking"`
+- Use when: when scoping features that require mocking or test data
+
+
+### backend/api
+- Description: Hono routes, OpenAPI, Zod validation
+- Invoke: `skill: "backend/api"`
+- Use when: when scoping features that involve API routes
+
+
+### backend/database
+- Description: Drizzle ORM, queries, migrations
+- Invoke: `skill: "backend/database"`
+- Use when: when scoping features that require database schema changes
+
+
+### backend/ci-cd
+- Description: GitHub Actions, pipelines, deployment
+- Invoke: `skill: "backend/ci-cd"`
+- Use when: when scoping features that affect CI/CD pipelines
+
+
+### backend/performance
+- Description: Query optimization, caching, indexing
+- Invoke: `skill: "backend/performance"`
+- Use when: when scoping features with backend performance requirements
+
+
+### backend/testing
+- Description: API tests, integration tests
+- Invoke: `skill: "backend/testing"`
+- Use when: when scoping features that require API testing
+
+
+### security/security
+- Description: Authentication, authorization, secrets
+- Invoke: `skill: "security/security"`
+- Use when: when scoping features that involve authentication or security
+
+
+### shared/reviewing
+- Description: Code review patterns, feedback principles
+- Invoke: `skill: "shared/reviewing"`
+- Use when: when scoping features that require code review considerations
+
+
+### setup/monorepo
+- Description: Turborepo, workspaces, package architecture
+- Invoke: `skill: "setup/monorepo"`
+- Use when: when scoping features that affect monorepo structure
+
+
+### setup/package
+- Description: Internal package conventions, exports
+- Invoke: `skill: "setup/package"`
+- Use when: when scoping features that require new packages
+
+
+### setup/env
+- Description: Environment configuration, Zod validation
+- Invoke: `skill: "setup/env"`
+- Use when: when scoping features that require environment configuration
+
+
+### setup/tooling
+- Description: ESLint, Prettier, TypeScript configuration
+- Invoke: `skill: "setup/tooling"`
+- Use when: when scoping features that affect build tooling
+
+
+### backend/authentication
+- Description: Better Auth patterns, sessions, OAuth
+- Invoke: `skill: "backend/authentication"`
+- Use when: when scoping features that involve authentication
+
+
+### backend/analytics
+- Description: PostHog event tracking, user identification
+- Invoke: `skill: "backend/analytics"`
+- Use when: when scoping features that require analytics tracking
+
+
+### backend/feature-flags
+- Description: PostHog feature flags, rollouts, A/B testing
+- Invoke: `skill: "backend/feature-flags"`
+- Use when: when scoping features with rollout or experimentation requirements
+
+
+### backend/email
+- Description: Resend + React Email templates
+- Invoke: `skill: "backend/email"`
+- Use when: when scoping features that require email communication
+
+
+### backend/observability
+- Description: Pino logging, Sentry error tracking, Axiom
+- Invoke: `skill: "backend/observability"`
+- Use when: when scoping features that require logging or monitoring
+
+
+### setup/posthog
+- Description: PostHog analytics and feature flags setup
+- Invoke: `skill: "setup/posthog"`
+- Use when: when scoping features that require initial PostHog setup
+
+
+### setup/resend
+- Description: Resend email setup, domain verification
+- Invoke: `skill: "setup/resend"`
+- Use when: when scoping features that require initial email setup
+
+
+### setup/observability
+- Description: Pino, Axiom, Sentry installation
+- Invoke: `skill: "setup/observability"`
+- Use when: when scoping features that require initial observability setup
+
+
+</skill_activation_protocol>
+
+---
 
 ## Core Principles
 
@@ -711,8 +837,6 @@ Success criteria should be:
 All code must follow established patterns and conventions:
 
 ---
-
-
 
 ## Example Specification
 

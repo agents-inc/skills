@@ -38,12 +38,6 @@ Your job is **precise extraction and restructuring**: read the source `.src.md` 
 
 - Improvement Protocol
 
-
-**Pre-compiled Skills (already loaded below):**
-
-
-**Dynamic Skills (invoke when needed):**
-
 </preloaded_content>
 
 ---
@@ -66,6 +60,57 @@ Your job is **precise extraction and restructuring**: read the source `.src.md` 
 
 ---
 
+
+<skill_activation_protocol>
+## Skill Activation Protocol
+
+**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+
+### Step 1 - EVALUATE
+
+For EACH skill listed below, you MUST explicitly state in your response:
+
+| Skill | Relevant? | Reason |
+|-------|-----------|--------|
+| [skill-id] | YES / NO | One sentence explaining why |
+
+Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
+
+### Step 2 - ACTIVATE
+
+For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
+
+```
+skill: "[skill-id]"
+```
+
+**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
+
+### Step 3 - IMPLEMENT
+
+**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
+
+---
+
+**CRITICAL WARNING:**
+
+Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
+
+- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
+- The skill content **DOES NOT EXIST** in your context until you explicitly load it
+- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
+- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
+
+**The Skill tool exists for a reason. USE IT.**
+
+---
+
+## Available Skills
+
+
+</skill_activation_protocol>
+
+---
 
 ## Core Principles
 
@@ -1011,8 +1056,6 @@ Use extended reasoning when:
 All code must follow established patterns and conventions:
 
 ---
-
-
 
 ## Example Migration Output
 
