@@ -25,17 +25,6 @@ tools: {{ agent.tools | join: ", " }}
 {% for prompt in endingPromptNames %}
 - {{ prompt }}
 {% endfor %}
-
-**Pre-compiled Skills (already loaded below):**
-{% for skill in skills.precompiled %}
-- {{ skill.name }}
-{% endfor %}
-
-**Dynamic Skills (invoke when needed):**
-{% for skill in skills.dynamic %}
-- Use `skill: "{{ skill.id | replace: "/", "-" }}"` for {{ skill.description }}
-  Usage: {{ skill.usage }}
-{% endfor %}
 </preloaded_content>
 
 ---
@@ -48,6 +37,63 @@ tools: {{ agent.tools | join: ", " }}
 ---
 
 {% endif %}
+<skill_activation_protocol>
+## Skill Activation Protocol
+
+**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+
+### Step 1 - EVALUATE
+
+For EACH skill listed below, you MUST explicitly state in your response:
+
+| Skill | Relevant? | Reason |
+|-------|-----------|--------|
+| [skill-id] | YES / NO | One sentence explaining why |
+
+Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
+
+### Step 2 - ACTIVATE
+
+For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
+
+```
+skill: "[skill-id]"
+```
+
+**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
+
+### Step 3 - IMPLEMENT
+
+**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
+
+---
+
+**CRITICAL WARNING:**
+
+Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
+
+- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
+- The skill content **DOES NOT EXIST** in your context until you explicitly load it
+- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
+- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
+
+**The Skill tool exists for a reason. USE IT.**
+
+---
+
+## Available Skills
+
+{% for skill in skills %}
+### {{ skill.id }}
+- Description: {{ skill.description }}
+- Invoke: `skill: "{{ skill.id }}"`
+- Use when: {{ skill.usage }}
+
+{% endfor %}
+</skill_activation_protocol>
+
+---
+
 {{ corePromptsContent }}
 
 ---
@@ -61,15 +107,6 @@ tools: {{ agent.tools | join: ", " }}
 All code must follow established patterns and conventions:
 
 ---
-
-{% for skill in skills.precompiled %}
-# Pre-compiled Skill: {{ skill.name }}
-
-{{ skill.content }}
-
----
-
-{% endfor %}
 
 {{ examples }}
 

@@ -9,7 +9,7 @@ claude_md: ./CLAUDE.md
 # =============================================================================
 # Agent Configurations
 # =============================================================================
-# Each agent has: core_prompts, ending_prompts, precompiled skills, dynamic skills
+# Each agent has: core_prompts, ending_prompts, and skills (unified list)
 
 agents:
   frontend-developer:
@@ -21,37 +21,18 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: Component architecture, MobX observer, hooks, patterns
         usage: when implementing React components
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: Tailwind, clsx, design tokens
         usage: when implementing styles
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: MobX stores, reactions, computed values
         usage: when implementing MobX stores or complex client-side state
-    dynamic:
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: REST APIs, React Query, Zod validation
         usage: when implementing data fetching, API calls, or React Query integrations
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: WCAG, ARIA, keyboard navigation
         usage: when implementing accessible components or ARIA patterns
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: MobX computed, lazy loading, WebGL cleanup
         usage: when optimizing renders or handling resource cleanup
 
   frontend-reviewer:
@@ -62,37 +43,18 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: Component architecture, MobX observer, hooks, patterns
         usage: when reviewing React components
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: Tailwind, clsx, design tokens
         usage: when reviewing styles
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: MobX stores, reactions, computed values
         usage: when reviewing MobX store implementations
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: WCAG, ARIA, keyboard navigation
         usage: when reviewing accessibility
-    dynamic:
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: Render performance, MobX computed
         usage: when reviewing code with potential performance issues
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: React Query, Zod validation
         usage: when reviewing API integration code
 
   tester:
@@ -104,27 +66,14 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: Karma, Mocha, Chai, Playwright E2E
         usage: when writing React component tests or E2E tests
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: Sinon, mock store factories, test doubles
         usage: when setting up mocks
-    dynamic:
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: Accessibility testing patterns
         usage: when writing accessibility-focused tests
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: MobX store testing patterns
         usage: when writing store tests
 
   pm:
@@ -135,47 +84,22 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: component architecture for spec scoping
         usage: when scoping features that involve React components
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: REST APIs, data fetching for spec scoping
         usage: when scoping features that involve data fetching or API integration
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: design tokens, theming for spec scoping
         usage: when scoping features that involve styling or theming
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: MobX state management for spec scoping
         usage: when scoping features that involve client-side state
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: a11y requirements for spec scoping
         usage: when scoping features that require accessibility considerations
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Performance
-        description: performance requirements for spec scoping
         usage: when scoping features with performance requirements
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: Karma+Chai testing requirements for spec scoping
         usage: when scoping features that require testing
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: Sinon mock requirements for spec scoping
         usage: when scoping features that require mocking or test data
 
   skill-summoner:
@@ -187,45 +111,20 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: understanding React patterns when creating React-related skills
         usage: when creating or improving skills related to React components or hooks
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: understanding Tailwind patterns when creating styling skills
         usage: when creating or improving skills related to CSS or styling patterns
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: Frontend API
-        description: understanding API integration patterns when creating data fetching skills
         usage: when creating or improving skills related to data fetching or API integration
       - id: frontend/client-state
-        path: skills/frontend/client-state.md
-        name: Client State
-        description: understanding MobX patterns when creating state management skills
         usage: when creating or improving skills related to state management
       - id: frontend/accessibility
-        path: skills/frontend/accessibility.md
-        name: Accessibility
-        description: understanding a11y patterns when creating accessibility skills
         usage: when creating or improving skills related to accessibility
       - id: frontend/performance
-        path: skills/frontend/performance.md
-        name: Frontend Performance
-        description: understanding render optimization when creating performance skills
         usage: when creating or improving skills related to frontend performance
       - id: frontend/testing
-        path: skills/frontend/testing.md
-        name: Frontend Testing
-        description: understanding Karma+Chai testing patterns when creating testing skills
         usage: when creating or improving skills related to React testing
       - id: frontend/mocking
-        path: skills/frontend/mocking.md
-        name: Mocking
-        description: understanding Sinon/mock patterns when creating testing skills
         usage: when creating or improving skills related to mocking or test data

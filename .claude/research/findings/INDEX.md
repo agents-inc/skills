@@ -18,6 +18,7 @@ A modular agent/skill compilation system for Claude Code that uses:
 On 2026-01-08, we spawned 12 research agents with ultrathink to analyze every aspect of the architecture. They identified **49 distinct issues** across maintainability, type safety, prompting, scalability, DRY, templates, compilation, profiles, skills, XML tags, model optimization, and testing.
 
 Additionally, **three rounds of open-source research** were completed:
+
 - **Round 1**: Open Source Strategy (4 agents) - CLI onboarding, positioning, profiles, community patterns
 - **Round 2**: Community Registry (5 agents) - Skill isolation, dependencies, registry models, bundling
 - **Round 3**: Stack Marketplace (5 agents) - Prior art, filtering, unification, viral adoption, schema
@@ -30,6 +31,7 @@ Additionally, **three rounds of open-source research** were completed:
 - Phase 4 (Competitor Analysis): ⏳ Pending
 - **Open Source Research: ✅ COMPLETE** - See [FINAL-DECISION.md](./FINAL-DECISION.md)
 - **Skill Folder Migration: ✅ COMPLETE** - See [SKILL-FOLDER-MIGRATION.md](./SKILL-FOLDER-MIGRATION.md)
+- **Skill Loading Refactor: ✅ IMPLEMENTED** - See [SKILL-LOADING-REFACTOR-PLAN.md](./SKILL-LOADING-REFACTOR-PLAN.md)
 
 ---
 
@@ -56,14 +58,15 @@ Additionally, **three rounds of open-source research** were completed:
 
 ### Open Source Research Files (Stack Marketplace)
 
-| Round | File | Content |
-| ----- | ---- | ------- |
-| **FINAL** | **[FINAL-DECISION.md](./FINAL-DECISION.md)** | **Authoritative decisions - START HERE** |
-| Round 1 | [OPEN-SOURCE-RESEARCH-TRACKER.md](./OPEN-SOURCE-RESEARCH-TRACKER.md) | CLI onboarding, positioning, profiles, community patterns |
-| Round 2 | [COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md](./COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md) | Skill isolation, dependencies, registry models, bundling |
-| Round 3 | [STACK-MARKETPLACE-PROPOSAL-RESEARCH.md](./STACK-MARKETPLACE-PROPOSAL-RESEARCH.md) | Prior art, filtering, viral adoption, schema design |
+| Round     | File                                                                                 | Content                                                   |
+| --------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| **FINAL** | **[FINAL-DECISION.md](./FINAL-DECISION.md)**                                         | **Authoritative decisions - START HERE**                  |
+| Round 1   | [OPEN-SOURCE-RESEARCH-TRACKER.md](./OPEN-SOURCE-RESEARCH-TRACKER.md)                 | CLI onboarding, positioning, profiles, community patterns |
+| Round 2   | [COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md](./COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md) | Skill isolation, dependencies, registry models, bundling  |
+| Round 3   | [STACK-MARKETPLACE-PROPOSAL-RESEARCH.md](./STACK-MARKETPLACE-PROPOSAL-RESEARCH.md)   | Prior art, filtering, viral adoption, schema design       |
 
 **Key OSS Decisions (from FINAL-DECISION.md):**
+
 - Community ready from day 1 (not phased)
 - No tiers/badges - upvotes only (quality emerges from votes)
 - Build everything in 1-2 days before launch
@@ -77,33 +80,33 @@ Additionally, **three rounds of open-source research** were completed:
 ### RESOLVED (2)
 
 1. ~~**Agents consume 30-35% of context**~~ → ✅ **RESOLVED**: 17% context usage in worst case is acceptable for short-lived subagents
-4. ~~**Dynamic skill invocation is fake**~~ → ✅ **RESOLVED**: All 36 skills now have proper YAML frontmatter
+2. ~~**Dynamic skill invocation is fake**~~ → ✅ **RESOLVED**: All 36 skills now have proper YAML frontmatter
 
 ### NOT NEEDED (2)
 
 10. ~~**No skill versioning**~~ → ❌ **NOT NEEDED**: Git history sufficient, no external consumers
 11. ~~**No skill dependencies**~~ → ❌ **NOT NEEDED**: Skills are self-contained, bundles solve grouping
 
-### CRITICAL (2) *(Updated 2026-01-08)*
+### CRITICAL (2) _(Updated 2026-01-08)_
 
 2. **No test suite** - Zero test files exist
 3. **No CI/CD** - No automated validation
-5. **Schema/compiler mismatch** - Skill overrides silently ignored
+4. **Schema/compiler mismatch** - Skill overrides silently ignored
 
-### HIGH (12) *(#7, #8 re-investigated 2026-01-08)*
+### HIGH (12) _(#7, #8 re-investigated 2026-01-08)_
 
 6. Schema validation IDE-only (no runtime)
 7. Config redundancy (625+ lines) → **Solutions identified**: YAML anchors (40% reduction), profile defaults, skill bundles - see [ISSUE-7-8-PROPOSALS.md](./ISSUE-7-8-PROPOSALS.md)
 8. Multi-file update workflow (5-7 files per agent) → 📋 **PLANNED**: Scaffolding CLI - see [ISSUE-7-8-PROPOSALS.md](./ISSUE-7-8-PROPOSALS.md)
 9. Verification scripts doc-only
-12. Redundant skill compilation
-13. Workflow files ~80% duplicated
-14. No config defaults mechanism
-15. No file caching in compiler
-16. Sequential compilation
-17. Undocumented workflow tags (15+)
-18. Excessive template whitespace
-19. Missing MUST/SHOULD classification
+10. Redundant skill compilation
+11. Workflow files ~80% duplicated
+12. No config defaults mechanism
+13. No file caching in compiler
+14. Sequential compilation
+15. Undocumented workflow tags (15+)
+16. Excessive template whitespace
+17. Missing MUST/SHOULD classification
 
 ### MEDIUM (18) & LOW (12)
 
@@ -202,6 +205,7 @@ _Last updated: 2026-01-09_
 **Session Highlights:**
 
 **Architecture Research:**
+
 - ✅ Issue #1 RESOLVED (context usage acceptable)
 - ✅ Issue #4 RESOLVED (36 skills now have frontmatter)
 - ✅ Issue #8 PLANNED (scaffolding CLI proposal ready)
@@ -212,6 +216,7 @@ _Last updated: 2026-01-09_
 - ✅ Created `ISSUE-7-8-PROPOSALS.md` with implementation details
 
 **Open Source Research (3 Rounds, 14 Agents):**
+
 - ✅ Round 1: Open Source Strategy (4 agents) - CLI onboarding, positioning, profiles, community patterns
 - ✅ Round 2: Community Registry (5 agents) - Skill isolation, dependencies, registry models, bundling
 - ✅ Round 3: Stack Marketplace (5 agents) - Prior art, filtering, viral adoption, schema design
@@ -219,9 +224,20 @@ _Last updated: 2026-01-09_
 - ✅ **OSS RESEARCH COMPLETE** - Ready for implementation
 
 **Skill Folder Migration (2026-01-09):**
+
 - ✅ Updated compile.ts to support folder-based skills
 - ✅ Updated schema files to allow folder paths (trailing /)
 - ✅ Migrated 25 skills to folder-based structure (skill.md + examples.md + reference.md)
 - ✅ 2 stub skills skipped (backend/performance, backend/testing - need content first)
 - ✅ 78 total skill files now compile (26 SKILL.md + 52 supporting files)
 - ✅ See [SKILL-FOLDER-MIGRATION.md](./SKILL-FOLDER-MIGRATION.md) for details
+
+**Skill Loading Refactor (2026-01-09):**
+
+- ✅ Unified `skills` array (removed `precompiled` vs `dynamic` distinction)
+- ✅ Added `<skill_activation_protocol>` section with three-step EVALUATE/ACTIVATE/IMPLEMENT
+- ✅ Emphatic language for 84% activation rate (vs 20% baseline)
+- ✅ Protocol placed after `<critical_requirements>` for context proximity
+- ✅ Simplified skill listing format (removed bold formatting)
+- ✅ Updated CLAUDE_ARCHITECTURE_BIBLE.md with new patterns
+- ✅ See [SKILL-LOADING-REFACTOR-PLAN.md](./SKILL-LOADING-REFACTOR-PLAN.md) for research

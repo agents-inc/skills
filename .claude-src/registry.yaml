@@ -223,42 +223,42 @@ skills:
   # Frontend Skills
   # ---------------------------------------------------------------------------
   frontend/react:
-    path: skills/frontend/react.md
+    path: skills/frontend/react/
     name: React
     description: Component architecture, hooks, patterns
 
   frontend/styling:
-    path: skills/frontend/styling.md
+    path: skills/frontend/styling/
     name: Styling
     description: SCSS Modules, cva, design tokens
 
   frontend/api:
-    path: skills/frontend/api.md
+    path: skills/frontend/api/
     name: API Integration
     description: REST APIs, React Query, data fetching
 
   frontend/client-state:
-    path: skills/frontend/client-state.md
+    path: skills/frontend/client-state/
     name: Client State
     description: Zustand stores, React Query integration
 
   frontend/accessibility:
-    path: skills/frontend/accessibility.md
+    path: skills/frontend/accessibility/
     name: Accessibility
     description: WCAG, ARIA, keyboard navigation
 
   frontend/performance:
-    path: skills/frontend/performance.md
+    path: skills/frontend/performance/
     name: Performance
     description: Bundle optimization, render performance
 
   frontend/testing:
-    path: skills/frontend/testing.md
+    path: skills/frontend/testing/
     name: Frontend Testing
     description: Playwright E2E, Vitest, React Testing Library
 
   frontend/mocking:
-    path: skills/frontend/mocking.md
+    path: skills/frontend/mocking/
     name: Mocking
     description: MSW handlers, browser/server workers, test data
 
@@ -266,22 +266,22 @@ skills:
   # Backend Skills
   # ---------------------------------------------------------------------------
   backend/api:
-    path: skills/backend/api.md
+    path: skills/backend/api/
     name: Backend API
     description: Hono routes, OpenAPI, Zod validation
 
   backend/authentication:
-    path: skills/backend/authentication.md
+    path: skills/backend/authentication/
     name: Authentication
     description: Better Auth patterns, sessions, OAuth
 
   backend/database:
-    path: skills/backend/database.md
+    path: skills/backend/database/
     name: Database
     description: Drizzle ORM, queries, migrations
 
   backend/ci-cd:
-    path: skills/backend/ci-cd.md
+    path: skills/backend/ci-cd/
     name: CI/CD
     description: GitHub Actions, pipelines, deployment
 
@@ -296,22 +296,22 @@ skills:
     description: API tests, integration tests
 
   backend/analytics:
-    path: skills/backend/analytics.md
+    path: skills/backend/analytics/
     name: Analytics
     description: PostHog event tracking, user identification
 
   backend/feature-flags:
-    path: skills/backend/feature-flags.md
+    path: skills/backend/feature-flags/
     name: Feature Flags
     description: PostHog feature flags, rollouts, A/B testing
 
   backend/email:
-    path: skills/backend/email.md
+    path: skills/backend/email/
     name: Email
     description: Resend + React Email templates
 
   backend/observability:
-    path: skills/backend/observability.md
+    path: skills/backend/observability/
     name: Observability
     description: Pino logging, Sentry error tracking, Axiom
 
@@ -319,7 +319,7 @@ skills:
   # Security Skills
   # ---------------------------------------------------------------------------
   security/security:
-    path: skills/security/security.md
+    path: skills/security/security/
     name: Security
     description: Authentication, authorization, secrets
 
@@ -327,7 +327,7 @@ skills:
   # Shared Skills
   # ---------------------------------------------------------------------------
   shared/reviewing:
-    path: skills/shared/reviewing.md
+    path: skills/shared/reviewing/
     name: Reviewing
     description: Code review patterns, feedback principles
 
@@ -335,37 +335,37 @@ skills:
   # Setup Skills
   # ---------------------------------------------------------------------------
   setup/monorepo:
-    path: skills/setup/monorepo.md
+    path: skills/setup/monorepo/
     name: Monorepo
     description: Turborepo, workspaces, package architecture
 
   setup/package:
-    path: skills/setup/package.md
+    path: skills/setup/package/
     name: Package
     description: Internal package conventions, exports
 
   setup/env:
-    path: skills/setup/env.md
+    path: skills/setup/env/
     name: Environment
     description: Environment configuration, Zod validation
 
   setup/tooling:
-    path: skills/setup/tooling.md
+    path: skills/setup/tooling/
     name: Tooling
     description: ESLint, Prettier, TypeScript configuration
 
   setup/posthog:
-    path: skills/setup/posthog.md
+    path: skills/setup/posthog/
     name: PostHog Setup
     description: PostHog analytics and feature flags setup
 
   setup/resend:
-    path: skills/setup/resend.md
+    path: skills/setup/resend/
     name: Resend Setup
     description: Resend email setup, domain verification
 
   setup/observability:
-    path: skills/setup/observability.md
+    path: skills/setup/observability/
     name: Observability Setup
     description: Pino, Axiom, Sentry installation
 
@@ -373,6 +373,6 @@ skills:
   # Research Skills
   # ---------------------------------------------------------------------------
   research/methodology:
-    path: skills/research/methodology.md
+    path: skills/research/methodology/
     name: Research Methodology
     description: Investigation flow, evidence-based research, structured output

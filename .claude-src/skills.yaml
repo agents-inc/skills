@@ -145,7 +145,7 @@ skills:
     description: ESLint, Prettier, TypeScript configuration
 
   setup/posthog:
-    path: skills/setup/posthog.md
+    path: skills/setup/posthog/
     name: PostHog Setup
     description: PostHog analytics and feature flags setup
 

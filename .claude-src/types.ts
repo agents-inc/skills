@@ -54,19 +54,7 @@ export interface Skill {
   content?: string; // Populated at compile time for precompiled skills
 }
 
-export interface SkillAssignment {
-  precompiled: Skill[];
-  dynamic: Skill[];
-}
-
-/**
- * Skill assignment in config.yaml (before resolution)
- * Contains references, not full skills
- */
-export interface SkillReferenceAssignment {
-  precompiled: SkillReference[];
-  dynamic: SkillReference[];
-}
+// SkillAssignment removed - now using flat Skill[] array
 
 // =============================================================================
 // Agent Definition Types (from agents.yaml - single source of truth)
@@ -102,8 +90,7 @@ export interface AgentsConfig {
 export interface ProfileAgentConfig {
   core_prompts: string[]; // Prompt names for beginning of agent
   ending_prompts: string[]; // Prompt names for end of agent
-  precompiled: SkillReference[]; // Skills compiled into agent
-  dynamic: SkillReference[]; // Skills loaded dynamically
+  skills: SkillReference[]; // Unified skills list (loaded dynamically via Skill tool)
 }
 
 /**
@@ -134,7 +121,7 @@ export interface AgentConfig {
   core_prompts: string[]; // Direct array of prompt names
   ending_prompts: string[]; // Direct array of prompt names
   output_format: string;
-  skills: SkillAssignment;
+  skills: Skill[]; // Unified skills list (loaded dynamically via Skill tool)
 }
 
 export interface CompiledAgentData {
@@ -149,7 +136,7 @@ export interface CompiledAgentData {
   outputFormat: string;
   endingPromptNames: string[];
   endingPromptsContent: string;
-  skills: SkillAssignment;
+  skills: Skill[]; // Flat array of all skills (metadata only, no content)
 }
 
 // =============================================================================

@@ -9,7 +9,7 @@ claude_md: ./CLAUDE.md
 # =============================================================================
 # Agent Configurations
 # =============================================================================
-# Each agent has: core_prompts, ending_prompts, precompiled skills, dynamic skills
+# Each agent has: core_prompts, ending_prompts, and skills (unified list)
 
 agents:
   frontend-developer:
@@ -21,12 +21,11 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: frontend/react
         usage: when implementing React components
       - id: frontend/styling
         usage: when implementing styles
-    dynamic:
       - id: frontend/api
         usage: when implementing data fetching, API calls, or React Query integrations
       - id: frontend/client-state
@@ -51,12 +50,11 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: backend/api
         usage: when implementing API routes
       - id: backend/authentication
         usage: when implementing authentication features
-    dynamic:
       - id: backend/database
         usage: when implementing database queries or migrations
       - id: backend/ci-cd
@@ -88,7 +86,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: shared/reviewing
         usage: when reviewing code
       - id: frontend/react
@@ -97,7 +95,6 @@ agents:
         usage: when reviewing styles
       - id: frontend/accessibility
         usage: when reviewing accessibility
-    dynamic:
       - id: frontend/performance
         usage: when reviewing code with potential performance issues
       - id: frontend/client-state
@@ -115,14 +112,13 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: shared/reviewing
         usage: when reviewing code
       - id: backend/api
         usage: when reviewing API routes
       - id: security/security
         usage: when reviewing security implementations
-    dynamic:
       - id: backend/database
         usage: when reviewing database queries or schema changes
       - id: backend/ci-cd
@@ -147,14 +143,13 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: frontend/testing
         usage: when writing React component tests
       - id: backend/testing
         usage: when writing API or integration tests
       - id: frontend/mocking
         usage: when setting up mocks
-    dynamic:
       - id: frontend/accessibility
         usage: when writing accessibility-focused tests
       - id: frontend/performance
@@ -172,8 +167,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       # Frontend skills
       - id: frontend/react
         usage: when scoping features that involve React components
@@ -243,8 +237,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       # Frontend skills
       - id: frontend/react
         usage: when creating or improving skills related to React components or hooks
@@ -308,8 +301,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       # Frontend skills
       - id: frontend/react
         usage: when creating or improving agents that work with React components
@@ -373,8 +365,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic: []
+    skills: []
 
   pattern-scout:
     core_prompts:
@@ -385,8 +376,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       - id: frontend/react
         usage: when comparing React component architecture patterns
       - id: frontend/styling
@@ -414,8 +404,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic:
+    skills:
       - id: frontend/react
         usage: when critiquing React patterns against industry standards
       - id: frontend/styling
@@ -442,12 +431,11 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: setup/monorepo
         usage: when documenting monorepo structure
       - id: setup/package
         usage: when documenting package conventions
-    dynamic:
       # Frontend skills
       - id: frontend/react
         usage: when documenting React component architecture or patterns
@@ -513,7 +501,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: setup/monorepo
         usage: when scaffolding monorepo apps
       - id: setup/package
@@ -532,7 +520,6 @@ agents:
         usage: when scaffolding mock data package
       - id: frontend/testing
         usage: when scaffolding test infrastructure
-    dynamic:
       - id: backend/api
         usage: when scaffolding API routes
       - id: backend/database
@@ -558,8 +545,7 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled: []
-    dynamic: []
+    skills: []
 
   frontend-researcher:
     core_prompts:
@@ -569,10 +555,9 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: research/methodology
         usage: when conducting any research task
-    dynamic:
       # Frontend skills only - this is a frontend-focused researcher
       - id: frontend/react
         usage: when researching React component patterns or architecture
@@ -599,10 +584,9 @@ agents:
     ending_prompts:
       - context-management
       - improvement-protocol
-    precompiled:
+    skills:
       - id: research/methodology
         usage: when conducting any research task
-    dynamic:
       # Backend skills only - this is a backend-focused researcher
       - id: backend/api
         usage: when researching API route patterns
