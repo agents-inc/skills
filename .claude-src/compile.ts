@@ -222,9 +222,20 @@ async function validate(
         );
         continue;
       }
-      const skillPath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
-      if (!(await Bun.file(skillPath).exists())) {
-        errors.push(`Skill file not found: ${skill.path} (agent: ${name})`);
+      const basePath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
+      const isFolder = skill.path.endsWith("/");
+
+      if (isFolder) {
+        // Folder-based skill: check for SKILL.md inside the folder
+        const skillFile = `${basePath}SKILL.md`;
+        if (!(await Bun.file(skillFile).exists())) {
+          errors.push(`Skill folder missing SKILL.md: ${skill.path}SKILL.md (agent: ${name})`);
+        }
+      } else {
+        // Legacy: single file skill
+        if (!(await Bun.file(basePath).exists())) {
+          errors.push(`Skill file not found: ${skill.path} (agent: ${name})`);
+        }
       }
     }
 
@@ -234,6 +245,21 @@ async function validate(
         warnings.push(
           `Dynamic skill missing path (won't be compiled): ${skill.id} (agent: ${name})`
         );
+        continue;
+      }
+      // Validate skill path exists (file or folder with SKILL.md)
+      const basePath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
+      const isFolder = skill.path.endsWith("/");
+
+      if (isFolder) {
+        const skillFile = `${basePath}SKILL.md`;
+        if (!(await Bun.file(skillFile).exists())) {
+          errors.push(`Dynamic skill folder missing SKILL.md: ${skill.path}SKILL.md (agent: ${name})`);
+        }
+      } else {
+        if (!(await Bun.file(basePath).exists())) {
+          errors.push(`Dynamic skill file not found: ${skill.path} (agent: ${name})`);
+        }
       }
     }
 
@@ -282,7 +308,12 @@ async function readSkillsWithContent(
   const result: Skill[] = [];
   for (const skill of skills) {
     if (!skill.path) continue;
-    const content = await readFile(`${ROOT}/profiles/${profile}/${skill.path}`);
+    const basePath = `${ROOT}/profiles/${profile}/${skill.path}`;
+    const isFolder = skill.path.endsWith("/");
+
+    // For folders, read SKILL.md; for files, read directly
+    const contentPath = isFolder ? `${basePath}SKILL.md` : basePath;
+    const content = await readFile(contentPath);
     result.push({ ...skill, content });
   }
   return result;
@@ -383,6 +414,9 @@ async function compileAllAgents(
 // Skills Compilation
 // =============================================================================
 
+// Optional supporting files to copy from skill folders
+const SKILL_SUPPORTING_FILES = ["examples.md", "reference.md"];
+
 async function compileAllSkills(
   resolvedAgents: Record<string, AgentConfig>
 ): Promise<void> {
@@ -398,12 +432,37 @@ async function compileAllSkills(
     const outDir = `${OUT}/skills/${id}`;
     await Bun.$`mkdir -p ${outDir}`;
 
+    const sourcePath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
+    const isFolder = skill.path.endsWith("/");
+
     try {
-      const content = await readFile(
-        `${ROOT}/profiles/${PROFILE}/${skill.path}`
-      );
-      await Bun.write(`${outDir}/SKILL.md`, content);
-      console.log(`  ✓ skills/${id}/SKILL.md`);
+      if (isFolder) {
+        // Folder-based skill: read SKILL.md and copy to output
+        const mainContent = await readFile(`${sourcePath}SKILL.md`);
+        await Bun.write(`${outDir}/SKILL.md`, mainContent);
+        console.log(`  ✓ skills/${id}/SKILL.md`);
+
+        // Copy optional supporting files
+        for (const file of SKILL_SUPPORTING_FILES) {
+          const supportingContent = await readFileOptional(`${sourcePath}${file}`);
+          if (supportingContent) {
+            await Bun.write(`${outDir}/${file}`, supportingContent);
+            console.log(`  ✓ skills/${id}/${file}`);
+          }
+        }
+
+        // Copy scripts directory if exists
+        const scriptsDir = `${sourcePath}scripts`;
+        if (await Bun.file(`${scriptsDir}/`).exists()) {
+          await Bun.$`cp -r ${scriptsDir} ${outDir}/`;
+          console.log(`  ✓ skills/${id}/scripts/`);
+        }
+      } else {
+        // Legacy: single file skill
+        const content = await readFile(sourcePath);
+        await Bun.write(`${outDir}/SKILL.md`, content);
+        console.log(`  ✓ skills/${id}/SKILL.md`);
+      }
     } catch (error) {
       console.error(`  ✗ skills/${id}/SKILL.md - ${error}`);
       throw error;

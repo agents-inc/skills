@@ -29,6 +29,7 @@ Additionally, **three rounds of open-source research** were completed:
 - Phase 3 (Implementation): ⏳ Pending
 - Phase 4 (Competitor Analysis): ⏳ Pending
 - **Open Source Research: ✅ COMPLETE** - See [FINAL-DECISION.md](./FINAL-DECISION.md)
+- **Skill Folder Migration: ✅ COMPLETE** - See [SKILL-FOLDER-MIGRATION.md](./SKILL-FOLDER-MIGRATION.md)
 
 ---
 
@@ -38,6 +39,7 @@ Additionally, **three rounds of open-source research** were completed:
 | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | **[ISSUES-INDEX.md](./ISSUES-INDEX.md)**                                           | All 49 issues explained, ordered by severity         |
 | **[ARCHITECTURE-IMPROVEMENT-FINDINGS.md](./ARCHITECTURE-IMPROVEMENT-FINDINGS.md)** | Main tracking doc with detailed findings by category |
+| **[SKILL-FOLDER-MIGRATION.md](./SKILL-FOLDER-MIGRATION.md)**                       | Skill migration to folder-based structure (COMPLETE) |
 
 ### Detailed Analysis Files
 
@@ -195,7 +197,7 @@ I want to [CHOOSE ONE]:
 
 ---
 
-_Last updated: 2026-01-08_
+_Last updated: 2026-01-09_
 
 **Session Highlights:**
 
@@ -215,3 +217,11 @@ _Last updated: 2026-01-08_
 - ✅ Round 3: Stack Marketplace (5 agents) - Prior art, filtering, viral adoption, schema design
 - ✅ Created `FINAL-DECISION.md` - Authoritative record of user-confirmed decisions
 - ✅ **OSS RESEARCH COMPLETE** - Ready for implementation
+
+**Skill Folder Migration (2026-01-09):**
+- ✅ Updated compile.ts to support folder-based skills
+- ✅ Updated schema files to allow folder paths (trailing /)
+- ✅ Migrated 25 skills to folder-based structure (skill.md + examples.md + reference.md)
+- ✅ 2 stub skills skipped (backend/performance, backend/testing - need content first)
+- ✅ 78 total skill files now compile (26 SKILL.md + 52 supporting files)
+- ✅ See [SKILL-FOLDER-MIGRATION.md](./SKILL-FOLDER-MIGRATION.md) for details
