@@ -42,7 +42,7 @@
     "AgentConfig": {
       "type": "object",
       "description": "Profile-specific configuration for a single agent",
-      "required": ["core_prompts", "ending_prompts", "precompiled", "dynamic"],
+      "required": ["core_prompts", "ending_prompts", "skills"],
       "additionalProperties": false,
       "properties": {
         "core_prompts": {
@@ -59,16 +59,9 @@
             "$ref": "#/$defs/PromptName"
           }
         },
-        "precompiled": {
+        "skills": {
           "type": "array",
-          "description": "Skills compiled directly into the agent prompt (always available)",
-          "items": {
-            "$ref": "#/$defs/SkillReference"
-          }
-        },
-        "dynamic": {
-          "type": "array",
-          "description": "Skills available for dynamic loading by the agent",
+          "description": "Skills available to this agent (loaded dynamically when needed)",
           "items": {
             "$ref": "#/$defs/SkillReference"
           }
@@ -91,7 +84,7 @@
     "SkillReference": {
       "type": "object",
       "description": "Reference to a skill with context-specific usage",
-      "required": ["id", "usage"],
+      "required": ["id"],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -110,8 +103,8 @@
         },
         "path": {
           "type": "string",
-          "description": "Override the skill's path for this profile (optional)",
-          "pattern": "^skills/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*\\.md$"
+          "description": "Override the skill's path for this profile (optional, .md for file, / for folder)",
+          "pattern": "^skills/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*(\\.md|/)$"
         },
         "name": {
           "type": "string",

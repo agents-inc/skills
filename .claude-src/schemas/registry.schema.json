@@ -77,9 +77,9 @@
       "properties": {
         "path": {
           "type": "string",
-          "description": "Profile-relative path to the skill markdown file",
-          "pattern": "^skills/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*\\.md$",
-          "examples": ["skills/frontend/react.md", "skills/backend/api.md"]
+          "description": "Profile-relative path to the skill file (.md) or folder (trailing /)",
+          "pattern": "^skills/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*(\\.md|/)$",
+          "examples": ["skills/frontend/react.md", "skills/frontend/react/", "skills/backend/api.md"]
         },
         "name": {
           "type": "string",

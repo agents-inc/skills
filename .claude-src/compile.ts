@@ -25,7 +25,6 @@ import type {
   ProfileAgentConfig,
   RegistryConfig,
   Skill,
-  SkillAssignment,
   SkillReference,
   ValidationResult,
 } from "./types";
@@ -99,16 +98,10 @@ function resolveSkillReference(
 }
 
 function resolveSkillReferences(
-  precompiled: SkillReference[],
-  dynamic: SkillReference[],
+  skills: SkillReference[],
   registry: RegistryConfig
-): SkillAssignment {
-  return {
-    precompiled: precompiled.map((ref) =>
-      resolveSkillReference(ref, registry)
-    ),
-    dynamic: dynamic.map((ref) => resolveSkillReference(ref, registry)),
-  };
+): Skill[] {
+  return skills.map((ref) => resolveSkillReference(ref, registry));
 }
 
 // =============================================================================
@@ -137,8 +130,7 @@ function resolveAgents(
 
     // Resolve skill references
     const skills = resolveSkillReferences(
-      profileAgentConfig.precompiled,
-      profileAgentConfig.dynamic,
+      profileAgentConfig.skills || [],
       registry
     );
 
@@ -214,11 +206,11 @@ async function validate(
     agent.core_prompts.forEach((p) => allPromptNames.add(p));
     agent.ending_prompts.forEach((p) => allPromptNames.add(p));
 
-    // Check precompiled skill paths
-    for (const skill of agent.skills.precompiled) {
+    // Check skill paths (unified - all skills loaded dynamically)
+    for (const skill of agent.skills) {
       if (!skill.path) {
-        errors.push(
-          `Precompiled skill missing path: ${skill.id} (agent: ${name})`
+        warnings.push(
+          `Skill missing path (won't be compiled): ${skill.id} (agent: ${name})`
         );
         continue;
       }
@@ -236,39 +228,6 @@ async function validate(
         if (!(await Bun.file(basePath).exists())) {
           errors.push(`Skill file not found: ${skill.path} (agent: ${name})`);
         }
-      }
-    }
-
-    // Check dynamic skills have paths (for compilation to .claude/skills/)
-    for (const skill of agent.skills.dynamic) {
-      if (!skill.path) {
-        warnings.push(
-          `Dynamic skill missing path (won't be compiled): ${skill.id} (agent: ${name})`
-        );
-        continue;
-      }
-      // Validate skill path exists (file or folder with SKILL.md)
-      const basePath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
-      const isFolder = skill.path.endsWith("/");
-
-      if (isFolder) {
-        const skillFile = `${basePath}SKILL.md`;
-        if (!(await Bun.file(skillFile).exists())) {
-          errors.push(`Dynamic skill folder missing SKILL.md: ${skill.path}SKILL.md (agent: ${name})`);
-        }
-      } else {
-        if (!(await Bun.file(basePath).exists())) {
-          errors.push(`Dynamic skill file not found: ${skill.path} (agent: ${name})`);
-        }
-      }
-    }
-
-    // Validate dynamic skills have usage property
-    for (const skill of agent.skills.dynamic) {
-      if (!skill.usage) {
-        errors.push(
-          `Dynamic skill missing required "usage" property: ${skill.id} (agent: ${name})`
-        );
       }
     }
   }
@@ -301,23 +260,6 @@ async function readCorePrompts(promptNames: string[]): Promise<string> {
   return contents.join("\n\n---\n\n");
 }
 
-async function readSkillsWithContent(
-  skills: Skill[],
-  profile: string
-): Promise<Skill[]> {
-  const result: Skill[] = [];
-  for (const skill of skills) {
-    if (!skill.path) continue;
-    const basePath = `${ROOT}/profiles/${profile}/${skill.path}`;
-    const isFolder = skill.path.endsWith("/");
-
-    // For folders, read SKILL.md; for files, read directly
-    const contentPath = isFolder ? `${basePath}SKILL.md` : basePath;
-    const content = await readFile(contentPath);
-    result.push({ ...skill, content });
-  }
-  return result;
-}
 
 async function compileAgent(
   name: string,
@@ -355,11 +297,8 @@ async function compileAgent(
   // Read ending prompts for this agent (directly from agent config)
   const endingPromptsContent = await readCorePrompts(agent.ending_prompts);
 
-  // Read precompiled skills with their content
-  const precompiledSkills = await readSkillsWithContent(
-    agent.skills.precompiled,
-    PROFILE
-  );
+  // Skills are already a flat array (metadata only, no content embedding)
+  const allSkills = agent.skills;
 
   // Format prompt names for display
   const formatPromptName = (n: string) =>
@@ -381,10 +320,7 @@ async function compileAgent(
     outputFormat,
     endingPromptNames: formattedEndingPromptNames,
     endingPromptsContent,
-    skills: {
-      precompiled: precompiledSkills,
-      dynamic: agent.skills.dynamic,
-    },
+    skills: allSkills, // Flat array of all skills (metadata only)
   };
 
   // Render with LiquidJS
@@ -422,7 +358,7 @@ async function compileAllSkills(
 ): Promise<void> {
   // Collect all unique skills with paths
   const allSkills = Object.values(resolvedAgents)
-    .flatMap((a) => [...a.skills.precompiled, ...a.skills.dynamic])
+    .flatMap((a) => a.skills)
     .filter((s) => s.path);
 
   const uniqueSkills = [...new Map(allSkills.map((s) => [s.id, s])).values()];

@@ -286,10 +286,10 @@ The template assembles agents in this order:
 3. <role>{{ intro }}</role>
 4. <preloaded_content>...</preloaded_content>
 5. <critical_requirements>{{ criticalRequirementsTop }}</critical_requirements>
-6. {{ corePromptsContent }}  (core-principles, investigation, write-verification, anti-over-engineering)
-7. {{ workflow }}
-8. ## Standards and Conventions
-9. Pre-compiled Skills
+6. <skill_activation_protocol>...</skill_activation_protocol>  (three-step activation with emphatic warnings)
+7. {{ corePromptsContent }}  (core-principles, investigation, write-verification, anti-over-engineering)
+8. {{ workflow }}
+9. ## Standards and Conventions
 10. {{ examples }}
 11. {{ outputFormat }}
 12. {{ endingPromptsContent }}  (context-management, improvement-protocol)
@@ -306,7 +306,6 @@ Every compiled agent includes a `<preloaded_content>` section (added by template
 Without this section, agents may:
 - Attempt to read files already bundled into their context (wastes tokens)
 - Get confused about what's available vs. what needs loading
-- Invoke skills that are already pre-compiled
 
 ### Structure
 
@@ -314,43 +313,95 @@ The template generates this section automatically based on `config.yaml`:
 
 ```markdown
 <preloaded_content>
-**IMPORTANT: The following content is already in your context. DO NOT read these files:**
+**IMPORTANT: The following content is already in your context. DO NOT read these files from the filesystem:**
 
-**Core Prompts (loaded via template):**
-- ✅ Core Principles (see `<core_principles>` section)
-- ✅ Investigation Requirement (see `<investigation_requirement>` section)
-- ✅ Write Verification (see `<write_verification_protocol>` section)
+**Core Prompts (loaded at beginning):**
+- Core Principles
+- Investigation Requirement
+- Write Verification
+- Anti-Over-Engineering
 
-**Pre-compiled Skills (bundled into this agent):**
-- ✅ React patterns (see Standards section)
-- ✅ Styling patterns (see Standards section)
-
-**Dynamic Skills (invoke when needed):**
-- Use `skill: "frontend-api"` when integrating with REST APIs
-- Use `skill: "frontend-accessibility"` for accessible component patterns
+**Ending Prompts (loaded at end):**
+- Context Management
+- Improvement Protocol
 </preloaded_content>
 ```
 
 ### How It Works
 
-1. **Pre-compiled skills** (📦) are listed with ✅ - already in context
-2. **Dynamic skills** (⚡) are listed with invocation syntax - load when needed
-3. The agent sees what's bundled and knows not to re-read those files
+1. **Core prompts** are listed - already embedded in agent
+2. **Ending prompts** are listed - already embedded in agent
+3. **Skills** are NOT listed here - they are documented in the separate `<skill_activation_protocol>` section
+
+### Skills Are Loaded Dynamically
+
+All skills are now unified and loaded via the Skill tool. See the **Skill Activation Protocol** section below for details.
+
+---
+
+## Skill Activation Protocol
+
+The `<skill_activation_protocol>` section is placed immediately after `<critical_requirements>` in every compiled agent. This positioning ensures context proximity to the skill invocation instructions.
+
+### Why This Exists
+
+**Problem**: Research showed that description-based skill activation has only a **20% baseline success rate**. Skills were being ignored 80% of the time without intervention.
+
+**Solution**: A forced evaluation hook with emphatic language achieves **84% activation rate** - a 4x improvement.
+
+### Three-Step Protocol
+
+The protocol enforces explicit skill evaluation before implementation:
+
+```markdown
+### Step 1 - EVALUATE
+For EACH skill, explicitly state YES/NO with reason in a table format.
+
+### Step 2 - ACTIVATE
+For EVERY skill marked YES, invoke the Skill tool IMMEDIATELY.
+
+### Step 3 - IMPLEMENT
+ONLY after evaluation and activation are complete, begin implementation.
+```
+
+### Emphatic Language
+
+The protocol uses strong language to create a commitment mechanism:
+
+- "Your evaluation is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills"
+- "The skill content **DOES NOT EXIST** in your context until you explicitly load it"
+- "You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it"
+
+This language follows research (Scott Spence, 200+ tests) showing that once Claude writes "YES - need this skill" in its response, it's psychologically committed to activating that skill.
+
+### Skill Listing Format
+
+Skills are listed with simplified formatting:
+
+```markdown
+### {{ skill.id }}
+- Description: {{ skill.description }}
+- Invoke: `skill: "{{ skill.id }}"`
+- Use when: {{ skill.usage }}
+```
 
 ### Configuration
 
-In `config.yaml`, skills are marked as precompiled or dynamic:
+In `config.yaml`, skills use a unified array structure:
 
 ```yaml
-skills:
-  precompiled:
-    - frontend/react      # Bundled into agent
-    - frontend/styling    # Bundled into agent
-  dynamic:
-    - id: frontend/api
-      description: "REST API integration patterns"
-      usage: "When implementing API calls"
+agents:
+  frontend-developer:
+    skills:
+      - id: frontend/react
+        usage: when implementing React components
+      - id: frontend/styling
+        usage: when implementing styles
+      - id: frontend/api
+        usage: when implementing data fetching
 ```
+
+**Note**: There is no `precompiled` vs `dynamic` distinction. All skills are loaded via the Skill tool when needed.
 
 ---
 
@@ -363,6 +414,7 @@ These tags MUST appear in compiled agents:
 | `<role>` | Template wraps intro.md | Agent identity |
 | `<preloaded_content>` | Template | Lists what's already loaded |
 | `<critical_requirements>` | Template wraps critical-requirements.md | Top MUST rules |
+| `<skill_activation_protocol>` | Template | Three-step skill activation with emphatic warnings |
 | `<critical_reminders>` | Template wraps critical-reminders.md | Bottom MUST reminders |
 | `<core_principles>` | core-prompts/core-principles.md | 5 principles + self-reminder |
 | `<investigation_requirement>` | core-prompts/investigation-requirement.md | Investigation-first |
@@ -686,72 +738,58 @@ agents:
 - All agents available across all profiles are defined here
 - Profile configs reference these agents by name
 
-## Config.yaml Structure (Simplified)
+## Config.yaml Structure (Unified Skills)
 
 Each profile's `config.yaml` specifies:
 1. **Profile metadata** (name, description, CLAUDE.md path)
-2. **Prompt sets** (core and ending prompts for each agent type)
-3. **Agent skills** (`agent_skills`) — **keys determine which agents to compile**
+2. **Agent configurations** (core_prompts, ending_prompts, skills)
 
-**Important:** There is no `use_agents` list. Which agents to compile is derived automatically from the keys of `agent_skills`. If an agent has an entry in `agent_skills`, it gets compiled for that profile.
+**Important:** There is no `use_agents` list. Which agents to compile is derived automatically from the `agents` key. If an agent is listed there, it gets compiled for that profile.
+
+**Unified Skills**: All skills are listed in a single `skills` array per agent. There is no distinction between precompiled and dynamic skills - all skills are loaded via the Skill tool when the agent evaluates them as relevant.
 
 ```yaml
-# .claude-src/profiles/work/config.yaml
+# .claude-src/profiles/home/config.yaml
 
 # Profile metadata
-name: work
-description: Photoroom webapp (MobX, Tailwind, React Query, Karma+Chai)
+name: home
+description: Personal projects (SCSS/cva, Zustand, React Query)
 claude_md: ./CLAUDE.md
 
-# Core prompt sets (shared logic, referenced by agents)
-core_prompt_sets:
-  developer:
-    - core-principles
-    - investigation-requirement
-    - write-verification
-    - anti-over-engineering
-  reviewer:
-    - core-principles
-    - investigation-requirement
-    - write-verification
-
-# Ending prompt sets (appended after skills/examples)
-ending_prompt_sets:
-  developer:
-    - context-management
-    - improvement-protocol
-  reviewer:
-    - context-management
-    - improvement-protocol
-
-# Agent skill assignments (keys determine which agents are compiled!)
-# If an agent is listed here, it will be compiled for this profile
-agent_skills:
+# Agent configurations (keys determine which agents are compiled!)
+agents:
   frontend-developer:          # This agent WILL be compiled
-    precompiled:               # Bundled directly into agent
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:                    # Unified skills array - all loaded via Skill tool
       - id: frontend/react
-        path: skills/frontend/react.md
-        name: React
-        description: Component architecture, MobX observer, hooks
         usage: when implementing React components
       - id: frontend/styling
-        path: skills/frontend/styling.md
-        name: Styling
-        description: Tailwind, clsx, design tokens
         usage: when implementing styles
-    dynamic:                   # Available via skill invocation
       - id: frontend/api
-        path: skills/frontend/api.md
-        name: API Integration
-        description: REST APIs, React Query, Zod validation
-        usage: when implementing data fetching or API calls
+        usage: when implementing data fetching, API calls, or React Query integrations
+      - id: frontend/accessibility
+        usage: when implementing accessible components or ARIA patterns
 
   frontend-reviewer:           # This agent WILL be compiled
-    precompiled:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: shared/reviewing
+        usage: when reviewing code
       - id: frontend/react
-        path: skills/frontend/react.md
-        # ...
-    dynamic: []
+        usage: when reviewing React components
 
   # Agents NOT listed here will NOT be compiled for this profile
 ```
@@ -1005,18 +1043,17 @@ Create in the appropriate profile: `.claude-src/profiles/{profile}/skills/{categ
 # In profile's config.yaml
 agents:
   frontend-developer:
+    core_prompts: [...]
+    ending_prompts: [...]
     skills:
-      precompiled:
-        - id: frontend/react
-          path: skills/frontend/react.md
-          name: React
-          description: Component patterns
-          usage: when implementing React components
+      - id: frontend/react
+        usage: when implementing React components
 ```
 
 ### Key Points
 
 - **Same skill ID** can exist in multiple profiles with different content
-- `frontend/react` in work profile → MobX patterns
-- `frontend/react` in home profile → Zustand patterns
-- Skills are bundled from the **active profile's** `skills/` directory
+- `frontend/react` in work profile -> MobX patterns
+- `frontend/react` in home profile -> Zustand patterns
+- Skills are resolved from the **active profile's** `skills/` directory via registry.yaml
+- All skills are loaded via the Skill tool (no precompiled embedding)
