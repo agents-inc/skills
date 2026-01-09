@@ -265,14 +265,14 @@ No mechanism to share skills across profiles or inherit from a base.
 
 ## Files Analyzed
 
-- `/home/vince/dev/claude-subagents/.claude-src/docs/CLAUDE_ARCHITECTURE_BIBLE.md`
-- `/home/vince/dev/claude-subagents/.claude-src/compile.ts`
-- `/home/vince/dev/claude-subagents/.claude-src/agents.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/skills.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/templates/agent.liquid`
-- `/home/vince/dev/claude-subagents/.claude-src/types.ts`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/config.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/work/config.yaml`
+- `/home/vince/dev/claude-subagents/src/docs/CLAUDE_ARCHITECTURE_BIBLE.md`
+- `/home/vince/dev/claude-subagents/src/compile.ts`
+- `/home/vince/dev/claude-subagents/src/agents.yaml`
+- `/home/vince/dev/claude-subagents/src/skills.yaml`
+- `/home/vince/dev/claude-subagents/src/templates/agent.liquid`
+- `/home/vince/dev/claude-subagents/src/types.ts`
+- `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml`
+- `/home/vince/dev/claude-subagents/src/profiles/work/config.yaml`
 - All skill files in both profiles
 
 ---

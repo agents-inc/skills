@@ -14,8 +14,8 @@
 
 **Files affected:**
 
-- `.claude-src/agent-sources/frontend-developer/workflow.md`
-- `.claude-src/agent-sources/backend-developer/workflow.md`
+- `src/agent-sources/frontend-developer/workflow.md`
+- `src/agent-sources/backend-developer/workflow.md`
 
 **Identical sections (verbatim):**
 
@@ -42,8 +42,8 @@
 
 **Files affected:**
 
-- `.claude-src/agent-sources/frontend-reviewer/workflow.md`
-- `.claude-src/agent-sources/backend-reviewer/workflow.md`
+- `src/agent-sources/frontend-reviewer/workflow.md`
+- `src/agent-sources/backend-reviewer/workflow.md`
 
 **Identical sections:**
 
@@ -61,8 +61,8 @@
 
 **Files affected:**
 
-- `.claude-src/agent-sources/frontend-researcher/workflow.md`
-- `.claude-src/agent-sources/backend-researcher/workflow.md`
+- `src/agent-sources/frontend-researcher/workflow.md`
+- `src/agent-sources/backend-researcher/workflow.md`
 
 **Identical sections:**
 
@@ -98,8 +98,8 @@
 
 **Files affected:**
 
-- `.claude-src/profiles/work/config.yaml`
-- `.claude-src/profiles/home/config.yaml`
+- `src/profiles/work/config.yaml`
+- `src/profiles/home/config.yaml`
 
 **Duplication pattern:**
 Every agent definition repeats the same `core_prompts` list:
@@ -158,8 +158,8 @@ All skills in both profiles follow the exact same structure:
 
 **Files affected:** All files in:
 
-- `.claude-src/profiles/work/skills/`
-- `.claude-src/profiles/home/skills/`
+- `src/profiles/work/skills/`
+- `src/profiles/home/skills/`
 
 **Issue:** This structure is manually maintained in each skill file rather than enforced via template.
 

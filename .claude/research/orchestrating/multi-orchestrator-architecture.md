@@ -1033,7 +1033,7 @@ routes:
 ### A.3 Task Routing Config
 
 ```yaml
-# .claude-src/orchestrator-config/routing.yaml
+# src/orchestrator-config/routing.yaml
 routing:
   rules:
     - name: frontend

@@ -9,8 +9,8 @@
 **What is this project?**
 A modular agent/skill compilation system for Claude Code that uses:
 
-- TypeScript compiler (`.claude-src/compile.ts`)
-- LiquidJS templates (`.claude-src/templates/agent.liquid`)
+- TypeScript compiler (`src/compile.ts`)
+- LiquidJS templates (`src/templates/agent.liquid`)
 - YAML configs (`registry.yaml` for agents+skills, profile configs)
 - Profile switching (home/work) for different tech stacks
 
@@ -145,7 +145,7 @@ Review systems in `.claude/research/`:
 ## Architecture Overview
 
 ```
-.claude-src/
+src/
 ├── registry.yaml            # Single source of truth for agents + skills
 ├── agents.yaml              # DEPRECATED - merged into registry.yaml
 ├── skills.yaml              # DEPRECATED - merged into registry.yaml

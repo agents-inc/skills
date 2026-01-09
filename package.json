@@ -4,11 +4,11 @@
   "description": "WIP subagents system",
   "main": "index.js",
   "scripts": {
-    "build:agents": "node .claude-src/compile.mjs",
-    "compile": "bun .claude-src/compile.ts",
-    "compile:home": "bun .claude-src/compile.ts --profile=home",
-    "compile:work": "bun .claude-src/compile.ts --profile=work",
-    "compile:watch": "bun --watch .claude-src/compile.ts"
+    "build:agents": "node src/compile.mjs",
+    "compile": "bun src/compile.ts",
+    "compile:home": "bun src/compile.ts --profile=home",
+    "compile:work": "bun src/compile.ts --profile=work",
+    "compile:watch": "bun --watch src/compile.ts"
   },
   "repository": {
     "type": "git",

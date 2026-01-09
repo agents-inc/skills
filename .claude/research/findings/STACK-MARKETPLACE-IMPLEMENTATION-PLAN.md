@@ -88,7 +88,7 @@ These decisions are confirmed and will not change during implementation.
 **Final Structure**:
 
 ```
-.claude-src/
+src/
 ├── registry.yaml              # Existing: agent + skill definitions
 ├── marketplace/               # NEW: Community stacks
 │   ├── stacks/
@@ -405,7 +405,7 @@ metrics:
 ### Filtering Schema
 
 ```yaml
-# .claude-src/filtering.yaml
+# src/filtering.yaml
 
 categories:
   framework:
@@ -513,7 +513,7 @@ categories:
 ### Profile Integration
 
 ```yaml
-# .claude-src/profiles/home/config.yaml
+# src/profiles/home/config.yaml
 
 name: home
 description: Personal projects

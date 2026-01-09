@@ -7,7 +7,7 @@
 
 ### What Exists:
 
-1. **JSON Schemas** (`.claude-src/schemas/`) - Well-defined schemas for agents.yaml, profile-config.yaml, and skills.yaml with enum constraints
+1. **JSON Schemas** (`src/schemas/`) - Well-defined schemas for agents.yaml, profile-config.yaml, and skills.yaml with enum constraints
 2. **TypeScript Interfaces** (`types.ts`) - Clean type definitions for all config structures, no `any` types found
 3. **IDE Integration** - YAML files use `# yaml-language-server: $schema=...` for editor validation
 4. **Partial Runtime Validation** - `validate()` function checks file existence and some properties

@@ -21,7 +21,6 @@
 | pm | Spec writing | Opus (appropriate - architecture decisions) |
 | skill-summoner | Skill creation | Opus (appropriate - pattern synthesis) |
 | agent-summoner | Agent creation | Opus (appropriate - meta-architecture) |
-| agent-migrator | Migration | Could be Sonnet (deterministic) |
 | pattern-scout | Pattern extraction | Could be Sonnet (read-only research) |
 | pattern-critique | Pattern review | Opus (appropriate - judgment calls) |
 | documentor | Documentation | Could be Sonnet or Haiku (deterministic) |
@@ -114,7 +113,7 @@ Planning Phase (Sonnet) -> Execution Phase (Haiku) -> Review Phase (Opus)
 
 1. **Implement Model Tiering** - Add Sonnet/Haiku options for appropriate agents
 
-   - Candidates for Sonnet: `agent-migrator`, `pattern-scout`, `documentor`, `architecture`, `frontend-researcher`, `backend-researcher`
+   - Candidates for Sonnet: `pattern-scout`, `documentor`, `architecture`, `frontend-researcher`, `backend-researcher`
    - Candidates for Haiku: Simple document generation, formatting tasks
 
 2. **Add Parallel Execution Hints** - Especially for researcher agents
@@ -141,10 +140,10 @@ Planning Phase (Sonnet) -> Execution Phase (Haiku) -> Review Phase (Opus)
 
 ## Files Examined
 
-- `/home/vince/dev/claude-subagents/.claude-src/docs/CLAUDE_ARCHITECTURE_BIBLE.md` - Model-Specific Considerations section (lines 542-648)
-- `/home/vince/dev/claude-subagents/.claude-src/agents.yaml` - All 16 agent definitions
-- `/home/vince/dev/claude-subagents/.claude-src/core-prompts/anti-over-engineering.md` - Full content (126 lines)
-- `/home/vince/dev/claude-subagents/.claude-src/docs/PROMPT_BIBLE.md` - Sonnet/Opus comparison (lines 846-976)
+- `/home/vince/dev/claude-subagents/src/docs/CLAUDE_ARCHITECTURE_BIBLE.md` - Model-Specific Considerations section (lines 542-648)
+- `/home/vince/dev/claude-subagents/src/agents.yaml` - All 16 agent definitions
+- `/home/vince/dev/claude-subagents/src/core-prompts/anti-over-engineering.md` - Full content (126 lines)
+- `/home/vince/dev/claude-subagents/src/docs/PROMPT_BIBLE.md` - Sonnet/Opus comparison (lines 846-976)
 - `/home/vince/dev/claude-subagents/.claude/research/unconventional-patterns-wshobson-agents.md` - Model tiering analysis
 - `/home/vince/dev/claude-subagents/.claude/research/landscape-gaps-opportunities.md` - Cost optimization research
 - All agent `intro.md` files for expansion modifier verification

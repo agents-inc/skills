@@ -1,0 +1,366 @@
+# yaml-language-server: $schema=./schemas/registry.schema.json
+# Single source of truth for all agent and skill definitions
+# Profile configs reference these by name/ID and add profile-specific prompts and skill assignments
+
+# =============================================================================
+# Agent Definitions
+# =============================================================================
+# Each agent defines: title, description, model, tools, output_format
+# Profile configs add: core_prompts, ending_prompts, precompiled skills, dynamic skills
+
+agents:
+  frontend-developer:
+    title: Frontend Developer Agent
+    description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-developer
+
+  backend-developer:
+    title: Backend Developer Agent
+    description: Implements backend features from detailed specs - API routes, database operations, server utilities, authentication, middleware - surgical execution following existing patterns - invoke AFTER pm creates spec
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-developer
+
+  frontend-reviewer:
+    title: Frontend Reviewer Agent
+    description: Reviews React code ONLY (*.tsx/*.jsx with JSX) - components, hooks, props, state, performance, a11y patterns - NOT for API routes, configs, or server code (use backend-reviewer)
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-reviewer
+
+  backend-reviewer:
+    title: Backend Reviewer Agent
+    description: Reviews non-React code - API routes, server utils, configs (*.config.*), build tooling, CI/CD (*.yml), security, env management - defers *.tsx React components to frontend-reviewer
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-reviewer
+
+  tester:
+    title: Tester Agent
+    description: Writes tests BEFORE implementation - all test types (*.test.*, *.spec.*, E2E) - Tester red-green-refactor - invoke BEFORE developer implements feature
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-tester
+
+  pm:
+    title: PM and Architect Agent
+    description: Creates detailed implementation specs by researching codebase patterns - architectural planning and requirements gathering - invoke BEFORE developer for any new feature
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-pm
+
+  skill-summoner:
+    title: Skill Summoner Agent
+    description: Creates technology-specific skills by researching best practices and comparing with codebase standards - use for MobX, Tailwind, Hono, and other technology skills
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - WebSearch
+      - WebFetch
+    output_format: output-formats-developer
+
+  agent-summoner:
+    title: Agent Summoner Agent
+    description: Expert in creating agents and skills - understands agent architecture deeply - invoke when you need to create, improve, or analyze agents/skills
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-developer
+
+  pattern-scout:
+    title: Pattern Scout Agent
+    description: Extracts ALL patterns from monorepo (15+ categories - code, architecture, testing, design, build, CI/CD, env, security) - creates comprehensive standards - invoke for new codebases
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-developer
+
+  pattern-critique:
+    title: Pattern Critique Agent
+    description: Critiques extracted patterns against industry standards (Airbnb, Stripe, Meta, Vercel) - frontend/React architecture focus - invoke AFTER pattern-scout extracts patterns
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-critique
+
+  documentor:
+    title: Documentor Agent
+    description: Creates AI-focused documentation that helps other agents understand where and how to implement features. Works incrementally, tracking progress over time.
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Glob
+      - Grep
+      - Bash
+    output_format: output-formats-documentor
+
+  architecture:
+    title: Architecture Agent
+    description: Scaffolds new applications in the monorepo with all foundational patterns (Next.js, Better Auth, Drizzle, Hono, PostHog, Pino/Sentry/Axiom, GitHub Actions)
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-developer
+
+  orchestrator:
+    title: Orchestrator Agent
+    description: Manages background agent execution - stays responsive while agents work, tracks state via dashboard, injects boilerplate automatically - use for multi-task coordination
+    model: opus
+    tools:
+      - Read
+      - Write
+      - Edit
+      - Grep
+      - Glob
+      - Bash
+      - Task
+      - TaskOutput
+    output_format: output-formats-orchestrator
+
+  frontend-researcher:
+    title: Frontend Researcher Agent
+    description: Read-only frontend research specialist - discovers React patterns, catalogs UI components, understands design systems and styling (SCSS Modules, cva, tokens), finds similar component implementations - produces structured findings for frontend-developer - invoke for frontend research before implementation
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-researcher
+
+  backend-researcher:
+    title: Backend Researcher Agent
+    description: Read-only backend research specialist - discovers API route patterns, understands database schemas and ORM patterns, catalogs middleware and authentication flows, finds similar service implementations - produces structured findings for backend-developer - invoke for backend research before implementation
+    model: opus
+    tools:
+      - Read
+      - Grep
+      - Glob
+      - Bash
+    output_format: output-formats-researcher
+
+# =============================================================================
+# Skill Definitions
+# =============================================================================
+# Each skill defines: path, name, description
+# Profile configs add: usage (context-specific description of when to use)
+
+skills:
+  # ---------------------------------------------------------------------------
+  # Frontend Skills
+  # ---------------------------------------------------------------------------
+  frontend/react:
+    path: skills/frontend/react/
+    name: React
+    description: Component architecture, hooks, patterns
+
+  frontend/styling:
+    path: skills/frontend/styling/
+    name: Styling
+    description: SCSS Modules, cva, design tokens
+
+  frontend/api:
+    path: skills/frontend/api/
+    name: API Integration
+    description: REST APIs, React Query, data fetching
+
+  frontend/client-state:
+    path: skills/frontend/client-state/
+    name: Client State
+    description: Zustand stores, React Query integration
+
+  frontend/accessibility:
+    path: skills/frontend/accessibility/
+    name: Accessibility
+    description: WCAG, ARIA, keyboard navigation
+
+  frontend/performance:
+    path: skills/frontend/performance/
+    name: Performance
+    description: Bundle optimization, render performance
+
+  frontend/testing:
+    path: skills/frontend/testing/
+    name: Frontend Testing
+    description: Playwright E2E, Vitest, React Testing Library
+
+  frontend/mocking:
+    path: skills/frontend/mocking/
+    name: Mocking
+    description: MSW handlers, browser/server workers, test data
+
+  # ---------------------------------------------------------------------------
+  # Backend Skills
+  # ---------------------------------------------------------------------------
+  backend/api:
+    path: skills/backend/api/
+    name: Backend API
+    description: Hono routes, OpenAPI, Zod validation
+
+  backend/authentication:
+    path: skills/backend/authentication/
+    name: Authentication
+    description: Better Auth patterns, sessions, OAuth
+
+  backend/database:
+    path: skills/backend/database/
+    name: Database
+    description: Drizzle ORM, queries, migrations
+
+  backend/ci-cd:
+    path: skills/backend/ci-cd/
+    name: CI/CD
+    description: GitHub Actions, pipelines, deployment
+
+  backend/performance:
+    path: skills/backend/performance.md
+    name: Backend Performance
+    description: Query optimization, caching, indexing
+
+  backend/testing:
+    path: skills/backend/testing.md
+    name: Backend Testing
+    description: API tests, integration tests
+
+  backend/analytics:
+    path: skills/backend/analytics/
+    name: Analytics
+    description: PostHog event tracking, user identification
+
+  backend/feature-flags:
+    path: skills/backend/feature-flags/
+    name: Feature Flags
+    description: PostHog feature flags, rollouts, A/B testing
+
+  backend/email:
+    path: skills/backend/email/
+    name: Email
+    description: Resend + React Email templates
+
+  backend/observability:
+    path: skills/backend/observability/
+    name: Observability
+    description: Pino logging, Sentry error tracking, Axiom
+
+  # ---------------------------------------------------------------------------
+  # Security Skills
+  # ---------------------------------------------------------------------------
+  security/security:
+    path: skills/security/security/
+    name: Security
+    description: Authentication, authorization, secrets
+
+  # ---------------------------------------------------------------------------
+  # Shared Skills
+  # ---------------------------------------------------------------------------
+  shared/reviewing:
+    path: skills/shared/reviewing/
+    name: Reviewing
+    description: Code review patterns, feedback principles
+
+  # ---------------------------------------------------------------------------
+  # Setup Skills
+  # ---------------------------------------------------------------------------
+  setup/monorepo:
+    path: skills/setup/monorepo/
+    name: Monorepo
+    description: Turborepo, workspaces, package architecture
+
+  setup/package:
+    path: skills/setup/package/
+    name: Package
+    description: Internal package conventions, exports
+
+  setup/env:
+    path: skills/setup/env/
+    name: Environment
+    description: Environment configuration, Zod validation
+
+  setup/tooling:
+    path: skills/setup/tooling/
+    name: Tooling
+    description: ESLint, Prettier, TypeScript configuration
+
+  setup/posthog:
+    path: skills/setup/posthog/
+    name: PostHog Setup
+    description: PostHog analytics and feature flags setup
+
+  setup/resend:
+    path: skills/setup/resend/
+    name: Resend Setup
+    description: Resend email setup, domain verification
+
+  setup/observability:
+    path: skills/setup/observability/
+    name: Observability Setup
+    description: Pino, Axiom, Sentry installation
+
+  # ---------------------------------------------------------------------------
+  # Research Skills
+  # ---------------------------------------------------------------------------
+  research/methodology:
+    path: skills/research/methodology/
+    name: Research Methodology
+    description: Investigation flow, evidence-based research, structured output

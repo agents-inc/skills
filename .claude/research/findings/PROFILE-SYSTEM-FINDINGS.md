@@ -3,16 +3,16 @@
 **Analysis Date:** 2026-01-08
 **Files Analyzed:**
 
-- `/home/vince/dev/claude-subagents/.claude-src/docs/CLAUDE_ARCHITECTURE_BIBLE.md`
-- `/home/vince/dev/claude-subagents/.claude-src/compile.ts`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/work/config.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/config.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/work/CLAUDE.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/CLAUDE.md`
-- `/home/vince/dev/claude-subagents/.claude-src/skills.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/types.ts`
-- `/home/vince/dev/claude-subagents/.claude-src/schemas/profile-config.schema.json`
-- `/home/vince/dev/claude-subagents/.claude-src/templates/agent.liquid`
+- `/home/vince/dev/claude-subagents/src/docs/CLAUDE_ARCHITECTURE_BIBLE.md`
+- `/home/vince/dev/claude-subagents/src/compile.ts`
+- `/home/vince/dev/claude-subagents/src/profiles/work/config.yaml`
+- `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml`
+- `/home/vince/dev/claude-subagents/src/profiles/work/CLAUDE.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/CLAUDE.md`
+- `/home/vince/dev/claude-subagents/src/skills.yaml`
+- `/home/vince/dev/claude-subagents/src/types.ts`
+- `/home/vince/dev/claude-subagents/src/schemas/profile-config.schema.json`
+- `/home/vince/dev/claude-subagents/src/templates/agent.liquid`
 
 ---
 
@@ -123,8 +123,8 @@ But `.claude/` also contains directories that persist across profile switches:
 
 ```
 skills.yaml: frontend/testing -> path: skills/frontend/testing.md
-work profile: .claude-src/profiles/work/skills/frontend/testing.md  (Karma, Mocha, Chai)
-home profile: .claude-src/profiles/home/skills/frontend/testing.md  (Vitest, RTL)
+work profile: src/profiles/work/skills/frontend/testing.md  (Karma, Mocha, Chai)
+home profile: src/profiles/home/skills/frontend/testing.md  (Vitest, RTL)
 ```
 
 **Current mitigation:** Compile-time validation checks skill file existence for referenced skills.
@@ -152,8 +152,8 @@ home profile: .claude-src/profiles/home/skills/frontend/testing.md  (Vitest, RTL
 
 1. Implement base/override pattern:
    ```
-   .claude-src/skills-base/        # Shared skill foundations
-   .claude-src/profiles/{p}/skills/ # Profile-specific overrides
+   src/skills-base/        # Shared skill foundations
+   src/profiles/{p}/skills/ # Profile-specific overrides
    ```
 2. Or use Liquid template inheritance within skill files:
    ```liquid
@@ -199,7 +199,7 @@ Both are valid per schema (schema allows optional override fields), but the inco
 
 Creating a new profile requires manual steps:
 
-1. Create directory: `.claude-src/profiles/{name}/`
+1. Create directory: `src/profiles/{name}/`
 2. Create config.yaml (copy and modify from existing)
 3. Create CLAUDE.md with project-specific content
 4. Create all skill files in `skills/` subdirectory

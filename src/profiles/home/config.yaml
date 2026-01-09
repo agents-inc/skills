@@ -1,0 +1,598 @@
+# yaml-language-server: $schema=../../schemas/profile-config.schema.json
+# Profile metadata
+name: home
+description: Personal projects (SCSS/cva, Zustand, React Query)
+
+# Profile-specific CLAUDE.md
+claude_md: ./CLAUDE.md
+
+# =============================================================================
+# Agent Configurations
+# =============================================================================
+# Each agent has: core_prompts, ending_prompts, and skills (unified list)
+
+agents:
+  frontend-developer:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: frontend/react
+        usage: when implementing React components
+      - id: frontend/styling
+        usage: when implementing styles
+      - id: frontend/api
+        usage: when implementing data fetching, API calls, or React Query integrations
+      - id: frontend/client-state
+        usage: when implementing Zustand stores or complex client-side state
+      - id: frontend/accessibility
+        usage: when implementing accessible components or ARIA patterns
+      - id: frontend/performance
+        usage: when optimizing renders or bundle size
+      - id: backend/authentication
+        usage: when implementing client-side authentication flows or protected routes
+      - id: backend/analytics
+        usage: when implementing client-side analytics tracking or user identification
+      - id: backend/feature-flags
+        usage: when implementing client-side feature flag evaluation or experiments
+
+  backend-developer:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: backend/api
+        usage: when implementing API routes
+      - id: backend/authentication
+        usage: when implementing authentication features
+      - id: backend/database
+        usage: when implementing database queries or migrations
+      - id: backend/ci-cd
+        usage: when implementing deployment pipelines or GitHub Actions
+      - id: backend/performance
+        usage: when optimizing queries, caching, or indexing
+      - id: security/security
+        usage: when implementing authentication, authorization, or secrets handling
+      - id: backend/analytics
+        usage: when implementing analytics event tracking or user identification
+      - id: backend/feature-flags
+        usage: when implementing feature flags, gradual rollouts, or experiments
+      - id: backend/email
+        usage: when implementing email sending, templates, or notifications
+      - id: backend/observability
+        usage: when implementing logging, error tracking, or monitoring patterns
+      - id: setup/posthog
+        usage: when setting up PostHog for the first time in a project
+      - id: setup/resend
+        usage: when setting up Resend/email for the first time in a project
+      - id: setup/observability
+        usage: when setting up observability stack for the first time in a project
+
+  frontend-reviewer:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: shared/reviewing
+        usage: when reviewing code
+      - id: frontend/react
+        usage: when reviewing React components
+      - id: frontend/styling
+        usage: when reviewing styles
+      - id: frontend/accessibility
+        usage: when reviewing accessibility
+      - id: frontend/performance
+        usage: when reviewing code with potential performance issues
+      - id: frontend/client-state
+        usage: when reviewing state management implementations
+      - id: backend/analytics
+        usage: when reviewing client-side analytics implementations
+      - id: backend/feature-flags
+        usage: when reviewing client-side feature flag implementations
+
+  backend-reviewer:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: shared/reviewing
+        usage: when reviewing code
+      - id: backend/api
+        usage: when reviewing API routes
+      - id: security/security
+        usage: when reviewing security implementations
+      - id: backend/database
+        usage: when reviewing database queries or schema changes
+      - id: backend/ci-cd
+        usage: when reviewing CI/CD configurations or deployment code
+      - id: backend/authentication
+        usage: when reviewing authentication implementations
+      - id: backend/analytics
+        usage: when reviewing analytics implementations
+      - id: backend/feature-flags
+        usage: when reviewing feature flag implementations
+      - id: backend/email
+        usage: when reviewing email sending implementations
+      - id: backend/observability
+        usage: when reviewing logging or error handling implementations
+
+  tester:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: frontend/testing
+        usage: when writing React component tests
+      - id: backend/testing
+        usage: when writing API or integration tests
+      - id: frontend/mocking
+        usage: when setting up mocks
+      - id: frontend/accessibility
+        usage: when writing accessibility-focused tests
+      - id: frontend/performance
+        usage: when writing performance benchmark tests
+      - id: backend/authentication
+        usage: when writing tests for authentication flows
+      - id: backend/feature-flags
+        usage: when writing tests involving feature flag behavior
+
+  pm:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      # Frontend skills
+      - id: frontend/react
+        usage: when scoping features that involve React components
+      - id: frontend/api
+        usage: when scoping features that involve data fetching or API integration
+      - id: frontend/styling
+        usage: when scoping features that involve styling or theming
+      - id: frontend/accessibility
+        usage: when scoping features that require accessibility considerations
+      - id: frontend/client-state
+        usage: when scoping features that involve client-side state
+      - id: frontend/performance
+        usage: when scoping features with performance requirements
+      - id: frontend/testing
+        usage: when scoping features that require React testing
+      - id: frontend/mocking
+        usage: when scoping features that require mocking or test data
+      # Backend skills
+      - id: backend/api
+        usage: when scoping features that involve API routes
+      - id: backend/database
+        usage: when scoping features that require database schema changes
+      - id: backend/ci-cd
+        usage: when scoping features that affect CI/CD pipelines
+      - id: backend/performance
+        usage: when scoping features with backend performance requirements
+      - id: backend/testing
+        usage: when scoping features that require API testing
+      # Security and shared
+      - id: security/security
+        usage: when scoping features that involve authentication or security
+      - id: shared/reviewing
+        usage: when scoping features that require code review considerations
+      # Setup skills
+      - id: setup/monorepo
+        usage: when scoping features that affect monorepo structure
+      - id: setup/package
+        usage: when scoping features that require new packages
+      - id: setup/env
+        usage: when scoping features that require environment configuration
+      - id: setup/tooling
+        usage: when scoping features that affect build tooling
+      # Production skills
+      - id: backend/authentication
+        usage: when scoping features that involve authentication
+      - id: backend/analytics
+        usage: when scoping features that require analytics tracking
+      - id: backend/feature-flags
+        usage: when scoping features with rollout or experimentation requirements
+      - id: backend/email
+        usage: when scoping features that require email communication
+      - id: backend/observability
+        usage: when scoping features that require logging or monitoring
+      - id: setup/posthog
+        usage: when scoping features that require initial PostHog setup
+      - id: setup/resend
+        usage: when scoping features that require initial email setup
+      - id: setup/observability
+        usage: when scoping features that require initial observability setup
+
+  skill-summoner:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      # Frontend skills
+      - id: frontend/react
+        usage: when creating or improving skills related to React components or hooks
+      - id: frontend/styling
+        usage: when creating or improving skills related to CSS or styling patterns
+      - id: frontend/api
+        usage: when creating or improving skills related to data fetching or API integration
+      - id: frontend/client-state
+        usage: when creating or improving skills related to state management
+      - id: frontend/accessibility
+        usage: when creating or improving skills related to accessibility
+      - id: frontend/performance
+        usage: when creating or improving skills related to frontend performance
+      - id: frontend/testing
+        usage: when creating or improving skills related to React testing
+      - id: frontend/mocking
+        usage: when creating or improving skills related to mocking or test data
+      # Backend skills
+      - id: backend/api
+        usage: when creating or improving skills related to API routes or endpoints
+      - id: backend/database
+        usage: when creating or improving skills related to database operations
+      - id: backend/ci-cd
+        usage: when creating or improving skills related to CI/CD pipelines
+      - id: backend/performance
+        usage: when creating or improving skills related to backend performance
+      - id: backend/testing
+        usage: when creating or improving skills related to API testing
+      # Security and shared
+      - id: security/security
+        usage: when creating or improving skills related to authentication or security
+      - id: shared/reviewing
+        usage: when creating or improving skills related to code review
+      # Setup skills
+      - id: setup/monorepo
+        usage: when creating or improving skills related to monorepo structure
+      - id: setup/package
+        usage: when creating or improving skills related to package conventions
+      - id: setup/env
+        usage: when creating or improving skills related to environment configuration
+      - id: setup/tooling
+        usage: when creating or improving skills related to build tooling
+      # Production skills
+      - id: backend/authentication
+        usage: when creating or improving skills related to authentication
+      - id: backend/analytics
+        usage: when creating or improving skills related to analytics
+      - id: backend/feature-flags
+        usage: when creating or improving skills related to feature flags
+      - id: backend/email
+        usage: when creating or improving skills related to email
+      - id: backend/observability
+        usage: when creating or improving skills related to observability
+
+  agent-summoner:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      # Frontend skills
+      - id: frontend/react
+        usage: when creating or improving agents that work with React components
+      - id: frontend/styling
+        usage: when creating or improving agents that work with styling
+      - id: frontend/api
+        usage: when creating or improving agents that work with API integration
+      - id: frontend/client-state
+        usage: when creating or improving agents that work with state management
+      - id: frontend/accessibility
+        usage: when creating or improving agents that work with accessibility
+      - id: frontend/performance
+        usage: when creating or improving agents that work with frontend performance
+      - id: frontend/testing
+        usage: when creating or improving agents that work with React testing
+      - id: frontend/mocking
+        usage: when creating or improving agents that work with mocking
+      # Backend skills
+      - id: backend/api
+        usage: when creating or improving agents that work with API routes
+      - id: backend/database
+        usage: when creating or improving agents that work with databases
+      - id: backend/ci-cd
+        usage: when creating or improving agents that work with CI/CD
+      - id: backend/performance
+        usage: when creating or improving agents that work with backend performance
+      - id: backend/testing
+        usage: when creating or improving agents that work with API testing
+      # Security and shared
+      - id: security/security
+        usage: when creating or improving agents that work with authentication or security
+      - id: shared/reviewing
+        usage: when creating or improving reviewer agents
+      # Setup skills
+      - id: setup/monorepo
+        usage: when creating or improving agents that work with monorepo structure
+      - id: setup/package
+        usage: when creating or improving agents that work with package conventions
+      - id: setup/env
+        usage: when creating or improving agents that work with environment configuration
+      - id: setup/tooling
+        usage: when creating or improving agents that work with build tooling
+      # Production skills
+      - id: backend/authentication
+        usage: when creating or improving agents that work with authentication
+      - id: backend/analytics
+        usage: when creating or improving agents that work with analytics
+      - id: backend/feature-flags
+        usage: when creating or improving agents that work with feature flags
+      - id: backend/email
+        usage: when creating or improving agents that work with email
+      - id: backend/observability
+        usage: when creating or improving agents that work with logging or monitoring
+
+  pattern-scout:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: frontend/react
+        usage: when comparing React component architecture patterns
+      - id: frontend/styling
+        usage: when comparing CSS methodology or design token patterns
+      - id: backend/api
+        usage: when comparing API route or endpoint patterns
+      - id: backend/database
+        usage: when comparing database schema or query patterns
+      - id: backend/authentication
+        usage: when identifying authentication patterns in codebases
+      - id: backend/analytics
+        usage: when identifying analytics tracking patterns in codebases
+      - id: backend/feature-flags
+        usage: when identifying feature flag patterns in codebases
+      - id: backend/email
+        usage: when identifying email infrastructure patterns in codebases
+      - id: backend/observability
+        usage: when identifying observability patterns in codebases
+
+  pattern-critique:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: frontend/react
+        usage: when critiquing React patterns against industry standards
+      - id: frontend/styling
+        usage: when critiquing styling patterns against industry standards
+      - id: frontend/client-state
+        usage: when critiquing state management patterns against industry standards
+      - id: backend/api
+        usage: when critiquing API route patterns against industry standards
+      - id: backend/authentication
+        usage: when critiquing authentication patterns against industry standards
+      - id: backend/analytics
+        usage: when critiquing analytics tracking patterns against industry standards
+      - id: backend/feature-flags
+        usage: when critiquing feature flag patterns against industry standards
+      - id: backend/observability
+        usage: when critiquing observability patterns against industry standards
+
+  documentor:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: setup/monorepo
+        usage: when documenting monorepo structure
+      - id: setup/package
+        usage: when documenting package conventions
+      # Frontend skills
+      - id: frontend/react
+        usage: when documenting React component architecture or patterns
+      - id: frontend/styling
+        usage: when documenting styling architecture or patterns
+      - id: frontend/api
+        usage: when documenting API integration architecture
+      - id: frontend/client-state
+        usage: when documenting state management architecture
+      - id: frontend/accessibility
+        usage: when documenting accessibility patterns
+      - id: frontend/performance
+        usage: when documenting frontend performance patterns
+      - id: frontend/testing
+        usage: when documenting React testing patterns
+      - id: frontend/mocking
+        usage: when documenting mocking patterns
+      # Backend skills
+      - id: backend/api
+        usage: when documenting API route architecture
+      - id: backend/database
+        usage: when documenting database architecture
+      - id: backend/ci-cd
+        usage: when documenting CI/CD patterns
+      - id: backend/performance
+        usage: when documenting backend performance patterns
+      - id: backend/testing
+        usage: when documenting API testing patterns
+      # Security and shared
+      - id: security/security
+        usage: when documenting security architecture
+      - id: shared/reviewing
+        usage: when documenting code review processes
+      # Setup skills
+      - id: setup/env
+        usage: when documenting environment configuration
+      - id: setup/tooling
+        usage: when documenting build tooling
+      # Production skills
+      - id: backend/authentication
+        usage: when documenting authentication architecture
+      - id: backend/analytics
+        usage: when documenting analytics architecture
+      - id: backend/feature-flags
+        usage: when documenting feature flag architecture
+      - id: backend/email
+        usage: when documenting email infrastructure
+      - id: backend/observability
+        usage: when documenting observability architecture
+      - id: setup/posthog
+        usage: when documenting PostHog setup procedures
+      - id: setup/resend
+        usage: when documenting email setup procedures
+      - id: setup/observability
+        usage: when documenting observability setup procedures
+
+  architecture:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+      - anti-over-engineering
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: setup/monorepo
+        usage: when scaffolding monorepo apps
+      - id: setup/package
+        usage: when scaffolding packages
+      - id: setup/env
+        usage: when setting up environment configuration
+      - id: setup/tooling
+        usage: when setting up build tooling
+      - id: setup/posthog
+        usage: when setting up PostHog
+      - id: setup/observability
+        usage: when setting up observability stack
+      - id: frontend/api
+        usage: when scaffolding API client layer
+      - id: frontend/mocking
+        usage: when scaffolding mock data package
+      - id: frontend/testing
+        usage: when scaffolding test infrastructure
+      - id: backend/api
+        usage: when scaffolding API routes
+      - id: backend/database
+        usage: when scaffolding database layer
+      - id: backend/authentication
+        usage: when scaffolding authentication
+      - id: backend/analytics
+        usage: when scaffolding analytics
+      - id: backend/feature-flags
+        usage: when scaffolding feature flags
+      - id: backend/observability
+        usage: when scaffolding observability
+      - id: backend/ci-cd
+        usage: when scaffolding CI/CD workflows
+      - id: security/security
+        usage: when considering security patterns
+
+  orchestrator:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills: []
+
+  frontend-researcher:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: research/methodology
+        usage: when conducting any research task
+      # Frontend skills only - this is a frontend-focused researcher
+      - id: frontend/react
+        usage: when researching React component patterns or architecture
+      - id: frontend/styling
+        usage: when researching styling patterns, tokens, or theming
+      - id: frontend/api
+        usage: when researching data fetching or API integration patterns
+      - id: frontend/client-state
+        usage: when researching state management patterns
+      - id: frontend/accessibility
+        usage: when researching accessibility patterns
+      - id: frontend/performance
+        usage: when researching performance patterns
+      - id: frontend/testing
+        usage: when researching testing patterns
+      - id: frontend/mocking
+        usage: when researching mocking patterns
+
+  backend-researcher:
+    core_prompts:
+      - core-principles
+      - investigation-requirement
+      - write-verification
+    ending_prompts:
+      - context-management
+      - improvement-protocol
+    skills:
+      - id: research/methodology
+        usage: when conducting any research task
+      # Backend skills only - this is a backend-focused researcher
+      - id: backend/api
+        usage: when researching API route patterns
+      - id: backend/database
+        usage: when researching database schema or query patterns
+      - id: backend/authentication
+        usage: when researching authentication or session patterns
+      - id: backend/analytics
+        usage: when researching analytics tracking patterns
+      - id: backend/feature-flags
+        usage: when researching feature flag patterns
+      - id: backend/observability
+        usage: when researching logging or monitoring patterns
+      - id: backend/email
+        usage: when researching email sending patterns
+      # Setup skills useful for backend research
+      - id: setup/monorepo
+        usage: when researching service architecture in monorepo
+      - id: setup/env
+        usage: when researching environment configuration patterns

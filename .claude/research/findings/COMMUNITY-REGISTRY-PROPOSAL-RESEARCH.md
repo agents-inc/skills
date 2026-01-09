@@ -298,13 +298,13 @@ Cross-domain content clearly marked and justified:
 
 ### Files Analyzed
 
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/react.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/styling.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/client-state.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/testing.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/mocking.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/api.md`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/skills/frontend/accessibility.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/react.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/styling.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/client-state.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/testing.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/mocking.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/api.md`
+- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/accessibility.md`
 
 ---
 

@@ -8,7 +8,7 @@
 
 ### Current State Analysis
 
-**File: `.claude-src/profiles/home/config.yaml`** - 626 lines
+**File: `src/profiles/home/config.yaml`** - 626 lines
 
 **Redundancy Breakdown:**
 
@@ -441,16 +441,16 @@ agents:
 
 **Files that must be touched:**
 
-1. `.claude-src/agents.yaml` - Add agent definition
-2. `.claude-src/agent-sources/{agent-name}/intro.md` - Create
-3. `.claude-src/agent-sources/{agent-name}/workflow.md` - Create
-4. `.claude-src/agent-sources/{agent-name}/examples.md` - Create
-5. `.claude-src/agent-sources/{agent-name}/critical-requirements.md` - Create
-6. `.claude-src/agent-sources/{agent-name}/critical-reminders.md` - Create
-7. `.claude-src/profiles/home/config.yaml` - Add agent config
-8. `.claude-src/profiles/work/config.yaml` - Add agent config (if applicable)
-9. Maybe: `.claude-src/skills.yaml` - Add new skills
-10. Maybe: `.claude-src/profiles/{profile}/skills/{category}/{skill}.md` - Create skill files
+1. `src/agents.yaml` - Add agent definition
+2. `src/agent-sources/{agent-name}/intro.md` - Create
+3. `src/agent-sources/{agent-name}/workflow.md` - Create
+4. `src/agent-sources/{agent-name}/examples.md` - Create
+5. `src/agent-sources/{agent-name}/critical-requirements.md` - Create
+6. `src/agent-sources/{agent-name}/critical-reminders.md` - Create
+7. `src/profiles/home/config.yaml` - Add agent config
+8. `src/profiles/work/config.yaml` - Add agent config (if applicable)
+9. Maybe: `src/skills.yaml` - Add new skills
+10. Maybe: `src/profiles/{profile}/skills/{category}/{skill}.md` - Create skill files
 
 **Time for new contributor:** 45-60 minutes (based on research findings)
 
@@ -1115,9 +1115,9 @@ You are an expert developer agent specializing in API performance optimization.
 ```json
 {
   "scripts": {
-    "create:agent": "bun .claude-src/scripts/create-agent.ts",
-    "create:skill": "bun .claude-src/scripts/create-skill.ts",
-    "create:profile": "bun .claude-src/scripts/create-profile.ts"
+    "create:agent": "bun src/scripts/create-agent.ts",
+    "create:skill": "bun src/scripts/create-skill.ts",
+    "create:profile": "bun src/scripts/create-profile.ts"
   }
 }
 ```

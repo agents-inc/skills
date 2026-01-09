@@ -71,7 +71,7 @@
 
 **1.1.1 Schema/Compiler Mismatch for Skill Overrides (CRITICAL)**
 
-**Location:** `.claude-src/schemas/profile-config.schema.json` lines 111-125, `.claude-src/compile.ts` lines 85-100
+**Location:** `src/schemas/profile-config.schema.json` lines 111-125, `src/compile.ts` lines 85-100
 
 **Problem:** The JSON schema documents optional `path`, `name`, `description` overrides for SkillReference, but the compiler ignores them entirely.
 
@@ -93,7 +93,7 @@ function resolveSkillReference(ref: SkillReference, skillsConfig: SkillsConfig):
 
 **1.1.2 Config File Redundancy (HIGH)**
 
-**Location:** `.claude-src/profiles/home/config.yaml` (625 lines), work/config.yaml (231 lines)
+**Location:** `src/profiles/home/config.yaml` (625 lines), work/config.yaml (231 lines)
 
 **Evidence:** `frontend/react` appears 9 times in home/config.yaml for different agents.
 
@@ -115,7 +115,7 @@ agents:
 
 **Problem:** Adding new agent requires 5-7 file updates with no scaffolding:
 
-1. Create `.claude-src/agent-sources/{name}/` directory (5 files)
+1. Create `src/agent-sources/{name}/` directory (5 files)
 2. Add to `agents.yaml`
 3. Add to `home/config.yaml` (prompts + skills)
 4. Add to `work/config.yaml` (prompts + skills)
@@ -634,7 +634,7 @@ There is no `Skill` tool, and the `skill: "..."` syntax is not recognized by Cla
 
 **3. Schema Validation Gap**
 
-- JSON schemas exist in `.claude-src/schemas/`
+- JSON schemas exist in `src/schemas/`
 - YAML files reference them via `# yaml-language-server: $schema=...`
 - BUT: `yaml` library does NOT validate against schema at runtime
 - Malformed YAML structure fails silently until TypeScript type mismatch
@@ -659,7 +659,7 @@ There is no `Skill` tool, and the `skill: "..."` syntax is not recognized by Cla
 
 1. **Add Test Suite for Compiler**
 
-   - Create `.claude-src/__tests__/compile.test.ts`
+   - Create `src/__tests__/compile.test.ts`
    - Test cases: valid compilation, missing files, invalid YAML, skill validation
    - Use Bun test or Vitest
 
@@ -676,7 +676,7 @@ There is no `Skill` tool, and the `skill: "..."` syntax is not recognized by Cla
    - Validate YAML against schemas before processing
 
 4. **Create Actual Verification Script**
-   - Save BIBLE lines 496-538 as `.claude-src/scripts/verify-agent.sh`
+   - Save BIBLE lines 496-538 as `src/scripts/verify-agent.sh`
    - Add npm scripts: `verify`, `verify:all`
 
 **MEDIUM Priority:**
@@ -689,10 +689,10 @@ There is no `Skill` tool, and the `skill: "..."` syntax is not recognized by Cla
 
 | File                                 | Test Coverage     |
 | ------------------------------------ | ----------------- |
-| `.claude-src/compile.ts`             | None              |
-| `.claude-src/types.ts`               | None (types only) |
-| `.claude-src/schemas/*.json`         | IDE-only          |
-| `.claude-src/templates/agent.liquid` | None              |
+| `src/compile.ts`             | None              |
+| `src/types.ts`               | None (types only) |
+| `src/schemas/*.json`         | IDE-only          |
+| `src/templates/agent.liquid` | None              |
 | `package.json`                       | No test script    |
 
 #### Verification Commands Status
