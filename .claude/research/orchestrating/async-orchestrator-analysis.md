@@ -85,7 +85,6 @@ Your Agent System (14 agents):
 └── Meta (create/improve system)
     ├── agent-summoner
     ├── skill-summoner
-    └── agent-migrator
 ```
 
 ### Current Orchestration Pattern
@@ -456,7 +455,7 @@ The orchestrator slots in as a new agent type coordinating existing specialists.
 **Boilerplate Templates:**
 
 ```yaml
-# .claude-src/orchestrator-templates/delegation.yaml
+# src/orchestrator-templates/delegation.yaml
 developer:
   preamble: |
     You have FRESH CONTEXT. Do not assume knowledge from previous sessions.

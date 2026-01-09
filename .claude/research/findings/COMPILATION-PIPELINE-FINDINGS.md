@@ -1,6 +1,6 @@
 # Compilation Pipeline Analysis (Agent #7)
 
-**File analyzed:** `.claude-src/compile.ts` (579 lines)
+**File analyzed:** `src/compile.ts` (579 lines)
 
 ## Overall Assessment
 
@@ -214,9 +214,9 @@ After compilation, would be helpful to show:
 
 | File                                 | Purpose          | Lines |
 | ------------------------------------ | ---------------- | ----- |
-| `.claude-src/compile.ts`             | Main compiler    | 579   |
-| `.claude-src/types.ts`               | TypeScript types | 155   |
-| `.claude-src/templates/agent.liquid` | Agent template   | 95    |
+| `src/compile.ts`             | Main compiler    | 579   |
+| `src/types.ts`               | TypeScript types | 155   |
+| `src/templates/agent.liquid` | Agent template   | 95    |
 | `package.json`                       | NPM scripts      | 28    |
 
 ## Critical Findings for Summary

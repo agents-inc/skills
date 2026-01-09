@@ -601,7 +601,7 @@ Location: `.claude/orchestrator-status.json`
 
 ## Available Agents
 
-**Read from `.claude-src/agents.yaml` for current list. Common agents for queue tasks:**
+**Read from `src/agents.yaml` for current list. Common agents for queue tasks:**
 
 | Agent | Purpose | Typical Task Type |
 |-------|---------|-------------------|

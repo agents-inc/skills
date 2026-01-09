@@ -28,7 +28,7 @@ The proposed stack structure (`skills/react/SKILL.md`) is **incompatible** with 
 
 ## Current Infrastructure Analysis
 
-### Source Structure (`.claude-src/profiles/home/skills/`)
+### Source Structure (`src/profiles/home/skills/`)
 
 ```
 skills/
@@ -58,7 +58,7 @@ skills/
 - Registry reference: `frontend/react` maps to `skills/frontend/react.md`
 - Has YAML frontmatter with `name` and `description`
 
-### Registry Definition (`.claude-src/registry.yaml`)
+### Registry Definition (`src/registry.yaml`)
 
 ```yaml
 skills:
@@ -251,7 +251,7 @@ my-stack/
 - Adds complexity to the compiler
 
 **Integration:**
-- Would need `bun .claude-src/compile.ts --stack=my-stack`
+- Would need `bun src/compile.ts --stack=my-stack`
 - Significant changes to `compile.ts`
 
 ---
@@ -337,7 +337,7 @@ current_checksum: sha256:xyz789...
 | Aspect | Profile Skills | Stack Skills |
 |--------|----------------|--------------|
 | Defined in | `registry.yaml` | `stack.yaml` |
-| Source location | `.claude-src/profiles/{profile}/skills/` | `{stack}/skills/` |
+| Source location | `src/profiles/{profile}/skills/` | `{stack}/skills/` |
 | Compilation | Yes (via compile.ts) | No (pre-compiled format) |
 | ID format | `category/name` | `category-name` |
 | Output location | `.claude/skills/{category-name}/` | Already in final format |
@@ -384,7 +384,7 @@ Profile Source → compile.ts → Compiled Output
 Could add a `--validate-stack` mode:
 
 ```bash
-bun .claude-src/compile.ts --validate-stack=my-stack
+bun src/compile.ts --validate-stack=my-stack
 ```
 
 This would:
@@ -470,10 +470,10 @@ This is the **canonical transformation**. Stacks should use the same convention.
 
 | File | Purpose |
 |------|---------|
-| `/home/vince/dev/claude-subagents/.claude-src/compile.ts` | Compilation logic |
-| `/home/vince/dev/claude-subagents/.claude-src/profiles/home/config.yaml` | Profile config example |
-| `/home/vince/dev/claude-subagents/.claude-src/registry.yaml` | Skill definitions |
-| `/home/vince/dev/claude-subagents/.claude-src/types.ts` | TypeScript types |
+| `/home/vince/dev/claude-subagents/src/compile.ts` | Compilation logic |
+| `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml` | Profile config example |
+| `/home/vince/dev/claude-subagents/src/registry.yaml` | Skill definitions |
+| `/home/vince/dev/claude-subagents/src/types.ts` | TypeScript types |
 | `/home/vince/dev/claude-subagents/.claude/research/findings/SKILL-FORKING-RESEARCH.md` | Forking proposal |
 
 ---
@@ -482,7 +482,7 @@ This is the **canonical transformation**. Stacks should use the same convention.
 
 ### Source Skills (28 files)
 ```
-.claude-src/profiles/home/skills/
+src/profiles/home/skills/
 ├── frontend/ (8 files)
 ├── backend/ (10 files)
 ├── setup/ (7 files)

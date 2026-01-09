@@ -3,9 +3,9 @@
 **Analysis Date:** 2026-01-08
 **Files Analyzed:**
 
-- `.claude-src/templates/agent.liquid` (95 lines)
-- `.claude-src/compile.ts` (579 lines)
-- `.claude-src/types.ts` (155 lines)
+- `src/templates/agent.liquid` (95 lines)
+- `src/compile.ts` (579 lines)
+- `src/types.ts` (155 lines)
 - Compiled outputs in `.claude/agents/`
 
 ---

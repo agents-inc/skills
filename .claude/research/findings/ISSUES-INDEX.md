@@ -87,7 +87,7 @@
 **Original Claim:** The `skill: "frontend-api"` syntax doesn't work. There's no Skill tool.
 
 **Resolution:**
-All skill source files in `.claude-src/profiles/home/skills/` and `.claude-src/profiles/work/skills/` have been updated with proper YAML frontmatter in the format:
+All skill source files in `src/profiles/home/skills/` and `src/profiles/work/skills/` have been updated with proper YAML frontmatter in the format:
 ```yaml
 ---
 name: skill-name

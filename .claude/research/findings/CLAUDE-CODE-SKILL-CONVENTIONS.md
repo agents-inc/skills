@@ -107,7 +107,7 @@ SKILL.md -> advanced.md
 
 ## 4. Current Project Structure Analysis
 
-### Source Structure (`.claude-src/profiles/home/skills/`)
+### Source Structure (`src/profiles/home/skills/`)
 
 ```
 skills/

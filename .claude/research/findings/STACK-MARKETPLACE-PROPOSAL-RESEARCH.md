@@ -1656,7 +1656,7 @@ The filtering system is the **user-facing layer** on top of the dependency valid
 
 ### 10. Files Analyzed
 
-- `/home/vince/dev/claude-subagents/.claude-src/registry.yaml` - Current skill/agent structure
+- `/home/vince/dev/claude-subagents/src/registry.yaml` - Current skill/agent structure
 - `/home/vince/dev/claude-subagents/.claude/research/findings/COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md` - Agent B dependency system
 
 ---
@@ -2500,7 +2500,7 @@ $ claude-stacks upvote yolo-modern-react
 ### 7. Directory Structure
 
 ```
-.claude-src/
+src/
 +-- stacks/
 |   +-- official/           # Maintainer-curated
 |   +-- verified/           # Verified community
@@ -2572,10 +2572,10 @@ philosophy: "Less is more"
 
 ### Files Analyzed
 
-- `/home/vince/dev/claude-subagents/.claude-src/registry.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/profiles/home/config.yaml`
-- `/home/vince/dev/claude-subagents/.claude-src/schemas/registry.schema.json`
-- `/home/vince/dev/claude-subagents/.claude-src/schemas/profile-config.schema.json`
+- `/home/vince/dev/claude-subagents/src/registry.yaml`
+- `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml`
+- `/home/vince/dev/claude-subagents/src/schemas/registry.schema.json`
+- `/home/vince/dev/claude-subagents/src/schemas/profile-config.schema.json`
 - `/home/vince/dev/claude-subagents/.claude/research/findings/COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md`
 
 ---

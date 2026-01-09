@@ -382,7 +382,7 @@ What would you like to name your profile? (e.g., "home", "work")
 > home
 
 Creating profile "home" from template "react-zustand"...
-  - Created .claude-src/profiles/local/home/
+  - Created src/profiles/local/home/
   - Copied 16 agent configs
   - Copied 28 skills
   - Generated CLAUDE.md
@@ -673,7 +673,7 @@ claude-agent-kit/                  # Main repo name suggestion
 
 Based on this recommendation and Agent 3's findings:
 
-1. **Rename `.claude-src/` to something clearer** - Perhaps `agent-kit/` or keep cleaner separation between `core/` and user content
+1. **Rename `src/` to something clearer** - Perhaps `agent-kit/` or keep cleaner separation between `core/` and user content
 
 2. **Clearly mark "framework" vs "content"** - Users should instantly know what to keep vs delete
 
@@ -772,7 +772,7 @@ These are NOT different configurations of the same stack - they are completely d
 Combine template profiles (committed) with a user profiles directory (gitignored):
 
 ```
-.claude-src/
+src/
 ├── profiles/
 │   ├── _templates/              # Example profiles (committed, public)
 │   │   ├── react-zustand/       # React + Zustand + SCSS + Vitest
@@ -798,7 +798,7 @@ Combine template profiles (committed) with a user profiles directory (gitignored
 └── compile.ts
 
 # In .gitignore:
-.claude-src/profiles/local/
+src/profiles/local/
 ```
 
 ### Design Decisions
@@ -835,7 +835,7 @@ Welcome to Claude Agents!
     Redux Toolkit
     None (useState only)
 
-Creating profile at .claude-src/profiles/local/home/...
+Creating profile at src/profiles/local/home/...
   ✓ Copied template: react-zustand
   ✓ Created config.yaml
   ✓ Created CLAUDE.md
@@ -887,7 +887,7 @@ Done! Run "bun run compile home" anytime to recompile.
 
 ```gitignore
 # User-specific profile configurations (contains personal tech stack choices)
-.claude-src/profiles/local/
+src/profiles/local/
 
 # Compiled output (regenerated on compile)
 .claude/agents/
@@ -901,12 +901,12 @@ One-time migration script:
 
 ```bash
 # migration.sh
-mkdir -p .claude-src/profiles/local
-mv .claude-src/profiles/home .claude-src/profiles/local/
-mv .claude-src/profiles/work .claude-src/profiles/local/
+mkdir -p src/profiles/local
+mv src/profiles/home src/profiles/local/
+mv src/profiles/work src/profiles/local/
 
 # Add to .gitignore if not already present
-echo ".claude-src/profiles/local/" >> .gitignore
+echo "src/profiles/local/" >> .gitignore
 
 echo "Migration complete! Your personal profiles are now in local/"
 ```
@@ -1099,7 +1099,7 @@ Current skill organization by domain (frontend/, backend/, setup/, security/, sh
 
 #### 1. "Custom" Directory Pattern
 ```
-.claude-src/
+src/
 ├── registry.yaml           # Core agents/skills (updatable)
 ├── custom/                  # User's personal additions (git-ignored)
 │   ├── registry.yaml        # User's agents/skills (merged with core)
