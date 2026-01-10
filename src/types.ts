@@ -168,9 +168,12 @@ export interface StackConfig {
   created?: string;
   updated?: string;
   framework?: string;
-  /** Array of skill IDs (e.g., ["frontend/react (@vince)", "backend/hono (@vince)"]) */
+  /** Array of all skill IDs available in the stack */
   skills: string[];
+  /** List of agent names this stack supports */
   agents: string[];
+  /** Per-agent skill assignments - maps agent name to array of skill IDs */
+  agent_skills?: Record<string, string[]>;
   philosophy?: string;
   principles?: string[];
   tags?: string[];

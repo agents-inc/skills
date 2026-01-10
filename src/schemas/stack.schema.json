@@ -4,15 +4,7 @@
   "title": "Stack Configuration",
   "description": "Complete tech stack definition for Claude Code. Stacks bundle framework, skills, agents, and philosophy into a single configuration that replaces profiles.",
   "type": "object",
-  "required": [
-    "id",
-    "name",
-    "version",
-    "author",
-    "framework",
-    "skills",
-    "agents"
-  ],
+  "required": ["name", "version", "author", "skills", "agents"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -44,9 +36,7 @@
       "type": "string",
       "description": "Detailed description of the stack's purpose and use cases (supports multiline)",
       "minLength": 1,
-      "examples": [
-        "Modern React with Tailwind, Zustand, and React Query.\nMove fast without breaking things."
-      ]
+      "examples": ["Modern React with Tailwind, Zustand, and React Query.\nMove fast without breaking things."]
     },
     "created": {
       "type": "string",
@@ -67,26 +57,22 @@
       "examples": ["react", "vue", "svelte", "nextjs", "nuxt"]
     },
     "skills": {
-      "type": "object",
-      "description": "Map of skill category names to skill names. Categories are slots that can be filled with specific technology skills.",
-      "minProperties": 1,
-      "additionalProperties": {
+      "type": "array",
+      "description": "Array of skill IDs to include in this stack (e.g., 'frontend/react (@vince)')",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
         "type": "string",
-        "description": "Skill name within the category",
+        "description": "Skill ID from SKILL.md frontmatter (e.g., 'frontend/react (@vince)')",
         "minLength": 1
       },
-      "propertyNames": {
-        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
-        "description": "Category names must be kebab-case"
-      },
       "examples": [
-        {
-          "state": "zustand",
-          "styling": "tailwind",
-          "testing": "vitest",
-          "mocking": "msw",
-          "data-fetching": "react-query"
-        }
+        [
+          "frontend/react (@vince)",
+          "frontend/scss-modules (@vince)",
+          "frontend/zustand (@vince)",
+          "backend/hono (@vince)"
+        ]
       ]
     },
     "agents": {
@@ -100,6 +86,29 @@
         "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
         "examples": ["frontend-developer", "frontend-reviewer", "tester", "pm"]
       }
+    },
+    "agent_skills": {
+      "type": "object",
+      "description": "Per-agent skill assignments. Maps agent name to array of skill IDs. Skills must be listed in the top-level skills array.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "Skill ID from SKILL.md frontmatter",
+          "minLength": 1
+        },
+        "uniqueItems": true
+      },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "description": "Agent names must match those in agents array"
+      },
+      "examples": [
+        {
+          "frontend-developer": ["frontend/react (@vince)", "frontend/scss-modules (@vince)"],
+          "backend-developer": ["backend/hono (@vince)", "backend/drizzle (@vince)"]
+        }
+      ]
     },
     "philosophy": {
       "type": "string",
@@ -133,9 +142,7 @@
         "minLength": 1
       },
       "uniqueItems": true,
-      "examples": [
-        ["react", "typescript", "tailwind", "zustand", "modern", "startup"]
-      ]
+      "examples": [["react", "typescript", "tailwind", "zustand", "modern", "startup"]]
     },
     "overrides": {
       "type": "object",

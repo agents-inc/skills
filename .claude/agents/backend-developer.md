@@ -127,79 +127,67 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
 - Invoke: `skill: "backend/hono (@vince)"`
-- Use when: when implementing API routes
-
-
-### backend/better-auth (@vince)
-- Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when implementing authentication features
+- Use when: when working with hono
 
 
 ### backend/drizzle (@vince)
 - Description: Drizzle ORM, queries, migrations
 - Invoke: `skill: "backend/drizzle (@vince)"`
-- Use when: when implementing database queries or migrations
+- Use when: when working with drizzle
 
 
-### backend/github-actions (@vince)
-- Description: GitHub Actions, pipelines, deployment
-- Invoke: `skill: "backend/github-actions (@vince)"`
-- Use when: when implementing deployment pipelines or GitHub Actions
-
-
-### backend/performance (@vince)
-- Description: Query optimization, caching, indexing
-- Invoke: `skill: "backend/performance (@vince)"`
-- Use when: when optimizing queries, caching, or indexing
-
-
-### security/security (@vince)
-- Description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
-- Invoke: `skill: "security/security (@vince)"`
-- Use when: when implementing authentication, authorization, or secrets handling
+### backend/better-auth (@vince)
+- Description: Better Auth patterns, sessions, OAuth
+- Invoke: `skill: "backend/better-auth (@vince)"`
+- Use when: when working with better auth
 
 
 ### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.
 - Invoke: `skill: "backend/posthog-analytics (@vince)"`
-- Use when: when implementing analytics event tracking or user identification
+- Use when: when working with posthog analytics
 
 
 ### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
 - Invoke: `skill: "backend/posthog-flags (@vince)"`
-- Use when: when implementing feature flags, gradual rollouts, or experiments
+- Use when: when working with posthog flags
 
 
 ### backend/resend (@vince)
 - Description: Resend + React Email templates
 - Invoke: `skill: "backend/resend (@vince)"`
-- Use when: when implementing email sending, templates, or notifications
+- Use when: when working with resend
 
 
 ### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 - Invoke: `skill: "backend/observability (@vince)"`
-- Use when: when implementing logging, error tracking, or monitoring patterns
+- Use when: when working with observability
 
 
-### setup/posthog-setup (@vince)
-- Description: PostHog analytics and feature flags setup
-- Invoke: `skill: "setup/posthog-setup (@vince)"`
-- Use when: when setting up PostHog for the first time in a project
+### backend/github-actions (@vince)
+- Description: GitHub Actions, pipelines, deployment
+- Invoke: `skill: "backend/github-actions (@vince)"`
+- Use when: when working with github actions
 
 
-### setup/resend-setup (@vince)
-- Description: Resend email setup, domain verification
-- Invoke: `skill: "setup/resend-setup (@vince)"`
-- Use when: when setting up Resend/email for the first time in a project
+### backend/performance (@vince)
+- Description: Query optimization, caching, indexing
+- Invoke: `skill: "backend/performance (@vince)"`
+- Use when: when working with performance
 
 
-### setup/observability-setup (@vince)
-- Description: Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload
-- Invoke: `skill: "setup/observability-setup (@vince)"`
-- Use when: when setting up observability stack for the first time in a project
+### backend/testing (@vince)
+- Description: API tests, integration tests
+- Invoke: `skill: "backend/testing (@vince)"`
+- Use when: when working with testing
+
+
+### security/security (@vince)
+- Description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
+- Invoke: `skill: "security/security (@vince)"`
+- Use when: when working with security
 
 
 </skill_activation_protocol>

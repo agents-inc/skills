@@ -15,6 +15,8 @@
  * Usage:
  *   bun src/compile.ts --profile=home
  *   bun src/compile.ts --profile=work --verbose
+ *   bun src/compile.ts --stack=modern-react
+ *   bun src/compile.ts --stack=home-stack --verbose
  */
 
 import { Liquid } from "liquidjs";
@@ -40,6 +42,8 @@ import type {
 
 const PROFILE =
   Bun.argv.find((a) => a.startsWith("--profile="))?.split("=")[1] ?? "home";
+const STACK =
+  Bun.argv.find((a) => a.startsWith("--stack="))?.split("=")[1];
 const VERBOSE = Bun.argv.includes("--verbose");
 const ROOT = import.meta.dir;
 const OUT = `${ROOT}/../.claude`;
@@ -271,6 +275,31 @@ async function loadStack(stackId: string): Promise<StackConfig> {
 }
 
 /**
+ * Convert a stack config to a profile-like config for compilation
+ * Stack mode: all agents get all stack skills, no explicit prompts
+ */
+function stackToProfileConfig(stackId: string, stack: StackConfig): ProfileConfig {
+  // Build agent configs - each agent gets all stack skills
+  const agents: Record<string, ProfileAgentConfig> = {};
+
+  for (const agentId of stack.agents) {
+    agents[agentId] = {
+      core_prompts: ["core-principles", "investigation-requirement", "write-verification", "anti-over-engineering"],
+      ending_prompts: ["context-management", "improvement-protocol"],
+      // Skills come from stack, not explicit here
+    };
+  }
+
+  return {
+    name: stack.name,
+    description: stack.description || "",
+    claude_md: "", // Will use stack's CLAUDE.md via cascade
+    stack: stackId, // Reference to self for skill resolution
+    agents,
+  };
+}
+
+/**
  * Resolve agent template with cascade: Profile -> Stack -> Default
  */
 async function resolveTemplate(profile: string, stack: string | undefined): Promise<string> {
@@ -306,21 +335,32 @@ async function resolveClaudeMd(profile: string, stack: string | undefined): Prom
 }
 
 /**
- * Resolve a stack's skills to skill references
- * Stack skills format: array of skill IDs (e.g., ["frontend/react (@vince)"])
+ * Resolve a stack's skills to skill references for a specific agent
+ * If stack.agent_skills[agentName] exists, use those; otherwise fall back to all stack skills
  * Returns: SkillReference[] with generic usage descriptions
  */
 function resolveStackSkills(
   stack: StackConfig,
+  agentName: string,
   skills: Record<string, SkillDefinition>
 ): SkillReference[] {
   const skillRefs: SkillReference[] = [];
 
-  for (const skillId of stack.skills) {
+  // Use per-agent skills if defined, otherwise fall back to all stack skills
+  const agentSkillIds = stack.agent_skills?.[agentName] ?? stack.skills;
+
+  for (const skillId of agentSkillIds) {
     // Validate skill exists
     if (!skills[skillId]) {
       throw new Error(
-        `Stack "${stack.name}" references skill "${skillId}" not found in scanned skills`
+        `Stack "${stack.name}" references skill "${skillId}" for agent "${agentName}" not found in scanned skills`
+      );
+    }
+
+    // Validate skill is in stack's skill list (if using per-agent skills)
+    if (stack.agent_skills?.[agentName] && !stack.skills.includes(skillId)) {
+      throw new Error(
+        `Stack "${stack.name}" agent_skills for "${agentName}" includes skill "${skillId}" not in stack's skills array`
       );
     }
 
@@ -353,7 +393,7 @@ async function getAgentSkills(
   if (profileConfig.stack) {
     console.log(`  📦 Resolving skills from stack "${profileConfig.stack}" for ${agentName}`);
     const stack = await loadStack(profileConfig.stack);
-    return resolveStackSkills(stack, skills);
+    return resolveStackSkills(stack, agentName, skills);
   }
 
   // No skills defined and no stack - return empty array
@@ -419,16 +459,28 @@ async function resolveAgents(
 
 async function validate(
   profileConfig: ProfileConfig,
-  resolvedAgents: Record<string, AgentConfig>
+  resolvedAgents: Record<string, AgentConfig>,
+  profileId: string | undefined,
+  stackId: string | undefined
 ): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Check CLAUDE.md (using cascade: profile -> stack)
+  // Check CLAUDE.md (using cascade: profile -> stack, or direct stack in stack mode)
   try {
-    await resolveClaudeMd(PROFILE, profileConfig.stack);
+    if (!profileId && stackId) {
+      // Stack mode - check stack's CLAUDE.md directly
+      const stackClaude = `${ROOT}/stacks/${stackId}/CLAUDE.md`;
+      if (!(await fileExists(stackClaude))) {
+        throw new Error("Stack CLAUDE.md not found");
+      }
+    } else if (profileId) {
+      // Profile mode - use cascade
+      await resolveClaudeMd(profileId, profileConfig.stack);
+    }
   } catch {
-    errors.push(`CLAUDE.md not found in profile "${PROFILE}"${profileConfig.stack ? ` or stack "${profileConfig.stack}"` : ""}`);
+    const location = profileId ? `profile "${profileId}"` : `stack "${stackId}"`;
+    errors.push(`CLAUDE.md not found in ${location}${profileConfig.stack && profileId ? ` or stack "${profileConfig.stack}"` : ""}`);
   }
 
   // Check core prompts directory exists
@@ -674,8 +726,28 @@ async function compileAllSkills(
 // CLAUDE.md Compilation
 // =============================================================================
 
-async function copyClaude(config: ProfileConfig): Promise<void> {
-  const claudePath = await resolveClaudeMd(PROFILE, config.stack);
+async function copyClaude(
+  config: ProfileConfig,
+  profileId: string | undefined,
+  stackId: string | undefined
+): Promise<void> {
+  // In stack mode, use stack's CLAUDE.md directly
+  // In profile mode, use cascade (profile -> stack)
+  let claudePath: string;
+
+  if (!profileId && stackId) {
+    // Stack mode - use stack's CLAUDE.md directly
+    claudePath = `${ROOT}/stacks/${stackId}/CLAUDE.md`;
+    if (!(await fileExists(claudePath))) {
+      throw new Error(`Stack ${stackId} missing CLAUDE.md`);
+    }
+  } else if (profileId) {
+    // Profile mode - use cascade
+    claudePath = await resolveClaudeMd(profileId, config.stack);
+  } else {
+    throw new Error("Either profileId or stackId must be provided");
+  }
+
   const content = await readFile(claudePath);
   await Bun.write(`${OUT}/../CLAUDE.md`, content);
   const source = claudePath.includes("/stacks/") ? "stack" : "profile";
@@ -735,78 +807,101 @@ async function compileAllCommands(): Promise<void> {
 // =============================================================================
 
 async function main(): Promise<void> {
-  console.log(`\n🚀 Compiling profile: ${PROFILE}\n`);
+  // Determine compilation mode
+  // STACK is explicit, PROFILE defaults to "home" if not provided
+  const hasExplicitProfile = Bun.argv.some((a) => a.startsWith("--profile="));
+
+  if (STACK && hasExplicitProfile) {
+    console.error("Cannot use both --profile and --stack flags");
+    process.exit(1);
+  }
+
+  const isStackMode = !!STACK;
+  const stackId = STACK;
+  const profileId = isStackMode ? undefined : PROFILE;
+
+  console.log(`\n Compiling ${isStackMode ? `stack: ${stackId}` : `profile: ${profileId}`}\n`);
 
   // Load agents and skills from co-located config (Phase 0A)
-  console.log("📂 Scanning directories for config...");
+  console.log("Scanning directories for config...");
   const agents = await loadAllAgents();
   const skills = await loadAllSkills();
-  console.log(`  ✓ Loaded ${Object.keys(agents).length} agents`);
-  console.log(`  ✓ Loaded ${Object.keys(skills).length} skills\n`);
+  console.log(`  Loaded ${Object.keys(agents).length} agents`);
+  console.log(`  Loaded ${Object.keys(skills).length} skills\n`);
 
-  // Load profile config
-  const configPath = `${ROOT}/profiles/${PROFILE}/config.yaml`;
+  // Load profile or stack config
   let profileConfig: ProfileConfig;
+  let effectiveStackId: string | undefined;
 
-  try {
-    profileConfig = parseYaml(await readFile(configPath));
-    log(
-      `Loaded profile config with ${Object.keys(profileConfig.agents).length} agents`
-    );
-  } catch (error) {
-    console.error(`❌ Failed to load config: ${configPath}`);
-    console.error(`   ${error}`);
-    process.exit(1);
+  if (isStackMode && stackId) {
+    console.log("Loading stack configuration...");
+    const stack = await loadStack(stackId);
+    profileConfig = stackToProfileConfig(stackId, stack);
+    effectiveStackId = stackId;
+    log(`Stack config: ${stack.agents.length} agents, ${stack.skills.length} skills`);
+  } else {
+    const configPath = `${ROOT}/profiles/${profileId}/config.yaml`;
+    try {
+      profileConfig = parseYaml(await readFile(configPath));
+      effectiveStackId = profileConfig.stack;
+      log(`Loaded profile config with ${Object.keys(profileConfig.agents).length} agents`);
+    } catch (error) {
+      console.error(`Failed to load config: ${configPath}`);
+      console.error(`   ${error}`);
+      process.exit(1);
+    }
   }
 
   // Resolve agents (merge definitions with profile config)
   let resolvedAgents: Record<string, AgentConfig>;
   try {
     resolvedAgents = await resolveAgents(agents, skills, profileConfig);
-    log(`Resolved ${Object.keys(resolvedAgents).length} agents for profile`);
+    log(`Resolved ${Object.keys(resolvedAgents).length} agents for ${isStackMode ? "stack" : "profile"}`);
   } catch (error) {
-    console.error(`❌ Failed to resolve agents:`);
+    console.error(`Failed to resolve agents:`);
     console.error(`   ${error}`);
     process.exit(1);
   }
 
   // Validate
-  console.log("🔍 Validating configuration...");
+  console.log("Validating configuration...");
   const validation = await validate(
     profileConfig,
-    resolvedAgents
+    resolvedAgents,
+    profileId,
+    effectiveStackId
   );
 
   if (validation.warnings.length > 0) {
-    console.log("\n⚠️  Warnings:");
+    console.log("\n  Warnings:");
     validation.warnings.forEach((w) => console.log(`   - ${w}`));
   }
 
   if (!validation.valid) {
-    console.error("\n❌ Validation failed:");
+    console.error("\n Validation failed:");
     validation.errors.forEach((e) => console.error(`   - ${e}`));
     process.exit(1);
   }
 
-  console.log("✅ Validation passed\n");
+  console.log(" Validation passed\n");
 
   // Clean output directory
   await Bun.$`rm -rf ${OUT}/agents ${OUT}/skills ${OUT}/commands`;
 
   // Compile
-  console.log("📄 Compiling agents...");
+  console.log("Compiling agents...");
   await compileAllAgents(resolvedAgents, profileConfig);
 
-  console.log("\n📦 Compiling skills...");
+  console.log("\nCompiling skills...");
   await compileAllSkills(resolvedAgents);
 
-  console.log("\n📋 Compiling commands...");
+  console.log("\nCompiling commands...");
   await compileAllCommands();
 
-  console.log("\n📋 Copying CLAUDE.md...");
-  await copyClaude(profileConfig);
+  console.log("\nCopying CLAUDE.md...");
+  await copyClaude(profileConfig, profileId, effectiveStackId);
 
-  console.log("\n✨ Done!\n");
+  console.log("\n Done!\n");
 }
 
 main().catch((error) => {

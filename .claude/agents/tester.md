@@ -122,43 +122,19 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ### frontend/vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
 - Invoke: `skill: "frontend/vitest (@vince)"`
-- Use when: when writing React component tests
-
-
-### backend/testing (@vince)
-- Description: API tests, integration tests
-- Invoke: `skill: "backend/testing (@vince)"`
-- Use when: when writing API or integration tests
+- Use when: when working with vitest
 
 
 ### frontend/msw (@vince)
 - Description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
 - Invoke: `skill: "frontend/msw (@vince)"`
-- Use when: when setting up mocks
+- Use when: when working with msw
 
 
-### frontend/accessibility (@vince)
-- Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility (@vince)"`
-- Use when: when writing accessibility-focused tests
-
-
-### frontend/performance (@vince)
-- Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance (@vince)"`
-- Use when: when writing performance benchmark tests
-
-
-### backend/better-auth (@vince)
-- Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when writing tests for authentication flows
-
-
-### backend/posthog-flags (@vince)
-- Description: PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
-- Invoke: `skill: "backend/posthog-flags (@vince)"`
-- Use when: when writing tests involving feature flag behavior
+### backend/testing (@vince)
+- Description: API tests, integration tests
+- Invoke: `skill: "backend/testing (@vince)"`
+- Use when: when working with testing
 
 
 </skill_activation_protocol>

@@ -1,0 +1,357 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Home Stack - Exact 1:1 mapping of home profile
+# Personal projects stack with SCSS Modules, Zustand, React Query
+
+name: 'Home Stack'
+description: >
+  Personal projects stack - exact 1:1 mapping of home profile.
+  A modern React stack with SCSS Modules + cva for styling, Zustand for state,
+  and React Query for data fetching. Includes full backend capabilities with
+  Hono, Drizzle, and comprehensive observability.
+author: '@vince'
+version: '1.0.0'
+
+skills:
+  # Frontend
+  - frontend/react (@vince)
+  - frontend/scss-modules (@vince)
+  - frontend/react-query (@vince)
+  - frontend/zustand (@vince)
+  - frontend/accessibility (@vince)
+  - frontend/performance (@vince)
+  - frontend/vitest (@vince)
+  - frontend/msw (@vince)
+  # Backend
+  - backend/hono (@vince)
+  - backend/drizzle (@vince)
+  - backend/better-auth (@vince)
+  - backend/posthog-analytics (@vince)
+  - backend/posthog-flags (@vince)
+  - backend/resend (@vince)
+  - backend/observability (@vince)
+  - backend/github-actions (@vince)
+  - backend/performance (@vince)
+  - backend/testing (@vince)
+  # Security
+  - security/security (@vince)
+  # Shared
+  - shared/reviewing (@vince)
+  # Setup
+  - setup/turborepo (@vince)
+  - setup/package (@vince)
+  - setup/env (@vince)
+  - setup/tooling (@vince)
+  - setup/posthog-setup (@vince)
+  - setup/resend-setup (@vince)
+  - setup/observability-setup (@vince)
+  # Research
+  - research/research-methodology (@vince)
+
+agents:
+  - frontend-developer
+  - backend-developer
+  - frontend-reviewer
+  - backend-reviewer
+  - tester
+  - pm
+  - skill-summoner
+  - agent-summoner
+  - pattern-scout
+  - pattern-critique
+  - documentor
+  - architecture
+  - orchestrator
+  - frontend-researcher
+  - backend-researcher
+
+# Per-agent skill assignments
+agent_skills:
+  frontend-developer:
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - security/security (@vince)
+
+  backend-developer:
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+
+  frontend-reviewer:
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - shared/reviewing (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - security/security (@vince)
+
+  backend-reviewer:
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+    - shared/reviewing (@vince)
+
+  tester:
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/testing (@vince)
+
+  pm:
+    - research/research-methodology (@vince)
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+
+  skill-summoner:
+    # All skills - needs to understand them all to create new ones
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+    - shared/reviewing (@vince)
+    - setup/turborepo (@vince)
+    - setup/package (@vince)
+    - setup/env (@vince)
+    - setup/tooling (@vince)
+    - setup/posthog-setup (@vince)
+    - setup/resend-setup (@vince)
+    - setup/observability-setup (@vince)
+    - research/research-methodology (@vince)
+
+  agent-summoner:
+    # All skills - needs to understand them all to create agents
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+    - shared/reviewing (@vince)
+    - setup/turborepo (@vince)
+    - setup/package (@vince)
+    - setup/env (@vince)
+    - setup/tooling (@vince)
+    - setup/posthog-setup (@vince)
+    - setup/resend-setup (@vince)
+    - setup/observability-setup (@vince)
+    - research/research-methodology (@vince)
+
+  pattern-scout:
+    # Research + all frontend + all backend - needs to find patterns
+    - research/research-methodology (@vince)
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+
+  pattern-critique:
+    # Research + reviewing + all frontend + all backend
+    - research/research-methodology (@vince)
+    - shared/reviewing (@vince)
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+
+  documentor:
+    # Research + all skills - needs to document everything
+    - research/research-methodology (@vince)
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+    - shared/reviewing (@vince)
+    - setup/turborepo (@vince)
+    - setup/package (@vince)
+    - setup/env (@vince)
+    - setup/tooling (@vince)
+    - setup/posthog-setup (@vince)
+    - setup/resend-setup (@vince)
+    - setup/observability-setup (@vince)
+
+  architecture:
+    # All setup + all backend + security - scaffolds full apps
+    - frontend/react (@vince)
+    - setup/turborepo (@vince)
+    - setup/package (@vince)
+    - setup/env (@vince)
+    - setup/tooling (@vince)
+    - setup/posthog-setup (@vince)
+    - setup/resend-setup (@vince)
+    - setup/observability-setup (@vince)
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - security/security (@vince)
+
+  orchestrator:
+    - research/research-methodology (@vince)
+
+  frontend-researcher:
+    # All frontend + research + testing skills
+    - frontend/react (@vince)
+    - frontend/scss-modules (@vince)
+    - frontend/react-query (@vince)
+    - frontend/zustand (@vince)
+    - frontend/accessibility (@vince)
+    - frontend/performance (@vince)
+    - frontend/vitest (@vince)
+    - frontend/msw (@vince)
+    - research/research-methodology (@vince)
+
+  backend-researcher:
+    # All backend + research
+    - backend/hono (@vince)
+    - backend/drizzle (@vince)
+    - backend/better-auth (@vince)
+    - backend/posthog-analytics (@vince)
+    - backend/posthog-flags (@vince)
+    - backend/resend (@vince)
+    - backend/observability (@vince)
+    - backend/github-actions (@vince)
+    - backend/performance (@vince)
+    - backend/testing (@vince)
+    - research/research-methodology (@vince)
+
+philosophy: 'Ship fast, iterate faster'
+
+principles:
+  - Prefer composition over inheritance
+  - Use hooks for everything, avoid class components
+  - SCSS Modules for co-located styles, cva for variants
+  - Zustand for client state, React Query for server state
+  - Test user behavior, not implementation details
+  - Type everything - zero tolerance for any
+
+tags:
+  - react
+  - typescript
+  - scss-modules
+  - zustand
+  - react-query
+  - modern
+  - fullstack

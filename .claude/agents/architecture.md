@@ -160,106 +160,118 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
+### frontend/react (@vince)
+- Description: Component architecture, hooks, patterns
+- Invoke: `skill: "frontend/react (@vince)"`
+- Use when: when working with react
+
+
 ### setup/turborepo (@vince)
 - Description: Turborepo, workspaces, package architecture
 - Invoke: `skill: "setup/turborepo (@vince)"`
-- Use when: when scaffolding monorepo apps
+- Use when: when working with turborepo
 
 
 ### setup/package (@vince)
 - Description: Internal package conventions, exports, @repo/* naming, workspace dependencies, tree-shaking configuration
 - Invoke: `skill: "setup/package (@vince)"`
-- Use when: when scaffolding packages
+- Use when: when working with package
 
 
 ### setup/env (@vince)
 - Description: Environment configuration, Zod validation
 - Invoke: `skill: "setup/env (@vince)"`
-- Use when: when setting up environment configuration
+- Use when: when working with env
 
 
 ### setup/tooling (@vince)
 - Description: ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos
 - Invoke: `skill: "setup/tooling (@vince)"`
-- Use when: when setting up build tooling
+- Use when: when working with tooling
 
 
 ### setup/posthog-setup (@vince)
 - Description: PostHog analytics and feature flags setup
 - Invoke: `skill: "setup/posthog-setup (@vince)"`
-- Use when: when setting up PostHog
+- Use when: when working with posthog setup
+
+
+### setup/resend-setup (@vince)
+- Description: Resend email setup, domain verification
+- Invoke: `skill: "setup/resend-setup (@vince)"`
+- Use when: when working with resend setup
 
 
 ### setup/observability-setup (@vince)
 - Description: Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload
 - Invoke: `skill: "setup/observability-setup (@vince)"`
-- Use when: when setting up observability stack
-
-
-### frontend/react-query (@vince)
-- Description: REST APIs, React Query, data fetching
-- Invoke: `skill: "frontend/react-query (@vince)"`
-- Use when: when scaffolding API client layer
-
-
-### frontend/msw (@vince)
-- Description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
-- Invoke: `skill: "frontend/msw (@vince)"`
-- Use when: when scaffolding mock data package
-
-
-### frontend/vitest (@vince)
-- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
-- Invoke: `skill: "frontend/vitest (@vince)"`
-- Use when: when scaffolding test infrastructure
+- Use when: when working with observability setup
 
 
 ### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
 - Invoke: `skill: "backend/hono (@vince)"`
-- Use when: when scaffolding API routes
+- Use when: when working with hono
 
 
 ### backend/drizzle (@vince)
 - Description: Drizzle ORM, queries, migrations
 - Invoke: `skill: "backend/drizzle (@vince)"`
-- Use when: when scaffolding database layer
+- Use when: when working with drizzle
 
 
 ### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
 - Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when scaffolding authentication
+- Use when: when working with better auth
 
 
 ### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.
 - Invoke: `skill: "backend/posthog-analytics (@vince)"`
-- Use when: when scaffolding analytics
+- Use when: when working with posthog analytics
 
 
 ### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
 - Invoke: `skill: "backend/posthog-flags (@vince)"`
-- Use when: when scaffolding feature flags
+- Use when: when working with posthog flags
+
+
+### backend/resend (@vince)
+- Description: Resend + React Email templates
+- Invoke: `skill: "backend/resend (@vince)"`
+- Use when: when working with resend
 
 
 ### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 - Invoke: `skill: "backend/observability (@vince)"`
-- Use when: when scaffolding observability
+- Use when: when working with observability
 
 
 ### backend/github-actions (@vince)
 - Description: GitHub Actions, pipelines, deployment
 - Invoke: `skill: "backend/github-actions (@vince)"`
-- Use when: when scaffolding CI/CD workflows
+- Use when: when working with github actions
+
+
+### backend/performance (@vince)
+- Description: Query optimization, caching, indexing
+- Invoke: `skill: "backend/performance (@vince)"`
+- Use when: when working with performance
+
+
+### backend/testing (@vince)
+- Description: API tests, integration tests
+- Invoke: `skill: "backend/testing (@vince)"`
+- Use when: when working with testing
 
 
 ### security/security (@vince)
 - Description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 - Invoke: `skill: "security/security (@vince)"`
-- Use when: when considering security patterns
+- Use when: when working with security
 
 
 </skill_activation_protocol>

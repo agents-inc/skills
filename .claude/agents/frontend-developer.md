@@ -113,55 +113,73 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
 - Invoke: `skill: "frontend/react (@vince)"`
-- Use when: when implementing React components
+- Use when: when working with react
 
 
 ### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
 - Invoke: `skill: "frontend/scss-modules (@vince)"`
-- Use when: when implementing styles
+- Use when: when working with scss modules
 
 
 ### frontend/react-query (@vince)
 - Description: REST APIs, React Query, data fetching
 - Invoke: `skill: "frontend/react-query (@vince)"`
-- Use when: when implementing data fetching, API calls, or React Query integrations
+- Use when: when working with react query
 
 
 ### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 - Invoke: `skill: "frontend/zustand (@vince)"`
-- Use when: when implementing Zustand stores or complex client-side state
+- Use when: when working with zustand
 
 
 ### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
 - Invoke: `skill: "frontend/accessibility (@vince)"`
-- Use when: when implementing accessible components or ARIA patterns
+- Use when: when working with accessibility
 
 
 ### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
 - Invoke: `skill: "frontend/performance (@vince)"`
-- Use when: when optimizing renders or bundle size
+- Use when: when working with performance
+
+
+### frontend/vitest (@vince)
+- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
+- Invoke: `skill: "frontend/vitest (@vince)"`
+- Use when: when working with vitest
+
+
+### frontend/msw (@vince)
+- Description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
+- Invoke: `skill: "frontend/msw (@vince)"`
+- Use when: when working with msw
 
 
 ### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
 - Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when implementing client-side authentication flows or protected routes
+- Use when: when working with better auth
 
 
 ### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.
 - Invoke: `skill: "backend/posthog-analytics (@vince)"`
-- Use when: when implementing client-side analytics tracking or user identification
+- Use when: when working with posthog analytics
 
 
 ### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
 - Invoke: `skill: "backend/posthog-flags (@vince)"`
-- Use when: when implementing client-side feature flag evaluation or experiments
+- Use when: when working with posthog flags
+
+
+### security/security (@vince)
+- Description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
+- Invoke: `skill: "security/security (@vince)"`
+- Use when: when working with security
 
 
 </skill_activation_protocol>
