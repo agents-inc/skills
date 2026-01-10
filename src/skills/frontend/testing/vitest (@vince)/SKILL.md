@@ -1,11 +1,11 @@
 ---
 name: frontend/vitest (@vince)
-description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
+description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
 ---
 
 # Testing Standards
 
-> **Quick Guide:** E2E for user flows (Playwright). Unit for pure functions (Vitest). Integration tests okay but not primary (Vitest + RTL + MSW). Current app uses MSW integration tests.
+> **Quick Guide:** E2E for user flows (Playwright). Unit for pure functions (Vitest). Integration tests okay but not primary (Vitest + RTL + network-level mocking). Current app uses integration tests with network-level API mocking.
 
 ---
 
@@ -23,19 +23,19 @@ description: Playwright E2E, Vitest, React Testing Library - E2E for user flows,
 
 **(You MUST co-locate tests with code in feature-based structure - NOT in separate test directories)**
 
-**(You MUST use MSW at network level for API mocking - NOT module-level mocks)**
+**(You MUST use network-level API mocking - NOT module-level mocks)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** E2E testing, Playwright, test-driven development (Tester), Vitest, React Testing Library, MSW, test organization
+**Auto-detection:** E2E testing, Playwright, test-driven development (Tester), Vitest, React Testing Library, test organization
 
 **When to use:**
 
 - Writing E2E tests for user workflows (primary approach with Playwright)
 - Unit testing pure utility functions with Vitest
-- Setting up MSW for integration tests (current codebase approach)
+- Setting up network-level mocking for integration tests (current codebase approach)
 - Organizing tests in feature-based structure (co-located tests)
 
 **When NOT to use:**
@@ -50,7 +50,7 @@ description: Playwright E2E, Vitest, React Testing Library - E2E for user flows,
 
 - E2E tests for user workflows (primary - inverted testing pyramid)
 - Unit tests for pure functions only (not components)
-- Integration tests with Vitest + React Testing Library + MSW (acceptable, not ideal)
+- Integration tests with Vitest + React Testing Library + network-level mocking (acceptable, not ideal)
 - Feature-based test organization (co-located with code)
 
 **Detailed Resources:**
@@ -73,7 +73,7 @@ Pure utilities, business logic, algorithms, data transformations, edge cases.
 
 **Integration tests acceptable but not primary**
 
-React Testing Library + MSW useful for component behavior when E2E too slow. Don't replace E2E for user workflows.
+React Testing Library + network-level mocking useful for component behavior when E2E too slow. Don't replace E2E for user workflows.
 
 **Testing Pyramid Inverted:**
 
@@ -167,9 +167,9 @@ See [examples.md](examples.md) for pure function test examples.
 
 ---
 
-### Pattern 3: Integration Testing with MSW (Current Approach)
+### Pattern 3: Integration Testing with Network-Level Mocking (Current Approach)
 
-The current codebase uses Vitest + React Testing Library + MSW for integration tests. This is acceptable but not ideal compared to E2E tests.
+The current codebase uses Vitest + React Testing Library + network-level mocking for integration tests. This is acceptable but not ideal compared to E2E tests.
 
 **When Integration Tests Make Sense:**
 
@@ -181,15 +181,15 @@ The current codebase uses Vitest + React Testing Library + MSW for integration t
 **Current Pattern:**
 
 - Tests in `__tests__/` directories co-located with code
-- MSW for API mocking at network level
-- Centralized mock data in `@repo/api-mocks`
+- Network-level API mocking (intercepts HTTP requests)
+- Centralized mock data in shared package
 - Test all states: loading, empty, error, success
 
 **Benefits:**
 
-- Tests component with API integration (via MSW)
+- Tests component with API integration (via network-level mocking)
 - Tests all states: loading, empty, error, success
-- Centralized mock handlers in `@repo/api-mocks`
+- Centralized mock handlers in shared package
 - Shared between tests and development
 
 **Limitations:**
@@ -198,7 +198,7 @@ The current codebase uses Vitest + React Testing Library + MSW for integration t
 - Doesn't test full user workflow
 - Requires maintaining mock parity with API
 
-See [examples.md](examples.md) for MSW integration test examples.
+See [examples.md](examples.md) for integration test examples.
 
 ---
 
@@ -294,7 +294,7 @@ See [examples.md](examples.md) for Ladle story examples.
 
 **(You MUST co-locate tests with code in feature-based structure - NOT in separate test directories)**
 
-**(You MUST use MSW at network level for API mocking - NOT module-level mocks)**
+**(You MUST use network-level API mocking - NOT module-level mocks)**
 
 **Failure to follow these rules will result in fragile tests that break on refactoring, untested critical user paths, and false confidence from high coverage of low-value tests.**
 

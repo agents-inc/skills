@@ -144,7 +144,7 @@ Set up MSW browser worker to intercept requests during development. Key consider
 - Await worker start before rendering app
 - Configure `onUnhandledRequest: "bypass"` for unmocked requests
 
-For Vite/React and Next.js integration examples, see [examples.md](examples.md#browser-worker).
+For app integration examples, see [examples.md](examples.md#browser-worker).
 
 ---
 
@@ -165,23 +165,23 @@ For test setup examples, see [examples.md](examples.md#server-worker).
 
 ## Integration Guide
 
-**Works with:**
+**Works with any:**
 
-- **React Query / TanStack Query**: MSW intercepts fetch calls, React Query sees normal responses
-- **Vitest**: Server worker integrates via test setup file (`setup-tests.ts`)
-- **React Testing Library**: Works seamlessly, no special configuration needed
-- **Vite/Next.js**: Browser worker integrates via app entry point
+- **Data fetching solution**: MSW intercepts fetch calls at the network level - your data fetching library sees normal responses
+- **Test runner**: Server worker integrates via test setup file (lifecycle hooks)
+- **Testing utilities**: Works seamlessly with any component testing library
+- **Frontend framework**: Browser worker integrates via app entry point
 
-**Configuration with other tools:**
+**Test runner configuration (generic):**
 
 ```typescript
-// Vitest config
-// vitest.config.ts
-export default defineConfig({
-  test: {
-    setupFiles: ["./src/setup-tests.ts"], // Loads serverWorker
-  },
-});
+// test-setup.ts (configure in your test runner)
+import { serverWorker } from "@repo/api-mocks/serverWorker";
+
+// Use your test runner's lifecycle hooks
+beforeAll(() => serverWorker.listen());
+afterEach(() => serverWorker.resetHandlers());
+afterAll(() => serverWorker.close());
 ```
 
 </integration>

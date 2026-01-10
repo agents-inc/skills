@@ -46,7 +46,7 @@ Need API mocking?
 
 - ⚠️ **Only testing happy path (missing empty/error variants)** - Incomplete test coverage
 - ⚠️ **Hardcoded HTTP status codes (magic numbers)** - Use named constants
-- ⚠️ **Top-level import of browser worker in Next.js** - SSR build failures
+- ⚠️ **Top-level import of browser worker in SSR frameworks** - Build failures due to service worker APIs
 - ⚠️ **No `onUnhandledRequest` configuration** - Unclear which requests are mocked vs real
 
 **Common Mistakes:**
@@ -61,7 +61,7 @@ Need API mocking?
 - MSW requires async/await for browser worker start - rendering before ready causes race conditions
 - Handler overrides with `serverWorker.use()` persist until `resetHandlers()` is called
 - Browser worker doesn't work in Node environment and vice versa - check your imports
-- Dynamic imports in Next.js are required for browser-only code to avoid SSR bundling issues
+- Dynamic imports in SSR frameworks are required for browser-only code to avoid server bundling issues
 
 ---
 
@@ -89,9 +89,9 @@ export const serverWorker = setupWorker(...handlers);
 
 ```typescript
 // ❌ ANTI-PATTERN: No resetHandlers
-import { afterAll, beforeAll } from "vitest";
 import { serverWorker } from "@repo/api-mocks/serverWorker";
 
+// In your test setup file
 beforeAll(() => serverWorker.listen());
 afterAll(() => serverWorker.close());
 // Missing: afterEach(() => serverWorker.resetHandlers());

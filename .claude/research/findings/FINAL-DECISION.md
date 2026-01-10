@@ -1,425 +1,372 @@
 # Stack Marketplace: Final Decisions
 
-> **Purpose**: Authoritative record of user-confirmed decisions for the Stack Marketplace project, integrating three rounds of research.
+> **Purpose**: Authoritative record of user-confirmed decisions for the Stack Marketplace project.
 
 ---
 
-## Implementation Progress (2026-01-09)
+## Current Status (2026-01-10)
 
-### Phase 1: Restructure ✅ COMPLETE
+### Architecture Vision
 
-| Task | Status | Notes |
-|------|--------|-------|
-| Create central `src/skills/` directory | ✅ Done | Skills moved from profiles to central location |
-| Move skills from profiles | ✅ Done | 26 skills migrated |
-| Update registry.yaml paths | ✅ Done | Paths already used `skills/` prefix |
-| Update compile.ts paths | ✅ Done | Changed from `profiles/${PROFILE}/skills/` to `src/skills/` |
-| Verify compilation | ✅ Done | All 15 agents compile successfully |
+The system has three layers with clear responsibilities:
 
-### Phase 2: Stack Logic ✅ COMPLETE
+| Layer | Purpose | Complexity |
+|-------|---------|------------|
+| **Skills** | Atomic, portable knowledge units | Rich (SKILL.md + metadata.yaml) |
+| **Stacks** | Curated skill collections with conventions | Medium (config + CLAUDE.md + optional template) |
+| **Profiles** | Thin overlay pointing to a stack | Minimal (just references stack) |
 
-| Task | Status | Notes |
-|------|--------|-------|
-| Create stack.schema.json | ✅ Done | Full schema with overrides, metrics, philosophy |
-| Create skill.schema.json | ✅ Done | Includes requires, conflicts_with, compatible_with |
-| Add skill.yaml metadata to all skills | ✅ Done | 26 skill.yaml files created |
-| Add stack resolution to compile.ts | ✅ Done | Profiles can now use `stack:` field |
-| Create initial stack definitions | ✅ Done | `modern-react.yaml`, `minimal-react.yaml` |
+**Key Principles:**
+- SKILL.md frontmatter is the **single source of truth** for skill identity
+- `name` field IS the identifier (no separate `id` field)
+- Templates cascade: Profile → Stack → Default
+- CLAUDE.md cascades: Profile → Stack
+- Skills stay in central directory (deferred: copying into stacks for independent versioning)
 
-### Phase 3: CLI Commands ⏳ PENDING
+---
 
-> **Note**: Phase 3 requires discussion before implementation.
+## Phase 0A: Co-located Config ✅ COMPLETE
 
-| Task | Status | Notes |
-|------|--------|-------|
-| `claude-stacks list` | Pending | Browse available stacks |
-| `claude-stacks use <id>` | Pending | Select a stack for profile |
-| `claude-stacks build` | Pending | Interactive stack builder wizard |
-| `claude-stacks export` | Pending | Export current profile as stack |
+Registry.yaml removed. Agents and skills discovered via directory scanning:
+- `src/agent-sources/*/agent.yaml` - Agent definitions
+- `src/skills/**/skill.yaml` - Skill metadata (being replaced by SKILL.md + metadata.yaml)
 
-### New Directory Structure
+---
 
-```
-src/
-├── skills/                              # Categorized with publisher naming
-│   ├── frontend/
-│   │   ├── react (@vince)/              # React patterns (SCSS/cva stack)
-│   │   ├── scss-modules (@vince)/       # SCSS Modules + cva
-│   │   ├── zustand (@vince)/            # Zustand state management
-│   │   ├── react-query (@vince)/        # React Query data fetching
-│   │   ├── vitest (@vince)/             # Vitest + Playwright + RTL
-│   │   ├── msw (@vince)/                # MSW mocking
-│   │   ├── accessibility (@vince)/      # WCAG, ARIA patterns
-│   │   ├── performance (@vince)/        # Bundle optimization
-│   │   ├── react-mobx (@photoroom)/     # React + MobX patterns
-│   │   ├── tailwind (@photoroom)/       # Tailwind CSS patterns
-│   │   ├── mobx (@photoroom)/           # MobX state management
-│   │   └── react-query-mobx (@photoroom)/ # React Query + MobX bridge
-│   ├── backend/
-│   │   ├── hono (@vince)/               # Hono API routes
-│   │   ├── drizzle (@vince)/            # Drizzle ORM
-│   │   ├── better-auth (@vince)/        # Better Auth patterns
-│   │   ├── posthog-analytics (@vince)/  # PostHog analytics
-│   │   ├── posthog-flags (@vince)/      # PostHog feature flags
-│   │   ├── resend (@vince)/             # Resend email
-│   │   ├── observability (@vince)/      # Pino, Sentry, Axiom
-│   │   ├── github-actions (@vince)/     # CI/CD patterns
-│   │   ├── performance (@vince)/        # Query optimization
-│   │   └── testing (@vince)/            # API testing
-│   ├── security/
-│   │   └── security (@vince)/           # Auth, secrets, XSS/CSRF
-│   ├── setup/
-│   │   ├── turborepo (@vince)/          # Monorepo patterns
-│   │   ├── package (@vince)/            # Package conventions
-│   │   ├── env (@vince)/                # Environment config
-│   │   ├── tooling (@vince)/            # ESLint, Prettier, TS
-│   │   ├── posthog-setup (@vince)/      # PostHog setup
-│   │   ├── resend-setup (@vince)/       # Resend setup
-│   │   └── observability-setup (@vince)/ # Observability setup
-│   ├── shared/
-│   │   └── reviewing (@vince)/          # Code review patterns
-│   └── research/
-│       └── research-methodology (@vince)/ # Investigation patterns
-├── stacks/
-│   ├── modern-react.yaml                # @vince: SCSS + Zustand + React Query
-│   ├── minimal-react.yaml               # @vince: Minimal frontend-only
-│   └── photoroom-webapp.yaml            # @photoroom: Tailwind + MobX
-├── schemas/
-│   ├── stack.schema.json                # Stack validation
-│   └── skill.schema.json                # Skill metadata validation
-└── compile.ts                           # Updated with stack resolution
+## Phase 0B: SKILL.md as Source of Truth ✅ COMPLETE
+
+### Problem Statement
+
+Skill identity (name, description) is duplicated across:
+1. skill.yaml (has id, name, description + metadata)
+2. SKILL.md frontmatter (has name, description)
+3. Profile config.yaml (references skills by name)
+
+### Solution: SKILL.md Frontmatter = Source of Truth
+
+**SKILL.md frontmatter contains identity:**
+```yaml
+---
+name: frontend/react (@vince)           # This IS the identifier (must be unique)
+description: Component architecture, hooks, patterns
+model: opus                             # Optional: which AI model to use
+---
 ```
 
-### Skill Naming Convention
+**metadata.yaml contains relationships (renamed from skill.yaml):**
+```yaml
+category: framework
+category_exclusive: true
+author: "@vince"
+version: "1.0.0"
+compatible_with: [...]
+conflicts_with: [...]
+requires: [...]
+tags: [...]
+```
 
-Skills use the format: `category/technology-name (@publisher)`
+### Key Decisions
 
-**Examples:**
-- `frontend/react (@vince)` - React patterns by @vince
-- `frontend/mobx (@photoroom)` - MobX patterns by @photoroom
-- `backend/hono (@vince)` - Hono API routes by @vince
+| Decision | Rationale |
+|----------|-----------|
+| **No `id` field** | `name` IS the identifier - must be unique |
+| **skill.yaml → metadata.yaml** | Clear separation: identity vs relationships |
+| **ID derived from folder path** | `src/skills/frontend/react/react (@vince)/` → `frontend/react (@vince)` |
+| **model in SKILL.md** | Skills can specify preferred AI model |
 
-This enables:
-- Clear categorization by domain (frontend, backend, etc.)
-- Community contributions with clear attribution
-- Multiple implementations of the same technology
-- Stack selection based on philosophy/author preference
+### Required Changes
 
----
+1. Update all SKILL.md frontmatter to include `model` field (optional)
+2. Rename skill.yaml → metadata.yaml in all skill folders
+3. Remove `id`, `name`, `description` from metadata.yaml
+4. Update compile.ts to parse SKILL.md frontmatter (add frontmatter parser)
+5. Update compile.ts to read metadata.yaml for relationship data
 
-> **UPDATE 2026-01-09**: This document has been superseded by **[STACK-MARKETPLACE-ARCHITECTURE.md](./STACK-MARKETPLACE-ARCHITECTURE.md)** for architectural decisions. Key changes:
-> - **Stacks now replace profiles entirely** (not separate concepts)
-> - **Skills are atomic** - no bleeding between skills (67% of cross-refs removable)
-> - **Framework as foundation** - everything else as siblings (no integrations layer)
-> - **Stacks ARE versioned** (changed from earlier "no versioning" decision)
-> - **Skill naming simplified** - `technology-name (@publisher)` format
->
-> The decisions below about community, upvotes, and quality signals remain valid.
+### Skill Directory Structure (Final)
 
----
-
-## Executive Summary
-
-The Stack Marketplace is a CLI-first platform for browsing, selecting, and contributing pre-configured Claude Code skill/agent combinations ("stacks"). After three research rounds (Open Source Strategy, Community Registry, Stack Marketplace), the user has confirmed a **community-ready-from-day-1** approach with **upvote-only quality signals** and **no tiered badges**. All features will be built incrementally over 1-2 days **before launch**, not as a post-launch evolution roadmap. The project differentiates itself by offering what no existing tool provides: community-created stacks with voting, smart cascading filters based on framework choices, and named stacks with philosophical identities.
-
----
-
-## Key Decisions (User Confirmed)
-
-### Implementation Approach
-
-| Decision | Details |
-|----------|---------|
-| **"Phases" meaning** | Incremental development done in 1-2 days BEFORE launch |
-| **Evolution roadmap** | NO - all features built before going live |
-| **Community timing** | Ready from day 1, not "curated first, community later" |
-| **Launch state** | Full system operational: smart filtering, upvotes, custom builder, community submissions |
-
-### Quality Signals
-
-| Decision | Details |
-|----------|---------|
-| **Maintained flags** | NO - not implementing |
-| **Verified badges** | NO - not implementing |
-| **Official/Verified/Community tiers** | NO - everything on the same level |
-| **Quality mechanism** | Upvotes and usage metrics ONLY |
-| **Downvotes** | NO - upvote-only system (reduces drama, low-quality stacks simply don't get upvoted) |
-
-**Rationale**: Quality emerges organically from community engagement. Artificial tiers create gatekeeping that hinders adoption. The community decides what's valuable through votes and downloads.
-
-### Directory Naming
-
-| Decision | Details |
-|----------|---------|
-| **Stacks directory** | TBD - not decided yet whether to call it `stacks/` or something else |
-| **Timeline** | Will be determined during implementation |
-
-### Future Features (Post-Launch)
-
-| Feature | Description | Timeline |
-|---------|-------------|----------|
-| **Stack Arena** | A comparison mode where users can see the output of famous apps (like a todo app) built with different stacks/variants | AFTER launch |
+```
+src/skills/{category}/{subcategory}/{skill-name} (@author)/
+├── SKILL.md              # SOURCE OF TRUTH: name, description, model
+├── metadata.yaml         # Relationships: category, tags, requires, conflicts, etc.
+├── examples.md           # Optional: usage examples
+└── reference.md          # Optional: reference material
+```
 
 ---
 
-## What's Confirmed from Research
+## Phase 0D: Stack Architecture ✅ COMPLETE
 
-### Core Approach
+### Stack Structure
 
-| Finding | Source | Status |
-|---------|--------|--------|
-| **Stack-first approach** | Agent 3 (Unification) | CONFIRMED - Users select stacks, skills follow automatically |
-| **Smart filtering system** | Agent 2 (Filtering) | CONFIRMED - Framework -> Styling -> State -> Testing cascade |
-| **Slot-based composition** | Agent D (Round 2) | CONFIRMED - Agents declare required/optional slots, stacks fill them |
-| **Upvote-only voting** | Agent 5 (Schema & UX) | CONFIRMED - No downvotes |
-| **CLI-first experience** | Agent 5 (Schema & UX) | CONFIRMED - Web catalog optional for later |
-| **Near-zero contribution friction** | Agent 4 (Viral Adoption) | CONFIRMED - Stack = single YAML file, <10 min to create |
-| **High-visibility attribution** | Agent 4 (Viral Adoption) | CONFIRMED - Creator name everywhere, download counts, profiles |
+Stacks are **directories** (not single YAML files) containing:
 
-### Technical Design
+```
+src/stacks/{stack-id}/
+├── config.yaml           # Stack configuration (references skills by name)
+├── CLAUDE.md             # Stack-level project conventions
+└── agent.liquid          # Optional: stack-specific agent template
+```
 
-| Component | Design Decision | Source |
-|-----------|-----------------|--------|
-| **Stack schema** | Reference skills by ID (not embedded content) | Agent 5 |
-| **Filtering relationships** | 4 types: requires, suggests, enhances, conflicts | Agent 2 |
-| **Compilation model** | Stack -> Resolve skill IDs -> Generate profile -> Compile agents | Agent 5 |
-| **Category cardinality** | Single for most (framework, styling), multiple for testing | Agent 2 |
-| **Auto-selection** | Yes for `requires`, No for `suggests` | Agent 2 |
+**Note:** Skills are NOT copied into stacks yet. Stacks reference skills from central `src/skills/` directory. Independent versioning (copying skills into stacks) is deferred until skills stabilize.
 
-### UX Design
-
-| Pattern | Implementation |
-|---------|----------------|
-| **Progressive disclosure wizard** | Step-by-step category selection with reasons shown for disabled options |
-| **Summary panel** | Always-visible panel showing current stack composition |
-| **Why tooltips** | Every disabled option shows WHY on hover |
-| **Advanced mode** | Toggle for power users who want all categories at once |
-
----
-
-## Stack Schema (Final)
-
-Based on Agent 5's design, simplified for the flat quality model:
+### Stack config.yaml
 
 ```yaml
-# Example: stacks/yolo-modern-react.yaml
-
-# Identity & Metadata
-id: yolo-modern-react
-name: "YOLO Modern React Stack"
-description: >
-  Modern React with Tailwind, Zustand, and React Query.
-  Move fast without breaking things.
-author: "@vincentbollaert"
+name: Modern React Stack
+description: SCSS Modules, Zustand, React Query
+author: "@vince"
 version: "1.0.0"
-created: "2026-01-01"
-updated: "2026-01-08"
 
-# Composition
-framework: react
-slots:
-  styling: frontend/tailwind
-  state-management: frontend/zustand
-  data-fetching: frontend/react-query
-  testing: frontend/vitest
-  mocking: frontend/msw
-  accessibility: frontend/accessibility
+skills:
+  - frontend/react (@vince)
+  - frontend/scss-modules (@vince)
+  - frontend/zustand (@vince)
+  - frontend/react-query (@vince)
+  - frontend/vitest (@vince)
+  - frontend/msw (@vince)
+  - frontend/accessibility (@vince)
+  - backend/hono (@vince)
+  - backend/drizzle (@vince)
+  # ... more skill references
 
-# Agents to include
 agents:
   - frontend-developer
+  - backend-developer
   - frontend-reviewer
+  - backend-reviewer
   - tester
   - pm
 
-# Philosophy
 philosophy: "Ship fast, iterate faster"
 principles:
   - Prefer composition over inheritance
   - Use hooks for everything, avoid classes
-  - Tailwind utilities first, extract components when repeated 3x
+  - SCSS Modules + cva for styling
 
-# Discoverability
-tags: [react, typescript, tailwind, zustand, modern, startup]
-
-# Trust Signals (Community-driven)
-metrics:
-  upvotes: 0       # Incremented by community
-  downloads: 0     # Tracked automatically
+tags: [react, typescript, scss, zustand]
 ```
 
-**Key differences from Agent 5's proposal:**
-- Removed `verification.verified` and `verification.tier`
-- Removed `badges` array
-- Kept `metrics` for upvotes and downloads (community signals only)
+### Deferred: Skill Copies in Stacks
+
+**Later**, when skills stabilize, stacks will contain full skill copies for independent versioning:
+
+```
+src/stacks/{stack-id}/
+├── config.yaml
+├── CLAUDE.md
+├── agent.liquid
+└── skills/                    # DEFERRED: Full copies for independent versioning
+    └── frontend/
+        └── react (@vince)/
+            ├── SKILL.md
+            └── metadata.yaml
+```
 
 ---
 
-## CLI Commands (Final)
+## Phase 0D.1: Stack Compilation ⏳ NEXT
+
+Add `--stack` flag to compile.ts for direct stack compilation.
+
+### Tasks
+
+1. Add `--stack=<stack-id>` option to compile.ts
+2. Stack compilation outputs to same `.claude/` directory as profile compilation
+3. Create `home-stack` - exact 1:1 mapping of current home profile
+4. Create `work-stack` - exact 1:1 mapping of current work profile
+
+### Verification (Manual)
+
+Before proceeding to 0E, manually verify that stack compilation produces **identical output** to profile compilation:
 
 ```bash
-# Browse
-claude-stacks list                         # List all stacks
-claude-stacks list --framework react       # Filter by framework
-claude-stacks list --tag tailwind          # Filter by tag
-claude-stacks list --sort popular          # Sort: popular, recent, downloads
-claude-stacks search "tailwind zustand"    # Full-text search
-claude-stacks preview <id>                 # Detailed preview
+# Compile using profile
+bun src/compile.ts --profile=home
+# Save output or checksum
 
-# Use
-claude-stacks use <id>                     # Use a stack for your profile
-claude-stacks use <id> --profile work      # Specify profile
+# Compile using stack
+bun src/compile.ts --stack=home-stack
+# Compare output - must be IDENTICAL
 
-# Build Custom
-claude-stacks build                        # Interactive wizard
-claude-stacks build --framework react      # Start with framework pre-selected
+# Same for work
+bun src/compile.ts --profile=work
+bun src/compile.ts --stack=work-stack
+# Compare output - must be IDENTICAL
+```
 
-# Contribute
-claude-stacks export <name>                # Export current profile as stack
-claude-stacks validate <file>              # Validate stack YAML
-claude-stacks submit <file>                # Create PR to contribute
+**Only proceed to Phase 0E after personal verification that outputs are identical.**
 
-# Engage
-claude-stacks upvote <id>                  # Upvote a stack
+---
+
+## Phase 0E: Profile Simplification ⏳ AFTER VERIFICATION
+
+### Profile Structure
+
+Profiles are **extremely simple** - thin overlays that point to stacks:
+
+```
+src/profiles/{profile}/
+├── config.yaml           # ONLY points to a stack
+├── CLAUDE.md             # Optional: overrides stack's CLAUDE.md
+└── agent.liquid          # Optional: overrides stack's template
+```
+
+### Profile config.yaml (Minimal)
+
+```yaml
+name: home
+stack: home-stack       # That's it. Points to src/stacks/home-stack/
+```
+
+**Profiles do exactly 3 things:**
+1. Point to a stack
+2. Optionally provide their own CLAUDE.md (overrides stack's)
+3. Optionally provide their own agent.liquid (overrides stack's)
+
+**Profiles do NOT:**
+- Define skills (that's what stacks do)
+- Override skills (no override mechanism)
+- Have complex configuration
+
+---
+
+## Template & CLAUDE.md Cascade
+
+### Resolution Order: Profile → Stack → Default
+
+| Asset | Check 1 (Profile) | Check 2 (Stack) | Check 3 (Default) |
+|-------|------------------|-----------------|-------------------|
+| **agent.liquid** | `profiles/{p}/agent.liquid` | `stacks/{s}/agent.liquid` | `templates/agent.liquid` |
+| **CLAUDE.md** | `profiles/{p}/CLAUDE.md` | `stacks/{s}/CLAUDE.md` | Error (required) |
+
+### Implementation in compile.ts
+
+```typescript
+async function resolveTemplate(profile: string, stack: string): Promise<string> {
+  // 1. Profile-specific template
+  const profileTemplate = `${ROOT}/profiles/${profile}/agent.liquid`;
+  if (await exists(profileTemplate)) return profileTemplate;
+
+  // 2. Stack-specific template
+  const stackTemplate = `${ROOT}/stacks/${stack}/agent.liquid`;
+  if (await exists(stackTemplate)) return stackTemplate;
+
+  // 3. Default template
+  return `${ROOT}/templates/agent.liquid`;
+}
+
+async function resolveClaudeMd(profile: string, stack: string): Promise<string> {
+  // 1. Profile-specific CLAUDE.md
+  const profileClaude = `${ROOT}/profiles/${profile}/CLAUDE.md`;
+  if (await exists(profileClaude)) return profileClaude;
+
+  // 2. Stack-specific CLAUDE.md
+  const stackClaude = `${ROOT}/stacks/${stack}/CLAUDE.md`;
+  if (await exists(stackClaude)) return stackClaude;
+
+  throw new Error(`No CLAUDE.md found for profile ${profile} or stack ${stack}`);
+}
 ```
 
 ---
 
-## Research Files Created
-
-This research effort produced the following documentation:
-
-| File | Purpose | Round |
-|------|---------|-------|
-| [INDEX.md](./INDEX.md) | Architecture research index (49 issues from 12 agents) | Pre-research |
-| [OPEN-SOURCE-RESEARCH-TRACKER.md](./OPEN-SOURCE-RESEARCH-TRACKER.md) | Round 1: Open source strategy (4 agents - CLI onboarding, positioning, profiles, community patterns) | Round 1 |
-| [COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md](./COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md) | Round 2: Community registry (5 agents - skill isolation, dependencies, registry models, bundling, comparison) | Round 2 |
-| [STACK-MARKETPLACE-PROPOSAL-RESEARCH.md](./STACK-MARKETPLACE-PROPOSAL-RESEARCH.md) | Round 3: Stack marketplace (5 agents - prior art, filtering, unification, viral adoption, schema) | Round 3 |
-| [FINAL-DECISION.md](./FINAL-DECISION.md) | This file - final decisions record | Final |
-
-### Key Insights by Round
-
-**Round 1 (Open Source Strategy)**:
-- Additive framing ("what do you do?") beats subtractive ("what to remove?")
-- Hybrid positioning: Dev Kit + Framework (own content, updatable core)
-- `_templates/` + `local/` directory structure
-- CLI onboarding with presets + customization
-
-**Round 2 (Community Registry)**:
-- Full skill isolation is NOT feasible - bounded isolation (~85% domain, ~15% integration)
-- Skill Slots with Defaults is the right bundling model
-- Homebrew-style dependency declarations (`requires`, `conflicts`)
-- Ship Dev Kit for v1, registry concepts layer on top
-
-**Round 3 (Stack Marketplace)**:
-- No existing tool combines community stacks + upvoting + smart filtering
-- Stack-first selection is the right UX (stacks fill skill slots)
-- Near-zero contribution friction (<10 min) is critical for adoption
-- Single-user utility must exist before network effects (CLI works without community)
-
----
-
-## What to Build First
-
-### Day 1: Foundation
-
-1. **Stack schema** (`stack.schema.json`)
-   - Based on final schema above
-   - JSON Schema for IDE validation
-   - Zod schema for runtime validation
-
-2. **Core official stacks** (5-10 to start)
-   - YOLO Modern React (React + Tailwind + Zustand + React Query)
-   - Conservative Redux (React + SCSS + Redux Toolkit + RTK Query)
-   - Minimal React (React + CSS Modules only)
-   - Full Stack (React + Tailwind + Zustand + Hono + Drizzle)
-   - Vue Modern (Vue + Tailwind + Pinia + Vue Query)
-
-3. **CLI commands: list, preview, use**
-   - Basic browsing and selection
-   - No filtering yet, just display
-
-### Day 2: Smart Filtering & Custom Builder
-
-4. **Filtering schema** (based on Agent 2's design)
-   - Technology definitions with relationships
-   - Category definitions with cardinality
-
-5. **Filter engine** (TypeScript)
-   - Cascade algorithm for `requires`, `suggests`, `conflicts`
-   - Available options calculation
-   - Disabled reasons generation
-
-6. **CLI command: build** (wizard)
-   - Step-by-step selection
-   - Show disabled options with "why" explanations
-   - Summary panel
-
-### Day 3: Community Features
-
-7. **CLI commands: export, validate, submit**
-   - Export current profile as stack YAML
-   - Validate against schema
-   - Create GitHub PR (using `gh` CLI)
-
-8. **CLI command: upvote**
-   - Simple upvote mechanism
-   - Store in JSON file or GitHub API
-
-9. **Compiler integration**
-   - Stack resolution step in compilation pipeline
-   - Profile can specify `stack:` field
-
----
-
-## What's Deferred (Post-Launch)
-
-| Feature | Description | Why Deferred |
-|---------|-------------|--------------|
-| **Stack Arena** | Side-by-side comparison of same app built with different stacks | Requires significant additional infrastructure |
-| **Web catalog** | Browse stacks in browser | CLI-first; web is nice-to-have |
-| **Creator profiles** | Full creator pages with all their stacks | Start with simple attribution |
-| **Trending algorithm** | Sophisticated popularity calculation | Start with simple sort by upvotes |
-| **Comments/discussions** | Stack-level discussions | Use GitHub issues initially |
-| **Forking stacks** | "Based on" lineage tracking | Start with independent stacks |
-
----
-
-## Success Metrics
-
-Based on Agent 4's viral adoption research:
-
-| Metric | Target (6 months) | Why |
-|--------|-------------------|-----|
-| **Official stacks** | 30-50 | Quality seeding for cold start |
-| **Community stacks** | 200+ | Network effects kicking in |
-| **Total downloads** | 10,000+ | Adoption indicator |
-| **Stack creators** | 50+ | Community engagement |
-| **Average upvotes (top 10)** | 500+ | Quality differentiation working |
-
----
-
-## Continuation Prompt
-
-Use this to resume work in a new session:
+## Directory Structure (Final)
 
 ```
-Read .claude/research/findings/FINAL-DECISION.md for the authoritative decisions on the Stack Marketplace project.
-
-Key decisions:
-- Community ready from day 1 (not phased)
-- No tiers/badges - upvotes only
-- Build everything in 1-2 days before launch
-
-I want to:
-- Start implementing [Day 1 / Day 2 / Day 3] items
-- Review the CLI command designs
-- Deep dive into the filtering schema
-- Create the first official stacks
+src/
+├── compile.ts                              # Scans directories, resolves cascades
+├── types.ts                                # Type definitions
+├── templates/
+│   └── agent.liquid                        # Default agent template
+├── agent-sources/
+│   └── {agent-id}/
+│       ├── agent.yaml                      # Agent definition
+│       ├── intro.md
+│       ├── workflow.md
+│       └── ...
+├── skills/                                 # CENTRAL skill repository
+│   └── {category}/
+│       └── {subcategory}/
+│           └── {skill-name} (@author)/
+│               ├── SKILL.md                # Source of truth: name, description, model
+│               ├── metadata.yaml           # Relationships: category, tags, requires, etc.
+│               └── examples.md             # Optional
+├── stacks/                                 # Stack directories
+│   └── {stack-id}/
+│       ├── config.yaml                     # Stack config (skill references, agents)
+│       ├── CLAUDE.md                       # Stack conventions
+│       └── agent.liquid                    # Optional: stack template
+├── profiles/                               # Thin overlays
+│   └── {profile}/
+│       ├── config.yaml                     # Just: name + stack reference
+│       ├── CLAUDE.md                       # Optional: override stack CLAUDE.md
+│       └── agent.liquid                    # Optional: override stack template
+├── core-prompts/                           # Shared prompts
+└── schemas/                                # JSON schemas for validation
 ```
 
 ---
 
-_Last updated: 2026-01-08_
+## Phase 0C: Skills Truly Atomic ⏳ LAST
 
-**Research complete. Ready for implementation.**
+Skills reference other domains they shouldn't own. 12 skills have violations.
+
+**Principle**: A skill should ONLY discuss its own domain. A React skill shouldn't mention SCSS, Zustand, or MSW.
+
+### Violations Audit
+
+| Skill | Violations | Severity |
+|-------|------------|----------|
+| React | References SCSS Modules, React Query, Zustand | HIGH |
+| Performance | References React Query, SCSS, Vitest | HIGH |
+| React Query | References Zustand, MSW | HIGH |
+| Observability | References Hono, Drizzle, React | HIGH |
+| Better Auth | References Hono, Drizzle | HIGH |
+| PostHog Analytics | References Better Auth, Email | HIGH |
+| SCSS Modules | References lucide-react | MEDIUM |
+| Zustand | References React Query | MEDIUM |
+| Vitest | References MSW | MEDIUM |
+| MSW | References React Testing Library | MEDIUM |
+| Resend Email | References Better Auth | MEDIUM |
+| GitHub Actions | References React Query, Zustand | MEDIUM |
+
+**Clean Skills:** Accessibility, Hono, Drizzle, PostHog Flags, Security, Tooling, Reviewing
+
+---
+
+## Phase 3: CLI Commands ⏸️ BLOCKED
+
+Blocked until foundation work (0B-0E, 0C) is complete.
+
+| Command | Purpose |
+|---------|---------|
+| `claude-stacks list` | Browse available stacks |
+| `claude-stacks use <id>` | Select a stack for profile |
+| `claude-stacks build` | Interactive stack builder wizard |
+| `claude-stacks export` | Export current as stack |
+
+---
+
+## Deferred Work
+
+| Feature | Why Deferred |
+|---------|--------------|
+| **Skill copies in stacks** | Skills still iterating; avoid duplication until stable |
+| **Independent versioning** | Depends on skill copies in stacks |
+| **Stack Arena** | Requires significant infrastructure |
+| **Web catalog** | CLI-first approach |
+| **Community features** | Foundation must be solid first |
+
+---
+
+## Research History
+
+Previous research rounds documented in:
+- [INDEX.md](./INDEX.md) - Architecture research index
+- [OPEN-SOURCE-RESEARCH-TRACKER.md](./OPEN-SOURCE-RESEARCH-TRACKER.md) - Round 1
+- [COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md](./COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md) - Round 2
+- [STACK-MARKETPLACE-PROPOSAL-RESEARCH.md](./STACK-MARKETPLACE-PROPOSAL-RESEARCH.md) - Round 3
+
+---
+
+_Last updated: 2026-01-10_

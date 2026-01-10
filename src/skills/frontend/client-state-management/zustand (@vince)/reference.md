@@ -12,7 +12,7 @@ Decision frameworks, red flags, and anti-patterns for client state management.
 What kind of state do I have?
 
 Is it server data (from API)?
-├─ YES → React Query
+├─ YES → Data fetching solution (not this skill's scope)
 └─ NO → Is it URL-appropriate (filters, search, shareable)?
     ├─ YES → URL params (searchParams)
     └─ NO → Is it needed in 2+ components?
@@ -38,7 +38,7 @@ Simple form (1-3 fields, minimal validation)?
 
 | Use Case | Solution | Why |
 |----------|----------|-----|
-| Server/API data | React Query | Caching, synchronization, loading states |
+| Server/API data | Data fetching solution | Caching, synchronization, loading states |
 | Shareable filters | URL params | Bookmarkable, browser navigation |
 | Shared UI state (2+ components) | Zustand | Fast, selective re-renders, no prop drilling |
 | Local UI state (1 component) | useState | Simple, component-local |
@@ -110,8 +110,8 @@ Storing API/server data in useState, Zustand, or Context causes stale data, no c
 const [users, setUsers] = useState([]);
 useEffect(() => { fetchUsers().then(setUsers); }, []);
 
-// CORRECT - React Query handles caching, refetch, sync
-const { data: users } = useQuery(getUsersOptions());
+// CORRECT - Use a data fetching solution with caching, refetch, sync
+// Your data fetching layer handles loading states and caching
 ```
 
 ### Prop Drilling for Shared State
