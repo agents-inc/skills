@@ -258,7 +258,7 @@ async function loadStack(stackId: string): Promise<StackConfig> {
     return cached;
   }
 
-  const stackPath = `${ROOT}/stacks/${stackId}.yaml`;
+  const stackPath = `${ROOT}/stacks/${stackId}/config.yaml`;
   try {
     const content = await readFile(stackPath);
     const stack = parseYaml(content) as StackConfig;
@@ -271,8 +271,43 @@ async function loadStack(stackId: string): Promise<StackConfig> {
 }
 
 /**
+ * Resolve agent template with cascade: Profile -> Stack -> Default
+ */
+async function resolveTemplate(profile: string, stack: string | undefined): Promise<string> {
+  // 1. Profile-specific template
+  const profileTemplate = `${ROOT}/profiles/${profile}/agent.liquid`;
+  if (await fileExists(profileTemplate)) return profileTemplate;
+
+  // 2. Stack-specific template (if stack defined)
+  if (stack) {
+    const stackTemplate = `${ROOT}/stacks/${stack}/agent.liquid`;
+    if (await fileExists(stackTemplate)) return stackTemplate;
+  }
+
+  // 3. Default template
+  return `${ROOT}/templates/agent.liquid`;
+}
+
+/**
+ * Resolve CLAUDE.md with cascade: Profile -> Stack
+ */
+async function resolveClaudeMd(profile: string, stack: string | undefined): Promise<string> {
+  // 1. Profile-specific CLAUDE.md
+  const profileClaude = `${ROOT}/profiles/${profile}/CLAUDE.md`;
+  if (await fileExists(profileClaude)) return profileClaude;
+
+  // 2. Stack-specific CLAUDE.md (if stack defined)
+  if (stack) {
+    const stackClaude = `${ROOT}/stacks/${stack}/CLAUDE.md`;
+    if (await fileExists(stackClaude)) return stackClaude;
+  }
+
+  throw new Error(`No CLAUDE.md found for profile ${profile}${stack ? ` or stack ${stack}` : ""}`);
+}
+
+/**
  * Resolve a stack's skills to skill references
- * Stack skills format: { category: "skill-id" }
+ * Stack skills format: array of skill IDs (e.g., ["frontend/react (@vince)"])
  * Returns: SkillReference[] with generic usage descriptions
  */
 function resolveStackSkills(
@@ -281,18 +316,18 @@ function resolveStackSkills(
 ): SkillReference[] {
   const skillRefs: SkillReference[] = [];
 
-  for (const [category, skillId] of Object.entries(stack.skills)) {
+  for (const skillId of stack.skills) {
     // Validate skill exists
     if (!skills[skillId]) {
       throw new Error(
-        `Stack "${stack.id}" references skill "${skillId}" (category: ${category}) not found in scanned skills`
+        `Stack "${stack.name}" references skill "${skillId}" not found in scanned skills`
       );
     }
 
     const skillDef = skills[skillId];
     skillRefs.push({
       id: skillId,
-      usage: `when working with ${skillDef.name.toLowerCase()} (${category})`,
+      usage: `when working with ${skillDef.name.toLowerCase()}`,
     });
   }
 
@@ -389,10 +424,11 @@ async function validate(
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Check CLAUDE.md
-  const claudePath = `${ROOT}/profiles/${PROFILE}/${profileConfig.claude_md}`;
-  if (!(await Bun.file(claudePath).exists())) {
-    errors.push(`CLAUDE.md not found: ${claudePath}`);
+  // Check CLAUDE.md (using cascade: profile -> stack)
+  try {
+    await resolveClaudeMd(PROFILE, profileConfig.stack);
+  } catch {
+    errors.push(`CLAUDE.md not found in profile "${PROFILE}"${profileConfig.stack ? ` or stack "${profileConfig.stack}"` : ""}`);
   }
 
   // Check core prompts directory exists
@@ -639,11 +675,11 @@ async function compileAllSkills(
 // =============================================================================
 
 async function copyClaude(config: ProfileConfig): Promise<void> {
-  const content = await readFile(
-    `${ROOT}/profiles/${PROFILE}/${config.claude_md}`
-  );
+  const claudePath = await resolveClaudeMd(PROFILE, config.stack);
+  const content = await readFile(claudePath);
   await Bun.write(`${OUT}/../CLAUDE.md`, content);
-  console.log(`  ✓ CLAUDE.md`);
+  const source = claudePath.includes("/stacks/") ? "stack" : "profile";
+  console.log(`  ✓ CLAUDE.md (from ${source})`);
 }
 
 // =============================================================================

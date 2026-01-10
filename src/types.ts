@@ -156,20 +156,20 @@ export interface ValidationResult {
 // =============================================================================
 
 /**
- * Stack configuration from stacks/{stack-id}.yaml
+ * Stack configuration from stacks/{stack-id}/config.yaml
  * Bundles framework, skills, agents, and philosophy into a single config
  */
 export interface StackConfig {
-  id: string;
+  id?: string;
   name: string;
   version: string;
   author: string;
   description?: string;
   created?: string;
   updated?: string;
-  framework: string;
-  /** Map of category names to skill IDs (e.g., { state: "frontend/client-state" }) */
-  skills: Record<string, string>;
+  framework?: string;
+  /** Array of skill IDs (e.g., ["frontend/react (@vince)", "backend/hono (@vince)"]) */
+  skills: string[];
   agents: string[];
   philosophy?: string;
   principles?: string[];

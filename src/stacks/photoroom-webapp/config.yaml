@@ -1,28 +1,21 @@
-# yaml-language-server: $schema=../schemas/stack.schema.json
+# yaml-language-server: $schema=../../schemas/stack.schema.json
 # Photoroom Webapp Stack - Tailwind, MobX, React Query + MobX bridge
 # Stack for the Photoroom webapp with MobX state management
 
-id: photoroom-webapp
 name: "Photoroom Webapp Stack"
-version: "1.0.0"
-author: "@photoroom"
-created: "2026-01-09"
-updated: "2026-01-09"
-
 description: >
   The Photoroom webapp stack with Tailwind CSS for styling, MobX for state
   management with RootStore pattern, and React Query bridged to MobX via
   MobxQuery. Uses @photoroom/icons and @photoroom/ui for design system.
+author: "@photoroom"
+version: "1.0.0"
 
-framework: react
-
-# Skills by category - maps to skill IDs in SKILL.md frontmatter
 skills:
   # Frontend - Photoroom specific
-  react: frontend/react (@photoroom)
-  styling: frontend/tailwind (@photoroom)
-  state: frontend/mobx (@photoroom)
-  data-fetching: frontend/react-query (@photoroom)
+  - frontend/react (@photoroom)
+  - frontend/tailwind (@photoroom)
+  - frontend/mobx (@photoroom)
+  - frontend/react-query (@photoroom)
 
 agents:
   - frontend-developer
@@ -39,7 +32,7 @@ principles:
   - Use reaction() in stores for side effects, NOT useEffect
   - React Query for server state, MobX for client state
   - Tailwind CSS with @photoroom/ui preset
-  - @photoroom/icons for all icons (not lucide-react)
+  - "@photoroom/icons for all icons (not lucide-react)"
   - Use type for props, NOT interface (ESLint enforced)
 
 tags:
@@ -50,17 +43,3 @@ tags:
   - react-query
   - photoroom
   - webapp
-
-overrides:
-  styling:
-    alternatives: []
-    locked: true
-  state:
-    alternatives: []
-    locked: true
-  framework:
-    locked: true
-
-metrics:
-  upvotes: 0
-  downloads: 0

@@ -166,133 +166,133 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
 - Invoke: `skill: "frontend/react (@vince)"`
-- Use when: when working with react (react)
+- Use when: when working with react
 
 
 ### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
 - Invoke: `skill: "frontend/scss-modules (@vince)"`
-- Use when: when working with scss modules (styling)
+- Use when: when working with scss modules
 
 
 ### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 - Invoke: `skill: "frontend/zustand (@vince)"`
-- Use when: when working with zustand (state)
+- Use when: when working with zustand
 
 
 ### frontend/react-query (@vince)
 - Description: REST APIs, React Query, data fetching
 - Invoke: `skill: "frontend/react-query (@vince)"`
-- Use when: when working with react query (data-fetching)
+- Use when: when working with react query
 
 
 ### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
 - Invoke: `skill: "frontend/accessibility (@vince)"`
-- Use when: when working with accessibility (accessibility)
+- Use when: when working with accessibility
 
 
 ### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
 - Invoke: `skill: "frontend/performance (@vince)"`
-- Use when: when working with performance (performance)
+- Use when: when working with performance
 
 
 ### frontend/vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
 - Invoke: `skill: "frontend/vitest (@vince)"`
-- Use when: when working with vitest (testing)
+- Use when: when working with vitest
 
 
 ### frontend/msw (@vince)
 - Description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
 - Invoke: `skill: "frontend/msw (@vince)"`
-- Use when: when working with msw (mocking)
+- Use when: when working with msw
 
 
 ### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
 - Invoke: `skill: "backend/hono (@vince)"`
-- Use when: when working with hono (api)
+- Use when: when working with hono
 
 
 ### backend/drizzle (@vince)
 - Description: Drizzle ORM, queries, migrations
 - Invoke: `skill: "backend/drizzle (@vince)"`
-- Use when: when working with drizzle (database)
+- Use when: when working with drizzle
 
 
 ### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
 - Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when working with better auth (authentication)
+- Use when: when working with better auth
 
 
 ### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.
 - Invoke: `skill: "backend/posthog-analytics (@vince)"`
-- Use when: when working with posthog analytics (analytics)
+- Use when: when working with posthog analytics
 
 
 ### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
 - Invoke: `skill: "backend/posthog-flags (@vince)"`
-- Use when: when working with posthog flags (feature-flags)
+- Use when: when working with posthog flags
 
 
 ### backend/resend (@vince)
 - Description: Resend + React Email templates
 - Invoke: `skill: "backend/resend (@vince)"`
-- Use when: when working with resend (email)
+- Use when: when working with resend
 
 
 ### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 - Invoke: `skill: "backend/observability (@vince)"`
-- Use when: when working with observability (observability)
+- Use when: when working with observability
 
 
 ### backend/github-actions (@vince)
 - Description: GitHub Actions, pipelines, deployment
 - Invoke: `skill: "backend/github-actions (@vince)"`
-- Use when: when working with github actions (ci-cd)
+- Use when: when working with github actions
 
 
 ### security/security (@vince)
 - Description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 - Invoke: `skill: "security/security (@vince)"`
-- Use when: when working with security (security)
+- Use when: when working with security
 
 
 ### setup/turborepo (@vince)
 - Description: Turborepo, workspaces, package architecture
 - Invoke: `skill: "setup/turborepo (@vince)"`
-- Use when: when working with turborepo (monorepo)
+- Use when: when working with turborepo
 
 
 ### setup/package (@vince)
 - Description: Internal package conventions, exports, @repo/* naming, workspace dependencies, tree-shaking configuration
 - Invoke: `skill: "setup/package (@vince)"`
-- Use when: when working with package (package)
+- Use when: when working with package
 
 
 ### setup/env (@vince)
 - Description: Environment configuration, Zod validation
 - Invoke: `skill: "setup/env (@vince)"`
-- Use when: when working with env (env)
+- Use when: when working with env
 
 
 ### setup/tooling (@vince)
 - Description: ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos
 - Invoke: `skill: "setup/tooling (@vince)"`
-- Use when: when working with tooling (tooling)
+- Use when: when working with tooling
 
 
 ### shared/reviewing (@vince)
 - Description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
 - Invoke: `skill: "shared/reviewing (@vince)"`
-- Use when: when working with reviewing (reviewing)
+- Use when: when working with reviewing
 
 
 </skill_activation_protocol>

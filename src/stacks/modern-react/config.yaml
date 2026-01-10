@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Modern React Stack - SCSS Modules, Zustand, React Query
+# This is the flagship stack for modern React development
+
+name: "Modern React Stack"
+description: >
+  A modern React stack with SCSS Modules + cva for styling, Zustand for state,
+  and React Query for data fetching. Emphasizes developer experience,
+  type safety, and performance.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - frontend/react (@vince)
+  - frontend/scss-modules (@vince)
+  - frontend/zustand (@vince)
+  - frontend/react-query (@vince)
+  - frontend/accessibility (@vince)
+  - frontend/performance (@vince)
+  - frontend/vitest (@vince)
+  - frontend/msw (@vince)
+  # Backend
+  - backend/hono (@vince)
+  - backend/drizzle (@vince)
+  - backend/better-auth (@vince)
+  - backend/posthog-analytics (@vince)
+  - backend/posthog-flags (@vince)
+  - backend/resend (@vince)
+  - backend/observability (@vince)
+  - backend/github-actions (@vince)
+  # Security
+  - security/security (@vince)
+  # Setup
+  - setup/turborepo (@vince)
+  - setup/package (@vince)
+  - setup/env (@vince)
+  - setup/tooling (@vince)
+  # Shared
+  - shared/reviewing (@vince)
+
+agents:
+  - frontend-developer
+  - backend-developer
+  - frontend-reviewer
+  - backend-reviewer
+  - tester
+  - pm
+  - architecture
+  - documentor
+
+philosophy: "Ship fast, iterate faster"
+
+principles:
+  - Prefer composition over inheritance
+  - Use hooks for everything, avoid class components
+  - SCSS Modules for co-located styles, cva for variants
+  - Zustand for client state, React Query for server state
+  - Test user behavior, not implementation details
+  - Type everything - zero tolerance for any
+
+tags:
+  - react
+  - typescript
+  - scss-modules
+  - zustand
+  - react-query
+  - modern
+  - fullstack
