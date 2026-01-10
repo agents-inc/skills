@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: frontend/mocking
+name: Mocking
+description: MSW handlers, browser/server workers, test data
+category: mocking
+category_exclusive: true
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - frontend/testing
+  - frontend/api
+
+tags:
+  - msw
+  - mock-service-worker
+  - mocking
+  - test-data
+  - api-mocking

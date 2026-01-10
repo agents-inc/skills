@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: setup/resend
+name: Resend Setup
+description: Resend email setup, domain verification
+category: setup
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - backend/email
+  - setup/env
+
+tags:
+  - resend
+  - setup
+  - email
+  - domain-verification
+  - installation

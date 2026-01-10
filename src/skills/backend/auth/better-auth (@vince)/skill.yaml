@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: backend/authentication
+name: Authentication
+description: Better Auth patterns, sessions, OAuth
+category: backend
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+requires:
+  - backend/database
+
+compatible_with:
+  - backend/api
+  - security/security
+
+tags:
+  - better-auth
+  - sessions
+  - oauth
+  - authentication
+  - authorization

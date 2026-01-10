@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: research/methodology
+name: Research Methodology
+description: Investigation flow, evidence-based research, structured output
+category: research
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+tags:
+  - research
+  - investigation
+  - evidence-based
+  - methodology
+  - analysis

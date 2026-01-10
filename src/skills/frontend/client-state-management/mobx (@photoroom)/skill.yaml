@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: frontend/mobx (@photoroom)
+name: MobX
+description: MobX stores, RootStore pattern for Photoroom webapp
+category: state
+category_exclusive: true
+author: "@photoroom"
+version: "1.0.0"
+
+compatible_with:
+  - frontend/react-mobx (@photoroom)
+  - frontend/react-query-mobx (@photoroom)
+
+conflicts_with:
+  - frontend/client-state
+
+tags:
+  - mobx
+  - state-management
+  - rootstore
+  - stores
+  - photoroom

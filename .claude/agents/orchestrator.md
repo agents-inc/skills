@@ -163,6 +163,138 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
+### frontend/react (@vince)
+- Description: Component architecture, hooks, patterns
+- Invoke: `skill: "frontend/react (@vince)"`
+- Use when: when working with react (react)
+
+
+### frontend/scss-modules (@vince)
+- Description: SCSS Modules, cva, design tokens
+- Invoke: `skill: "frontend/scss-modules (@vince)"`
+- Use when: when working with scss modules (styling)
+
+
+### frontend/zustand (@vince)
+- Description: Zustand stores, React Query integration
+- Invoke: `skill: "frontend/zustand (@vince)"`
+- Use when: when working with zustand (state)
+
+
+### frontend/react-query (@vince)
+- Description: REST APIs, React Query, data fetching
+- Invoke: `skill: "frontend/react-query (@vince)"`
+- Use when: when working with react query (data-fetching)
+
+
+### frontend/accessibility (@vince)
+- Description: WCAG, ARIA, keyboard navigation
+- Invoke: `skill: "frontend/accessibility (@vince)"`
+- Use when: when working with accessibility (accessibility)
+
+
+### frontend/performance (@vince)
+- Description: Bundle optimization, render performance
+- Invoke: `skill: "frontend/performance (@vince)"`
+- Use when: when working with frontend performance (performance)
+
+
+### frontend/vitest (@vince)
+- Description: Playwright E2E, Vitest, React Testing Library
+- Invoke: `skill: "frontend/vitest (@vince)"`
+- Use when: when working with vitest (testing)
+
+
+### frontend/msw (@vince)
+- Description: MSW handlers, browser/server workers, test data
+- Invoke: `skill: "frontend/msw (@vince)"`
+- Use when: when working with msw (mocking)
+
+
+### backend/hono (@vince)
+- Description: Hono routes, OpenAPI, Zod validation
+- Invoke: `skill: "backend/hono (@vince)"`
+- Use when: when working with hono (api)
+
+
+### backend/drizzle (@vince)
+- Description: Drizzle ORM, queries, migrations
+- Invoke: `skill: "backend/drizzle (@vince)"`
+- Use when: when working with drizzle (database)
+
+
+### backend/better-auth (@vince)
+- Description: Better Auth patterns, sessions, OAuth
+- Invoke: `skill: "backend/better-auth (@vince)"`
+- Use when: when working with better auth (authentication)
+
+
+### backend/posthog-analytics (@vince)
+- Description: PostHog event tracking, user identification
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
+- Use when: when working with posthog analytics (analytics)
+
+
+### backend/posthog-flags (@vince)
+- Description: PostHog feature flags, rollouts, A/B testing
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
+- Use when: when working with posthog flags (feature-flags)
+
+
+### backend/resend (@vince)
+- Description: Resend + React Email templates
+- Invoke: `skill: "backend/resend (@vince)"`
+- Use when: when working with resend (email)
+
+
+### backend/observability (@vince)
+- Description: Pino logging, Sentry error tracking, Axiom
+- Invoke: `skill: "backend/observability (@vince)"`
+- Use when: when working with observability (observability)
+
+
+### backend/github-actions (@vince)
+- Description: GitHub Actions, pipelines, deployment
+- Invoke: `skill: "backend/github-actions (@vince)"`
+- Use when: when working with github actions (ci-cd)
+
+
+### security/security (@vince)
+- Description: Authentication, authorization, secrets
+- Invoke: `skill: "security/security (@vince)"`
+- Use when: when working with security (security)
+
+
+### setup/turborepo (@vince)
+- Description: Turborepo, workspaces, package architecture
+- Invoke: `skill: "setup/turborepo (@vince)"`
+- Use when: when working with turborepo (monorepo)
+
+
+### setup/package (@vince)
+- Description: Internal package conventions, exports
+- Invoke: `skill: "setup/package (@vince)"`
+- Use when: when working with package (package)
+
+
+### setup/env (@vince)
+- Description: Environment configuration, Zod validation
+- Invoke: `skill: "setup/env (@vince)"`
+- Use when: when working with environment (env)
+
+
+### setup/tooling (@vince)
+- Description: ESLint, Prettier, TypeScript configuration
+- Invoke: `skill: "setup/tooling (@vince)"`
+- Use when: when working with tooling (tooling)
+
+
+### shared/reviewing (@vince)
+- Description: Code review patterns, feedback principles
+- Invoke: `skill: "shared/reviewing (@vince)"`
+- Use when: when working with reviewing (reviewing)
+
+
 </skill_activation_protocol>
 
 ---

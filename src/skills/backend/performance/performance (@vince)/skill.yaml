@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: backend/performance
+name: Backend Performance
+description: Query optimization, caching, indexing
+category: performance
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - backend/database
+  - backend/api
+
+tags:
+  - performance
+  - query-optimization
+  - caching
+  - indexing
+  - backend

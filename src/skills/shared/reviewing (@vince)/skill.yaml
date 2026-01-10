@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: shared/reviewing
+name: Reviewing
+description: Code review patterns, feedback principles
+category: shared
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+tags:
+  - code-review
+  - feedback
+  - patterns
+  - review-principles
+  - quality

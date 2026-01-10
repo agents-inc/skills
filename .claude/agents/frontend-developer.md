@@ -110,57 +110,57 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### frontend/react
+### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react"`
+- Invoke: `skill: "frontend/react (@vince)"`
 - Use when: when implementing React components
 
 
-### frontend/styling
+### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling"`
+- Invoke: `skill: "frontend/scss-modules (@vince)"`
 - Use when: when implementing styles
 
 
-### frontend/api
+### frontend/react-query (@vince)
 - Description: REST APIs, React Query, data fetching
-- Invoke: `skill: "frontend/api"`
+- Invoke: `skill: "frontend/react-query (@vince)"`
 - Use when: when implementing data fetching, API calls, or React Query integrations
 
 
-### frontend/client-state
+### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration
-- Invoke: `skill: "frontend/client-state"`
+- Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when implementing Zustand stores or complex client-side state
 
 
-### frontend/accessibility
+### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility"`
+- Invoke: `skill: "frontend/accessibility (@vince)"`
 - Use when: when implementing accessible components or ARIA patterns
 
 
-### frontend/performance
+### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance"`
+- Invoke: `skill: "frontend/performance (@vince)"`
 - Use when: when optimizing renders or bundle size
 
 
-### backend/authentication
+### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/authentication"`
+- Invoke: `skill: "backend/better-auth (@vince)"`
 - Use when: when implementing client-side authentication flows or protected routes
 
 
-### backend/analytics
+### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification
-- Invoke: `skill: "backend/analytics"`
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
 - Use when: when implementing client-side analytics tracking or user identification
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when implementing client-side feature flag evaluation or experiments
 
 

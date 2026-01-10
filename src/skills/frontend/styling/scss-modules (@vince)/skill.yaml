@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: frontend/styling
+name: Styling
+description: SCSS Modules, cva, design tokens
+category: styling
+category_exclusive: true
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - frontend/react
+
+tags:
+  - scss
+  - css-modules
+  - cva
+  - design-tokens
+  - styling

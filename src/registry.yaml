@@ -203,6 +203,8 @@ agents:
 # =============================================================================
 # Skill Definitions
 # =============================================================================
+# Naming convention: category/technology-name (@publisher)
+# Skills organized in subdirectories: frontend/, backend/, security/, setup/, shared/, research/
 # Each skill defines: path, name, description
 # Profile configs add: usage (context-specific description of when to use)
 
@@ -210,157 +212,179 @@ skills:
   # ---------------------------------------------------------------------------
   # Frontend Skills
   # ---------------------------------------------------------------------------
-  frontend/react:
-    path: skills/frontend/react/
+  # @vince - Modern React Stack (SCSS Modules, Zustand, React Query)
+  frontend/react (@vince):
+    path: skills/frontend/react/react (@vince)/
     name: React
     description: Component architecture, hooks, patterns
 
-  frontend/styling:
-    path: skills/frontend/styling/
-    name: Styling
+  frontend/scss-modules (@vince):
+    path: skills/frontend/styling/scss-modules (@vince)/
+    name: SCSS Modules
     description: SCSS Modules, cva, design tokens
 
-  frontend/api:
-    path: skills/frontend/api/
-    name: API Integration
+  frontend/react-query (@vince):
+    path: skills/frontend/server-state-management/react-query (@vince)/
+    name: React Query
     description: REST APIs, React Query, data fetching
 
-  frontend/client-state:
-    path: skills/frontend/client-state/
-    name: Client State
+  frontend/zustand (@vince):
+    path: skills/frontend/client-state-management/zustand (@vince)/
+    name: Zustand
     description: Zustand stores, React Query integration
 
-  frontend/accessibility:
-    path: skills/frontend/accessibility/
+  frontend/accessibility (@vince):
+    path: skills/frontend/accessibility/accessibility (@vince)/
     name: Accessibility
     description: WCAG, ARIA, keyboard navigation
 
-  frontend/performance:
-    path: skills/frontend/performance/
-    name: Performance
+  frontend/performance (@vince):
+    path: skills/frontend/performance/performance (@vince)/
+    name: Frontend Performance
     description: Bundle optimization, render performance
 
-  frontend/testing:
-    path: skills/frontend/testing/
-    name: Frontend Testing
+  frontend/vitest (@vince):
+    path: skills/frontend/testing/vitest (@vince)/
+    name: Vitest
     description: Playwright E2E, Vitest, React Testing Library
 
-  frontend/mocking:
-    path: skills/frontend/mocking/
-    name: Mocking
+  frontend/msw (@vince):
+    path: skills/frontend/mocks/msw (@vince)/
+    name: MSW
     description: MSW handlers, browser/server workers, test data
+
+  # @photoroom - Photoroom Webapp Stack (Tailwind, MobX, React Query + MobX)
+  frontend/react-mobx (@photoroom):
+    path: skills/frontend/react/mobx (@photoroom)/
+    name: React + MobX
+    description: MobX observer, stores, i18n for Photoroom webapp
+
+  frontend/tailwind (@photoroom):
+    path: skills/frontend/styling/tailwind (@photoroom)/
+    name: Tailwind CSS
+    description: Tailwind CSS, clsx, design tokens for Photoroom webapp
+
+  frontend/mobx (@photoroom):
+    path: skills/frontend/client-state-management/mobx (@photoroom)/
+    name: MobX
+    description: MobX stores, RootStore pattern for Photoroom webapp
+
+  frontend/react-query-mobx (@photoroom):
+    path: skills/frontend/server-state-management/react-query (@photoroom)/
+    name: React Query + MobX
+    description: React Query, Axios, API classes for Photoroom webapp
 
   # ---------------------------------------------------------------------------
   # Backend Skills
   # ---------------------------------------------------------------------------
-  backend/api:
-    path: skills/backend/api/
-    name: Backend API
+  backend/hono (@vince):
+    path: skills/backend/api/hono (@vince)/
+    name: Hono
     description: Hono routes, OpenAPI, Zod validation
 
-  backend/authentication:
-    path: skills/backend/authentication/
-    name: Authentication
+  backend/better-auth (@vince):
+    path: skills/backend/auth/better-auth (@vince)/
+    name: Better Auth
     description: Better Auth patterns, sessions, OAuth
 
-  backend/database:
-    path: skills/backend/database/
-    name: Database
+  backend/drizzle (@vince):
+    path: skills/backend/database/drizzle (@vince)/
+    name: Drizzle
     description: Drizzle ORM, queries, migrations
 
-  backend/ci-cd:
-    path: skills/backend/ci-cd/
-    name: CI/CD
+  backend/github-actions (@vince):
+    path: skills/backend/ci-cd/github-actions (@vince)/
+    name: GitHub Actions
     description: GitHub Actions, pipelines, deployment
 
-  backend/performance:
-    path: skills/backend/performance.md
+  backend/performance (@vince):
+    path: skills/backend/performance/performance (@vince)/
     name: Backend Performance
     description: Query optimization, caching, indexing
 
-  backend/testing:
-    path: skills/backend/testing.md
+  backend/testing (@vince):
+    path: skills/backend/testing/testing (@vince)/
     name: Backend Testing
     description: API tests, integration tests
 
-  backend/analytics:
-    path: skills/backend/analytics/
-    name: Analytics
+  backend/posthog-analytics (@vince):
+    path: skills/backend/analytics/posthog-analytics (@vince)/
+    name: PostHog Analytics
     description: PostHog event tracking, user identification
 
-  backend/feature-flags:
-    path: skills/backend/feature-flags/
-    name: Feature Flags
+  backend/posthog-flags (@vince):
+    path: skills/backend/feature-flags/posthog-flags (@vince)/
+    name: PostHog Flags
     description: PostHog feature flags, rollouts, A/B testing
 
-  backend/email:
-    path: skills/backend/email/
-    name: Email
+  backend/resend (@vince):
+    path: skills/backend/email/resend (@vince)/
+    name: Resend
     description: Resend + React Email templates
 
-  backend/observability:
-    path: skills/backend/observability/
+  backend/observability (@vince):
+    path: skills/backend/observability/observability (@vince)/
     name: Observability
     description: Pino logging, Sentry error tracking, Axiom
 
   # ---------------------------------------------------------------------------
   # Security Skills
   # ---------------------------------------------------------------------------
-  security/security:
-    path: skills/security/security/
+  security/security (@vince):
+    path: skills/security/security (@vince)/
     name: Security
     description: Authentication, authorization, secrets
 
   # ---------------------------------------------------------------------------
-  # Shared Skills
-  # ---------------------------------------------------------------------------
-  shared/reviewing:
-    path: skills/shared/reviewing/
-    name: Reviewing
-    description: Code review patterns, feedback principles
-
-  # ---------------------------------------------------------------------------
   # Setup Skills
   # ---------------------------------------------------------------------------
-  setup/monorepo:
-    path: skills/setup/monorepo/
-    name: Monorepo
+  setup/turborepo (@vince):
+    path: skills/setup/monorepo/turborepo (@vince)/
+    name: Turborepo
     description: Turborepo, workspaces, package architecture
 
-  setup/package:
-    path: skills/setup/package/
+  setup/package (@vince):
+    path: skills/setup/monorepo/package/package (@vince)/
     name: Package
     description: Internal package conventions, exports
 
-  setup/env:
-    path: skills/setup/env/
+  setup/env (@vince):
+    path: skills/setup/env/env (@vince)/
     name: Environment
     description: Environment configuration, Zod validation
 
-  setup/tooling:
-    path: skills/setup/tooling/
+  setup/tooling (@vince):
+    path: skills/setup/tooling/tooling (@vince)/
     name: Tooling
     description: ESLint, Prettier, TypeScript configuration
 
-  setup/posthog:
-    path: skills/setup/posthog/
+  setup/posthog-setup (@vince):
+    path: skills/setup/analytics/posthog-setup (@vince)/
     name: PostHog Setup
     description: PostHog analytics and feature flags setup
 
-  setup/resend:
-    path: skills/setup/resend/
+  setup/resend-setup (@vince):
+    path: skills/setup/email/resend-setup (@vince)/
     name: Resend Setup
     description: Resend email setup, domain verification
 
-  setup/observability:
-    path: skills/setup/observability/
+  setup/observability-setup (@vince):
+    path: skills/setup/observability/observability-setup (@vince)/
     name: Observability Setup
     description: Pino, Axiom, Sentry installation
 
   # ---------------------------------------------------------------------------
+  # Shared Skills
+  # ---------------------------------------------------------------------------
+  shared/reviewing (@vince):
+    path: skills/shared/reviewing (@vince)/
+    name: Reviewing
+    description: Code review patterns, feedback principles
+
+  # ---------------------------------------------------------------------------
   # Research Skills
   # ---------------------------------------------------------------------------
-  research/methodology:
-    path: skills/research/methodology/
+  research/research-methodology (@vince):
+    path: skills/research/research-methodology/research-methodology (@vince)/
     name: Research Methodology
     description: Investigation flow, evidence-based research, structured output

@@ -160,105 +160,105 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### setup/monorepo
+### setup/turborepo (@vince)
 - Description: Turborepo, workspaces, package architecture
-- Invoke: `skill: "setup/monorepo"`
+- Invoke: `skill: "setup/turborepo (@vince)"`
 - Use when: when scaffolding monorepo apps
 
 
-### setup/package
+### setup/package (@vince)
 - Description: Internal package conventions, exports
-- Invoke: `skill: "setup/package"`
+- Invoke: `skill: "setup/package (@vince)"`
 - Use when: when scaffolding packages
 
 
-### setup/env
+### setup/env (@vince)
 - Description: Environment configuration, Zod validation
-- Invoke: `skill: "setup/env"`
+- Invoke: `skill: "setup/env (@vince)"`
 - Use when: when setting up environment configuration
 
 
-### setup/tooling
+### setup/tooling (@vince)
 - Description: ESLint, Prettier, TypeScript configuration
-- Invoke: `skill: "setup/tooling"`
+- Invoke: `skill: "setup/tooling (@vince)"`
 - Use when: when setting up build tooling
 
 
-### setup/posthog
+### setup/posthog-setup (@vince)
 - Description: PostHog analytics and feature flags setup
-- Invoke: `skill: "setup/posthog"`
+- Invoke: `skill: "setup/posthog-setup (@vince)"`
 - Use when: when setting up PostHog
 
 
-### setup/observability
+### setup/observability-setup (@vince)
 - Description: Pino, Axiom, Sentry installation
-- Invoke: `skill: "setup/observability"`
+- Invoke: `skill: "setup/observability-setup (@vince)"`
 - Use when: when setting up observability stack
 
 
-### frontend/api
+### frontend/react-query (@vince)
 - Description: REST APIs, React Query, data fetching
-- Invoke: `skill: "frontend/api"`
+- Invoke: `skill: "frontend/react-query (@vince)"`
 - Use when: when scaffolding API client layer
 
 
-### frontend/mocking
+### frontend/msw (@vince)
 - Description: MSW handlers, browser/server workers, test data
-- Invoke: `skill: "frontend/mocking"`
+- Invoke: `skill: "frontend/msw (@vince)"`
 - Use when: when scaffolding mock data package
 
 
-### frontend/testing
+### frontend/vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library
-- Invoke: `skill: "frontend/testing"`
+- Invoke: `skill: "frontend/vitest (@vince)"`
 - Use when: when scaffolding test infrastructure
 
 
-### backend/api
+### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "backend/api"`
+- Invoke: `skill: "backend/hono (@vince)"`
 - Use when: when scaffolding API routes
 
 
-### backend/database
+### backend/drizzle (@vince)
 - Description: Drizzle ORM, queries, migrations
-- Invoke: `skill: "backend/database"`
+- Invoke: `skill: "backend/drizzle (@vince)"`
 - Use when: when scaffolding database layer
 
 
-### backend/authentication
+### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/authentication"`
+- Invoke: `skill: "backend/better-auth (@vince)"`
 - Use when: when scaffolding authentication
 
 
-### backend/analytics
+### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification
-- Invoke: `skill: "backend/analytics"`
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
 - Use when: when scaffolding analytics
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when scaffolding feature flags
 
 
-### backend/observability
+### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom
-- Invoke: `skill: "backend/observability"`
+- Invoke: `skill: "backend/observability (@vince)"`
 - Use when: when scaffolding observability
 
 
-### backend/ci-cd
+### backend/github-actions (@vince)
 - Description: GitHub Actions, pipelines, deployment
-- Invoke: `skill: "backend/ci-cd"`
+- Invoke: `skill: "backend/github-actions (@vince)"`
 - Use when: when scaffolding CI/CD workflows
 
 
-### security/security
+### security/security (@vince)
 - Description: Authentication, authorization, secrets
-- Invoke: `skill: "security/security"`
+- Invoke: `skill: "security/security (@vince)"`
 - Use when: when considering security patterns
 
 

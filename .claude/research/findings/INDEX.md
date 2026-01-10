@@ -32,6 +32,7 @@ Additionally, **three rounds of open-source research** were completed:
 - **Open Source Research: ✅ COMPLETE** - See [FINAL-DECISION.md](./FINAL-DECISION.md)
 - **Skill Folder Migration: ✅ COMPLETE** - See [SKILL-FOLDER-MIGRATION.md](./SKILL-FOLDER-MIGRATION.md)
 - **Skill Loading Refactor: ✅ IMPLEMENTED** - See [SKILL-LOADING-REFACTOR-PLAN.md](./SKILL-LOADING-REFACTOR-PLAN.md)
+- **Stack Marketplace Architecture: ✅ DESIGNED** - See [STACK-MARKETPLACE-ARCHITECTURE.md](./STACK-MARKETPLACE-ARCHITECTURE.md)
 
 ---
 
@@ -60,18 +61,21 @@ Additionally, **three rounds of open-source research** were completed:
 
 | Round     | File                                                                                 | Content                                                   |
 | --------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| **FINAL** | **[FINAL-DECISION.md](./FINAL-DECISION.md)**                                         | **Authoritative decisions - START HERE**                  |
+| **ARCH**  | **[STACK-MARKETPLACE-ARCHITECTURE.md](./STACK-MARKETPLACE-ARCHITECTURE.md)**         | **Architecture decisions - START HERE FOR IMPLEMENTATION** |
+| **FINAL** | [FINAL-DECISION.md](./FINAL-DECISION.md)                                             | Original decisions (some superseded by ARCH)              |
 | Round 1   | [OPEN-SOURCE-RESEARCH-TRACKER.md](./OPEN-SOURCE-RESEARCH-TRACKER.md)                 | CLI onboarding, positioning, profiles, community patterns |
 | Round 2   | [COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md](./COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md) | Skill isolation, dependencies, registry models, bundling  |
 | Round 3   | [STACK-MARKETPLACE-PROPOSAL-RESEARCH.md](./STACK-MARKETPLACE-PROPOSAL-RESEARCH.md)   | Prior art, filtering, viral adoption, schema design       |
 
-**Key OSS Decisions (from FINAL-DECISION.md):**
+**Key Architecture Decisions (from STACK-MARKETPLACE-ARCHITECTURE.md):**
 
-- Community ready from day 1 (not phased)
-- No tiers/badges - upvotes only (quality emerges from votes)
-- Build everything in 1-2 days before launch
-- CLI-first experience
-- Stack Arena deferred to post-launch
+- **Stacks replace profiles** - A stack IS your complete tech stack
+- **Skills are atomic** - 67% of cross-refs removable, no bleeding
+- **Framework as foundation** - Everything else (state, styling, testing) are siblings
+- **No integrations layer** - Metadata handles requires/conflicts
+- **Stacks are versioned** - Full semantic versioning
+- **Override system** - Swap technologies within a stack
+- Community ready from day 1, upvotes only, CLI-first
 
 ---
 
@@ -186,16 +190,22 @@ src/
 Use this to resume work in a new session:
 
 ```
-Read .claude/research/findings/INDEX.md to get context on the architecture improvement project.
+Read .claude/research/findings/STACK-MARKETPLACE-ARCHITECTURE.md for Stack Marketplace implementation.
 
-We completed Phase 1 (research with 12 agents) and Phase 2 (synthesis).
-49 issues were identified across 12 areas.
+Key decisions:
+- Stacks replace profiles (a stack IS your tech stack)
+- Skills are atomic (framework as foundation, everything else siblings)
+- No integrations layer (metadata handles requires/conflicts)
+- Stacks are versioned with override system
 
-I want to [CHOOSE ONE]:
-- Proceed with Phase 3 implementation, starting with [critical/high/specific issue]
-- Proceed with Phase 4 competitor analysis
-- Deep dive into [specific area] findings
-- Review the issues list and reprioritize
+I want to:
+- Implement Stack Marketplace restructure (skills → central, create stacks/)
+- [Or other task]
+```
+
+For original architecture research:
+```
+Read .claude/research/findings/INDEX.md for the 49 issues identified across 12 areas.
 ```
 
 ---
@@ -241,3 +251,19 @@ _Last updated: 2026-01-09_
 - ✅ Simplified skill listing format (removed bold formatting)
 - ✅ Updated CLAUDE_ARCHITECTURE_BIBLE.md with new patterns
 - ✅ See [SKILL-LOADING-REFACTOR-PLAN.md](./SKILL-LOADING-REFACTOR-PLAN.md) for research
+
+**Stack Marketplace Architecture (2026-01-09):**
+
+- ✅ Spawned 5 research agents for initial architecture (directory, deduplication, compiler, schema, migration)
+- ✅ User refined: Stacks replace profiles entirely (not separate concepts)
+- ✅ User refined: Skills must be atomic (no bleeding between skills)
+- ✅ Spawned 5 research agents for skill bleed analysis (audit, testing/mocking, atomic templates, groupings, problems)
+- ✅ Found: 67% of cross-references are REMOVABLE (skills CAN be atomic)
+- ✅ Found: Root cause of bleed is prescriptive language ("MUST use X"), not architecture
+- ✅ User confirmed: Framework as foundation, everything else as siblings
+- ✅ User confirmed: No integrations layer needed (metadata handles requires/conflicts)
+- ✅ User confirmed: Stacks ARE versioned (changed from earlier decision)
+- ✅ User confirmed: Simple naming for now (`react-zustand (@publisher)`)
+- ✅ Spawned edge case agent: Sibling-only structure works with proper metadata
+- ✅ Created [STACK-MARKETPLACE-ARCHITECTURE.md](./STACK-MARKETPLACE-ARCHITECTURE.md) - Source of truth for implementation
+- ✅ **ARCHITECTURE DESIGN COMPLETE** - Ready for implementation

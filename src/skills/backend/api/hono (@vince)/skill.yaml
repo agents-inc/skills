@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: backend/api
+name: Backend API
+description: Hono routes, OpenAPI, Zod validation
+category: backend
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - backend/authentication
+  - backend/database
+  - security/security
+
+tags:
+  - hono
+  - openapi
+  - zod
+  - rest-api
+  - validation

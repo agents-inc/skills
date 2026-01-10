@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: backend/observability
+name: Observability
+description: Pino logging, Sentry error tracking, Axiom
+category: backend
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - setup/observability
+  - backend/api
+
+tags:
+  - pino
+  - sentry
+  - axiom
+  - logging
+  - error-tracking
+  - monitoring

@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: setup/env
+name: Environment
+description: Environment configuration, Zod validation
+category: setup
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - security/security
+  - setup/monorepo
+
+tags:
+  - environment
+  - env
+  - configuration
+  - zod
+  - validation
+  - dotenv

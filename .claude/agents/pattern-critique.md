@@ -106,51 +106,51 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### frontend/react
+### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react"`
+- Invoke: `skill: "frontend/react (@vince)"`
 - Use when: when critiquing React patterns against industry standards
 
 
-### frontend/styling
+### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling"`
+- Invoke: `skill: "frontend/scss-modules (@vince)"`
 - Use when: when critiquing styling patterns against industry standards
 
 
-### frontend/client-state
+### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration
-- Invoke: `skill: "frontend/client-state"`
+- Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when critiquing state management patterns against industry standards
 
 
-### backend/api
+### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "backend/api"`
+- Invoke: `skill: "backend/hono (@vince)"`
 - Use when: when critiquing API route patterns against industry standards
 
 
-### backend/authentication
+### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/authentication"`
+- Invoke: `skill: "backend/better-auth (@vince)"`
 - Use when: when critiquing authentication patterns against industry standards
 
 
-### backend/analytics
+### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification
-- Invoke: `skill: "backend/analytics"`
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
 - Use when: when critiquing analytics tracking patterns against industry standards
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when critiquing feature flag patterns against industry standards
 
 
-### backend/observability
+### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom
-- Invoke: `skill: "backend/observability"`
+- Invoke: `skill: "backend/observability (@vince)"`
 - Use when: when critiquing observability patterns against industry standards
 
 

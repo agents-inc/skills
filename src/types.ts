@@ -90,7 +90,7 @@ export interface AgentsConfig {
 export interface ProfileAgentConfig {
   core_prompts: string[]; // Prompt names for beginning of agent
   ending_prompts: string[]; // Prompt names for end of agent
-  skills: SkillReference[]; // Unified skills list (loaded dynamically via Skill tool)
+  skills?: SkillReference[]; // Optional - can come from stack if profile has one
 }
 
 /**
@@ -101,6 +101,8 @@ export interface ProfileConfig {
   name: string;
   description: string;
   claude_md: string;
+  /** Optional stack reference - resolves stack skills for agents without explicit skills */
+  stack?: string;
   agents: Record<string, ProfileAgentConfig>; // Keys determine which agents to compile
 }
 
@@ -147,4 +149,41 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
+}
+
+// =============================================================================
+// Stack Types
+// =============================================================================
+
+/**
+ * Stack configuration from stacks/{stack-id}.yaml
+ * Bundles framework, skills, agents, and philosophy into a single config
+ */
+export interface StackConfig {
+  id: string;
+  name: string;
+  version: string;
+  author: string;
+  description?: string;
+  created?: string;
+  updated?: string;
+  framework: string;
+  /** Map of category names to skill IDs (e.g., { state: "frontend/client-state" }) */
+  skills: Record<string, string>;
+  agents: string[];
+  philosophy?: string;
+  principles?: string[];
+  tags?: string[];
+  overrides?: Record<string, StackOverrideRule>;
+  metrics?: StackMetrics;
+}
+
+export interface StackOverrideRule {
+  alternatives?: string[];
+  locked?: boolean;
+}
+
+export interface StackMetrics {
+  upvotes?: number;
+  downloads?: number;
 }

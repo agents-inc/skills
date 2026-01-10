@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: backend/feature-flags
+name: Feature Flags
+description: PostHog feature flags, rollouts, A/B testing
+category: backend
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - backend/analytics
+
+tags:
+  - posthog
+  - feature-flags
+  - rollouts
+  - ab-testing
+  - experiments

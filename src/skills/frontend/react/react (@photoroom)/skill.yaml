@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: frontend/react-mobx (@photoroom)
+name: React + MobX
+description: MobX observer, stores, i18n for Photoroom webapp
+category: framework
+category_exclusive: true
+author: "@photoroom"
+version: "1.0.0"
+
+compatible_with:
+  - frontend/mobx (@photoroom)
+  - frontend/tailwind (@photoroom)
+
+conflicts_with:
+  - frontend/react
+
+tags:
+  - react
+  - mobx
+  - observer
+  - i18n
+  - photoroom

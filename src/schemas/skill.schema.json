@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/skill.schema.json",
+  "title": "Skill Metadata",
+  "description": "Metadata schema for individual skill.yaml files. Defines dependencies, conflicts, and discoverability information for skills in the Stack Marketplace.",
+  "type": "object",
+  "required": ["id", "name", "category"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the skill in category/name format",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "examples": ["state/zustand", "framework/react", "styling/tailwind"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable display name for the skill",
+      "minLength": 1,
+      "examples": ["Zustand", "React", "Tailwind CSS"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of what this skill teaches",
+      "minLength": 1,
+      "examples": [
+        "Lightweight state management with hooks-based API",
+        "Component architecture, hooks, and React patterns"
+      ]
+    },
+    "category": {
+      "$ref": "#/$defs/SkillCategory",
+      "description": "Category this skill belongs to (framework, state, styling, etc.)"
+    },
+    "category_exclusive": {
+      "type": "boolean",
+      "description": "If true, only one skill from this category can be active. Defaults to true.",
+      "default": true
+    },
+    "requires": {
+      "type": "array",
+      "description": "Hard dependencies - skill IDs or patterns that must be present",
+      "items": {
+        "$ref": "#/$defs/SkillReference"
+      },
+      "uniqueItems": true,
+      "examples": [["framework/*"], ["framework/react", "testing/vitest"]]
+    },
+    "compatible_with": {
+      "type": "array",
+      "description": "Soft recommendations - skills this works well with",
+      "items": {
+        "$ref": "#/$defs/SkillReference"
+      },
+      "uniqueItems": true,
+      "examples": [["framework/react", "framework/vue"]]
+    },
+    "conflicts_with": {
+      "type": "array",
+      "description": "Mutual exclusions - skills that cannot coexist with this one",
+      "items": {
+        "$ref": "#/$defs/SkillReference"
+      },
+      "uniqueItems": true,
+      "examples": [["state/mobx", "state/redux", "state/pinia"]]
+    },
+    "author": {
+      "type": "string",
+      "description": "Author of the skill (for community contributions)",
+      "pattern": "^@[a-z][a-z0-9-]*$",
+      "examples": ["@vince", "@photoroom"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the skill",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.-]+)?(\\+[a-z0-9.-]+)?$",
+      "examples": ["1.0.0", "2.1.0-beta.1"]
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags for discoverability in the marketplace",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "uniqueItems": true,
+      "examples": [["state-management", "hooks", "lightweight"]]
+    }
+  },
+  "$defs": {
+    "SkillCategory": {
+      "type": "string",
+      "description": "Valid skill category names",
+      "enum": [
+        "framework",
+        "state",
+        "styling",
+        "testing",
+        "mocking",
+        "data-fetching",
+        "backend",
+        "frontend",
+        "security",
+        "shared",
+        "setup",
+        "research"
+      ]
+    },
+    "SkillReference": {
+      "type": "string",
+      "description": "Reference to a skill ID or pattern. Patterns use * for wildcards (e.g., framework/* matches any framework skill).",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/([a-z][a-z0-9]*(-[a-z0-9]+)*|\\*)$",
+      "examples": ["framework/react", "state/zustand", "framework/*"]
+    }
+  }
+}

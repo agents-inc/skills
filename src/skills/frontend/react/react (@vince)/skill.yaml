@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: frontend/react
+name: React
+description: Component architecture, hooks, patterns
+category: framework
+category_exclusive: true
+author: "@vince"
+version: "1.0.0"
+
+tags:
+  - react
+  - components
+  - hooks
+  - jsx
+  - tsx

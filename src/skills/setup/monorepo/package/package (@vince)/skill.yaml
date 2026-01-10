@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: setup/package
+name: Package
+description: Internal package conventions, exports
+category: setup
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - setup/monorepo
+  - setup/tooling
+
+tags:
+  - package
+  - exports
+  - conventions
+  - internal-packages
+  - typescript

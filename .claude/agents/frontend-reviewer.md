@@ -121,51 +121,51 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### shared/reviewing
+### shared/reviewing (@vince)
 - Description: Code review patterns, feedback principles
-- Invoke: `skill: "shared/reviewing"`
+- Invoke: `skill: "shared/reviewing (@vince)"`
 - Use when: when reviewing code
 
 
-### frontend/react
+### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react"`
+- Invoke: `skill: "frontend/react (@vince)"`
 - Use when: when reviewing React components
 
 
-### frontend/styling
+### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling"`
+- Invoke: `skill: "frontend/scss-modules (@vince)"`
 - Use when: when reviewing styles
 
 
-### frontend/accessibility
+### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility"`
+- Invoke: `skill: "frontend/accessibility (@vince)"`
 - Use when: when reviewing accessibility
 
 
-### frontend/performance
+### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance"`
+- Invoke: `skill: "frontend/performance (@vince)"`
 - Use when: when reviewing code with potential performance issues
 
 
-### frontend/client-state
+### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration
-- Invoke: `skill: "frontend/client-state"`
+- Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when reviewing state management implementations
 
 
-### backend/analytics
+### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification
-- Invoke: `skill: "backend/analytics"`
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
 - Use when: when reviewing client-side analytics implementations
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when reviewing client-side feature flag implementations
 
 

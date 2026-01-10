@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/stack.schema.json",
+  "title": "Stack Configuration",
+  "description": "Complete tech stack definition for Claude Code. Stacks bundle framework, skills, agents, and philosophy into a single configuration that replaces profiles.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "author",
+    "framework",
+    "skills",
+    "agents"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the stack (kebab-case)",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "examples": ["modern-react", "enterprise-react", "yolo-modern-react"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable display name for the stack",
+      "minLength": 1,
+      "examples": ["Modern React Stack", "Enterprise React Stack", "YOLO Modern React Stack"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the stack (major.minor.patch)",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": ["1.0.0", "2.1.0", "0.1.0-beta"]
+    },
+    "author": {
+      "type": "string",
+      "description": "Stack creator's handle (with @ prefix for usernames)",
+      "minLength": 1,
+      "examples": ["@vince", "@photoroom", "@community-user"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the stack's purpose and use cases (supports multiline)",
+      "minLength": 1,
+      "examples": [
+        "Modern React with Tailwind, Zustand, and React Query.\nMove fast without breaking things."
+      ]
+    },
+    "created": {
+      "type": "string",
+      "description": "Date when the stack was first created (ISO 8601 date format)",
+      "format": "date",
+      "examples": ["2026-01-01"]
+    },
+    "updated": {
+      "type": "string",
+      "description": "Date when the stack was last updated (ISO 8601 date format)",
+      "format": "date",
+      "examples": ["2026-01-08"]
+    },
+    "framework": {
+      "type": "string",
+      "description": "Foundation framework for the stack (defines stack identity)",
+      "minLength": 1,
+      "examples": ["react", "vue", "svelte", "nextjs", "nuxt"]
+    },
+    "skills": {
+      "type": "object",
+      "description": "Map of skill category names to skill names. Categories are slots that can be filled with specific technology skills.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "description": "Skill name within the category",
+        "minLength": 1
+      },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "description": "Category names must be kebab-case"
+      },
+      "examples": [
+        {
+          "state": "zustand",
+          "styling": "tailwind",
+          "testing": "vitest",
+          "mocking": "msw",
+          "data-fetching": "react-query"
+        }
+      ]
+    },
+    "agents": {
+      "type": "array",
+      "description": "List of agent IDs to include in this stack",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "description": "Agent ID (must exist in registry)",
+        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "examples": ["frontend-developer", "frontend-reviewer", "tester", "pm"]
+      }
+    },
+    "philosophy": {
+      "type": "string",
+      "description": "Short guiding principle or motto for the stack",
+      "minLength": 1,
+      "examples": ["Ship fast, iterate faster", "Stability and type safety first"]
+    },
+    "principles": {
+      "type": "array",
+      "description": "Detailed philosophy principles that guide development with this stack",
+      "items": {
+        "type": "string",
+        "description": "A single principle statement",
+        "minLength": 1
+      },
+      "examples": [
+        [
+          "Prefer composition over inheritance",
+          "Use hooks for everything, avoid classes",
+          "Tailwind utilities first, extract components when repeated 3x"
+        ]
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "description": "Keywords for discoverability and filtering",
+      "items": {
+        "type": "string",
+        "description": "A single tag (lowercase, no spaces)",
+        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "examples": [
+        ["react", "typescript", "tailwind", "zustand", "modern", "startup"]
+      ]
+    },
+    "overrides": {
+      "type": "object",
+      "description": "Override rules for each skill category. Defines which skills can be swapped and what alternatives are available.",
+      "additionalProperties": {
+        "$ref": "#/$defs/OverrideRule"
+      },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "description": "Category names must match those in skills"
+      }
+    },
+    "metrics": {
+      "$ref": "#/$defs/Metrics",
+      "description": "Community-driven trust signals (automatically tracked)"
+    }
+  },
+  "$defs": {
+    "OverrideRule": {
+      "type": "object",
+      "description": "Override configuration for a single skill category",
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "type": "array",
+          "description": "List of alternative skill names that can replace the default",
+          "items": {
+            "type": "string",
+            "description": "Alternative skill name",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "examples": [
+            ["scss-modules", "css-in-js"],
+            ["mobx", "redux"]
+          ]
+        },
+        "locked": {
+          "type": "boolean",
+          "description": "If true, this category cannot be overridden (e.g., framework defines stack identity)",
+          "default": false
+        }
+      }
+    },
+    "Metrics": {
+      "type": "object",
+      "description": "Community engagement metrics for the stack",
+      "additionalProperties": false,
+      "properties": {
+        "upvotes": {
+          "type": "integer",
+          "description": "Number of community upvotes",
+          "minimum": 0,
+          "default": 0
+        },
+        "downloads": {
+          "type": "integer",
+          "description": "Number of times the stack has been downloaded/used",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    }
+  }
+}

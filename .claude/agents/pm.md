@@ -110,165 +110,165 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### frontend/react
+### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react"`
+- Invoke: `skill: "frontend/react (@vince)"`
 - Use when: when scoping features that involve React components
 
 
-### frontend/api
+### frontend/react-query (@vince)
 - Description: REST APIs, React Query, data fetching
-- Invoke: `skill: "frontend/api"`
+- Invoke: `skill: "frontend/react-query (@vince)"`
 - Use when: when scoping features that involve data fetching or API integration
 
 
-### frontend/styling
+### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling"`
+- Invoke: `skill: "frontend/scss-modules (@vince)"`
 - Use when: when scoping features that involve styling or theming
 
 
-### frontend/accessibility
+### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility"`
+- Invoke: `skill: "frontend/accessibility (@vince)"`
 - Use when: when scoping features that require accessibility considerations
 
 
-### frontend/client-state
+### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration
-- Invoke: `skill: "frontend/client-state"`
+- Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when scoping features that involve client-side state
 
 
-### frontend/performance
+### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance"`
+- Invoke: `skill: "frontend/performance (@vince)"`
 - Use when: when scoping features with performance requirements
 
 
-### frontend/testing
+### frontend/vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library
-- Invoke: `skill: "frontend/testing"`
+- Invoke: `skill: "frontend/vitest (@vince)"`
 - Use when: when scoping features that require React testing
 
 
-### frontend/mocking
+### frontend/msw (@vince)
 - Description: MSW handlers, browser/server workers, test data
-- Invoke: `skill: "frontend/mocking"`
+- Invoke: `skill: "frontend/msw (@vince)"`
 - Use when: when scoping features that require mocking or test data
 
 
-### backend/api
+### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "backend/api"`
+- Invoke: `skill: "backend/hono (@vince)"`
 - Use when: when scoping features that involve API routes
 
 
-### backend/database
+### backend/drizzle (@vince)
 - Description: Drizzle ORM, queries, migrations
-- Invoke: `skill: "backend/database"`
+- Invoke: `skill: "backend/drizzle (@vince)"`
 - Use when: when scoping features that require database schema changes
 
 
-### backend/ci-cd
+### backend/github-actions (@vince)
 - Description: GitHub Actions, pipelines, deployment
-- Invoke: `skill: "backend/ci-cd"`
+- Invoke: `skill: "backend/github-actions (@vince)"`
 - Use when: when scoping features that affect CI/CD pipelines
 
 
-### backend/performance
+### backend/performance (@vince)
 - Description: Query optimization, caching, indexing
-- Invoke: `skill: "backend/performance"`
+- Invoke: `skill: "backend/performance (@vince)"`
 - Use when: when scoping features with backend performance requirements
 
 
-### backend/testing
+### backend/testing (@vince)
 - Description: API tests, integration tests
-- Invoke: `skill: "backend/testing"`
+- Invoke: `skill: "backend/testing (@vince)"`
 - Use when: when scoping features that require API testing
 
 
-### security/security
+### security/security (@vince)
 - Description: Authentication, authorization, secrets
-- Invoke: `skill: "security/security"`
+- Invoke: `skill: "security/security (@vince)"`
 - Use when: when scoping features that involve authentication or security
 
 
-### shared/reviewing
+### shared/reviewing (@vince)
 - Description: Code review patterns, feedback principles
-- Invoke: `skill: "shared/reviewing"`
+- Invoke: `skill: "shared/reviewing (@vince)"`
 - Use when: when scoping features that require code review considerations
 
 
-### setup/monorepo
+### setup/turborepo (@vince)
 - Description: Turborepo, workspaces, package architecture
-- Invoke: `skill: "setup/monorepo"`
+- Invoke: `skill: "setup/turborepo (@vince)"`
 - Use when: when scoping features that affect monorepo structure
 
 
-### setup/package
+### setup/package (@vince)
 - Description: Internal package conventions, exports
-- Invoke: `skill: "setup/package"`
+- Invoke: `skill: "setup/package (@vince)"`
 - Use when: when scoping features that require new packages
 
 
-### setup/env
+### setup/env (@vince)
 - Description: Environment configuration, Zod validation
-- Invoke: `skill: "setup/env"`
+- Invoke: `skill: "setup/env (@vince)"`
 - Use when: when scoping features that require environment configuration
 
 
-### setup/tooling
+### setup/tooling (@vince)
 - Description: ESLint, Prettier, TypeScript configuration
-- Invoke: `skill: "setup/tooling"`
+- Invoke: `skill: "setup/tooling (@vince)"`
 - Use when: when scoping features that affect build tooling
 
 
-### backend/authentication
+### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/authentication"`
+- Invoke: `skill: "backend/better-auth (@vince)"`
 - Use when: when scoping features that involve authentication
 
 
-### backend/analytics
+### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification
-- Invoke: `skill: "backend/analytics"`
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
 - Use when: when scoping features that require analytics tracking
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when scoping features with rollout or experimentation requirements
 
 
-### backend/email
+### backend/resend (@vince)
 - Description: Resend + React Email templates
-- Invoke: `skill: "backend/email"`
+- Invoke: `skill: "backend/resend (@vince)"`
 - Use when: when scoping features that require email communication
 
 
-### backend/observability
+### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom
-- Invoke: `skill: "backend/observability"`
+- Invoke: `skill: "backend/observability (@vince)"`
 - Use when: when scoping features that require logging or monitoring
 
 
-### setup/posthog
+### setup/posthog-setup (@vince)
 - Description: PostHog analytics and feature flags setup
-- Invoke: `skill: "setup/posthog"`
+- Invoke: `skill: "setup/posthog-setup (@vince)"`
 - Use when: when scoping features that require initial PostHog setup
 
 
-### setup/resend
+### setup/resend-setup (@vince)
 - Description: Resend email setup, domain verification
-- Invoke: `skill: "setup/resend"`
+- Invoke: `skill: "setup/resend-setup (@vince)"`
 - Use when: when scoping features that require initial email setup
 
 
-### setup/observability
+### setup/observability-setup (@vince)
 - Description: Pino, Axiom, Sentry installation
-- Invoke: `skill: "setup/observability"`
+- Invoke: `skill: "setup/observability-setup (@vince)"`
 - Use when: when scoping features that require initial observability setup
 
 

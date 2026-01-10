@@ -135,63 +135,63 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### research/methodology
+### research/research-methodology (@vince)
 - Description: Investigation flow, evidence-based research, structured output
-- Invoke: `skill: "research/methodology"`
+- Invoke: `skill: "research/research-methodology (@vince)"`
 - Use when: when conducting any research task
 
 
-### backend/api
+### backend/hono (@vince)
 - Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "backend/api"`
+- Invoke: `skill: "backend/hono (@vince)"`
 - Use when: when researching API route patterns
 
 
-### backend/database
+### backend/drizzle (@vince)
 - Description: Drizzle ORM, queries, migrations
-- Invoke: `skill: "backend/database"`
+- Invoke: `skill: "backend/drizzle (@vince)"`
 - Use when: when researching database schema or query patterns
 
 
-### backend/authentication
+### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/authentication"`
+- Invoke: `skill: "backend/better-auth (@vince)"`
 - Use when: when researching authentication or session patterns
 
 
-### backend/analytics
+### backend/posthog-analytics (@vince)
 - Description: PostHog event tracking, user identification
-- Invoke: `skill: "backend/analytics"`
+- Invoke: `skill: "backend/posthog-analytics (@vince)"`
 - Use when: when researching analytics tracking patterns
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when researching feature flag patterns
 
 
-### backend/observability
+### backend/observability (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom
-- Invoke: `skill: "backend/observability"`
+- Invoke: `skill: "backend/observability (@vince)"`
 - Use when: when researching logging or monitoring patterns
 
 
-### backend/email
+### backend/resend (@vince)
 - Description: Resend + React Email templates
-- Invoke: `skill: "backend/email"`
+- Invoke: `skill: "backend/resend (@vince)"`
 - Use when: when researching email sending patterns
 
 
-### setup/monorepo
+### setup/turborepo (@vince)
 - Description: Turborepo, workspaces, package architecture
-- Invoke: `skill: "setup/monorepo"`
+- Invoke: `skill: "setup/turborepo (@vince)"`
 - Use when: when researching service architecture in monorepo
 
 
-### setup/env
+### setup/env (@vince)
 - Description: Environment configuration, Zod validation
-- Invoke: `skill: "setup/env"`
+- Invoke: `skill: "setup/env (@vince)"`
 - Use when: when researching environment configuration patterns
 
 

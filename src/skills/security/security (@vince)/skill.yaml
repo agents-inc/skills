@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: security/security
+name: Security
+description: Authentication, authorization, secrets
+category: security
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - backend/authentication
+  - backend/api
+  - setup/env
+
+tags:
+  - security
+  - authentication
+  - authorization
+  - secrets
+  - xss
+  - csrf
+  - input-validation

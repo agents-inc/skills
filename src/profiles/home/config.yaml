@@ -6,10 +6,15 @@ description: Personal projects (SCSS/cva, Zustand, React Query)
 # Profile-specific CLAUDE.md
 claude_md: ./CLAUDE.md
 
+# Stack defines default skills for all agents
+# Agents can override with explicit skills if needed
+stack: modern-react
+
 # =============================================================================
 # Agent Configurations
 # =============================================================================
-# Each agent has: core_prompts, ending_prompts, and skills (unified list)
+# Each agent has: core_prompts, ending_prompts
+# Skills are resolved from stack unless explicitly overridden
 
 agents:
   frontend-developer:
@@ -22,23 +27,23 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when implementing React components
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when implementing styles
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when implementing data fetching, API calls, or React Query integrations
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when implementing Zustand stores or complex client-side state
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when implementing accessible components or ARIA patterns
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when optimizing renders or bundle size
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when implementing client-side authentication flows or protected routes
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when implementing client-side analytics tracking or user identification
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when implementing client-side feature flag evaluation or experiments
 
   backend-developer:
@@ -51,31 +56,31 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when implementing API routes
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when implementing authentication features
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when implementing database queries or migrations
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when implementing deployment pipelines or GitHub Actions
-      - id: backend/performance
+      - id: backend/performance (@vince)
         usage: when optimizing queries, caching, or indexing
-      - id: security/security
+      - id: security/security (@vince)
         usage: when implementing authentication, authorization, or secrets handling
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when implementing analytics event tracking or user identification
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when implementing feature flags, gradual rollouts, or experiments
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when implementing email sending, templates, or notifications
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when implementing logging, error tracking, or monitoring patterns
-      - id: setup/posthog
+      - id: setup/posthog-setup (@vince)
         usage: when setting up PostHog for the first time in a project
-      - id: setup/resend
+      - id: setup/resend-setup (@vince)
         usage: when setting up Resend/email for the first time in a project
-      - id: setup/observability
+      - id: setup/observability-setup (@vince)
         usage: when setting up observability stack for the first time in a project
 
   frontend-reviewer:
@@ -87,21 +92,21 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: shared/reviewing
+      - id: shared/reviewing (@vince)
         usage: when reviewing code
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when reviewing React components
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when reviewing styles
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when reviewing accessibility
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when reviewing code with potential performance issues
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when reviewing state management implementations
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when reviewing client-side analytics implementations
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when reviewing client-side feature flag implementations
 
   backend-reviewer:
@@ -113,25 +118,25 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: shared/reviewing
+      - id: shared/reviewing (@vince)
         usage: when reviewing code
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when reviewing API routes
-      - id: security/security
+      - id: security/security (@vince)
         usage: when reviewing security implementations
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when reviewing database queries or schema changes
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when reviewing CI/CD configurations or deployment code
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when reviewing authentication implementations
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when reviewing analytics implementations
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when reviewing feature flag implementations
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when reviewing email sending implementations
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when reviewing logging or error handling implementations
 
   tester:
@@ -144,19 +149,19 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when writing React component tests
-      - id: backend/testing
+      - id: backend/testing (@vince)
         usage: when writing API or integration tests
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when setting up mocks
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when writing accessibility-focused tests
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when writing performance benchmark tests
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when writing tests for authentication flows
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when writing tests involving feature flag behavior
 
   pm:
@@ -169,63 +174,63 @@ agents:
       - improvement-protocol
     skills:
       # Frontend skills
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when scoping features that involve React components
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when scoping features that involve data fetching or API integration
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when scoping features that involve styling or theming
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when scoping features that require accessibility considerations
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when scoping features that involve client-side state
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when scoping features with performance requirements
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when scoping features that require React testing
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when scoping features that require mocking or test data
       # Backend skills
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when scoping features that involve API routes
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when scoping features that require database schema changes
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when scoping features that affect CI/CD pipelines
-      - id: backend/performance
+      - id: backend/performance (@vince)
         usage: when scoping features with backend performance requirements
-      - id: backend/testing
+      - id: backend/testing (@vince)
         usage: when scoping features that require API testing
       # Security and shared
-      - id: security/security
+      - id: security/security (@vince)
         usage: when scoping features that involve authentication or security
-      - id: shared/reviewing
+      - id: shared/reviewing (@vince)
         usage: when scoping features that require code review considerations
       # Setup skills
-      - id: setup/monorepo
+      - id: setup/turborepo (@vince)
         usage: when scoping features that affect monorepo structure
-      - id: setup/package
+      - id: setup/package (@vince)
         usage: when scoping features that require new packages
-      - id: setup/env
+      - id: setup/env (@vince)
         usage: when scoping features that require environment configuration
-      - id: setup/tooling
+      - id: setup/tooling (@vince)
         usage: when scoping features that affect build tooling
       # Production skills
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when scoping features that involve authentication
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when scoping features that require analytics tracking
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when scoping features with rollout or experimentation requirements
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when scoping features that require email communication
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when scoping features that require logging or monitoring
-      - id: setup/posthog
+      - id: setup/posthog-setup (@vince)
         usage: when scoping features that require initial PostHog setup
-      - id: setup/resend
+      - id: setup/resend-setup (@vince)
         usage: when scoping features that require initial email setup
-      - id: setup/observability
+      - id: setup/observability-setup (@vince)
         usage: when scoping features that require initial observability setup
 
   skill-summoner:
@@ -239,57 +244,57 @@ agents:
       - improvement-protocol
     skills:
       # Frontend skills
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when creating or improving skills related to React components or hooks
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when creating or improving skills related to CSS or styling patterns
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when creating or improving skills related to data fetching or API integration
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when creating or improving skills related to state management
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when creating or improving skills related to accessibility
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when creating or improving skills related to frontend performance
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when creating or improving skills related to React testing
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when creating or improving skills related to mocking or test data
       # Backend skills
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when creating or improving skills related to API routes or endpoints
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when creating or improving skills related to database operations
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when creating or improving skills related to CI/CD pipelines
-      - id: backend/performance
+      - id: backend/performance (@vince)
         usage: when creating or improving skills related to backend performance
-      - id: backend/testing
+      - id: backend/testing (@vince)
         usage: when creating or improving skills related to API testing
       # Security and shared
-      - id: security/security
+      - id: security/security (@vince)
         usage: when creating or improving skills related to authentication or security
-      - id: shared/reviewing
+      - id: shared/reviewing (@vince)
         usage: when creating or improving skills related to code review
       # Setup skills
-      - id: setup/monorepo
+      - id: setup/turborepo (@vince)
         usage: when creating or improving skills related to monorepo structure
-      - id: setup/package
+      - id: setup/package (@vince)
         usage: when creating or improving skills related to package conventions
-      - id: setup/env
+      - id: setup/env (@vince)
         usage: when creating or improving skills related to environment configuration
-      - id: setup/tooling
+      - id: setup/tooling (@vince)
         usage: when creating or improving skills related to build tooling
       # Production skills
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when creating or improving skills related to authentication
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when creating or improving skills related to analytics
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when creating or improving skills related to feature flags
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when creating or improving skills related to email
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when creating or improving skills related to observability
 
   agent-summoner:
@@ -303,57 +308,57 @@ agents:
       - improvement-protocol
     skills:
       # Frontend skills
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when creating or improving agents that work with React components
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when creating or improving agents that work with styling
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when creating or improving agents that work with API integration
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when creating or improving agents that work with state management
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when creating or improving agents that work with accessibility
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when creating or improving agents that work with frontend performance
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when creating or improving agents that work with React testing
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when creating or improving agents that work with mocking
       # Backend skills
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when creating or improving agents that work with API routes
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when creating or improving agents that work with databases
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when creating or improving agents that work with CI/CD
-      - id: backend/performance
+      - id: backend/performance (@vince)
         usage: when creating or improving agents that work with backend performance
-      - id: backend/testing
+      - id: backend/testing (@vince)
         usage: when creating or improving agents that work with API testing
       # Security and shared
-      - id: security/security
+      - id: security/security (@vince)
         usage: when creating or improving agents that work with authentication or security
-      - id: shared/reviewing
+      - id: shared/reviewing (@vince)
         usage: when creating or improving reviewer agents
       # Setup skills
-      - id: setup/monorepo
+      - id: setup/turborepo (@vince)
         usage: when creating or improving agents that work with monorepo structure
-      - id: setup/package
+      - id: setup/package (@vince)
         usage: when creating or improving agents that work with package conventions
-      - id: setup/env
+      - id: setup/env (@vince)
         usage: when creating or improving agents that work with environment configuration
-      - id: setup/tooling
+      - id: setup/tooling (@vince)
         usage: when creating or improving agents that work with build tooling
       # Production skills
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when creating or improving agents that work with authentication
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when creating or improving agents that work with analytics
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when creating or improving agents that work with feature flags
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when creating or improving agents that work with email
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when creating or improving agents that work with logging or monitoring
 
   pattern-scout:
@@ -366,23 +371,23 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when comparing React component architecture patterns
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when comparing CSS methodology or design token patterns
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when comparing API route or endpoint patterns
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when comparing database schema or query patterns
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when identifying authentication patterns in codebases
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when identifying analytics tracking patterns in codebases
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when identifying feature flag patterns in codebases
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when identifying email infrastructure patterns in codebases
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when identifying observability patterns in codebases
 
   pattern-critique:
@@ -394,21 +399,21 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when critiquing React patterns against industry standards
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when critiquing styling patterns against industry standards
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when critiquing state management patterns against industry standards
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when critiquing API route patterns against industry standards
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when critiquing authentication patterns against industry standards
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when critiquing analytics tracking patterns against industry standards
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when critiquing feature flag patterns against industry standards
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when critiquing observability patterns against industry standards
 
   documentor:
@@ -421,64 +426,64 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: setup/monorepo
+      - id: setup/turborepo (@vince)
         usage: when documenting monorepo structure
-      - id: setup/package
+      - id: setup/package (@vince)
         usage: when documenting package conventions
       # Frontend skills
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when documenting React component architecture or patterns
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when documenting styling architecture or patterns
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when documenting API integration architecture
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when documenting state management architecture
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when documenting accessibility patterns
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when documenting frontend performance patterns
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when documenting React testing patterns
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when documenting mocking patterns
       # Backend skills
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when documenting API route architecture
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when documenting database architecture
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when documenting CI/CD patterns
-      - id: backend/performance
+      - id: backend/performance (@vince)
         usage: when documenting backend performance patterns
-      - id: backend/testing
+      - id: backend/testing (@vince)
         usage: when documenting API testing patterns
       # Security and shared
-      - id: security/security
+      - id: security/security (@vince)
         usage: when documenting security architecture
-      - id: shared/reviewing
+      - id: shared/reviewing (@vince)
         usage: when documenting code review processes
       # Setup skills
-      - id: setup/env
+      - id: setup/env (@vince)
         usage: when documenting environment configuration
-      - id: setup/tooling
+      - id: setup/tooling (@vince)
         usage: when documenting build tooling
       # Production skills
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when documenting authentication architecture
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when documenting analytics architecture
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when documenting feature flag architecture
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when documenting email infrastructure
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when documenting observability architecture
-      - id: setup/posthog
+      - id: setup/posthog-setup (@vince)
         usage: when documenting PostHog setup procedures
-      - id: setup/resend
+      - id: setup/resend-setup (@vince)
         usage: when documenting email setup procedures
-      - id: setup/observability
+      - id: setup/observability-setup (@vince)
         usage: when documenting observability setup procedures
 
   architecture:
@@ -491,39 +496,39 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: setup/monorepo
+      - id: setup/turborepo (@vince)
         usage: when scaffolding monorepo apps
-      - id: setup/package
+      - id: setup/package (@vince)
         usage: when scaffolding packages
-      - id: setup/env
+      - id: setup/env (@vince)
         usage: when setting up environment configuration
-      - id: setup/tooling
+      - id: setup/tooling (@vince)
         usage: when setting up build tooling
-      - id: setup/posthog
+      - id: setup/posthog-setup (@vince)
         usage: when setting up PostHog
-      - id: setup/observability
+      - id: setup/observability-setup (@vince)
         usage: when setting up observability stack
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when scaffolding API client layer
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when scaffolding mock data package
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when scaffolding test infrastructure
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when scaffolding API routes
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when scaffolding database layer
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when scaffolding authentication
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when scaffolding analytics
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when scaffolding feature flags
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when scaffolding observability
-      - id: backend/ci-cd
+      - id: backend/github-actions (@vince)
         usage: when scaffolding CI/CD workflows
-      - id: security/security
+      - id: security/security (@vince)
         usage: when considering security patterns
 
   orchestrator:
@@ -545,24 +550,24 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: research/methodology
+      - id: research/research-methodology (@vince)
         usage: when conducting any research task
       # Frontend skills only - this is a frontend-focused researcher
-      - id: frontend/react
+      - id: frontend/react (@vince)
         usage: when researching React component patterns or architecture
-      - id: frontend/styling
+      - id: frontend/scss-modules (@vince)
         usage: when researching styling patterns, tokens, or theming
-      - id: frontend/api
+      - id: frontend/react-query (@vince)
         usage: when researching data fetching or API integration patterns
-      - id: frontend/client-state
+      - id: frontend/zustand (@vince)
         usage: when researching state management patterns
-      - id: frontend/accessibility
+      - id: frontend/accessibility (@vince)
         usage: when researching accessibility patterns
-      - id: frontend/performance
+      - id: frontend/performance (@vince)
         usage: when researching performance patterns
-      - id: frontend/testing
+      - id: frontend/vitest (@vince)
         usage: when researching testing patterns
-      - id: frontend/mocking
+      - id: frontend/msw (@vince)
         usage: when researching mocking patterns
 
   backend-researcher:
@@ -574,25 +579,25 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: research/methodology
+      - id: research/research-methodology (@vince)
         usage: when conducting any research task
       # Backend skills only - this is a backend-focused researcher
-      - id: backend/api
+      - id: backend/hono (@vince)
         usage: when researching API route patterns
-      - id: backend/database
+      - id: backend/drizzle (@vince)
         usage: when researching database schema or query patterns
-      - id: backend/authentication
+      - id: backend/better-auth (@vince)
         usage: when researching authentication or session patterns
-      - id: backend/analytics
+      - id: backend/posthog-analytics (@vince)
         usage: when researching analytics tracking patterns
-      - id: backend/feature-flags
+      - id: backend/posthog-flags (@vince)
         usage: when researching feature flag patterns
-      - id: backend/observability
+      - id: backend/observability (@vince)
         usage: when researching logging or monitoring patterns
-      - id: backend/email
+      - id: backend/resend (@vince)
         usage: when researching email sending patterns
       # Setup skills useful for backend research
-      - id: setup/monorepo
+      - id: setup/turborepo (@vince)
         usage: when researching service architecture in monorepo
-      - id: setup/env
+      - id: setup/env (@vince)
         usage: when researching environment configuration patterns

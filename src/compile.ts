@@ -26,6 +26,7 @@ import type {
   RegistryConfig,
   Skill,
   SkillReference,
+  StackConfig,
   ValidationResult,
 } from "./types";
 
@@ -105,13 +106,97 @@ function resolveSkillReferences(
 }
 
 // =============================================================================
+// Stack Resolution (resolve stack skills to skill references)
+// =============================================================================
+
+/** Cache for loaded stacks to avoid re-reading files */
+const stackCache = new Map<string, StackConfig>();
+
+/**
+ * Load a stack configuration from src/stacks/{stackId}.yaml
+ */
+async function loadStack(stackId: string): Promise<StackConfig> {
+  // Check cache first
+  const cached = stackCache.get(stackId);
+  if (cached) {
+    return cached;
+  }
+
+  const stackPath = `${ROOT}/stacks/${stackId}.yaml`;
+  try {
+    const content = await readFile(stackPath);
+    const stack = parseYaml(content) as StackConfig;
+    stackCache.set(stackId, stack);
+    log(`Loaded stack: ${stack.name} (${stackId})`);
+    return stack;
+  } catch (error) {
+    throw new Error(`Failed to load stack "${stackId}": ${error}`);
+  }
+}
+
+/**
+ * Resolve a stack's skills to skill references
+ * Stack skills format: { category: "skill-id" }
+ * Returns: SkillReference[] with generic usage descriptions
+ */
+function resolveStackSkills(
+  stack: StackConfig,
+  registry: RegistryConfig
+): SkillReference[] {
+  const skillRefs: SkillReference[] = [];
+
+  for (const [category, skillId] of Object.entries(stack.skills)) {
+    // Validate skill exists in registry
+    if (!registry.skills[skillId]) {
+      throw new Error(
+        `Stack "${stack.id}" references skill "${skillId}" (category: ${category}) not found in registry`
+      );
+    }
+
+    const skillDef = registry.skills[skillId];
+    skillRefs.push({
+      id: skillId,
+      usage: `when working with ${skillDef.name.toLowerCase()} (${category})`,
+    });
+  }
+
+  return skillRefs;
+}
+
+/**
+ * Get skills for an agent, preferring explicit skills over stack skills
+ * If agent has explicit skills, use those; otherwise use stack skills
+ */
+async function getAgentSkills(
+  agentName: string,
+  profileAgentConfig: ProfileAgentConfig,
+  profileConfig: ProfileConfig,
+  registry: RegistryConfig
+): Promise<SkillReference[]> {
+  // If agent has explicit skills defined, use those
+  if (profileAgentConfig.skills && profileAgentConfig.skills.length > 0) {
+    return profileAgentConfig.skills;
+  }
+
+  // If profile has a stack and agent has no explicit skills, resolve from stack
+  if (profileConfig.stack) {
+    console.log(`  📦 Resolving skills from stack "${profileConfig.stack}" for ${agentName}`);
+    const stack = await loadStack(profileConfig.stack);
+    return resolveStackSkills(stack, registry);
+  }
+
+  // No skills defined and no stack - return empty array
+  return [];
+}
+
+// =============================================================================
 // Agent Resolution (merge registry.yaml agents + profile config)
 // =============================================================================
 
-function resolveAgents(
+async function resolveAgents(
   registry: RegistryConfig,
   profileConfig: ProfileConfig
-): Record<string, AgentConfig> {
+): Promise<Record<string, AgentConfig>> {
   const resolved: Record<string, AgentConfig> = {};
 
   // Derive agents to compile from profile agents keys
@@ -128,11 +213,16 @@ function resolveAgents(
     // Get profile-specific agent config
     const profileAgentConfig = profileConfig.agents[agentName];
 
-    // Resolve skill references
-    const skills = resolveSkillReferences(
-      profileAgentConfig.skills || [],
+    // Get skills (from explicit config or stack)
+    const skillRefs = await getAgentSkills(
+      agentName,
+      profileAgentConfig,
+      profileConfig,
       registry
     );
+
+    // Resolve skill references to full skill objects
+    const skills = resolveSkillReferences(skillRefs, registry);
 
     // Merge definition with profile config
     resolved[agentName] = {
@@ -214,7 +304,8 @@ async function validate(
         );
         continue;
       }
-      const basePath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
+      // Skills are now in central src/skills/ directory
+      const basePath = `${ROOT}/${skill.path}`;
       const isFolder = skill.path.endsWith("/");
 
       if (isFolder) {
@@ -368,7 +459,8 @@ async function compileAllSkills(
     const outDir = `${OUT}/skills/${id}`;
     await Bun.$`mkdir -p ${outDir}`;
 
-    const sourcePath = `${ROOT}/profiles/${PROFILE}/${skill.path}`;
+    // Skills are now in central src/skills/ directory
+    const sourcePath = `${ROOT}/${skill.path}`;
     const isFolder = skill.path.endsWith("/");
 
     try {
@@ -505,7 +597,7 @@ async function main(): Promise<void> {
   // Resolve agents (merge definitions with profile config)
   let resolvedAgents: Record<string, AgentConfig>;
   try {
-    resolvedAgents = resolveAgents(registry, profileConfig);
+    resolvedAgents = await resolveAgents(registry, profileConfig);
     log(`Resolved ${Object.keys(resolvedAgents).length} agents for profile`);
   } catch (error) {
     console.error(`❌ Failed to resolve agents:`);

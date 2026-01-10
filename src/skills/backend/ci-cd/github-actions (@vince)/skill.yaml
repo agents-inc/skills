@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: backend/ci-cd
+name: CI/CD
+description: GitHub Actions, pipelines, deployment
+category: backend
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - setup/monorepo
+  - setup/tooling
+
+tags:
+  - github-actions
+  - pipelines
+  - deployment
+  - ci
+  - cd
+  - automation

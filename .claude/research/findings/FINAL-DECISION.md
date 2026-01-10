@@ -4,6 +4,120 @@
 
 ---
 
+## Implementation Progress (2026-01-09)
+
+### Phase 1: Restructure ✅ COMPLETE
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Create central `src/skills/` directory | ✅ Done | Skills moved from profiles to central location |
+| Move skills from profiles | ✅ Done | 26 skills migrated |
+| Update registry.yaml paths | ✅ Done | Paths already used `skills/` prefix |
+| Update compile.ts paths | ✅ Done | Changed from `profiles/${PROFILE}/skills/` to `src/skills/` |
+| Verify compilation | ✅ Done | All 15 agents compile successfully |
+
+### Phase 2: Stack Logic ✅ COMPLETE
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Create stack.schema.json | ✅ Done | Full schema with overrides, metrics, philosophy |
+| Create skill.schema.json | ✅ Done | Includes requires, conflicts_with, compatible_with |
+| Add skill.yaml metadata to all skills | ✅ Done | 26 skill.yaml files created |
+| Add stack resolution to compile.ts | ✅ Done | Profiles can now use `stack:` field |
+| Create initial stack definitions | ✅ Done | `modern-react.yaml`, `minimal-react.yaml` |
+
+### Phase 3: CLI Commands ⏳ PENDING
+
+> **Note**: Phase 3 requires discussion before implementation.
+
+| Task | Status | Notes |
+|------|--------|-------|
+| `claude-stacks list` | Pending | Browse available stacks |
+| `claude-stacks use <id>` | Pending | Select a stack for profile |
+| `claude-stacks build` | Pending | Interactive stack builder wizard |
+| `claude-stacks export` | Pending | Export current profile as stack |
+
+### New Directory Structure
+
+```
+src/
+├── skills/                              # Categorized with publisher naming
+│   ├── frontend/
+│   │   ├── react (@vince)/              # React patterns (SCSS/cva stack)
+│   │   ├── scss-modules (@vince)/       # SCSS Modules + cva
+│   │   ├── zustand (@vince)/            # Zustand state management
+│   │   ├── react-query (@vince)/        # React Query data fetching
+│   │   ├── vitest (@vince)/             # Vitest + Playwright + RTL
+│   │   ├── msw (@vince)/                # MSW mocking
+│   │   ├── accessibility (@vince)/      # WCAG, ARIA patterns
+│   │   ├── performance (@vince)/        # Bundle optimization
+│   │   ├── react-mobx (@photoroom)/     # React + MobX patterns
+│   │   ├── tailwind (@photoroom)/       # Tailwind CSS patterns
+│   │   ├── mobx (@photoroom)/           # MobX state management
+│   │   └── react-query-mobx (@photoroom)/ # React Query + MobX bridge
+│   ├── backend/
+│   │   ├── hono (@vince)/               # Hono API routes
+│   │   ├── drizzle (@vince)/            # Drizzle ORM
+│   │   ├── better-auth (@vince)/        # Better Auth patterns
+│   │   ├── posthog-analytics (@vince)/  # PostHog analytics
+│   │   ├── posthog-flags (@vince)/      # PostHog feature flags
+│   │   ├── resend (@vince)/             # Resend email
+│   │   ├── observability (@vince)/      # Pino, Sentry, Axiom
+│   │   ├── github-actions (@vince)/     # CI/CD patterns
+│   │   ├── performance (@vince)/        # Query optimization
+│   │   └── testing (@vince)/            # API testing
+│   ├── security/
+│   │   └── security (@vince)/           # Auth, secrets, XSS/CSRF
+│   ├── setup/
+│   │   ├── turborepo (@vince)/          # Monorepo patterns
+│   │   ├── package (@vince)/            # Package conventions
+│   │   ├── env (@vince)/                # Environment config
+│   │   ├── tooling (@vince)/            # ESLint, Prettier, TS
+│   │   ├── posthog-setup (@vince)/      # PostHog setup
+│   │   ├── resend-setup (@vince)/       # Resend setup
+│   │   └── observability-setup (@vince)/ # Observability setup
+│   ├── shared/
+│   │   └── reviewing (@vince)/          # Code review patterns
+│   └── research/
+│       └── research-methodology (@vince)/ # Investigation patterns
+├── stacks/
+│   ├── modern-react.yaml                # @vince: SCSS + Zustand + React Query
+│   ├── minimal-react.yaml               # @vince: Minimal frontend-only
+│   └── photoroom-webapp.yaml            # @photoroom: Tailwind + MobX
+├── schemas/
+│   ├── stack.schema.json                # Stack validation
+│   └── skill.schema.json                # Skill metadata validation
+└── compile.ts                           # Updated with stack resolution
+```
+
+### Skill Naming Convention
+
+Skills use the format: `category/technology-name (@publisher)`
+
+**Examples:**
+- `frontend/react (@vince)` - React patterns by @vince
+- `frontend/mobx (@photoroom)` - MobX patterns by @photoroom
+- `backend/hono (@vince)` - Hono API routes by @vince
+
+This enables:
+- Clear categorization by domain (frontend, backend, etc.)
+- Community contributions with clear attribution
+- Multiple implementations of the same technology
+- Stack selection based on philosophy/author preference
+
+---
+
+> **UPDATE 2026-01-09**: This document has been superseded by **[STACK-MARKETPLACE-ARCHITECTURE.md](./STACK-MARKETPLACE-ARCHITECTURE.md)** for architectural decisions. Key changes:
+> - **Stacks now replace profiles entirely** (not separate concepts)
+> - **Skills are atomic** - no bleeding between skills (67% of cross-refs removable)
+> - **Framework as foundation** - everything else as siblings (no integrations layer)
+> - **Stacks ARE versioned** (changed from earlier "no versioning" decision)
+> - **Skill naming simplified** - `technology-name (@publisher)` format
+>
+> The decisions below about community, upvotes, and quality signals remain valid.
+
+---
+
 ## Executive Summary
 
 The Stack Marketplace is a CLI-first platform for browsing, selecting, and contributing pre-configured Claude Code skill/agent combinations ("stacks"). After three research rounds (Open Source Strategy, Community Registry, Stack Marketplace), the user has confirmed a **community-ready-from-day-1** approach with **upvote-only quality signals** and **no tiered badges**. All features will be built incrementally over 1-2 days **before launch**, not as a post-launch evolution roadmap. The project differentiates itself by offering what no existing tool provides: community-created stacks with voting, smart cascading filters based on framework choices, and named stacks with philosophical identities.

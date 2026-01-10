@@ -119,45 +119,45 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### frontend/testing
+### frontend/vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library
-- Invoke: `skill: "frontend/testing"`
+- Invoke: `skill: "frontend/vitest (@vince)"`
 - Use when: when writing React component tests
 
 
-### backend/testing
+### backend/testing (@vince)
 - Description: API tests, integration tests
-- Invoke: `skill: "backend/testing"`
+- Invoke: `skill: "backend/testing (@vince)"`
 - Use when: when writing API or integration tests
 
 
-### frontend/mocking
+### frontend/msw (@vince)
 - Description: MSW handlers, browser/server workers, test data
-- Invoke: `skill: "frontend/mocking"`
+- Invoke: `skill: "frontend/msw (@vince)"`
 - Use when: when setting up mocks
 
 
-### frontend/accessibility
+### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility"`
+- Invoke: `skill: "frontend/accessibility (@vince)"`
 - Use when: when writing accessibility-focused tests
 
 
-### frontend/performance
+### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance"`
+- Invoke: `skill: "frontend/performance (@vince)"`
 - Use when: when writing performance benchmark tests
 
 
-### backend/authentication
+### backend/better-auth (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/authentication"`
+- Invoke: `skill: "backend/better-auth (@vince)"`
 - Use when: when writing tests for authentication flows
 
 
-### backend/feature-flags
+### backend/posthog-flags (@vince)
 - Description: PostHog feature flags, rollouts, A/B testing
-- Invoke: `skill: "backend/feature-flags"`
+- Invoke: `skill: "backend/posthog-flags (@vince)"`
 - Use when: when writing tests involving feature flag behavior
 
 

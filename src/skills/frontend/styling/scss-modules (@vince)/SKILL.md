@@ -1,0 +1,211 @@
+---
+name: frontend/scss-modules (@vince)
+description: SCSS Modules, cva, design tokens
+---
+
+# Styling & Design System
+
+> **Quick Guide:** Two-tier token system (Core primitives -> Semantic tokens). Foreground/background color pairs. Components use semantic tokens only. SCSS Modules + CSS Cascade Layers. HSL format. Dark mode via `.dark` class with mixin. Data-attributes for state. Self-contained (no external dependencies).
+
+---
+
+<critical_requirements>
+
+## CRITICAL: Before Using This Skill
+
+> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+
+**(You MUST wrap ALL UI package component styles in `@layer components {}` for proper cascade precedence)**
+
+**(You MUST use semantic tokens ONLY in components - NEVER use core tokens directly)**
+
+**(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
+
+**(You MUST use data-attributes for state styling - NOT className toggling)**
+
+**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
+
+</critical_requirements>
+
+---
+
+**Auto-detection:** UI components, styling patterns, design tokens, SCSS modules, CSS Cascade Layers, dark mode theming
+
+**When to use:**
+
+- Implementing design tokens and theming
+- Building component styles with SCSS Modules
+- Ensuring visual consistency across applications
+- Working with colors, spacing, typography
+- Implementing dark mode with class-based theming
+- Setting up CSS Cascade Layers for predictable style precedence
+
+**Key patterns covered:**
+
+- Two-tier token system (Core -> Semantic)
+- SCSS Module patterns with CSS Cascade Layers
+- Color system (HSL format, semantic naming, foreground/background pairs)
+- Spacing and typography systems
+- Dark mode implementation (`.dark` class with mixin pattern)
+- Component structure and organization
+
+**When NOT to use:**
+
+- One-off prototypes without design system needs (use inline styles or basic CSS)
+- External component libraries with their own theming (Material-UI, Chakra)
+- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
+
+**Detailed Resources:**
+- For code examples, see [examples.md](examples.md)
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+
+---
+
+<philosophy>
+
+## Philosophy
+
+The design system follows a **self-contained, two-tier token architecture** where core primitives (raw HSL values, base sizes) map to semantic tokens (purpose-driven names). Components consume only semantic tokens, enabling theme changes without component modifications.
+
+**Core Principles:**
+
+- **Self-contained:** No external dependencies (no Open Props, no Tailwind for tokens)
+- **Two-tier system:** Core tokens provide raw values, semantic tokens provide meaning
+- **HSL-first:** Use modern CSS color functions, not Sass color manipulation
+- **Layer-based:** CSS Cascade Layers ensure predictable style precedence across monorepo
+- **Theme-agnostic components:** Components use semantic tokens and adapt automatically to light/dark mode
+
+</philosophy>
+
+---
+
+<patterns>
+
+## Core Patterns
+
+### Pattern 1: Two-Tier Token System
+
+The design system uses a two-tier token architecture: **Tier 1 (Core tokens)** provides raw values, **Tier 2 (Semantic tokens)** references core tokens with purpose-driven names.
+
+#### Token Architecture
+
+**Location:** `packages/ui/src/styles/design-tokens.scss`
+
+**Tier 1: Core tokens** - Raw HSL values, base sizes, primitives
+
+```scss
+--color-white: 0 0% 100%;
+--color-gray-900: 222 47% 11%;
+--color-red-500: 0 84% 60%;
+--space-unit: 0.2rem;
+```
+
+**Tier 2: Semantic tokens** - Reference core tokens with purpose-driven names
+
+```scss
+--color-background-base: var(--color-white);
+--color-text-default: var(--color-gray-500);
+--color-primary: var(--color-gray-900);
+--color-primary-foreground: var(--color-white);
+--color-destructive: var(--color-red-500);
+```
+
+**Why this matters:** Semantic tokens make purpose clear (what the token is for), theme changes only update token values (not component code), components remain theme-agnostic.
+
+For complete implementation examples, see [examples.md](examples.md#pattern-1-two-tier-token-system).
+
+---
+
+### Pattern 2: HSL Color Format with CSS Color Functions
+
+Store HSL values without the `hsl()` wrapper in tokens, apply `hsl()` wrapper when using tokens, and use modern CSS color functions for transparency and color mixing.
+
+#### Color Format Rules
+
+- Store HSL values without `hsl()` wrapper: `--color-gray-900: 222 47% 11%;`
+- Use `hsl()` wrapper when applying: `background-color: hsl(var(--color-primary))`
+- Use CSS color functions for derived colors:
+  - Transparency: `hsl(var(--color-primary) / 0.5)` or `hsl(from var(--color-primary) h s l / 0.5)`
+  - Color mixing: `color-mix(in srgb, hsl(var(--color-primary)), white 10%)`
+- **NEVER use Sass color functions:** No `darken()`, `lighten()`, `transparentize()`
+- Always use semantic color tokens (not raw HSL in components)
+
+**Why HSL:** HSL format eliminates Sass dependencies, CSS color functions work natively in browsers, semantic naming clarifies purpose (not just value), theme changes update token values without touching components.
+
+For complete implementation examples, see [examples.md](examples.md#pattern-2-hsl-color-format-with-css-color-functions).
+
+---
+
+### Pattern 3: CSS Cascade Layers for Predictable Precedence
+
+Use CSS Cascade Layers to control style precedence across the monorepo, ensuring UI package components have lower priority than app-specific overrides.
+
+#### Layer Hierarchy (lowest -> highest priority)
+
+1. `@layer reset` - Browser resets and normalizations
+2. `@layer components` - Design system component styles (UI package)
+3. Unlayered styles - App-specific overrides (highest priority)
+
+#### Key Rules
+
+- **UI package components:** Always wrap in `@layer components {}`
+- **App-specific styles:** Never wrap in layers (unlayered = highest priority)
+- **Layer declaration:** Import `layers.scss` first to declare layer order
+
+**Why layers:** Wrapping in `@layer components {}` ensures app styles can override without specificity wars, loading order becomes irrelevant, predictable precedence across monorepo.
+
+For complete implementation examples, see [examples.md](examples.md#pattern-3-css-cascade-layers-for-predictable-precedence).
+
+---
+
+### Pattern 4: Dark Mode with `.dark` Class and Mixin
+
+Implement dark mode by adding `.dark` class to root element, which overrides semantic tokens. Use mixin pattern for organization.
+
+#### Key Principles
+
+- Components remain **theme-agnostic** (no theme logic in component code)
+- Semantic tokens provide indirection between theme and components
+- Only override **Tier 2 semantic tokens** in `.dark` class, never Tier 1 core tokens
+- Theme switching is instant (just CSS variable changes)
+
+For complete implementation examples, see [examples.md](examples.md#pattern-4-dark-mode-with-dark-class-and-mixin).
+
+---
+
+### Additional Patterns
+
+The following patterns are documented with full examples in [examples.md](examples.md):
+
+- **Pattern 5:** SCSS Module Structure with Cascade Layers
+- **Pattern 6:** Spacing System with Semantic Tokens
+- **Pattern 7:** Typography System with REM-Based Sizing
+- **Pattern 8:** Data-Attributes for State Styling
+- **Pattern 9:** SCSS Mixins for Reusable Patterns
+- **Pattern 10:** Global Styles Organization
+- **Pattern 11:** Icon Styling with lucide-react
+- **Pattern 12:** Advanced CSS Features
+
+</patterns>
+
+---
+
+<critical_reminders>
+
+## CRITICAL REMINDERS
+
+> **All code must follow project conventions in CLAUDE.md**
+
+**(You MUST wrap ALL UI package component styles in `@layer components {}` for proper cascade precedence)**
+
+**(You MUST use semantic tokens ONLY in components - NEVER use core tokens directly)**
+
+**(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
+
+**(You MUST use data-attributes for state styling - NOT className toggling)**
+
+**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
+
+**Failure to follow these rules will break theming, create cascade precedence issues, and violate design system conventions.**
+
+</critical_reminders>

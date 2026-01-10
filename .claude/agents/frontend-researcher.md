@@ -132,57 +132,57 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 ## Available Skills
 
 
-### research/methodology
+### research/research-methodology (@vince)
 - Description: Investigation flow, evidence-based research, structured output
-- Invoke: `skill: "research/methodology"`
+- Invoke: `skill: "research/research-methodology (@vince)"`
 - Use when: when conducting any research task
 
 
-### frontend/react
+### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react"`
+- Invoke: `skill: "frontend/react (@vince)"`
 - Use when: when researching React component patterns or architecture
 
 
-### frontend/styling
+### frontend/scss-modules (@vince)
 - Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling"`
+- Invoke: `skill: "frontend/scss-modules (@vince)"`
 - Use when: when researching styling patterns, tokens, or theming
 
 
-### frontend/api
+### frontend/react-query (@vince)
 - Description: REST APIs, React Query, data fetching
-- Invoke: `skill: "frontend/api"`
+- Invoke: `skill: "frontend/react-query (@vince)"`
 - Use when: when researching data fetching or API integration patterns
 
 
-### frontend/client-state
+### frontend/zustand (@vince)
 - Description: Zustand stores, React Query integration
-- Invoke: `skill: "frontend/client-state"`
+- Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when researching state management patterns
 
 
-### frontend/accessibility
+### frontend/accessibility (@vince)
 - Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility"`
+- Invoke: `skill: "frontend/accessibility (@vince)"`
 - Use when: when researching accessibility patterns
 
 
-### frontend/performance
+### frontend/performance (@vince)
 - Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance"`
+- Invoke: `skill: "frontend/performance (@vince)"`
 - Use when: when researching performance patterns
 
 
-### frontend/testing
+### frontend/vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library
-- Invoke: `skill: "frontend/testing"`
+- Invoke: `skill: "frontend/vitest (@vince)"`
 - Use when: when researching testing patterns
 
 
-### frontend/mocking
+### frontend/msw (@vince)
 - Description: MSW handlers, browser/server workers, test data
-- Invoke: `skill: "frontend/mocking"`
+- Invoke: `skill: "frontend/msw (@vince)"`
 - Use when: when researching mocking patterns
 
 

@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../schemas/skill.schema.json
+id: setup/tooling
+name: Tooling
+description: ESLint, Prettier, TypeScript configuration
+category: setup
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+
+compatible_with:
+  - setup/monorepo
+  - setup/package
+
+tags:
+  - eslint
+  - prettier
+  - typescript
+  - configuration
+  - linting
+  - formatting
