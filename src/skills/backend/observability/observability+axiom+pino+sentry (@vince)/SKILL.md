@@ -1,5 +1,5 @@
 ---
-name: backend/observability (@vince)
+name: backend/observability+axiom+pino+sentry (@vince)
 description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 ---
 

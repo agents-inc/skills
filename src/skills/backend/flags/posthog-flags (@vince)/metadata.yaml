@@ -4,12 +4,12 @@ category_exclusive: false
 author: "@vince"
 version: 1.0.0
 compatible_with:
-  - setup/observability
-  - backend/api
+  - backend/posthog-analytics
+requires_setup:
+  - setup/posthog
 tags:
-  - pino
-  - sentry
-  - axiom
-  - logging
-  - error-tracking
-  - monitoring
+  - posthog
+  - feature-flags
+  - rollouts
+  - ab-testing
+  - experiments

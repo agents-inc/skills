@@ -3,11 +3,12 @@ category: backend
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
-compatible_with:
-  - backend/analytics
+compatible_with: []
+requires_setup:
+  - setup/resend
 tags:
-  - posthog
-  - feature-flags
-  - rollouts
-  - ab-testing
-  - experiments
+  - resend
+  - react-email
+  - email
+  - templates
+  - transactional

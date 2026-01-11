@@ -3,12 +3,13 @@ category: backend
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
-compatible_with:
-  - backend/authentication
-  - setup/resend
+compatible_with: []
+requires_setup:
+  - setup/observability
 tags:
-  - resend
-  - react-email
-  - email
-  - templates
-  - transactional
+  - pino
+  - sentry
+  - axiom
+  - logging
+  - error-tracking
+  - monitoring

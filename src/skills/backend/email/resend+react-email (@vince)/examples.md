@@ -464,64 +464,63 @@ export { sendEmailWithRetry };
 
 ---
 
-## Better Auth Integration Examples
+## Authentication Integration Examples
 
 ### Verification Email Integration
 
-```typescript
-// lib/auth.ts
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { render } from "@react-email/components";
+Integrate email sending with your authentication system's email callbacks.
 
-import { db } from "@/lib/db";
+```typescript
+// lib/email/auth-emails.ts
 import { sendEmailWithRetry } from "@/lib/email/send-with-retry";
 import { VerificationEmail, PasswordResetEmail } from "@repo/emails";
 
-export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "pg" }),
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: true,
-    sendResetPassword: async ({ user, url, token }) => {
-      const result = await sendEmailWithRetry({
-        to: user.email,
-        subject: "Reset your password",
-        react: PasswordResetEmail({
-          userName: user.name ?? "there",
-          resetUrl: url,
-        }),
-      });
+interface AuthUser {
+  email: string;
+  name?: string | null;
+}
 
-      if (!result.success) {
-        console.error("[Auth] Failed to send password reset email:", result.error);
-        // Don't throw - Better Auth will show generic error to user
-      }
-    },
-  },
-  emailVerification: {
-    sendVerificationEmail: async ({ user, url, token }) => {
-      const result = await sendEmailWithRetry({
-        to: user.email,
-        subject: "Verify your email address",
-        react: VerificationEmail({
-          userName: user.name ?? "there",
-          verificationUrl: url,
-        }),
-      });
+// Use these functions in your auth system's email callbacks
+export async function sendVerificationEmail(user: AuthUser, verificationUrl: string) {
+  const result = await sendEmailWithRetry({
+    to: user.email,
+    subject: "Verify your email address",
+    react: VerificationEmail({
+      userName: user.name ?? "there",
+      verificationUrl,
+    }),
+  });
 
-      if (!result.success) {
-        console.error("[Auth] Failed to send verification email:", result.error);
-      }
-    },
-  },
-});
+  if (!result.success) {
+    console.error("[Auth] Failed to send verification email:", result.error);
+  }
 
-// Named export
-export { auth };
+  return result;
+}
+
+export async function sendPasswordResetEmail(user: AuthUser, resetUrl: string) {
+  const result = await sendEmailWithRetry({
+    to: user.email,
+    subject: "Reset your password",
+    react: PasswordResetEmail({
+      userName: user.name ?? "there",
+      resetUrl,
+    }),
+  });
+
+  if (!result.success) {
+    console.error("[Auth] Failed to send password reset email:", result.error);
+    // Don't throw - let auth system show generic error to user
+  }
+
+  return result;
+}
+
+// Named exports
+export { sendVerificationEmail, sendPasswordResetEmail };
 ```
 
-**Why good:** Uses retry wrapper for reliability, logs failures without throwing (Better Auth handles errors), extracts user name with fallback
+**Why good:** Uses retry wrapper for reliability, logs failures without throwing, extracts user name with fallback, decoupled from specific auth library
 
 ---
 
@@ -790,10 +789,13 @@ export async function POST(request: NextRequest) {
 
 ## Email Preferences Examples
 
+> **Database examples below use Drizzle ORM.** Adapt to your ORM of choice (Prisma, Kysely, raw SQL, etc.) - the patterns remain the same.
+
 ### Preferences Schema
 
 ```typescript
 // lib/db/schema/email-preferences.ts
+// Example using Drizzle ORM - adapt to your database solution
 import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core";
 
 export const emailPreferences = pgTable("email_preferences", {
@@ -811,7 +813,7 @@ export const emailPreferences = pgTable("email_preferences", {
 ```typescript
 // app/api/email/unsubscribe/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq } from "drizzle-orm"; // Adapt to your ORM
 import jwt from "jsonwebtoken";
 
 import { db } from "@/lib/db";
@@ -893,7 +895,7 @@ export type { EmailCategory };
 
 ```typescript
 // lib/email/send-notification.ts
-import { eq } from "drizzle-orm";
+import { eq } from "drizzle-orm"; // Adapt to your ORM
 
 import { db } from "@/lib/db";
 import { emailPreferences } from "@/lib/db/schema";

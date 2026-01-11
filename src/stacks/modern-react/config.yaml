@@ -23,17 +23,16 @@ skills:
   # Backend
   - backend/hono (@vince)
   - backend/drizzle (@vince)
-  - backend/better-auth (@vince)
+  - backend/better-auth+drizzle+hono (@vince)
   - backend/posthog-analytics (@vince)
   - backend/posthog-flags (@vince)
-  - backend/resend (@vince)
-  - backend/observability (@vince)
+  - backend/resend+react-email (@vince)
+  - backend/observability+axiom+pino+sentry (@vince)
   - backend/github-actions (@vince)
   # Security
   - security/security (@vince)
   # Setup
   - setup/turborepo (@vince)
-  - setup/package (@vince)
   - setup/env (@vince)
   - setup/tooling (@vince)
   # Shared

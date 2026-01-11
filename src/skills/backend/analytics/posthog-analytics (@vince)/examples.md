@@ -79,7 +79,7 @@ const eventProperties = {
 
 ---
 
-## Pattern 2: User Identification with Better Auth
+## Pattern 2: User Identification with Authentication
 
 ### Constants
 

@@ -64,6 +64,24 @@
       },
       "uniqueItems": true,
       "examples": [["state-management", "hooks", "lightweight"]]
+    },
+    "requires_setup": {
+      "type": "array",
+      "description": "Setup skills that must be completed before using this skill. Used by usage skills to link to their setup prerequisites.",
+      "items": {
+        "$ref": "#/$defs/SkillReference"
+      },
+      "uniqueItems": true,
+      "examples": [["setup/posthog"], ["setup/resend"]]
+    },
+    "provides_setup_for": {
+      "type": "array",
+      "description": "Usage skills that this setup skill provides initial configuration for. Used by setup skills to link to their corresponding usage skills.",
+      "items": {
+        "$ref": "#/$defs/SkillReference"
+      },
+      "uniqueItems": true,
+      "examples": [["backend/posthog-analytics", "backend/posthog-flags"], ["backend/resend"]]
     }
   },
   "$defs": {
@@ -87,9 +105,9 @@
     },
     "SkillReference": {
       "type": "string",
-      "description": "Reference to a skill ID or pattern. Patterns use * for wildcards (e.g., framework/* matches any framework skill).",
-      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/([a-z][a-z0-9]*(-[a-z0-9]+)*|\\*)$",
-      "examples": ["framework/react", "state/zustand", "framework/*"]
+      "description": "Reference to a skill ID or pattern. Patterns use * for wildcards (e.g., framework/* matches any framework skill). Coupled skills use + notation (e.g., backend/better-auth+drizzle+hono).",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/([a-z][a-z0-9]*(-[a-z0-9]+)*(\\+[a-z][a-z0-9]*(-[a-z0-9]+)*)*|\\*)$",
+      "examples": ["framework/react", "state/zustand", "framework/*", "backend/better-auth+drizzle+hono"]
     }
   }
 }

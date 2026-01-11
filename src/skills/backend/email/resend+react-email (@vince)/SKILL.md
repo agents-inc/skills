@@ -1,5 +1,5 @@
 ---
-name: backend/resend (@vince)
+name: backend/resend+react-email (@vince)
 description: Resend + React Email templates
 ---
 
@@ -35,7 +35,7 @@ description: Resend + React Email templates
 
 - Sending transactional emails (verification, password reset, receipts)
 - Creating React Email templates with Tailwind styling
-- Integrating email sending with Better Auth flows
+- Integrating email sending with authentication flows
 - Building notification systems with email delivery
 - Implementing email tracking and analytics
 
@@ -50,7 +50,7 @@ description: Resend + React Email templates
 
 - React Email template patterns with Tailwind
 - Sending with error handling and retry
-- Better Auth integration (verification, password reset)
+- Authentication integration (verification, password reset)
 - Async email sending patterns
 - Email tracking (opens, clicks)
 - Batch sending for notifications
@@ -413,5 +413,4 @@ const resend = getResendClient(); // Same instance across requests
 - [Resend Error Handling](https://resend.com/docs/api-reference/errors)
 - [React Email Components](https://react.email/docs/components)
 - [React Email Tailwind](https://react.email/docs/components/tailwind)
-- [Better Auth Email Configuration](https://www.better-auth.com/docs/concepts/email)
 - [CAN-SPAM Compliance](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business)
