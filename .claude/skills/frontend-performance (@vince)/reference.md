@@ -69,10 +69,9 @@ Performance optimization integrates across the entire stack.
 - **Turborepo** - Build caching reduces build times by 80%+
 - **Next.js** - Automatic code splitting, Image component, SSR/SSG for Core Web Vitals
 - **Vite** - Fast HMR (< 5s rebuilds), built-in bundle analysis
-- **React Query** - Request deduplication, caching reduces API calls
 - **TypeScript** - Incremental compilation speeds up type checking
-- **SCSS Modules** - CSS code splitting per component
-- **Vitest** - Parallel test execution, coverage caching
+- **CSS Modules** - CSS code splitting per component (framework-agnostic)
+- **Testing** - Performance regression tests catch slowdowns before production
 
 **Performance monitoring:**
 

@@ -1,11 +1,11 @@
 ---
 name: setup/turborepo (@vince)
-description: Turborepo, workspaces, package architecture
+description: Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking
 ---
 
 # Monorepo Orchestration with Turborepo
 
-> **Quick Guide:** Turborepo 2.4.2 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency.
+> **Quick Guide:** Turborepo 2.4.2 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency. Internal packages use `@repo/*` naming, explicit `exports` fields, and `workspace:*` protocol.
 
 ---
 
@@ -23,11 +23,17 @@ description: Turborepo, workspaces, package architecture
 
 **(You MUST use Bun workspaces protocol `workspace:*` for internal package dependencies)**
 
+**(You MUST use `@repo/*` naming convention for ALL internal packages)**
+
+**(You MUST define explicit `exports` field in package.json - never allow importing internal paths)**
+
+**(You MUST mark React as `peerDependencies` NOT `dependencies` in component packages)**
+
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Turborepo configuration, turbo.json, monorepo setup, workspaces, Bun workspaces, syncpack, task pipelines
+**Auto-detection:** Turborepo configuration, turbo.json, monorepo setup, workspaces, Bun workspaces, syncpack, task pipelines, @repo/* packages, package.json exports, workspace dependencies, shared configurations
 
 **When to use:**
 
@@ -35,6 +41,9 @@ description: Turborepo, workspaces, package architecture
 - Setting up workspaces for monorepo package linking
 - Enabling remote caching for team/CI cache sharing
 - Synchronizing dependency versions across workspace packages
+- Creating new internal packages in `packages/`
+- Configuring package.json exports for tree-shaking
+- Setting up shared configuration packages (@repo/eslint-config, @repo/typescript-config)
 
 **When NOT to use:**
 
@@ -43,6 +52,7 @@ description: Turborepo, workspaces, package architecture
 - Very small projects where setup overhead exceeds caching benefits
 - Polyrepo architecture is preferred over monorepo
 - Projects already using Nx or Lerna (don't mix monorepo tools)
+- App-specific code that won't be shared (keep in app directory)
 
 **Key patterns covered:**
 
@@ -51,6 +61,10 @@ description: Turborepo, workspaces, package architecture
 - Bun workspaces for package linking
 - Syncpack for dependency version consistency
 - Environment variable handling in turbo.json
+- Package structure and @repo/* naming conventions
+- package.json exports for tree-shaking
+- Named exports and barrel file patterns
+- Internal dependencies with workspace protocol
 
 **Detailed Resources:**
 - For code examples, see [examples.md](examples.md)
@@ -251,6 +265,12 @@ bun run build --filter=...[HEAD^1]
 
 **(You MUST use Bun workspaces protocol `workspace:*` for internal package dependencies)**
 
-**Failure to follow these rules will cause incorrect builds, cache misses, and broken dependency resolution.**
+**(You MUST use `@repo/*` naming convention for ALL internal packages)**
+
+**(You MUST define explicit `exports` field in package.json - never allow importing internal paths)**
+
+**(You MUST mark React as `peerDependencies` NOT `dependencies` in component packages)**
+
+**Failure to follow these rules will cause incorrect builds, cache misses, broken dependency resolution, and tree-shaking failures.**
 
 </critical_reminders>

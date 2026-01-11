@@ -60,11 +60,10 @@ What type of email is this?
 
 **Works with:**
 
-- **Better Auth**: sendVerificationEmail and sendResetPassword callbacks
-- **Hono API Routes**: Same patterns as Next.js
-- **React Query**: Track email sending status with mutations
-- **PostHog**: Track email events via webhooks
-- **Drizzle ORM**: Store email preferences and events
+- **Authentication systems**: sendVerificationEmail and sendResetPassword callbacks
+- **API routes**: Server-side email sending
+- **Analytics**: Track email events via webhooks
+- **Databases**: Store email preferences and events
 
 **Replaces / Conflicts with:**
 

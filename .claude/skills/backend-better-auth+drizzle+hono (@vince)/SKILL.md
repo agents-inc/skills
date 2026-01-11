@@ -1,5 +1,5 @@
 ---
-name: backend/better-auth (@vince)
+name: backend/better-auth+drizzle+hono (@vince)
 description: Better Auth patterns, sessions, OAuth
 ---
 

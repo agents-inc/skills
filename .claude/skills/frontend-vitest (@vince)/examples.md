@@ -356,43 +356,47 @@ describe("calculateTotal", () => {
 
 ## Integration Testing Examples
 
-### Integration Test with MSW
+### Integration Test with Network-Level Mocking
 
 ```typescript
-// Good Example - Integration test with MSW
+// Good Example - Integration test with network-level mocking
 // apps/client-react/src/home/__tests__/features.test.tsx
-import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
-import { defaultFeatures } from "@repo/api-mocks/mocks";
-import { serverWorker } from "@repo/api-mocks/serverWorker";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { renderApp } from "../../testSetup/testUtils.local";
+// Import your network mocking handlers (implementation varies by mocking library)
+import { featuresHandlers, mockServer } from "../test-utils/mock-server";
+
+const EXPECTED_FEATURE_COUNT = 3;
 
 describe("Features", () => {
   it("should render empty state", async () => {
-    serverWorker.use(getFeaturesHandlers.emptyHandler());
+    // Override default handler with empty response
+    mockServer.use(featuresHandlers.empty());
     renderApp();
 
     await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
   });
 
   it("should render error state", async () => {
-    serverWorker.use(getFeaturesHandlers.errorHandler());
+    // Override default handler with error response
+    mockServer.use(featuresHandlers.error());
     renderApp();
 
     await expect(screen.findByText(/An error has occurred/i)).resolves.toBeInTheDocument();
   });
 
   it("should render features", async () => {
-    serverWorker.use(getFeaturesHandlers.defaultHandler());
+    // Use default handler (returns feature list)
+    mockServer.use(featuresHandlers.default());
     renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("feature")).toBeInTheDocument();
     });
 
-    expect(screen.getAllByTestId("feature")).toHaveLength(defaultFeatures.length);
+    expect(screen.getAllByTestId("feature")).toHaveLength(EXPECTED_FEATURE_COUNT);
   });
 
   it("should toggle feature", async () => {
@@ -409,7 +413,7 @@ describe("Features", () => {
 });
 ```
 
-**Why good:** Tests component with API integration via MSW at network level, tests all states (loading, empty, error, success) ensuring robustness, centralized mock handlers in @repo/api-mocks prevent duplication, shared between tests and development for consistency
+**Why good:** Tests component with API integration via network-level mocking, tests all states (loading, empty, error, success) ensuring robustness, centralized mock handlers prevent duplication, shared between tests and development for consistency
 
 ```typescript
 // Bad Example - Module-level mocking
@@ -430,51 +434,59 @@ test("renders features", async () => {
 
 ---
 
-### MSW Setup Pattern
+### Network Mock Setup Pattern
 
 ```typescript
-// Good Example - MSW handler setup
+// Good Example - Network mock handler setup
 // src/mocks/handlers.ts
-import { http, HttpResponse } from "msw";
+// Note: Implementation varies by your chosen mocking library
 
 const API_USER_ENDPOINT = "/api/users/:id";
 
-export const handlers = [
-  http.get(API_USER_ENDPOINT, ({ params }) => {
-    return HttpResponse.json({
-      id: params.id,
+export const userHandlers = {
+  default: () => ({
+    method: "GET",
+    path: API_USER_ENDPOINT,
+    response: {
+      id: "123",
       name: "John Doe",
       email: "john@example.com",
-    });
+    },
   }),
-];
+  error: () => ({
+    method: "GET",
+    path: API_USER_ENDPOINT,
+    status: 500,
+    response: { error: "Internal server error" },
+  }),
+};
 ```
 
 ```typescript
 // src/mocks/server.ts
-import { setupServer } from "msw/node";
+// Setup varies by mocking library - this is conceptual
 import { handlers } from "./handlers";
 
-export const server = setupServer(...handlers);
+export const mockServer = createMockServer(handlers);
 ```
 
-**Why good:** MSW mocks at network level matching real API behavior, handlers are reusable across tests and development, easy to override per-test for different scenarios
+**Why good:** Network-level mocking matches real API behavior, handlers are reusable across tests and development, easy to override per-test for different scenarios
 
 ---
 
 ### Test Setup
 
 ```typescript
-// Good Example - MSW setup for tests
+// Good Example - Network mock setup for tests
 // setupTests.ts
-import { serverWorker } from "@repo/api-mocks/serverWorker";
+import { mockServer } from "./test-utils/mock-server";
 
-beforeAll(() => serverWorker.listen());
-afterEach(() => serverWorker.resetHandlers());
-afterAll(() => serverWorker.close());
+beforeAll(() => mockServer.listen());
+afterEach(() => mockServer.resetHandlers());
+afterAll(() => mockServer.close());
 ```
 
-**Why good:** MSW intercepts at network level matching real API behavior, resetHandlers() after each test prevents test pollution, centralized in @repo/api-mocks enables reuse across apps
+**Why good:** Network-level mocking intercepts HTTP requests matching real API behavior, resetHandlers() after each test prevents test pollution, centralized mock server enables reuse across tests
 
 ---
 
@@ -482,17 +494,16 @@ afterAll(() => serverWorker.close());
 
 ```typescript
 // Good Example - Test-specific handler overrides
-import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
-import { serverWorker } from "@repo/api-mocks/serverWorker";
+import { featuresHandlers, mockServer } from "./test-utils/mock-server";
 
 it("should handle empty state", async () => {
-  serverWorker.use(getFeaturesHandlers.emptyHandler());
+  mockServer.use(featuresHandlers.empty());
   renderApp();
   await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
 });
 ```
 
-**Why good:** Easy to test different scenarios (empty, error, success), handlers are reusable across tests, doesn't pollute global state with per-test use()
+**Why good:** Easy to test different scenarios (empty, error, success), handlers are reusable across tests, doesn't pollute global state with per-test overrides
 
 ---
 
@@ -501,10 +512,10 @@ it("should handle empty state", async () => {
 ### Don't Test Third-Party Libraries
 
 ```typescript
-// Bad Example - Testing React Query behavior
-test("useQuery returns data", () => {
-  const { result } = renderHook(() => useQuery(["key"], fetchFn));
-  // Testing React Query, not your code
+// Bad Example - Testing data fetching library behavior
+test("data fetching hook returns data", () => {
+  const { result } = renderHook(() => useDataFetchingHook(["key"], fetchFn));
+  // Testing the library, not your code
 });
 ```
 

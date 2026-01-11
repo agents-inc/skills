@@ -172,7 +172,7 @@ export const browserWorker = setupServer(...handlers);
 
 **Why bad:** `setupServer` is for Node.js environment and will fail in browser, causes cryptic runtime errors about service worker not being available
 
-### App Integration (Vite/React)
+### App Integration (SPA/Client-Side)
 
 ```typescript
 // apps/client-react/src/main.tsx
@@ -213,7 +213,7 @@ createRoot(document.getElementById("root")!).render(<App />);
 
 **Why bad:** Race condition where app renders before MSW is ready causes first requests to fail, no async/await means initial API calls might bypass mocks unpredictably, hard-to-debug intermittent failures in development
 
-### App Integration (Next.js App Router)
+### App Integration (SSR Framework)
 
 ```typescript
 // apps/client-next/app/layout.tsx
@@ -245,7 +245,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 }
 ```
 
-**Why good:** Dynamic import in Next.js prevents server-side bundling of browser-only code, awaiting in async component ensures MSW ready before render, named constants for magic strings
+**Why good:** Dynamic import prevents server-side bundling of browser-only code, awaiting ensures MSW ready before render, named constants for magic strings
 
 ```typescript
 // ❌ Bad Example - Importing browser worker at top level
@@ -299,9 +299,9 @@ export const serverWorker = setupWorker(...handlers);
 ```typescript
 // apps/client-react/src/setup-tests.ts
 // ✅ Good Example
-import { afterAll, afterEach, beforeAll } from "vitest";
 import { serverWorker } from "@repo/api-mocks/serverWorker";
 
+// Use your test runner's lifecycle hooks
 beforeAll(() => serverWorker.listen());
 afterEach(() => serverWorker.resetHandlers());
 afterAll(() => serverWorker.close());
@@ -311,11 +311,11 @@ afterAll(() => serverWorker.close());
 
 ```typescript
 // ❌ Bad Example - Missing resetHandlers
-import { afterAll, beforeAll } from "vitest";
 import { serverWorker } from "@repo/api-mocks/serverWorker";
 
 beforeAll(() => serverWorker.listen());
 afterAll(() => serverWorker.close());
+// Missing: afterEach(() => serverWorker.resetHandlers());
 ```
 
 **Why bad:** Missing `resetHandlers` in `afterEach` means handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent breaking test isolation
@@ -329,15 +329,14 @@ afterAll(() => serverWorker.close());
 ```typescript
 // apps/client-react/src/__tests__/features.test.tsx
 // ✅ Good Example
-import { expect, it } from "vitest";
-import { screen } from "@testing-library/react";
 import { getFeaturesHandlers } from "@repo/api-mocks/handlers";
 import { serverWorker } from "@repo/api-mocks/serverWorker";
 
 it("should render features", async () => {
   // Uses default handler
   renderApp();
-  await expect(screen.findByText("Dark mode")).resolves.toBeInTheDocument();
+  // Assert using your component testing library
+  await expect(findByText("Dark mode")).resolves.toBeInTheDocument();
 });
 
 it("should render empty state", async () => {
@@ -345,7 +344,7 @@ it("should render empty state", async () => {
   serverWorker.use(getFeaturesHandlers.emptyHandler());
   renderApp();
 
-  await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
+  await expect(findByText("No features found")).resolves.toBeInTheDocument();
 });
 
 it("should handle errors", async () => {
@@ -353,7 +352,7 @@ it("should handle errors", async () => {
   serverWorker.use(getFeaturesHandlers.errorHandler());
   renderApp();
 
-  await expect(screen.findByText(/error/i)).resolves.toBeInTheDocument();
+  await expect(findByText(/error/i)).resolves.toBeInTheDocument();
 });
 ```
 
@@ -361,13 +360,11 @@ it("should handle errors", async () => {
 
 ```typescript
 // ❌ Bad Example - Only testing happy path
-import { expect, it } from "vitest";
-import { screen } from "@testing-library/react";
-
 it("should render features", async () => {
   renderApp();
-  await expect(screen.findByText("Dark mode")).resolves.toBeInTheDocument();
+  await expect(findByText("Dark mode")).resolves.toBeInTheDocument();
 });
+// Missing: tests for empty and error scenarios
 ```
 
 **Why bad:** Only tests default success scenario, empty and error states go untested causing bugs to reach production, no validation that error handling works, incomplete test coverage

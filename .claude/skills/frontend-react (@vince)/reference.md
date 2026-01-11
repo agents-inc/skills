@@ -16,14 +16,14 @@ Does component need ref access?
 └─ NO → Don't use forwardRef (unnecessary)
 ```
 
-### When to Use cva
+### When to Use Variant Props
 
 ```
-Does component have variants?
+Does component have visual variants?
 ├─ YES → Are there 2+ variant dimensions (color, size)?
-│   ├─ YES → Use cva ✓
-│   └─ NO → Consider cva only if 3+ values in single dimension
-└─ NO → Don't use cva (use SCSS Modules only)
+│   ├─ YES → Use typed variant props (TypeScript unions)
+│   └─ NO → Consider simple prop with 3+ values
+└─ NO → Skip variant props (no complexity needed)
 ```
 
 ### When to Use useCallback
@@ -62,16 +62,16 @@ Is this reusable logic?
 
 ### Medium Priority Issues
 
-- Using cva for components without variants (over-engineering - use SCSS Modules only)
-- Hardcoding styles instead of using design tokens (breaks theme consistency)
+- Adding variant abstractions for components without variants (over-engineering)
 - Using useCallback on every handler regardless of child memoization (premature optimization)
 - Inline event handlers in JSX when passing to memoized children (causes unnecessary re-renders)
 - Generic event handler names (`click`, `change`) instead of descriptive names
+- Not exposing style prop alongside className for runtime values
 
 ### Common Mistakes
 
 - Not typing event handlers explicitly (leads to runtime errors)
-- Using string interpolation for class names instead of `clsx` (error-prone and not type-safe)
+- Using string interpolation for class names (error-prone)
 - Missing accessibility attributes on icon-only buttons (`title`, `aria-label`)
 - Hardcoding icon colors instead of using `currentColor` inheritance
 - No error boundaries around features (one error crashes entire app)
@@ -82,9 +82,9 @@ Is this reusable logic?
 - Error boundaries don't catch errors in event handlers or async code (use try/catch for those)
 - `useCallback` without memoized children adds overhead without benefit
 - Icons inherit `currentColor` by default - explicitly setting color breaks theming
-- SCSS Module class names must be applied via `className` prop, not spread into component
-- Data-attributes (`data-active="true"`) are better than className toggling for state styling
+- Data-attributes (`data-active="true"`) are useful for styling based on state
 - SSR requires checking `typeof window !== "undefined"` before accessing browser APIs
+- Styles must be applied via `className` prop, not spread into component
 
 ---
 
@@ -136,27 +136,29 @@ All reusable components must expose a className prop. Without it, consumers cann
 
 ```typescript
 // WRONG - No className prop
-export const Card = ({ children }) => (
-  <div className={styles.card}>{children}</div>
+export const Card = ({ children }: { children: React.ReactNode }) => (
+  <div>{children}</div>
 );
 
-// CORRECT - className prop merged
-export const Card = ({ children, className }) => (
-  <div className={clsx(styles.card, className)}>{children}</div>
+// CORRECT - className prop exposed
+export const Card = ({ children, className }: CardProps) => (
+  <div className={className}>{children}</div>
 );
 ```
 
-### Using cva for Components Without Variants
+### Adding Variant Abstractions for Simple Components
 
-cva adds unnecessary complexity for simple components. Only use when you have 2+ variant dimensions.
+Variant props add unnecessary complexity for simple components. Only use when you have 2+ variant dimensions.
 
 ```typescript
-// WRONG - cva for single-style component
-const cardStyles = cva("card", { variants: {} });
+// WRONG - Variant system for single-style component
+type CardVariant = "default";
+export const Card = ({ variant = "default" }: { variant?: CardVariant }) => ...
 
-// CORRECT - SCSS Modules only
-import styles from "./card.module.scss";
-<div className={styles.card}>...</div>
+// CORRECT - Simple component without variant props
+export const Card = ({ className, children }: CardProps) => (
+  <div className={className}>{children}</div>
+);
 ```
 
 ---
@@ -167,11 +169,11 @@ import styles from "./card.module.scss";
 
 - [ ] Uses `forwardRef` if exposing DOM elements
 - [ ] Exposes `className` prop for customization
+- [ ] Exposes `style` prop for runtime values
 - [ ] Uses named exports (no default exports)
 - [ ] Uses named constants for all numbers
 - [ ] Has `displayName` set for forwardRef components
-- [ ] Uses cva only when 2+ variant dimensions exist
-- [ ] Uses design tokens instead of hardcoded values
+- [ ] Uses typed variant props only when 2+ variant dimensions exist
 - [ ] Has proper accessibility attributes on interactive elements
 
 ### Hook Checklist

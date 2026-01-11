@@ -183,7 +183,7 @@ The following patterns are documented with full examples in [examples.md](exampl
 - **Pattern 8:** Data-Attributes for State Styling
 - **Pattern 9:** SCSS Mixins for Reusable Patterns
 - **Pattern 10:** Global Styles Organization
-- **Pattern 11:** Icon Styling with lucide-react
+- **Pattern 11:** Icon Styling
 - **Pattern 12:** Advanced CSS Features
 
 </patterns>

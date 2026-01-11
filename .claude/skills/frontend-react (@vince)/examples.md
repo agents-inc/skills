@@ -12,40 +12,25 @@
 // packages/ui/src/components/button/button.tsx
 import { forwardRef } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import clsx from "clsx";
-import styles from "./button.module.scss";
 
-const buttonVariants = cva("btn", {
-  variants: {
-    variant: {
-      default: clsx(styles.btn, styles.btnDefault),
-      ghost: clsx(styles.btn, styles.btnGhost),
-      link: clsx(styles.btn, styles.btnLink),
-    },
-    size: {
-      default: clsx(styles.btn, styles.btnSizeDefault),
-      large: clsx(styles.btn, styles.btnSizeLarge),
-      icon: clsx(styles.btn, styles.btnSizeIcon),
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
-  },
-});
+// Type-safe variant props
+export type ButtonVariant = "default" | "ghost" | "link";
+export type ButtonSize = "default" | "large" | "icon";
 
-export type ButtonProps = React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  };
+export type ButtonProps = React.ComponentProps<"button"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  asChild?: boolean;
+};
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant, size, className, asChild = false, ...props }, ref) => {
+  ({ variant = "default", size = "default", className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={clsx(buttonVariants({ variant, size, className }))}
+        className={className}
+        data-variant={variant}
+        data-size={size}
         ref={ref}
         {...props}
       />
@@ -56,7 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 ```
 
-**Why good:** forwardRef enables ref forwarding for focus management and DOM access, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, displayName improves debugging in React DevTools
+**Why good:** forwardRef enables ref forwarding for focus management and DOM access, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, displayName improves debugging in React DevTools, data-attributes enable styling based on variants
 
 ### Bad Example - Missing critical patterns
 
@@ -74,137 +59,45 @@ export default function Button({ variant, size, onClick, children }) {
 
 ---
 
-## SCSS Module Examples
+## Variant Props Examples
 
-### Good Example - Uses design tokens and data-attributes
-
-```scss
-// packages/ui/src/components/button/button.module.scss
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: var(--text-size-body);
-  font-weight: 600;
-
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.btnDefault {
-  background-color: var(--color-surface-base);
-  color: var(--color-text-default);
-  border-color: var(--color-surface-subtle);
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-surface-subtle);
-  }
-
-  &[data-active="true"] {
-    color: var(--color-text-muted);
-    background: var(--color-surface-strong);
-  }
-}
-
-.btnGhost {
-  background-color: transparent;
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-surface-subtle);
-  }
-}
-
-.btnSizeDefault {
-  padding: var(--space-md);
-}
-
-.btnSizeLarge {
-  padding: var(--space-xlg) var(--space-xxlg);
-}
-
-.btnSizeIcon {
-  padding: var(--space-md);
-  aspect-ratio: 1;
-}
-```
-
-**Why good:** design tokens ensure consistency across components, data-attributes for state styling separate state from presentation, scoped styles prevent global namespace pollution
-
-### Bad Example - Hardcoded values and inline styles
-
-```scss
-.button {
-  padding: 12px 24px; // Magic numbers
-  background: #3b82f6; // Hardcoded color
-  border-radius: 8px; // Magic number
-}
-
-.button.active {
-  background: #2563eb; // className toggling for state
-}
-```
-
-**Why bad:** hardcoded values prevent theme switching and break design system consistency, magic numbers are unmaintainable and inconsistent across components, className toggling for state is harder to manage than data-attributes
-
----
-
-## cva Variant Examples
-
-### Good Example - Using cva for components with variants
+### Good Example - Type-safe variant props
 
 ```typescript
-import { cva, type VariantProps } from "class-variance-authority";
-import clsx from "clsx";
-import styles from "./alert.module.scss";
+import { forwardRef } from "react";
 
 const ANIMATION_DURATION_MS = 200;
 
-const alertVariants = cva("alert", {
-  variants: {
-    variant: {
-      info: clsx(styles.alert, styles.alertInfo),
-      warning: clsx(styles.alert, styles.alertWarning),
-      error: clsx(styles.alert, styles.alertError),
-      success: clsx(styles.alert, styles.alertSuccess),
-    },
-    size: {
-      sm: clsx(styles.alert, styles.alertSm),
-      md: clsx(styles.alert, styles.alertMd),
-      lg: clsx(styles.alert, styles.alertLg),
-    },
-  },
-  defaultVariants: {
-    variant: "info",
-    size: "md",
-  },
-});
+// Define variant types explicitly
+export type AlertVariant = "info" | "warning" | "error" | "success";
+export type AlertSize = "sm" | "md" | "lg";
 
-export type AlertProps = React.ComponentProps<"div"> &
-  VariantProps<typeof alertVariants>;
-
-export const Alert = ({ variant, size, className, ...props }: AlertProps) => {
-  return (
-    <div
-      className={clsx(alertVariants({ variant, size, className }))}
-      style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease` }}
-      {...props}
-    />
-  );
+export type AlertProps = React.ComponentProps<"div"> & {
+  variant?: AlertVariant;
+  size?: AlertSize;
 };
+
+export const Alert = forwardRef<HTMLDivElement, AlertProps>(
+  ({ variant = "info", size = "md", className, style, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={className}
+        data-variant={variant}
+        data-size={size}
+        style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease`, ...style }}
+        {...props}
+      />
+    );
+  }
+);
+
+Alert.displayName = "Alert";
 ```
 
-**Why good:** cva provides type-safe variant props with autocomplete, defaultVariants prevent undefined behavior, named constant for animation duration prevents magic numbers, VariantProps extracts correct TypeScript types from cva definition
+**Why good:** TypeScript union types provide autocomplete for variant values, data-attributes enable CSS styling based on variants, named constant for animation duration prevents magic numbers, forwardRef and displayName follow React conventions
 
-### Bad Example - Not using cva when component has variants
+### Bad Example - Untyped variants with string interpolation
 
 ```typescript
 export const Alert = ({ variant = "info", size = "md", className, ...props }) => {
@@ -257,7 +150,13 @@ import { Button } from "@repo/ui/button";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "../../components/button/button";
-import styles from "./feature.module.scss";
+
+export type FeatureProps = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+};
 
 export const Feature = ({ id, title, description, status }: FeatureProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -268,14 +167,9 @@ export const Feature = ({ id, title, description, status }: FeatureProps) => {
       <Button
         variant="ghost"
         size="icon"
-        className={styles.expandButton}
         aria-label={isExpanded ? "Collapse details" : "Expand details"}
       >
-        {isExpanded ? (
-          <ChevronUp className={styles.icon} />
-        ) : (
-          <ChevronDown className={styles.icon} />
-        )}
+        {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </Button>
       {isExpanded && <p>{description}</p>}
     </li>
@@ -283,37 +177,27 @@ export const Feature = ({ id, title, description, status }: FeatureProps) => {
 };
 ```
 
-**Why good:** dynamic aria-label accurately describes current state, conditional icon rendering provides visual feedback, className prop on icon enables consistent sizing via design tokens
+**Why good:** dynamic aria-label accurately describes current state, conditional icon rendering provides visual feedback, icons inherit color from button via currentColor
 
-### Good Example - Icon sizing with design tokens
+### Good Example - Icon color inheritance
 
-```scss
-// packages/ui/src/patterns/feature/feature.module.scss
-.expandButton {
-  // Button already has proper sizing
-  // Icon inherits color from button
-}
+Icons from lucide-react inherit `currentColor` by default, keeping them in sync with text color automatically.
 
-.icon {
-  // Use design token for consistent sizing
-  width: var(--text-size-icon); // 16px
-  height: var(--text-size-icon);
-}
+```tsx
+// Icon inherits button's text color automatically
+<Button variant="primary">
+  <CheckCircle />  {/* Inherits button text color */}
+  Save
+</Button>
+
+// Apply className if custom styling needed
+<Button>
+  <WarningIcon className="custom-icon-class" />
+  Warning
+</Button>
 ```
 
-**Why good:** design token ensures consistent icon sizing across all components, color inheritance via currentColor keeps icons synced with text color
-
-### Bad Example - Hardcoded icon sizing and colors
-
-```scss
-.icon {
-  width: 16px; // Magic number
-  height: 16px; // Magic number
-  color: #3b82f6; // Hardcoded color
-}
-```
-
-**Why bad:** magic numbers prevent consistent sizing across components, hardcoded colors break when theme changes, manual color management duplicates effort and causes inconsistencies
+**Why good:** color inheritance via currentColor keeps icons synced with text color without manual management
 
 ### Good Example - Accessible icon-only buttons
 
@@ -357,29 +241,31 @@ export const Socials = () => {
 ### Good Example - Icons inherit color from parent
 
 ```tsx
-<Button className={styles.successButton}>
-  <CheckCircle />  {/* Icon inherits green color */}
+// Icons automatically inherit button's text color via currentColor
+<Button data-variant="success">
+  <CheckCircle />  {/* Icon inherits green color from button */}
   Save
 </Button>
 
-<Button className={styles.errorButton}>
-  <XCircle />  {/* Icon inherits red color */}
+<Button data-variant="danger">
+  <XCircle />  {/* Icon inherits red color from button */}
   Delete
 </Button>
 ```
 
-**Why good:** using currentColor keeps icon colors synced with text, reduces CSS duplication, automatic color consistency across themes
+**Why good:** using currentColor keeps icon colors synced with text, reduces styling complexity, automatic color consistency across themes
 
-### Bad Example - Manually setting icon colors
+### Bad Example - Manually overriding icon colors
 
 ```tsx
-<Button className={styles.successButton}>
-  <CheckCircle className={styles.greenIcon} />
+// Don't override icon colors with explicit classes
+<Button data-variant="success">
+  <CheckCircle color="green" />  {/* Manual color override */}
   Save
 </Button>
 ```
 
-**Why bad:** manual color classes create maintenance burden, icons can get out of sync with text color, breaks color consistency in themes
+**Why bad:** explicitly setting icon color overrides currentColor inheritance, icons can get out of sync with button text color, breaks color consistency when themes change
 
 ---
 
@@ -623,30 +509,42 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 **Why good:** generic type parameter makes hook reusable with any value type, cleanup function prevents memory leaks, proper dependency array ensures correct behavior
 
-### useDebounce Usage with React Query
+### useDebounce Usage Example
 
 ```typescript
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 
 const DEBOUNCE_DELAY_MS = 500;
-const MIN_SEARCH_LENGTH = 0;
+const MIN_SEARCH_LENGTH = 1;
 
 function SearchComponent() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [results, setResults] = useState<string[]>([]);
   const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY_MS);
 
-  const { data } = useQuery({
-    queryKey: ["search", debouncedSearchTerm],
-    queryFn: () => searchAPI(debouncedSearchTerm),
-    enabled: debouncedSearchTerm.length > MIN_SEARCH_LENGTH,
-  });
+  useEffect(() => {
+    if (debouncedSearchTerm.length >= MIN_SEARCH_LENGTH) {
+      // Perform search when debounced value updates
+      performSearch(debouncedSearchTerm).then(setResults);
+    }
+  }, [debouncedSearchTerm]);
 
-  return <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />;
+  return (
+    <div>
+      <input
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search..."
+      />
+      <ul>
+        {results.map((result, i) => <li key={i}>{result}</li>)}
+      </ul>
+    </div>
+  );
 }
 ```
 
-**Why good:** debounce prevents excessive API calls, named constants for delay and minimum length, enabled option prevents unnecessary queries for empty search
+**Why good:** debounce prevents excessive function calls on rapid input, named constants for delay and minimum length, effect only runs when debounced value changes
 
 ### useLocalStorage Hook
 

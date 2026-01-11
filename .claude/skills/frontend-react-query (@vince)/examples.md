@@ -894,3 +894,60 @@ console.error(error); // What operation failed?
 ```
 
 **Why bad:** Unhandled localStorage crashes app in private browsing, silent catch blocks hide bugs, generic logs make debugging impossible in production
+
+---
+
+## Pattern 10: useDebounce Integration with React Query
+
+### Constants
+
+```typescript
+const DEBOUNCE_DELAY_MS = 500;
+const MIN_SEARCH_LENGTH = 0;
+```
+
+### Implementation
+
+```typescript
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+const DEBOUNCE_DELAY_MS = 500;
+const MIN_SEARCH_LENGTH = 0;
+
+function SearchComponent() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY_MS);
+
+  const { data } = useQuery({
+    queryKey: ["search", debouncedSearchTerm],
+    queryFn: () => searchAPI(debouncedSearchTerm),
+    enabled: debouncedSearchTerm.length > MIN_SEARCH_LENGTH,
+  });
+
+  return <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />;
+}
+
+// Named export
+export { SearchComponent };
+```
+
+**Why good:** debounce prevents excessive API calls on every keystroke, named constants for delay and minimum length make values self-documenting, enabled option prevents unnecessary queries for empty search terms, query key includes debounced term for proper cache management
+
+### Bad Example - No Debounce
+
+```typescript
+// BAD: Fetches on every keystroke
+function SearchComponent() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data } = useQuery({
+    queryKey: ["search", searchTerm], // Changes on every keystroke
+    queryFn: () => searchAPI(searchTerm),
+  });
+
+  return <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />;
+}
+```
+
+**Why bad:** triggers a new API request on every keystroke creating excessive network traffic, wastes server resources, creates poor UX with flickering results, can cause race conditions where older results arrive after newer ones
