@@ -139,10 +139,10 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with drizzle
 
 
-### backend/better-auth (@vince)
+### backend/better-auth+drizzle+hono (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when working with better auth
+- Invoke: `skill: "backend/better-auth+drizzle+hono (@vince)"`
+- Use when: when working with better auth+drizzle+hono
 
 
 ### backend/posthog-analytics (@vince)
@@ -157,16 +157,16 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with posthog flags
 
 
-### backend/resend (@vince)
+### backend/resend+react-email (@vince)
 - Description: Resend + React Email templates
-- Invoke: `skill: "backend/resend (@vince)"`
-- Use when: when working with resend
+- Invoke: `skill: "backend/resend+react-email (@vince)"`
+- Use when: when working with resend+react email
 
 
-### backend/observability (@vince)
+### backend/observability+axiom+pino+sentry (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
-- Invoke: `skill: "backend/observability (@vince)"`
-- Use when: when working with observability
+- Invoke: `skill: "backend/observability+axiom+pino+sentry (@vince)"`
+- Use when: when working with observability+axiom+pino+sentry
 
 
 ### backend/github-actions (@vince)

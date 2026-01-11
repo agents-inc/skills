@@ -153,7 +153,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 ### frontend/zustand (@vince)
-- Description: Zustand stores, React Query integration, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
+- Description: Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 - Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when working with zustand
 
@@ -171,7 +171,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 ### frontend/vitest (@vince)
-- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
+- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
 - Invoke: `skill: "frontend/vitest (@vince)"`
 - Use when: when working with vitest
 

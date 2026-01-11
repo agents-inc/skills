@@ -50,9 +50,8 @@ Is this a B2B product with multi-user accounts?
 
 **Works with:**
 
-- **Better Auth**: Call identify() on login/signup, reset() on logout
-- **React Query**: Track data fetch success/failure events
-- **Hono API Routes**: Server-side event tracking with posthog-node
+- **Authentication flows**: Call identify() on login/signup, reset() on logout
+- **API routes**: Server-side event tracking with posthog-node
 - **Feature Flags**: Same PostHog instance handles both (separate skill)
 
 **Replaces / Conflicts with:**

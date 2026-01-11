@@ -9,12 +9,14 @@
 ### Example: Skip Link Component
 
 ```typescript
-// components/SkipLink/SkipLink.tsx
-import styles from './SkipLink.module.css';
+// components/skip-link.tsx
+interface SkipLinkProps {
+  className?: string;
+}
 
-export function SkipLink() {
+export function SkipLink({ className }: SkipLinkProps) {
   return (
-    <a href="#main-content" className={styles.skipLink}>
+    <a href="#main-content" className={className}>
       Skip to main content
     </a>
   );
@@ -22,8 +24,8 @@ export function SkipLink() {
 ```
 
 ```css
-/* SkipLink.module.css */
-.skipLink {
+/* Skip link styling pattern - apply via your styling solution */
+.skip-link {
   position: absolute;
   top: -100px;
   left: 0;
@@ -34,17 +36,19 @@ export function SkipLink() {
   z-index: 9999;
 }
 
-.skipLink:focus {
+.skip-link:focus {
   top: 0;
 }
 ```
 
 ```typescript
-// Layout.tsx
+// layout.tsx
+import type { ReactNode } from 'react';
+
 function Layout({ children }: { children: ReactNode }) {
   return (
     <>
-      <SkipLink />
+      <SkipLink className="skip-link" />
       <Header />
       <main id="main-content" tabIndex={-1}>
         {children}
@@ -69,10 +73,9 @@ function Layout({ children }: { children: ReactNode }) {
 ### Example: Accessible Modal Dialog with Radix UI
 
 ```typescript
-// components/Dialog/Dialog.tsx
+// components/dialog.tsx
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { useEffect, useRef, type ReactNode } from 'react';
-import styles from './Dialog.module.css';
 
 interface DialogProps {
   open: boolean;
@@ -80,6 +83,7 @@ interface DialogProps {
   title: string;
   description?: string;
   children: ReactNode;
+  className?: string;
 }
 
 export function Dialog({
@@ -88,6 +92,7 @@ export function Dialog({
   title,
   description,
   children,
+  className,
 }: DialogProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -101,29 +106,29 @@ export function Dialog({
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className={styles.overlay} />
+        <RadixDialog.Overlay className="dialog-overlay" />
 
-        <RadixDialog.Content className={styles.content}>
-          <RadixDialog.Title className={styles.title}>
+        <RadixDialog.Content className={className}>
+          <RadixDialog.Title>
             {title}
           </RadixDialog.Title>
 
           {description && (
-            <RadixDialog.Description className={styles.description}>
+            <RadixDialog.Description>
               {description}
             </RadixDialog.Description>
           )}
 
-          <div className={styles.body}>
+          <div>
             {children}
           </div>
 
           <RadixDialog.Close
             ref={closeButtonRef}
-            className={styles.close}
             aria-label="Close dialog"
           >
-            <Icon name="x" />
+            {/* Use your icon component here */}
+            <span aria-hidden="true">X</span>
           </RadixDialog.Close>
         </RadixDialog.Content>
       </RadixDialog.Portal>
@@ -146,20 +151,21 @@ export function Dialog({
 ### Example: Accessible Password Input with Requirements
 
 ```typescript
-// components/PasswordInput/PasswordInput.tsx
+// components/password-input.tsx
 import { useState, type ComponentPropsWithoutRef } from 'react';
-import styles from './PasswordInput.module.css';
 
 interface PasswordInputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'type'> {
   label: string;
   error?: string;
   showRequirements?: boolean;
+  className?: string;
 }
 
 export function PasswordInput({
   label,
   error,
   showRequirements = true,
+  className,
   ...props
 }: PasswordInputProps) {
   const [value, setValue] = useState('');
@@ -172,18 +178,15 @@ export function PasswordInput({
     { label: 'Contains lowercase letter', met: /[a-z]/.test(value) },
   ];
 
-  const allRequirementsMet = requirements.every(r => r.met);
-
   return (
-    <div className={styles.wrapper}>
-      <label htmlFor={props.id} className={styles.label}>
+    <div className={className}>
+      <label htmlFor={props.id}>
         {label}
       </label>
 
-      <div className={styles.inputWrapper}>
+      <div>
         <input
           type={showPassword ? 'text' : 'password'}
-          className={`${styles.input} ${error ? styles.error : ''}`}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           aria-invalid={!!error}
@@ -199,26 +202,26 @@ export function PasswordInput({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className={styles.toggleButton}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
         >
-          <Icon name={showPassword ? 'eye-off' : 'eye'} />
+          {/* Use your icon component here */}
+          {showPassword ? 'Hide' : 'Show'}
         </button>
       </div>
 
       {showRequirements && (
         <ul
           id={`${props.id}-requirements`}
-          className={styles.requirements}
           aria-label="Password requirements"
         >
           {requirements.map((req, index) => (
             <li
               key={index}
-              className={req.met ? styles.met : styles.unmet}
+              data-met={req.met}
               aria-live="polite"
             >
-              <Icon name={req.met ? 'check' : 'x'} size={16} />
+              {/* Use your icon component: check or x */}
+              <span aria-hidden="true">{req.met ? '✓' : '×'}</span>
               <span>{req.label}</span>
             </li>
           ))}
@@ -228,7 +231,6 @@ export function PasswordInput({
       {error && (
         <span
           id={`${props.id}-error`}
-          className={styles.errorMessage}
           role="alert"
         >
           {error}
@@ -253,9 +255,8 @@ export function PasswordInput({
 ### Example: Accessible Sortable Data Table
 
 ```typescript
-// components/DataTable/DataTable.tsx
-import { useState } from 'react';
-import styles from './DataTable.module.css';
+// components/data-table.tsx
+import { useState, type ReactNode } from 'react';
 
 interface Column<T> {
   key: keyof T;
@@ -269,6 +270,7 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   caption: string;
   rowKey: keyof T;
+  className?: string;
 }
 
 export function DataTable<T>({
@@ -276,6 +278,7 @@ export function DataTable<T>({
   columns,
   caption,
   rowKey,
+  className,
 }: DataTableProps<T>) {
   const [sortColumn, setSortColumn] = useState<keyof T | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -301,8 +304,8 @@ export function DataTable<T>({
   });
 
   return (
-    <table className={styles.table}>
-      <caption className={styles.caption}>{caption}</caption>
+    <table className={className}>
+      <caption>{caption}</caption>
 
       <thead>
         <tr>
@@ -310,12 +313,10 @@ export function DataTable<T>({
             <th
               key={String(column.key)}
               scope="col"
-              className={styles.th}
             >
               {column.sortable ? (
                 <button
                   onClick={() => handleSort(column.key)}
-                  className={styles.sortButton}
                   aria-sort={
                     sortColumn === column.key
                       ? sortDirection === 'asc'
@@ -326,11 +327,9 @@ export function DataTable<T>({
                 >
                   {column.header}
                   {sortColumn === column.key && (
-                    <Icon
-                      name={sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}
-                      size={16}
-                      aria-hidden="true"
-                    />
+                    <span aria-hidden="true">
+                      {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                    </span>
                   )}
                 </button>
               ) : (
@@ -345,7 +344,7 @@ export function DataTable<T>({
         {sortedData.map((row) => (
           <tr key={String(row[rowKey])}>
             {columns.map((column) => (
-              <td key={String(column.key)} className={styles.td}>
+              <td key={String(column.key)}>
                 {column.render
                   ? column.render(row[column.key], row)
                   : String(row[column.key])}
@@ -408,18 +407,24 @@ export function DataTable<T>({
 
 ```typescript
 // GOOD: Color + Icon + Text
-function StatusBadge({ status }: { status: 'success' | 'error' | 'warning' }) {
+interface StatusBadgeProps {
+  status: 'success' | 'error' | 'warning';
+  className?: string;
+}
+
+function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = {
-    success: { icon: Check, text: 'Success', color: 'var(--color-success)' },
-    error: { icon: X, text: 'Error', color: 'var(--color-error)' },
-    warning: { icon: AlertTriangle, text: 'Warning', color: 'var(--color-warning)' },
+    success: { symbol: '✓', text: 'Success', color: 'var(--color-success)' },
+    error: { symbol: '×', text: 'Error', color: 'var(--color-error)' },
+    warning: { symbol: '!', text: 'Warning', color: 'var(--color-warning)' },
   };
 
-  const { icon: Icon, text, color } = config[status];
+  const { symbol, text, color } = config[status];
 
   return (
-    <div className={styles.badge} style={{ color }}>
-      <Icon size={16} aria-hidden="true" />
+    <div className={className} style={{ color }}>
+      {/* Use your icon component here, or simple symbol */}
+      <span aria-hidden="true">{symbol}</span>
       <span>{text}</span>
     </div>
   );
@@ -496,33 +501,45 @@ function BadStatusBadge({ status }: { status: 'success' | 'error' }) {
 ### Example: Semantic List
 
 ```typescript
-// packages/ui/src/patterns/feature/feature.tsx
+// components/feature.tsx
 // GOOD: Uses <li> for list item
-export const Feature = ({ id, title, description, status }: FeatureProps) => {
+
+interface FeatureProps {
+  id: string;
+  title: string;
+  description: string;
+  status: 'done' | 'pending';
+  className?: string;
+}
+
+export function Feature({ id, title, description, status, className }: FeatureProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <li  // Semantic HTML element
-      className={styles.feature}
-      onClick={() => setIsExpanded(!isExpanded)}
+      className={className}
       data-expanded={isExpanded}
-      data-testid="feature"
     >
-      <div className={styles.header}>
+      <div>
+        {/* Radix UI Switch has built-in role="switch" and ARIA */}
         <Switch
           id={`${id}-switch`}
           checked={status === "done"}
-          // Radix UI Switch has built-in role="switch" and ARIA
         />
-        <h2 className={styles.title}>{title}</h2>
-        <Button variant="ghost" size="icon">
-          {isExpanded ? <ChevronUp /> : <ChevronDown />}
-        </Button>
+        <h2>{title}</h2>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+        >
+          {/* Use your icon component here */}
+          <span aria-hidden="true">{isExpanded ? '−' : '+'}</span>
+        </button>
       </div>
       {isExpanded && <p>{description}</p>}
     </li>
   );
-};
+}
 ```
 
 ```typescript
@@ -604,11 +621,10 @@ export const Feature = ({ id, title, description, status }: FeatureProps) => {
 ### Example: Accessible Form Field with Radix UI
 
 ```typescript
-// Simplified from packages/ui/src/components/select/select.tsx
+// components/custom-select.tsx
 import * as Select from "@radix-ui/react-select";
-import { ChevronDown } from "lucide-react";
 
-export const CustomSelect = () => {
+export function CustomSelect() {
   return (
     <Select.Root>
       {/* Radix UI automatically handles:
@@ -621,7 +637,8 @@ export const CustomSelect = () => {
       <Select.Trigger aria-label="Select option">
         <Select.Value placeholder="Choose an option" />
         <Select.Icon>
-          <ChevronDown />
+          {/* Use your icon component here */}
+          <span aria-hidden="true">▼</span>
         </Select.Icon>
       </Select.Trigger>
 
@@ -639,7 +656,7 @@ export const CustomSelect = () => {
       </Select.Portal>
     </Select.Root>
   );
-};
+}
 ```
 
 **Why good:** Radix UI components include all required ARIA attributes and keyboard support automatically.
@@ -649,87 +666,101 @@ export const CustomSelect = () => {
 ### Example: Form with Error Handling
 
 ```typescript
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+// components/login-form.tsx
+// This example shows pure accessibility patterns - integrate with your form library
 
-const schema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
+import { useState, type FormEvent } from 'react';
 
-type FormData = z.infer<typeof schema>;
+interface FormErrors {
+  email?: string;
+  password?: string;
+}
 
 export function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const validate = (): FormErrors => {
+    const newErrors: FormErrors = {};
+    if (!email || !email.includes('@')) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    if (!password || password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+    return newErrors;
+  };
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      await login(data);
-    } catch (error) {
-      setSubmitError('Login failed. Please try again.');
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      try {
+        // Submit form data
+      } catch {
+        setSubmitError('Login failed. Please try again.');
+      }
     }
   };
 
+  const errorCount = Object.keys(errors).length + (submitError ? 1 : 0);
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form onSubmit={handleSubmit} noValidate>
       {/* Error summary for screen readers */}
-      {(Object.keys(errors).length > 0 || submitError) && (
-        <div role="alert" className={styles.errorSummary}>
-          <h2>There are {Object.keys(errors).length} errors in this form</h2>
+      {errorCount > 0 && (
+        <div role="alert">
+          <h2>There are {errorCount} errors in this form</h2>
           <ul>
-            {errors.email && <li><a href="#email">{errors.email.message}</a></li>}
-            {errors.password && <li><a href="#password">{errors.password.message}</a></li>}
+            {errors.email && <li><a href="#email">{errors.email}</a></li>}
+            {errors.password && <li><a href="#password">{errors.password}</a></li>}
             {submitError && <li>{submitError}</li>}
           </ul>
         </div>
       )}
 
       {/* Email field */}
-      <div className={styles.field}>
+      <div>
         <label htmlFor="email">
           Email <span aria-label="required">*</span>
         </label>
         <input
           id="email"
           type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           aria-required="true"
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? 'email-error' : undefined}
-          {...register('email')}
         />
         {errors.email && (
-          <span id="email-error" role="alert" className={styles.error}>
-            {errors.email.message}
+          <span id="email-error" role="alert">
+            {errors.email}
           </span>
         )}
       </div>
 
       {/* Password field */}
-      <div className={styles.field}>
+      <div>
         <label htmlFor="password">
           Password <span aria-label="required">*</span>
         </label>
         <input
           id="password"
           type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           aria-required="true"
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? 'password-error' : undefined}
-          {...register('password')}
         />
         {errors.password && (
-          <span id="password-error" role="alert" className={styles.error}>
-            {errors.password.message}
+          <span id="password-error" role="alert">
+            {errors.password}
           </span>
         )}
       </div>
@@ -755,7 +786,7 @@ export function LoginForm() {
 
 ```typescript
 // GOOD: Multiple indicators
-<div className={styles.field}>
+<div className="field">
   <label htmlFor="email">
     Email
     <abbr title="required" aria-label="required">*</abbr>
@@ -766,14 +797,14 @@ export function LoginForm() {
     required  // Browser validation
     aria-required="true"  // Screen reader announcement
   />
-  <p className={styles.helperText}>
+  <p className="helper-text">
     We'll never share your email.
   </p>
 </div>
 
 // Add legend explaining asterisks
 <form>
-  <p className={styles.formLegend}>
+  <p className="form-legend">
     <abbr title="required" aria-label="required">*</abbr> indicates required fields
   </p>
   {/* fields */}
@@ -898,7 +929,8 @@ export function LoginForm() {
 ```typescript
 // Usage: Additional context for screen readers
 <button>
-  <Icon name="trash" />
+  {/* Use your icon component here */}
+  <span aria-hidden="true">🗑</span>
   <span className="sr-only">Delete item</span>
 </button>
 
@@ -926,8 +958,9 @@ export function LoginForm() {
 
 ```typescript
 // GOOD: Hide decorative icons from screen readers
-<div className={styles.banner}>
-  <Icon name="sparkles" aria-hidden="true" />  {/* Decorative */}
+<div className="banner">
+  {/* Use your icon component with aria-hidden */}
+  <span aria-hidden="true">✨</span>  {/* Decorative */}
   <h1>Welcome to our site!</h1>
 </div>
 
@@ -951,16 +984,14 @@ export function LoginForm() {
 
 ## Testing Examples
 
-### Example: Testing Library Accessibility Queries
+### Example: Role-Based Accessibility Queries
 
 ```typescript
-// apps/client-react/src/home/__tests__/features.test.tsx
-
-// Role-based queries
-import { screen, within } from '@testing-library/react';
+// Role-based queries encourage accessible markup
+// These examples use Testing Library patterns - adapt to your testing framework
 
 it('should toggle the feature', async () => {
-  renderApp();
+  // Render your component
 
   // Query by role (encourages accessible markup)
   const feature = await screen.findByTestId('feature');
@@ -968,12 +999,13 @@ it('should toggle the feature', async () => {
 
   expect(switchElement).toBeChecked();
 
-  userEvent.click(switchElement);
+  // Simulate user interaction
+  await userEvent.click(switchElement);
   await waitFor(() => expect(switchElement).not.toBeChecked());
 });
 
 it('should render button with accessible name', () => {
-  render(<Button>Click me</Button>);
+  // Render your button component
 
   // Query by role and accessible name
   const button = screen.getByRole('button', { name: 'Click me' });
@@ -983,19 +1015,26 @@ it('should render button with accessible name', () => {
 
 **Why good:** Role-based queries fail if markup isn't accessible, catching issues early.
 
+**Key accessibility query patterns:**
+- `getByRole('button')` - Finds buttons by ARIA role
+- `getByRole('link', { name: 'Home' })` - Finds links by accessible name
+- `getByRole('textbox')` - Finds inputs by role
+- `getByRole('switch')` - Finds toggle controls
+- `getByLabelText('Email')` - Finds inputs by label association
+
 ---
 
 ### Example: jest-axe Integration
 
 ```typescript
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { render } from '@testing-library/react';
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
 
 describe('LoginForm', () => {
   it('should have no accessibility violations', async () => {
+    // Render your component and get the container element
     const { container } = render(<LoginForm />);
     const results = await axe(container);
 
@@ -1003,6 +1042,7 @@ describe('LoginForm', () => {
   });
 
   it('should have no violations with errors', async () => {
+    // Test with error state
     const { container } = render(
       <LoginForm errors={{ email: 'Invalid email' }} />
     );

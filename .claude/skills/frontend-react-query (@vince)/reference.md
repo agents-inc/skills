@@ -57,7 +57,7 @@ How to handle errors?
 **Works with:**
 
 - **React Query (@tanstack/react-query)**: Generated query options integrate directly with useQuery/useMutation hooks for automatic data fetching and caching
-- **MSW (@repo/api-mocks)**: Mock handlers use generated types from `@repo/api/types` ensuring mocks match API contract (see API Mocking skill for MSW setup)
+- **API mocking solutions**: Mock handlers can use generated types from `@repo/api/types` ensuring mocks match API contract
 - **TypeScript**: Generated types provide end-to-end type safety from OpenAPI schema to UI components
 - **Next.js**: Environment variables (NEXT_PUBLIC_API_URL) configure client per deployment environment
 
@@ -66,7 +66,7 @@ How to handle errors?
 - **Axios**: hey-api uses fetch-based client, no interceptors available—use React Query middleware instead
 - **Custom API hooks**: Generated query options replace manual useQuery wrappers
 - **Manual type definitions**: OpenAPI types replace hand-written interfaces
-- **Redux for server state**: React Query handles server state, use Zustand for client state only
+- **Redux for server state**: React Query handles server state; use a client state management solution for client-only state
 
 </integration>
 
@@ -169,7 +169,7 @@ staleTime: STALE_TIME_MS,
 
 **Gotchas & Edge Cases:**
 
-- When using MSW mocks, they must start before React Query provider mounts (see API Mocking skill)
+- When using API mocks, they must start before React Query provider mounts
 - `NEXT_PUBLIC_` prefix required for client-side env variables in Next.js
 - `client.setConfig()` merges with existing config, doesn't replace it
 - Generated query keys are immutable tuples (safe for React Query key equality)

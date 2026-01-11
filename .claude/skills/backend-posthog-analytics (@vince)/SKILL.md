@@ -5,7 +5,7 @@ description: PostHog event tracking, user identification, group analytics for B2
 
 # PostHog Analytics Patterns
 
-> **Quick Guide:** Use PostHog for product analytics with structured event naming (category:object_action), server-side tracking for reliability, and proper user identification integrated with Better Auth. Client-side for UI interactions, server-side for business events.
+> **Quick Guide:** Use PostHog for product analytics with structured event naming (category:object_action), server-side tracking for reliability, and proper user identification integrated with your authentication flow. Client-side for UI interactions, server-side for business events.
 
 **Detailed Resources:**
 - For code examples, see [examples.md](examples.md)
@@ -54,7 +54,7 @@ description: PostHog event tracking, user identification, group analytics for B2
 
 - Event naming conventions (category:object_action)
 - Property naming patterns (object_adjective, is_/has_ booleans)
-- User identification with Better Auth integration
+- User identification with authentication flow integration
 - Client-side tracking with React hooks
 - Server-side tracking with posthog-node
 - Group analytics for B2B organizations
@@ -134,7 +134,7 @@ For complete code examples, see [examples.md](examples.md#pattern-1-event-naming
 
 ---
 
-### Pattern 2: User Identification with Better Auth
+### Pattern 2: User Identification with Authentication
 
 Integrate PostHog identification with your authentication flow.
 
@@ -167,7 +167,7 @@ const handleLogout = async () => {
 };
 ```
 
-For complete implementation with constants and hooks, see [examples.md](examples.md#pattern-2-user-identification-with-better-auth).
+For complete implementation with constants and hooks, see [examples.md](examples.md#pattern-2-user-identification-with-authentication).
 
 ---
 

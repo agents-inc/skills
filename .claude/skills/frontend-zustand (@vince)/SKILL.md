@@ -1,11 +1,11 @@
 ---
 name: frontend/zustand (@vince)
-description: Zustand stores, React Query integration, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
+description: Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 ---
 
 # Client State Management Patterns
 
-> **Quick Guide:** Local UI state? useState. Shared UI (2+ components)? Zustand. Server data? React Query. URL-appropriate filters? searchParams. NEVER use Context for state management.
+> **Quick Guide:** Local UI state? useState. Shared UI (2+ components)? Zustand. Server data? Use your data fetching solution. URL-appropriate filters? searchParams. NEVER use Context for state management.
 
 **Detailed Resources:**
 - For code examples, see [examples.md](examples.md)
@@ -17,7 +17,7 @@ description: Zustand stores, React Query integration, client state patterns. Use
 
 ## CRITICAL: Before Managing Client State
 
-**(You MUST use React Query for ALL server/API data - NEVER useState, Zustand, or Context)**
+**(You MUST use a data fetching solution for ALL server/API data - NEVER useState, Zustand, or Context)**
 
 **(You MUST use Zustand for ALL shared UI state (2+ components) - NOT Context or prop drilling)**
 
@@ -49,7 +49,7 @@ description: Zustand stores, React Query integration, client state patterns. Use
 
 **When NOT to use:**
 
-- Server/API data (use React Query instead)
+- Server/API data (use a dedicated data fetching solution)
 - State that should be shareable via URL (use searchParams)
 - Any Context-based state management approach
 
@@ -59,7 +59,7 @@ description: Zustand stores, React Query integration, client state patterns. Use
 
 ## Philosophy
 
-React provides multiple tools for managing client state, but each has a specific purpose. The key principle: **use the right tool for the right job**. Server data belongs in React Query with caching and synchronization. Local UI state stays in useState. Shared UI state lives in Zustand for performance. URL state makes filters shareable. Context is ONLY for dependency injection, never state management.
+React provides multiple tools for managing client state, but each has a specific purpose. The key principle: **use the right tool for the right job**. Server data belongs in a dedicated data fetching layer with caching and synchronization. Local UI state stays in useState. Shared UI state lives in Zustand for performance. URL state makes filters shareable. Context is ONLY for dependency injection, never state management.
 
 The decision tree at the top of this skill guides you to the right solution based on your specific use case. Follow it strictly to avoid common pitfalls like using Context for state or putting server data in client state.
 
@@ -81,7 +81,7 @@ The most critical decision: is this server data or client data?
 
 ```
 Is it server data (from API)?
-├─ YES → React Query
+├─ YES → Data fetching solution (not this skill's scope)
 └─ NO → Is it URL-appropriate (filters, search)?
     ├─ YES → URL params (searchParams)
     └─ NO → Is it needed in 2+ components?
@@ -121,7 +121,7 @@ Use ONLY when state is truly component-local and never shared.
 
 - State needed in 2+ components (use Zustand)
 - Prop drilling 3+ levels (use Zustand)
-- Server data (use React Query)
+- Server data (use a data fetching solution)
 
 For implementation examples and good/bad comparisons, see [examples.md](examples.md#pattern-2-local-state-with-usestate).
 
@@ -159,7 +159,7 @@ Context is NOT a state management solution. It's for dependency injection and si
 
 - **ANY state management** (use Zustand instead)
 - **ANY frequently updating values** (massive performance issues)
-- Server data (use React Query)
+- Server data (use a data fetching solution)
 - UI state (use Zustand for shared, useState for local)
 - User interactions, selections, filters (use Zustand)
 - Shopping carts, modals, sidebars (use Zustand)
@@ -198,7 +198,7 @@ For controlled component patterns and Zod schema validation examples, see [examp
 
 ## CRITICAL REMINDERS
 
-**(You MUST use React Query for ALL server/API data - NEVER useState, Zustand, or Context)**
+**(You MUST use a data fetching solution for ALL server/API data - NEVER useState, Zustand, or Context)**
 
 **(You MUST use Zustand for ALL shared UI state (2+ components) - NOT Context or prop drilling)**
 

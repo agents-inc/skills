@@ -248,8 +248,6 @@ CI/CD pipelines integrate with multiple parts of the stack:
 - **Bun**: Fast package installation, test runner, build tool
 - **GitHub Actions**: Workflow orchestration, secret management, environments
 - **Vercel**: Preview deployments, production hosting, remote cache provider
-- **React Query**: No CI impact (client-side only)
-- **Zustand**: No CI impact (client-side only)
 - **Testing libraries**: Vitest/Jest run via `turbo run test`
 
 **Authentication integrations:**

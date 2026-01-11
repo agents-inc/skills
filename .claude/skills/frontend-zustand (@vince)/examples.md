@@ -78,7 +78,7 @@ function FeaturesList() {
 }
 ```
 
-**Why bad:** Server data belongs in React Query not client state, no caching strategy means duplicate requests, no automatic refetch on window focus, manually managing loading/error states that React Query handles automatically
+**Why bad:** Server data belongs in a data fetching layer not client state, no caching strategy means duplicate requests, no automatic refetch on window focus, manually managing loading/error states that a data fetching solution handles automatically
 
 ### Bad Example - Prop Drilling for Shared State
 
@@ -355,7 +355,7 @@ export const ProductList = () => {
   const page = searchParams.get("page") ?? DEFAULT_PAGE;
   const sort = searchParams.get("sort") ?? DEFAULT_SORT;
 
-  // Pass URL params to React Query for data fetching
+  // Pass URL params to your data fetching solution
   // const { data } = useGetProducts({ category, search, minPrice, page, sort });
 
   return <div>...</div>;

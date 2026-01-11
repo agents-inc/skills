@@ -5,7 +5,7 @@ description: Component architecture, hooks, patterns
 
 # React Components
 
-> **Quick Guide:** Tiered components (Primitives -> Components -> Patterns -> Templates). Use `forwardRef` for ref forwarding. `cva` for type-safe variants. `asChild` pattern for polymorphic components. Expose `className` prop. lucide-react for icons.
+> **Quick Guide:** Tiered components (Primitives -> Components -> Patterns -> Templates). Use `forwardRef` for ref forwarding. `asChild` pattern for polymorphic components. Expose `className` prop for styling flexibility. lucide-react for icons.
 
 ---
 
@@ -29,26 +29,26 @@ description: Component architecture, hooks, patterns
 
 ---
 
-**Auto-detection:** React components, component patterns, icon usage, cva, forwardRef
+**Auto-detection:** React components, component patterns, icon usage, forwardRef, custom hooks
 
 **When to use:**
 
 - Building React components
-- Implementing component variants with cva
+- Implementing component architecture patterns
 - Working with icons in components
-- Understanding component architecture
+- Creating custom hooks
 
 **Key patterns covered:**
 
 - Component architecture tiers
-- forwardRef and cva patterns
+- forwardRef, displayName, and ref patterns
 - Icon usage with lucide-react
 - Custom hooks for common patterns
 - Error boundaries with retry
 
 **When NOT to use:**
 
-- Simple one-off components without variants (skip cva, use SCSS Modules only)
+- Simple one-off components without variants (skip variant abstractions)
 - Components that don't need refs (skip forwardRef)
 - Static content without interactivity (consider static HTML)
 
@@ -62,7 +62,7 @@ description: Component architecture, hooks, patterns
 
 ## Philosophy
 
-React components follow a tiered architecture from low-level primitives to high-level templates. Components should be composable, type-safe, and expose necessary customization points (`className`, refs). Use `cva` only when components have multiple variants to avoid over-engineering.
+React components follow a tiered architecture from low-level primitives to high-level templates. Components should be composable, type-safe, and expose necessary customization points (`className`, refs). Use variant abstractions only when components have multiple variants to avoid over-engineering. React is styling-agnostic - apply styles via the `className` prop.
 
 </philosophy>
 
@@ -90,40 +90,26 @@ React components are organized in a tiered hierarchy from low-level building blo
 // packages/ui/src/components/button/button.tsx
 import { forwardRef } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import clsx from "clsx";
-import styles from "./button.module.scss";
 
-const buttonVariants = cva("btn", {
-  variants: {
-    variant: {
-      default: clsx(styles.btn, styles.btnDefault),
-      ghost: clsx(styles.btn, styles.btnGhost),
-      link: clsx(styles.btn, styles.btnLink),
-    },
-    size: {
-      default: clsx(styles.btn, styles.btnSizeDefault),
-      large: clsx(styles.btn, styles.btnSizeLarge),
-      icon: clsx(styles.btn, styles.btnSizeIcon),
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
-  },
-});
+// Variant props can be typed however your styling solution requires
+export type ButtonVariant = "default" | "ghost" | "link";
+export type ButtonSize = "default" | "large" | "icon";
 
-export type ButtonProps = React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  };
+export type ButtonProps = React.ComponentProps<"button"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  asChild?: boolean;
+};
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant, size, className, asChild = false, ...props }, ref) => {
+  ({ variant = "default", size = "default", className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    // Apply styling via className - use any styling solution
     return (
       <Comp
-        className={clsx(buttonVariants({ variant, size, className }))}
+        className={className}
+        data-variant={variant}
+        data-size={size}
         ref={ref}
         {...props}
       />
@@ -134,70 +120,59 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 ```
 
-**Why good:** forwardRef enables ref forwarding for focus management and DOM access, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, displayName improves debugging in React DevTools
+**Why good:** forwardRef enables ref forwarding for focus management and DOM access, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, displayName improves debugging in React DevTools, data-attributes enable styling based on state/variants
 
 **When to use:** All reusable React components in the component library.
 
 ---
 
-### Pattern 2: Component Variants with cva
+### Pattern 2: Component Variant Props
 
-Use `cva` (class-variance-authority) for type-safe component variants. Only use when component has multiple variants (size, color, etc.).
+Components with multiple visual variants should expose type-safe variant props. The actual styling implementation is handled by your styling solution.
 
-#### When to Use cva
+#### When to Use Variant Props
 
 - Component has 2+ visual variants (default, ghost, outline)
 - Component has 2+ size variants (sm, md, lg)
-- Need type-safe variant props
-- Need compound variants (combinations of variants)
+- Need type-safe variant props with autocomplete
 
 #### Implementation
 
 ```typescript
-// Good Example - Using cva for components with variants
-import { cva, type VariantProps } from "class-variance-authority";
-import clsx from "clsx";
-import styles from "./alert.module.scss";
+// Good Example - Type-safe variant props
+import { forwardRef } from "react";
 
 const ANIMATION_DURATION_MS = 200;
 
-const alertVariants = cva("alert", {
-  variants: {
-    variant: {
-      info: clsx(styles.alert, styles.alertInfo),
-      warning: clsx(styles.alert, styles.alertWarning),
-      error: clsx(styles.alert, styles.alertError),
-      success: clsx(styles.alert, styles.alertSuccess),
-    },
-    size: {
-      sm: clsx(styles.alert, styles.alertSm),
-      md: clsx(styles.alert, styles.alertMd),
-      lg: clsx(styles.alert, styles.alertLg),
-    },
-  },
-  defaultVariants: {
-    variant: "info",
-    size: "md",
-  },
-});
+export type AlertVariant = "info" | "warning" | "error" | "success";
+export type AlertSize = "sm" | "md" | "lg";
 
-export type AlertProps = React.ComponentProps<"div"> &
-  VariantProps<typeof alertVariants>;
-
-export const Alert = ({ variant, size, className, ...props }: AlertProps) => {
-  return (
-    <div
-      className={clsx(alertVariants({ variant, size, className }))}
-      style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease` }}
-      {...props}
-    />
-  );
+export type AlertProps = React.ComponentProps<"div"> & {
+  variant?: AlertVariant;
+  size?: AlertSize;
 };
+
+export const Alert = forwardRef<HTMLDivElement, AlertProps>(
+  ({ variant = "info", size = "md", className, style, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={className}
+        data-variant={variant}
+        data-size={size}
+        style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease`, ...style }}
+        {...props}
+      />
+    );
+  }
+);
+
+Alert.displayName = "Alert";
 ```
 
-**Why good:** cva provides type-safe variant props with autocomplete, defaultVariants prevent undefined behavior, named constant for animation duration prevents magic numbers, VariantProps extracts correct TypeScript types from cva definition
+**Why good:** TypeScript union types provide autocomplete for variant values, data-attributes enable CSS styling based on variants, named constant for animation duration prevents magic numbers, forwardRef and displayName follow React conventions
 
-**When not to use:** Simple components without variants (overkill - use SCSS Modules only).
+**When not to use:** Simple components without variants (skip variant abstraction).
 
 ---
 
@@ -385,7 +360,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
 **Why good:** catches render errors preventing full app crashes, retry capability allows recovery from transient errors, custom fallback prop enables branded error UI, onError callback enables error tracking integration
 
-**When to use:** Place error boundaries around feature sections, not just the root. Use React Query's error boundaries for data fetching errors.
+**When to use:** Place error boundaries around feature sections, not just the root. Consider separate error boundaries for data fetching vs render errors.
 
 **When not to use:** Error boundaries don't catch event handler errors, async errors, or SSR errors - use try/catch for those.
 
@@ -397,20 +372,20 @@ export class ErrorBoundary extends Component<Props, State> {
 
 ## Integration Guide
 
+**React is styling and state-agnostic.** Components should expose `className` prop for styling flexibility and use `useState` for component-local state.
+
 **Works with:**
 
-- **SCSS Modules**: All React components use SCSS Modules for styling
-- **cva**: Type-safe variant management for components with multiple variants
 - **Radix UI**: Primitives like `Slot` for polymorphic components
 - **lucide-react**: Icon library for consistent iconography
-- **React Query**: State management for server data (separate from component state)
-- **Zustand**: Global client state management (separate from local component state)
+- Any CSS solution via `className` prop
+- Any state management solution via props or hooks
 
-**Component State vs Global State:**
+**Component State Guidance:**
 
-- Use local component state (`useState`) for UI-only state
-- Use Zustand for global client state needed across components
-- Use React Query for all server data
+- Use `useState` for UI-only state local to a component
+- Use `useReducer` for complex local state with multiple sub-values
+- External state management decisions are separate from React component architecture
 
 </integration>
 

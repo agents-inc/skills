@@ -137,7 +137,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 ### frontend/zustand (@vince)
-- Description: Zustand stores, React Query integration, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
+- Description: Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 - Invoke: `skill: "frontend/zustand (@vince)"`
 - Use when: when working with zustand
 
@@ -155,7 +155,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 ### frontend/vitest (@vince)
-- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, MSW for API mocking - inverted testing pyramid prioritizing E2E tests
+- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
 - Invoke: `skill: "frontend/vitest (@vince)"`
 - Use when: when working with vitest
 
@@ -178,10 +178,10 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with drizzle
 
 
-### backend/better-auth (@vince)
+### backend/better-auth+drizzle+hono (@vince)
 - Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "backend/better-auth (@vince)"`
-- Use when: when working with better auth
+- Invoke: `skill: "backend/better-auth+drizzle+hono (@vince)"`
+- Use when: when working with better auth+drizzle+hono
 
 
 ### backend/posthog-analytics (@vince)
@@ -196,16 +196,16 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with posthog flags
 
 
-### backend/resend (@vince)
+### backend/resend+react-email (@vince)
 - Description: Resend + React Email templates
-- Invoke: `skill: "backend/resend (@vince)"`
-- Use when: when working with resend
+- Invoke: `skill: "backend/resend+react-email (@vince)"`
+- Use when: when working with resend+react email
 
 
-### backend/observability (@vince)
+### backend/observability+axiom+pino+sentry (@vince)
 - Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
-- Invoke: `skill: "backend/observability (@vince)"`
-- Use when: when working with observability
+- Invoke: `skill: "backend/observability+axiom+pino+sentry (@vince)"`
+- Use when: when working with observability+axiom+pino+sentry
 
 
 ### backend/github-actions (@vince)

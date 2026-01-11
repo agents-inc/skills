@@ -142,7 +142,7 @@ apps/client-react/
 LoginForm.tsx           → LoginForm.test.tsx        (integration test)
 useAuth.ts              → useAuth.test.ts           (integration test)
 formatPrice.ts          → formatPrice.test.ts       (unit test)
-auth-service.ts         → auth-service.test.ts      (integration test with MSW)
+auth-service.ts         → auth-service.test.ts      (integration test with network mocking)
 
 login-flow.spec.ts      (E2E test)
 checkout-flow.spec.ts   (E2E test)
@@ -186,7 +186,7 @@ checkout-flow.spec.ts   (E2E test)
 
 - E2E tests don't show up in coverage metrics (that's okay - they provide more value than coverage numbers suggest)
 - Playwright's `toBeVisible()` waits for element but `toBeInTheDocument()` doesn't - always use visibility checks to avoid flaky tests
-- MSW handlers are global - always `resetHandlers()` after each test to prevent test pollution
+- Network mock handlers are typically global - always reset handlers after each test to prevent test pollution
 - Async updates in React require `waitFor()` or `findBy*` queries - using `getBy*` queries immediately will cause flaky failures
 - Test files named `*.test.ts` run with Vitest, `*.spec.ts` run with Playwright - mixing these up causes wrong test runner to execute tests
 
@@ -225,7 +225,7 @@ vi.mock("../api", () => ({
 
 **Why it's wrong:** Module mocks break when import structure changes, defeats purpose of integration testing, doesn't test network layer or serialization.
 
-**What to do instead:** Use MSW to mock at network level.
+**What to do instead:** Use network-level mocking to intercept HTTP requests.
 
 ---
 
@@ -274,14 +274,14 @@ test("user can login", async ({ page }) => {
 - Test validation, error messages, error recovery
 - Verify user sees appropriate feedback
 
-**MSW Pattern Benefits:**
+**Network-Level Mocking Benefits:**
 
-- Tests component with API integration (via MSW)
+- Tests component with API integration (via network interception)
 - Tests all states: loading, empty, error, success
-- Centralized mock handlers in `@repo/api-mocks`
+- Centralized mock handlers can be shared
 - Shared between tests and development
 
-**MSW Pattern Limitations:**
+**Network-Level Mocking Limitations:**
 
 - Doesn't test real API (mocks can drift)
 - Doesn't test full user workflow

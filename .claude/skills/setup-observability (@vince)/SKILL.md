@@ -1,5 +1,5 @@
 ---
-name: setup/observability-setup (@vince)
+name: setup/observability (@vince)
 description: Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload
 ---
 
