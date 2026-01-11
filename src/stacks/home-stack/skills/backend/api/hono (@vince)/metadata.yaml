@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: backend
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - backend/authentication
+  - backend/database
+  - security/security
+tags:
+  - hono
+  - openapi
+  - zod
+  - rest-api
+  - validation

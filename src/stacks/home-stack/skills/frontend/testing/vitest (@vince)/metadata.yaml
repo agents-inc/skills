@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: testing
+category_exclusive: true
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+  - frontend/mocking
+tags:
+  - playwright
+  - vitest
+  - react-testing-library
+  - e2e
+  - unit-testing
+  - integration-testing

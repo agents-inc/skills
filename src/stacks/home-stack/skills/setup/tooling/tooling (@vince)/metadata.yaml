@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../schemas/metadata.schema.json
+category: setup
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - setup/turborepo
+tags:
+  - eslint
+  - prettier
+  - typescript
+  - configuration
+  - linting
+  - formatting

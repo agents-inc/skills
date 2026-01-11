@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: research
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - research
+  - investigation
+  - evidence-based
+  - methodology
+  - analysis

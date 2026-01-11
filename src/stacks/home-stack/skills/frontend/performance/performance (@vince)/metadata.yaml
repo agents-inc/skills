@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: frontend
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+tags:
+  - bundle-optimization
+  - render-performance
+  - code-splitting
+  - lazy-loading
+  - memoization

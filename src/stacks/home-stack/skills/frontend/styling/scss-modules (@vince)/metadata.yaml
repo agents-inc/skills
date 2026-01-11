@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: styling
+category_exclusive: true
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+tags:
+  - scss
+  - css-modules
+  - cva
+  - design-tokens
+  - styling

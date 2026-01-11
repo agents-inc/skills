@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: backend
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with: []
+requires_setup:
+  - setup/resend
+tags:
+  - resend
+  - react-email
+  - email
+  - templates
+  - transactional

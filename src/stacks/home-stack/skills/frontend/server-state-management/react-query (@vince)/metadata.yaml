@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: data-fetching
+category_exclusive: true
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+  - frontend/client-state
+tags:
+  - react-query
+  - tanstack-query
+  - data-fetching
+  - rest-api
+  - caching

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: performance
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - backend/database
+  - backend/api
+tags:
+  - performance
+  - query-optimization
+  - caching
+  - indexing
+  - backend
