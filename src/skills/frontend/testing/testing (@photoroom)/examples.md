@@ -1,113 +1,15 @@
----
-name: Frontend Testing
-description: Karma, Mocha, Chai, Playwright for Photoroom webapp
----
+# Testing Examples
 
-# Frontend Testing Patterns - Photoroom Webapp
-
-> **Quick Guide:** Unit tests use Karma + Mocha + Chai (NOT Jest/Vitest). Use Chai assertion syntax (`to.equal`, `to.deep.equal`, `to.have.been.called`). Sinon for mocking with mandatory sandbox cleanup. Mock store factories for dependency injection. E2E tests use Playwright with custom fixtures and Page Object Model. Import from `fixtures` not `@playwright/test`.
+> Code examples for all testing patterns. Reference from [SKILL.md](SKILL.md).
 
 ---
 
-<critical_requirements>
+## Chai Assertion Syntax
 
-## ⚠️ CRITICAL: Before Using This Skill
-
-> **All code must follow project conventions in CLAUDE.md** (PascalCase test files matching source, named exports, import ordering, `import type`, named constants)
-
-**(You MUST use Chai assertion syntax - NOT Jest/Vitest syntax (`.toBe()` vs `.to.equal()`))**
-
-**(You MUST use Sinon sandbox with cleanup in `afterEach` - NEVER use `sinon.stub()` directly)**
-
-**(You MUST call `queryClient.clear()` in `beforeEach` for tests using React Query)**
-
-**(You MUST import `test` and `expect` from `fixtures` in E2E tests - NOT from `@playwright/test`)**
-
-**(You MUST use Page Object Model (POM) pattern for E2E test interactions)**
-
-</critical_requirements>
-
----
-
-**Auto-detection:** Karma, Mocha, Chai, Sinon, unit test, test file, `.test.ts`, sandbox, mock store, Playwright, E2E, end-to-end, `.e2e.ts`, fixtures, POM, page object
-
-**When to use:**
-
-- Writing unit tests for stores, utilities, or hooks
-- Setting up test mocks with Sinon sandbox
-- Creating mock store factories for dependency injection
-- Writing Playwright E2E tests with custom auth fixtures
-- Using Page Object Model for E2E interactions
-
-**Key patterns covered:**
-
-- Karma + Mocha + Chai test framework (NOT Jest/Vitest)
-- Chai assertion syntax (`to.equal`, `to.deep.equal`, `to.have.been.called`)
-- Sinon sandbox pattern with mandatory cleanup
-- Mock store factories with partial dependencies
-- Test setup (WASM initialization, queryClient.clear)
-- Playwright E2E configuration and custom fixtures
-- Page Object Model (POM) pattern
-- Auth state fixtures (proContext, proPage)
-
-**When NOT to use:**
-
-- Integration testing (use E2E instead)
-- Component rendering tests (use Storybook for visual testing)
-- API endpoint testing (use apps/image-editing-api patterns)
-
----
-
-<philosophy>
-
-## Philosophy
-
-Testing in the Photoroom webapp follows a clear separation: **unit tests** for stores, utilities, and isolated logic; **E2E tests** for user flows and integration. The codebase uses Karma + Mocha + Chai for unit tests (NOT Jest/Vitest) and Playwright for E2E tests.
-
-**Unit Testing Principles:**
-
-1. **Chai assertions** - Use `.to.equal()`, `.to.deep.equal()`, `.to.have.been.called`
-2. **Sinon sandboxes** - Always use sandbox for mocking with cleanup in `afterEach`
-3. **Mock store factories** - Create test stores with partial dependency injection
-4. **Isolated tests** - Clear queryClient and sandbox between tests
-
-**E2E Testing Principles:**
-
-1. **Custom fixtures** - Import from `fixtures`, not `@playwright/test`
-2. **Page Object Model** - Encapsulate page interactions in POM classes
-3. **Auth state fixtures** - Use `proContext`/`proPage` for authenticated tests
-4. **Parallel execution** - Tests run in parallel with worker isolation
-
-**When to use unit tests:**
-
-- MobX store actions and computed properties
-- Utility functions and helpers
-- Hooks with complex logic
-- State machine transitions
-
-**When to use E2E tests:**
-
-- User authentication flows
-- Critical user journeys (create, edit, export)
-- Cross-page navigation
-- API integration verification
-
-</philosophy>
-
----
-
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: Chai Assertion Syntax
-
-The webapp uses Chai assertions with Mocha. Use Chai syntax exclusively for unit tests.
-
-#### Chai vs Jest/Vitest Syntax Reference
+### Chai vs Jest/Vitest Syntax Reference
 
 ```typescript
-// ✅ Good Example - Chai syntax (used in webapp)
+// Good Example - Chai syntax (used in webapp)
 import { expect } from "chai";
 
 describe("MyStore", () => {
@@ -154,7 +56,7 @@ describe("MyStore", () => {
 **Why good:** Matches the webapp test framework (Karma + Mocha + Chai), consistent with existing tests, sinon-chai enables natural mocking assertions
 
 ```typescript
-// ❌ Bad Example - Jest/Vitest syntax (NOT used in webapp)
+// Bad Example - Jest/Vitest syntax (NOT used in webapp)
 import { expect } from "vitest";
 
 describe("MyStore", () => {
@@ -172,14 +74,12 @@ describe("MyStore", () => {
 
 ---
 
-### Pattern 2: Sinon Sandbox with Cleanup
+## Sinon Sandbox with Cleanup
 
-Use Sinon sandbox for all mocking. Create sandbox in test setup, restore in `afterEach`.
-
-#### Sandbox Pattern
+### Sandbox Pattern
 
 ```typescript
-// ✅ Good Example - Sinon sandbox with cleanup
+// Good Example - Sinon sandbox with cleanup
 import sinon from "sinon";
 import { expect } from "chai";
 
@@ -218,7 +118,7 @@ describe("AuthStore", () => {
 **Why good:** Sandbox groups related stubs/mocks together, `sandbox.restore()` cleans up all stubs at once, prevents test pollution between tests, enables stubbing module methods like `logger.error`
 
 ```typescript
-// ❌ Bad Example - Direct sinon.stub without cleanup
+// Bad Example - Direct sinon.stub without cleanup
 describe("AuthStore", () => {
   it("should call fetchAppStartup on login", async () => {
     sinon.stub(api, "fetch"); // BAD: No cleanup - pollutes other tests
@@ -236,14 +136,12 @@ describe("AuthStore", () => {
 
 ---
 
-### Pattern 3: Mock Store Factories
+## Mock Store Factories
 
-Create test store factories that accept partial dependencies for flexible testing.
-
-#### Factory Pattern
+### Factory Pattern
 
 ```typescript
-// ✅ Good Example - Mock store factory with partial dependencies
+// Good Example - Mock store factory with partial dependencies
 import { AuthStore, type AuthStoreDependencies } from "stores/AuthStore";
 import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
 import type { Ampli } from "@photoroom/shared";
@@ -348,7 +246,7 @@ describe("AuthStore", () => {
 **Why good:** Factory accepts partial dependencies so tests only provide what they need, default implementations for all dependencies prevent test setup boilerplate, TestFirebaseAuth provides control over auth state for testing, `when()` from MobX waits for observable conditions
 
 ```typescript
-// ❌ Bad Example - Hardcoded dependencies
+// Bad Example - Hardcoded dependencies
 describe("AuthStore", () => {
   it("should work", () => {
     // BAD: Must provide ALL dependencies every time
@@ -367,11 +265,9 @@ describe("AuthStore", () => {
 
 ---
 
-### Pattern 4: Test Setup with WASM and QueryClient
+## Test Setup with WASM and QueryClient
 
-Tests requiring the engine need WASM initialization. Tests using React Query need `queryClient.clear()`.
-
-#### Test Setup
+### Global Test Setup
 
 ```typescript
 // src/tests/setup.ts
@@ -399,10 +295,10 @@ beforeEach(async () => {
 
 **Why good:** WASM initialization is expensive so done once in `before`, queryClient.clear() prevents test pollution from cached data, each test starts with fresh query state
 
-#### Individual Test Setup
+### Individual Test Setup
 
 ```typescript
-// ✅ Good Example - Test file with proper setup
+// Good Example - Test file with proper setup
 import { expect } from "chai";
 import sinon from "sinon";
 import { when } from "mobx";
@@ -441,59 +337,9 @@ describe("TeamsStore", () => {
 
 ---
 
-### Pattern 5: Test File Organization
+## Playwright E2E Configuration
 
-Tests live in two locations: co-located with source files or in `src/tests/` for integration tests.
-
-#### File Organization
-
-```
-src/
-├── stores/
-│   ├── AuthStore.ts
-│   ├── AuthStore.test.ts         # Co-located unit test
-│   ├── AppVersionStore.ts
-│   └── AppVersionStore.test.ts   # Co-located unit test
-├── utils/
-│   ├── url.ts
-│   └── url.test.ts               # Co-located utility test
-├── lib/
-│   └── editor/
-│       ├── helpers/
-│       │   ├── color.ts
-│       │   └── color.test.ts     # Co-located helper test
-│       └── models/
-│           ├── Concept.ts
-│           └── Concept.test.ts   # Co-located model test
-└── tests/
-    ├── setup.ts                  # Global test setup
-    ├── AuthStore.test.ts         # Integration test
-    └── TeamsStore.test.ts        # Integration test
-
-e2e/
-├── fixtures/
-│   ├── index.ts                  # Fixture exports
-│   └── auth.ts                   # Auth fixtures
-├── pom/
-│   ├── index.ts                  # POM exports
-│   ├── webapp.ts                 # Main webapp POM
-│   ├── CreatePage.ts             # Create page POM
-│   ├── Editor.ts                 # Editor POM
-│   └── BrandKitPage.ts           # Brand kit POM
-├── auth.e2e.ts                   # Auth E2E tests
-├── editor.e2e.ts                 # Editor E2E tests
-└── batch.e2e.ts                  # Batch E2E tests
-```
-
-**Why good:** Co-located tests are easy to find next to source, `src/tests/` for complex integration tests, E2E tests in dedicated `e2e/` directory, POM classes organized in `e2e/pom/`
-
----
-
-### Pattern 6: Playwright E2E Configuration
-
-E2E tests use Playwright with specific configuration for the webapp.
-
-#### Playwright Config
+### Playwright Config
 
 ```typescript
 // playwright.config.ts
@@ -551,11 +397,9 @@ export default defineConfig({
 
 ---
 
-### Pattern 7: Custom Auth Fixtures
+## Custom Auth Fixtures
 
-E2E tests use custom fixtures for authenticated states. Import from `fixtures`, not `@playwright/test`.
-
-#### Auth Fixtures
+### Auth Fixtures
 
 ```typescript
 // e2e/fixtures/auth.ts
@@ -613,7 +457,7 @@ export { expect } from "@playwright/test";
 
 **Why good:** Reusable auth contexts for different user types, clipboard permissions for export tests, proper cleanup with context.close(), exports both `test` and `expect` for use in test files
 
-#### Fixtures Index
+### Fixtures Index
 
 ```typescript
 // e2e/fixtures/index.ts
@@ -624,14 +468,12 @@ export { test, expect } from "./auth";
 
 ---
 
-### Pattern 8: E2E Test Structure
+## E2E Test Structure
 
-E2E tests import from fixtures and use Page Object Model for interactions.
-
-#### E2E Test File
+### E2E Test File
 
 ```typescript
-// ✅ Good Example - E2E test with fixtures and POM
+// Good Example - E2E test with fixtures and POM
 import { expect, test } from "fixtures";
 import { openApp } from "pom";
 
@@ -668,7 +510,7 @@ test.describe("Auth", () => {
 **Why good:** Imports from `fixtures` not `@playwright/test`, uses `proPage` fixture for authenticated user, `openApp` POM helper for navigation, proper async/await for network responses
 
 ```typescript
-// ❌ Bad Example - Importing from @playwright/test
+// Bad Example - Importing from @playwright/test
 import { test, expect } from "@playwright/test"; // WRONG - ESLint error
 
 test("should work", async ({ page }) => {
@@ -680,11 +522,9 @@ test("should work", async ({ page }) => {
 
 ---
 
-### Pattern 9: Page Object Model (POM)
+## Page Object Model (POM)
 
-Encapsulate page interactions in POM classes for maintainability and reuse.
-
-#### POM Structure
+### POM Structure
 
 ```typescript
 // e2e/pom/webapp.ts
@@ -779,7 +619,7 @@ export class Editor {
 
 **Why good:** Page interactions encapsulated in reusable classes, locators defined once and reused, async methods for actions, composed POM (Webapp contains CreatePage, Editor, etc.), clear separation of concerns
 
-#### POM Helper Functions
+### POM Helper Functions
 
 ```typescript
 // e2e/pom/index.ts
@@ -815,10 +655,10 @@ export { BrandKitPage } from "./BrandKitPage";
 
 **Why good:** `openApp` helper reduces test boilerplate, default options with sensible defaults, returns Webapp instance for chaining
 
-#### Using POM in Tests
+### Using POM in Tests
 
 ```typescript
-// ✅ Good Example - Using POM in E2E test
+// Good Example - Using POM in E2E test
 import { expect, test } from "fixtures";
 import { openApp } from "pom";
 
@@ -846,311 +686,3 @@ test.describe("Editor", () => {
 ```
 
 **Why good:** Clean test code using POM abstractions, reusable `openApp` helper, page interactions through POM methods, assertions use Playwright expect
-
-</patterns>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns
-
-### ❌ Using Jest/Vitest Assertion Syntax
-
-Jest/Vitest assertions will fail with Karma + Chai. Use Chai syntax exclusively.
-
-```typescript
-// ❌ Avoid - Jest/Vitest syntax
-expect(value).toBe("expected");
-expect(mockFn).toHaveBeenCalled();
-expect(obj).toEqual({ key: "value" });
-
-// ✅ Use instead - Chai syntax
-expect(value).to.equal("expected");
-expect(mockFn).to.have.been.called;
-expect(obj).to.deep.equal({ key: "value" });
-```
-
-### ❌ Direct Sinon Stubs Without Sandbox
-
-Stubs without sandbox leak between tests, causing flaky failures.
-
-```typescript
-// ❌ Avoid - Direct stub without cleanup
-it("test 1", () => {
-  sinon.stub(api, "fetch"); // Leaks to test 2
-});
-
-it("test 2", () => {
-  api.fetch(); // Still stubbed from test 1!
-});
-
-// ✅ Use instead - Sandbox pattern
-let sandbox: sinon.SinonSandbox;
-
-beforeEach(() => {
-  sandbox = sinon.createSandbox();
-});
-
-afterEach(() => {
-  sandbox.restore();
-});
-
-it("test 1", () => {
-  sandbox.stub(api, "fetch"); // Cleaned up after test
-});
-```
-
-### ❌ Importing Directly from @playwright/test
-
-Bypasses custom auth fixtures and configuration.
-
-```typescript
-// ❌ Avoid - Direct Playwright import
-import { test, expect } from "@playwright/test";
-
-// ✅ Use instead - Custom fixtures
-import { test, expect } from "fixtures";
-```
-
-### ❌ Missing queryClient.clear() for React Query Tests
-
-Cached data from previous tests causes false positives.
-
-```typescript
-// ❌ Avoid - No cache clearing
-describe("TeamsStore", () => {
-  it("should fetch teams", async () => {
-    // May pass due to cached data from previous test
-  });
-});
-
-// ✅ Use instead - Clear cache each test
-beforeEach(() => {
-  queryClient.clear();
-});
-```
-
-### ❌ Hardcoded Dependencies Instead of Factories
-
-Requires full dependency setup for every test.
-
-```typescript
-// ❌ Avoid - Full dependency specification
-const store = new AuthStore({
-  firebaseAuth: new TestFirebaseAuth(),
-  fetchAppStartup: async () => ({ courierToken: "token" }),
-  fetchMagicCode: async () => ({ token: "code", expiresAt: "date" }),
-  ampli: mockAmpli,
-  notificationsStore: mockNotifications,
-});
-
-// ✅ Use instead - Factory with defaults
-const store = makeTestAuthStore({ fetchAppStartup: customStub });
-```
-
-### ❌ Raw Selectors Instead of POM
-
-Duplicated selectors across tests, harder to maintain.
-
-```typescript
-// ❌ Avoid - Raw selectors in test
-await page.click('[data-testid="upload-button"]');
-await page.click('[data-testid="template-grid"] button:first-child');
-
-// ✅ Use instead - POM methods
-await webapp.createPage.uploadButton.click();
-await webapp.createPage.selectTemplate("Portrait");
-```
-
-### ❌ Forgetting to Await MobX when()
-
-Causes race conditions or requires arbitrary setTimeout.
-
-```typescript
-// ❌ Avoid - Not awaiting when()
-when(() => !store.isLoading);
-expect(store.data).to.exist; // May fail - loading not complete
-
-// ✅ Use instead - Await the condition
-await when(() => !store.isLoading);
-expect(store.data).to.exist;
-```
-
-</anti_patterns>
-
----
-
-<decision_framework>
-
-## Decision Framework
-
-### Unit Test vs E2E Test
-
-```
-What am I testing?
-
-Is it a user flow across multiple pages?
-|-- YES --> E2E test with Playwright
-|-- NO --> Is it testing API integration in the browser?
-    |-- YES --> E2E test
-    |-- NO --> Is it a store action or computed property?
-        |-- YES --> Unit test
-        |-- NO --> Is it a utility function?
-            |-- YES --> Unit test
-            |-- NO --> Is it a hook with complex logic?
-                |-- YES --> Unit test with mock dependencies
-                |-- NO --> Consider if test is needed
-```
-
-### Assertion Syntax Decision
-
-```
-Which assertion syntax should I use?
-
-Am I in a unit test file (.test.ts)?
-|-- YES --> Chai syntax: expect(x).to.equal(y)
-|-- NO --> Am I in an E2E test file (.e2e.ts)?
-    |-- YES --> Playwright expect: await expect(locator).toBeVisible()
-    |-- NO --> Check file type and use appropriate syntax
-```
-
-### Mock Strategy Decision
-
-```
-How should I mock this dependency?
-
-Is it a store dependency?
-|-- YES --> Use mock store factory with partial dependencies
-|-- NO --> Is it a module function?
-    |-- YES --> Use sandbox.stub(module, "functionName")
-    |-- NO --> Is it an external service?
-        |-- YES --> Create test implementation class (like TestFirebaseAuth)
-        |-- NO --> Use sandbox.stub() with appropriate return value
-```
-
-### E2E Test Organization
-
-```
-Where should this E2E test live?
-
-Is it testing a specific feature area?
-|-- YES --> Create/use feature-specific file (auth.e2e.ts, editor.e2e.ts)
-|-- NO --> Is it a cross-cutting flow?
-    |-- YES --> Create flow-specific file (onboarding.e2e.ts)
-    |-- NO --> Add to relevant existing file
-```
-
-</decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **MobX**: Use `when()` to await observable conditions in tests
-- **React Query**: Clear `queryClient` in `beforeEach` to prevent stale data
-- **Sinon**: Primary mocking library with sandbox pattern
-- **Chai**: Assertion library with natural language syntax
-- **Playwright**: E2E testing with custom fixtures
-
-**Test Commands:**
-
-```bash
-# Unit tests
-cd apps/webapp
-pnpm run test           # Run all unit tests
-pnpm run test:watch     # Watch mode
-
-# E2E tests
-pnpm run e2e            # Run E2E tests
-pnpm run e2e:headed     # Run with browser visible
-pnpm run e2e:debug      # Debug mode
-pnpm run e2e:ui         # Playwright UI mode
-```
-
-**Running Specific Tests:**
-
-```bash
-# Unit test by file
-pnpm run test -- --grep "AuthStore"
-
-# E2E test by file
-pnpm run e2e auth.e2e.ts
-
-# E2E test by test name
-pnpm run e2e -g "should redirect"
-```
-
-**Replaces / Conflicts with:**
-
-- **Jest/Vitest**: NOT used for webapp unit tests - use Chai assertions
-- **React Testing Library**: NOT used for component tests - use Storybook or E2E
-- **Cypress**: NOT used - Playwright is the E2E framework
-
-</integration>
-
----
-
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- Using Jest/Vitest assertion syntax (`.toBe()`, `.toEqual()`, `.toHaveBeenCalled()`) - tests will fail
-- Missing `sandbox.restore()` in `afterEach` - causes test pollution and flaky tests
-- Importing `test`/`expect` from `@playwright/test` in E2E files - bypasses custom fixtures
-- Missing `queryClient.clear()` for React Query tests - stale cached data causes false positives
-
-**Medium Priority Issues:**
-
-- Direct `sinon.stub()` without sandbox - harder to clean up, potential leaks
-- Not using `when()` for MobX conditions - may need arbitrary setTimeout
-- Hardcoded test data instead of factories - brittle tests
-- Missing `await` for async assertions - tests pass incorrectly
-- Not using POM for E2E tests - duplicated selectors, harder to maintain
-
-**Common Mistakes:**
-
-- `expect(value).toBe("x")` instead of `expect(value).to.equal("x")`
-- `expect(fn).toHaveBeenCalled()` instead of `expect(fn).to.have.been.called`
-- Forgetting to await `when()` for MobX observables
-- Not closing browser contexts in E2E fixtures
-- Using `page` fixture when `proPage` needed for auth
-
-**Gotchas & Edge Cases:**
-
-- Chai uses `.to.be.true` not `.to.be(true)` - the boolean without parentheses
-- `to.have.been.called` not `to.be.called` for sinon-chai spy assertions
-- `when()` returns a promise - must be awaited
-- Playwright's `expect` is different from Chai's `expect` - check file type
-- E2E auth state files must exist before running tests (`./e2e/.auth/pro.json`)
-- WASM initialization is async - must complete before engine-related tests
-
-</red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use Chai assertion syntax - NOT Jest/Vitest syntax (`.toBe()` vs `.to.equal()`))**
-
-**(You MUST use Sinon sandbox with cleanup in `afterEach` - NEVER use `sinon.stub()` directly)**
-
-**(You MUST call `queryClient.clear()` in `beforeEach` for tests using React Query)**
-
-**(You MUST import `test` and `expect` from `fixtures` in E2E tests - NOT from `@playwright/test`)**
-
-**(You MUST use Page Object Model (POM) pattern for E2E test interactions)**
-
-**Failure to follow these rules will cause test failures, flaky tests from pollution, and missing auth fixtures in E2E tests.**
-
-</critical_reminders>

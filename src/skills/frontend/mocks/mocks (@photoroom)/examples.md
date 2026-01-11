@@ -1,78 +1,12 @@
----
-name: Mocking
-description: Sinon sandbox, mock stores for Photoroom webapp
----
+# Mocking Examples (Photoroom Webapp)
 
-# Frontend Mocking Patterns (Photoroom Webapp)
-
-> **Quick Guide:** Use Sinon sandbox pattern for test isolation. Create mock store factories with partial dependencies via dependency injection. Use TestFirebaseAuth for auth mocking, ampliMock for analytics, and MobX `when()` for async assertions. Always restore sandbox in afterEach.
+> All code examples for frontend mocking patterns. Good/bad comparisons for each pattern.
 
 ---
 
-<critical_requirements>
+## Dependency Injection Pattern
 
-## ⚠️ CRITICAL: Before Using This Skill
-
-> **All code must follow project conventions in CLAUDE.md** (PascalCase stores, named exports, import ordering, `import type`, named constants)
-
-**(You MUST create a Sinon sandbox in describe scope and call sandbox.restore() in afterEach - prevents test pollution)**
-
-**(You MUST use mock store factories with partial dependencies - never instantiate stores directly in tests)**
-
-**(You MUST use TestFirebaseAuth for Firebase auth mocking - never mock Firebase SDK directly)**
-
-**(You MUST use MobX when() for async assertions - never use arbitrary timeouts or setTimeout)**
-
-**(You MUST use Chai assertion syntax (to.equal, to.be.true) - NOT Jest syntax (toBe, toEqual))**
-
-</critical_requirements>
-
----
-
-**Auto-detection:** sinon sandbox, mock store, TestFirebaseAuth, ampliMock, test factory, MobX when, NotificationsStore mock, dependency injection testing
-
-**When to use:**
-
-- Writing unit tests for MobX stores
-- Mocking Firebase authentication in tests
-- Creating test doubles for analytics (ampli)
-- Testing stores with injected dependencies
-- Waiting for async MobX state changes in tests
-- Isolating tests with sandbox pattern
-
-**When NOT to use:**
-
-- E2E tests (use Playwright fixtures instead)
-- Testing React components with DOM (use React Testing Library)
-- Integration tests with real backend (use test environment)
-
-**Key patterns covered:**
-
-- Sinon sandbox pattern for stub isolation
-- Mock store factories with partial dependencies
-- TestFirebaseAuth for Firebase auth testing
-- ampliMock for analytics mocking
-- NotificationsStore mocking
-- MobX when() for async state assertions
-- Cleanup patterns (sandbox.restore())
-- Dependency injection enabling testability
-
----
-
-<philosophy>
-
-## Philosophy
-
-The Photoroom webapp testing approach leverages **dependency injection** in MobX stores to enable clean mocking. Each store receives its dependencies via constructor, making it easy to inject test doubles.
-
-**Core Testing Principles:**
-
-1. **Sandbox Isolation**: Every test suite creates a Sinon sandbox. Stubs are restored in afterEach to prevent cross-test pollution.
-2. **Factory Pattern**: Mock store factories accept partial dependencies, providing sensible defaults for unmocked dependencies.
-3. **Test Doubles Over Mocking SDK**: Use pre-built test doubles (TestFirebaseAuth, ampliMock) instead of stubbing complex SDKs.
-4. **Async Assertions with when()**: MobX `when()` waits for observable conditions, eliminating flaky timeout-based tests.
-
-**Why Dependency Injection Matters:**
+The foundation of testable stores - receive dependencies via constructor.
 
 ```typescript
 // Testable: dependencies injected via constructor
@@ -89,35 +23,15 @@ const authStore = new AuthStore({
 });
 ```
 
-**When to mock:**
-
-- External services (Firebase, Analytics)
-- API calls (provide mock functions)
-- Side effects (notifications, logging)
-- Time-dependent operations
-
-**When NOT to mock:**
-
-- The code under test itself
-- Simple utility functions
-- MobX reactivity (let it work naturally)
-
-</philosophy>
-
 ---
 
-<patterns>
+## Sinon Sandbox Pattern
 
-## Core Patterns
-
-### Pattern 1: Sinon Sandbox for Test Isolation
-
-Create a Sinon sandbox at describe scope. Call sandbox.restore() in afterEach to clean up stubs between tests.
-
-#### Test Structure
+### Test Structure
 
 ```typescript
 // src/tests/MyStore.test.ts
+// ✅ Good Example
 import sinon from "sinon";
 import { expect } from "chai";
 import { when } from "mobx";
@@ -183,14 +97,13 @@ describe("MyStore", () => {
 
 ---
 
-### Pattern 2: Mock Store Factories with Partial Dependencies
+## Mock Store Factories
 
-Create factory functions that accept partial dependencies and provide sensible defaults. This enables focused testing of specific behaviors.
-
-#### Factory Implementation
+### Factory Implementation
 
 ```typescript
 // src/tests/AuthStore.test.ts
+// ✅ Good Example
 import { when } from "mobx";
 import { expect } from "chai";
 
@@ -300,14 +213,13 @@ it("test 2", () => {
 
 ---
 
-### Pattern 3: TestFirebaseAuth for Authentication Testing
+## TestFirebaseAuth
 
-Use TestFirebaseAuth class to simulate Firebase auth states without the real Firebase SDK.
-
-#### TestFirebaseAuth Implementation
+### TestFirebaseAuth Implementation
 
 ```typescript
 // src/tests/mocks/TestFirebaseAuth.ts
+// ✅ Good Example
 import type { TFirebaseAuth, FirebaseUser } from "stores/FirebaseAuth";
 
 type AuthStateCallback = (user: FirebaseUser | null) => void;
@@ -378,9 +290,10 @@ export class TestFirebaseAuth implements TFirebaseAuth {
 }
 ```
 
-#### Usage in Tests
+### Usage in Tests
 
 ```typescript
+// ✅ Good Example
 describe("AuthStore", () => {
   it("should handle sign out", async () => {
     const firebaseAuth = new TestFirebaseAuth();
@@ -440,14 +353,13 @@ it("should handle login", () => {
 
 ---
 
-### Pattern 4: ampliMock for Analytics Testing
+## ampliMock
 
-Use ampliMock to verify analytics events without sending real data.
-
-#### ampliMock Implementation
+### ampliMock Implementation
 
 ```typescript
 // src/tests/mocks/ampliMock.ts
+// ✅ Good Example
 import type { Ampli } from "@photoroom/shared";
 
 type EventCall = {
@@ -485,9 +397,10 @@ export const createAmpliMock = (): Ampli & {
 export const ampliMock = createAmpliMock();
 ```
 
-#### Usage in Tests
+### Usage in Tests
 
 ```typescript
+// ✅ Good Example
 describe("UserStore", () => {
   const sandbox = sinon.createSandbox();
   let ampli: ReturnType<typeof createAmpliMock>;
@@ -558,13 +471,12 @@ it("test 2", async () => {
 
 ---
 
-### Pattern 5: MobX when() for Async Assertions
+## MobX when() Async
 
-Use MobX `when()` to wait for observable conditions instead of arbitrary timeouts.
-
-#### Correct Async Testing
+### Correct Async Testing
 
 ```typescript
+// ✅ Good Example
 import { when } from "mobx";
 
 describe("TeamsStore", () => {
@@ -657,13 +569,12 @@ it("should load teams", () => {
 
 ---
 
-### Pattern 6: NotificationsStore Mocking
+## NotificationsStore Mocking
 
-Create fresh NotificationsStore instances for each test to verify user feedback.
-
-#### Implementation
+### Implementation
 
 ```typescript
+// ✅ Good Example
 import { NotificationsStore } from "@photoroom/ui/src/components/status/Notification/NotificationsStore";
 
 describe("ExportStore", () => {
@@ -728,14 +639,13 @@ it("should handle error", async () => {
 
 ---
 
-### Pattern 7: Complete Test File Structure
+## Complete Test Structure
 
-Following the established patterns, here's a complete test file structure:
-
-#### Complete Example
+### Complete Example
 
 ```typescript
 // src/tests/AuthStore.test.ts
+// ✅ Good Example
 import sinon from "sinon";
 import { expect } from "chai";
 import { when } from "mobx";
@@ -880,308 +790,3 @@ describe("AuthStore", () => {
 ```
 
 **Why good:** Clear organization with describe blocks, each test creates fresh dependencies, sandbox.restore() in afterEach, when() for all async assertions, verifies both state and side effects (analytics, notifications)
-
-</patterns>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns
-
-### ❌ Missing Sandbox Cleanup
-
-Stubs created without sandbox cleanup leak to other tests, causing flaky failures that are difficult to diagnose.
-
-```typescript
-// ❌ Anti-pattern
-describe("MyStore", () => {
-  it("test one", () => {
-    sinon.stub(api, "fetch").resolves({ data: "test" });
-    // No restore - stub persists!
-  });
-
-  it("test two", () => {
-    // api.fetch still stubbed from test one!
-    // Test may pass or fail depending on execution order
-  });
-});
-```
-
-**Correct approach:** Create sandbox at describe scope, call sandbox.restore() in afterEach.
-
----
-
-### ❌ setTimeout-Based Async Assertions
-
-Using arbitrary timeouts for async assertions creates flaky tests that pass locally but fail in CI, or vice versa.
-
-```typescript
-// ❌ Anti-pattern
-it("should load data", async () => {
-  store.loadData();
-  await new Promise((r) => setTimeout(r, 100)); // Arbitrary delay
-  expect(store.data).to.exist; // May fail if load takes > 100ms
-});
-```
-
-**Correct approach:** Use MobX `when()` to wait for observable conditions.
-
----
-
-### ❌ Shared Store Instances
-
-Reusing store instances between tests causes state leakage and order-dependent test failures.
-
-```typescript
-// ❌ Anti-pattern
-const sharedStore = makeTestStore(); // Created once
-
-it("test 1", () => {
-  sharedStore.setValue("a");
-  expect(sharedStore.value).to.equal("a");
-});
-
-it("test 2", () => {
-  // sharedStore still has "a" from test 1!
-  expect(sharedStore.value).to.be.undefined; // Fails
-});
-```
-
-**Correct approach:** Create fresh store instances within each test using factory functions.
-
----
-
-### ❌ Direct Firebase SDK Mocking
-
-Stubbing Firebase SDK internals is fragile, incomplete, and requires deep knowledge of Firebase implementation details.
-
-```typescript
-// ❌ Anti-pattern
-sandbox.stub(firebase.auth(), "onAuthStateChanged").callsFake((cb) => {
-  cb({ uid: "123" }); // Incomplete user object
-  return () => {};
-});
-```
-
-**Correct approach:** Use TestFirebaseAuth test double that implements the same interface.
-
----
-
-### ❌ Jest Syntax in Karma/Mocha Tests
-
-Using Jest assertion syntax (toBe, toEqual, jest.fn()) in a Karma/Mocha/Chai environment causes compilation errors.
-
-```typescript
-// ❌ Anti-pattern
-expect(value).toBe(5);        // Jest syntax
-expect(array).toEqual([1,2]); // Jest syntax
-const mock = jest.fn();       // Jest mocking
-```
-
-**Correct approach:** Use Chai assertions (to.equal, to.deep.equal) and Sinon for mocking.
-
----
-
-### ❌ Missing await with when()
-
-Forgetting to await MobX `when()` causes tests to pass before async operations complete, leading to false positives.
-
-```typescript
-// ❌ Anti-pattern
-it("should load", () => {
-  store.loadData();
-  when(() => store.isLoaded); // Missing await!
-  expect(store.data).to.exist; // Runs immediately, likely fails
-});
-```
-
-**Correct approach:** Always await when() calls.
-
-</anti_patterns>
-
----
-
-<decision_framework>
-
-## Decision Framework
-
-### What to Mock
-
-```
-What am I testing?
-|
-+-- External service (Firebase, Analytics)?
-|   |
-|   +-- Use dedicated test double (TestFirebaseAuth, ampliMock)
-|
-+-- API call?
-|   |
-|   +-- Inject mock function via factory
-|   |   sandbox.stub().resolves({ ... })
-|
-+-- Store dependency?
-|   |
-|   +-- Create via factory, provide partial overrides
-|
-+-- Side effect (notifications, logging)?
-    |
-    +-- Create fresh instance per test
-    +-- Verify calls/state after action
-```
-
-### Async Assertion Strategy
-
-```
-Waiting for async behavior?
-|
-+-- Is it MobX observable state?
-|   |
-|   +-- YES --> Use when(() => condition)
-|   |
-|   +-- NO --> Is it a Promise?
-|       |
-|       +-- YES --> await the Promise directly
-|       |
-|       +-- NO --> Is it a callback?
-|           |
-|           +-- Use sinon.stub().callsFake()
-```
-
-### Stub vs Spy vs Mock
-
-```
-What behavior do I need?
-|
-+-- Replace implementation entirely?
-|   |
-|   +-- sandbox.stub().resolves({ ... })
-|
-+-- Track calls but keep original?
-|   |
-|   +-- sandbox.spy(object, "method")
-|
-+-- Verify specific call pattern?
-    |
-    +-- sandbox.stub() with expect().to.have.been.calledWith()
-```
-
-### Test Isolation
-
-```
-Creating test instance?
-|
-+-- Is it a store?
-|   |
-|   +-- Use factory function with partial dependencies
-|   +-- Create fresh instance in each test
-|
-+-- Is it a mock?
-|   |
-|   +-- Create in beforeEach or inside test
-|   +-- Reset/restore in afterEach
-|
-+-- Is it a stub?
-    |
-    +-- Create via sandbox.stub()
-    +-- sandbox.restore() handles cleanup
-```
-
-</decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **MobX Stores**: Test stores via dependency injection; use when() for async assertions
-- **Sinon**: sandbox.stub() for function mocking; sandbox.restore() for cleanup
-- **Chai**: Assertion library with to.equal, to.be.true syntax (NOT Jest)
-- **Firebase Auth**: TestFirebaseAuth simulates auth state changes
-- **Analytics (Ampli)**: ampliMock captures event calls for verification
-- **NotificationsStore**: Fresh instances per test to verify user feedback
-
-**Test Framework:**
-
-- **Karma + Mocha**: Test runner (NOT Jest/Vitest)
-- **Chai**: Assertions (to.equal NOT toBe)
-- **Sinon**: Mocking (createSandbox NOT jest.fn())
-
-**Common Test Imports:**
-
-```typescript
-import sinon from "sinon";
-import { expect } from "chai";
-import { when } from "mobx";
-```
-
-**Use these patterns:**
-
-- Chai assertion syntax (to.equal, to.be.true)
-- MobX when() for async assertions
-- Fresh store instances per test
-- TestFirebaseAuth for auth testing
-
-</integration>
-
----
-
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- Missing sandbox.restore() in afterEach - stubs leak to other tests causing flaky failures
-- Using setTimeout for async assertions - flaky tests that pass/fail randomly
-- Missing await with when() - test passes before async operation completes
-- Jest assertion syntax (toBe, toEqual) - wrong test framework, tests won't compile
-
-**Medium Priority Issues:**
-
-- Shared store instances between tests - state leakage causes order-dependent tests
-- Not resetting ampliMock between tests - event counts accumulate incorrectly
-- Not verifying notifications in error paths - silent failures in production
-- Direct Firebase SDK stubbing - fragile, incomplete mocks
-
-**Common Mistakes:**
-
-- Forgetting to await async store methods before assertions
-- Not providing all required dependencies to factory (check for undefined errors)
-- Using regular methods instead of arrow functions in test stores
-- Not cleaning up MobxQuery in store dispose (memory leaks in tests)
-
-**Gotchas & Edge Cases:**
-
-- TestFirebaseAuth fires onAuthStateChanged async - first callback is delayed via setTimeout(0)
-- when() with timeout throws error, must wrap in try/catch
-- Sinon stubs on class methods need the class instance, not prototype
-- NotificationsStore maxNotifications affects test assertions
-- ampliMock.getCalls() returns copy - safe to filter/map without mutation
-
-</red_flags>
-
----
-
-<critical_reminders>
-
-## ⚠️ CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md** (PascalCase stores, named exports, import ordering)
-
-**(You MUST create a Sinon sandbox in describe scope and call sandbox.restore() in afterEach - prevents test pollution)**
-
-**(You MUST use mock store factories with partial dependencies - never instantiate stores directly in tests)**
-
-**(You MUST use TestFirebaseAuth for Firebase auth mocking - never mock Firebase SDK directly)**
-
-**(You MUST use MobX when() for async assertions - never use arbitrary timeouts or setTimeout)**
-
-**(You MUST use Chai assertion syntax (to.equal, to.be.true) - NOT Jest syntax (toBe, toEqual))**
-
-**Failure to follow these rules will cause flaky tests, test pollution, and false positives/negatives.**
-
-</critical_reminders>
