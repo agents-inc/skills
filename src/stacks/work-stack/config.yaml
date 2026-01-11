@@ -16,6 +16,10 @@ skills:
   - frontend/styling-tailwind (@photoroom)
   - frontend/state-mobx (@photoroom)
   - frontend/server-state-react-query+axios+zod (@photoroom)
+  - frontend/accessibility (@photoroom)
+  - frontend/performance+mobx (@photoroom)
+  - frontend/mocks (@photoroom)
+  - frontend/testing+karma+playwright (@photoroom)
 
 agents:
   - frontend-developer
@@ -31,28 +35,46 @@ agent_skills:
     - frontend/styling-tailwind (@photoroom)
     - frontend/state-mobx (@photoroom)
     - frontend/server-state-react-query+axios+zod (@photoroom)
+    - frontend/accessibility (@photoroom)
+    - frontend/performance+mobx (@photoroom)
+    - frontend/mocks (@photoroom)
+    - frontend/testing+karma+playwright (@photoroom)
 
   frontend-reviewer:
     - frontend/react+mobx (@photoroom)
     - frontend/styling-tailwind (@photoroom)
     - frontend/state-mobx (@photoroom)
     - frontend/server-state-react-query+axios+zod (@photoroom)
+    - frontend/accessibility (@photoroom)
+    - frontend/performance+mobx (@photoroom)
+    - frontend/mocks (@photoroom)
+    - frontend/testing+karma+playwright (@photoroom)
 
   tester:
     - frontend/react+mobx (@photoroom)
     - frontend/state-mobx (@photoroom)
+    - frontend/mocks (@photoroom)
+    - frontend/testing+karma+playwright (@photoroom)
 
   pm:
     - frontend/react+mobx (@photoroom)
     - frontend/styling-tailwind (@photoroom)
     - frontend/state-mobx (@photoroom)
     - frontend/server-state-react-query+axios+zod (@photoroom)
+    - frontend/accessibility (@photoroom)
+    - frontend/performance+mobx (@photoroom)
+    - frontend/mocks (@photoroom)
+    - frontend/testing+karma+playwright (@photoroom)
 
   skill-summoner:
     - frontend/react+mobx (@photoroom)
     - frontend/styling-tailwind (@photoroom)
     - frontend/state-mobx (@photoroom)
     - frontend/server-state-react-query+axios+zod (@photoroom)
+    - frontend/accessibility (@photoroom)
+    - frontend/performance+mobx (@photoroom)
+    - frontend/mocks (@photoroom)
+    - frontend/testing+karma+playwright (@photoroom)
 
 philosophy: "Design system first, move fast"
 
