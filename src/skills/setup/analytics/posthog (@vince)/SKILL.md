@@ -1,5 +1,5 @@
 ---
-name: setup/posthog-setup (@vince)
+name: setup/posthog (@vince)
 description: PostHog analytics and feature flags setup
 ---
 
