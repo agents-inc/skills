@@ -1,5 +1,5 @@
 ---
-name: setup/resend-setup (@vince)
+name: setup/resend (@vince)
 description: Resend email setup, domain verification
 ---
 

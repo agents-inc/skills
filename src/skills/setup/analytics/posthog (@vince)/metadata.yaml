@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../../schemas/metadata.schema.json
+category: setup
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - backend/posthog-analytics
+  - backend/posthog-flags
+  - setup/env
+provides_setup_for:
+  - backend/posthog-analytics
+  - backend/posthog-flags
+tags:
+  - posthog
+  - setup
+  - analytics
+  - feature-flags
+  - installation
