@@ -1,12 +1,17 @@
-# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+# yaml-language-server: $schema=../../schemas/metadata.schema.json
 category: setup
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
 compatible_with:
-  - setup/monorepo
   - setup/tooling
+  - backend/ci-cd
 tags:
+  - turborepo
+  - workspaces
+  - monorepo
+  - package-management
+  - bun
   - package
   - exports
   - conventions
