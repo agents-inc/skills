@@ -72,6 +72,7 @@ export async function loadAllAgents(
 
 /**
  * Load all skills by scanning skills/{category}/{skillId}/SKILL.md
+ * Used for central skill repository (authoring mode)
  */
 export async function loadAllSkills(
   projectRoot: string
@@ -102,6 +103,46 @@ export async function loadAllSkills(
     };
 
     verbose(`Loaded skill: ${skillId} from ${file}`);
+  }
+
+  return skills;
+}
+
+/**
+ * Load skills from a stack's embedded skills directory
+ * Scans stacks/{stackId}/skills/**\/SKILL.md for Phase 1 architecture
+ */
+export async function loadStackSkills(
+  stackId: string,
+  projectRoot: string
+): Promise<Record<string, SkillDefinition>> {
+  const skills: Record<string, SkillDefinition> = {};
+  const stackSkillsDir = path.join(projectRoot, DIRS.stacks, stackId, 'skills');
+
+  const files = await glob('**/SKILL.md', stackSkillsDir);
+
+  for (const file of files) {
+    const fullPath = path.join(stackSkillsDir, file);
+    const content = await readFile(fullPath);
+
+    const frontmatter = parseFrontmatter(content);
+    if (!frontmatter) {
+      console.warn(`  Warning: Skipping ${file}: Missing or invalid frontmatter`);
+      continue;
+    }
+
+    const folderPath = file.replace('/SKILL.md', '');
+    // Path points to stack's embedded skill location (relative to src/)
+    const skillPath = `stacks/${stackId}/skills/${folderPath}/`;
+    const skillId = frontmatter.name;
+
+    skills[skillId] = {
+      path: skillPath,
+      name: extractDisplayName(frontmatter.name),
+      description: frontmatter.description,
+    };
+
+    verbose(`Loaded stack skill: ${skillId} from ${file}`);
   }
 
   return skills;

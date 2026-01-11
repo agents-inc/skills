@@ -4,9 +4,9 @@ import pc from 'picocolors';
 import path from 'path';
 import { parse as parseYaml } from 'yaml';
 import { readFile } from '../utils/fs';
-import { setVerbose, verbose } from '../utils/logger';
+import { setVerbose } from '../utils/logger';
 import { OUTPUT_DIR, DEFAULT_PROFILE, DIRS } from '../consts';
-import { loadAllAgents, loadAllSkills, loadStack } from '../lib/loader';
+import { loadAllAgents, loadAllSkills, loadStackSkills, loadStack } from '../lib/loader';
 import { resolveAgents, stackToProfileConfig } from '../lib/resolver';
 import { validate, printValidationResult } from '../lib/validator';
 import {
@@ -52,13 +52,12 @@ export const compileCommand = new Command('compile')
     );
 
     try {
-      // Load agents and skills
-      s.start('Scanning directories for config...');
+      // Load agents first (shared across all stacks/profiles)
+      s.start('Loading agents...');
       const agents = await loadAllAgents(projectRoot);
-      const skills = await loadAllSkills(projectRoot);
-      s.stop(`Loaded ${Object.keys(agents).length} agents, ${Object.keys(skills).length} skills`);
+      s.stop(`Loaded ${Object.keys(agents).length} agents`);
 
-      // Load profile or stack config
+      // Load profile or stack config to determine effective stack ID
       let profileConfig: ProfileConfig;
       let effectiveStackId: string | undefined;
 
@@ -81,6 +80,17 @@ export const compileCommand = new Command('compile')
           p.log.error(`Failed to load config: ${configPath}`);
           process.exit(1);
         }
+      }
+
+      // Load skills from stack (if available) or central repository
+      s.start('Loading skills...');
+      let skills;
+      if (effectiveStackId) {
+        skills = await loadStackSkills(effectiveStackId, projectRoot);
+        s.stop(`Loaded ${Object.keys(skills).length} skills from stack: ${effectiveStackId}`);
+      } else {
+        skills = await loadAllSkills(projectRoot);
+        s.stop(`Loaded ${Object.keys(skills).length} skills from central repository`);
       }
 
       // Resolve agents
