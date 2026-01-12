@@ -3,6 +3,7 @@ name: {{ agent.name }}
 description: {{ agent.description }}
 model: {{ agent.model | default: "opus" }}
 tools: {{ agent.tools | join: ", " }}
+{% if preloadedSkillIds.size > 0 %}skills: {{ preloadedSkillIds | join: ", " }}{% endif %}
 ---
 
 # {{ agent.title }}
@@ -37,10 +38,11 @@ tools: {{ agent.tools | join: ", " }}
 ---
 
 {% endif %}
+{% if dynamicSkills.size > 0 %}
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -81,9 +83,9 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
+## Available Skills (Require Loading)
 
-{% for skill in skills %}
+{% for skill in dynamicSkills %}
 ### {{ skill.id }}
 - Description: {{ skill.description }}
 - Invoke: `skill: "{{ skill.id }}"`
@@ -91,6 +93,11 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 {% endfor %}
 </skill_activation_protocol>
+{% else %}
+<skills_note>
+All skills for this agent are preloaded via frontmatter. No additional skill activation required.
+</skills_note>
+{% endif %}
 
 ---
 
