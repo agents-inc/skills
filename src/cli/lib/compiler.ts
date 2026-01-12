@@ -5,6 +5,7 @@ import { verbose } from '../utils/logger';
 import { DIRS, OUTPUT_DIR, SKILL_SUPPORTING_FILES } from '../consts';
 import { resolveClaudeMd } from './resolver';
 import type {
+  Skill,
   AgentConfig,
   CompiledAgentData,
   ProfileConfig,
@@ -78,6 +79,19 @@ async function compileAgent(
   const formattedCorePromptNames = agent.core_prompts.map(formatPromptName);
   const formattedEndingPromptNames = agent.ending_prompts.map(formatPromptName);
 
+  // Partition skills into preloaded vs dynamic
+  // Preloaded skills: listed in frontmatter, Claude Code loads them automatically
+  // Dynamic skills: listed in Available Skills section, loaded via Skill tool
+  const preloadedSkills = agent.skills.filter((s) => s.preloaded);
+  const dynamicSkills = agent.skills.filter((s) => !s.preloaded);
+
+  // IDs for frontmatter
+  const preloadedSkillIds = preloadedSkills.map((s) => s.id);
+
+  verbose(
+    `Skills for ${name}: ${preloadedSkills.length} preloaded, ${dynamicSkills.length} dynamic`
+  );
+
   // Prepare template data
   const data: CompiledAgentData = {
     agent,
@@ -92,6 +106,9 @@ async function compileAgent(
     endingPromptNames: formattedEndingPromptNames,
     endingPromptsContent,
     skills: agent.skills,
+    preloadedSkills,
+    dynamicSkills,
+    preloadedSkillIds,
   };
 
   // Render with LiquidJS

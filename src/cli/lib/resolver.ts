@@ -9,6 +9,7 @@ import type {
   ProfileAgentConfig,
   ProfileConfig,
   Skill,
+  SkillAssignment,
   SkillDefinition,
   SkillReference,
   StackConfig,
@@ -76,6 +77,7 @@ export function resolveSkillReference(
     name: definition.name,
     description: definition.description,
     usage: ref.usage,
+    preloaded: ref.preloaded ?? false,
   };
 }
 
@@ -90,7 +92,15 @@ export function resolveSkillReferences(
 }
 
 /**
+ * Get skill IDs from stack skills array (for validation)
+ */
+function getStackSkillIds(stackSkills: SkillAssignment[]): string[] {
+  return stackSkills.map((s) => s.id);
+}
+
+/**
  * Resolve a stack's skills to skill references for a specific agent
+ * Handles SkillAssignment objects with preloaded flag
  */
 export function resolveStackSkills(
   stack: StackConfig,
@@ -100,10 +110,16 @@ export function resolveStackSkills(
   const skillRefs: SkillReference[] = [];
 
   // Use per-agent skills if defined, otherwise fall back to all stack skills
-  const agentSkillIds = stack.agent_skills?.[agentName] ?? stack.skills;
+  const assignments: SkillAssignment[] =
+    stack.agent_skills?.[agentName] ?? stack.skills;
 
-  for (const skillId of agentSkillIds) {
-    // Validate skill exists
+  // Get list of all valid skill IDs in this stack
+  const validSkillIds = getStackSkillIds(stack.skills);
+
+  for (const assignment of assignments) {
+    const skillId = assignment.id;
+
+    // Validate skill exists in scanned skills
     if (!skills[skillId]) {
       throw new Error(
         `Stack "${stack.name}" references skill "${skillId}" for agent "${agentName}" not found in scanned skills`
@@ -111,7 +127,7 @@ export function resolveStackSkills(
     }
 
     // Validate skill is in stack's skill list (if using per-agent skills)
-    if (stack.agent_skills?.[agentName] && !stack.skills.includes(skillId)) {
+    if (stack.agent_skills?.[agentName] && !validSkillIds.includes(skillId)) {
       throw new Error(
         `Stack "${stack.name}" agent_skills for "${agentName}" includes skill "${skillId}" not in stack's skills array`
       );
@@ -121,6 +137,7 @@ export function resolveStackSkills(
     skillRefs.push({
       id: skillId,
       usage: `when working with ${skillDef.name.toLowerCase()}`,
+      preloaded: assignment.preloaded ?? false,
     });
   }
 
