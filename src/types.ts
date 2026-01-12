@@ -185,8 +185,8 @@ export interface StackConfig {
   skills: SkillAssignment[]
   /** List of agent names this stack supports */
   agents: string[]
-  /** Per-agent skill assignments - maps agent name to array of skill assignments */
-  agent_skills?: Record<string, SkillAssignment[]>
+  /** Per-agent skill assignments - maps agent name to categories, each with array of skill assignments */
+  agent_skills?: Record<string, Record<string, SkillAssignment[]>>
   philosophy?: string
   principles?: string[]
   tags?: string[]

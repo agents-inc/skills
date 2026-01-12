@@ -150,10 +150,22 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with performance
 
 
+### backend/performance (@vince)
+- Description: Query optimization, caching, indexing
+- Invoke: `skill: "backend/performance (@vince)"`
+- Use when: when working with performance
+
+
 ### frontend/testing-vitest (@vince)
 - Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
 - Invoke: `skill: "frontend/testing-vitest (@vince)"`
 - Use when: when working with testing vitest
+
+
+### backend/testing (@vince)
+- Description: API tests, integration tests
+- Invoke: `skill: "backend/testing (@vince)"`
+- Use when: when working with testing
 
 
 ### frontend/mocks-msw (@vince)
@@ -202,18 +214,6 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 - Invoke: `skill: "backend/observability+axiom+pino+sentry (@vince)"`
 - Use when: when working with observability+axiom+pino+sentry
-
-
-### backend/performance (@vince)
-- Description: Query optimization, caching, indexing
-- Invoke: `skill: "backend/performance (@vince)"`
-- Use when: when working with performance
-
-
-### backend/testing (@vince)
-- Description: API tests, integration tests
-- Invoke: `skill: "backend/testing (@vince)"`
-- Use when: when working with testing
 
 
 ### security/security (@vince)
