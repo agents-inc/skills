@@ -86,11 +86,15 @@
     },
     "agent_skills": {
       "type": "object",
-      "description": "Per-agent skill assignments. Maps agent ID to array of skill assignments with preloaded flags.",
+      "description": "Per-agent skill assignments. Maps agent ID to categories, each containing arrays of skill assignments.",
       "additionalProperties": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/SkillAssignment"
+        "type": "object",
+        "description": "Categories of skills for this agent (e.g., framework, styling, state-management)",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SkillAssignment"
+          }
         }
       },
       "propertyNames": {
@@ -99,14 +103,25 @@
       },
       "examples": [
         {
-          "frontend-developer": [
-            { "id": "frontend/react (@vince)", "preloaded": true },
-            { "id": "frontend/scss-modules (@vince)" }
-          ],
-          "backend-developer": [
-            { "id": "backend/hono (@vince)", "preloaded": true },
-            { "id": "backend/drizzle (@vince)" }
-          ]
+          "frontend-developer": {
+            "framework": [
+              { "id": "frontend/react (@vince)", "preloaded": true }
+            ],
+            "styling": [
+              { "id": "frontend/styling-scss-modules (@vince)", "preloaded": true }
+            ],
+            "state-management": [
+              { "id": "frontend/state-zustand (@vince)" }
+            ]
+          },
+          "backend-developer": {
+            "api": [
+              { "id": "backend/api-hono (@vince)", "preloaded": true }
+            ],
+            "database": [
+              { "id": "backend/database-drizzle (@vince)", "preloaded": true }
+            ]
+          }
         }
       ]
     },

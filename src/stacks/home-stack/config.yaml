@@ -63,298 +63,494 @@ agents:
   - frontend-researcher
   - backend-researcher
 
-# Per-agent skill assignments
+# Per-agent skill assignments (hierarchical by category)
 agent_skills:
   frontend-developer:
-    - id: frontend/react (@vince)
-      preloaded: true
-    - id: frontend/styling-scss-modules (@vince)
-      preloaded: true
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: security/security (@vince)
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+        preloaded: true
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    security:
+      - id: security/security (@vince)
 
   backend-developer:
-    - id: backend/api-hono (@vince)
-      preloaded: true
-    - id: backend/database-drizzle (@vince)
-      preloaded: true
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    performance:
+      - id: backend/performance (@vince)
+    testing:
+      - id: backend/testing (@vince)
+    security:
+      - id: security/security (@vince)
 
   frontend-reviewer:
-    - id: frontend/react (@vince)
-      preloaded: true
-    - id: frontend/styling-scss-modules (@vince)
-      preloaded: true
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: shared/reviewing (@vince)
-      preloaded: true
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: security/security (@vince)
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+        preloaded: true
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    security:
+      - id: security/security (@vince)
 
   backend-reviewer:
-    - id: backend/api-hono (@vince)
-      preloaded: true
-    - id: backend/database-drizzle (@vince)
-      preloaded: true
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
-    - id: shared/reviewing (@vince)
-      preloaded: true
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    performance:
+      - id: backend/performance (@vince)
+    testing:
+      - id: backend/testing (@vince)
+    security:
+      - id: security/security (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
 
   tester:
-    - id: frontend/testing-vitest (@vince)
-      preloaded: true
-    - id: frontend/mocks-msw (@vince)
-      preloaded: true
-    - id: backend/testing (@vince)
-      preloaded: true
+    testing:
+      - id: frontend/testing-vitest (@vince)
+        preloaded: true
+      - id: backend/testing (@vince)
+        preloaded: true
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+        preloaded: true
 
   pm:
-    - id: research/research-methodology (@vince)
-      preloaded: true
-    - id: frontend/react (@vince)
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/react (@vince)
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+      - id: backend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: backend/testing (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    security:
+      - id: security/security (@vince)
 
   skill-summoner:
     # All skills - needs to understand them all to create new ones
-    - id: frontend/react (@vince)
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
-    - id: shared/reviewing (@vince)
-    - id: setup/monorepo-turborepo (@vince)
-    - id: setup/env (@vince)
-    - id: setup/tooling (@vince)
-    - id: setup/analytics-posthog (@vince)
-    - id: setup/email-resend+react-email (@vince)
-    - id: setup/observability+axiom+pino+sentry (@vince)
-    - id: research/research-methodology (@vince)
+    framework:
+      - id: frontend/react (@vince)
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+      - id: backend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: backend/testing (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    security:
+      - id: security/security (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+    setup:
+      - id: setup/monorepo-turborepo (@vince)
+      - id: setup/env (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/analytics-posthog (@vince)
+      - id: setup/email-resend+react-email (@vince)
+      - id: setup/observability+axiom+pino+sentry (@vince)
+    research:
+      - id: research/research-methodology (@vince)
 
   agent-summoner:
     # All skills - needs to understand them all to create agents
-    - id: frontend/react (@vince)
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
-    - id: shared/reviewing (@vince)
-    - id: setup/monorepo-turborepo (@vince)
-    - id: setup/env (@vince)
-    - id: setup/tooling (@vince)
-    - id: setup/analytics-posthog (@vince)
-    - id: setup/email-resend+react-email (@vince)
-    - id: setup/observability+axiom+pino+sentry (@vince)
-    - id: research/research-methodology (@vince)
+    framework:
+      - id: frontend/react (@vince)
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+      - id: backend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: backend/testing (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    security:
+      - id: security/security (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+    setup:
+      - id: setup/monorepo-turborepo (@vince)
+      - id: setup/env (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/analytics-posthog (@vince)
+      - id: setup/email-resend+react-email (@vince)
+      - id: setup/observability+axiom+pino+sentry (@vince)
+    research:
+      - id: research/research-methodology (@vince)
 
   pattern-scout:
     # Research + all frontend + all backend - needs to find patterns
-    - id: research/research-methodology (@vince)
-      preloaded: true
-    - id: frontend/react (@vince)
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/react (@vince)
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+      - id: backend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: backend/testing (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
 
   pattern-critique:
     # Research + reviewing + all frontend + all backend
-    - id: research/research-methodology (@vince)
-      preloaded: true
-    - id: shared/reviewing (@vince)
-      preloaded: true
-    - id: frontend/react (@vince)
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/react (@vince)
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+      - id: backend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: backend/testing (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
 
   documentor:
     # Research + all skills - needs to document everything
-    - id: research/research-methodology (@vince)
-      preloaded: true
-    - id: frontend/react (@vince)
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
-    - id: shared/reviewing (@vince)
-    - id: setup/monorepo-turborepo (@vince)
-    - id: setup/env (@vince)
-    - id: setup/tooling (@vince)
-    - id: setup/analytics-posthog (@vince)
-    - id: setup/email-resend+react-email (@vince)
-    - id: setup/observability+axiom+pino+sentry (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/react (@vince)
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+      - id: backend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: backend/testing (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    security:
+      - id: security/security (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+    setup:
+      - id: setup/monorepo-turborepo (@vince)
+      - id: setup/env (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/analytics-posthog (@vince)
+      - id: setup/email-resend+react-email (@vince)
+      - id: setup/observability+axiom+pino+sentry (@vince)
 
   architecture:
     # All setup + all backend + security - scaffolds full apps
-    - id: frontend/react (@vince)
-    - id: setup/monorepo-turborepo (@vince)
-      preloaded: true
-    - id: setup/env (@vince)
-    - id: setup/tooling (@vince)
-    - id: setup/analytics-posthog (@vince)
-    - id: setup/email-resend+react-email (@vince)
-    - id: setup/observability+axiom+pino+sentry (@vince)
-    - id: backend/api-hono (@vince)
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: security/security (@vince)
+    framework:
+      - id: frontend/react (@vince)
+    setup:
+      - id: setup/monorepo-turborepo (@vince)
+        preloaded: true
+      - id: setup/env (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/analytics-posthog (@vince)
+      - id: setup/email-resend+react-email (@vince)
+      - id: setup/observability+axiom+pino+sentry (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    performance:
+      - id: backend/performance (@vince)
+    testing:
+      - id: backend/testing (@vince)
+    security:
+      - id: security/security (@vince)
 
   orchestrator:
-    - id: research/research-methodology (@vince)
-      preloaded: true
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
 
   frontend-researcher:
-    # All frontend + research + testing skills
-    - id: frontend/react (@vince)
-      preloaded: true
-    - id: frontend/styling-scss-modules (@vince)
-    - id: frontend/server-state-react-query (@vince)
-    - id: frontend/state-zustand (@vince)
-    - id: frontend/accessibility (@vince)
-    - id: frontend/performance (@vince)
-    - id: frontend/testing-vitest (@vince)
-    - id: frontend/mocks-msw (@vince)
-    - id: research/research-methodology (@vince)
-      preloaded: true
+    # All frontend + research
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-scss-modules (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    accessibility:
+      - id: frontend/accessibility (@vince)
+    performance:
+      - id: frontend/performance (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
 
   backend-researcher:
     # All backend + research
-    - id: backend/api-hono (@vince)
-      preloaded: true
-    - id: backend/database-drizzle (@vince)
-    - id: backend/auth-better-auth+drizzle+hono (@vince)
-    - id: backend/analytics-posthog (@vince)
-    - id: backend/flags-posthog (@vince)
-    - id: backend/email-resend+react-email (@vince)
-    - id: backend/observability+axiom+pino+sentry (@vince)
-    - id: backend/ci-cd-github-actions (@vince)
-    - id: backend/performance (@vince)
-    - id: backend/testing (@vince)
-    - id: research/research-methodology (@vince)
-      preloaded: true
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: backend/analytics-posthog (@vince)
+    flags:
+      - id: backend/flags-posthog (@vince)
+    email:
+      - id: backend/email-resend+react-email (@vince)
+    observability:
+      - id: backend/observability+axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: backend/ci-cd-github-actions (@vince)
+    performance:
+      - id: backend/performance (@vince)
+    testing:
+      - id: backend/testing (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
 
 philosophy: 'Ship fast, iterate faster'
 

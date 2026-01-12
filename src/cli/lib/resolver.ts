@@ -99,8 +99,22 @@ function getStackSkillIds(stackSkills: SkillAssignment[]): string[] {
 }
 
 /**
+ * Flatten hierarchical agent skills (categorized format) to flat array
+ * Format: { framework: [...], styling: [...] } -> [...]
+ */
+function flattenAgentSkills(
+  categorizedSkills: Record<string, SkillAssignment[]>
+): SkillAssignment[] {
+  const assignments: SkillAssignment[] = [];
+  for (const category of Object.keys(categorizedSkills)) {
+    assignments.push(...categorizedSkills[category]);
+  }
+  return assignments;
+}
+
+/**
  * Resolve a stack's skills to skill references for a specific agent
- * Handles SkillAssignment objects with preloaded flag
+ * Handles hierarchical SkillAssignment objects with preloaded flag
  */
 export function resolveStackSkills(
   stack: StackConfig,
@@ -109,9 +123,11 @@ export function resolveStackSkills(
 ): SkillReference[] {
   const skillRefs: SkillReference[] = [];
 
-  // Use per-agent skills if defined, otherwise fall back to all stack skills
-  const assignments: SkillAssignment[] =
-    stack.agent_skills?.[agentName] ?? stack.skills;
+  // Use per-agent skills if defined (hierarchical format), otherwise fall back to all stack skills
+  const agentSkillCategories = stack.agent_skills?.[agentName];
+  const assignments: SkillAssignment[] = agentSkillCategories
+    ? flattenAgentSkills(agentSkillCategories)
+    : stack.skills;
 
   // Get list of all valid skill IDs in this stack
   const validSkillIds = getStackSkillIds(stack.skills);
@@ -127,7 +143,7 @@ export function resolveStackSkills(
     }
 
     // Validate skill is in stack's skill list (if using per-agent skills)
-    if (stack.agent_skills?.[agentName] && !validSkillIds.includes(skillId)) {
+    if (agentSkillCategories && !validSkillIds.includes(skillId)) {
       throw new Error(
         `Stack "${stack.name}" agent_skills for "${agentName}" includes skill "${skillId}" not in stack's skills array`
       );
