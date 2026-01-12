@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: state
+category_exclusive: true
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react-mobx (@vince)
+  - frontend/react-query-mobx (@vince)
+conflicts_with:
+  - frontend/client-state
+tags:
+  - mobx
+  - state-management
+  - rootstore
+  - stores
+  - photoroom

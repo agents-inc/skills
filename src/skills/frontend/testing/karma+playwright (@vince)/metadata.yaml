@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: testing
+category_exclusive: false
+author: "@vince"
+version: "1.0.0"
+compatible_with:
+  - frontend/react
+  - frontend/mobx
+conflicts_with: []
+requires: []
+tags:
+  - testing
+  - karma
+  - mocha
+  - chai
+  - sinon
+  - playwright
+  - e2e
+  - unit-testing
+  - page-object-model
