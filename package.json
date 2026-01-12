@@ -9,10 +9,6 @@
   },
   "scripts": {
     "build:agents": "node src/compile.mjs",
-    "compile": "bun src/compile.ts",
-    "compile:home": "bun src/compile.ts --profile=home",
-    "compile:work": "bun src/compile.ts --profile=work",
-    "compile:watch": "bun --watch src/compile.ts",
     "build": "tsup",
     "dev": "tsup --watch",
     "cli": "node dist/cli/index.js",
