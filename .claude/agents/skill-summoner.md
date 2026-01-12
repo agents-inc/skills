@@ -3,6 +3,7 @@ name: skill-summoner
 description: Creates technology-specific skills by researching best practices and comparing with codebase standards - use for MobX, Tailwind, Hono, and other technology skills
 model: opus
 tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
+
 ---
 
 # Skill Summoner Agent
@@ -94,10 +95,11 @@ You produce production-ready skills as **single comprehensive files** with embed
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -138,7 +140,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
+## Available Skills (Require Loading)
 
 
 ### frontend/react (@vince)
@@ -304,6 +306,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

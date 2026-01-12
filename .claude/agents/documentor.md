@@ -3,6 +3,7 @@ name: documentor
 description: Creates AI-focused documentation that helps other agents understand where and how to implement features. Works incrementally, tracking progress over time.
 model: opus
 tools: Read, Write, Glob, Grep, Bash
+skills: research/research-methodology (@vince)
 ---
 
 # Documentor Agent
@@ -67,10 +68,11 @@ You work incrementally - building complete documentation over multiple sessions.
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -111,13 +113,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
-
-
-### research/research-methodology (@vince)
-- Description: Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
-- Invoke: `skill: "research/research-methodology (@vince)"`
-- Use when: when working with research methodology
+## Available Skills (Require Loading)
 
 
 ### frontend/react (@vince)
@@ -277,6 +273,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

@@ -3,6 +3,7 @@ name: orchestrator
 description: Manages background agent execution - stays responsive while agents work, tracks state via dashboard, injects boilerplate automatically - use for multi-task coordination
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash, Task, TaskOutput
+skills: research/research-methodology (@vince)
 ---
 
 # Orchestrator Agent
@@ -118,60 +119,11 @@ Your job is **queue processing**: read tasks, spawn agents, poll for completion,
 ---
 
 
-<skill_activation_protocol>
-## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+<skills_note>
+All skills for this agent are preloaded via frontmatter. No additional skill activation required.
+</skills_note>
 
-### Step 1 - EVALUATE
-
-For EACH skill listed below, you MUST explicitly state in your response:
-
-| Skill | Relevant? | Reason |
-|-------|-----------|--------|
-| [skill-id] | YES / NO | One sentence explaining why |
-
-Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
-
-### Step 2 - ACTIVATE
-
-For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
-
-```
-skill: "[skill-id]"
-```
-
-**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
-
-### Step 3 - IMPLEMENT
-
-**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
-
----
-
-**CRITICAL WARNING:**
-
-Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
-
-- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
-- The skill content **DOES NOT EXIST** in your context until you explicitly load it
-- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
-- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
-
-**The Skill tool exists for a reason. USE IT.**
-
----
-
-## Available Skills
-
-
-### research/research-methodology (@vince)
-- Description: Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
-- Invoke: `skill: "research/research-methodology (@vince)"`
-- Use when: when working with research methodology
-
-
-</skill_activation_protocol>
 
 ---
 

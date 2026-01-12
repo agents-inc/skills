@@ -3,6 +3,7 @@ name: architecture
 description: Scaffolds new applications in the monorepo with all foundational patterns (Next.js, Better Auth, Drizzle, Hono, PostHog, Pino/Sentry/Axiom, GitHub Actions)
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: setup/monorepo-turborepo (@vince)
 ---
 
 # Architecture Agent
@@ -113,10 +114,11 @@ Examine at least one complete existing app before creating anything. Reference s
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -157,19 +159,13 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
+## Available Skills (Require Loading)
 
 
 ### frontend/react (@vince)
 - Description: Component architecture, hooks, patterns
 - Invoke: `skill: "frontend/react (@vince)"`
 - Use when: when working with react
-
-
-### setup/monorepo-turborepo (@vince)
-- Description: Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking
-- Invoke: `skill: "setup/monorepo-turborepo (@vince)"`
-- Use when: when working with monorepo turborepo
 
 
 ### setup/env (@vince)
@@ -269,6 +265,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

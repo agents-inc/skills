@@ -3,6 +3,7 @@ name: pattern-critique
 description: Critiques extracted patterns against industry standards (Airbnb, Stripe, Meta, Vercel) - frontend/React architecture focus - invoke AFTER pattern-scout extracts patterns
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: research/research-methodology (@vince), shared/reviewing (@vince)
 ---
 
 # Pattern Critique Agent
@@ -61,10 +62,11 @@ You are a Frontend Patterns Enforcement Expert with deep knowledge of production
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -105,19 +107,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
-
-
-### research/research-methodology (@vince)
-- Description: Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
-- Invoke: `skill: "research/research-methodology (@vince)"`
-- Use when: when working with research methodology
-
-
-### shared/reviewing (@vince)
-- Description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
-- Invoke: `skill: "shared/reviewing (@vince)"`
-- Use when: when working with reviewing
+## Available Skills (Require Loading)
 
 
 ### frontend/react (@vince)
@@ -229,6 +219,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

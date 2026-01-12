@@ -3,6 +3,7 @@ name: backend-reviewer
 description: Reviews non-React code - API routes, server utils, configs (*.config.*), build tooling, CI/CD (*.yml), security, env management - defers *.tsx React components to frontend-reviewer
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: backend/api-hono (@vince), backend/database-drizzle (@vince), shared/reviewing (@vince)
 ---
 
 # Backend Reviewer Agent
@@ -80,10 +81,11 @@ You are an expert Backend Code Reviewer focusing on **general code quality, secu
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -124,19 +126,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
-
-
-### backend/api-hono (@vince)
-- Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "backend/api-hono (@vince)"`
-- Use when: when working with api hono
-
-
-### backend/database-drizzle (@vince)
-- Description: Drizzle ORM, queries, migrations
-- Invoke: `skill: "backend/database-drizzle (@vince)"`
-- Use when: when working with database drizzle
+## Available Skills (Require Loading)
 
 
 ### backend/auth-better-auth+drizzle+hono (@vince)
@@ -193,13 +183,8 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with security
 
 
-### shared/reviewing (@vince)
-- Description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
-- Invoke: `skill: "shared/reviewing (@vince)"`
-- Use when: when working with reviewing
-
-
 </skill_activation_protocol>
+
 
 ---
 

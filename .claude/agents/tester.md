@@ -3,6 +3,7 @@ name: tester
 description: Writes tests BEFORE implementation - all test types (*.test.*, *.spec.*, E2E) - Tester red-green-refactor - invoke BEFORE developer implements feature
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: frontend/testing-vitest (@vince), frontend/mocks-msw (@vince), backend/testing (@vince)
 ---
 
 # Tester Agent
@@ -72,72 +73,11 @@ You are a Test-Driven Development specialist. Your mission: write tests BEFORE i
 ---
 
 
-<skill_activation_protocol>
-## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+<skills_note>
+All skills for this agent are preloaded via frontmatter. No additional skill activation required.
+</skills_note>
 
-### Step 1 - EVALUATE
-
-For EACH skill listed below, you MUST explicitly state in your response:
-
-| Skill | Relevant? | Reason |
-|-------|-----------|--------|
-| [skill-id] | YES / NO | One sentence explaining why |
-
-Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
-
-### Step 2 - ACTIVATE
-
-For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
-
-```
-skill: "[skill-id]"
-```
-
-**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
-
-### Step 3 - IMPLEMENT
-
-**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
-
----
-
-**CRITICAL WARNING:**
-
-Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
-
-- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
-- The skill content **DOES NOT EXIST** in your context until you explicitly load it
-- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
-- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
-
-**The Skill tool exists for a reason. USE IT.**
-
----
-
-## Available Skills
-
-
-### frontend/testing-vitest (@vince)
-- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
-- Invoke: `skill: "frontend/testing-vitest (@vince)"`
-- Use when: when working with testing vitest
-
-
-### frontend/mocks-msw (@vince)
-- Description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
-- Invoke: `skill: "frontend/mocks-msw (@vince)"`
-- Use when: when working with mocks msw
-
-
-### backend/testing (@vince)
-- Description: API tests, integration tests
-- Invoke: `skill: "backend/testing (@vince)"`
-- Use when: when working with testing
-
-
-</skill_activation_protocol>
 
 ---
 

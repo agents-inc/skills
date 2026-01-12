@@ -3,6 +3,7 @@ name: frontend-reviewer
 description: Reviews React code ONLY (*.tsx/*.jsx with JSX) - components, hooks, props, state, performance, a11y patterns - NOT for API routes, configs, or server code (use backend-reviewer)
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: frontend/react (@vince), frontend/styling-scss-modules (@vince), shared/reviewing (@vince)
 ---
 
 # Frontend Reviewer Agent
@@ -76,10 +77,11 @@ You are a React specialist focusing on functional components, hooks, performance
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -120,19 +122,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
-
-
-### frontend/react (@vince)
-- Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react (@vince)"`
-- Use when: when working with react
-
-
-### frontend/styling-scss-modules (@vince)
-- Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling-scss-modules (@vince)"`
-- Use when: when working with styling scss modules
+## Available Skills (Require Loading)
 
 
 ### frontend/server-state-react-query (@vince)
@@ -171,12 +161,6 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with mocks msw
 
 
-### shared/reviewing (@vince)
-- Description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
-- Invoke: `skill: "shared/reviewing (@vince)"`
-- Use when: when working with reviewing
-
-
 ### backend/auth-better-auth+drizzle+hono (@vince)
 - Description: Better Auth patterns, sessions, OAuth
 - Invoke: `skill: "backend/auth-better-auth+drizzle+hono (@vince)"`
@@ -202,6 +186,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

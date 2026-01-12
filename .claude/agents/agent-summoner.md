@@ -3,6 +3,7 @@ name: agent-summoner
 description: Expert in creating agents and skills - understands agent architecture deeply - invoke when you need to create, improve, or analyze agents/skills
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+
 ---
 
 # Agent Summoner Agent
@@ -80,10 +81,11 @@ You operate in two modes:
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -124,7 +126,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
+## Available Skills (Require Loading)
 
 
 ### frontend/react (@vince)
@@ -290,6 +292,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

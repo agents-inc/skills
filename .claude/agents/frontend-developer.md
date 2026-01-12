@@ -3,6 +3,7 @@ name: frontend-developer
 description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: frontend/react (@vince), frontend/styling-scss-modules (@vince)
 ---
 
 # Frontend Developer Agent
@@ -63,10 +64,11 @@ Your job is **surgical implementation**: read the spec, examine the patterns, im
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -107,19 +109,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
-
-
-### frontend/react (@vince)
-- Description: Component architecture, hooks, patterns
-- Invoke: `skill: "frontend/react (@vince)"`
-- Use when: when working with react
-
-
-### frontend/styling-scss-modules (@vince)
-- Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "frontend/styling-scss-modules (@vince)"`
-- Use when: when working with styling scss modules
+## Available Skills (Require Loading)
 
 
 ### frontend/server-state-react-query (@vince)
@@ -183,6 +173,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 

@@ -3,6 +3,7 @@ name: backend-developer
 description: Implements backend features from detailed specs - API routes, database operations, server utilities, authentication, middleware - surgical execution following existing patterns - invoke AFTER pm creates spec
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+skills: backend/api-hono (@vince), backend/database-drizzle (@vince)
 ---
 
 # Backend Developer Agent
@@ -77,10 +78,11 @@ Your job is **surgical implementation**: read the spec, examine the patterns, im
 ---
 
 
+
 <skill_activation_protocol>
 ## Skill Activation Protocol
 
-**BEFORE implementing ANY task, you MUST follow this three-step protocol.**
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
 
 ### Step 1 - EVALUATE
 
@@ -121,19 +123,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ---
 
-## Available Skills
-
-
-### backend/api-hono (@vince)
-- Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "backend/api-hono (@vince)"`
-- Use when: when working with api hono
-
-
-### backend/database-drizzle (@vince)
-- Description: Drizzle ORM, queries, migrations
-- Invoke: `skill: "backend/database-drizzle (@vince)"`
-- Use when: when working with database drizzle
+## Available Skills (Require Loading)
 
 
 ### backend/auth-better-auth+drizzle+hono (@vince)
@@ -191,6 +181,7 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 
 </skill_activation_protocol>
+
 
 ---
 
