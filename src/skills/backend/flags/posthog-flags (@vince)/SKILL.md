@@ -10,8 +10,16 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 ---
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
+
+**Topic-Specific Examples:**
+- [examples/payloads.md](examples/payloads.md) - Remote configuration with JSON payloads
+- [examples/server-side.md](examples/server-side.md) - Server-side evaluation with posthog-node
+- [examples/rollouts.md](examples/rollouts.md) - Gradual rollouts and user targeting
+- [examples/experiments.md](examples/experiments.md) - A/B testing with experiments
+- [examples/development.md](examples/development.md) - Local development overrides
+- [examples/lifecycle.md](examples/lifecycle.md) - Flag cleanup and lifecycle management
 
 ---
 
@@ -147,7 +155,7 @@ export const CheckoutButton = () => {
 
 **Why good:** Named constant prevents typos, undefined check prevents flash of wrong content, explicit handling of all states
 
-For more examples including bad patterns, see [examples.md](examples.md#pattern-1-client-side-boolean-flags).
+For more examples including bad patterns, see [examples/core.md](examples/core.md#pattern-1-client-side-boolean-flags).
 
 ---
 
@@ -204,7 +212,7 @@ export const PricingPage = () => {
 
 **Why good:** Variant constants prevent typos, switch statement handles all cases, default fallback to control variant, loading state prevents flash
 
-For more examples, see [examples.md](examples.md#pattern-2-multivariate-flags-and-variants).
+For more examples, see [examples/core.md](examples/core.md#pattern-2-multivariate-flags-and-variants).
 
 ---
 
@@ -273,7 +281,7 @@ export async function GET(request: NextRequest) {
 
 **Why good:** Local evaluation reduces latency (500ms to 50ms), personProperties enable targeting, server-side prevents client manipulation
 
-For more examples including bad patterns and local-only evaluation, see [examples.md](examples.md#pattern-5-server-side-flag-evaluation).
+For more examples including bad patterns and local-only evaluation, see [examples/server-side.md](examples/server-side.md).
 
 </patterns>
 

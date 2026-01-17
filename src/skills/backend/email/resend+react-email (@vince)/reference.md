@@ -1,6 +1,6 @@
 # Email Reference
 
-> Decision frameworks, anti-patterns, red flags, and integration guides for the Email skill.
+> Decision frameworks, anti-patterns, red flags, and integration guides for the Email skill. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) folder for code examples.
 
 ---
 

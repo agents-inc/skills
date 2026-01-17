@@ -4,6 +4,8 @@ Decision frameworks, anti-patterns, red flags, and performance optimization for 
 
 ---
 
+<performance>
+
 ## Performance Optimization
 
 ### Query Optimization with Indexes
@@ -81,7 +83,11 @@ return { jobs: results, total: count };
 - Real-time feeds (use cursor-based pagination)
 - Large datasets (offset is slow on large tables - use keyset pagination)
 
+</performance>
+
 ---
+
+<decision_framework>
 
 ## Decision Framework
 
@@ -130,7 +136,11 @@ return { jobs: results, total: count };
 - LISTEN/NOTIFY for real-time updates
 - NOT available in all edge environments
 
+</decision_framework>
+
 ---
+
+<red_flags>
 
 ## RED FLAGS
 
@@ -167,7 +177,11 @@ return { jobs: results, total: count };
 - Relations must be defined separately from tables in Drizzle schema
 - Transaction callbacks receive `tx` parameter - using `db` bypasses transaction
 
+</red_flags>
+
 ---
+
+<anti_patterns>
 
 ## Anti-Patterns to Avoid
 
@@ -245,3 +259,5 @@ const results = await db
 | Real-time updates | WebSocket connection | LISTEN/NOTIFY support |
 | Edge runtime | HTTP connection | WebSocket not available |
 | Repeated query | Prepared statement | Performance optimization |
+
+</anti_patterns>

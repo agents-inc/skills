@@ -26,7 +26,12 @@ description: Drizzle ORM, queries, migrations
 ---
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Connection setup and schema definition (always loaded)
+  - [queries.md](examples/queries.md) - Relational queries and query builder
+  - [transactions.md](examples/transactions.md) - Atomic operations
+  - [migrations.md](examples/migrations.md) - Drizzle Kit workflow
+  - [seeding.md](examples/seeding.md) - Development data population
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -132,7 +137,7 @@ export default defineConfig({
 });
 ```
 
-For more connection examples (WebSocket, error handling), see [examples.md](examples.md#pattern-1-database-connection).
+For more connection examples (WebSocket, error handling), see [examples/core.md](examples/core.md).
 
 ---
 
@@ -193,7 +198,7 @@ export const companies = pgTable("companies", {
 
 **Why good:** `uuid().defaultRandom()` generates secure unique IDs, `.notNull()` enforces required fields preventing null errors, enums constrain values to valid options, `deletedAt` enables soft deletes preserving data history, `createdAt`/`updatedAt` track record lifecycle
 
-For complete schema examples (relations, junction tables), see [examples.md](examples.md#pattern-2-schema-definition).
+For complete schema examples (relations, junction tables), see [examples/core.md](examples/core.md).
 
 ---
 
@@ -239,7 +244,7 @@ if (job) {
 
 **When not to use:** Simple queries without relations (use `db.select()`), need custom JOINs with complex conditions (use query builder)
 
-For more query examples (N+1 anti-pattern, complex filtering), see [examples.md](examples.md#pattern-3-relational-queries).
+For more query examples (N+1 anti-pattern, complex filtering), see [examples/queries.md](examples/queries.md).
 
 </patterns>
 
@@ -247,12 +252,12 @@ For more query examples (N+1 anti-pattern, complex filtering), see [examples.md]
 
 ## Additional Patterns
 
-The following patterns are documented with full examples in [examples.md](examples.md):
+The following patterns are documented with full examples in [examples/](examples/):
 
-- **Pattern 4: Query Builder** - Complex filters, dynamic conditions, custom JOINs
-- **Pattern 5: Transactions** - Atomic operations, error handling, rollback
-- **Pattern 6: Database Migrations** - Drizzle Kit workflow, `generate` vs `push`
-- **Pattern 7: Database Seeding** - Development data, safe cleanup
+- **Query Builder** - Complex filters, dynamic conditions, custom JOINs - see [queries.md](examples/queries.md)
+- **Transactions** - Atomic operations, error handling, rollback - see [transactions.md](examples/transactions.md)
+- **Database Migrations** - Drizzle Kit workflow, `generate` vs `push` - see [migrations.md](examples/migrations.md)
+- **Database Seeding** - Development data, safe cleanup - see [seeding.md](examples/seeding.md)
 
 Performance optimization (indexes, prepared statements, pagination) is documented in [reference.md](reference.md#performance-optimization).
 

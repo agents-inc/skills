@@ -1,6 +1,6 @@
 # Observability Reference
 
-Decision frameworks, anti-patterns, and red flags for observability patterns.
+> Decision frameworks, anti-patterns, and red flags for observability patterns. Back to [SKILL.md](SKILL.md) | See [examples/core.md](examples/core.md) for code examples.
 
 ---
 

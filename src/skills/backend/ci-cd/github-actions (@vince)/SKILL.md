@@ -30,7 +30,13 @@ description: GitHub Actions, pipelines, deployment
 ---
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) directory:
+  - [core.md](examples/core.md) - Pipeline config, jobs, caching basics, resource management
+  - [testing.md](examples/testing.md) - Affected detection, quality gates
+  - [caching.md](examples/caching.md) - Remote caching, Turborepo
+  - [security.md](examples/security.md) - OIDC auth, secrets rotation
+  - [deployment.md](examples/deployment.md) - Multi-env, rollback
+  - [monitoring.md](examples/monitoring.md) - Datadog, GitHub Insights
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -138,7 +144,7 @@ export const CACHE_PATHS = {
 } as const;
 ```
 
-See [examples.md](examples.md) for complete workflow examples.
+See [examples/core.md](examples/core.md) for complete workflow examples.
 
 ---
 
@@ -160,7 +166,7 @@ export const TURBO_FILTERS = {
 
 **Key principle:** PRs use affected detection for fast feedback (< 5 min), main branch runs full test suite for comprehensive validation.
 
-See [examples.md](examples.md) for PR vs main branch workflow examples.
+See [examples/testing.md](examples/testing.md) for PR vs main branch workflow examples.
 
 ---
 
@@ -190,7 +196,7 @@ export const QUALITY_GATES = {
 5. Bundle size check (performance regression prevention)
 6. Security audit (dependency vulnerabilities)
 
-See [examples.md](examples.md) for comprehensive quality gate workflow.
+See [examples/testing.md](examples/testing.md) for comprehensive quality gate workflow.
 
 </patterns>
 

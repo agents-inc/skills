@@ -1,6 +1,8 @@
 # PostHog Analytics - Reference Guide
 
-> Decision frameworks, anti-patterns, and red flags for PostHog analytics. Return to [skill.md](skill.md) for core concepts.
+> Decision frameworks, anti-patterns, and red flags for PostHog analytics.
+>
+> **Return to:** [SKILL.md](SKILL.md) for core concepts.
 
 ---
 

@@ -59,7 +59,12 @@ description: Better Auth patterns, sessions, OAuth
 - Client-side React integration
 
 **Detailed Resources:**
-- For all code examples and patterns, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Sign up, sign in, client setup, Drizzle adapter
+  - [oauth.md](examples/oauth.md) - GitHub, Google OAuth providers
+  - [two-factor.md](examples/two-factor.md) - TOTP setup, enable, verify
+  - [organizations.md](examples/organizations.md) - Multi-tenancy, invitations
+  - [sessions.md](examples/sessions.md) - Session config, revocation
 - For decision frameworks, anti-patterns, and red flags, see [reference.md](reference.md)
 
 ---

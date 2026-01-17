@@ -59,7 +59,15 @@ description: Resend + React Email templates
 - Unsubscribe and preferences handling
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Template structure, basic sending (start here)
+  - [templates.md](examples/templates.md) - Password Reset, Notification templates
+  - [retry.md](examples/retry.md) - Retry logic with exponential backoff
+  - [async-batch.md](examples/async-batch.md) - Async sending, batch API
+  - [auth-integration.md](examples/auth-integration.md) - Auth system integration
+  - [webhooks.md](examples/webhooks.md) - Webhook handler for tracking
+  - [preferences.md](examples/preferences.md) - Unsubscribe, email preferences
+  - [testing.md](examples/testing.md) - Template testing patterns
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---

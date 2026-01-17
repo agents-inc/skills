@@ -1,12 +1,14 @@
 # Backend API Reference
 
-> Decision frameworks, anti-patterns, and red flags for Hono + OpenAPI. Referenced from [skill.md](skill.md).
+> Decision frameworks, anti-patterns, and red flags for Hono + OpenAPI. Referenced from [SKILL.md](SKILL.md).
 
 ---
 
+<decision_framework>
+
 ## Decision Framework
 
-**Hono + OpenAPI:** Public/multi-client APIs, need docs, complex validation, type generation with hey-api
+**Hono + OpenAPI:** Public/multi-client APIs, need docs, complex validation, type generation with OpenAPI client generators
 
 **Server Actions:** Simple forms, internal-only, no external API consumers, no complex validation
 
@@ -51,7 +53,11 @@
 
 **Deep `/health/deep`:** Includes dependency checks. Use for readiness probes and monitoring.
 
+</decision_framework>
+
 ---
+
+<red_flags>
 
 ## RED FLAGS
 
@@ -97,7 +103,11 @@
 - **ETags with dynamic content:** Don't use for user-specific data (generates new ETag per user)
 - **Correlation IDs:** Forward from client if present (`X-Correlation-ID` header)
 
+</red_flags>
+
 ---
+
+<anti_patterns>
 
 ## Anti-Patterns to Avoid
 
@@ -246,6 +256,8 @@ try {
 **Why it's wrong:** Can't debug in production, no correlation, no operation context.
 
 **What to do instead:** Log with correlation ID, operation name, and structured format.
+
+</anti_patterns>
 
 ---
 

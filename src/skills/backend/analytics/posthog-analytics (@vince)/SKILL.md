@@ -8,7 +8,7 @@ description: PostHog event tracking, user identification, group analytics for B2
 > **Quick Guide:** Use PostHog for product analytics with structured event naming (category:object_action), server-side tracking for reliability, and proper user identification integrated with your authentication flow. Client-side for UI interactions, server-side for business events.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md) (start here)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -130,7 +130,7 @@ Use the **category:object_action** framework for consistent, queryable event nam
 - `is_` or `has_` for booleans: `is_first_purchase`, `has_completed_onboarding`
 - `_date` or `_timestamp` suffix: `trial_end_date`, `last_login_timestamp`
 
-For complete code examples, see [examples.md](examples.md#pattern-1-event-naming-conventions).
+For complete code examples, see [examples/core.md](examples/core.md#pattern-1-event-naming-conventions).
 
 ---
 
@@ -167,7 +167,7 @@ const handleLogout = async () => {
 };
 ```
 
-For complete implementation with constants and hooks, see [examples.md](examples.md#pattern-2-user-identification-with-authentication).
+For complete implementation with constants and hooks, see [examples/core.md](examples/core.md#pattern-2-user-identification-with-authentication).
 
 ---
 
@@ -202,7 +202,7 @@ posthogServer.capture({
 await posthogServer.flush(); // REQUIRED for serverless
 ```
 
-For complete Hono route examples, see [examples.md](examples.md#pattern-4-server-side-tracking-with-posthog-node).
+For complete Hono route examples, see [examples/server-tracking.md](examples/server-tracking.md).
 
 </patterns>
 
