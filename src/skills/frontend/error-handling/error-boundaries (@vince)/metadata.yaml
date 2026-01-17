@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: error-handling
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+tags:
+  - error-boundary
+  - error-handling
+  - fallback-ui
+  - react-error-boundary
+  - getDerivedStateFromError
+  - componentDidCatch
+  - useErrorBoundary
+  - error-recovery
+  - graceful-degradation
