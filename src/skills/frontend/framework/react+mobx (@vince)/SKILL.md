@@ -8,7 +8,12 @@ description: MobX observer, stores, i18n for Photoroom webapp
 > **Quick Guide:** Functional components with explicit TypeScript types. Use `observer()` for MobX reactivity. Use `type` for props (not interface). Use `useTranslation()` for i18n. Access stores via `stores` singleton. Named exports only (except App.tsx). Add `displayName` for React DevTools.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Basic structure, observer, props, displayName, file naming
+  - [mobx-reactivity.md](examples/mobx-reactivity.md) - Avoiding useEffect/useMemo with MobX
+  - [hooks.md](examples/hooks.md) - Custom hooks with stores
+  - [i18n.md](examples/i18n.md) - useTranslation patterns
+  - [patterns.md](examples/patterns.md) - Promise-based modal pattern
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -87,7 +92,7 @@ React components in the Photoroom webapp are functional components with explicit
 
 Functional components with explicit TypeScript types and proper exports. Use `type` for props (ESLint enforced), default parameter values, and named exports.
 
-See [examples.md](examples.md#pattern-1-basic-component-structure) for good/bad examples.
+See [examples/core.md](examples/core.md#pattern-1-basic-component-structure) for good/bad examples.
 
 ---
 
@@ -95,7 +100,7 @@ See [examples.md](examples.md#pattern-1-basic-component-structure) for good/bad 
 
 All components reading MobX observables MUST be wrapped with `observer()`. Add `displayName` for React DevTools debugging.
 
-See [examples.md](examples.md#pattern-2-mobx-observer-wrapper) for implementation examples.
+See [examples/core.md](examples/core.md#pattern-2-mobx-observer-wrapper) for implementation examples.
 
 ---
 
@@ -103,7 +108,7 @@ See [examples.md](examples.md#pattern-2-mobx-observer-wrapper) for implementatio
 
 Extend native HTML attributes for composability and prop spreading. This enables consumers to pass `id`, `data-*`, `aria-*` attributes.
 
-See [examples.md](examples.md#pattern-3-props-extending-html-attributes) for implementation patterns.
+See [examples/core.md](examples/core.md#pattern-3-props-extending-html-attributes) for implementation patterns.
 
 ---
 
@@ -111,7 +116,7 @@ See [examples.md](examples.md#pattern-3-props-extending-html-attributes) for imp
 
 All user-facing text must use translation keys via `useTranslation()` hook in components, or direct `t()` import in utilities/hooks.
 
-See [examples.md](examples.md#pattern-4-usetranslation-for-i18n) for translation patterns.
+See [examples/i18n.md](examples/i18n.md#pattern-4-usetranslation-for-i18n) for translation patterns.
 
 ---
 
@@ -119,7 +124,7 @@ See [examples.md](examples.md#pattern-4-usetranslation-for-i18n) for translation
 
 Extract reusable logic into custom hooks that access stores via the singleton.
 
-See [examples.md](examples.md#pattern-5-custom-hooks-with-stores) for hook patterns.
+See [examples/hooks.md](examples/hooks.md#pattern-5-custom-hooks-with-stores) for hook patterns.
 
 ---
 
@@ -127,7 +132,7 @@ See [examples.md](examples.md#pattern-5-custom-hooks-with-stores) for hook patte
 
 Use `useConfirmModal` for confirmation flows that return promises.
 
-See [examples.md](examples.md#pattern-6-promise-based-modal-pattern) for modal implementation.
+See [examples/patterns.md](examples/patterns.md#pattern-6-promise-based-modal-pattern) for modal implementation.
 
 ---
 
@@ -135,7 +140,7 @@ See [examples.md](examples.md#pattern-6-promise-based-modal-pattern) for modal i
 
 Add `displayName` to components wrapped with `observer()` or `forwardRef()` for React DevTools debugging.
 
-See [examples.md](examples.md#pattern-7-displayname-convention) for displayName patterns.
+See [examples/core.md](examples/core.md#pattern-7-displayname-convention) for displayName patterns.
 
 ---
 
@@ -143,7 +148,7 @@ See [examples.md](examples.md#pattern-7-displayname-convention) for displayName 
 
 PascalCase for component files, camelCase with `use` prefix for hooks, camelCase for utilities.
 
-See [examples.md](examples.md#pattern-8-component-file-naming) for file naming conventions.
+See [examples/core.md](examples/core.md#pattern-8-component-file-naming) for file naming conventions.
 
 ---
 
@@ -153,7 +158,7 @@ Use MobX reactions in stores instead of useEffect in components for side effects
 
 **When useEffect IS appropriate:** URL parameter handling, focus management, integration with non-MobX libraries, browser API cleanup.
 
-See [examples.md](examples.md#pattern-9-avoiding-useeffect-with-mobx) for reaction patterns.
+See [examples/mobx-reactivity.md](examples/mobx-reactivity.md#pattern-9-avoiding-useeffect-with-mobx) for reaction patterns.
 
 ---
 
@@ -161,7 +166,7 @@ See [examples.md](examples.md#pattern-9-avoiding-useeffect-with-mobx) for reacti
 
 Use MobX computed values instead of useMemo for derived state. MobX computed values are automatically cached.
 
-See [examples.md](examples.md#pattern-10-usememo-with-mobx) for computed patterns.
+See [examples/mobx-reactivity.md](examples/mobx-reactivity.md#pattern-10-usememo-with-mobx) for computed patterns.
 
 </patterns>
 

@@ -54,8 +54,11 @@ description: Playwright E2E, Vitest, React Testing Library - E2E for user flows,
 - Feature-based test organization (co-located with code)
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- For E2E and unit test examples, see [examples/core.md](examples/core.md)
+- For integration test examples, see [examples/integration.md](examples/integration.md)
+- For anti-patterns (what NOT to test), see [examples/anti-patterns.md](examples/anti-patterns.md)
+- For Ladle story examples, see [examples/ladle-stories.md](examples/ladle-stories.md)
+- For decision frameworks, see [reference.md](reference.md)
 
 ---
 
@@ -142,7 +145,7 @@ E2E tests verify complete user workflows through the entire application stack, p
 - Test files: `*.spec.ts` or `*.e2e.ts`
 - Group by user journey, not by component
 
-See [examples.md](examples.md) for complete E2E test examples.
+See [examples/core.md](examples/core.md) for complete E2E test examples.
 
 ---
 
@@ -163,7 +166,7 @@ Only write unit tests for pure functions with no side effects. Never unit test R
 - Hooks with side effects (use E2E tests or integration tests)
 - API calls or external integrations (use E2E tests)
 
-See [examples.md](examples.md) for pure function test examples.
+See [examples/core.md](examples/core.md) for pure function test examples.
 
 ---
 
@@ -198,7 +201,7 @@ The current codebase uses Vitest + React Testing Library + network-level mocking
 - Doesn't test full user workflow
 - Requires maintaining mock parity with API
 
-See [examples.md](examples.md) for integration test examples.
+See [examples/integration.md](examples/integration.md) for integration test examples.
 
 ---
 
@@ -274,7 +277,7 @@ apps/client-react/
   # App-specific features don't need stories
 ```
 
-See [examples.md](examples.md) for Ladle story examples.
+See [examples/ladle-stories.md](examples/ladle-stories.md) for Ladle story examples.
 
 </patterns>
 

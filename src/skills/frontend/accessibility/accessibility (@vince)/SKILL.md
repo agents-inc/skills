@@ -55,7 +55,15 @@ description: WCAG, ARIA, keyboard navigation
 - Screen reader support (role-based queries, hidden content, live regions)
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) directory:
+  - [core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
+  - [forms.md](examples/forms.md) - Form validation, error handling, Radix select
+  - [focus.md](examples/focus.md) - Modal dialogs, focus indicators
+  - [color.md](examples/color.md) - Contrast, color-independent indicators, tokens
+  - [tables.md](examples/tables.md) - Sortable data tables
+  - [touch-targets.md](examples/touch-targets.md) - Touch target sizing
+  - [screen-reader.md](examples/screen-reader.md) - sr-only, hiding decorative content
+  - [testing.md](examples/testing.md) - Role queries, jest-axe, Lighthouse CI
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---

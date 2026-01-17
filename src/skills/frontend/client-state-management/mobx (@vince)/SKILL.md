@@ -8,7 +8,7 @@ description: MobX stores, RootStore pattern for Photoroom webapp
 > **Quick Guide:** Use MobX for reactive client state management. RootStore pattern for orchestration. Arrow function methods for `this` binding. `makeAutoObservable` by default. `runInAction` after all `await` calls. `observer()` on ALL components reading MobX state. Use your data fetching solution for server data.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) (core, computed, reactions, rootstore, mobx-query, configuration)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -97,7 +97,7 @@ In the Photoroom webapp, MobX manages **client-side state** while a data fetchin
 
 Every store follows a consistent structure with private dependencies, observable state, constructor with DI and reactions, arrow function actions, and computed getters.
 
-See [examples.md](examples.md#pattern-1-store-class-structure) for complete store template and implementation.
+See [examples/core.md](examples/core.md#pattern-1-store-class-structure) for complete store template and implementation.
 
 ---
 
@@ -109,7 +109,7 @@ Store methods MUST be arrow functions to preserve `this` binding when destructur
 
 **When not to use:** Private helper methods called only internally (though arrow functions are still fine).
 
-See [examples.md](examples.md#pattern-2-arrow-function-methods-critical) for good/bad examples.
+See [examples/core.md](examples/core.md#pattern-2-arrow-function-methods-critical) for good/bad examples.
 
 ---
 
@@ -119,7 +119,7 @@ MobX requires `runInAction()` for ALL state mutations after `await` calls becaus
 
 **When to use:** Every state mutation that occurs after an `await` statement.
 
-See [examples.md](examples.md#pattern-3-runinaction-after-await) for correct async patterns.
+See [examples/core.md](examples/core.md#pattern-3-runinaction-after-await) for correct async patterns.
 
 ---
 
@@ -129,7 +129,7 @@ Use `get` accessors for derived state instead of manual updates. MobX automatica
 
 **When to use:** Any value that can be derived from other observable state.
 
-See [examples.md](examples.md#pattern-4-computed-properties-for-derived-state) for implementation examples.
+See [examples/computed.md](examples/computed.md#pattern-4-computed-properties-for-derived-state) for implementation examples.
 
 ---
 
@@ -141,7 +141,7 @@ Use `reaction()` or `autorun()` in store constructors for side effects. NEVER us
 
 **When not to use:** Valid uses of useEffect: URL parameter handling, focus management, integration with non-MobX libraries, cleanup of external resources.
 
-See [examples.md](examples.md#pattern-5-reactions-for-side-effects) for reaction patterns.
+See [examples/reactions.md](examples/reactions.md#pattern-5-reactions-for-side-effects) for reaction patterns.
 
 ---
 
@@ -149,7 +149,7 @@ See [examples.md](examples.md#pattern-5-reactions-for-side-effects) for reaction
 
 All stores are orchestrated through a centralized `RootStore` with dependency injection. Never import stores directly.
 
-See [examples.md](examples.md#pattern-6-rootstore-pattern) for RootStore structure and store access patterns.
+See [examples/rootstore.md](examples/rootstore.md#pattern-6-rootstore-pattern) for RootStore structure and store access patterns.
 
 ---
 
@@ -157,7 +157,7 @@ See [examples.md](examples.md#pattern-6-rootstore-pattern) for RootStore structu
 
 Use ES private fields (`#`) for store dependencies to hide implementation details and make API surface clear.
 
-See [examples.md](examples.md#pattern-7-private-dependencies-with--prefix) for implementation.
+See [examples/rootstore.md](examples/rootstore.md#pattern-7-private-dependencies-with--prefix) for implementation.
 
 ---
 
@@ -165,7 +165,7 @@ See [examples.md](examples.md#pattern-7-private-dependencies-with--prefix) for i
 
 Use `MobxQuery` to bridge your data fetching layer with MobX stores. This allows stores to consume server data reactively.
 
-See [examples.md](examples.md#pattern-8-mobxquery-bridge) for MobxQuery implementation.
+See [examples/mobx-query.md](examples/mobx-query.md#pattern-8-mobxquery-bridge) for MobxQuery implementation.
 
 ---
 
@@ -175,7 +175,7 @@ Use `makeAutoObservable` by default. Use `makeObservable` only when you need fin
 
 **When to use makeObservable:** Large arrays/objects where shallow observation improves performance, methods that should not be actions, legacy codebases with specific requirements.
 
-See [examples.md](examples.md#pattern-9-makeautoobservable-vs-makeobservable) for comparison examples.
+See [examples/configuration.md](examples/configuration.md#pattern-9-makeautoobservable-vs-makeobservable) for comparison examples.
 
 ---
 
@@ -185,7 +185,7 @@ ALL components reading MobX observables MUST be wrapped with `observer()`. Witho
 
 **When to use:** Every React component that reads MobX observable state.
 
-See [examples.md](examples.md#pattern-10-observer-wrapper-for-components) for implementation.
+See [examples/core.md](examples/core.md#pattern-10-observer-wrapper-for-components) for implementation.
 
 ---
 
@@ -193,7 +193,7 @@ See [examples.md](examples.md#pattern-10-observer-wrapper-for-components) for im
 
 Export interfaces for stores used by other stores. This enables type-safe dependency injection and easier testing.
 
-See [examples.md](examples.md#pattern-11-store-type-interfaces) for interface patterns.
+See [examples/rootstore.md](examples/rootstore.md#pattern-11-store-type-interfaces) for interface patterns.
 
 </patterns>
 

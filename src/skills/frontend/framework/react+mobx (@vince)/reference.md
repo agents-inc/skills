@@ -1,6 +1,6 @@
 # React Component Reference
 
-> Decision frameworks, anti-patterns, and red flags for React development. See [SKILL.md](SKILL.md) for core concepts and [examples.md](examples.md) for code examples.
+> Decision frameworks, anti-patterns, and red flags for React development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) folder for code examples.
 
 ---
 

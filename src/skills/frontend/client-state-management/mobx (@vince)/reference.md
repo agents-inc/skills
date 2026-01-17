@@ -1,8 +1,10 @@
 # MobX Reference
 
-> Decision frameworks, anti-patterns, and red flags for MobX development. See [SKILL.md](SKILL.md) for core concepts and [examples.md](examples.md) for code examples.
+> Decision frameworks, anti-patterns, and red flags for MobX development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
+
+<decision_framework>
 
 ## Decision Framework
 
@@ -69,7 +71,11 @@ Is it reacting to MobX observable changes?
 | Side effects on state change | reaction() in store | Centralized, testable |
 | External system sync | useEffect in component | React lifecycle |
 
+</decision_framework>
+
 ---
+
+<red_flags>
 
 ## RED FLAGS
 
@@ -106,7 +112,11 @@ Is it reacting to MobX observable changes?
 - `observable.shallow` only observes array/object reference, not contents
 - Private `#` fields are not observable - use for dependencies only
 
+</red_flags>
+
 ---
+
+<anti_patterns>
 
 ## Anti-Patterns
 
@@ -199,7 +209,11 @@ const Child = observer(() => {
 });
 ```
 
+</anti_patterns>
+
 ---
+
+<quick_reference>
 
 ## Quick Reference
 
@@ -228,3 +242,5 @@ const Child = observer(() => {
 - [ ] Wraps ALL state mutations after `await` in `runInAction()`
 - [ ] Has proper error handling with `runInAction()` in catch block
 - [ ] Guards against stale responses in reactions
+
+</quick_reference>

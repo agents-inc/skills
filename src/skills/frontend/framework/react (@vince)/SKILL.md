@@ -53,7 +53,7 @@ description: Component architecture, hooks, patterns
 - Static content without interactivity (consider static HTML)
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -293,7 +293,7 @@ Key hooks covered:
 - `useDebounce` - Debounce values for search inputs
 - `useLocalStorage` - Type-safe localStorage persistence
 
-See [examples.md](examples.md) for complete hook implementations.
+See [examples/hooks.md](examples/hooks.md) for complete hook implementations.
 
 ---
 

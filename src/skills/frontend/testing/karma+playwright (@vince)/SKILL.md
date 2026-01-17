@@ -58,7 +58,10 @@ description: Karma, Mocha, Chai, Sinon for unit tests, Playwright E2E with custo
 
 **Detailed Resources:**
 
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md) (always load first)
+  - [examples/mock-stores.md](examples/mock-stores.md) - Mock store factories, test setup
+  - [examples/playwright-config.md](examples/playwright-config.md) - E2E configuration, auth fixtures
+  - [examples/page-objects.md](examples/page-objects.md) - E2E structure, Page Object Model
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -101,6 +104,46 @@ Testing in the Photoroom webapp follows a clear separation: **unit tests** for s
 
 ---
 
+<decision_framework>
+
+## Decision Framework
+
+### Unit Test vs E2E Test
+
+```
+What am I testing?
+
+Is it a user flow across multiple pages?
+|-- YES --> E2E test with Playwright
+|-- NO --> Is it testing API integration in the browser?
+    |-- YES --> E2E test
+    |-- NO --> Is it a store action or computed property?
+        |-- YES --> Unit test
+        |-- NO --> Is it a utility function?
+            |-- YES --> Unit test
+            |-- NO --> Is it a hook with complex logic?
+                |-- YES --> Unit test with mock dependencies
+                |-- NO --> Consider if test is needed
+```
+
+### Assertion Syntax Decision
+
+```
+Which assertion syntax should I use?
+
+Am I in a unit test file (.test.ts)?
+|-- YES --> Chai syntax: expect(x).to.equal(y)
+|-- NO --> Am I in an E2E test file (.e2e.ts)?
+    |-- YES --> Playwright expect: await expect(locator).toBeVisible()
+    |-- NO --> Check file type and use appropriate syntax
+```
+
+See [reference.md](reference.md) for Mock Strategy and E2E Test Organization decision trees.
+
+</decision_framework>
+
+---
+
 <patterns>
 
 ## Core Patterns
@@ -116,7 +159,7 @@ Key differences from Jest/Vitest:
 - Null/undefined: `to.be.null` / `to.be.undefined`
 - Function calls (sinon-chai): `to.have.been.called` / `to.have.been.calledWith()`
 
-See [examples.md](examples.md#chai-assertion-syntax) for complete syntax reference.
+See [examples/core.md](examples/core.md#pattern-1-chai-assertion-syntax) for complete syntax reference.
 
 ---
 
@@ -129,7 +172,7 @@ Use Sinon sandbox for all mocking. Create sandbox in test setup, restore in `aft
 - Use `sandbox.stub()` not `sinon.stub()` directly
 - Enables stubbing module methods like `logger.error`
 
-See [examples.md](examples.md#sinon-sandbox-with-cleanup) for implementation.
+See [examples/core.md](examples/core.md#pattern-2-sinon-sandbox-with-cleanup) for implementation.
 
 ---
 
@@ -142,7 +185,7 @@ Create test store factories that accept partial dependencies for flexible testin
 - Test-specific implementations (e.g., TestFirebaseAuth)
 - Use `when()` from MobX to await observable conditions
 
-See [examples.md](examples.md#mock-store-factories) for factory pattern implementation.
+See [examples/mock-stores.md](examples/mock-stores.md#pattern-1-mock-store-factories) for factory pattern implementation.
 
 ---
 
@@ -154,7 +197,7 @@ Tests requiring the engine need WASM initialization. Tests using React Query nee
 - `queryClient.clear()` in `beforeEach` (prevents test pollution)
 - Each test starts with fresh query state
 
-See [examples.md](examples.md#test-setup-with-wasm-and-queryclient) for setup code.
+See [examples/mock-stores.md](examples/mock-stores.md#pattern-2-test-setup-with-wasm-and-queryclient) for setup code.
 
 ---
 
@@ -198,7 +241,7 @@ Key configuration:
 - Parallel execution with worker limits
 - Trace on failure for debugging
 
-See [examples.md](examples.md#playwright-e2e-configuration) for config file.
+See [examples/playwright-config.md](examples/playwright-config.md#pattern-1-playwright-e2e-configuration) for config file.
 
 ---
 
@@ -211,7 +254,7 @@ E2E tests use custom fixtures for authenticated states. Import from `fixtures`, 
 - Clipboard permissions for export tests
 - Proper cleanup with `context.close()`
 
-See [examples.md](examples.md#custom-auth-fixtures) for fixture implementation.
+See [examples/playwright-config.md](examples/playwright-config.md#pattern-2-custom-auth-fixtures) for fixture implementation.
 
 ---
 
@@ -224,7 +267,7 @@ E2E tests import from fixtures and use Page Object Model for interactions.
 - Use POM helpers (`openApp`, `webapp.editor.selectTool`)
 - Await network responses with `page.waitForResponse()`
 
-See [examples.md](examples.md#e2e-test-structure) for test examples.
+See [examples/page-objects.md](examples/page-objects.md#pattern-1-e2e-test-structure) for test examples.
 
 ---
 
@@ -237,9 +280,48 @@ Encapsulate page interactions in POM classes for maintainability and reuse.
 - Async methods for actions
 - Helper function `openApp()` reduces boilerplate
 
-See [examples.md](examples.md#page-object-model-pom) for POM implementation.
+See [examples/page-objects.md](examples/page-objects.md#pattern-2-page-object-model-pom) for POM implementation.
 
 </patterns>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Using Jest/Vitest assertion syntax (`.toBe()`, `.toEqual()`, `.toHaveBeenCalled()`) - tests will fail
+- Missing `sandbox.restore()` in `afterEach` - causes test pollution and flaky tests
+- Importing `test`/`expect` from `@playwright/test` in E2E files - bypasses custom fixtures
+- Missing `queryClient.clear()` for React Query tests - stale cached data causes false positives
+
+**Medium Priority Issues:**
+
+- Direct `sinon.stub()` without sandbox - harder to clean up, potential leaks
+- Not using `when()` for MobX conditions - may need arbitrary setTimeout
+- Hardcoded test data instead of factories - brittle tests
+- Not using POM for E2E tests - duplicated selectors, harder to maintain
+
+**Common Mistakes:**
+
+- `expect(value).toBe("x")` instead of `expect(value).to.equal("x")`
+- `expect(fn).toHaveBeenCalled()` instead of `expect(fn).to.have.been.called`
+- Forgetting to await `when()` for MobX observables
+- Using `page` fixture when `proPage` needed for auth
+
+**Gotchas & Edge Cases:**
+
+- Chai uses `.to.be.true` not `.to.be(true)` - the boolean without parentheses
+- `to.have.been.called` not `to.be.called` for sinon-chai spy assertions
+- `when()` returns a promise - must be awaited
+- Playwright's `expect` is different from Chai's `expect` - check file type
+- E2E auth state files must exist before running tests (`./e2e/.auth/pro.json`)
+
+See [reference.md](reference.md) for comprehensive anti-patterns and integration guide.
+
+</red_flags>
 
 ---
 

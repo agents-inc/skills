@@ -57,8 +57,12 @@ description: React Query, Axios, API classes for Photoroom webapp
 - React Query conservative defaults
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Axios instance, API classes, React Query setup (always loaded)
+- [examples/mutations.md](examples/mutations.md) - useMutation hooks, cache invalidation, notifications
+- [examples/validation.md](examples/validation.md) - Zod schema validation with safeParse
+- [examples/mobx-bridge.md](examples/mobx-bridge.md) - MobxQuery for store integration
+- [examples/error-handling.md](examples/error-handling.md) - Logger error tracking with Sentry
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, RED FLAGS
 
 ---
 
@@ -105,7 +109,7 @@ The Photoroom webapp uses a **layered API architecture** that separates concerns
 
 Use static class methods to construct URLs with type-safe query parameters. URLs are built from `appEnv.photoroom.backendURL` base.
 
-See [examples.md](examples.md#pattern-1-static-api-class-for-url-construction) for implementation.
+See [examples/core.md](examples/core.md#pattern-1-static-api-class-for-url-construction) for implementation.
 
 ---
 
@@ -113,7 +117,7 @@ See [examples.md](examples.md#pattern-1-static-api-class-for-url-construction) f
 
 Use the configured `djangoBackend` axios instance with auth and header interceptors. Never create custom axios instances.
 
-See [examples.md](examples.md#pattern-2-axios-instance-with-interceptors) for implementation.
+See [examples/core.md](examples/core.md#pattern-2-axios-instance-with-interceptors) for implementation.
 
 ---
 
@@ -121,7 +125,7 @@ See [examples.md](examples.md#pattern-2-axios-instance-with-interceptors) for im
 
 React Query is configured with conservative defaults - no automatic refetching. Use query key string constants.
 
-See [examples.md](examples.md#pattern-3-react-query-configuration) for implementation.
+See [examples/core.md](examples/core.md#pattern-3-react-query-configuration) for implementation.
 
 ---
 
@@ -129,7 +133,7 @@ See [examples.md](examples.md#pattern-3-react-query-configuration) for implement
 
 Wrap useMutation in custom hooks that handle notifications and state coordination.
 
-See [examples.md](examples.md#pattern-4-usemutation-in-custom-hooks) for implementation.
+See [examples/mutations.md](examples/mutations.md#pattern-4-usemutation-in-custom-hooks) for implementation.
 
 ---
 
@@ -137,7 +141,7 @@ See [examples.md](examples.md#pattern-4-usemutation-in-custom-hooks) for impleme
 
 Validate ALL API responses with Zod schemas using safeParse to catch contract changes.
 
-See [examples.md](examples.md#pattern-5-zod-schema-validation) for implementation.
+See [examples/validation.md](examples/validation.md#pattern-5-zod-schema-validation) for implementation.
 
 ---
 
@@ -145,7 +149,7 @@ See [examples.md](examples.md#pattern-5-zod-schema-validation) for implementatio
 
 Use MobxQuery to bridge React Query data into MobX stores for reactive updates.
 
-See [examples.md](examples.md#pattern-6-mobxquery-bridge-for-store-integration) for implementation.
+See [examples/mobx-bridge.md](examples/mobx-bridge.md#pattern-6-mobxquery-bridge-for-store-integration) for implementation.
 
 ---
 
@@ -153,7 +157,7 @@ See [examples.md](examples.md#pattern-6-mobxquery-bridge-for-store-integration) 
 
 Use module-specific loggers for API error tracking with structured context.
 
-See [examples.md](examples.md#pattern-7-error-handling-with-logger) for implementation.
+See [examples/error-handling.md](examples/error-handling.md#pattern-7-error-handling-with-logger) for implementation.
 
 ---
 
@@ -161,7 +165,7 @@ See [examples.md](examples.md#pattern-7-error-handling-with-logger) for implemen
 
 Show user feedback via NotificationsStore for mutation success/failure.
 
-See [examples.md](examples.md#pattern-8-user-notifications-for-mutations) for implementation.
+See [examples/mutations.md](examples/mutations.md#pattern-8-user-notifications-for-mutations) for implementation.
 
 </patterns>
 

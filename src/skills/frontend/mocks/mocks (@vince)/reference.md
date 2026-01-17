@@ -1,6 +1,6 @@
 # Mocking Reference (Photoroom Webapp)
 
-> Decision frameworks, red flags, and anti-patterns for frontend mocking.
+> Decision frameworks, red flags, and anti-patterns for frontend mocking. Reference from [SKILL.md](SKILL.md).
 
 ---
 

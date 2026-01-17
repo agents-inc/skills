@@ -8,7 +8,12 @@ description: Sinon sandbox, mock stores, TestFirebaseAuth, ampliMock for Photoro
 > **Quick Guide:** Use Sinon sandbox pattern for test isolation. Create mock store factories with partial dependencies via dependency injection. Use TestFirebaseAuth for auth mocking, ampliMock for analytics, and MobX `when()` for async assertions. Always restore sandbox in afterEach.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Dependency injection, Sinon sandbox, mock store factories
+  - [firebase-auth.md](examples/firebase-auth.md) - TestFirebaseAuth implementation and usage
+  - [analytics-mocking.md](examples/analytics-mocking.md) - ampliMock for analytics testing
+  - [async-testing.md](examples/async-testing.md) - MobX when() and NotificationsStore mocking
+  - [complete-example.md](examples/complete-example.md) - Full AuthStore test reference
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -80,7 +85,7 @@ The Photoroom webapp testing approach leverages **dependency injection** in MobX
 
 Testable stores receive dependencies via constructor, allowing tests to inject mocks. This pattern enables focused testing of specific behaviors without complex SDK stubbing.
 
-For implementation details, see [examples.md](examples.md#dependency-injection-pattern).
+For implementation details, see [examples/core.md](examples/core.md).
 
 **When to mock:**
 
@@ -112,7 +117,7 @@ Key principles:
 - afterEach ensures stubs are restored even if test fails
 - Prevents test pollution where one test's stubs affect another
 
-For code examples, see [examples.md](examples.md#sinon-sandbox-pattern).
+For code examples, see [examples/core.md](examples/core.md#sinon-sandbox-pattern).
 
 ---
 
@@ -126,7 +131,7 @@ Key principles:
 - Each test gets fresh instances preventing state leakage
 - Factory pattern centralizes test setup logic
 
-For implementation examples, see [examples.md](examples.md#mock-store-factories).
+For implementation examples, see [examples/core.md](examples/core.md#mock-store-factories).
 
 ---
 
@@ -140,7 +145,7 @@ Key principles:
 - No need to mock complex Firebase SDK internals
 - Always await async state propagation with when()
 
-For code examples, see [examples.md](examples.md#testfirebaseauth).
+For code examples, see [examples/firebase-auth.md](examples/firebase-auth.md).
 
 ---
 
@@ -154,7 +159,7 @@ Key principles:
 - Reset in afterEach ensures clean state
 - Verifies event order and properties
 
-For implementation examples, see [examples.md](examples.md#amplimock).
+For implementation examples, see [examples/analytics-mocking.md](examples/analytics-mocking.md).
 
 ---
 
@@ -169,7 +174,7 @@ Key principles:
 - Works naturally with MobX reactivity
 - Always await when() calls
 
-For code examples, see [examples.md](examples.md#mobx-when-async).
+For code examples, see [examples/async-testing.md](examples/async-testing.md#mobx-when-for-async-assertions).
 
 ---
 
@@ -182,7 +187,7 @@ Key principles:
 - Can verify notification type, label, and count
 - Tests user feedback not just internal state
 
-For implementation examples, see [examples.md](examples.md#notificationsstore-mocking).
+For implementation examples, see [examples/async-testing.md](examples/async-testing.md#notificationsstore-mocking).
 
 ---
 
@@ -190,7 +195,7 @@ For implementation examples, see [examples.md](examples.md#notificationsstore-mo
 
 Following the established patterns, a complete test file structure combines sandbox isolation, factory functions, and async assertions.
 
-For complete example, see [examples.md](examples.md#complete-test-structure).
+For complete example, see [examples/complete-example.md](examples/complete-example.md).
 
 </patterns>
 

@@ -8,8 +8,8 @@ description: Zustand stores, client state patterns. Use when deciding between Zu
 > **Quick Guide:** Local UI state? useState. Shared UI (2+ components)? Zustand. Server data? Use your data fetching solution. URL-appropriate filters? searchParams. NEVER use Context for state management.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- For code examples, see [examples/core.md](examples/core.md) and [examples/forms.md](examples/forms.md)
+- For anti-pattern code examples, see [reference.md](reference.md)
 
 ---
 
@@ -103,7 +103,7 @@ const MAX_RETRY_ATTEMPTS = 3;
 const DEBOUNCE_DELAY_MS = 300;
 ```
 
-For implementation examples, see [examples.md](examples.md#pattern-1-server-state-vs-client-state).
+For implementation examples, see [examples/core.md](examples/core.md#pattern-1-server-state-vs-client-state).
 
 ---
 
@@ -123,7 +123,7 @@ Use ONLY when state is truly component-local and never shared.
 - Prop drilling 3+ levels (use Zustand)
 - Server data (use a data fetching solution)
 
-For implementation examples and good/bad comparisons, see [examples.md](examples.md#pattern-2-local-state-with-usestate).
+For implementation examples and good/bad comparisons, see [examples/core.md](examples/core.md#pattern-2-local-state-with-usestate).
 
 ---
 
@@ -140,7 +140,7 @@ Use as soon as state is needed in 2+ components across the tree.
 - Shopping cart, filters, selected items
 - Any shared UI state
 
-For store setup, usage patterns, and shallow comparison examples, see [examples.md](examples.md#pattern-3-global-state-with-zustand).
+For store setup, usage patterns, and shallow comparison examples, see [examples/core.md](examples/core.md#pattern-3-global-state-with-zustand).
 
 ---
 
@@ -164,7 +164,7 @@ Context is NOT a state management solution. It's for dependency injection and si
 - User interactions, selections, filters (use Zustand)
 - Shopping carts, modals, sidebars (use Zustand)
 
-For examples of why Context fails for state and acceptable usage, see [examples.md](examples.md#pattern-4-context-api---dependency-injection-only).
+For examples of why Context fails for state and acceptable usage, see [examples/core.md](examples/core.md#pattern-4-context-api---dependency-injection-only).
 
 ---
 
@@ -180,7 +180,7 @@ Use URL params for shareable/bookmarkable state.
 - Sort order
 - Any state that should be shareable via URL
 
-For Next.js implementation examples, see [examples.md](examples.md#pattern-5-url-state-for-shareable-filters).
+For Next.js implementation examples, see [examples/core.md](examples/core.md#pattern-5-url-state-for-shareable-filters).
 
 ---
 
@@ -188,9 +188,99 @@ For Next.js implementation examples, see [examples.md](examples.md#pattern-5-url
 
 Use controlled components with Zod validation.
 
-For controlled component patterns and Zod schema validation examples, see [examples.md](examples.md#pattern-6-form-state-and-validation).
+For controlled component patterns and Zod schema validation examples, see [examples/forms.md](examples/forms.md#pattern-6-form-state-and-validation).
 
 </patterns>
+
+---
+
+<decision_framework>
+
+## Decision Framework
+
+### State Management Decision Tree
+
+```
+What kind of state do I have?
+
+Is it server data (from API)?
+├─ YES → Use your data fetching solution (not this skill's scope)
+└─ NO → Is it URL-appropriate (filters, search, shareable)?
+    ├─ YES → URL params (searchParams)
+    └─ NO → Is it needed in 2+ components?
+        ├─ YES → Zustand
+        └─ NO → Is it truly component-local?
+            ├─ YES → useState
+            └─ NO → Is it a singleton/dependency?
+                └─ YES → Context (ONLY for DI)
+```
+
+### Form Library Decision
+
+```
+What kind of form do I have?
+
+Simple form (1-3 fields, minimal validation)?
+├─ YES → Vanilla React (useState + Zod)
+└─ NO → Complex form (10+ fields, field-level validation)?
+    └─ YES → React Hook Form
+```
+
+### Quick Reference Table
+
+| Use Case | Solution | Why |
+|----------|----------|-----|
+| Server/API data | Data fetching solution | Caching, synchronization, loading states |
+| Shareable filters | URL params | Bookmarkable, browser navigation |
+| Shared UI state (2+ components) | Zustand | Fast, selective re-renders, no prop drilling |
+| Local UI state (1 component) | useState | Simple, component-local |
+| Framework providers | Context | Singletons that never change |
+| Dependency injection | Context | Services, DB connections |
+| **ANY state management** | **NEVER Context** | **Use Zustand instead** |
+
+</decision_framework>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- **Storing server/API data in client state (useState, Context, Zustand)** - causes stale data, no caching, manual sync complexity
+- **Using Context with useState/useReducer for state management** - every consumer re-renders on any change, performance nightmare
+- **Using useState for state needed in 2+ components** - causes prop drilling, tight coupling, refactoring difficulty
+- **Default exports in state files** - violates project conventions, breaks tree-shaking
+- **Magic numbers in validation or initial state** - makes rules unclear, hard to maintain
+
+**Medium Priority Issues:**
+
+- Prop drilling 3+ levels instead of using Zustand
+- Filter state in useState instead of URL params (not shareable)
+- Creating unnecessary object references in Zustand selectors (causes re-renders)
+- Subscribing to entire Zustand store instead of specific values
+- Validating on every keystroke instead of on blur/submit
+
+**Common Mistakes:**
+
+- Mixing controlled and uncontrolled inputs in forms
+- Not preventing default on form submit
+- Showing validation errors before user finishes typing
+- Not typing form events explicitly (use `ChangeEvent<HTMLInputElement>`, `FormEvent<HTMLFormElement>`)
+- Disabling input fields during submission (only disable submit button)
+- Not handling submit errors with user-friendly messages
+- Missing loading states during async operations
+
+**Gotchas & Edge Cases:**
+
+- Context re-renders ALL consumers when ANY value changes - no way to select specific values
+- Zustand selectors that return new objects cause re-renders even if values identical (use shallow or primitive selectors)
+- URL params are always strings - need parsing for numbers/booleans
+- Form validation on every keystroke kills performance - validate on blur/submit
+- Persisting modal/sidebar state across sessions confuses users - only persist preferences
+
+</red_flags>
 
 ---
 

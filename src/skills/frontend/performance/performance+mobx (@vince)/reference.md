@@ -1,6 +1,6 @@
 # Performance Reference
 
-> Decision frameworks, anti-patterns, red flags, and integration guides for Photoroom webapp performance optimization.
+> Decision frameworks, anti-patterns, red flags, and integration guides for Photoroom webapp performance optimization. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
 

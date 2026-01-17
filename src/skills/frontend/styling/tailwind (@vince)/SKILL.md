@@ -8,7 +8,7 @@ description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 > **Quick Guide:** Tailwind CSS is the primary styling approach. Use `clsx` for class composition. Design tokens from `@photoroom/ui` preset. SCSS is minimal (global styles only). Always expose `className` prop on components for composability.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) (core, variants, responsive, global-styles, icons)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -100,7 +100,7 @@ The webapp follows a **Tailwind-first** styling approach where utility classes a
 
 Tailwind is the primary styling approach. Use utility classes directly in JSX. No separate CSS files for components.
 
-See [examples.md](examples.md#pattern-1-tailwind-css-utility-first-styling) for implementation examples.
+See [examples/core.md](examples/core.md#pattern-1-tailwind-css-utility-first-styling) for implementation examples.
 
 ---
 
@@ -108,7 +108,7 @@ See [examples.md](examples.md#pattern-1-tailwind-css-utility-first-styling) for 
 
 Use `clsx` for combining and conditionally applying Tailwind classes. Avoids template literal issues with trailing spaces.
 
-See [examples.md](examples.md#pattern-2-clsx-for-class-composition) for composition patterns.
+See [examples/core.md](examples/core.md#pattern-2-clsx-for-class-composition) for composition patterns.
 
 ---
 
@@ -116,7 +116,7 @@ See [examples.md](examples.md#pattern-2-clsx-for-class-composition) for composit
 
 Use the extended Tailwind config from `@photoroom/ui` for consistent design tokens (spacing, colors, typography, border radius).
 
-See [examples.md](examples.md#pattern-3-design-tokens-from-photoroomui-preset) for token usage.
+See [examples/core.md](examples/core.md#pattern-3-design-tokens-from-photoroomui-preset) for token usage.
 
 ---
 
@@ -124,7 +124,7 @@ See [examples.md](examples.md#pattern-3-design-tokens-from-photoroomui-preset) f
 
 Always expose `className` prop on components and merge it with internal classes using `clsx`. This enables consumer customization.
 
-See [examples.md](examples.md#pattern-4-exposing-classname-prop-for-composability) for props patterns.
+See [examples/core.md](examples/core.md#pattern-4-exposing-classname-prop-for-composability) for props patterns.
 
 ---
 
@@ -132,7 +132,7 @@ See [examples.md](examples.md#pattern-4-exposing-classname-prop-for-composabilit
 
 SCSS is minimal - primarily for global styles and font definitions. Component styling should use Tailwind.
 
-See [examples.md](examples.md#pattern-5-scss-usage-minimal---global-styles-only) for when to use SCSS.
+See [examples/global-styles.md](examples/global-styles.md) for when to use SCSS.
 
 ---
 
@@ -140,7 +140,7 @@ See [examples.md](examples.md#pattern-5-scss-usage-minimal---global-styles-only)
 
 Use objects to map variants to class names for consistent variant handling with type-safe keys.
 
-See [examples.md](examples.md#pattern-6-variant-objects-with-tailwind) for variant patterns.
+See [examples/variants.md](examples/variants.md) for variant patterns.
 
 ---
 
@@ -148,7 +148,7 @@ See [examples.md](examples.md#pattern-6-variant-objects-with-tailwind) for varia
 
 Use the internal `@photoroom/icons` package for consistent icon styling. Icons use currentColor for color inheritance.
 
-See [examples.md](examples.md#pattern-7-icons-from-photoroomicons) for icon patterns.
+See [examples/icons.md](examples/icons.md) for icon patterns.
 
 ---
 
@@ -156,7 +156,7 @@ See [examples.md](examples.md#pattern-7-icons-from-photoroomicons) for icon patt
 
 Use Tailwind's responsive prefixes for mobile-first responsive design. Start with mobile styles, add breakpoint overrides.
 
-See [examples.md](examples.md#pattern-8-responsive-design-with-tailwind-breakpoints) for responsive patterns.
+See [examples/responsive.md](examples/responsive.md) for responsive patterns.
 
 </patterns>
 
