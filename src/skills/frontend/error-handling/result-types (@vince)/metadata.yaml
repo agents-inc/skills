@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: error-handling
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+  - backend/typescript
+tags:
+  - result-type
+  - either-type
+  - error-handling
+  - railway-oriented-programming
+  - typed-errors
+  - flatMap
+  - andThen
+  - tryCatch
+  - discriminated-union
+  - neverthrow
+  - fp-ts
+  - error-as-value

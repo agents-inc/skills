@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../../../schemas/metadata.schema.json
+category: files
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - image-preview
+  - canvas-api
+  - image-resize
+  - image-compression
+  - exif-orientation
+  - object-url
+  - thumbnail
+  - blob
+  - file-api
+  - client-side-processing
+compatible_with:
+  - frontend/react
+  - frontend/forms/*

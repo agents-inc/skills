@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: file-upload
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - file-upload
+  - drag-drop
+  - react-dropzone
+  - uppy
+  - tus-protocol
+  - s3-presigned
+  - multipart-upload
+  - file-validation
+  - progress-tracking
+  - accessibility
+compatible_with:
+  - frontend/react
+  - frontend/forms/*
+  - backend/api-hono (@vince)
