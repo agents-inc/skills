@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: frontend
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+requires: []
+compatible_with:
+  - frontend/styling-scss-modules (@vince)
+  - frontend/accessibility (@vince)
+  - frontend/performance (@vince)
+tags:
+  - animation
+  - css
+  - transitions
+  - keyframes
+  - scroll-driven
+  - view-transitions
+  - accessibility
+  - performance
