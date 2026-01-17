@@ -1,7 +1,9 @@
 # New Skills to Create
 
 > **Purpose:** Comprehensive list of atomic skills to add to the skills library.
-> **Status:** ALL 44 skills COMPLETE - All pending skills have been researched, created, and code-reviewed
+> **Status:** ✅ ALL COMPLETE - 44 NEW skills + 32 ORIGINAL skills refactored
+> **Verification Date:** 2026-01-17
+> **All Issues Resolved:** jotai examples/ folder created, old examples.md files removed
 
 ---
 
@@ -320,8 +322,76 @@ Each skill MUST comply with:
 
 ---
 
+## Original Skills Refactoring (examples.md → examples/ folder)
+
+> **Purpose:** Track original skills that need their `examples.md` converted to the new `examples/` folder structure.
+> **Status:** ✅ COMPLETE - All 32 original skills have been refactored to examples/ folder structure
+> **Verification Date:** 2026-01-17
+
+These skills have been refactored from the old flat `examples.md` structure to the new granular `examples/` folder with topic-specific files.
+
+### Frontend Original Skills
+
+| #   | Skill Path                                                        | Refactor Status   | Files Created | Verified |
+| --- | ----------------------------------------------------------------- | ----------------- | ------------- | -------- |
+| 1   | `frontend/framework/react (@vince)`                               | ✅ COMPLETE       | 4 files       | ✅       |
+| 2   | `frontend/framework/react+mobx (@vince)`                          | ✅ COMPLETE       | 5 files       | ✅       |
+| 3   | `frontend/client-state-management/zustand (@vince)`               | ✅ COMPLETE       | 2 files       | ✅       |
+| 4   | `frontend/client-state-management/mobx (@vince)`                  | ✅ COMPLETE       | 6 files       | ✅       |
+| 5   | `frontend/server-state-management/react-query (@vince)`           | ✅ COMPLETE       | 3 files       | ✅       |
+| 6   | `frontend/server-state-management/react-query+axios+zod (@vince)` | ✅ COMPLETE       | 5 files       | ✅       |
+| 7   | `frontend/styling/scss-modules (@vince)`                          | ✅ COMPLETE       | 6 files       | ✅       |
+| 8   | `frontend/styling/tailwind (@vince)`                              | ✅ COMPLETE       | 5 files       | ✅       |
+| 9   | `frontend/testing/vitest (@vince)`                                | ✅ COMPLETE       | 4 files       | ✅       |
+| 10  | `frontend/testing/karma+playwright (@vince)`                      | ✅ COMPLETE       | 4 files       | ✅       |
+| 11  | `frontend/mocks/msw (@vince)`                                     | ✅ COMPLETE       | 5 files       | ✅       |
+| 12  | `frontend/mocks/mocks (@vince)`                                   | ✅ COMPLETE       | 5 files       | ✅       |
+| 13  | `frontend/accessibility/accessibility (@vince)`                   | ✅ COMPLETE       | 8 files       | ✅       |
+| 14  | `frontend/performance/performance (@vince)`                       | ✅ COMPLETE       | 6 files       | ✅       |
+| 15  | `frontend/performance/performance+mobx (@vince)`                  | ✅ COMPLETE       | 4 files       | ✅       |
+
+### Backend Original Skills
+
+| #   | Skill Path                                         | Refactor Status | Files Created | Verified |
+| --- | -------------------------------------------------- | --------------- | ------------- | -------- |
+| 16  | `backend/api/hono (@vince)`                        | ✅ COMPLETE     | 7 files       | ✅       |
+| 17  | `backend/database/drizzle (@vince)`                | ✅ COMPLETE     | 5 files       | ✅       |
+| 18  | `backend/auth/better-auth+drizzle+hono (@vince)`   | ✅ COMPLETE     | 5 files       | ✅       |
+| 19  | `backend/analytics/posthog-analytics (@vince)`     | ✅ COMPLETE     | 7 files       | ✅       |
+| 20  | `backend/flags/posthog-flags (@vince)`             | ✅ COMPLETE     | 7 files       | ✅       |
+| 21  | `backend/email/resend+react-email (@vince)`        | ✅ COMPLETE     | 8 files       | ✅       |
+| 22  | `backend/observability/axiom+pino+sentry (@vince)` | ✅ COMPLETE     | 7 files       | ✅       |
+| 23  | `backend/ci-cd/github-actions (@vince)`            | ✅ COMPLETE     | 6 files       | ✅       |
+
+### Setup/Other Original Skills
+
+| #   | Skill Path                                            | Refactor Status | Files Created | Verified |
+| --- | ----------------------------------------------------- | --------------- | ------------- | -------- |
+| 24  | `setup/analytics/posthog (@vince)`                    | ✅ COMPLETE     | 3 files       | ✅       |
+| 25  | `setup/email/resend (@vince)`                         | ✅ COMPLETE     | 4 files       | ✅       |
+| 26  | `setup/env (@vince)`                                  | ✅ COMPLETE     | 4 files       | ✅       |
+| 27  | `setup/monorepo/turborepo (@vince)`                   | ✅ COMPLETE     | 4 files       | ✅       |
+| 28  | `setup/observability/axiom+pino+sentry (@vince)`      | ✅ COMPLETE     | 6 files       | ✅       |
+| 29  | `setup/tooling/tooling (@vince)`                      | ✅ COMPLETE     | 5 files       | ✅       |
+| 30  | `security/security (@vince)`                          | ✅ COMPLETE     | 4 files       | ✅       |
+| 31  | `shared/reviewing (@vince)`                           | ✅ COMPLETE     | 3 files       | ✅       |
+| 32  | `research/research-methodology/research-methodology (@vince)` | ✅ COMPLETE | 2 files    | ✅       |
+
+---
+
+## Cleanup Status
+
+All cleanup tasks completed on 2026-01-17:
+
+| Task                                          | Status      |
+| --------------------------------------------- | ----------- |
+| Convert jotai examples.md → examples/ folder  | ✅ DONE     |
+| Remove hono duplicate examples.md             | ✅ DONE     |
+| Remove performance duplicate examples.md      | ✅ DONE     |
+
+---
+
 _Last updated: 2026-01-17_
-_Extraction agents: 36 launched, 36 completed_
-_Code review: All 36 skills verified by reviewer agents_
-_Secondary verification: All skills independently verified_
-_Status: All 44 skills COMPLETE - including 15 new skills from iteration 2 (jotai, urql, vee-validate, css-animations, view-transitions, react-intl, vue-i18n, sse, socket-io, expo, result-types, image-handling, native-js, service-workers, offline-first)_
+_Verification: All 44 NEW skills verified as IMPLEMENTED with examples/ folders_
+_Verification: All 32 ORIGINAL skills verified as REFACTORED to examples/ folder_
+_All cleanup tasks completed - no old examples.md files remain_
