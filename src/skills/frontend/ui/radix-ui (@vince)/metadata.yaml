@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: ui
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - radix
+  - radix-ui
+  - primitives
+  - headless
+  - accessibility
+  - compound-components
+  - asChild
+  - dialog
+  - popover
+  - tooltip
+  - dropdown

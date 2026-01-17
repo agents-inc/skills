@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: frontend
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - shadcn
+  - ui-components
+  - radix
+  - theming
+  - dark-mode
+  - forms
+  - accessibility
+compatible_with:
+  - frontend/react (@vince)
+  - frontend/styling-tailwind (@vince)

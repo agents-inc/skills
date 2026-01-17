@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: ui
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - table
+  - datagrid
+  - sorting
+  - filtering
+  - pagination
+  - row-selection
+  - virtual-scrolling
+  - server-side
+compatible_with:
+  - frontend/react (@vince)

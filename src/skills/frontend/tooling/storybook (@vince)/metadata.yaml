@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: tooling
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/react
+  - frontend/testing/vitest
+  - frontend/testing/playwright-e2e
+tags:
+  - storybook
+  - component-development
+  - documentation
+  - visual-testing
+  - interaction-testing
+  - CSF3
+  - autodocs
+  - controls
+  - design-system
