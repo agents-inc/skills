@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: testing
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - frontend/framework/vue-composition-api
+  - frontend/client-state-management/pinia
+tags:
+  - vue-test-utils
+  - testing
+  - component-testing
+  - mount
+  - shallowMount
+  - wrapper
+  - trigger
+  - setValue
+  - flushPromises
+  - composables
+  - pinia-testing
