@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: utilities
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - native-javascript
+  - es2023
+  - es2024
+  - es2025
+  - lodash-alternative
+  - array-methods
+  - object-methods
+  - set-operations
+  - structuredClone
+  - optional-chaining
+  - immutable-arrays

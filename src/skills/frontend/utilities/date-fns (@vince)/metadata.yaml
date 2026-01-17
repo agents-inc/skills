@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: utilities
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - date-fns
+  - dates
+  - time
+  - formatting
+  - parsing
+  - timezone
+  - internationalization
+  - manipulation

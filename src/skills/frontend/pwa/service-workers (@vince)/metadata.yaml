@@ -1,0 +1,77 @@
+id: frontend/pwa/service-workers
+version: 1.0.0
+author: "@vince"
+
+name: Service Worker Patterns
+description: >-
+  Service Worker lifecycle management, caching strategies (cache-first, network-first,
+  stale-while-revalidate), precaching, runtime caching, update handling, offline fallbacks,
+  and cache versioning for Progressive Web Apps.
+
+category: frontend
+subcategory: pwa
+
+technologies:
+  - Service Worker API
+  - Cache API
+  - CacheStorage
+  - IndexedDB
+
+keywords:
+  - service worker
+  - serviceWorker
+  - sw.js
+  - sw.ts
+  - navigator.serviceWorker
+  - caches
+  - Cache API
+  - CacheStorage
+  - skipWaiting
+  - clients.claim
+  - precache
+  - offline-first
+  - PWA
+  - progressive web app
+  - cache-first
+  - network-first
+  - stale-while-revalidate
+  - offline fallback
+  - waitUntil
+  - install event
+  - activate event
+  - fetch event
+
+triggers:
+  files:
+    - sw.js
+    - sw.ts
+    - service-worker.js
+    - service-worker.ts
+    - workbox-config.js
+  content:
+    - navigator.serviceWorker
+    - serviceWorker.register
+    - caches.open
+    - event.waitUntil
+    - self.skipWaiting
+    - clients.claim
+  tasks:
+    - offline support
+    - PWA
+    - progressive web app
+    - service worker
+    - caching strategy
+    - precache
+    - cache-first
+    - network-first
+
+usage: >-
+  When implementing Progressive Web Apps, offline functionality, sophisticated caching
+  strategies, or any Service Worker-related feature.
+
+files:
+  - SKILL.md
+  - reference.md
+  - examples/core.md
+  - examples/caching.md
+  - examples/updates.md
