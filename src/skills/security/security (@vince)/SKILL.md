@@ -8,8 +8,13 @@ description: Authentication, authorization, secrets management, XSS prevention, 
 > **Quick Guide:** Managing secrets? Use .env.local (gitignored), CI secrets (GitHub/Vercel), rotate quarterly. Dependency security? Enable Dependabot, audit weekly, patch critical vulns within 24hrs. XSS prevention? React escapes by default - never use dangerouslySetInnerHTML with user input. Sanitize with DOMPurify if needed. Set CSP headers. CODEOWNERS? Require security team review for auth/, .env.example, workflows.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md) (essential patterns)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
+
+**Additional Examples:**
+- [examples/xss-prevention.md](examples/xss-prevention.md) - XSS protection, DOMPurify, CSP headers
+- [examples/dependency-security.md](examples/dependency-security.md) - Dependabot, CI security checks
+- [examples/access-control.md](examples/access-control.md) - CODEOWNERS, rate limiting, branch protection
 
 ---
 
@@ -134,7 +139,7 @@ Secrets include: API keys, tokens, passwords, database credentials, private keys
 | Passwords | 90 days |
 | Certificates | 30 days warning before expiry |
 
-**See [examples.md](examples.md#pattern-1-secret-management) for code examples.**
+**See [examples/core.md](examples/core.md#pattern-1-secret-management) for code examples.**
 
 ---
 
@@ -155,7 +160,7 @@ Enable automated vulnerability scanning with Dependabot to catch security issues
 - **Minor updates** (1.2.0 -> 1.3.0) - Review changes, test, merge
 - **Major updates** (1.0.0 -> 2.0.0) - Plan migration, test thoroughly
 
-**See [examples.md](examples.md#pattern-2-dependency-security) for Dependabot configuration and CI security check scripts.**
+**See [examples/dependency-security.md](examples/dependency-security.md) for Dependabot configuration and CI security check scripts.**
 
 ---
 
@@ -175,7 +180,7 @@ When HTML rendering is required, use DOMPurify with a whitelist of allowed tags 
 
 Configure CSP headers to prevent unauthorized script execution even if XSS occurs.
 
-**See [examples.md](examples.md#pattern-3-xss-prevention) for React, DOMPurify, and CSP code examples.**
+**See [examples/xss-prevention.md](examples/xss-prevention.md) for React, DOMPurify, and CSP code examples.**
 
 </patterns>
 

@@ -1,112 +1,12 @@
-# Reviewing Patterns - Examples
+# Reviewing Patterns - Anti-Patterns
 
-> Code examples and comparisons for the reviewing skill.
+[Back to SKILL.md](../SKILL.md) | [core.md](core.md) | [feedback-patterns.md](feedback-patterns.md) | [reference.md](../reference.md)
 
----
-
-## Progress Tracking Example
-
-```
-Files Examined:
-- [x] src/components/user-profile.tsx (complete)
-- [x] src/hooks/use-user.ts (complete)
-- [ ] src/api/users.ts (deferred to backend-reviewer)
-
-Success Criteria:
-- [x] User profile displays correctly
-- [x] Edit form validates input
-- [ ] Tests pass (need to verify)
-
-Issues Found:
-- 1x Must Fix (missing error handling)
-- 2x Should Fix (performance optimizations)
-
-Positive Patterns:
-- Clean component structure
-- Good TypeScript usage
-```
+> Common issues to flag in reviewed code, and reviewer behaviors to avoid.
 
 ---
 
-## Retrieval Strategy
-
-When reviewing unfamiliar code, use this systematic approach.
-
-**Just-in-Time Loading:**
-
-1. **Glob** - Find files by pattern
-   - `**/*.ts` for TypeScript files
-   - `**/*.config.*` for config files
-   - `**/components/**` for components
-
-2. **Grep** - Search for patterns
-   - Function definitions
-   - Import statements
-   - Error handling patterns
-
-3. **Read** - Examine full content
-   - Always read complete files before commenting
-   - Never assume based on file names
-
-**Load patterns just-in-time** - Don't read everything upfront; load when relevant.
-
-**Why this matters:** Efficient retrieval preserves context window and prevents information overload. Load what you need when you need it.
-
----
-
-## Feedback Principles Examples
-
-### Be Specific
-
-```markdown
-Bad: "This code needs improvement"
-Good: "ProfileEditModal.tsx line 45: This validation logic duplicates
-validateEmail() from validation.ts. Use the existing utility instead."
-```
-
-**Why:** Vague feedback wastes time. Specific feedback can be acted on immediately.
-
----
-
-### Explain Why
-
-```markdown
-Bad: "Don't use any types"
-Good: "Line 23: Replace `any` with `UserProfile` type. This provides type
-safety and catches errors at compile time. The type is already
-defined in types/user.ts."
-```
-
-**Why:** Understanding impact helps authors learn and prevents repeat mistakes.
-
----
-
-### Suggest Solutions
-
-```markdown
-Bad: "This is wrong"
-Good: "Line 67: Instead of creating a new error handler, follow the pattern
-in SettingsForm.tsx (lines 78-82) which handles this scenario."
-```
-
-**Why:** Solutions (especially referencing existing code) make fixes faster and maintain consistency.
-
----
-
-### Acknowledge Good Work
-
-```markdown
-- "Excellent use of the existing validation pattern"
-- "Good error handling following our conventions"
-- "Tests are comprehensive and well-structured"
-- "Clean implementation matching the pattern"
-```
-
-**Why:** Positive reinforcement teaches what to repeat. Reviews that only criticize demotivate and miss teaching opportunities.
-
----
-
-## Review-Specific Anti-Patterns
+## Code Anti-Patterns (What to Flag)
 
 Watch for these common issues in reviewed code.
 
@@ -193,7 +93,7 @@ try {
 
 ---
 
-## Anti-Patterns to Avoid (as a Reviewer)
+## Reviewer Anti-Patterns (What to Avoid)
 
 ### Reviewing Without Reading Full Files
 
