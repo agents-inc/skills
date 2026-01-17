@@ -1,0 +1,49 @@
+id: mobile/expo (@vince)
+name: Expo Development
+description: Build production-ready React Native apps with Expo managed workflow, Expo Router for file-based navigation, and EAS for cloud builds and OTA updates
+category: mobile
+author: vince
+
+keywords:
+  - expo
+  - expo-router
+  - eas build
+  - eas update
+  - expo-dev-client
+  - expo prebuild
+  - continuous native generation
+  - cng
+  - managed workflow
+  - ota updates
+  - config plugins
+  - expo-notifications
+  - expo-camera
+  - expo-location
+  - development builds
+  - app.config.ts
+  - eas.json
+
+triggers:
+  - expo
+  - expo-router
+  - EAS Build
+  - EAS Update
+  - expo-dev-client
+  - app.config.js
+  - app.config.ts
+  - app.json expo
+  - expo prebuild
+  - npx expo
+  - eas.json
+  - expo-constants
+  - expo-notifications
+  - Continuous Native Generation
+  - CNG
+  - EXPO_PUBLIC_
+  - runtimeVersion
+  - expo-camera
+  - expo-location
+  - expo-image
+  - expo-font
+
+version: 1.0.0

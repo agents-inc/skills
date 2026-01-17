@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: mobile
+category_exclusive: true
+author: "@vince"
+version: 1.0.0
+requires: []
+compatible_with:
+  - frontend/state-zustand (@vince)
+  - frontend/server-state-react-query (@vince)
+  - frontend/forms/react-hook-form (@vince)
+  - frontend/forms/zod-validation (@vince)
+tags:
+  - react-native
+  - mobile
+  - ios
+  - android
+  - expo
+  - navigation
+  - react-navigation
+  - nativewind
+  - reanimated
+  - gesture-handler
+  - flatlist
+  - performance
