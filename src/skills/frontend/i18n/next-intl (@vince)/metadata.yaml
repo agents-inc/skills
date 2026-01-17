@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: i18n
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - next-intl
+  - i18n
+  - internationalization
+  - localization
+  - translations
+  - ICU
