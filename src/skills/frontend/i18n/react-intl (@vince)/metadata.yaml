@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: i18n
+category_exclusive: false
+author: "@vince"
+version: 1.0.0
+tags:
+  - react-intl
+  - formatjs
+  - i18n
+  - internationalization
+  - localization
+  - translations
+  - ICU
+  - FormattedMessage
+  - useIntl
