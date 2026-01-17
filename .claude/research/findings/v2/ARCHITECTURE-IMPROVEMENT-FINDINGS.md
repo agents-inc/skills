@@ -3,6 +3,7 @@
 > **Central Truth Document** for all research findings from multi-agent analysis of the modular agent/skill architecture.
 
 **Quick Links:**
+
 - **[INDEX.md](./INDEX.md)** - Start here for new sessions (context + continuation prompt)
 - **[ISSUES-INDEX.md](./ISSUES-INDEX.md)** - All 49 issues with full explanations, ordered by severity
 - **[Detailed Findings Files](#detailed-findings-files)** - Deep-dive analysis from each research agent
@@ -41,20 +42,20 @@
 
 ## Detailed Findings Files
 
-| Agent # | Focus Area | File |
-|---------|------------|------|
-| 1 | Maintainability | *This file, §1* |
-| 2 | Type Safety | [TYPE-SAFETY-DETAILED.md](./TYPE-SAFETY-DETAILED.md) |
-| 3 | Prompting Techniques | *This file, §3* |
-| 4 | Scalability | [SCALABILITY-ANALYSIS.md](./SCALABILITY-ANALYSIS.md) |
-| 5 | DRY Principles | [DRY-PRINCIPLES-AGENT5-FINDINGS.md](./DRY-PRINCIPLES-AGENT5-FINDINGS.md) |
-| 6 | Template Architecture | [TEMPLATE-ARCHITECTURE-FINDINGS.md](./TEMPLATE-ARCHITECTURE-FINDINGS.md) |
-| 7 | Compilation Pipeline | [COMPILATION-PIPELINE-FINDINGS.md](./COMPILATION-PIPELINE-FINDINGS.md) |
-| 8 | Profile System | [PROFILE-SYSTEM-FINDINGS.md](./PROFILE-SYSTEM-FINDINGS.md) |
-| 9 | Skill Architecture | *This file, §9* |
-| 10 | XML Tag Strategy | [10-XML-TAG-STRATEGY-FINDINGS.md](./10-XML-TAG-STRATEGY-FINDINGS.md) |
-| 11 | Model Optimizations | [MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md](./MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md) |
-| 12 | Testing & Verification | *This file, §12* |
+| Agent # | Focus Area             | File                                                                                   |
+| ------- | ---------------------- | -------------------------------------------------------------------------------------- |
+| 1       | Maintainability        | _This file, §1_                                                                        |
+| 2       | Type Safety            | [TYPE-SAFETY-DETAILED.md](./TYPE-SAFETY-DETAILED.md)                                   |
+| 3       | Prompting Techniques   | _This file, §3_                                                                        |
+| 4       | Scalability            | [SCALABILITY-ANALYSIS.md](./SCALABILITY-ANALYSIS.md)                                   |
+| 5       | DRY Principles         | [DRY-PRINCIPLES-AGENT5-FINDINGS.md](./DRY-PRINCIPLES-AGENT5-FINDINGS.md)               |
+| 6       | Template Architecture  | [TEMPLATE-ARCHITECTURE-FINDINGS.md](./TEMPLATE-ARCHITECTURE-FINDINGS.md)               |
+| 7       | Compilation Pipeline   | [COMPILATION-PIPELINE-FINDINGS.md](./COMPILATION-PIPELINE-FINDINGS.md)                 |
+| 8       | Profile System         | [PROFILE-SYSTEM-FINDINGS.md](./PROFILE-SYSTEM-FINDINGS.md)                             |
+| 9       | Skill Architecture     | _This file, §9_                                                                        |
+| 10      | XML Tag Strategy       | [10-XML-TAG-STRATEGY-FINDINGS.md](./10-XML-TAG-STRATEGY-FINDINGS.md)                   |
+| 11      | Model Optimizations    | [MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md](./MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md) |
+| 12      | Testing & Verification | _This file, §12_                                                                       |
 
 **Master Issue List:** [ISSUES-INDEX.md](./ISSUES-INDEX.md) - All 49 issues with severity ratings and full explanations
 
@@ -687,13 +688,13 @@ There is no `Skill` tool, and the `skill: "..."` syntax is not recognized by Cla
 
 #### Files Analyzed
 
-| File                                 | Test Coverage     |
-| ------------------------------------ | ----------------- |
+| File                         | Test Coverage     |
+| ---------------------------- | ----------------- |
 | `src/compile.ts`             | None              |
 | `src/types.ts`               | None (types only) |
 | `src/schemas/*.json`         | IDE-only          |
 | `src/templates/agent.liquid` | None              |
-| `package.json`                       | No test script    |
+| `package.json`               | No test script    |
 
 #### Verification Commands Status
 
