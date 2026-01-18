@@ -1,11 +1,15 @@
 ---
 name: frontend/animation/framer-motion (@vince)
-description: Framer Motion animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility
+description: Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility
 ---
 
-# Framer Motion Animation Patterns
+# Motion Animation Patterns
 
-> **Quick Guide:** Use Framer Motion for declarative React animations. motion components for basic animations, variants for orchestrated sequences, AnimatePresence for exit animations, layout/layoutId for FLIP animations, useScroll/useInView for scroll-triggered effects.
+> **Quick Guide:** Use Motion (formerly Framer Motion) for declarative React animations. motion components for basic animations, variants for orchestrated sequences, AnimatePresence for exit animations, layout/layoutId for FLIP animations, useScroll/useInView for scroll-triggered effects.
+
+> **v11+ Note:** The package has been renamed from `framer-motion` to `motion`. Import from `"motion/react"` instead of `"framer-motion"`. Both packages are supported during migration.
+
+> **v12 Note (Current: v12.26+):** New features include `usePageInView` for background tab detection, enhanced `stagger()` with `from`/`ease` options, `resize()` function, and `.stop()`/`.cancel()` on drag controls.
 
 ---
 
@@ -29,7 +33,7 @@ description: Framer Motion animation patterns - motion components, variants, ges
 
 ---
 
-**Auto-detection:** Framer Motion, motion.div, motion.button, AnimatePresence, useAnimation, useScroll, useInView, variants, whileHover, whileTap, layoutId, spring, tween
+**Auto-detection:** Motion, Framer Motion, motion.div, motion.button, AnimatePresence, useAnimation, useScroll, useInView, usePageInView, variants, whileHover, whileTap, layoutId, spring, tween, stagger, "motion/react", "framer-motion"
 
 **When to use:**
 
@@ -51,12 +55,25 @@ description: Framer Motion animation patterns - motion components, variants, ges
 - Spring and tween transitions
 - useAnimation for imperative control
 - Reduced motion accessibility
+- v12: usePageInView, enhanced stagger(), resize()
 
 **When NOT to use:**
 
 - Simple CSS transitions (use CSS transitions instead)
 - Complex timeline-based animations requiring frame-level control (consider GSAP)
 - Performance-critical animations on low-powered devices without careful optimization
+
+**Package Migration (v11+):**
+
+```bash
+# Migrate from framer-motion to motion
+npm uninstall framer-motion
+npm install motion
+
+# Update imports
+# Old: import { motion } from "framer-motion"
+# New: import { motion } from "motion/react"
+```
 
 **Detailed Resources:**
 - For code examples, see [examples/](examples/) folder
@@ -93,7 +110,10 @@ Motion components are the foundation of Framer Motion. Prefix any HTML or SVG el
 #### Animation Props
 
 ```typescript
-import { motion } from "framer-motion";
+// v11+ (recommended - motion package)
+import { motion } from "motion/react";
+// Legacy (framer-motion package - still works during migration)
+// import { motion } from "framer-motion";
 
 const FADE_DURATION_S = 0.3;
 const SLIDE_DISTANCE_PX = 20;
@@ -632,6 +652,107 @@ export const AccessibleReveal = ({ children }: { children: React.ReactNode }) =>
 **Why good:** Provides graceful degradation instead of no animation, maintains visual feedback while respecting preferences, hook reactively updates if setting changes
 
 **When to use:** Always - reduced motion support is a requirement for accessible applications
+
+---
+
+### Pattern 10: v12 Features
+
+New features introduced in Motion v12.
+
+#### usePageInView Hook (v12.19+)
+
+Detect when the page/tab is visible to pause animations or videos in background tabs.
+
+```typescript
+import { usePageInView } from "motion/react";
+import { useRef, useEffect } from "react";
+
+export const AutoPausingVideo = ({ src }: { src: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const isPageVisible = usePageInView();
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    if (isPageVisible) {
+      videoRef.current.play();
+    } else {
+      videoRef.current.pause();
+    }
+  }, [isPageVisible]);
+
+  return <video ref={videoRef} src={src} muted loop />;
+};
+```
+
+**Why good:** Automatically pauses resource-intensive animations when user switches tabs, improves performance and battery life
+
+#### Enhanced stagger() with from and ease (v12+)
+
+The `stagger()` function now supports staggering from any child and eased staggering.
+
+```typescript
+import { motion, stagger, type Variants } from "motion/react";
+
+const STAGGER_DELAY_S = 0.05;
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      // Stagger from center with easing
+      staggerChildren: stagger(STAGGER_DELAY_S, {
+        from: "center",
+        ease: "easeOut",
+      }),
+    },
+  },
+};
+
+// Alternative: stagger from a specific index
+const fromIndexVariants: Variants = {
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: stagger(STAGGER_DELAY_S, {
+        from: 3, // Start from 4th child (0-indexed)
+      }),
+    },
+  },
+};
+
+// Options: "first" (default), "center", "last", or number (index)
+```
+
+**Why good:** Enables ripple-out effects from center or specific elements, eased staggering creates more polished animations
+
+#### Drag Controls with stop/cancel (v12+)
+
+```typescript
+import { motion, useDragControls } from "motion/react";
+
+export const CancellableDrag = () => {
+  const controls = useDragControls();
+
+  const handleEmergencyStop = () => {
+    controls.stop(); // Stop drag immediately
+    // or controls.cancel(); // Cancel and revert
+  };
+
+  return (
+    <motion.div
+      drag
+      dragControls={controls}
+      onDragEnd={() => console.log("Drag ended")}
+    >
+      Drag me
+    </motion.div>
+  );
+};
+```
+
+**When to use:** When you need programmatic control to stop or cancel drag operations
 
 </patterns>
 

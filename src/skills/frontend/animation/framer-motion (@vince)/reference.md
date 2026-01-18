@@ -1,6 +1,108 @@
-# Framer Motion Reference
+# Motion Reference
 
-> Decision frameworks, anti-patterns, and red flags for Framer Motion development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and red flags for Motion (formerly Framer Motion) development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+
+---
+
+## v11/v12 Migration Guide
+
+### Package Rename (CRITICAL - v11+)
+
+The package has been renamed from `framer-motion` to `motion`:
+
+```bash
+npm uninstall framer-motion
+npm install motion
+```
+
+Update imports:
+
+```typescript
+// Old (framer-motion)
+import { motion } from "framer-motion";
+
+// New (motion v11+)
+import { motion } from "motion/react";
+```
+
+### Breaking Changes in v11
+
+#### Render Scheduling
+
+Motion component renders moved from synchronous to microtask scheduling. Update Jest/Vitest tests:
+
+```typescript
+// Before v11 - synchronous
+render(<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} />);
+expect(element).toHaveStyle("opacity: 1");
+
+// v11+ - await animation frame
+import { frame } from "motion";
+
+async function nextFrame() {
+  return new Promise<void>((resolve) => {
+    frame.postRender(() => resolve());
+  });
+}
+
+render(<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} />);
+await nextFrame();
+expect(element).toHaveStyle("opacity: 1");
+```
+
+#### Velocity Calculation
+
+Velocity is now calculated based on the value at end of previous frame, not intermediate synchronous updates:
+
+```typescript
+// v11+ behavior
+const x = motionValue(0);
+
+requestAnimationFrame(() => {
+  x.set(100);
+  x.getVelocity(); // Velocity of 0 -> 100
+  x.set(200);
+  x.getVelocity(); // Velocity of 0 -> 200 (not 100 -> 200)
+});
+```
+
+#### Removed APIs
+
+- `glide` function removed - use `type: "inertia"` instead:
+
+```typescript
+// Old
+animate(element, { x: 100 }, { type: "glide" });
+
+// New
+animate(element, { x: 100 }, { type: "inertia" });
+```
+
+### New in v12
+
+**No breaking changes in v12 for React.** New features include:
+
+- **usePageInView** (v12.19+): Pause animations when tab is in background
+- **Enhanced stagger()**: Now accepts `from` ("first", "center", "last", index) and `ease` options
+- **resize()** (v12.16+): New function for resize-linked animations
+- **useDragControls.stop()/cancel()**: Programmatic control over drag operations
+- **animateView** (v12.6+): Renamed from `view`, with `interrupt: "wait"` as default
+
+```typescript
+// v12 enhanced stagger example
+import { stagger } from "motion/react";
+
+const containerVariants = {
+  visible: {
+    transition: {
+      staggerChildren: stagger(0.05, {
+        from: "center", // Ripple from center
+        ease: "easeOut",
+      }),
+    },
+  },
+};
+```
 
 ---
 
@@ -365,8 +467,9 @@ const scale = useTransform(x, [0, 100], [1, 1.5]);
 | `useSpring` | Springy value | MotionValue |
 | `useScroll` | Scroll position | { scrollX, scrollY, scrollXProgress, scrollYProgress } |
 | `useInView` | Visibility | boolean |
+| `usePageInView` | Tab visibility (v12.19+) | boolean |
 | `useReducedMotion` | Accessibility | boolean \| null |
-| `useDragControls` | Programmatic drag | DragControls |
+| `useDragControls` | Programmatic drag | DragControls (with .stop()/.cancel() in v12) |
 
 ### Essential Components
 

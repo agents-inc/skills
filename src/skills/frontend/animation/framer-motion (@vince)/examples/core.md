@@ -1,6 +1,8 @@
-# Framer Motion Examples
+# Motion Examples
 
-> Complete code examples for Framer Motion animation patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Complete code examples for Motion (formerly Framer Motion) animation patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+
+> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
 
 **For advanced patterns**: See topic-specific files in this folder:
 - [layout.md](layout.md) - Layout animations, shared elements

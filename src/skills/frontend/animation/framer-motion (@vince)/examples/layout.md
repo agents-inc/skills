@@ -2,6 +2,8 @@
 
 > Layout animations and shared element transitions. See [core.md](core.md) for basic patterns.
 
+> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
+
 **Prerequisites**: Understand AnimatePresence Patterns from [core.md](core.md) first.
 
 ---

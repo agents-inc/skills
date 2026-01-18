@@ -2,6 +2,8 @@
 
 > Complex animation sequences using useAnimation and keyframes. See [core.md](core.md) for basic patterns.
 
+> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
+
 ---
 
 ## Multi-Step Animation with useAnimation
