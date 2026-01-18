@@ -5,11 +5,12 @@ description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 
 # Styling Patterns
 
-> **Quick Guide:** Tailwind CSS is the primary styling approach. Use `clsx` for class composition. Design tokens from `@photoroom/ui` preset. SCSS is minimal (global styles only). Always expose `className` prop on components for composability.
+> **Quick Guide:** Tailwind CSS v4 is the primary styling approach. Use `clsx` for class composition. Design tokens via `@theme` directive in CSS. SCSS is minimal (global styles only). Always expose `className` prop on components for composability.
 
 **Detailed Resources:**
-- For code examples, see [examples/](examples/) (core, variants, responsive, global-styles, icons)
+- For code examples, see [examples/](examples/) (core, variants, responsive, global-styles, icons, v4-features)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- For Tailwind v4 specific features, see [examples/v4-features.md](examples/v4-features.md)
 
 ---
 
@@ -33,7 +34,7 @@ description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 
 ---
 
-**Auto-detection:** Tailwind CSS, clsx, className, styling, design tokens, SCSS, custom fonts, CSS composition
+**Auto-detection:** Tailwind CSS, Tailwind v4, clsx, className, styling, design tokens, SCSS, custom fonts, CSS composition, @theme, @container, container queries, 3D transforms, OKLCH
 
 **When to use:**
 
@@ -42,14 +43,20 @@ description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 - Working with design tokens and theming
 - Extending components with custom styles
 - Implementing responsive designs
+- Container queries for component-based responsive design
+- 3D transforms and animations
 
 **Key patterns covered:**
 
-- Tailwind CSS utility-first styling
+- Tailwind CSS v4 utility-first styling
+- CSS-first configuration with @theme directive
 - clsx for class composition
-- Design tokens from @photoroom/ui preset
+- Design tokens via @theme (replaces tailwind.config.js)
+- OKLCH color system for P3 wide gamut support
+- Container queries (@container, @sm:, @max-sm:)
+- 3D transforms (perspective-*, rotate-x-*, translate-z-*)
 - SCSS usage (minimal - global styles only)
-- Custom font definitions (TT Photoroom)
+- Custom font definitions
 - Exposing className prop on components
 - Props extending HTML attributes
 
@@ -158,6 +165,38 @@ Use Tailwind's responsive prefixes for mobile-first responsive design. Start wit
 
 See [examples/responsive.md](examples/responsive.md) for responsive patterns.
 
+---
+
+### Pattern 9: CSS-First Configuration with @theme (v4)
+
+Tailwind v4 uses CSS-first configuration. Define design tokens directly in CSS using the `@theme` directive instead of JavaScript.
+
+See [examples/v4-features.md](examples/v4-features.md#css-first-configuration-with-theme) for @theme patterns.
+
+---
+
+### Pattern 10: Container Queries (v4)
+
+Use built-in container queries for component-based responsive design. Elements respond to their container size, not viewport.
+
+See [examples/v4-features.md](examples/v4-features.md#container-queries-built-in) for container query patterns.
+
+---
+
+### Pattern 11: 3D Transforms (v4)
+
+Use native 3D transform utilities for perspective, rotation, and translation in 3D space.
+
+See [examples/v4-features.md](examples/v4-features.md#3d-transforms) for 3D transform patterns.
+
+---
+
+### Pattern 12: OKLCH Color System (v4)
+
+Tailwind v4 uses OKLCH colors for P3 wide gamut support. More vivid colors with better gradient interpolation.
+
+See [examples/v4-features.md](examples/v4-features.md#oklch-color-system) for OKLCH color patterns.
+
 </patterns>
 
 ---
@@ -172,23 +211,39 @@ See [examples/responsive.md](examples/responsive.md) for responsive patterns.
 - **@photoroom/icons**: Icon components with currentColor inheritance
 - **clsx**: Class composition utility
 - **React components**: Via className prop and HTML attributes
+- **Vite**: First-party `@tailwindcss/vite` plugin for maximum performance
 
-**Token Sources:**
+**Token Sources (v4 CSS-first):**
 
-```javascript
-// tailwind.config.js
-module.exports = {
-  presets: [require("@photoroom/ui/tailwind.config.js")],
-  // Custom extensions...
-};
+```css
+/* app.css - v4 CSS-first configuration */
+@import "tailwindcss";
+
+/* Import preset tokens (if using shared theme) */
+@import "../packages/photoroom-ui/theme.css";
+
+/* Or define tokens directly with @theme */
+@theme {
+  --color-brand-500: oklch(0.72 0.11 178);
+  --radius-400: 0.75rem;
+}
+```
+
+**Legacy JavaScript Config (for advanced cases):**
+
+```css
+/* Reference JS config when needed */
+@config "../../tailwind.config.js";
 ```
 
 **Token Categories:**
 
 - **Spacing:** `p-2`, `gap-2`, `m-4`
-- **Colors:** `text-black-alpha-8`, `bg-gray-100`
+- **Colors:** `text-black-alpha-8`, `bg-gray-100` (now in OKLCH)
 - **Border radius:** `rounded-400`, `rounded-lg`
 - **Typography:** `text-500`
+- **Container queries:** `@sm:`, `@md:`, `@lg:`
+- **3D transforms:** `perspective-*`, `rotate-x-*`, `translate-z-*`
 
 </integration>
 

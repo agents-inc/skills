@@ -296,11 +296,14 @@ packages/ui/src/styles/
 
 ```scss
 // packages/ui/src/styles/global.scss
+// NOTE: @use rules must come before any other rules (except @forward/@charset)
 @use "layers"; // Declare layers FIRST
 @use "reset"; // Uses @layer reset
 @use "design-tokens"; // Unlayered (highest priority)
 @use "utility-classes"; // Unlayered (highest priority)
 ```
+
+**Why @use:** Modern Sass module system (see [modules.md](modules.md)). `@import` is deprecated and will be removed in Dart Sass 3.0.0.
 
 ### Minimal Utility Classes
 

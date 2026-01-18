@@ -2,14 +2,19 @@
 category: styling
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 2.0.0
 compatible_with:
   - frontend/react-mobx (@vince)
 conflicts_with:
   - frontend/styling
 tags:
   - tailwind
+  - tailwind-v4
   - css
   - clsx
   - design-tokens
   - photoroom
+  - container-queries
+  - 3d-transforms
+  - oklch
+  - theme-directive

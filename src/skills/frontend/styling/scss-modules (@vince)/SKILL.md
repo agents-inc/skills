@@ -25,6 +25,8 @@ description: SCSS Modules, cva, design tokens
 
 **(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
 
+**(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
+
 </critical_requirements>
 
 ---
@@ -125,8 +127,9 @@ Store HSL values without the `hsl()` wrapper in tokens, apply `hsl()` wrapper wh
 - Store HSL values without `hsl()` wrapper: `--color-gray-900: 222 47% 11%;`
 - Use `hsl()` wrapper when applying: `background-color: hsl(var(--color-primary))`
 - Use CSS color functions for derived colors:
-  - Transparency: `hsl(var(--color-primary) / 0.5)` or `hsl(from var(--color-primary) h s l / 0.5)`
+  - Transparency: `hsl(var(--color-primary) / 0.5)` (append alpha to HSL components)
   - Color mixing: `color-mix(in srgb, hsl(var(--color-primary)), white 10%)`
+  - Channel manipulation: `hsl(from hsl(var(--color-primary)) h s calc(l * 0.8))` (wrap origin in `hsl()` first)
 - **NEVER use Sass color functions:** No `darken()`, `lighten()`, `transparentize()`
 - Always use semantic color tokens (not raw HSL in components)
 
@@ -186,6 +189,7 @@ The following patterns are documented with full examples in the examples/ folder
 - **Pattern 11:** Icon Styling - [examples/patterns.md](examples/patterns.md#pattern-11-icon-styling)
 - **Pattern 12:** cva Integration - [examples/cva.md](examples/cva.md#pattern-12-cva-class-variance-authority-integration)
 - **Pattern 13:** Advanced CSS Features - [examples/advanced.md](examples/advanced.md#pattern-13-advanced-css-features)
+- **Pattern 14:** Sass Module System (@use and @forward) - [examples/modules.md](examples/modules.md#pattern-14-sass-module-system-use-and-forward)
 
 </patterns>
 
@@ -204,6 +208,8 @@ For complete anti-patterns and red flags, see [reference.md](reference.md#red-fl
 - Using Sass color functions (`darken()`, `lighten()`)
 - Hardcoded color/spacing values
 - Theme logic in components
+- Using `@import` instead of `@use` (deprecated in Dart Sass 1.80.0, removed in 3.0.0)
+- Using `/` for division instead of `math.div()` (deprecated)
 
 </red_flags>
 
@@ -224,6 +230,8 @@ For complete anti-patterns and red flags, see [reference.md](reference.md#red-fl
 **(You MUST use data-attributes for state styling - NOT className toggling)**
 
 **(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
+
+**(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
 
 **Failure to follow these rules will break theming, create cascade precedence issues, and violate design system conventions.**
 

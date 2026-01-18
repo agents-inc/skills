@@ -60,11 +60,11 @@
   // Interactive colors (with foreground pairs)
   --color-primary: var(--color-gray-900);
   --color-primary-foreground: var(--color-white);
-  --color-primary-hover: color-mix(in srgb, var(--color-primary), black 5%);
+  --color-primary-hover: color-mix(in srgb, hsl(var(--color-primary)), black 5%);
 
   --color-destructive: var(--color-red-500);
   --color-destructive-foreground: var(--color-white);
-  --color-destructive-hover: color-mix(in srgb, var(--color-destructive), black 5%);
+  --color-destructive-hover: color-mix(in srgb, hsl(var(--color-destructive)), black 5%);
 
   // Input colors
   --color-input: var(--color-gray-200);
@@ -159,11 +159,11 @@ const COLOR_MIX_HOVER_PERCENTAGE = 5;
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
 
-  // Transparency using relative color syntax
-  border: 1px solid rgb(from var(--color-primary) r g b / 0.5);
+  // Transparency using HSL with alpha (matches token storage format)
+  border: 1px solid hsl(var(--color-primary) / 0.5);
 
   &:hover {
-    background-color: color-mix(in srgb, var(--color-primary), black 5%);
+    background-color: color-mix(in srgb, hsl(var(--color-primary)), black 5%);
   }
 }
 
