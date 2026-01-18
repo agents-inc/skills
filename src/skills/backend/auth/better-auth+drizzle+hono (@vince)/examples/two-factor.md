@@ -37,8 +37,13 @@ export { auth };
 
 After adding the plugin, run:
 ```bash
+# Step 1: Generate Better Auth schema
 npx @better-auth/cli generate
+
+# Step 2: Generate Drizzle migration
 npx drizzle-kit generate
+
+# Step 3: Apply migration to database
 npx drizzle-kit migrate
 ```
 

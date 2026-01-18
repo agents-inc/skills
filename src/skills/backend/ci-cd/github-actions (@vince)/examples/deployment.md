@@ -160,17 +160,16 @@ jobs:
           vercel-args: "--prod"
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
           body: |
             Deployed commit ${{ github.sha }} to production.
 
             ### Changes
             ${{ github.event.head_commit.message }}
+        # Note: Requires contents: write permission (inherited from GITHUB_TOKEN default)
 ```
 
 **Why good:** Single build artifact promoted through all environments ensures consistency, preview deployments for every PR enable visual review before merge, environment protection on production requires manual approval, artifact retention preserves builds for rollback capability

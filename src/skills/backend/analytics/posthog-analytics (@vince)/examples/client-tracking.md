@@ -26,6 +26,7 @@ const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://app.postho
 if (typeof window !== "undefined" && POSTHOG_KEY) {
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
+    defaults: "2025-05-24", // Use versioned config defaults for stability
     person_profiles: "identified_only", // Only create profiles for identified users
     capture_pageview: false, // Disable automatic pageviews (we handle manually)
     capture_pageleave: true, // Track when users leave pages

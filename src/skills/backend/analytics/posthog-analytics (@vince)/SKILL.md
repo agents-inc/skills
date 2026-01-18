@@ -177,8 +177,9 @@ Track business events reliably from your backend with posthog-node.
 
 **Key Rules:**
 1. Always include `distinctId` (user's database ID)
-2. Always call `flush()` before returning in serverless
-3. Configure `flushAt: 1` and `flushInterval: 0` for serverless
+2. Use `captureImmediate()` for serverless (guarantees HTTP completion)
+3. Always call `shutdown()` before returning in serverless
+4. Configure `flushAt: 1` and `flushInterval: 0` for serverless
 
 **Server Client Setup:**
 ```typescript
@@ -199,7 +200,7 @@ posthogServer.capture({
     is_first_project: user.projectCount === 0,
   },
 });
-await posthogServer.flush(); // REQUIRED for serverless
+await posthogServer.shutdown(); // REQUIRED for serverless
 ```
 
 For complete Hono route examples, see [examples/server-tracking.md](examples/server-tracking.md).
@@ -220,13 +221,19 @@ posthog.init(POSTHOG_KEY, {
 });
 ```
 
-**Serverless (immediate flush):**
+**Serverless (immediate delivery):**
 ```typescript
 const posthogServer = new PostHog(POSTHOG_KEY, {
   flushAt: 1,        // Flush after 1 event
   flushInterval: 0,  // No interval batching
 });
-await posthogServer.flush(); // Always await
+
+// Option 1: Use captureImmediate (preferred - guarantees completion)
+await posthogServer.captureImmediate({ distinctId, event, properties });
+
+// Option 2: Use capture + shutdown
+posthogServer.capture({ distinctId, event, properties });
+await posthogServer.shutdown(); // Ensures all events sent before termination
 ```
 
 **Reducing Costs:**

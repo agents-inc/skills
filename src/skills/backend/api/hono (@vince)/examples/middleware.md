@@ -17,6 +17,7 @@ import { createMiddleware } from "hono/factory";
 const BEARER_PREFIX = "Bearer ";
 const BEARER_PREFIX_LENGTH = 7;
 const HTTP_STATUS_UNAUTHORIZED = 401;
+const JWT_ALGORITHM = "HS256"; // REQUIRED: Explicit algorithm to prevent algorithm confusion attacks
 
 type AuthVariables = {
   userId: string;
@@ -36,7 +37,8 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(asy
   const token = authHeader.slice(BEARER_PREFIX_LENGTH);
 
   try {
-    const payload = await verify(token, process.env.JWT_SECRET!);
+    // IMPORTANT: Always specify the algorithm explicitly (required since v4.11.4)
+    const payload = await verify(token, process.env.JWT_SECRET!, JWT_ALGORITHM);
 
     if (!payload.userId || typeof payload.userId !== "string") {
       throw new Error("Invalid token payload");
@@ -54,7 +56,28 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(asy
 });
 ```
 
-**Why good:** Type-safe Variables means c.get("userId") is typed, payload validation prevents accepting garbage tokens, default role prevents undefined access
+**Why good:** Type-safe Variables means c.get("userId") is typed, explicit algorithm prevents algorithm confusion attacks (CVE-2026-22818), payload validation prevents accepting garbage tokens, default role prevents undefined access
+
+### Good Example - JWK/JWKS Authentication (Asymmetric Keys)
+
+For OIDC/OAuth providers using asymmetric keys:
+
+```typescript
+import { jwk } from "hono/jwk";
+
+// REQUIRED since v4.11.4: Explicit algorithm allowlist for asymmetric verification
+const ALLOWED_ALGORITHMS = ["RS256"] as const;
+
+export const jwkMiddleware = jwk({
+  jwks_uri: "https://auth.example.com/.well-known/jwks.json",
+  alg: ALLOWED_ALGORITHMS, // REQUIRED: prevents algorithm confusion attacks
+});
+
+// Usage
+app.use("/api/*", jwkMiddleware);
+```
+
+**Why good:** Explicit algorithm allowlist prevents attackers from forcing symmetric verification with known keys, JWKS auto-fetches and caches public keys
 
 **Usage in route:**
 
@@ -103,6 +126,7 @@ const authMiddleware = async (c, next) => {
     return c.json({ error: "Unauthorized" }, 401); // BAD: Magic number
   }
 
+  // BAD: No algorithm specified - vulnerable to algorithm confusion attacks!
   // BAD: No payload validation
   const payload = await verify(token, process.env.JWT_SECRET!);
 
@@ -113,7 +137,7 @@ const authMiddleware = async (c, next) => {
 };
 ```
 
-**Why bad:** c.userId not typed = any access, no payload validation = trusts malicious tokens, "Unauthorized" gives attackers no info but also no help for debugging
+**Why bad:** Missing algorithm allows attackers to forge tokens via algorithm confusion (CVE-2026-22818), c.userId not typed = any access, no payload validation = trusts malicious tokens, "Unauthorized" gives attackers no info but also no help for debugging
 
 ---
 

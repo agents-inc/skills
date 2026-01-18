@@ -35,6 +35,33 @@ export { posthogServer };
 
 ---
 
+## Serverless Best Practices (AWS Lambda, Vercel Functions)
+
+For serverless environments, use `captureImmediate()` instead of `capture()`:
+
+```typescript
+// ✅ Preferred for serverless - guarantees HTTP request completes
+await posthogServer.captureImmediate({
+  distinctId: user.id,
+  event: "subscription_created",
+  properties: {
+    plan: "pro",
+    is_annual: true,
+  },
+});
+```
+
+**Why `captureImmediate` over `capture`:** Even with `flushAt: 1`, `capture()` is still async. Serverless environments can freeze or terminate before the request completes. `captureImmediate()` guarantees the HTTP request finishes before your function continues.
+
+**Always call `shutdown()` at the end:**
+
+```typescript
+// Ensures all queued events are sent before function terminates
+await posthogServer.shutdown();
+```
+
+---
+
 ## Server-Side Event Tracking
 
 ```typescript
@@ -74,7 +101,7 @@ app.openapi(createProjectRoute, async (c) => {
   });
 
   // Ensure event is sent before response
-  await posthogServer.flush();
+  await posthogServer.shutdown();
 
   return c.json({ project }, 201);
 });
@@ -132,7 +159,7 @@ export async function trackUserSignedUp(user: AuthEventUser) {
     },
   });
 
-  await posthogServer.flush();
+  await posthogServer.shutdown();
 }
 
 export async function trackUserLoggedIn(user: AuthEventUser) {
@@ -144,7 +171,7 @@ export async function trackUserLoggedIn(user: AuthEventUser) {
     },
   });
 
-  await posthogServer.flush();
+  await posthogServer.shutdown();
 }
 
 export { trackUserSignedUp, trackUserLoggedIn };

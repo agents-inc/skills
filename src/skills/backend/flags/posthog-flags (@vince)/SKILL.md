@@ -31,7 +31,7 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
-**(You MUST use the feature flag secure API key for server-side local evaluation - NEVER expose it on the client)**
+**(You MUST use the feature flags secure API key (phs_*) for server-side local evaluation - personal API keys are deprecated for this use)**
 
 **(You MUST handle the `undefined` state when flags are loading - never assume a flag is immediately available)**
 
@@ -227,14 +227,19 @@ Use `posthog-node` for server-side evaluation. Use local evaluation for performa
 import { PostHog } from "posthog-node";
 
 const POSTHOG_POLL_INTERVAL_MS = 30000; // 30 seconds
+const FLAG_REQUEST_TIMEOUT_MS = 3000; // 3 seconds (default)
 
 // Initialize with local evaluation
+// Use the Feature Flags Secure API Key (phs_*) from project settings
+// Personal API keys are deprecated for local evaluation
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
-  host: process.env.POSTHOG_HOST || "https://app.posthog.com",
-  // Enable local evaluation with feature flag secure key
+  host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
+  // Enable local evaluation with feature flags secure key (phs_*)
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
   // Poll for flag definition updates
   featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS,
+  // Timeout for flag evaluation requests
+  featureFlagsRequestTimeoutMs: FLAG_REQUEST_TIMEOUT_MS,
 });
 
 // Named export
@@ -279,9 +284,9 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-**Why good:** Local evaluation reduces latency (500ms to 50ms), personProperties enable targeting, server-side prevents client manipulation
+**Why good:** Local evaluation reduces latency (500ms to 10-50ms), personProperties enable targeting, server-side prevents client manipulation
 
-For more examples including bad patterns and local-only evaluation, see [examples/server-side.md](examples/server-side.md).
+For more examples including bad patterns, local-only evaluation, and distributed environments, see [examples/server-side.md](examples/server-side.md).
 
 </patterns>
 
@@ -295,7 +300,7 @@ For more examples including bad patterns and local-only evaluation, see [example
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
-**(You MUST use the feature flag secure API key for server-side local evaluation - NEVER expose it on the client)**
+**(You MUST use the feature flags secure API key (phs_*) for server-side local evaluation - personal API keys are deprecated for this use)**
 
 **(You MUST handle the `undefined` state when flags are loading - never assume a flag is immediately available)**
 

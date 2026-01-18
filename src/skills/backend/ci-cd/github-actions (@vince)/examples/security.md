@@ -316,3 +316,139 @@ jobs:
 ```
 
 **Why bad:** Static GitHub secrets never expire and rarely rotated in practice, compromised secrets remain valid indefinitely, no centralized audit trail of secret access, manual rotation process error-prone and often skipped
+
+---
+
+## Pattern 7: Artifact Attestations Examples
+
+> **New in 2024-2025:** Artifact attestations provide SLSA v1.0 Build Level 2 provenance for supply chain security.
+
+### Build Provenance for Binaries
+
+```yaml
+# Good Example - Artifact attestation for supply chain security
+name: Build with Attestation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write      # REQUIRED for OIDC token
+  contents: read       # REQUIRED for checkout
+  attestations: write  # REQUIRED for attestation persistence
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bunx turbo run build
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: 'apps/web/dist/**/*'
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: apps/web/dist
+```
+
+**Why good:** Attestation creates cryptographic proof linking artifact to source code and build process, SLSA v1.0 Build Level 2 compliance out of the box, verifiable by consumers using `gh attestation verify`, no additional infrastructure required
+
+**Verification:**
+
+```bash
+# Verify artifact attestation
+gh attestation verify ./dist/app.js -R your-org/your-repo
+```
+
+---
+
+### Container Image Attestation
+
+```yaml
+# Good Example - Container image with attestation
+name: Build Container with Attestation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+  packages: write  # REQUIRED for container registry
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-container:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Generate attestation for container
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+```
+
+**Why good:** Container images have cryptographic attestation stored alongside in registry, consumers can verify image provenance before deployment, integrates with container signing workflows, meets enterprise supply chain requirements
+
+**Verification:**
+
+```bash
+# Verify container image attestation
+docker login ghcr.io
+gh attestation verify oci://ghcr.io/your-org/your-repo:tag -R your-org/your-repo
+```
+
+```yaml
+# Bad Example - No attestation
+jobs:
+  build:
+    steps:
+      - run: bun run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/
+        # No provenance - consumers cannot verify build integrity
+```
+
+**Why bad:** No cryptographic proof of build provenance, consumers cannot verify artifact came from expected source, supply chain attacks possible via artifact tampering, does not meet SLSA compliance requirements

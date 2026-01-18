@@ -25,7 +25,7 @@ description: Hono routes, OpenAPI, Zod validation
 
 ---
 
-**Auto-detection:** Hono, @hono/zod-openapi, OpenAPIHono, createRoute, Zod schemas with .openapi(), app.route(), createMiddleware, rate limiting, CORS configuration, health checks
+**Auto-detection:** Hono, @hono/zod-openapi, OpenAPIHono, createRoute, Zod schemas with .openapi(), app.route(), createMiddleware, rate limiting, CORS configuration, health checks, hc client, RPC mode, getContext, tryGetContext, contextStorage, some/every/except middleware
 
 **When to use:**
 
@@ -60,6 +60,9 @@ description: Hono routes, OpenAPI, Zod validation
 - Health check endpoints (shallow and deep)
 - Request/response logging with PII sanitization
 - Caching strategies (Cache-Control, ETags)
+- RPC client (hc) with end-to-end type safety (v4.11.0+)
+- Context Storage for accessing context outside handlers (v4.6.0+)
+- Combine Middleware (some/every/except) for complex auth logic (v4.x)
 
 **Detailed Resources:**
 - For code examples, see [examples/](examples/) (core.md, validation.md, routes.md, middleware.md, etc.)

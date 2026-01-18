@@ -52,6 +52,30 @@ const getActiveJobsByCountry = db
 const results = await getActiveJobsByCountry.execute({ country: "germany" });
 ```
 
+**Caveat:** Prepared statements created outside a transaction cannot be used inside transactions. If you need prepared statements within transactions, create them inside each transaction callback.
+
+---
+
+### Batch API (Neon)
+
+Execute multiple statements in a single network round-trip:
+
+```typescript
+// Batch multiple operations - reduces latency significantly
+const batchResponse = await db.batch([
+  db.insert(companies).values({ name: "Acme Corp", slug: "acme-corp" }).returning(),
+  db.insert(jobs).values({ companyId: companyId, title: "Engineer" }),
+  db.query.jobs.findMany({ where: eq(jobs.isActive, true) }),
+]);
+
+// Results are typed and ordered
+const [insertedCompany, insertedJob, activeJobs] = batchResponse;
+```
+
+**Why use batch:** Single network round-trip instead of multiple, all statements execute in implicit transaction (all succeed or all fail), significantly reduces latency in serverless environments.
+
+**When to use:** Multiple independent operations that should be atomic, bulk inserts/updates, reducing network overhead in Neon serverless.
+
 ### Pagination
 
 Implement offset-based pagination:
@@ -151,6 +175,7 @@ return { jobs: results, total: count };
 - ❌ **Not setting `casing: 'snake_case'`** - Causes field name mismatches between JS camelCase and SQL snake_case
 - ❌ **Long transactions** - Locks rows, blocks other queries, degrades performance
 - ❌ **N+1 queries with relations** - Multiple database round-trips instead of single query, use `.with()` to fetch in one query
+- ❌ **Using v1 `relations()` per-table syntax** - Deprecated, use `defineRelations()` for RQB v2
 
 **Medium Priority Issues:**
 
@@ -158,6 +183,7 @@ return { jobs: results, total: count };
 - ⚠️ No pagination limits - Can return massive datasets causing memory issues
 - ⚠️ Not using prepared statements - Slower performance for repeated queries
 - ⚠️ Mixing relational queries and query builder - Inconsistent patterns, harder to maintain
+- ⚠️ Using callback-based `where`/`orderBy` syntax - v1 syntax deprecated, use object-based syntax
 
 **Common Mistakes:**
 
@@ -168,6 +194,7 @@ return { jobs: results, total: count };
 - Foreign keys without `onDelete` - Orphaned records possible after deletions
 - No timestamps - Can't track creation/updates
 - No soft deletes - Data loss risk
+- Manual junction table mapping - Use `through()` for many-to-many in RQB v2
 
 **Gotchas & Edge Cases:**
 
@@ -176,6 +203,13 @@ return { jobs: results, total: count };
 - `casing: 'snake_case'` config must match actual database column names
 - Relations must be defined separately from tables in Drizzle schema
 - Transaction callbacks receive `tx` parameter - using `db` bypasses transaction
+- Prepared statements created outside transactions cannot be used inside transactions
+- Identity columns: `generatedAlwaysAsIdentity` prevents manual ID insertion (use `generatedByDefaultAsIdentity` if needed)
+- RQB v2 `defineRelations()` must spread main relations first for TypeScript inference when using `defineRelationsPart()`
+- RQB v2 predefined `where` in relations can only filter on target (`to`) table, not source
+- v1.0.0-beta.2 removed journal.json - run `drizzle-kit up` to migrate existing migrations
+- DrizzleQueryError wraps all driver errors (v0.44.0+) - check `error.cause` for original error
+- MSSQL/CockroachDB now supported but RQB v2 not yet available for these dialects
 
 </red_flags>
 
@@ -259,5 +293,6 @@ const results = await db
 | Real-time updates | WebSocket connection | LISTEN/NOTIFY support |
 | Edge runtime | HTTP connection | WebSocket not available |
 | Repeated query | Prepared statement | Performance optimization |
+| Multiple Neon operations | Batch API | Single round-trip, atomic |
 
 </anti_patterns>

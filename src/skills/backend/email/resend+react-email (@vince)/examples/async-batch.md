@@ -203,4 +203,23 @@ How many emails?
 +-- 1 email --> resend.emails.send()
 +-- 2-100 emails --> resend.batch.send()
 +-- 100+ emails --> Loop with batch API
+
+Need attachments or scheduling?
++-- YES --> Use resend.emails.send() (batch API doesn't support these)
++-- NO --> Can use resend.batch.send()
 ```
+
+---
+
+## Batch API Limitations
+
+**Not Supported in Batch:**
+- `attachments` field - use single send for emails with attachments
+- `scheduledAt` field - use single send for scheduled emails
+- Maximum 40MB per email after Base64 encoding (single send limit)
+
+**Supported in Batch:**
+- `tags` - for analytics and tracking
+- `headers` (including Idempotency-Key)
+- `cc` and `bcc` recipients
+- Up to 50 recipients per email (`to` field)

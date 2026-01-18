@@ -8,6 +8,18 @@
 
 ---
 
+## Official Types Package
+
+For type safety with `window.posthog`, install the official types package:
+
+```bash
+npm install @posthog/types
+```
+
+This provides TypeScript definitions for the global PostHog object when using the script tag method.
+
+---
+
 ## Event Type Definitions
 
 ```typescript

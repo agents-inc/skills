@@ -15,19 +15,26 @@ Use `posthog-node` for server-side evaluation. Use local evaluation for performa
 import { PostHog } from "posthog-node";
 
 const POSTHOG_POLL_INTERVAL_MS = 30000; // 30 seconds
+const FLAG_REQUEST_TIMEOUT_MS = 3000; // 3 seconds (default)
 
 // Initialize with local evaluation
+// Use Feature Flags Secure API Key (phs_*) from project settings > Feature Flags tab
+// Personal API keys are DEPRECATED for local evaluation
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
-  host: process.env.POSTHOG_HOST || "https://app.posthog.com",
-  // Enable local evaluation with feature flag secure key
+  host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
+  // Enable local evaluation with feature flags secure key (phs_*)
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
   // Poll for flag definition updates
   featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS,
+  // Timeout for flag requests (prevents blocking on slow responses)
+  featureFlagsRequestTimeoutMs: FLAG_REQUEST_TIMEOUT_MS,
 });
 
 // Named export
 export { posthog };
 ```
+
+**Note:** Get the Feature Flags Secure API Key from PostHog Project Settings > Feature Flags tab. The key starts with `phs_`. Personal API keys still work but are being deprecated for local evaluation.
 
 ### Good Example - Server-side flag evaluation
 
@@ -102,7 +109,107 @@ const posthog = new PostHog(process.env.POSTHOG_API_KEY!);
 const flag = await posthog.isFeatureEnabled("beta-dashboard", userId);
 ```
 
-**Why bad:** No local evaluation = network request per flag check, high latency (500ms vs 50ms), increases PostHog API costs
+**Why bad:** No local evaluation = network request per flag check, high latency (500ms vs 10-50ms), increases PostHog API costs
+
+---
+
+## Pattern: Distributed/Stateless Environments (Serverless/Edge)
+
+In serverless/edge environments, the default in-memory cache causes performance issues due to per-request initialization. Use an external cache provider to share flag definitions.
+
+### The Problem
+
+```typescript
+// BAD: In Lambda/Edge, each invocation may cold start
+// Flag definitions are fetched on EVERY cold start = slow + expensive
+const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
+  personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
+});
+// Cold start: +500ms to fetch definitions
+```
+
+### Solution 1: External Cache (Redis) - Node.js/Python Only
+
+```typescript
+// lib/posthog-server-redis.ts
+import { PostHog } from "posthog-node";
+import type { FlagDefinitionCacheProvider } from "posthog-node";
+import { createClient } from "redis";
+
+const CACHE_TTL_SECONDS = 300; // 5 minutes
+const CACHE_KEY = "posthog:flag-definitions";
+
+// Create a Redis-based cache provider (experimental feature)
+const createRedisCache = (redisUrl: string): FlagDefinitionCacheProvider => {
+  const client = createClient({ url: redisUrl });
+  client.connect();
+
+  return {
+    async get() {
+      const data = await client.get(CACHE_KEY);
+      return data ? JSON.parse(data) : undefined;
+    },
+    async set(data) {
+      await client.setEx(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(data));
+    },
+  };
+};
+
+export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
+  host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
+  personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
+  // Use Redis for shared flag definitions across instances
+  flagDefinitionCacheProvider: createRedisCache(process.env.REDIS_URL!),
+});
+```
+
+**Why good:** All Lambda/Edge instances share one cache, only one instance fetches definitions, eliminates cold start penalty
+
+### Solution 2: Split Read/Write Pattern (Cloudflare KV)
+
+For storage backends without atomic locking (Cloudflare KV), use a cron job to write and workers to read.
+
+```typescript
+// scheduled-worker.ts (cron job - writes to KV)
+import { PostHog } from "posthog-node";
+
+const CACHE_KEY = "posthog-flags";
+
+export default {
+  async scheduled(event: ScheduledEvent, env: Env) {
+    const posthog = new PostHog(env.POSTHOG_API_KEY, {
+      personalApiKey: env.POSTHOG_FEATURE_FLAGS_KEY,
+    });
+
+    // Fetch latest flag definitions
+    const definitions = await posthog.getAllFlags("system");
+
+    // Write to KV for all workers to read
+    await env.FLAGS_KV.put(CACHE_KEY, JSON.stringify(definitions));
+  },
+};
+```
+
+```typescript
+// request-worker.ts (handles requests - reads from KV)
+const CACHE_KEY = "posthog-flags";
+
+export default {
+  async fetch(request: Request, env: Env) {
+    // Read flag definitions from KV (no API call)
+    const definitions = await env.FLAGS_KV.get(CACHE_KEY, "json");
+
+    // Evaluate locally without network request
+    const isEnabled = definitions?.["beta-feature"] === true;
+
+    return new Response(JSON.stringify({ isEnabled }));
+  },
+};
+```
+
+**Why good:** Zero network requests for flag evaluation, cron controls update frequency, works with any KV-like storage
+
+**Note:** External cache providers are currently experimental and available in Node.js and Python SDKs only.
 
 ---
 

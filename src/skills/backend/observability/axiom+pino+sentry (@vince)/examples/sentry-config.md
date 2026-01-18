@@ -4,6 +4,15 @@
 
 **Related**: See [error-boundaries.md](error-boundaries.md) for React error boundary components.
 
+**SDK Version Notes:**
+- v9.x: `captureUserFeedback()` renamed to `captureFeedback()`, `comments` field renamed to `message`
+- v9.x: `enableTracing` option removed, use `tracesSampleRate` directly (no longer needs boolean flag)
+- v9.x: `getCurrentHub()` removed, use `Sentry.getClient()`, `Sentry.getCurrentScope()`, or top-level functions
+- v9.x: `beforeSendSpan` cannot return `null` to drop spans, use integrations instead
+- v9.x: `hideSourceMaps` option removed (SDK emits hidden source maps by default)
+- v9.x: Metrics API completely removed (was deprecated in v8)
+- v9.x: Minimum browser support raised to ES2020 (Chrome 80+, Safari 14+, Firefox 74+)
+
 ---
 
 ## Pattern: Setting User Context

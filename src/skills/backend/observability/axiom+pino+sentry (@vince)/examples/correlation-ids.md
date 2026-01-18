@@ -113,4 +113,105 @@ app.post("/jobs", async (c) => {
 
 ---
 
+## Pattern: AsyncLocalStorage with Mixin (Modern Alternative)
+
+For applications where you need automatic context injection without manually creating child loggers in every handler, use AsyncLocalStorage with Pino's `mixin` option.
+
+**File: `packages/api/src/lib/async-context.ts`**
+
+```typescript
+import { AsyncLocalStorage } from "async_hooks";
+
+interface RequestContext {
+  correlationId: string;
+  userId?: string;
+  service?: string;
+}
+
+export const asyncContext = new AsyncLocalStorage<RequestContext>();
+
+export const getRequestContext = (): RequestContext | undefined => {
+  return asyncContext.getStore();
+};
+```
+
+**File: `packages/api/src/lib/logger.ts`**
+
+```typescript
+import pino from "pino";
+import { getRequestContext } from "./async-context";
+
+export const logger = pino({
+  level: process.env.LOG_LEVEL || "info",
+  // Mixin automatically injects context into EVERY log call
+  mixin() {
+    const context = getRequestContext();
+    if (context) {
+      return {
+        correlationId: context.correlationId,
+        userId: context.userId,
+        service: context.service,
+      };
+    }
+    return {};
+  },
+});
+```
+
+**File: `packages/api/src/middleware/context-middleware.ts`**
+
+```typescript
+import type { Context, Next } from "hono";
+import { createMiddleware } from "hono/factory";
+import { randomUUID } from "crypto";
+
+import { asyncContext } from "@/lib/async-context";
+
+const CORRELATION_ID_HEADER = "x-correlation-id";
+
+export const contextMiddleware = createMiddleware(async (c: Context, next: Next) => {
+  const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
+  c.header(CORRELATION_ID_HEADER, correlationId);
+
+  // Run the rest of the request in the async context
+  return asyncContext.run(
+    {
+      correlationId,
+      service: "api",
+    },
+    () => next()
+  );
+});
+```
+
+**Usage (no child logger needed):**
+
+```typescript
+import { Hono } from "hono";
+import { logger } from "@/lib/logger";
+import { contextMiddleware } from "@/middleware/context-middleware";
+
+const app = new Hono();
+app.use(contextMiddleware);
+
+app.post("/jobs", async (c) => {
+  // correlationId is AUTOMATICALLY included via mixin!
+  logger.info({ operation: "job.create" }, "Processing job creation request");
+
+  const job = await createJob(data);
+
+  logger.info({ jobId: job.id }, "Job created successfully");
+  return c.json(job);
+});
+```
+
+**Why good:** No manual child logger creation in every handler, context automatically propagates through entire async call chain (including nested function calls and database operations), cleaner code with less boilerplate, works across your entire codebase without passing logger instances
+
+**When to use AsyncLocalStorage + mixin vs child loggers:**
+
+- **AsyncLocalStorage + mixin**: When you want automatic context injection everywhere, larger applications with many nested function calls
+- **Child loggers**: When you need explicit control, simpler applications, or want to add operation-specific context
+
+---
+
 _See [core.md](core.md) for foundational patterns: Log Levels, Structured Logging._
