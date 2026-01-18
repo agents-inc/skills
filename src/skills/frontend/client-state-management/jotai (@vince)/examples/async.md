@@ -118,6 +118,32 @@ export { loadableDataAtom, DataComponent };
 
 **Why good:** Loadable utility converts async atom to sync, returns discriminated union for type-safe state handling, no Suspense boundary needed
 
+### Good Example - Unwrap Pattern (v2 Alternative to Loadable)
+
+```typescript
+import { atom } from "jotai";
+import { unwrap } from "jotai/utils";
+
+const countAtom = atom(0);
+
+const delayedCountAtom = atom(async (get) => {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return get(countAtom);
+});
+
+// unwrap with undefined fallback (default)
+const unwrappedAtom = unwrap(delayedCountAtom);
+// Value is `undefined` while pending
+
+// unwrap with custom fallback - keeps previous value or initial
+const unwrappedWithFallbackAtom = unwrap(delayedCountAtom, (prev) => prev ?? 0);
+// Value is `0` initially, subsequent updates keep previous value
+
+export { delayedCountAtom, unwrappedAtom, unwrappedWithFallbackAtom };
+```
+
+**Why good:** `unwrap` is simpler than `loadable` when you just need the value with a fallback, errors are thrown directly (not caught like `loadable`), useful for derived atoms in v2 where `get` doesn't auto-resolve promises
+
 ### Bad Example - No Suspense Boundary
 
 ```tsx

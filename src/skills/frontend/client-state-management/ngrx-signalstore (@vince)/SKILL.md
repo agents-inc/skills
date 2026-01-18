@@ -52,7 +52,7 @@ description: NgRx SignalStore patterns for Angular state management. Use when ma
 - Store creation with `signalStore()` and `providedIn` options
 - State, computed, and methods composition
 - Entity management with `withEntities`
-- RxJS integration with `rxMethod`
+- RxJS integration with `rxMethod` and signal-only `signalMethod`
 - Custom features with `signalStoreFeature`
 - Call state patterns (loading, loaded, error)
 - DevTools integration with ngrx-toolkit
@@ -85,7 +85,7 @@ NgRx SignalStore is a lightweight, functional state management solution built on
 2. **`patchState()`** ensures immutable updates without Immer dependency
 3. **`withEntities()`** provides standardized entity management (similar to Redux Toolkit's `createEntityAdapter`)
 4. **`rxMethod()`** bridges Angular Signals with RxJS for complex async flows
-5. **Protected state** (v18+) prevents external mutations by default
+5. **Protected state** (v18+) prevents external mutations by default; v19+ applies deep freeze recursively
 
 **State Ownership:**
 
@@ -180,6 +180,37 @@ Use `rxMethod()` for side effects that need RxJS operators (debounce, switchMap,
 - Factory function receives `Observable<T>` for piping
 - Runs in injection context (can use `inject()`)
 - Auto-unsubscribes on store destroy
+
+For implementation examples, see [examples/effects.md](examples/effects.md).
+
+---
+
+### Pattern 4b: Signal-Only Side Effects with signalMethod (v19+)
+
+Use `signalMethod()` for side effects that don't need RxJS operators.
+
+#### When to Use
+
+- Simple side effects without RxJS dependency
+- When you want to work purely with Signals
+- Side effects that don't require debounce/switchMap/cancellation
+- When injection context is not available
+
+#### Key Behaviors
+
+- Accepts `Signal<T>` or `T` as input (no Observable)
+- Processor function runs independently of injection context
+- Only parameter signals are tracked; internal signals remain untracked
+- You must handle race conditions manually (no built-in switchMap)
+
+#### rxMethod vs signalMethod
+
+| Feature | `rxMethod` | `signalMethod` |
+|---------|-----------|---------------|
+| RxJS required | Yes | No |
+| Operators (debounce, switchMap) | Yes | No |
+| Race condition handling | Built-in | Manual |
+| Input types | T, Signal<T>, Observable<T> | T, Signal<T> |
 
 For implementation examples, see [examples/effects.md](examples/effects.md).
 

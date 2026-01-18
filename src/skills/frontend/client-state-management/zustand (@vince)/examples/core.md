@@ -166,6 +166,8 @@ export const useUIStore = create<UIState>()(
 
 **Why good:** Named constants for all default values prevent magic strings/booleans, devtools middleware enables debugging, persist middleware saves theme preference across sessions, partialize prevents persisting transient UI state like modal/sidebar, named export follows project conventions
 
+> **Note (Zustand v5):** The persist middleware no longer stores initial state during store creation. If you need computed or randomized initial values, set them explicitly after store creation: `useUIStore.setState({ theme: computedTheme })`
+
 ### Usage in Components - Select Only What You Need
 
 ```typescript
@@ -202,11 +204,10 @@ export const Sidebar = () => {
 
 **Why good:** Component only subscribes to sidebarOpen value, won't re-render on theme or modal changes, data-attribute for styling follows project pattern
 
-### Shallow Comparison Pattern
+### Shallow Comparison Pattern (useShallow - Zustand v5)
 
 ```typescript
 import { useUIStore } from "../stores/ui-store";
-import { shallow } from "zustand/shallow";
 
 // Bad Example - Will re-render on ANY store change
 export const Header = () => {
@@ -218,21 +219,22 @@ export const Header = () => {
 **Why bad:** Component subscribes to entire store, re-renders when ANY value changes even if component doesn't use those values, causes unnecessary re-renders and performance issues at scale
 
 ```typescript
-// Good Example - Only re-renders when selected values change
+// Good Example - Using useShallow hook (v5 pattern)
+import { useShallow } from "zustand/react/shallow";
+
 export const Header = () => {
   const { sidebarOpen, modalOpen, theme } = useUIStore(
-    (state) => ({
+    useShallow((state) => ({
       sidebarOpen: state.sidebarOpen,
       modalOpen: state.modalOpen,
       theme: state.theme,
-    }),
-    shallow,
+    })),
   );
   return <header>...</header>;
 };
 ```
 
-**Why good:** shallow comparison prevents re-renders when object reference changes but values are the same, component only re-renders when these specific values change, better than subscribing to entire store
+**Why good:** useShallow hook prevents re-renders when object reference changes but values are the same, component only re-renders when these specific values change, v5 recommended pattern, better than subscribing to entire store
 
 ```typescript
 // Better Example - Select only what you need (preferred)
@@ -248,6 +250,26 @@ export const Header = () => {
 **When to use:** As soon as state needs to be accessed from 2+ disconnected components or prop drilling exceeds 2 levels.
 
 **When not to use:** For truly local component state or server data.
+
+### Selector Stability (Zustand v5 Requirement)
+
+In v5, selectors must return stable references. Returning new objects, arrays, or functions inline causes infinite loops.
+
+```typescript
+// Bad Example - Creates new function on every render (causes infinite loop in v5)
+const action = useStore((state) => state.action ?? (() => {}));
+```
+
+**Why bad:** Inline fallback `() => {}` creates a new reference every render, causing infinite re-render loops in v5
+
+```typescript
+// Good Example - Stable fallback reference
+const FALLBACK_ACTION = () => {};
+
+const action = useStore((state) => state.action ?? FALLBACK_ACTION);
+```
+
+**Why good:** Named constant provides stable reference, prevents infinite render loops, works correctly with Zustand v5's strict equality checks
 
 ---
 

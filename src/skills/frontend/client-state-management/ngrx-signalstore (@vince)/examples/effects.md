@@ -686,3 +686,153 @@ export const ApiStore = signalStore(
 ```
 
 **Why good:** Demonstrates rxMethod flexibility - accepts static values, signals, or observables as input
+
+---
+
+## Pattern 7: signalMethod for Signal-Only Side Effects (v19+)
+
+### Good Example - Using signalMethod Without RxJS
+
+```typescript
+// stores/theme.store.ts
+import { effect, signal } from '@angular/core';
+import {
+  signalStore,
+  withState,
+  withMethods,
+  patchState,
+} from '@ngrx/signals';
+import { signalMethod } from '@ngrx/signals';
+
+type Theme = 'light' | 'dark' | 'system';
+
+const STORAGE_KEY = 'app-theme';
+
+interface ThemeState {
+  theme: Theme;
+  resolvedTheme: 'light' | 'dark';
+}
+
+export const ThemeStore = signalStore(
+  { providedIn: 'root' },
+  withState<ThemeState>({
+    theme: 'system',
+    resolvedTheme: 'light',
+  }),
+  withMethods((store) => ({
+    // signalMethod for simple side effects (v19+)
+    // No RxJS required, works with signals or static values
+    applyTheme: signalMethod<Theme>((theme) => {
+      // Side effect: update DOM and localStorage
+      const resolved = theme === 'system'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
+
+      document.documentElement.setAttribute('data-theme', resolved);
+      localStorage.setItem(STORAGE_KEY, theme);
+
+      // Update store state
+      patchState(store, { theme, resolvedTheme: resolved });
+    }),
+
+    // Can call with static value
+    setDarkMode() {
+      this.applyTheme('dark');
+    },
+
+    // Or connect to a signal for reactive updates
+    connectToSystemTheme() {
+      const systemTheme = signal<Theme>('system');
+      // Automatically re-runs when systemTheme changes
+      this.applyTheme(systemTheme);
+    },
+
+    loadSavedTheme() {
+      const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+      if (saved) {
+        this.applyTheme(saved);
+      }
+    },
+  }))
+);
+```
+
+**Why good:** `signalMethod` for simple side effects without RxJS, works with both static values and signals, STORAGE_KEY named constant
+
+### When to Use signalMethod vs rxMethod
+
+```typescript
+// stores/comparison.store.ts
+import { inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import {
+  signalStore,
+  withState,
+  withMethods,
+  patchState,
+} from '@ngrx/signals';
+import { signalMethod } from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { pipe, switchMap, debounceTime, tap } from 'rxjs';
+
+const DEBOUNCE_MS = 300;
+
+export const ComparisonStore = signalStore(
+  { providedIn: 'root' },
+  withState({
+    localData: '',
+    searchResults: [] as string[],
+    isSearching: false,
+  }),
+  withMethods((store) => {
+    const http = inject(HttpClient);
+
+    return {
+      // USE signalMethod: Simple side effect, no async, no RxJS operators
+      updateLocalData: signalMethod<string>((data) => {
+        // Simple sync update + side effect
+        console.log('Data updated:', data);
+        patchState(store, { localData: data });
+      }),
+
+      // USE rxMethod: Need debounce, cancellation, RxJS operators
+      search: rxMethod<string>(
+        pipe(
+          tap(() => patchState(store, { isSearching: true })),
+          debounceTime(DEBOUNCE_MS),
+          switchMap((query) => http.get<string[]>(`/api/search?q=${query}`)),
+          tap((results) => patchState(store, { searchResults: results, isSearching: false }))
+        )
+      ),
+    };
+  })
+);
+```
+
+**Why good:** Shows clear distinction - `signalMethod` for simple sync side effects, `rxMethod` when you need RxJS operators like debounce/switchMap
+
+### Important: Race Conditions with signalMethod
+
+```typescript
+// CAUTION: signalMethod does NOT handle race conditions
+// stores/unsafe-search.store.ts
+
+// BAD: Using signalMethod for async operations
+const unsafeSearch = signalMethod<string>(async (query) => {
+  patchState(store, { isLoading: true });
+  // Race condition! Multiple calls can resolve out of order
+  const results = await fetch(`/api/search?q=${query}`).then(r => r.json());
+  patchState(store, { results, isLoading: false }); // May overwrite newer results
+});
+
+// GOOD: Use rxMethod with switchMap for async operations
+const safeSearch = rxMethod<string>(
+  pipe(
+    tap(() => patchState(store, { isLoading: true })),
+    switchMap((query) => http.get(`/api/search?q=${query}`)),
+    tap((results) => patchState(store, { results, isLoading: false }))
+  )
+);
+```
+
+**Why important:** `signalMethod` does not cancel previous operations - use `rxMethod` with `switchMap` for cancellable async requests

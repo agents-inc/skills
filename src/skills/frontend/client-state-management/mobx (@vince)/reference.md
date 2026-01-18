@@ -28,22 +28,36 @@ Is it server data (from API)?
 
 ```
 Is this a public method that may be destructured?
-|-- YES --> Arrow function (preserves `this`)
-|-- NO --> Is it called after await?
-    |-- YES --> Wrap state mutations in runInAction()
+|-- YES --> Arrow function OR use autoBind: true (preserves `this`)
+|-- NO --> Is it an async method?
+    |-- YES --> Choose:
+    |   |-- runInAction: Simple async, familiar async/await syntax
+    |   |-- flow: Complex async, needs cancellation, cleaner code
     |-- NO --> Regular action
 ```
 
-### makeAutoObservable vs makeObservable
+### makeAutoObservable vs makeObservable vs Modern Decorators
 
 ```
-Do you need fine-grained control?
-|-- YES --> Is it for performance (shallow observation)?
-|   |-- YES --> makeObservable with observable.shallow
-|   |-- NO --> Is it to exclude specific methods?
-|       |-- YES --> makeObservable with explicit annotations
-|       |-- NO --> makeAutoObservable (with exclusions parameter)
-|-- NO --> makeAutoObservable (default choice)
+Are you using TypeScript 5+ and want best performance?
+|-- YES --> Modern decorators (@observable accessor) - 30% faster
+|-- NO --> Do you need fine-grained control?
+    |-- YES --> Is it for performance (shallow observation)?
+    |   |-- YES --> makeObservable with observable.shallow
+    |   |-- NO --> Is it to exclude specific methods?
+    |       |-- YES --> makeObservable with explicit annotations
+    |       |-- NO --> makeAutoObservable (with exclusions parameter)
+    |-- NO --> makeAutoObservable (default choice)
+```
+
+### mobx-react-lite vs mobx-react
+
+```
+Do you need class component support?
+|-- YES --> mobx-react
+|-- NO --> Do you need Provider/inject pattern?
+    |-- YES --> mobx-react (but prefer stores singleton)
+    |-- NO --> mobx-react-lite (smaller bundle, recommended)
 ```
 
 ### Side Effect Location Decision
@@ -70,6 +84,13 @@ Is it reacting to MobX observable changes?
 | URL-shareable state | URL params | Bookmarkable, browser navigation |
 | Side effects on state change | reaction() in store | Centralized, testable |
 | External system sync | useEffect in component | React lifecycle |
+| Simple async actions | runInAction | Familiar async/await, minimal change |
+| Cancellable async actions | flow | Built-in cancellation, no runInAction needed |
+| `this` binding in methods | Arrow functions OR autoBind | Both valid, choose for consistency |
+| Best performance (TS 5+) | Modern decorators with accessor | 30% faster than makeAutoObservable |
+| Functional components | mobx-react-lite | Smaller bundle, hooks support |
+| Class components | mobx-react | Full feature set |
+| Complex object comparison | computed with comparer.structural | Prevents unnecessary re-renders |
 
 </decision_framework>
 
@@ -92,8 +113,10 @@ Is it reacting to MobX observable changes?
 - Using `useMemo` for derived MobX state (use computed getters in stores)
 - Passing stores as props instead of using stores singleton
 - Not disposing MobxQuery instances (memory leaks)
+- Not disposing reactions (memory leaks) - always store and call disposers
 - Accessing stores before RootStore.isLoading is false
 - Creating new stores without adding to RootStore
+- Using legacy decorators (@observable, @action) - deprecated in MobX 6, removed in MobX 7
 
 ### Common Mistakes
 
@@ -105,12 +128,19 @@ Is it reacting to MobX observable changes?
 
 ### Gotchas & Edge Cases
 
-- Code after `await` is NOT part of the action - always use `runInAction()`
+- Code after `await` is NOT part of the action - always use `runInAction()` or `flow`
 - `observer()` must wrap the component, not be called inside
 - Destructuring observables breaks reactivity - destructure at render time only
 - `reaction()` runs once on setup with `fireImmediately: true`
 - `observable.shallow` only observes array/object reference, not contents
 - Private `#` fields are not observable - use for dependencies only
+- **Reactions must be disposed** - store the disposer and call it in cleanup to prevent memory leaks
+- **Legacy decorators deprecated** - support will be removed in MobX 7, use `makeAutoObservable` or modern 2022.3 decorators
+- **Modern decorator accessor properties are non-enumerable** - `Object.keys()` and `JSON.stringify()` won't include them, implement `toJSON()` for serialization
+- **Modern decorators require `experimentalDecorators: false`** - turning it off enables TC39 Stage 3 decorators, keeping it on uses legacy decorators
+- **`keepAlive: true` on computed can cause memory leaks** - only use when performance benefit outweighs memory cost
+- **Computed suspension** - computed values not being observed are suspended and recompute on each access outside reactive context
+- **`useLocalObservable` methods are auto-bound** - unlike class stores, methods in the observable object are automatically bound
 
 </red_flags>
 
@@ -219,12 +249,13 @@ const Child = observer(() => {
 
 ### Store Checklist
 
-- [ ] Uses arrow functions for all public methods
+- [ ] Uses arrow functions for all public methods OR `autoBind: true`
 - [ ] Uses `#` prefix for private dependencies
 - [ ] Uses `makeAutoObservable` (or `makeObservable` for fine-grained control)
-- [ ] Wraps state mutations after `await` in `runInAction()`
+- [ ] Wraps state mutations after `await` in `runInAction()` (or uses `flow`)
 - [ ] Uses computed getters for derived state
 - [ ] Uses `reaction()` for side effects (not useEffect in components)
+- [ ] Stores reaction disposers and calls them in dispose() method
 - [ ] Exports type interface for external consumers
 - [ ] Registered in RootStore
 
@@ -238,9 +269,11 @@ const Child = observer(() => {
 
 ### Async Action Checklist
 
-- [ ] Uses arrow function syntax
-- [ ] Wraps ALL state mutations after `await` in `runInAction()`
-- [ ] Has proper error handling with `runInAction()` in catch block
+- [ ] Uses arrow function syntax OR store uses `autoBind: true`
+- [ ] For async/await: Wraps ALL state mutations after `await` in `runInAction()`
+- [ ] For flow: Uses generator syntax with `yield` (no runInAction needed)
+- [ ] Has proper error handling (with `runInAction()` in catch block for async/await)
 - [ ] Guards against stale responses in reactions
+- [ ] Disposes reactions when store is destroyed
 
 </quick_reference>

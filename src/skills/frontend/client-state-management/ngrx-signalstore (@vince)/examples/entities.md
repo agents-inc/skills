@@ -631,3 +631,90 @@ export const InventoryStore = signalStore(
 ```
 
 **Why good:** Bulk operations (addEntities, updateEntities, removeEntities), computed for filtering, predicate-based updates, named constant for threshold
+
+---
+
+## Pattern 6: prependEntity and upsertEntity (v20+)
+
+### Good Example - New Entity Operations
+
+```typescript
+// stores/activity-feed.store.ts
+import { computed } from '@angular/core';
+import {
+  signalStore,
+  withComputed,
+  withMethods,
+  patchState,
+} from '@ngrx/signals';
+import {
+  withEntities,
+  prependEntity,
+  upsertEntity,
+  setAllEntities,
+} from '@ngrx/signals/entities';
+
+const MAX_FEED_ITEMS = 50;
+
+interface ActivityItem {
+  id: string;
+  type: 'message' | 'notification' | 'update';
+  content: string;
+  timestamp: Date;
+  read: boolean;
+}
+
+export const ActivityFeedStore = signalStore(
+  { providedIn: 'root' },
+  withEntities<ActivityItem>(),
+  withComputed(({ entities }) => ({
+    unreadCount: computed(() => entities().filter((a) => !a.read).length),
+    recentItems: computed(() => entities().slice(0, 10)),
+  })),
+  withMethods((store) => ({
+    // prependEntity adds to START of collection (v20+)
+    // Useful for feeds, logs, chat where newest items appear first
+    addNewActivity(type: ActivityItem['type'], content: string) {
+      const item: ActivityItem = {
+        id: crypto.randomUUID(),
+        type,
+        content,
+        timestamp: new Date(),
+        read: false,
+      };
+      // Item appears at the beginning of entities()
+      patchState(store, prependEntity(item));
+
+      // Trim old items if over limit
+      const allItems = store.entities();
+      if (allItems.length > MAX_FEED_ITEMS) {
+        const trimmed = allItems.slice(0, MAX_FEED_ITEMS);
+        patchState(store, setAllEntities(trimmed));
+      }
+    },
+
+    // upsertEntity merges if exists, adds if not (v20+)
+    // Only updates provided properties - efficient for partial updates
+    updateOrAddActivity(item: Partial<ActivityItem> & { id: string }) {
+      // If entity with id exists: merges provided props
+      // If not exists: adds as new entity
+      patchState(store, upsertEntity(item));
+    },
+
+    // Practical use case: mark as read with upsert
+    markAsRead(id: string) {
+      // Only updates `read` property, preserves everything else
+      patchState(store, upsertEntity({ id, read: true }));
+    },
+
+    // Batch upsert for sync scenarios
+    syncActivities(activities: ActivityItem[]) {
+      activities.forEach((activity) => {
+        patchState(store, upsertEntity(activity));
+      });
+    },
+  }))
+);
+```
+
+**Why good:** `prependEntity` adds to start (ideal for feeds/logs), `upsertEntity` handles add-or-update logic automatically, partial updates preserve existing data, MAX_FEED_ITEMS named constant
