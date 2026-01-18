@@ -112,6 +112,7 @@ Do objects share a common discriminator field?
 - **Array of at least one**: Use `z.array(schema).min(1)` not `z.array(schema).nonempty()` for better error messages
 - **Date parsing**: `z.coerce.date()` uses `new Date()` which accepts many formats; use `.datetime()` for strict ISO format
 - **Extend with refinements**: `.extend()` on a schema with `.refine()` throws; use `.superRefine()` on the extended schema instead
+- **Zod v3 vs v4 syntax differences**: If migrating to v4, ISO validators moved to `z.iso.*` namespace and email/url are now top-level functions - see "Zod v4 Migration Notes" section below
 
 ---
 
@@ -312,10 +313,14 @@ function processDateInput(dateStr: DateInput): DateOutput {
 | `.refine()` | Custom validation | `.refine((val) => val > 0, { message: "..." })` |
 | `.superRefine()` | Cross-field validation | `.superRefine((data, ctx) => { ctx.addIssue(...) })` |
 | `.transform()` | Convert data during validation | `.transform((val) => val.trim())` |
+| `.pipe()` | Chain schemas together | `z.string().pipe(z.transform(v => v.length))` |
+| `.catch()` | Provide fallback on error | `.catch("default")` or `.catch((ctx) => fallback)` |
 | `.default()` | Provide default value | `.default("unknown")` |
 | `.optional()` | Allow undefined | `.optional()` → `T \| undefined` |
 | `.nullable()` | Allow null | `.nullable()` → `T \| null` |
 | `.nullish()` | Allow null or undefined | `.nullish()` → `T \| null \| undefined` |
+| `.readonly()` | Mark output as readonly | `.readonly()` → `Readonly<T>` |
+| `.brand<T>()` | Add nominal type brand | `.brand<"UserId">()` |
 | `.extend()` | Add fields to object | `schema.extend({ newField: z.string() })` |
 | `.merge()` | Combine two objects | `schemaA.merge(schemaB)` |
 | `.pick()` | Select specific fields | `schema.pick({ id: true, name: true })` |
@@ -323,11 +328,134 @@ function processDateInput(dateStr: DateInput): DateOutput {
 | `.partial()` | Make all fields optional | `schema.partial()` |
 | `.passthrough()` | Allow extra fields | `schema.passthrough()` |
 | `.strict()` | Reject extra fields | `schema.strict()` |
-| `.catch()` | Provide fallback on error | `.catch("default")` |
 | `z.coerce` | Convert type before validation | `z.coerce.number()` |
+| `z.lazy` | Recursive schema reference | `z.lazy(() => CategorySchema)` |
 | `z.infer` | Extract output type | `type T = z.infer<typeof schema>` |
 | `z.input` | Extract input type | `type T = z.input<typeof schema>` |
 | `z.output` | Extract output type (alias) | `type T = z.output<typeof schema>` |
+
+### ISO String Validators (Zod 3.23+)
+
+| Method | Purpose | Example |
+|--------|---------|---------|
+| `.date()` | Validate ISO 8601 date string | `z.string().date()` → `"2024-01-15"` |
+| `.time()` | Validate ISO 8601 time string | `z.string().time()` → `"12:30:00"` |
+| `.datetime()` | Validate ISO 8601 datetime | `z.string().datetime()` → `"2024-01-15T12:30:00Z"` |
+| `.duration()` | Validate ISO 8601 duration | `z.string().duration()` → `"P3Y6M4DT12H30M5S"` |
+
+**Zod v4 Note:** In v4, these moved to `z.iso.date()`, `z.iso.time()`, `z.iso.datetime()`, `z.iso.duration()` as top-level functions.
+
+---
+
+## Advanced Patterns
+
+### Pipe - Chaining Schemas
+
+Use `.pipe()` to chain schemas together, particularly useful with transforms.
+
+```typescript
+import { z } from "zod";
+
+// Parse string, then validate the resulting length
+const stringToLength = z.string().pipe(z.transform((val) => val.length));
+stringToLength.parse("hello"); // => 5
+
+// Combine preprocess-like behavior with pipe
+const trimmedNonEmpty = z.string()
+  .transform((s) => s.trim())
+  .pipe(z.string().min(1, "Cannot be empty after trimming"));
+```
+
+### Catch - Fallback Values
+
+Use `.catch()` to recover from validation errors with fallback values.
+
+```typescript
+import { z } from "zod";
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_THEME = "light";
+
+// Simple fallback value
+const numberWithCatch = z.number().catch(DEFAULT_PAGE);
+numberWithCatch.parse(5);       // => 5
+numberWithCatch.parse("invalid"); // => 1 (fallback)
+
+// Fallback with access to error context
+const themeSchema = z.enum(["light", "dark"]).catch((ctx) => {
+  console.warn("Invalid theme, using default:", ctx.error);
+  return DEFAULT_THEME;
+});
+```
+
+### Brand - Nominal Types
+
+Use `.brand<T>()` to create nominal types that prevent accidental mixing of structurally identical types.
+
+```typescript
+import { z } from "zod";
+
+// Create branded types for IDs
+const UserIdSchema = z.string().uuid().brand<"UserId">();
+const PostIdSchema = z.string().uuid().brand<"PostId">();
+
+type UserId = z.infer<typeof UserIdSchema>;  // string & { __brand: "UserId" }
+type PostId = z.infer<typeof PostIdSchema>;  // string & { __brand: "PostId" }
+
+// TypeScript prevents mixing these types
+function getUser(id: UserId) { /* ... */ }
+
+const userId = UserIdSchema.parse("550e8400-e29b-41d4-a716-446655440000");
+const postId = PostIdSchema.parse("660e8400-e29b-41d4-a716-446655440000");
+
+getUser(userId); // ✅ OK
+// getUser(postId); // ❌ TypeScript error: PostId not assignable to UserId
+```
+
+### Readonly - Frozen Output
+
+Use `.readonly()` to mark schema output as readonly (frozen with `Object.freeze()`).
+
+```typescript
+import { z } from "zod";
+
+const ConfigSchema = z.object({
+  apiUrl: z.string().url(),
+  timeout: z.number(),
+}).readonly();
+
+type Config = z.infer<typeof ConfigSchema>;
+// Readonly<{ apiUrl: string; timeout: number }>
+
+const config = ConfigSchema.parse({ apiUrl: "https://api.example.com", timeout: 5000 });
+// config.timeout = 10000; // ❌ TypeScript error: Cannot assign to 'timeout'
+```
+
+### Lazy - Recursive Schemas
+
+Use getter syntax or `z.lazy()` for recursive/self-referencing schemas.
+
+```typescript
+import { z } from "zod";
+
+// Using getter syntax (preferred in Zod 3.22+)
+const CategorySchema: z.ZodType<Category> = z.object({
+  name: z.string(),
+  get subcategories() {
+    return z.array(CategorySchema).optional();
+  },
+});
+
+type Category = z.infer<typeof CategorySchema>;
+
+// Alternative: z.lazy() for older patterns
+const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
+  value: z.string(),
+  children: z.lazy(() => z.array(TreeNodeSchema)).optional(),
+});
+
+type TreeNode = z.infer<typeof TreeNodeSchema>;
+```
 
 ---
 
@@ -370,3 +498,41 @@ const customErrorMap: z.ZodErrorMap = (issue, ctx) => {
 
 z.setErrorMap(customErrorMap);
 ```
+
+---
+
+## Zod v4 Migration Notes
+
+### Major Changes from v3 to v4
+
+**Performance Improvements:**
+- String parsing: 14.7x faster
+- Array parsing: 7.4x faster
+- Object parsing: 6.5x faster
+- TypeScript instantiations: 100x reduction (25,000 → 175)
+- Bundle size: 57% smaller (5.36kb gzipped vs 12.47kb)
+
+**Breaking Changes:**
+
+1. **Error Customization**: Unified error API - use single `error` parameter instead of fragmented `message`, `invalid_type_error`, `required_error`
+2. **ISO Validators**: Moved to top-level `z.iso.*` namespace:
+   - `z.string().date()` → `z.iso.date()`
+   - `z.string().time()` → `z.iso.time()`
+   - `z.string().datetime()` → `z.iso.datetime()`
+   - `z.string().duration()` → `z.iso.duration()`
+3. **Email/URL**: Moved to top-level functions:
+   - `z.string().email()` → `z.email()`
+   - `z.string().url()` → `z.url()`
+4. **Refinements**: Now live within schemas (not wrapping), enabling method chaining like `.refine().min()`
+
+**New Features in v4:**
+
+- **Template Literals**: `z.templateLiteral()` for type-safe string patterns
+- **File Validation**: `z.file()` with `.min()`, `.max()`, `.mime()` constraints
+- **String Boolean**: `z.stringbool()` parses "true", "yes", "1" to boolean
+- **Codecs**: `z.codec(inputSchema, outputSchema, { decode, encode })` for bidirectional transforms
+- **Recursive Types**: Getter syntax without type casting
+- **JSON Schema Export**: Native `z.toJSONSchema()` conversion
+- **Email Regex Options**: `z.regexes.email`, `z.regexes.html5Email`, `z.regexes.rfc5322Email`, `z.regexes.unicodeEmail`
+
+For complete migration guide, see [zod.dev/v4](https://zod.dev/v4).

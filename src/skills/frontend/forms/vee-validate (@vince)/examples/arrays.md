@@ -536,6 +536,19 @@ const onSubmit = handleSubmit((data) => {
 | `swap(from, to)` | Swap positions | `swap(0, 1)` |
 | `move(from, to)` | Move to position | `move(2, 0)` |
 | `replace(arr)` | Replace entire array | `replace([{ name: '' }])` |
-| `update(index, obj)` | Replace at index | `update(0, { name: 'new' })` |
+| `update(index, obj)` | Replace at index (non-merging) | `update(0, { name: 'new' })` |
+
+### Field Entry Properties
+
+Each entry in `fields` array contains:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `key` | `string \| number` | Stable identifier for v-for :key (auto-generated) |
+| `value` | `T` | The actual field data object |
+| `isFirst` | `boolean` | True if this is the first item in array |
+| `isLast` | `boolean` | True if this is the last item in array |
+
+**Note:** `update()` does NOT merge objects - it completely replaces the value at the given index.
 
 ---

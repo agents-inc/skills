@@ -6,6 +6,8 @@ description: Zod schema validation patterns for TypeScript - schema definitions,
 # Zod Schema Validation Patterns
 
 > **Quick Guide:** Use Zod for runtime validation of untrusted data (API responses, form inputs, config). Define schemas once, infer TypeScript types with `z.infer`. Use `safeParse` for error handling, `refine` for custom validation, `transform` for data transformation.
+>
+> **Version Note:** This skill documents Zod v3.23 patterns. Zod v4 is available with major performance improvements (14.7x faster string parsing, 100x fewer TypeScript instantiations) and new APIs (`z.email()`, `z.iso.*`, `z.templateLiteral()`, `z.codec()`). For v4 migration, see [zod.dev/v4](https://zod.dev/v4).
 
 ---
 
@@ -27,7 +29,7 @@ description: Zod schema validation patterns for TypeScript - schema definitions,
 
 ---
 
-**Auto-detection:** Zod schemas, z.object, z.string, z.number, z.infer, safeParse, refine, transform, discriminatedUnion, z.coerce
+**Auto-detection:** Zod schemas, z.object, z.string, z.number, z.infer, safeParse, refine, transform, discriminatedUnion, z.coerce, z.pipe, z.catch, z.brand, z.lazy
 
 **When to use:**
 

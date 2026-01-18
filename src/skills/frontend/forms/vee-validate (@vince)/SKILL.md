@@ -15,13 +15,11 @@ description: VeeValidate v4 patterns - useForm, useField, defineField, useFieldA
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `toTypedSchema()` wrapper when using schema libraries - raw schemas won't work)**
+**(You MUST use `toTypedSchema()` wrapper when using schema libraries in v4 - raw schemas won't work)**
 
 **(You MUST use `field.key` as iteration key in useFieldArray - NEVER use array index)**
 
 **(You MUST use function form `() => props.name` or `toRef()` in useField for prop reactivity)**
-
-**(You MUST wrap state updates after `await` in `runInAction` equivalent - use reactive assignment)**
 
 **(You MUST initialize field array values in `initialValues` - undefined arrays cause errors)**
 
@@ -457,13 +455,11 @@ Use `flushPromises()` for async validation timing.
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use `toTypedSchema()` wrapper when using schema libraries - raw schemas won't work)**
+**(You MUST use `toTypedSchema()` wrapper when using schema libraries in v4 - raw schemas won't work)**
 
 **(You MUST use `field.key` as iteration key in useFieldArray - NEVER use array index)**
 
 **(You MUST use function form `() => props.name` or `toRef()` in useField for prop reactivity)**
-
-**(You MUST wrap state updates after `await` in `runInAction` equivalent - use reactive assignment)**
 
 **(You MUST initialize field array values in `initialValues` - undefined arrays cause errors)**
 

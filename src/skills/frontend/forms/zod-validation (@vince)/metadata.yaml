@@ -2,7 +2,8 @@
 category: forms
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1.1.0
+library_version: "v3.23 (v4 notes included)"
 tags:
   - zod
   - validation
@@ -10,3 +11,5 @@ tags:
   - typescript
   - type-inference
   - runtime-validation
+  - zod-v3
+  - zod-v4

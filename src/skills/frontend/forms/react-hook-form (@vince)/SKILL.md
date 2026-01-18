@@ -63,6 +63,7 @@ description: React Hook Form patterns - useForm, Controller, useFieldArray, vali
   - [arrays.md](examples/arrays.md) - useFieldArray for dynamic forms
   - [performance.md](examples/performance.md) - Performance optimization
   - [wizard.md](examples/wizard.md) - Multi-step wizard forms
+  - [v7-advanced.md](examples/v7-advanced.md) - v7.46+ features (values prop, Form component, FormStateSubscribe)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -535,6 +536,8 @@ function AddressFields({ prefix, title }: AddressFieldsProps) {
 ### Pattern 7: Form Reset and Default Values
 
 Handle form reset properly, especially when loading async data.
+
+**Note:** For reactive async data, consider using the `values` prop instead of manual reset. See [v7-advanced.md](examples/v7-advanced.md) Pattern 1 for the modern approach.
 
 ```typescript
 import { useForm } from "react-hook-form";

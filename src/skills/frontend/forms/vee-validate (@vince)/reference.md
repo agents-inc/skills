@@ -310,4 +310,56 @@ Shows errors immediately before user has interacted with field.
 - [ ] Define schemas outside component (prevent recreation)
 - [ ] Use `keepValuesOnUnmount: true` for multi-step forms
 
+### Composition Helpers Reference
+
+These helpers enable building custom components without the full `useForm` or `useField` composables:
+
+| Helper | Purpose |
+|--------|---------|
+| `useFieldError(name)` | Access single field's first error message |
+| `useFieldValue(name)` | Access single field's current value |
+| `useIsFieldDirty(name)` | Check if a field is dirty |
+| `useIsFieldTouched(name)` | Check if a field is touched |
+| `useIsFieldValid(name)` | Check if a field is valid |
+| `useValidateField(name)` | Returns function to validate a specific field |
+| `useFormErrors()` | Access entire error bag |
+| `useFormValues()` | Access all current form values |
+| `useIsFormDirty()` | Check if form has any dirty fields |
+| `useIsFormTouched()` | Check if form has any touched fields |
+| `useIsFormValid()` | Check if all fields are validated and valid |
+| `useValidateForm()` | Returns function to validate entire form |
+| `useResetForm()` | Returns function to reset form |
+| `useSubmitForm(handler)` | Creates submission function with validation |
+| `useIsSubmitting()` | Check if form is currently submitting |
+| `useIsValidating()` | Check if form is currently validating |
+| `useSubmitCount()` | Track number of submission attempts |
+| `useFormContext()` | Access parent form context (for nested components) |
+
+---
+
+## VeeValidate v5 Migration Note
+
+VeeValidate v5 is in beta with breaking changes. When migrating:
+
+**Key Changes:**
+- `toTypedSchema()` is removed - pass schemas directly to `validationSchema`
+- `@vee-validate/zod`, `@vee-validate/yup`, `@vee-validate/valibot` packages deprecated
+- Minimum versions: Zod 3.24.0+, Yup 1.7.0+, Valibot 1.0+
+
+**v4 (current):**
+```typescript
+import { toTypedSchema } from '@vee-validate/zod';
+const schema = toTypedSchema(z.object({ ... }));
+```
+
+**v5 (beta):**
+```typescript
+// No import needed - pass schema directly
+const schema = z.object({ ... });
+```
+
+**Lost Features in v5:**
+- Required meta flag resolution from schemas
+- Using schema defaults to initialize form values
+
 ---

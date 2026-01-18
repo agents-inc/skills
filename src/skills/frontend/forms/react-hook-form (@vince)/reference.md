@@ -105,6 +105,11 @@ Which component library are you using?
 - **Errors object structure** - Array errors are at `errors.arrayName[index].fieldName`, array-level errors at `errors.arrayName.root`.
 - **shouldUnregister removes data** - When true, unmounted fields lose their values. Keep false (default) for multi-step forms.
 - **resolver validation runs async** - May cause flash of invalid state. Use `isValid` from formState for button states.
+- **values vs defaultValues** - Use `values` for reactive external data (v7.x+), `defaultValues` for static initial values.
+- **useWatch initial value** - Returns `defaultValue` or `defaultValues` from useForm on first render before subscription.
+- **setValue and useFieldArray** - `setValue` no longer directly updates useFieldArray. Use `replace()` API instead.
+- **FormStateSubscribe requires FormProvider** - Must wrap form with FormProvider to use FormStateSubscribe component.
+- **handleSubmit no longer catches errors** - Since v7.42.0, errors in onSubmit callback are not caught. Handle errors in your callback.
 
 ---
 
@@ -241,6 +246,9 @@ const handleDuplicate = (index) => {
 - [ ] `mode` - Set to "onBlur" or "onTouched" for optimal UX
 - [ ] `resolver` - Use for schema-based validation (Zod, Yup)
 - [ ] Generic type - Always use `useForm<FormData>()` for type safety
+- [ ] `values` - Use for reactive external data (v7.x+), replaces reset pattern
+- [ ] `disabled` - Disable entire form and all inputs (v7.48.0+)
+- [ ] `resetOptions` - Control behavior when values/defaultValues update
 
 ### register Options Checklist
 
@@ -276,6 +284,29 @@ const handleDuplicate = (index) => {
 | `update(index, obj)` | Replace at index | `update(0, { name: "new" })` |
 | `replace(arr)` | Replace all | `replace([{ name: "" }])` |
 
+### Reset Options (v7.47+)
+
+| Option | Description |
+|--------|-------------|
+| `keepErrors` | Preserve all errors |
+| `keepDirty` | Preserve isDirty and dirtyFields |
+| `keepDirtyValues` | Preserve dirty field values, update only non-dirty |
+| `keepValues` | Preserve all input values |
+| `keepDefaultValues` | Keep original defaultValues |
+| `keepIsSubmitted` | Preserve isSubmitted state |
+| `keepTouched` | Preserve touchedFields |
+| `keepIsValid` | Preserve isValid state |
+| `keepSubmitCount` | Preserve submitCount |
+| `keepIsSubmitSuccessful` | Preserve isSubmitSuccessful (v7.47.0+) |
+| `keepFieldsRef` | Skip input ref re-registration (v7.60.0+) |
+
+### New Components (v7.46+)
+
+| Component | Version | Use Case |
+|-----------|---------|----------|
+| `<Form />` | v7.46.0 | Progressive enhancement, Server Actions |
+| `<FormStateSubscribe />` | v7.68.0 | Targeted re-renders for specific formState |
+
 ### Performance Optimization Checklist
 
 - [ ] Use `mode: "onBlur"` instead of `mode: "onChange"`
@@ -285,3 +316,5 @@ const handleDuplicate = (index) => {
 - [ ] Use `React.memo` for expensive Controller children
 - [ ] Use `field.id` as key in useFieldArray (never index)
 - [ ] Provide complete objects to append/prepend/insert
+- [ ] Use `FormStateSubscribe` for targeted re-renders (v7.68.0+)
+- [ ] Use `values` prop instead of reset pattern for async data
