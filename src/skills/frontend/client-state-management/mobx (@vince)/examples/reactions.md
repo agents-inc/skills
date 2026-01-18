@@ -75,3 +75,91 @@ const MyComponent = observer(() => {
 ```
 
 **Why bad:** Creates duplicate reactive systems (React + MobX), useEffect dependency arrays don't track MobX observables correctly, business logic scattered in components instead of stores, harder to test and maintain
+
+---
+
+## Reaction Disposal Pattern
+
+### Good Example - Disposing reactions to prevent memory leaks
+
+```typescript
+import { makeAutoObservable, reaction } from "mobx";
+
+export class SearchStore {
+  #dependencies: SearchStoreDependencies;
+  #disposers: (() => void)[] = [];
+
+  searchQuery = "";
+  results: SearchResult[] = [];
+
+  constructor(dependencies: SearchStoreDependencies) {
+    makeAutoObservable(this);
+    this.#dependencies = dependencies;
+
+    // Store the disposer returned by reaction
+    const disposeSearchReaction = reaction(
+      () => this.searchQuery,
+      (query) => {
+        if (query.length > 2) {
+          this.performSearch(query);
+        }
+      },
+      { delay: 300 } // Debounce
+    );
+
+    // Track all disposers for cleanup
+    this.#disposers.push(disposeSearchReaction);
+  }
+
+  // Call this when the store is no longer needed
+  dispose = () => {
+    this.#disposers.forEach((dispose) => dispose());
+    this.#disposers = [];
+  };
+
+  setSearchQuery = (query: string) => {
+    this.searchQuery = query;
+  };
+
+  private performSearch = async (query: string) => {
+    // ... search logic
+  };
+}
+```
+
+**Why good:** Reactions are properly disposed preventing memory leaks, disposers array pattern scales to multiple reactions, dispose method provides clean cleanup API
+
+### Good Example - Disposal in React component with useLocalObservable
+
+```typescript
+import { observer, useLocalObservable } from "mobx-react-lite";
+import { reaction } from "mobx";
+import { useEffect } from "react";
+
+const SearchComponent = observer(() => {
+  const store = useLocalObservable(() => ({
+    query: "",
+    results: [] as SearchResult[],
+    setQuery(q: string) {
+      this.query = q;
+    },
+  }));
+
+  // Setup and dispose reaction in useEffect
+  useEffect(() => {
+    const dispose = reaction(
+      () => store.query,
+      (query) => {
+        // Perform search...
+      }
+    );
+
+    // Return disposer for cleanup
+    return dispose;
+  }, [store]);
+
+  return <input value={store.query} onChange={(e) => store.setQuery(e.target.value)} />;
+});
+```
+
+**Why good:** useEffect cleanup function calls the reaction disposer, prevents memory leaks when component unmounts, reaction tied to component lifecycle

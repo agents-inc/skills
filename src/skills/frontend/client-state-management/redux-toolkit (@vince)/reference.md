@@ -83,6 +83,8 @@ Does each item have a unique ID?
 - **Default exports in Redux files** - violates project conventions, breaks tree-shaking
 - **Storing derived state** - compute in selectors, not in state
 - **RTK Query cache not blacklisted in redux-persist** - causes stale cache restoration
+- **RTK 2.0: Object syntax in extraReducers** - removed in v2, use builder callback
+- **RTK 2.0: Using AnyAction type** - deprecated, use UnknownAction with isAction() guard
 
 **Medium Priority Issues:**
 
@@ -341,8 +343,17 @@ addTodo: (state, action: PayloadAction<Omit<Todo, "id">>) => { /* ... */ }
 // 4. Type thunk generics for full safety
 createAsyncThunk<ReturnType, ArgType, { state: RootState; rejectValue: string }>
 
-// 5. Use typed entity adapter
-const adapter = createEntityAdapter<User>();
+// 5. RTK 2.0: Use typed entity adapter with explicit ID type
+const adapter = createEntityAdapter<User, string>();
+
+// 6. RTK 2.0: Use UnknownAction instead of AnyAction
+import type { UnknownAction } from "@reduxjs/toolkit";
+import { isAction } from "@reduxjs/toolkit";
+
+// Type guard before accessing action properties
+if (isAction(action)) {
+  console.log(action.type); // Safe
+}
 ```
 
 ### Pre-Typed createAsyncThunk
@@ -409,6 +420,82 @@ export const apiSlice = createApi({
 ---
 
 ## Migration Guide
+
+### From RTK 1.x to RTK 2.0
+
+RTK 2.0 was released in December 2023. Most apps require minimal changes.
+
+**Breaking Changes:**
+
+1. **Object syntax removed** - `extraReducers` must use builder callback
+   ```typescript
+   // WRONG - No longer works in RTK 2.0
+   extraReducers: {
+     [fetchTodos.pending]: (state) => {}
+   }
+
+   // CORRECT - Required in RTK 2.0
+   extraReducers: (builder) => {
+     builder.addCase(fetchTodos.pending, (state) => {})
+   }
+   ```
+
+2. **Middleware must be callback** - Cannot pass array directly
+   ```typescript
+   // WRONG - No longer works
+   configureStore({ middleware: [myMiddleware] })
+
+   // CORRECT
+   configureStore({
+     middleware: (getDefaultMiddleware) =>
+       getDefaultMiddleware().concat(myMiddleware)
+   })
+   ```
+
+3. **TypeScript: UnknownAction replaces AnyAction** - Use `isAction()` type guard
+
+4. **TypeScript: Use `Tuple` for custom middleware arrays**
+   ```typescript
+   import { configureStore, Tuple } from "@reduxjs/toolkit";
+
+   // WRONG - Type information lost with spread
+   middleware: (getDefaultMiddleware) => [
+     ...getDefaultMiddleware(),
+     customMiddleware
+   ]
+
+   // CORRECT - Tuple preserves types
+   middleware: (getDefaultMiddleware) =>
+     new Tuple(...getDefaultMiddleware(), customMiddleware)
+   ```
+
+5. **Enhancers must be callback** - Similar to middleware
+   ```typescript
+   // WRONG - No longer works
+   configureStore({ enhancers: [myEnhancer] })
+
+   // CORRECT
+   configureStore({
+     enhancers: (getDefaultEnhancers) =>
+       getDefaultEnhancers().concat(myEnhancer)
+   })
+   ```
+
+**Automated Migration:**
+```bash
+# Run codemods for automatic syntax conversion
+npx @reduxjs/rtk-codemods createSliceBuilder ./src
+npx @reduxjs/rtk-codemods createReducerBuilder ./src
+```
+
+**New Features in RTK 2.0:**
+- `selectors` field in `createSlice` for inline selectors
+- `slice.selectSlice` auto-generated selector
+- `combineSlices` for lazy-loading reducers
+- `buildCreateSlice` with `asyncThunkCreator` for async thunks in reducers
+- `settled` lifecycle handler for async thunks (runs after both fulfilled and rejected)
+- Reselect 5.0 with `weakMapMemoize` default (infinite cache)
+- `isAction()` type guard for safe action type checking in middleware
 
 ### From Legacy Redux to RTK
 

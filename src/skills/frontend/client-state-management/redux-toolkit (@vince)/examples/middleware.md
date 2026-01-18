@@ -13,30 +13,37 @@ Custom middleware patterns for logging, analytics, and side effects.
 ```typescript
 // store/middleware/logger-middleware.ts
 import type { Middleware } from "@reduxjs/toolkit";
+import { isAction } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 
 const ENABLE_LOGGING = process.env.NODE_ENV === "development";
 
+// RTK 2.0: action is typed as `unknown`, must use isAction() type guard
 export const loggerMiddleware: Middleware<{}, RootState> =
   (store) => (next) => (action) => {
     if (!ENABLE_LOGGING) {
       return next(action);
     }
 
-    console.group(action.type);
-    console.log("Dispatching:", action);
-    console.log("Previous state:", store.getState());
+    // RTK 2.0: Use isAction() to safely access action.type
+    if (isAction(action)) {
+      console.group(action.type);
+      console.log("Dispatching:", action);
+      console.log("Previous state:", store.getState());
 
-    const result = next(action);
+      const result = next(action);
 
-    console.log("Next state:", store.getState());
-    console.groupEnd();
+      console.log("Next state:", store.getState());
+      console.groupEnd();
 
-    return result;
+      return result;
+    }
+
+    return next(action);
   };
 ```
 
-**Why good:** Typed middleware with RootState, named constants for config, conditionally enables based on environment
+**Why good:** RTK 2.0 isAction() type guard for safe action.type access, typed middleware with RootState, named constants for config, conditionally enables based on environment
 
 ---
 
@@ -45,6 +52,7 @@ export const loggerMiddleware: Middleware<{}, RootState> =
 ```typescript
 // store/middleware/analytics-middleware.ts
 import type { Middleware } from "@reduxjs/toolkit";
+import { isAction } from "@reduxjs/toolkit";
 
 const TRACKED_ACTIONS = new Set([
   "auth/login/fulfilled",
@@ -53,18 +61,19 @@ const TRACKED_ACTIONS = new Set([
   "users/userRemoved",
 ]);
 
+// RTK 2.0: action is unknown, use isAction() type guard
 export const analyticsMiddleware: Middleware = () => (next) => (action) => {
-  if (TRACKED_ACTIONS.has(action.type)) {
+  if (isAction(action) && TRACKED_ACTIONS.has(action.type)) {
     // Send to analytics service
     // analytics.track(action.type, action.payload);
-    console.log("[Analytics]", action.type, action.payload);
+    console.log("[Analytics]", action.type);
   }
 
   return next(action);
 };
 ```
 
-**Why good:** Declarative list of tracked actions, easily extensible, named constant for tracked actions set
+**Why good:** RTK 2.0 isAction() type guard before accessing action.type, declarative list of tracked actions, easily extensible, named constant for tracked actions set
 
 ---
 

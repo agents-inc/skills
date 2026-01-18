@@ -16,7 +16,7 @@
 
 **(You MUST wrap async atom consumers in Suspense boundaries - async atoms trigger Suspense by default)**
 
-**(You MUST use `runInAction` pattern via write atoms for state updates after async operations)**
+**(You MUST use write atoms (action atoms) to encapsulate state updates after async operations)**
 
 **(You MUST use named exports ONLY - NO default exports in any atom files)**
 
@@ -174,7 +174,7 @@ For implementation examples, see [examples.md](examples.md#pattern-10-store-and-
 
 **(You MUST wrap async atom consumers in Suspense boundaries - async atoms trigger Suspense by default)**
 
-**(You MUST use `runInAction` pattern via write atoms for state updates after async operations)**
+**(You MUST use write atoms (action atoms) to encapsulate state updates after async operations)**
 
 **(You MUST use named exports ONLY - NO default exports in any atom files)**
 

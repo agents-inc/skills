@@ -268,3 +268,96 @@ export const UserStatus = () => {
 ```
 
 **Why bad:** Without `observer`, React has no way to know observables changed, component shows stale data indefinitely, common source of "my UI doesn't update" bugs
+
+---
+
+## Pattern 12: flow for Async Actions
+
+### Good Example - flow with generator functions
+
+```typescript
+import { makeAutoObservable, flow } from "mobx";
+
+export class UserStore {
+  user: User | null = null;
+  isLoading = false;
+  error: string | null = null;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // flow uses generator functions - no runInAction needed
+  fetchUser = flow(function* (this: UserStore, userId: string) {
+    this.isLoading = true;
+    this.error = null;
+
+    try {
+      // yield instead of await - MobX handles action context
+      const response = yield fetch(`/api/users/${userId}`);
+      const data = yield response.json();
+
+      // No runInAction needed - we're still in the flow context
+      this.user = data;
+      this.isLoading = false;
+    } catch (err) {
+      this.error = err instanceof Error ? err.message : "Unknown error";
+      this.isLoading = false;
+    }
+  });
+
+  // flow returns a cancellable promise
+  cancelableFetch = flow(function* (this: UserStore) {
+    this.isLoading = true;
+    yield delay(1000); // Can be cancelled
+    this.isLoading = false;
+  });
+}
+
+// Usage with cancellation
+const store = new UserStore();
+const promise = store.cancelableFetch();
+
+// Cancel the flow if needed
+promise.cancel(); // Stops execution and cleanup
+```
+
+**Why good:** No need for `runInAction` after yields, built-in cancellation support via `promise.cancel()`, cleaner error handling, MobX tracks state mutations throughout the generator
+
+### Good Example - flow vs runInAction comparison
+
+```typescript
+// Using runInAction (traditional approach)
+fetchDataWithRunInAction = async () => {
+  this.isLoading = true;
+  try {
+    const result = await api.fetch();
+    runInAction(() => {
+      this.data = result; // Must wrap in runInAction
+      this.isLoading = false;
+    });
+  } catch (err) {
+    runInAction(() => {
+      this.error = err.message;
+      this.isLoading = false;
+    });
+  }
+};
+
+// Using flow (MobX-native approach)
+fetchDataWithFlow = flow(function* (this: MyStore) {
+  this.isLoading = true;
+  try {
+    const result = yield api.fetch();
+    this.data = result; // No wrapping needed
+    this.isLoading = false;
+  } catch (err) {
+    this.error = err.message;
+    this.isLoading = false;
+  }
+});
+```
+
+**When to use flow:** Complex async operations needing cancellation, multiple sequential async calls, cleaner code without runInAction wrappers
+
+**When to use runInAction:** Simple async operations, familiarity with async/await, existing codebase using runInAction consistently

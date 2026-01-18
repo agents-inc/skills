@@ -5,7 +5,7 @@ description: MobX stores, RootStore pattern for Photoroom webapp
 
 # MobX Client State Management Patterns
 
-> **Quick Guide:** Use MobX for reactive client state management. RootStore pattern for orchestration. Arrow function methods for `this` binding. `makeAutoObservable` by default. `runInAction` after all `await` calls. `observer()` on ALL components reading MobX state. Use your data fetching solution for server data.
+> **Quick Guide:** Use MobX for reactive client state management. RootStore pattern for orchestration. Arrow function methods OR `autoBind: true` for `this` binding. `makeAutoObservable` by default (or modern decorators with TypeScript 5+). `runInAction` after all `await` calls. `observer()` on ALL components reading MobX state. Use your data fetching solution for server data.
 
 **Detailed Resources:**
 - For code examples, see [examples/](examples/) (core, computed, reactions, rootstore, mobx-query, configuration)
@@ -33,7 +33,7 @@ description: MobX stores, RootStore pattern for Photoroom webapp
 
 ---
 
-**Auto-detection:** MobX store, makeAutoObservable, runInAction, reaction, observer, RootStore, client state, observable state
+**Auto-detection:** MobX store, makeAutoObservable, makeObservable, runInAction, reaction, observer, RootStore, client state, observable state, @observable accessor, mobx-react-lite
 
 **When to use:**
 
@@ -47,13 +47,15 @@ description: MobX stores, RootStore pattern for Photoroom webapp
 
 - RootStore pattern with dependency injection
 - Store class structure with private dependencies (`#`)
-- Arrow function methods for `this` binding (CRITICAL)
-- `makeAutoObservable` vs `makeObservable`
-- Computed properties for derived state
+- Arrow function methods OR `autoBind: true` for `this` binding (CRITICAL)
+- `makeAutoObservable` vs `makeObservable` with `autoBind` option
+- Modern decorators with `accessor` keyword (TypeScript 5+)
+- Computed properties for derived state (with `equals` comparers)
 - Reactions for side effects (NOT useEffect)
-- `runInAction` after all `await` calls
+- `runInAction` after all `await` calls (or `flow` for cancellable async)
 - MobxQuery bridge for data fetching integration
 - Store access via `stores` singleton
+- `mobx-react-lite` vs `mobx-react` package choice
 
 **When NOT to use:**
 
@@ -175,6 +177,8 @@ Use `makeAutoObservable` by default. Use `makeObservable` only when you need fin
 
 **When to use makeObservable:** Large arrays/objects where shallow observation improves performance, methods that should not be actions, legacy codebases with specific requirements.
 
+**autoBind option:** Use `makeAutoObservable(this, {}, { autoBind: true })` to automatically bind all methods to the instance. This is an alternative to arrow functions for preserving `this` binding.
+
 See [examples/configuration.md](examples/configuration.md#pattern-9-makeautoobservable-vs-makeobservable) for comparison examples.
 
 ---
@@ -194,6 +198,54 @@ See [examples/core.md](examples/core.md#pattern-10-observer-wrapper-for-componen
 Export interfaces for stores used by other stores. This enables type-safe dependency injection and easier testing.
 
 See [examples/rootstore.md](examples/rootstore.md#pattern-11-store-type-interfaces) for interface patterns.
+
+---
+
+### Pattern 12: flow for Async Actions (Alternative to runInAction)
+
+Use `flow` with generator functions as an alternative to `runInAction` for async actions. `flow` provides built-in cancellation support and eliminates the need for manual `runInAction` wrapping.
+
+**When to use flow:** Complex async operations that need cancellation, or when you prefer generator syntax over async/await with runInAction.
+
+**When to use runInAction:** Simple async operations, or when you prefer async/await syntax.
+
+See [examples/core.md](examples/core.md#pattern-12-flow-for-async-actions) for flow implementation.
+
+---
+
+### Pattern 13: Modern Decorators (TypeScript 5+)
+
+MobX supports TC39 Stage 3 decorators (TypeScript 5.0+) that eliminate the need for `makeObservable`/`makeAutoObservable` calls. These provide 30% better performance than `makeAutoObservable`.
+
+**When to use:** New TypeScript 5+ projects, performance-critical stores, when you prefer co-located field declarations with observability annotations.
+
+**When NOT to use:** Existing codebases using `makeAutoObservable` consistently (migration not required), projects not on TypeScript 5+.
+
+**Important:** Modern decorators require `accessor` keyword and `experimentalDecorators: false` in tsconfig.
+
+See [examples/configuration.md](examples/configuration.md#pattern-13-modern-decorators-typescript-5) for decorator syntax.
+
+---
+
+### Pattern 14: Computed Value Options
+
+Computed values support advanced options for performance optimization: `equals` comparers, `keepAlive`, and `requiresReaction`.
+
+**When to use equals:** Complex objects where you want structural comparison instead of reference equality, arrays that should compare contents.
+
+**When to use keepAlive:** Expensive computations that should stay cached even when not observed (use with caution - can cause memory leaks).
+
+See [examples/computed.md](examples/computed.md#pattern-14-computed-value-options) for options examples.
+
+---
+
+### Pattern 15: mobx-react-lite vs mobx-react
+
+Use `mobx-react-lite` for functional components (lighter weight). Use `mobx-react` for class components or when you need Provider/inject patterns.
+
+**Default choice:** `mobx-react-lite` - recommended for modern React applications using hooks.
+
+See [examples/configuration.md](examples/configuration.md#pattern-15-mobx-react-lite-vs-mobx-react) for package comparison.
 
 </patterns>
 

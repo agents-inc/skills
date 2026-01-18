@@ -15,6 +15,7 @@ description: Redux Toolkit patterns for complex client state. Use when managing 
   - [entity-adapters.md](examples/entity-adapters.md) - Normalized state
   - [async-thunks.md](examples/async-thunks.md) - Async operations
   - [selectors.md](examples/selectors.md) - Memoized selectors
+  - [rtk-2-features.md](examples/rtk-2-features.md) - **RTK 2.0**: combineSlices, inline selectors, buildCreateSlice
   - [middleware.md](examples/middleware.md) - Custom middleware
   - [testing.md](examples/testing.md) - Testing patterns
   - [integrations.md](examples/integrations.md) - Redux Persist
@@ -54,6 +55,7 @@ description: Redux Toolkit patterns for complex client state. Use when managing 
 
 - Store configuration with `configureStore`
 - Slice creation with `createSlice` and Immer integration
+- **RTK 2.0**: Inline selectors in `createSlice`, `combineSlices`, `buildCreateSlice` for async thunks
 - RTK Query for data fetching and caching
 - Typed hooks for TypeScript integration
 - Entity adapters for normalized state

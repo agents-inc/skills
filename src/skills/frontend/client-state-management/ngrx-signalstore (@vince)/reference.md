@@ -62,10 +62,15 @@ Do I need RxJS operators (debounce, switchMap, retry)?
 │   - Cancellation support
 │   - Complex operator chains
 │   - Reactive input (signal/observable)
-└─ NO → async/await in withMethods
-    - Simple fetch operations
-    - Sequential calls
-    - Try/catch error handling
+└─ NO → Do I need to react to signal changes?
+    ├─ YES → signalMethod (v19+)
+    │   - No RxJS dependency
+    │   - Signal reactivity
+    │   - Manual race condition handling
+    └─ NO → async/await in withMethods
+        - Simple fetch operations
+        - Sequential calls
+        - Try/catch error handling
 ```
 
 ### Quick Reference Table
@@ -79,6 +84,9 @@ Do I need RxJS operators (debounce, switchMap, retry)?
 | Reusable logic | `signalStoreFeature()` | Composition, DRY |
 | Loading states | `withCallState()` | Consistent patterns |
 | DevTools | `withDevtools()` | Debugging, inspection |
+| Signal-only effects | `signalMethod()` | No RxJS dependency (v19+) |
+| Non-reactive props | `withProps()` | Mutable objects, observables (v19+) |
+| Derived linked state | `withLinkedState()` | Auto-computed reactive state (v20+) |
 
 ---
 
@@ -115,6 +123,8 @@ Do I need RxJS operators (debounce, switchMap, retry)?
 - `rxMethod` auto-unsubscribes on destroy - don't manually unsubscribe
 - Protected state (v18+) prevents external `patchState` calls by default
 - Feature execution order matters - later features can access earlier ones
+- **v19+ Deep Freeze**: State values are recursively frozen with `Object.freeze` in development mode - use `withProps()` for mutable objects like FormGroup
+- `signalMethod` does not handle race conditions - use `rxMethod` with `switchMap` for cancellable requests
 
 ---
 

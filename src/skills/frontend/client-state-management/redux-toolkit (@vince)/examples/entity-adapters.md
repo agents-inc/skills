@@ -32,8 +32,9 @@ interface UsersState extends EntityState<User, string> {
   error: string | null;
 }
 
-// Create adapter - handles normalized state { ids: [], entities: {} }
-const usersAdapter = createEntityAdapter<User>({
+// RTK 2.0: Create adapter with explicit ID type as second generic parameter
+// Handles normalized state { ids: [], entities: {} }
+const usersAdapter = createEntityAdapter<User, string>({
   // Custom ID selector if not using `id` field
   selectId: (user) => user.id,
   // Sort by name

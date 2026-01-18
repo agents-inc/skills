@@ -275,10 +275,15 @@ Simple form (1-3 fields, minimal validation)?
 **Gotchas & Edge Cases:**
 
 - Context re-renders ALL consumers when ANY value changes - no way to select specific values
-- Zustand selectors that return new objects cause re-renders even if values identical (use shallow or primitive selectors)
+- Zustand selectors that return new objects cause re-renders even if values identical (use `useShallow` from `zustand/react/shallow` or primitive selectors)
 - URL params are always strings - need parsing for numbers/booleans
 - Form validation on every keystroke kills performance - validate on blur/submit
 - Persisting modal/sidebar state across sessions confuses users - only persist preferences
+- **Zustand v5:** Selectors must return stable references - returning new functions/objects inline causes infinite loops
+- **Zustand v5:** The old `shallow` second argument pattern is deprecated - use `useShallow` hook wrapper instead
+- **Zustand v5:** The persist middleware no longer stores initial state during store creation - set computed/random initial values explicitly after store creation with `useStore.setState({ count: initialValue })`
+- **Zustand v5:** Requires React 18+ and TypeScript 4.5+
+- **Zustand v5:** `use-sync-external-store` is a peer dependency when using `zustand/traditional` (for `createWithEqualityFn`)
 
 </red_flags>
 

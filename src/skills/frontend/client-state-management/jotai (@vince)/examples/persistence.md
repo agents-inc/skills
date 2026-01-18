@@ -32,6 +32,16 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 // Persists to localStorage by default
 const themeAtom = atomWithStorage<Theme>(STORAGE_KEY_THEME, DEFAULT_THEME);
 
+// With getOnInit option (v2) - immediately returns stored value on first render
+// Without getOnInit (default): renders initialValue first, then stored value
+// With getOnInit: true: renders stored value immediately (may cause hydration issues in SSR)
+const themeWithGetOnInitAtom = atomWithStorage<Theme>(
+  STORAGE_KEY_THEME,
+  DEFAULT_THEME,
+  undefined, // use default localStorage
+  { getOnInit: true }
+);
+
 const preferencesAtom = atomWithStorage<UserPreferences>(
   STORAGE_KEY_PREFERENCES,
   DEFAULT_PREFERENCES

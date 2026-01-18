@@ -517,3 +517,131 @@ export class ModalContainerComponent {
 ```
 
 **Why good:** Component-scoped store (no providedIn), providers array for DI, store destroyed with component, each instance independent
+
+---
+
+## Pattern 7: withProps for Mutable Objects (v19+ Deep Freeze Migration)
+
+### Good Example - FormGroup with withProps (v19+ Breaking Change)
+
+In v19+, state values are recursively frozen with `Object.freeze`. Use `withProps()` for mutable objects like Angular's FormGroup.
+
+```typescript
+// stores/form.store.ts - v19+ CORRECT approach
+import { inject } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  signalStore,
+  withState,
+  withMethods,
+  withProps,
+  patchState,
+} from '@ngrx/signals';
+
+interface UserFormData {
+  name: string;
+  email: string;
+}
+
+interface FormState {
+  isSubmitting: boolean;
+  submitError: string | null;
+  lastSavedData: UserFormData | null;
+}
+
+export const UserFormStore = signalStore(
+  { providedIn: 'root' },
+  // Reactive state (will be frozen)
+  withState<FormState>({
+    isSubmitting: false,
+    submitError: null,
+    lastSavedData: null,
+  }),
+  // Mutable objects go in withProps (NOT frozen)
+  withProps(() => {
+    const fb = inject(FormBuilder);
+
+    return {
+      // FormGroup is mutable - use withProps
+      formGroup: fb.group({
+        name: ['', [Validators.required, Validators.minLength(2)]],
+        email: ['', [Validators.required, Validators.email]],
+      }),
+    };
+  }),
+  withMethods((store) => ({
+    async submit() {
+      if (store.formGroup.invalid) return;
+
+      patchState(store, { isSubmitting: true, submitError: null });
+
+      try {
+        const data = store.formGroup.value as UserFormData;
+        await fetch('/api/users', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+
+        patchState(store, {
+          isSubmitting: false,
+          lastSavedData: data,
+        });
+        store.formGroup.reset();
+      } catch (err) {
+        patchState(store, {
+          isSubmitting: false,
+          submitError: err instanceof Error ? err.message : 'Submit failed',
+        });
+      }
+    },
+
+    resetForm() {
+      store.formGroup.reset();
+      patchState(store, { submitError: null });
+    },
+
+    loadData(data: UserFormData) {
+      store.formGroup.patchValue(data);
+    },
+  }))
+);
+```
+
+**Why good:** FormGroup in `withProps` (mutable, not frozen), reactive state in `withState` (immutable), clear separation of mutable vs immutable data
+
+### Bad Example - FormGroup in withState (v19+ Breaking Change)
+
+```typescript
+// WRONG - FormGroup in withState will be frozen in v19+
+import { FormGroup, FormControl } from '@angular/forms';
+import { signalStore, withState, withMethods } from '@ngrx/signals';
+
+export const BrokenFormStore = signalStore(
+  // ERROR in v19+: "object is not extensible"
+  withState({
+    formGroup: new FormGroup({
+      name: new FormControl(''),
+    }),
+  }),
+  withMethods((store) => ({
+    addField() {
+      // This will FAIL in v19+ due to deep freeze
+      store.formGroup().addControl('email', new FormControl(''));
+    },
+  }))
+);
+```
+
+**Why bad:** v19+ applies `Object.freeze` recursively to state - FormGroup mutations will throw "object is not extensible" error
+
+### withState vs withProps Decision Guide
+
+| Use Case | Feature | Reason |
+|----------|---------|--------|
+| Primitive values | `withState` | Reactive, immutable |
+| Simple objects | `withState` | Reactive, frozen |
+| Arrays | `withState` | Reactive, use entity updaters |
+| FormGroup/FormControl | `withProps` | Needs mutation |
+| Services | `withProps` | Not state |
+| Observables | `withProps` | Not reactive state |
+| Constants | `withProps` | Static values |

@@ -126,6 +126,8 @@ Working with large objects?
 - loadable() returns discriminated union - always check `state` property first
 - RESET symbol is special - pass to setter to reset atomWithStorage to initial value
 - Default store is global - provider-less mode shares state across entire app
+- **v2 async read behavior**: `get()` in read functions doesn't auto-resolve promises - use `await get(asyncAtom)` explicitly
+- atomWithStorage `getOnInit: true` returns stored value immediately but may cause SSR hydration issues
 
 ---
 
@@ -336,14 +338,15 @@ import { atom, useAtom, useAtomValue, useSetAtom, Provider, createStore } from "
 // Types
 import type { Atom, PrimitiveAtom, WritableAtom } from "jotai";
 
-// Utils
+// Utils - async handling
+import { loadable, unwrap } from "jotai/utils";
+
+// Utils - collections and storage
 import {
   atomWithStorage,
   atomFamily,
   selectAtom,
   splitAtom,
-  loadable,
-  unwrap,
   useHydrateAtoms,
   RESET,
   createJSONStorage,
