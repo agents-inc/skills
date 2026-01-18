@@ -660,7 +660,89 @@ export const WithMultipleDesigns: Story = {
 
 ---
 
-## Test Runner Addon
+## Vitest Addon (Recommended for Storybook 8.4+)
+
+The Vitest addon is the recommended testing solution for Vite-based Storybook projects. It supersedes the test runner with Vitest browser mode integration.
+
+### Installation
+
+```bash
+# Automatic setup (recommended)
+npx storybook add @storybook/addon-vitest
+```
+
+### Configuration
+
+```typescript
+// .storybook/main.ts
+import type { StorybookConfig } from "@storybook/react-vite";
+
+const config: StorybookConfig = {
+  addons: [
+    "@storybook/addon-essentials",
+    "@storybook/addon-vitest",  // Add Vitest addon
+  ],
+  // ...
+};
+
+export default config;
+```
+
+```typescript
+// vitest.config.ts
+import { defineConfig, mergeConfig } from "vitest/config";
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import viteConfig from "./vite.config";
+
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      projects: [
+        {
+          plugins: [
+            storybookTest({
+              configDir: ".storybook",
+              // Optional: Enable clickable story links in CI
+              storybookUrl: "https://your-storybook.com",
+              // Tag filtering
+              tags: {
+                include: ["test"],
+                exclude: ["experimental"],
+              },
+            }),
+          ],
+          browser: {
+            enabled: true,
+            provider: "playwright",
+            name: "chromium",
+          },
+        },
+      ],
+    },
+  })
+);
+```
+
+### Package Scripts
+
+```json
+{
+  "scripts": {
+    "test-storybook": "vitest --project=storybook",
+    "test-storybook:watch": "vitest --project=storybook --watch",
+    "test-storybook:ui": "vitest --project=storybook --ui"
+  }
+}
+```
+
+**Why good:** Runs in real browser (Vitest browser mode), integrates with Storybook UI, supports IDE extensions, faster than test runner
+
+---
+
+## Test Runner Addon (Legacy - For Non-Vite Projects)
+
+> **Note:** For Vite-based projects, use `@storybook/addon-vitest` instead.
 
 ### Installation
 
@@ -726,7 +808,7 @@ npx http-server storybook-static --port 6006
 npm run test-storybook -- --url http://localhost:6006
 ```
 
-**Why good:** Runs all play functions as tests, integrates with CI, generates coverage reports
+**Why good:** Runs all play functions as tests, works with any Storybook framework, integrates with CI
 
 ---
 
@@ -745,6 +827,7 @@ const config: StorybookConfig = {
     "@storybook/addon-essentials",
     "@storybook/addon-interactions",
     "@storybook/addon-a11y",
+    "@storybook/addon-vitest",  // Storybook 8.4+ testing
     "@storybook/addon-links",
     "@chromatic-com/storybook",
   ],
@@ -752,12 +835,12 @@ const config: StorybookConfig = {
     name: "@storybook/react-vite",
     options: {},
   },
-  docs: {
-    autodocs: "tag",
-  },
+  // NOTE: docs.autodocs is deprecated in Storybook 8 - use tags in preview.tsx instead
   staticDirs: ["../public"],
   typescript: {
-    reactDocgen: "react-docgen-typescript",
+    // Storybook 8 default is react-docgen (faster)
+    // Use react-docgen-typescript only if you need imported type support
+    reactDocgen: "react-docgen",
   },
 };
 
@@ -770,6 +853,8 @@ import type { Preview } from "@storybook/react";
 import "../src/styles/globals.css";
 
 const preview: Preview = {
+  // Enable autodocs globally (Storybook 8+ approach)
+  tags: ["autodocs"],
   parameters: {
     controls: {
       matchers: {
@@ -786,6 +871,10 @@ const preview: Preview = {
       ],
     },
   },
+  // Use initialGlobals instead of globals (Storybook 8.2+)
+  initialGlobals: {
+    theme: "light",
+  },
   decorators: [
     (Story) => (
       <div style={{ margin: "1rem" }}>
@@ -798,7 +887,7 @@ const preview: Preview = {
 export default preview;
 ```
 
-**Why good:** Complete setup for professional component development, covers documentation, testing, accessibility, and visual regression
+**Why good:** Complete Storybook 8.4+ setup for professional component development, covers documentation, testing, accessibility, and visual regression
 
 ---
 

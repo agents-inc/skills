@@ -97,7 +97,7 @@ Building a form field?
 ### High Priority Issues
 
 - **Not using CLI for installation** - Manual copy leads to missing dependencies and inconsistent setup
-- **Modifying CSS variables incorrectly** - Breaking HSL format (e.g., using `hsl(...)` wrapper in variable definition)
+- **Modifying CSS variables incorrectly** - Breaking OKLCH format (e.g., wrapping values in `hsl()` when they're already OKLCH)
 - **Not using cn() utility** - Direct className concatenation breaks Tailwind class merging
 - **Missing components.json** - CLI commands will fail without proper configuration
 - **Hardcoding colors in components** - Use CSS variables for theme consistency
@@ -120,13 +120,16 @@ Building a form field?
 
 ### Gotchas & Edge Cases
 
-- **CSS variable format** - Store without `hsl()`: `--primary: 222 47% 11%`, apply with `hsl()`: `bg-primary` in Tailwind
+- **CSS variable format (Tailwind v4)** - Store with `oklch()`: `--primary: oklch(0.205 0 0)`, use directly: `bg-primary` via `@theme inline` mapping
 - **Foreground convention** - `--primary-foreground` is text color ON `--primary` background, not the opposite
 - **Server components** - Some components need "use client" directive for interactivity
 - **Button asChild prop** - Use when wrapping with Link component to avoid nested buttons
 - **FormField requires defaultValue** - Controlled inputs need initial values defined
 - **Select component** - Requires both onValueChange and defaultValue for controlled usage
 - **Toast positioning** - Toaster component position affects all toasts globally
+- **React 19** - No forwardRef needed; ref is now a regular prop
+- **data-slot attributes** - shadcn/ui components now include `data-slot` for enhanced styling capabilities
+- **Chart config (Tailwind v4)** - Use `var(--chart-1)` directly, no `hsl()` wrapper needed
 
 ---
 
@@ -291,7 +294,7 @@ npx shadcn@latest add
 npx shadcn@latest add button --path=packages/ui/src/components
 ```
 
-### Essential CSS Variables
+### Essential CSS Variables (Tailwind v4 OKLCH)
 
 | Variable | Purpose |
 |----------|---------|
@@ -307,6 +310,16 @@ npx shadcn@latest add button --path=packages/ui/src/components
 | `--input` | Input border color |
 | `--ring` | Focus ring color |
 | `--radius` | Border radius base |
+| `--chart-1` through `--chart-5` | Chart color palette |
+| `--sidebar` | Sidebar background |
+| `--sidebar-foreground` | Sidebar text |
+| `--sidebar-primary` | Sidebar primary action |
+
+**Computed radius variables (via @theme inline):**
+- `--radius-sm`: `calc(var(--radius) - 4px)`
+- `--radius-md`: `calc(var(--radius) - 2px)`
+- `--radius-lg`: `var(--radius)`
+- `--radius-xl`: `calc(var(--radius) + 4px)`
 
 ### Component Import Pattern
 
@@ -360,15 +373,19 @@ import {
 - [ ] Accessibility attributes preserved
 - [ ] `className` prop exposed on custom components
 
-### Theming Checklist
+### Theming Checklist (Tailwind v4)
 
 - [ ] `components.json` has `cssVariables: true`
-- [ ] Colors defined in HSL format without wrapper
+- [ ] Colors defined in OKLCH format (e.g., `oklch(0.205 0 0)`)
 - [ ] All colors have foreground pair
 - [ ] `.dark` class has all color overrides
+- [ ] `@theme inline` section maps variables to Tailwind utilities
+- [ ] `@custom-variant dark` defined for dark mode
 - [ ] ThemeProvider wraps application
 - [ ] `suppressHydrationWarning` on html element
 - [ ] Theme toggle component added
+- [ ] Chart variables (`--chart-1` through `--chart-5`) defined if using charts
+- [ ] Sidebar variables defined if using sidebar component
 
 ---
 

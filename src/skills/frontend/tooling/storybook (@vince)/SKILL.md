@@ -609,6 +609,8 @@ const meta = {
 - **Hardcoding props in JSX instead of using args** - Defeats the purpose of controls; makes stories non-interactive
 - **Missing `component` property in meta** - Stories won't render correctly; autodocs won't work
 - **Using `fireEvent` instead of `userEvent` in play functions** - Doesn't simulate real user behavior
+- **Importing from `@storybook/testing-library`** - Deprecated; use `@storybook/test` instead
+- **Using `argTypesRegex` for play function handlers** - Implicit actions cannot be used in play functions; use explicit `fn()`
 
 **Medium Priority Issues:**
 
@@ -631,6 +633,10 @@ const meta = {
 - Decorators run outermost to innermost - order matters for context
 - `canvas.getByRole` uses Testing Library - same accessibility rules apply
 - Hot reload preserves args state - may need manual refresh for some changes
+- Storybook 8 uses `react-docgen` by default (not `react-docgen-typescript`) - imported types may not be extracted
+- In Storybook 8.2+, use `initialGlobals` instead of deprecated `globals` in preview.ts
+- Built-in tags: `dev` (sidebar visibility), `test` (test inclusion), `autodocs` (docs generation) - use `!tag` to remove inherited tags
+- Vitest addon (8.4+) is recommended over test-runner for Vite projects - provides Storybook UI integration
 
 </red_flags>
 

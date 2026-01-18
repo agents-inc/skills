@@ -49,6 +49,8 @@ description: TanStack Table v8 patterns - useReactTable, column definitions, sor
 - Row selection with single/multi-select modes
 - Expanding rows and sub-rows
 - Virtual scrolling integration
+- Column pinning (left/right sticky columns)
+- Column resizing with CSS variables for performance
 
 **When NOT to use:**
 
@@ -57,9 +59,17 @@ description: TanStack Table v8 patterns - useReactTable, column definitions, sor
 - Read-only data display without user interaction
 
 **Detailed Resources:**
-- For core code examples, see [examples.md](examples.md)
-- For advanced patterns (server-side, virtualization), see [examples-advanced.md](examples-advanced.md)
-- For architectural patterns (selection, expanding, visibility), see [examples-patterns.md](examples-patterns.md)
+- For core code examples, see [examples/core.md](examples/core.md)
+- For sorting patterns, see [examples/sorting.md](examples/sorting.md)
+- For filtering patterns, see [examples/filtering.md](examples/filtering.md)
+- For pagination patterns, see [examples/pagination.md](examples/pagination.md)
+- For row selection patterns, see [examples/selection.md](examples/selection.md)
+- For expandable rows, see [examples/expanding.md](examples/expanding.md)
+- For column visibility, see [examples/column-visibility.md](examples/column-visibility.md)
+- For server-side data handling, see [examples/server-side.md](examples/server-side.md)
+- For virtual scrolling, see [examples/virtualization.md](examples/virtualization.md)
+- For column pinning, see [examples/column-pinning.md](examples/column-pinning.md)
+- For column resizing, see [examples/column-resizing.md](examples/column-resizing.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -854,14 +864,18 @@ TanStack Table is a headless library that integrates with your existing architec
 
 **Boundary clarifications:**
 
-- **TanStack Table handles:** Table state (sorting, filtering, pagination), row models, column definitions
-- **Your styling solution handles:** Table markup styling, cell formatting CSS
+- **TanStack Table handles:** Table state (sorting, filtering, pagination, pinning, sizing), row models, column definitions
+- **Your styling solution handles:** Table markup styling, sticky column CSS, cell formatting CSS
 - **Your data fetching solution handles:** API calls, caching, loading states for server-side tables
 - **Your form solution handles:** Inline editing inputs, validation
 
 **Virtual scrolling note:**
 
-TanStack Table does not include virtualization. For tables with thousands of rows, integrate with `@tanstack/react-virtual`. See [examples.md](examples.md) for virtual scrolling patterns.
+TanStack Table does not include virtualization. For tables with thousands of rows, integrate with `@tanstack/react-virtual`. See [examples/virtualization.md](examples/virtualization.md) for virtual scrolling patterns.
+
+**Column pinning note:**
+
+Column pinning provides state and APIs for pinning columns left/right. You handle the sticky CSS positioning. See [examples/column-pinning.md](examples/column-pinning.md) for patterns.
 
 </integration>
 

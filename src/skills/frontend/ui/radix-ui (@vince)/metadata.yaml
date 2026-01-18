@@ -2,7 +2,7 @@
 category: ui
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1.1.0
 tags:
   - radix
   - radix-ui
@@ -15,3 +15,7 @@ tags:
   - popover
   - tooltip
   - dropdown
+  - react-19
+  - rsc
+  - otp
+  - password-toggle

@@ -4,93 +4,166 @@
 
 ---
 
-## Complete Theme Configuration
+## Complete Theme Configuration (Tailwind v4)
 
-### Default CSS Variables
+### Default CSS Variables with OKLCH
 
 ```css
-/* globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* globals.css - Tailwind v4 with OKLCH colors */
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@layer base {
-  :root {
-    /* Background colors */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+@custom-variant dark (&:is(.dark *));
 
-    /* Card colors */
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+:root {
+  /* Background colors */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
 
-    /* Popover colors */
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+  /* Card colors */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
 
-    /* Primary colors */
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+  /* Popover colors */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
 
-    /* Secondary colors */
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+  /* Primary colors */
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
 
-    /* Muted colors */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+  /* Secondary colors */
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
 
-    /* Accent colors */
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+  /* Muted colors */
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
 
-    /* Destructive colors */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+  /* Accent colors */
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
 
-    /* Border and input */
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+  /* Destructive colors */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
 
-    /* Border radius */
-    --radius: 0.5rem;
-  }
+  /* Border and input */
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  /* Chart colors */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+  /* Border radius */
+  --radius: 0.625rem;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+  /* Sidebar colors */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+
+  /* Chart colors (dark) */
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+
+  /* Sidebar colors (dark) */
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+/* Map CSS variables to Tailwind utilities */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
@@ -98,71 +171,55 @@
 }
 ```
 
-**Why good:** Complete reference for all CSS variables, HSL format enables easy color manipulation, dark mode uses same variable names
+**Why good:** Complete reference for all CSS variables, OKLCH format provides better perceptual uniformity than HSL, `@theme inline` maps variables to Tailwind utilities, dark mode uses same variable names
 
 ---
 
 ## Custom Brand Colors
 
-### Adding Brand, Success, and Warning Colors
+### Adding Brand, Success, and Warning Colors (OKLCH)
 
 ```css
-/* Adding custom brand colors */
+/* Adding custom brand colors with OKLCH */
 :root {
   /* Keep all default shadcn variables */
 
   /* Add custom brand colors */
-  --brand: 262.1 83.3% 57.8%; /* Purple */
-  --brand-foreground: 0 0% 100%;
+  --brand: oklch(0.627 0.265 303.9); /* Purple */
+  --brand-foreground: oklch(1 0 0);
 
-  --success: 142.1 76.2% 36.3%; /* Green */
-  --success-foreground: 0 0% 100%;
+  --success: oklch(0.527 0.154 150.069); /* Green */
+  --success-foreground: oklch(1 0 0);
 
-  --warning: 45.4 93.4% 47.5%; /* Amber */
-  --warning-foreground: 0 0% 0%;
+  --warning: oklch(0.795 0.184 86.047); /* Amber */
+  --warning-foreground: oklch(0.145 0 0);
 }
 
 .dark {
-  --brand: 263.4 70% 50.4%;
-  --brand-foreground: 0 0% 100%;
+  --brand: oklch(0.627 0.265 303.9);
+  --brand-foreground: oklch(1 0 0);
 
-  --success: 142.1 70.6% 45.3%;
-  --success-foreground: 0 0% 100%;
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(1 0 0);
 
-  --warning: 45.4 93.4% 47.5%;
-  --warning-foreground: 0 0% 0%;
+  --warning: oklch(0.795 0.184 86.047);
+  --warning-foreground: oklch(0.145 0 0);
 }
 ```
 
-### Extend Tailwind Config
+### Extend @theme inline (Tailwind v4)
 
-```ts
-// tailwind.config.ts
-import type { Config } from "tailwindcss";
-
-const config: Config = {
-  // ... existing config
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          DEFAULT: "hsl(var(--brand))",
-          foreground: "hsl(var(--brand-foreground))",
-        },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-        },
-      },
-    },
-  },
-};
-
-export default config;
+```css
+/* Add to @theme inline section */
+@theme inline {
+  /* ... existing color mappings ... */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+}
 ```
 
 ### Usage
@@ -177,7 +234,25 @@ export default config;
 </Badge>
 ```
 
-**Why good:** Foreground convention ensures readable text, custom colors follow same pattern as defaults, works with opacity modifiers
+### Chart Configuration (Tailwind v4)
+
+With Tailwind v4, theme colors now include the color format, so remove the `hsl()` wrapper:
+
+```typescript
+// Tailwind v4 - no hsl() wrapper needed
+const chartConfig = {
+  desktop: {
+    label: "Desktop",
+    color: "var(--chart-1)", // No hsl() wrapper
+  },
+  mobile: {
+    label: "Mobile",
+    color: "var(--chart-2)", // No hsl() wrapper
+  },
+} satisfies ChartConfig;
+```
+
+**Why good:** Foreground convention ensures readable text, custom colors follow same pattern as defaults, works with opacity modifiers, OKLCH provides better perceptual uniformity
 
 ---
 
@@ -302,7 +377,7 @@ import { useTheme } from "next-themes";
 export function DynamicChart() {
   const { resolvedTheme } = useTheme();
 
-  // Get computed CSS variable value
+  // Get computed CSS variable value (Tailwind v4 with OKLCH)
   const getColor = (variable: string) => {
     if (typeof window === "undefined") return "";
     return getComputedStyle(document.documentElement)
@@ -310,10 +385,11 @@ export function DynamicChart() {
       .trim();
   };
 
-  const primaryColor = `hsl(${getColor("--primary")})`;
+  // OKLCH values are already complete - no wrapper needed
+  const primaryColor = getColor("--primary");
 
   return <Chart color={primaryColor} />;
 }
 ```
 
-**Why good:** Components automatically adapt to theme, opacity modifiers work with HSL colors, JavaScript access when needed for third-party libraries
+**Why good:** Components automatically adapt to theme, OKLCH values include full color format, JavaScript access when needed for third-party libraries

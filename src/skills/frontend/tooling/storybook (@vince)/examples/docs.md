@@ -34,27 +34,14 @@ type Story = StoryObj<typeof meta>;
 import type { Preview } from "@storybook/react";
 
 const preview: Preview = {
-  // Enable autodocs for ALL components
+  // Enable autodocs for ALL components (Storybook 8+ recommended approach)
   tags: ["autodocs"],
 };
 
 export default preview;
 ```
 
-```typescript
-// .storybook/main.ts
-import type { StorybookConfig } from "@storybook/react-vite";
-
-const config: StorybookConfig = {
-  // Other config...
-  docs: {
-    autodocs: "tag",  // Only generate for components with autodocs tag
-    // autodocs: true,  // Generate for ALL components
-  },
-};
-
-export default config;
-```
+> **Note:** In Storybook 8, the `docs.autodocs` setting in `main.ts` is deprecated. Use `tags: ["autodocs"]` in `preview.ts` instead.
 
 **Why good:** Global configuration reduces per-file boilerplate, tag-based allows selective generation
 

@@ -2,6 +2,8 @@
 
 > Decision frameworks, anti-patterns, and red flags for TanStack Table development. See [SKILL.md](SKILL.md) for core concepts and [examples.md](examples.md) for code examples.
 
+**Version:** TanStack Table v8.21.3 (latest as of April 2025)
+
 ---
 
 ## Decision Framework
@@ -42,6 +44,28 @@ What features do you need?
 ├─ getExpandedRowModel → Expandable rows / sub-rows
 ├─ getGroupedRowModel → Row grouping
 └─ getFacetedRowModel → Faceted filtering (distinct values)
+
+Note: Column pinning and column sizing are part of core - no extra row model needed
+```
+
+### Column Pinning vs Split Tables
+
+```
+Do you need pinned columns?
+├─ NO → Standard rendering
+└─ YES → How complex is your layout?
+    ├─ Simple → Sticky CSS approach (getIsPinned + position: sticky)
+    └─ Complex → Split table approach (getLeftVisibleCells, getCenterVisibleCells, getRightVisibleCells)
+```
+
+### Column Resize Mode
+
+```
+Do users need to resize columns?
+├─ NO → Don't enable (smaller bundle)
+└─ YES → What kind of feedback?
+    ├─ Live resize → columnResizeMode: "onChange" (requires CSS variables + memoization)
+    └─ Resize on release → columnResizeMode: "onEnd" (simpler, more performant)
 ```
 
 ### accessorKey vs accessorFn
@@ -118,6 +142,16 @@ What kind of column is it?
 - **Visibility state hides by false** - A column is hidden if its ID maps to `false` in visibility state. Missing keys mean visible.
 
 - **getSortedRowModel needed for sort state** - Even if you just want to track sorting state without auto-sorting, you need a sorting row model or `manualSorting: true`.
+
+- **Column pinning requires sticky CSS** - TanStack Table provides pinning state, but you must apply `position: sticky` CSS yourself.
+
+- **Pinned column overlap** - Pinned cells need a background color, otherwise scrolling content shows through.
+
+- **Column resizing "onChange" mode performance** - Using `columnResizeMode: "onChange"` without CSS variables and memoization causes poor performance. Use CSS variables pattern.
+
+- **getResizeHandler needs both mouse and touch** - Attach handler to both `onMouseDown` and `onTouchStart` for mobile support.
+
+- **Column order: Pinning affects order** - There are 3 features that reorder columns: Column Pinning, Column Ordering, and Grouping. Pinning happens first.
 
 ---
 
@@ -273,6 +307,9 @@ import type {
   RowSelectionState,
   VisibilityState,
   ExpandedState,
+  ColumnPinningState,
+  ColumnSizingState,
+  ColumnResizeMode,
 } from "@tanstack/react-table";
 
 // Row models (import only what you need)
@@ -334,6 +371,27 @@ import {
 - [ ] Checkbox column uses `columnHelper.display()`
 - [ ] `indeterminate` state handled for select-all
 
+### Column Pinning Checklist
+
+- [ ] `ColumnPinningState` type for state
+- [ ] `onColumnPinningChange` handler set
+- [ ] Sticky CSS applied to pinned columns
+- [ ] Background color set on pinned cells (prevents overlap)
+- [ ] Left/right offsets calculated for multiple pinned columns
+- [ ] Shadow on pinned columns for visual separation
+- [ ] `enablePinning: false` on columns that shouldn't be pinnable
+
+### Column Resizing Checklist
+
+- [ ] `enableColumnResizing: true` set
+- [ ] `columnResizeMode` chosen ("onChange" or "onEnd")
+- [ ] Resize handle element with `getResizeHandler()`
+- [ ] CSS variables for width (performance)
+- [ ] Table body memoized (if using "onChange")
+- [ ] `size`, `minSize`, `maxSize` set on columns
+- [ ] Visual feedback during resize (`getIsResizing()`)
+- [ ] Double-click to reset (`resetSize()`)
+
 ### Accessibility Checklist
 
 - [ ] Sortable headers have `aria-sort` attribute
@@ -342,6 +400,7 @@ import {
 - [ ] Selection checkboxes have `aria-label`
 - [ ] Virtual tables announce row count with `aria-live`
 - [ ] Pagination has `aria-label` on navigation buttons
+- [ ] Resize handles have `aria-label`
 
 ---
 

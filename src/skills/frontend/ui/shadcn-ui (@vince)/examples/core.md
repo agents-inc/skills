@@ -14,11 +14,11 @@ npx shadcn@latest init
 
 # When prompted, select:
 # - TypeScript: Yes
-# - Style: Default (or New York for more rounded corners)
+# - Style: New York (recommended; "default" style is deprecated)
 # - Base color: Slate
 # - Global CSS file: app/globals.css
 # - CSS variables: Yes
-# - Tailwind config: tailwind.config.js
+# - Tailwind config: (leave blank for Tailwind v4)
 # - Components alias: @/components
 # - Utils alias: @/lib/utils
 ```
@@ -28,13 +28,13 @@ npx shadcn@latest init
 ```json
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "default",
+  "style": "new-york",
   "rsc": true,
   "tsx": true,
   "tailwind": {
-    "config": "tailwind.config.ts",
+    "config": "",
     "css": "src/styles/globals.css",
-    "baseColor": "slate",
+    "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
@@ -44,11 +44,12 @@ npx shadcn@latest init
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
-  }
+  },
+  "iconLibrary": "lucide"
 }
 ```
 
-**Why good:** Explicit aliases make imports consistent, CSS variables enable theming, TypeScript ensures type safety
+**Why good:** Explicit aliases make imports consistent, CSS variables enable theming, TypeScript ensures type safety, iconLibrary configures default icon set
 
 ---
 
@@ -105,33 +106,45 @@ cn("px-4", "px-6"); // "px-6" - later class wins
 
 ---
 
-## Essential CSS Structure
+## Essential CSS Structure (Tailwind v4)
 
 ```css
-/* globals.css - minimal setup */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* globals.css - Tailwind v4 minimal setup */
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    /* ... see theming.md for complete list */
-  }
+@custom-variant dark (&:is(.dark *));
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    /* ... dark mode overrides */
-  }
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --radius: 0.625rem;
+  /* ... see theming.md for complete list */
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  /* ... dark mode overrides */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* ... see theming.md for complete list */
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
@@ -139,7 +152,7 @@ cn("px-4", "px-6"); // "px-6" - later class wins
 }
 ```
 
-**Why good:** HSL format enables opacity modifiers, CSS variables enable theming
+**Why good:** OKLCH format provides better perceptual uniformity, `@theme inline` maps CSS variables to Tailwind utilities, CSS variables enable theming
 
 ---
 

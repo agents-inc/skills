@@ -9,6 +9,8 @@
 - [selection.md](selection.md) - Row selection with bulk actions
 - [expanding.md](expanding.md) - Expandable rows with sub-content
 - [column-visibility.md](column-visibility.md) - Column visibility toggles
+- [column-pinning.md](column-pinning.md) - Sticky pinned columns (left/right)
+- [column-resizing.md](column-resizing.md) - Performant column resizing with CSS variables
 - [server-side.md](server-side.md) - Server-side data handling
 - [virtualization.md](virtualization.md) - Virtual scrolling for large datasets
 

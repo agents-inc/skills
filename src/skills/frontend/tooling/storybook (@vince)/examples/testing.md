@@ -465,7 +465,87 @@ export const LowContrast: Story = {
 
 ---
 
-## Test Runner Integration
+## Vitest Addon Integration (Recommended for Storybook 8.4+)
+
+The Vitest addon is the recommended approach for running story tests in Vite-based projects. It supersedes the test runner with better performance and Storybook UI integration.
+
+### Installation
+
+```bash
+# Automatic setup (recommended)
+npx storybook add @storybook/addon-vitest
+```
+
+### Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig, mergeConfig } from "vitest/config";
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import viteConfig from "./vite.config";
+
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      projects: [
+        {
+          plugins: [storybookTest({ configDir: ".storybook" })],
+          browser: {
+            enabled: true,
+            provider: "playwright",
+            name: "chromium",
+          },
+        },
+      ],
+    },
+  })
+);
+```
+
+### Tag-Based Test Control
+
+```typescript
+// button.stories.tsx
+const meta = {
+  title: "Components/Button",
+  component: Button,
+  tags: ["stable"],  // Custom tag
+} satisfies Meta<typeof Button>;
+
+// Skip this story from tests
+export const Experimental: Story = {
+  tags: ["!test", "experimental"],  // Remove test tag, add experimental
+  args: { children: "Experimental" },
+};
+
+// Docs-only story (hidden from sidebar)
+export const DocsOnly: Story = {
+  tags: ["autodocs", "!dev"],  // Show in docs, hide from sidebar
+  args: { children: "Docs Only" },
+};
+```
+
+### Package.json Scripts
+
+```json
+{
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test-storybook": "vitest --project=storybook",
+    "test-storybook:watch": "vitest --project=storybook --watch"
+  }
+}
+```
+
+**Why good:** Uses Vitest browser mode for real browser testing, integrates with Storybook UI, supports IDE extensions, faster than test runner
+
+---
+
+## Legacy Test Runner (For Non-Vite Projects)
+
+> **Note:** For Vite-based projects, use the Vitest addon instead. The test runner is still available for Webpack-based Storybook projects.
 
 ### Running Tests in CI
 
@@ -493,7 +573,7 @@ const config: TestRunnerConfig = {
 export default config;
 ```
 
-### Package.json Scripts
+### Package.json Scripts (Test Runner)
 
 ```json
 {
@@ -506,7 +586,7 @@ export default config;
 }
 ```
 
-**Why good:** Test runner executes play functions in CI, catches interaction regressions, integrates with standard CI tools
+**Why good:** Works with any Storybook framework, executes play functions in CI, catches interaction regressions
 
 ---
 

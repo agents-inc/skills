@@ -1,6 +1,6 @@
 # Radix UI Primitives
 
-> **Quick Guide:** Radix UI provides unstyled, accessible primitives for building design systems. Use compound component patterns (Root, Trigger, Content), `asChild` for polymorphism, and `data-state` attributes for animations. Focus on behavior and accessibility - defer styling decisions to your styling solution.
+> **Quick Guide:** Radix UI provides unstyled, accessible primitives for building design systems. Use compound component patterns (Root, Trigger, Content), `asChild` for polymorphism, and `data-state` attributes for animations. Focus on behavior and accessibility - defer styling decisions to your styling solution. **Current: v1.4.x (May 2025)** - Full React 19 and RSC compatibility with new preview primitives.
 
 ---
 
@@ -12,17 +12,17 @@
 
 **(You MUST use compound component anatomy - Root, Trigger, Portal, Content, Close - for overlay components)**
 
-**(You MUST use `forwardRef` and spread all props when using `asChild` with custom components)**
+**(You MUST use `forwardRef` and spread all props when using `asChild` with custom components - unless using React 19+ where `ref` is a regular prop)**
 
 **(You MUST use Portal for overlays to escape CSS stacking contexts and parent overflow constraints)**
 
-**(You MUST provide accessible labels via Title/Description components or ARIA attributes)**
+**(You MUST provide accessible labels via Title/Description components or ARIA attributes - Dialog logs console errors for missing Title)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Radix UI, @radix-ui, Dialog, Dropdown, DropdownMenu, Select, Popover, Tooltip, Accordion, Tabs, AlertDialog, asChild, Slot, Portal, data-state
+**Auto-detection:** Radix UI, radix-ui, @radix-ui, Dialog, Dropdown, DropdownMenu, Select, Popover, Tooltip, Accordion, Tabs, AlertDialog, asChild, Slot, Portal, data-state, OneTimePasswordField, PasswordToggleField, unstable_Form, Form.Field, Form.Message
 
 **When to use:**
 
@@ -37,6 +37,16 @@
 - Simple components without complex interactions (use plain HTML)
 - Non-React projects (Radix primitives are React-specific)
 
+**Package Installation:**
+
+```bash
+# Recommended: Unified tree-shakeable package (prevents version conflicts)
+npm i radix-ui
+
+# Alternative: Individual packages
+npm i @radix-ui/react-dialog @radix-ui/react-dropdown-menu
+```
+
 **Detailed Resources:**
 - For core code examples (Dialog, asChild, Slot), see [examples/core.md](examples/core.md)
 - For overlay patterns (AlertDialog, controlled Dialog), see [examples/overlays.md](examples/overlays.md)
@@ -44,6 +54,7 @@
 - For animation patterns (data-state, CSS keyframes), see [examples/animation.md](examples/animation.md)
 - For form patterns (Select), see [examples/forms.md](examples/forms.md)
 - For navigation patterns (Accordion, Tabs), see [examples/navigation.md](examples/navigation.md)
+- For preview components (OneTimePasswordField, PasswordToggleField), see [examples/preview.md](examples/preview.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -61,6 +72,8 @@ Radix UI Primitives provide behavioral and accessibility foundations without imp
 **Radix is styling-agnostic:** Apply styles via `className` prop using your styling solution. The primitives expose `data-state` attributes for state-based styling.
 
 **Compound Component Model:** Each primitive consists of multiple parts (Root, Trigger, Content, etc.) that share context. This enables flexible composition while maintaining coordinated behavior.
+
+**React 19 & RSC Support (v1.4.3):** Full compatibility with React 19 and React Server Components. Enhanced keyboard handling avoids browser hotkey interference.
 
 </philosophy>
 
@@ -490,6 +503,17 @@ import { Dialog } from "radix-ui";
 | Tooltip | Contextual information on hover/focus |
 | Accordion | Expandable content sections |
 | Tabs | Tabbed interfaces |
+| Progress | Progress bars (supports `value={undefined}` for indeterminate) |
+
+**Preview Components (Unstable API):**
+
+| Primitive | Use Case | Import Prefix | Version |
+|-----------|----------|---------------|---------|
+| OneTimePasswordField | OTP input with keyboard nav, paste, autofill | `unstable_` | 0.1.8 |
+| PasswordToggleField | Password visibility toggle with focus management | `unstable_` | 0.1.3 |
+| Form | Form validation with constraint API | `unstable_` | 0.1.8 |
+
+**Note:** Preview components use `unstable_` prefix. APIs may change before stable release.
 
 </integration>
 
@@ -503,11 +527,11 @@ import { Dialog } from "radix-ui";
 
 **(You MUST use compound component anatomy - Root, Trigger, Portal, Content, Close - for overlay components)**
 
-**(You MUST use `forwardRef` and spread all props when using `asChild` with custom components)**
+**(You MUST use `forwardRef` and spread all props when using `asChild` with custom components - unless using React 19+ where `ref` is a regular prop)**
 
 **(You MUST use Portal for overlays to escape CSS stacking contexts and parent overflow constraints)**
 
-**(You MUST provide accessible labels via Title/Description components or ARIA attributes)**
+**(You MUST provide accessible labels via Title/Description components or ARIA attributes - Dialog logs console errors for missing Title)**
 
 **Failure to follow these rules will break accessibility, focus management, and proper DOM rendering.**
 

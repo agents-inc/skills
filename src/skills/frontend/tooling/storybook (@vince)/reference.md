@@ -116,19 +116,21 @@ const config: StorybookConfig = {
   },
 
   // TypeScript configuration
+  // NOTE: Storybook 8 uses react-docgen by default (faster, ~50% startup improvement)
+  // Only use react-docgen-typescript if you need imported types from other files
   typescript: {
-    reactDocgen: "react-docgen-typescript",
-    reactDocgenTypescriptOptions: {
-      shouldExtractLiteralValuesFromEnum: true,
-      propFilter: (prop) =>
-        prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
-    },
+    reactDocgen: "react-docgen",  // Default in Storybook 8
+    // Uncomment below to use react-docgen-typescript (slower but handles imported types)
+    // reactDocgen: "react-docgen-typescript",
+    // reactDocgenTypescriptOptions: {
+    //   shouldExtractLiteralValuesFromEnum: true,
+    //   propFilter: (prop) =>
+    //     prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
+    // },
   },
 
-  // Documentation configuration
-  docs: {
-    autodocs: "tag",  // Generate docs for components with autodocs tag
-  },
+  // NOTE: docs.autodocs in main.ts is deprecated in Storybook 8
+  // Use tags: ["autodocs"] in preview.ts instead (see Preview Configuration below)
 
   // Static files
   staticDirs: ["../public"],
@@ -181,12 +183,33 @@ const preview: Preview = {
     // Global arg type definitions
   },
 
-  // Tags configuration
+  // Tags configuration - replaces deprecated docs.autodocs in main.ts
   tags: ["autodocs"],
+
+  // Initial globals (renamed from 'globals' in Storybook 8.2+)
+  // Use for global state like theme, locale
+  initialGlobals: {
+    theme: "light",
+  },
+
+  // Global types for toolbar controls
+  globalTypes: {
+    theme: {
+      description: "Global theme",
+      toolbar: {
+        title: "Theme",
+        icon: "circlehollow",
+        items: ["light", "dark"],
+        dynamicTitle: true,
+      },
+    },
+  },
 };
 
 export default preview;
 ```
+
+> **Note:** In Storybook 8.2+, `globals` was renamed to `initialGlobals`. The old `globals` field is deprecated and will be removed in Storybook 9.
 
 ---
 
@@ -293,12 +316,22 @@ parameters: {
 ### Actions Parameters
 
 ```typescript
-parameters: {
-  actions: {
-    argTypesRegex: "^on[A-Z].*",  // Auto-detect handlers
+// DEPRECATED in Storybook 8: argTypesRegex implicit actions
+// Implicit actions can no longer be used during rendering (play functions)
+// Use explicit fn() instead:
+
+import { fn } from "@storybook/test";
+
+const meta = {
+  component: Button,
+  args: {
+    onClick: fn(),  // Explicit mock function
+    onHover: fn(),
   },
-}
+} satisfies Meta<typeof Button>;
 ```
+
+> **Note:** In Storybook 8, `argTypesRegex` for auto-detecting action handlers is deprecated. Actions created via `argTypesRegex` cannot be used in play functions. Always use explicit `fn()` from `@storybook/test` for testable handlers.
 
 ---
 
@@ -508,10 +541,12 @@ export const WithDiscount: Story = {
 |-------|---------|--------------|
 | `@storybook/addon-a11y` | Accessibility testing | `npm i -D @storybook/addon-a11y` |
 | `@storybook/addon-interactions` | Play function panel | `npm i -D @storybook/addon-interactions` |
+| `@storybook/addon-vitest` | Vitest integration (replaces test-runner) | `npx storybook add @storybook/addon-vitest` |
 | `@storybook/addon-links` | Story cross-linking | `npm i -D @storybook/addon-links` |
 | `@storybook/addon-designs` | Figma embed | `npm i -D @storybook/addon-designs` |
-| `@storybook/test-runner` | CI testing | `npm i -D @storybook/test-runner` |
 | `@chromatic-com/storybook` | Visual testing | `npm i -D @chromatic-com/storybook` |
+
+> **Note:** `@storybook/test-runner` has been superseded by `@storybook/addon-vitest` for Vite-based projects. The Vitest addon provides the same functionality powered by Vitest's browser mode and includes Storybook UI integration.
 
 ---
 
@@ -568,4 +603,57 @@ canvas.getByAltText(/profile/i);
 
 // Priority 3: Test IDs (last resort)
 canvas.getByTestId("custom-element");
+```
+
+---
+
+## Storybook 8 Migration Notes
+
+### Removed Features
+
+| Feature | Status | Migration |
+|---------|--------|-----------|
+| `storiesOf` API | Removed | Use CSF 3.0 format |
+| `.stories.mdx` format | Removed | Split into separate `.stories.tsx` and `.mdx` files |
+| Storyshots addon | Removed | Use `@storybook/addon-vitest` or Chromatic |
+| `@storybook/testing-library` | Deprecated | Use `@storybook/test` |
+| `@storybook/jest` | Deprecated | Use `@storybook/test` |
+| `docs.autodocs` in main.ts | Deprecated | Use `tags: ["autodocs"]` in preview.ts |
+| `globals` in preview.ts | Deprecated (8.2+) | Use `initialGlobals` |
+| `globalTypes.defaultValue` | Deprecated (8.2+) | Use `initialGlobals` to set default values |
+| `argTypesRegex` for actions | Limited | Cannot be used in play functions; use explicit `fn()` |
+| `@storybook/test-runner` | Superseded (8.4+) | Use `@storybook/addon-vitest` for Vite projects |
+
+### Package Consolidations
+
+| Old Package | New Package |
+|-------------|-------------|
+| `@storybook/addons` | `@storybook/manager-api` or `@storybook/preview-api` |
+| `@storybook/client-api` | `@storybook/preview-api` |
+| `@storybook/channel-postmessage` | `@storybook/channels` |
+| `@storybook/testing-library` | `@storybook/test` |
+| `@storybook/jest` | `@storybook/test` |
+
+### Default Changes in Storybook 8
+
+- **react-docgen** is now the default for React component analysis (was `react-docgen-typescript`)
+  - Faster (~50% startup improvement)
+  - Limitation: Cannot extract types imported from other files
+  - Use `react-docgen-typescript` if you need imported type support
+
+### CSF Factories (Future)
+
+CSF Factories is the next evolution of CSF, providing better TypeScript ergonomics. However, CSF 3.0 remains fully supported. Migration is optional and can be done incrementally.
+
+```typescript
+// CSF Factories preview (Storybook 10+)
+import preview from '#.storybook/preview';
+
+const meta = preview.meta({
+  component: Button,
+});
+
+export const Primary = meta.story({
+  args: { primary: true },
+});
 ```

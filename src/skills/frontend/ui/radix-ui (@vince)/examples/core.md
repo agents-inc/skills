@@ -159,10 +159,40 @@ export function DialogWithCustomTrigger() {
 
 **Why good:** CustomButton uses forwardRef so Radix can attach refs for focus management, props are spread so Radix can pass event handlers and ARIA attributes, variant prop enables styling while maintaining Radix behavior
 
-### Bad Example - asChild Without forwardRef
+### Good Example - React 19+ asChild (No forwardRef Required)
 
 ```typescript
-// This breaks Radix functionality
+import { Dialog } from "radix-ui";
+
+// React 19+: ref is passed as a regular prop, no forwardRef wrapper needed
+type ButtonProps = React.ComponentProps<"button"> & {
+  variant?: "primary" | "secondary";
+  ref?: React.Ref<HTMLButtonElement>;
+};
+
+function CustomButton({ variant = "primary", className, ref, ...props }: ButtonProps) {
+  return (
+    <button
+      ref={ref}
+      data-variant={variant}
+      className={className}
+      {...props}
+    />
+  );
+}
+
+// Use with asChild - works without forwardRef in React 19+
+<Dialog.Trigger asChild>
+  <CustomButton variant="primary">Open Dialog</CustomButton>
+</Dialog.Trigger>
+```
+
+**Why good:** React 19 passes ref as a regular prop, no forwardRef wrapper needed, displayName not required, all props still spread correctly
+
+### Bad Example - asChild Without forwardRef (React 18 and below)
+
+```typescript
+// This breaks Radix functionality in React 18 and below
 const BadButton = ({ children, onClick }) => {
   return <button onClick={onClick}>{children}</button>;
 };
@@ -172,7 +202,7 @@ const BadButton = ({ children, onClick }) => {
 </Dialog.Trigger>
 ```
 
-**Why bad:** no forwardRef means Radix can't attach refs for positioning and focus management, props not spread means ARIA attributes and event handlers are lost, breaks accessibility and keyboard navigation
+**Why bad:** no forwardRef (React 18) or no ref prop (React 19) means Radix can't attach refs for positioning and focus management, props not spread means ARIA attributes and event handlers are lost, breaks accessibility and keyboard navigation
 
 ---
 

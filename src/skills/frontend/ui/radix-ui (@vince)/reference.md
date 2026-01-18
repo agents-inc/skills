@@ -1,6 +1,6 @@
 # Radix UI Reference
 
-> Decision frameworks, anti-patterns, and red flags for Radix UI primitives. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and red flags for Radix UI primitives. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **Current: v1.4.x (May 2025)** - Full React 19 and RSC compatibility with new preview primitives.
 
 ---
 
@@ -119,6 +119,12 @@ Expandable sections?
 - Slot merges event handlers with child handler taking precedence
 - `data-state` changes to "closed" before unmount animation starts (use animation, not transition)
 - AlertDialog requires Cancel or Action to close (no click-outside dismiss by design)
+- **v1.4.3+**: Dialog logs console **errors** for missing Title and **warnings** for missing Description
+- **v1.4.3+**: Components with `hideWhenDetached` prevent interactions when content is hidden
+- **v1.4.3+**: Progress supports `value={undefined}` for indeterminate state representation
+- **v1.4.3+**: Select and Scroll Area support `nonce` prop for Content Security Policy compliance
+- **React 19**: `forwardRef` wrapper no longer needed - `ref` can be passed as a regular prop
+- **Import Patterns**: Prefer unified `radix-ui` package over individual `@radix-ui/*` packages to prevent version conflicts
 
 ---
 
@@ -315,3 +321,52 @@ Root                    # State and context provider
         ├── [content]   # Your content
         └── Close       # Closes the component
 ```
+
+### CSS Variables Reference
+
+| Component | Variable | Purpose |
+|-----------|----------|---------|
+| Accordion | `--radix-accordion-content-height` | Content height during animation |
+| Accordion | `--radix-accordion-content-width` | Content width during animation |
+| Collapsible | `--radix-collapsible-content-height` | Content height during animation |
+| Collapsible | `--radix-collapsible-content-width` | Content width during animation |
+| Select | `--radix-select-trigger-width` | Trigger element width |
+| Select | `--radix-select-trigger-height` | Trigger element height |
+| Select | `--radix-select-content-available-width` | Available space width |
+| Select | `--radix-select-content-available-height` | Available space height |
+| Select | `--radix-select-content-transform-origin` | Transform origin for animations |
+| Popover | `--radix-popover-content-transform-origin` | Transform origin for animations |
+| Tooltip | `--radix-tooltip-content-transform-origin` | Transform origin for animations |
+| DropdownMenu | `--radix-dropdown-menu-content-transform-origin` | Transform origin for animations |
+
+### v1.4.x Important Changes (May 2025)
+
+| Feature | Description |
+|---------|-------------|
+| React 19 Support | Full compatibility, `forwardRef` optional |
+| RSC Compatibility | Works with React Server Components |
+| Escape Key Capture | Components capture Escape key events |
+| Dialog Console Warnings | Logs errors for missing Title, warnings for missing Description |
+| hideWhenDetached | Prevents interactions with hidden content |
+| Progress Indeterminate | `value={undefined}` explicitly supported |
+| CSP nonce | Select and Scroll Area support `nonce` prop |
+| OneTimePasswordField | New preview primitive for OTP inputs (Apr 2025) |
+| PasswordToggleField | New preview primitive for password visibility (May 2025) |
+| Form Bubble Inputs | Form controls use Radix Primitive component by default |
+| Tooltip Performance | Improved rendering performance for Tooltip provider |
+| Avatar crossOrigin | Added `crossOrigin` support in Avatar images |
+
+### Preview Components (Unstable)
+
+| Component | Import | Version | Use Case |
+|-----------|--------|---------|----------|
+| OneTimePasswordField | `unstable_OneTimePasswordField` | 0.1.8 | OTP input with keyboard navigation, paste, autofill |
+| PasswordToggleField | `unstable_PasswordToggleField` | 0.1.3 | Password visibility toggle with focus management |
+| Form | `unstable_Form` | 0.1.8 | Form validation with constraint API |
+
+**Key Preview Features:**
+- **OneTimePasswordField**: autoSubmit, validationType (numeric/alphanumeric), sanitizeValue, HiddenInput for forms
+- **PasswordToggleField**: Icon component with visible/hidden props, Slot for custom rendering, onVisibilityChange
+- **Form**: Field, Label, Control, Message (with match prop), ValidityState, Submit components
+
+**Note:** Preview components have unstable APIs and may change before stable release.
