@@ -55,6 +55,7 @@ description: React Query, Axios, API classes for Photoroom webapp
 - Zod schema validation with safeParse
 - MobxQuery bridge for store integration
 - React Query conservative defaults
+- Request cancellation with AbortController (replaces deprecated CancelToken)
 
 **Detailed Resources:**
 - [examples/core.md](examples/core.md) - Axios instance, API classes, React Query setup (always loaded)

@@ -271,6 +271,7 @@ retry: DEFAULT_RETRY_ATTEMPTS,
 
 - **Not using `import type`** - Type-only imports should use `import type` syntax
 - **Missing transformer** - Without SuperJSON, Date/Map/Set won't serialize correctly
+- **Transformer in wrong location (v11)** - In v11, transformer goes INSIDE `httpBatchLink()`, NOT at `createClient()` level
 - **No error formatter** - Zod errors should be formatted for better client DX
 - **Optimistic updates without rollback** - Must include `onError` handler to restore previous state
 - **Default exports** - Should use named exports per project conventions
@@ -294,6 +295,86 @@ retry: DEFAULT_RETRY_ATTEMPTS,
 - Middleware runs in order - auth middleware should come before rate limiting
 
 </red_flags>
+
+---
+
+## tRPC v11 Migration Notes
+
+### Breaking Changes from v10
+
+1. **Transformer Location Changed** (CRITICAL):
+   ```typescript
+   // v10 (no longer works in v11)
+   trpc.createClient({
+     transformer: superjson, // WRONG - will cause error in v11
+     links: [httpBatchLink({ url: '/api/trpc' })]
+   })
+
+   // v11 (correct - transformer INSIDE the link)
+   trpc.createClient({
+     links: [
+       httpBatchLink({
+         url: '/api/trpc',
+         transformer: superjson, // CORRECT - inside httpBatchLink
+       })
+     ]
+   })
+   ```
+
+2. **React Query v5 Required**: Update to `@tanstack/react-query@^5`
+   - Replace `isLoading` with `isPending` throughout your code
+
+3. **New TanStack Integration Package** (recommended):
+   ```typescript
+   // New v11 package for TanStack-native integration
+   import { createTRPCContext } from "@trpc/tanstack-react-query";
+
+   export const { TRPCProvider, useTRPC, useTRPCClient } =
+     createTRPCContext<AppRouter>();
+   ```
+
+4. **New queryOptions/mutationOptions API** (recommended, not required):
+   ```typescript
+   // Classic (still works with @trpc/react-query)
+   trpc.user.getById.useQuery({ id })
+
+   // New v11 pattern (with @trpc/tanstack-react-query)
+   const trpc = useTRPC();
+   useQuery(trpc.user.getById.queryOptions({ id }))
+   ```
+
+5. **queryKey() Method**: Access type-safe query keys for cache manipulation
+   ```typescript
+   queryClient.invalidateQueries({
+     queryKey: trpc.user.list.queryKey()
+   })
+   ```
+
+6. **Subscription Output Type Changes**:
+   ```typescript
+   // Before: output: __OUTPUT__
+   // After: output: AsyncGenerator<__OUTPUT__, void, unknown>
+   ```
+
+7. **Removed .interop() Mode**: v9 compatibility layer removed
+
+### Installation for v11
+
+```bash
+# New TanStack-native integration (recommended)
+npm install @trpc/server@^11 @trpc/client@^11 @trpc/tanstack-react-query @tanstack/react-query@^5
+
+# Classic integration (still supported)
+npm install @trpc/server@^11 @trpc/client@^11 @trpc/react-query@^11 @tanstack/react-query@^5
+```
+
+### New v11 Features
+
+- **FormData/File Support**: Native support for `File`, `Blob`, `Uint8Array` uploads
+- **httpBatchStreamLink**: Streaming responses for large datasets
+- **Shorthand Router Definitions**: Plain objects instead of explicit `router()` calls
+- **Server-Sent Events**: SSE subscriptions as alternative to WebSockets
+- **Generator Subscriptions**: JavaScript generators with cleanup support
 
 ---
 

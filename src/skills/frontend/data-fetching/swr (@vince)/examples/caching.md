@@ -405,22 +405,21 @@ function PrefetchLink({ userId }: { userId: string }) {
 export { PrefetchLink };
 ```
 
-### Prefetch with mutate
+### Prefetch with preload (SWR 2.0+)
 
 ```typescript
 // components/prefetch-list.tsx
-import { useSWRConfig } from "swr";
+import { preload } from "swr";
 import { useEffect } from "react";
+import { fetcher } from "@/lib/fetcher";
 
 function PrefetchList({ userIds }: { userIds: string[] }) {
-  const { mutate } = useSWRConfig();
-
   useEffect(() => {
-    // Prefetch all user data on mount
+    // Prefetch all user data on mount using official preload API
     userIds.forEach((id) => {
-      mutate(`/api/users/${id}`, fetcher(`/api/users/${id}`));
+      preload(`/api/users/${id}`, fetcher);
     });
-  }, [userIds, mutate]);
+  }, [userIds]);
 
   return <UserList userIds={userIds} />;
 }

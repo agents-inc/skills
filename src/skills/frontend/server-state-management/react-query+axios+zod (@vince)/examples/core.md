@@ -90,6 +90,8 @@ const url = appEnv.photoroom.backendURL + "/v2/templates/?page=" + page + "&favo
 
 Use the configured `djangoBackend` axios instance with auth and header interceptors. Never create custom axios instances.
 
+> **Axios v1.x Note:** Request interceptors must use `InternalAxiosRequestConfig` type (not `AxiosRequestConfig`). This is a TypeScript change in Axios v1.x where the internal config has required `headers` property.
+
 ### Configuration
 
 ```typescript
@@ -228,5 +230,124 @@ new QueryClient({
 ```
 
 **Why bad:** String literals cause cache key mismatches when typos occur, aggressive refetching causes jarring UI updates when users switch tabs
+
+---
+
+## Pattern 4: Request Cancellation with AbortController
+
+Use AbortController to cancel in-flight requests when components unmount or when user navigates away. This replaces the deprecated CancelToken API (deprecated since Axios v0.22.0).
+
+### Basic Cancellation
+
+```typescript
+import { useEffect, useState } from "react";
+import { djangoBackend } from "lib/apiServices";
+import { ContentAPI } from "lib/APIs";
+
+export const useTemplate = (templateId: string) => {
+  const [template, setTemplate] = useState<Template | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchTemplate = async () => {
+      try {
+        setIsLoading(true);
+        const response = await djangoBackend.get(
+          ContentAPI.templateURL(templateId),
+          { signal: controller.signal }
+        );
+        setTemplate(response.data);
+      } catch (error) {
+        // Check if request was cancelled - don't treat as error
+        if (axios.isCancel(error)) {
+          return; // Component unmounted, ignore
+        }
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTemplate();
+
+    // Cleanup: abort request on unmount or templateId change
+    return () => {
+      controller.abort();
+    };
+  }, [templateId]);
+
+  return { template, isLoading };
+};
+```
+
+**Why good:** Prevents state updates on unmounted components, avoids memory leaks, uses modern AbortController API (native browser support), cleanup runs automatically on dependency change or unmount
+
+### With Timeout Using AbortSignal.timeout()
+
+```typescript
+// For Node.js 17.3+ and modern browsers
+const fetchWithTimeout = async (templateId: string) => {
+  const TIMEOUT_MS = 10000;
+
+  const response = await djangoBackend.get(
+    ContentAPI.templateURL(templateId),
+    { signal: AbortSignal.timeout(TIMEOUT_MS) }
+  );
+  return response.data;
+};
+```
+
+**Why good:** Native timeout API is simpler than manual AbortController + setTimeout, automatically aborts after timeout
+
+### React Query Integration
+
+React Query v5 automatically handles cancellation via AbortController when using the signal from queryFn context:
+
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { djangoBackend } from "lib/apiServices";
+import { ContentAPI } from "lib/APIs";
+
+export const useTemplate = (templateId: string) => {
+  return useQuery({
+    queryKey: ["template", templateId],
+    queryFn: async ({ signal }) => {
+      // React Query passes AbortSignal automatically
+      const response = await djangoBackend.get(
+        ContentAPI.templateURL(templateId),
+        { signal }
+      );
+      return response.data;
+    },
+  });
+};
+```
+
+**Why good:** React Query handles cancellation automatically, no manual cleanup needed, query is cancelled when component unmounts or queryKey changes
+
+```typescript
+// BAD Example - Using deprecated CancelToken
+import axios from "axios";
+
+const source = axios.CancelToken.source();
+const response = await djangoBackend.get(url, {
+  cancelToken: source.token, // DEPRECATED since v0.22.0
+});
+source.cancel("Operation cancelled");
+
+// BAD Example - Ignoring cancellation in useEffect
+useEffect(() => {
+  const fetchData = async () => {
+    const response = await djangoBackend.get(url);
+    setData(response.data); // May update unmounted component!
+  };
+  fetchData();
+  // Missing cleanup - request continues even after unmount
+}, []);
+```
+
+**Why bad:** CancelToken is deprecated and will be removed in future Axios versions, missing cleanup causes "Can't perform state update on unmounted component" warnings and memory leaks
 
 ---

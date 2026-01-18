@@ -60,12 +60,14 @@ export { FeaturesPage };
 
 ### Global Error Handling
 
+> **v5 Pattern:** Use `QueryCache` and `MutationCache` for global error handling. The `onError` callback on queries was removed in v5, but mutations still support it.
+
 ```typescript
 // apps/client-next/lib/query-provider.tsx
 "use client";
 
 import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { client } from "@repo/api/client";
 import { toast } from "@repo/ui/toast";
 
@@ -76,17 +78,27 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        // v5: Global query error handling via QueryCache
+        queryCache: new QueryCache({
+          onError: (error, query) => {
+            // Only show toast for queries that have already been fetched
+            // This prevents showing error toasts for prefetched queries
+            if (query.state.data !== undefined) {
+              toast.error(`Something went wrong: ${error.message}`);
+            }
+          },
+        }),
+        // v5: Global mutation error handling via MutationCache
+        mutationCache: new MutationCache({
+          onError: (error) => {
+            console.error("Mutation error:", error);
+            toast.error("Something went wrong. Please try again.");
+          },
+        }),
         defaultOptions: {
           queries: {
             retry: !isDevelopment, // No retry in dev (fail fast)
             staleTime: FIVE_MINUTES_MS,
-          },
-          mutations: {
-            onError: (error) => {
-              // Global error handling for mutations
-              console.error("Mutation error:", error);
-              toast.error("Something went wrong. Please try again.");
-            },
           },
         },
       })
@@ -105,7 +117,10 @@ export { QueryProvider };
 
 ### Per-Query Error Handling with Retry
 
+> **Note:** In React Query v5, `onError`, `onSuccess`, and `onSettled` callbacks were **removed** from `useQuery`. Use `useEffect` for component-level side effects or `QueryCache.onError` for global handling.
+
 ```typescript
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getFeaturesOptions } from "@repo/api/reactQueries";
 import { toast } from "@repo/ui/toast";
@@ -121,11 +136,15 @@ export function Features() {
     retry: MAX_RETRY_ATTEMPTS,
     retryDelay: (attemptIndex) =>
       Math.min(INITIAL_RETRY_DELAY_MS * EXPONENTIAL_BASE ** attemptIndex, MAX_RETRY_DELAY_MS),
-    onError: (error) => {
+  });
+
+  // v5 pattern: Use useEffect for error side effects
+  useEffect(() => {
+    if (error) {
       console.error("Failed to load features:", error);
       toast.error("Failed to load features");
-    },
-  });
+    }
+  }, [error]);
 
   return <div>{/* ... */}</div>;
 }
@@ -140,16 +159,27 @@ export { Features };
 // BAD: Magic numbers in retry logic
 retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000);
 
-// BAD: Swallowing errors silently
-onError: () => {}, // User has no feedback!
+// BAD: Using onError callback (REMOVED in v5)
+// This will cause a TypeScript error in React Query v5
+onError: (error) => {
+  toast.error(error.message);  // This callback no longer exists!
+},
 
 // BAD: Using retry: false in production
 retry: false, // Fails on transient network errors
+
+// BAD: Swallowing errors silently
+useEffect(() => {
+  if (error) {
+    // Logging without user feedback
+    console.log(error);
+  }
+}, [error]);
 ```
 
-**Why bad:** Magic numbers obscure retry policy making tuning difficult, silent errors leave users confused, disabling retry in production causes failures from temporary network blips
+**Why bad:** Magic numbers obscure retry policy making tuning difficult, `onError` was removed in v5 and will not work, disabling retry in production causes failures from temporary network blips, logging without user feedback leaves users confused
 
-**When not to use:** Don't use global onError for queries (handle at component level for better UX).
+**When not to use:** For global error handling across all queries, use `QueryCache.onError` instead of per-component `useEffect`.
 
 ---
 

@@ -126,6 +126,22 @@ function UserDataInner({ userId }: { userId: string }) {
   );
 }
 
+// Alternative: throwOnError option (SWR 2.0+)
+// Throws errors to error boundary WITHOUT suspense mode
+function UserDataWithThrow({ userId }: { userId: string }) {
+  const { data, isLoading } = useSWR<User>(`/api/users/${userId}`, fetcher, {
+    throwOnError: true, // Throws to error boundary
+  });
+
+  if (isLoading) return <Skeleton />;
+
+  return (
+    <div>
+      <h1>{data.name}</h1>
+    </div>
+  );
+}
+
 function UserDataWithBoundary({ userId }: { userId: string }) {
   return (
     <ErrorBoundary

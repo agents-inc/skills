@@ -240,9 +240,21 @@ const userRouter = router({
 
 ---
 
-## Pattern 3: React Query Integration
+## Pattern 3: React Query Integration (tRPC v11)
 
-### Provider Setup
+### Provider Setup (New TanStack Integration - Recommended)
+
+```typescript
+// apps/client/lib/trpc.ts
+import { createTRPCContext } from "@trpc/tanstack-react-query";
+import type { AppRouter } from "@repo/api";
+
+// v11: Create typed context providers and hooks
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+  createTRPCContext<AppRouter>();
+
+export { TRPCProvider, useTRPC, useTRPCClient };
+```
 
 ```typescript
 // apps/client/lib/trpc-provider.tsx
@@ -250,9 +262,10 @@ const userRouter = router({
 
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink, loggerLink } from "@trpc/client";
+import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import superjson from "superjson";
-import { trpc } from "./trpc";
+import { TRPCProvider } from "./trpc";
+import type { AppRouter } from "@repo/api";
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const DEFAULT_RETRY_ATTEMPTS = 3;
@@ -264,24 +277,35 @@ function getBaseUrl() {
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
-export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: FIVE_MINUTES_MS,
-            retry: isDevelopment ? false : DEFAULT_RETRY_ATTEMPTS,
-          },
-          mutations: {
-            retry: false, // Don't retry mutations
-          },
-        },
-      })
-  );
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: FIVE_MINUTES_MS,
+        retry: isDevelopment ? false : DEFAULT_RETRY_ATTEMPTS,
+      },
+      mutations: {
+        retry: false, // Don't retry mutations
+      },
+    },
+  });
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+function getQueryClient() {
+  if (typeof window === "undefined") {
+    return makeQueryClient();
+  }
+  if (!browserQueryClient) browserQueryClient = makeQueryClient();
+  return browserQueryClient;
+}
+
+export function AppTRPCProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
-    trpc.createClient({
+    createTRPCClient<AppRouter>({
       links: [
         // Logger in development
         loggerLink({
@@ -290,6 +314,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         // Batch HTTP requests
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
+          // v11 CRITICAL: transformer goes INSIDE the link
           transformer: superjson,
           headers() {
             return {
@@ -302,15 +327,31 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        {children}
+      </TRPCProvider>
+    </QueryClientProvider>
   );
 }
 
 // Named export
-export { TRPCProvider };
+export { AppTRPCProvider };
 ```
+
+### Bad Example - Transformer in Wrong Location
+
+```typescript
+// BAD: v11 error - transformer at client level
+const trpcClient = createTRPCClient<AppRouter>({
+  transformer: superjson, // WRONG - causes error in v11
+  links: [
+    httpBatchLink({ url: "/api/trpc" }),
+  ],
+});
+```
+
+**Why bad:** tRPC v11 moved transformer to links - placing it at client level causes "The transformer property has moved to httpLink/httpBatchLink/wsLink" error
 
 ### Bad Example - Magic Numbers
 
@@ -394,5 +435,61 @@ function UserCard({ user }: { user: User }) {
 ```
 
 **Why bad:** Manual types diverge from backend causing runtime errors, defeats tRPC's automatic type inference, double maintenance burden
+
+---
+
+## Pattern 5: v11 queryOptions/mutationOptions Pattern
+
+### Using New v11 TanStack Integration API
+
+```typescript
+// apps/client/components/user-list.tsx
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/lib/trpc";
+
+export function UserList() {
+  // useTRPC from createTRPCContext provides typed procedure access
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  // v11: queryOptions factory creates React Query compatible options
+  const usersQuery = useQuery(trpc.user.list.queryOptions({ limit: 10 }));
+
+  // v11: mutationOptions factory with custom onSuccess
+  const createUser = useMutation({
+    ...trpc.user.create.mutationOptions(),
+    onSuccess: () => {
+      // v11: queryKey for type-safe invalidation
+      queryClient.invalidateQueries({
+        queryKey: trpc.user.list.queryKey(),
+      });
+    },
+  });
+
+  return (
+    <div>
+      {usersQuery.data?.users.map((user) => (
+        <div key={user.id}>{user.name}</div>
+      ))}
+      <button onClick={() => createUser.mutate({ email: "new@example.com", name: "New User" })}>
+        Add User
+      </button>
+    </div>
+  );
+}
+
+// Named export
+export { UserList };
+```
+
+### Benefits of v11 TanStack Integration
+
+- **Direct React Query hook usage** (`useQuery`, `useMutation` from TanStack)
+- **`queryOptions()`** returns complete query configuration
+- **`mutationOptions()`** returns complete mutation configuration
+- **`queryKey()`** provides type-safe query keys for invalidation
+- **Easier prefetching** with `queryClient.prefetchQuery(trpc.x.queryOptions())`
+- **React Compiler compatible** - follows hooks rules properly
+- **Lower learning curve** - use standard TanStack Query patterns
 
 ---

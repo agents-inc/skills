@@ -318,3 +318,166 @@ describe("DeletePostButton cache updates", () => {
 ```
 
 **Why good:** Tests cache behavior directly by providing custom cache instance. Verifies mutation correctly updates cache state.
+
+---
+
+## Schema-Based Testing (v3.10+)
+
+Apollo Client v3.10 introduced experimental schema-based testing utilities as an alternative to `MockedProvider`.
+
+```typescript
+// test/schema-test-utils.tsx
+import { createTestSchema, createSchemaFetch } from "@apollo/client/testing/experimental";
+import { buildSchema } from "graphql";
+
+// Define or import your GraphQL schema
+const typeDefs = `
+  type Query {
+    user(id: ID!): User
+    users: [User!]!
+  }
+
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+  }
+
+  type Mutation {
+    createUser(name: String!, email: String!): User!
+  }
+`;
+
+// Default resolvers
+const defaultResolvers = {
+  Query: {
+    user: (_: any, { id }: { id: string }) => ({
+      id,
+      name: "Test User",
+      email: "test@example.com",
+    }),
+    users: () => [
+      { id: "1", name: "User 1", email: "user1@example.com" },
+      { id: "2", name: "User 2", email: "user2@example.com" },
+    ],
+  },
+  Mutation: {
+    createUser: (_: any, { name, email }: { name: string; email: string }) => ({
+      id: `user-${Date.now()}`,
+      name,
+      email,
+    }),
+  },
+};
+
+// Create test schema with resolvers
+const testSchema = createTestSchema(buildSchema(typeDefs), {
+  resolvers: defaultResolvers,
+  // Optional: Mock scalar types
+  scalars: {
+    DateTime: () => new Date().toISOString(),
+  },
+});
+
+// Create fetch function for tests
+const schemaFetch = createSchemaFetch(testSchema);
+
+export { testSchema, schemaFetch, createTestSchema };
+```
+
+```typescript
+// components/user-list.test.tsx
+import { render, screen, waitFor } from "@testing-library/react";
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import { schemaFetch, testSchema } from "@/test/schema-test-utils";
+import { UserList } from "./user-list";
+
+describe("UserList with schema-based testing", () => {
+  it("renders users from schema", async () => {
+    // Create client with schema fetch
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new HttpLink({
+        uri: "/graphql",
+        fetch: schemaFetch,
+      }),
+    });
+
+    render(
+      <ApolloProvider client={client}>
+        <UserList />
+      </ApolloProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("User 1")).toBeInTheDocument();
+      expect(screen.getByText("User 2")).toBeInTheDocument();
+    });
+  });
+
+  it("can override resolvers per test", async () => {
+    // Override resolvers for this specific test
+    const customSchema = testSchema.fork({
+      resolvers: {
+        Query: {
+          users: () => [{ id: "custom", name: "Custom User", email: "custom@test.com" }],
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new HttpLink({
+        uri: "/graphql",
+        fetch: createSchemaFetch(customSchema),
+      }),
+    });
+
+    render(
+      <ApolloProvider client={client}>
+        <UserList />
+      </ApolloProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Custom User")).toBeInTheDocument();
+    });
+  });
+});
+```
+
+**Why good:** Schema-based testing mirrors backend implementation, allows overriding resolvers per test, uses real link chain instead of mocked one, supports incremental adoption alongside MockedProvider
+
+---
+
+## MockedProvider Enhancements (v3.9+)
+
+```typescript
+// Reusable mock with maxUsageCount
+const reusableMock: MockedResponse = {
+  request: {
+    query: GET_USER,
+    variables: { id: "user-123" },
+  },
+  result: {
+    data: { user: { __typename: "User", id: "user-123", name: "Test" } },
+  },
+  maxUsageCount: 3, // Mock can be used up to 3 times (default: 1)
+};
+
+// Dynamic variable matching with variableMatcher
+const dynamicMock: MockedResponse = {
+  request: {
+    query: SEARCH_USERS,
+  },
+  variableMatcher: (variables) => {
+    // Match any search query starting with "test"
+    return variables.query?.startsWith("test");
+  },
+  result: {
+    data: { searchUsers: [{ id: "1", name: "Test User" }] },
+  },
+};
+```
+
+**Why good:** `maxUsageCount` allows same mock for multiple renders/refetches, `variableMatcher` enables dynamic matching without exact variable equality

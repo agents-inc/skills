@@ -40,9 +40,10 @@ description: SWR data fetching patterns - useSWR, useSWRMutation, caching, reval
 **When NOT to use:**
 
 - Complex mutation workflows with many side effects (use React Query)
-- Need built-in DevTools for debugging (SWR lacks this)
 - Need request cancellation out of the box (use React Query)
 - Complex dependent queries with fine-grained control
+
+> **Note (SWR 2.0+):** SWR DevTools browser extension is now available with zero setup for v2+. See [SWR DevTools](https://swr-devtools.vercel.app/) for installation.
 
 **Key patterns covered:**
 
@@ -80,9 +81,17 @@ SWR (stale-while-revalidate) is a data fetching strategy that returns cached (st
 **Trade-offs:**
 
 - Simpler API means less control over complex scenarios
-- No built-in DevTools (use React Query DevTools workaround or console)
 - Request cancellation requires manual AbortController setup
 - Less opinionated about mutations than React Query
+
+**SWR 2.0+ Features:**
+
+- SWR DevTools browser extension (zero setup for v2+)
+- useSWRMutation for remote mutations with trigger function
+- preload API for prefetching resources
+- isLoading state (distinct from isValidating)
+- keepPreviousData option for smooth data transitions
+- throwOnError option for error boundary integration
 
 </philosophy>
 

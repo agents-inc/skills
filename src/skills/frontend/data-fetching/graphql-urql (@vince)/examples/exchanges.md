@@ -13,10 +13,11 @@ Request Flow:    Component → Cache → Auth → Retry → Fetch → Server
 Response Flow:   Server → Fetch → Retry → Auth → Cache → Component
 ```
 
-**Default Exchange Stack:**
-1. `dedupExchange` - Deduplicates identical in-flight requests (implicit)
-2. `cacheExchange` - Document caching (query + variables hash)
-3. `fetchExchange` - HTTP requests to GraphQL API
+**Default Exchange Stack (v4+):**
+1. `cacheExchange` - Document caching (query + variables hash)
+2. `fetchExchange` - HTTP requests to GraphQL API
+
+> **Note:** Deduplication is built into the core client since v5. The `dedupExchange` was removed in v5.0.0.
 
 ---
 

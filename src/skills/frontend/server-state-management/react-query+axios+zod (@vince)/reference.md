@@ -219,6 +219,32 @@ class Store {
 
 ---
 
+### ❌ Using Deprecated CancelToken Instead of AbortController
+
+CancelToken was deprecated in Axios v0.22.0 and will be removed in future versions. Use the native AbortController API instead.
+
+```typescript
+// ❌ Anti-pattern - Deprecated CancelToken
+import axios from "axios";
+
+const source = axios.CancelToken.source();
+const response = await djangoBackend.get(url, {
+  cancelToken: source.token,
+});
+source.cancel("Operation cancelled");
+
+// ✅ Correct approach - AbortController
+const controller = new AbortController();
+const response = await djangoBackend.get(url, {
+  signal: controller.signal,
+});
+controller.abort();
+```
+
+**Why this matters:** CancelToken is deprecated and based on a withdrawn ECMAScript proposal. AbortController is the native browser API with better support and will be the only cancellation method in future Axios versions.
+
+---
+
 ### ❌ Using useEffect to Sync React Query with MobX
 
 Syncing React Query data to MobX via useEffect creates unnecessary rerenders and race conditions.
@@ -285,5 +311,8 @@ class TeamsStore {
 - MobxQuery callback runs on every query state change (loading, success, error)
 - Query key arrays must be stable (use constants, not inline arrays)
 - authInterceptor is async - token may not be immediately available
+- CancelToken is deprecated since Axios v0.22.0 - use AbortController instead
+- `InternalAxiosRequestConfig` (not `AxiosRequestConfig`) must be used in request interceptors (Axios v1.x TypeScript change)
+- React Query v5 passes `signal` in queryFn context for automatic cancellation - use it!
 
 </red_flags>
