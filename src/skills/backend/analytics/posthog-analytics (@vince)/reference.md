@@ -105,10 +105,10 @@ posthog.capture("user_action", {
 
 ---
 
-### Missing Server-Side Flush
+### Missing Server-Side Shutdown
 
 ```typescript
-// ANTI-PATTERN: No flush in serverless
+// ANTI-PATTERN: No shutdown in serverless
 export async function handler() {
   posthogServer.capture({
     distinctId: userId,
@@ -119,9 +119,9 @@ export async function handler() {
 }
 ```
 
-**Why it's wrong:** Serverless functions terminate before batch flush.
+**Why it's wrong:** Serverless functions terminate before batch flush. Even with `flushAt: 1`, `capture()` is async and may not complete.
 
-**What to do instead:** Always `await posthogServer.flush()` before returning.
+**What to do instead:** Use `captureImmediate()` or always `await posthogServer.shutdown()` before returning.
 
 ---
 
@@ -150,7 +150,8 @@ posthog.capture("action");
 
 - Using email as `distinct_id` - PII should not be the identifier
 - Missing `posthog.reset()` on logout - Users get mixed together
-- No `await flush()` in serverless - Events are lost
+- No `await shutdown()` in serverless - Events are lost
+- Using `capture()` instead of `captureImmediate()` in serverless - Events may not complete
 - PII in event properties - GDPR violation risk
 - Calling `identify()` on every render - Performance degradation
 
@@ -221,7 +222,7 @@ posthog.capture("action");
 
 1. **Check initialization**: Ensure `posthog.init()` called with valid key
 2. **Check distinct_id**: Server-side events require explicit `distinctId`
-3. **Check flush**: Serverless needs `await posthogServer.flush()`
+3. **Check shutdown**: Serverless needs `await posthogServer.shutdown()` or use `captureImmediate()`
 4. **Check filters**: Verify not filtering by environment/user
 
 ### User Profiles Not Linked

@@ -9,6 +9,7 @@
 - [error-handling.md](error-handling.md) - Standardized error responses
 - [openapi.md](openapi.md) - OpenAPI spec generation
 - [health-checks.md](health-checks.md) - Health check endpoints
+- [advanced-v4.md](advanced-v4.md) - RPC client, Context Storage, Combine Middleware (v4.x)
 
 ---
 

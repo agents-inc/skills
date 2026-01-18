@@ -7,6 +7,7 @@
 - [oauth.md](oauth.md) - GitHub, Google OAuth providers
 - [two-factor.md](two-factor.md) - TOTP setup and verification
 - [organizations.md](organizations.md) - Multi-tenancy and invitations
+- [v1.4-features.md](v1.4-features.md) - Stateless auth, performance, Generic OAuth
 
 ---
 
@@ -70,3 +71,63 @@ export { listSessions, revokeSession, revokeOtherSessions };
 ```
 
 **Why good:** listSessions enables "active sessions" UI, revokeOtherSessions useful after password change
+
+---
+
+## Cookie Cache Strategies (v1.4+)
+
+Three encoding strategies for session cookies:
+
+```typescript
+// lib/auth.ts
+const CACHE_MAX_AGE_SECONDS = 5 * 60; // 5 minutes
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { provider: "pg" }),
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: CACHE_MAX_AGE_SECONDS,
+      // Choose based on requirements:
+      strategy: "compact", // Default: smallest, fastest
+      // strategy: "jwt",  // Readable, verifiable by third parties
+      // strategy: "jwe",  // Encrypted, hides session data
+    },
+  },
+});
+
+export { auth };
+```
+
+| Strategy | Size | Security | Use Case |
+|----------|------|----------|----------|
+| `compact` | Smallest | Signed | Internal apps, performance-critical |
+| `jwt` | Medium | Signed | API consumers, third-party verification |
+| `jwe` | Largest | Encrypted | Sensitive data, hide from client |
+
+**Gotcha:** Revoked sessions persist in cache until `maxAge` expires on other devices.
+
+---
+
+## Session Versioning for Mass Invalidation
+
+For stateless sessions, increment version to invalidate all sessions:
+
+```typescript
+// lib/auth.ts
+export const auth = betterAuth({
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: CACHE_MAX_AGE_SECONDS,
+      strategy: "jwe",
+      // Increment to invalidate ALL stateless sessions
+      version: 2, // Was 1
+    },
+  },
+});
+
+export { auth };
+```
+
+**Why good:** Mass invalidation without database, useful for security incidents

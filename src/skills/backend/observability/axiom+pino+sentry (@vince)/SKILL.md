@@ -158,7 +158,11 @@ Generate and propagate correlation IDs to trace requests across services.
 2. **Request Logger Middleware** - Creates request-scoped logger with correlation context
 3. **Route Handler Usage** - Child loggers inherit correlation ID automatically
 
-For implementation examples, see [examples/correlation-ids.md](examples/correlation-ids.md).
+**Modern Alternative: AsyncLocalStorage + Mixin**
+
+For larger applications, use AsyncLocalStorage with Pino's `mixin` option for automatic context injection without manual child logger creation in every handler.
+
+For implementation examples of both approaches, see [examples/correlation-ids.md](examples/correlation-ids.md).
 
 ---
 

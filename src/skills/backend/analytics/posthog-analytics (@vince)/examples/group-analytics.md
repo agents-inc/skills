@@ -78,7 +78,7 @@ export async function trackMemberInvited(data: InviteEventData) {
     },
   });
 
-  await posthogServer.flush();
+  await posthogServer.shutdown();
 }
 
 export { trackMemberInvited };

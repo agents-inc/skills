@@ -178,12 +178,19 @@ export { auth };
 ### Schema Generation Commands
 
 ```bash
-# Generate schema from Better Auth
+# For Drizzle adapter, use this 3-step workflow:
+
+# Step 1: Generate Better Auth schema
 npx @better-auth/cli generate
 
-# Generate and apply migrations with Drizzle Kit
+# Step 2: Generate Drizzle migration file
 npx drizzle-kit generate
+
+# Step 3: Apply migration to database
 npx drizzle-kit migrate
+
+# NOTE: The `migrate` command only works with Kysely adapter
+# For Drizzle, always use the 3-step workflow above
 ```
 
 **Why good:** drizzleAdapter integrates with existing Drizzle setup, experimental joins improve performance, schema customization for existing tables

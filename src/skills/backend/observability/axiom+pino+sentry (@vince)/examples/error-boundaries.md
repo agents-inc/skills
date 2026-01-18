@@ -6,14 +6,80 @@
 
 ---
 
-## Pattern: Error Boundary Component
+## Pattern: Sentry Built-in ErrorBoundary (Recommended)
+
+Use Sentry's built-in ErrorBoundary component for automatic error capturing.
+
+```typescript
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+
+export function JobsPage() {
+  return (
+    <div>
+      <h1>Available Jobs</h1>
+      <Sentry.ErrorBoundary
+        fallback={({ error, resetError }) => (
+          <div role="alert">
+            <p>Failed to load jobs: {error.message}</p>
+            <button onClick={resetError}>Retry</button>
+          </div>
+        )}
+      >
+        <JobList />
+      </Sentry.ErrorBoundary>
+    </div>
+  );
+}
+```
+
+**Why good:** Automatic error reporting to Sentry, built-in reset capability, properly typed fallback props
+
+---
+
+## Pattern: React 19+ Error Hooks (v8.6.0+)
+
+React 19 exposes error hooks on `createRoot` and `hydrateRoot`. Use `Sentry.reactErrorHandler()` to capture errors at the root level.
+
+**File: `apps/client-next/app/root.tsx`**
+
+```typescript
+import { createRoot } from "react-dom/client";
+import * as Sentry from "@sentry/react";
+
+const container = document.getElementById("app");
+
+const root = createRoot(container!, {
+  // Errors NOT caught by any ErrorBoundary
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    console.warn("Uncaught error", error, errorInfo.componentStack);
+  }),
+  // Errors caught by an ErrorBoundary
+  onCaughtError: Sentry.reactErrorHandler(),
+  // Automatic recovery errors
+  onRecoverableError: Sentry.reactErrorHandler(),
+});
+
+root.render(<App />);
+```
+
+**Why good:** Captures errors at React root level before they propagate, works with React 19's new error handling model, provides centralized error processing
+
+**Note:** For finer-grained control, use only `onUncaughtError` and `onRecoverableError` at root level, then use ErrorBoundary components for caught errors.
+
+---
+
+## Pattern: Custom Error Boundary with captureReactException (v9.8.0+)
+
+For custom error boundaries, use `Sentry.captureReactException` instead of `captureException` to get proper React component stack traces.
 
 **File: `apps/client-next/components/error-boundary.tsx`**
 
 ```typescript
 "use client";
 
-import { useEffect } from "react";
+import React from "react";
 import * as Sentry from "@sentry/nextjs";
 
 import type { ReactNode } from "react";
@@ -39,12 +105,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Report to Sentry with component stack
-    Sentry.captureException(error, {
-      extra: {
-        componentStack: errorInfo.componentStack,
-      },
-    });
+    // v9.8.0+: Use captureReactException for proper component stack
+    Sentry.captureReactException(error, errorInfo);
   }
 
   reset = () => {
@@ -78,6 +140,8 @@ function DefaultErrorFallback({ error, reset }: { error: Error; reset: () => voi
   );
 }
 ```
+
+**Why good:** `captureReactException` (v9.8.0+) provides better React-specific error context than generic `captureException`, properly captures component stack for debugging
 
 ---
 
@@ -145,6 +209,17 @@ export function JobsPage() {
   );
 }
 ```
+
+---
+
+## Sentry SDK Version Reference
+
+| Feature | Minimum Version | Notes |
+|---------|-----------------|-------|
+| `Sentry.ErrorBoundary` | v7.x | Built-in component |
+| `reactErrorHandler()` | v8.6.0 | For React 19 hooks |
+| `captureReactException()` | v9.8.0 | For custom boundaries |
+| `onRequestError` | v8.28.0 | For Next.js 15 |
 
 ---
 

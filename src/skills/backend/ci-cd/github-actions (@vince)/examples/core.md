@@ -218,3 +218,306 @@ jobs:
 ```
 
 **Why:** Concurrency cancellation saves resources (only test latest commit), timeout prevents runaway jobs from consuming runner hours, disk cleanup needed for large builds (Next.js can use 10GB+)
+
+---
+
+## Reusable Workflows
+
+### Basic Reusable Workflow
+
+```yaml
+# .github/workflows/reusable-ci.yml
+# Good Example - Reusable workflow for standardized CI
+name: Reusable CI Workflow
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Node.js version to use"
+        required: false
+        type: string
+        default: "20"
+      bun-version:
+        description: "Bun version to use"
+        required: false
+        type: string
+        default: "1.2.2"
+      run-e2e:
+        description: "Whether to run E2E tests"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      TURBO_TOKEN:
+        required: false
+      TURBO_TEAM:
+        required: false
+    outputs:
+      build-sha:
+        description: "SHA of the build"
+        value: ${{ jobs.build.outputs.sha }}
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bunx turbo run lint --filter=...[origin/main]
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+      - name: Test
+        run: bunx turbo run test --filter=...[origin/main]
+
+  build:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - name: Build
+        run: bunx turbo run build
+```
+
+**Why good:** Centralized CI definition ensures all repos use same quality gates, inputs allow customization per-caller while enforcing standards, secrets passed securely via workflow_call
+
+### Calling a Reusable Workflow
+
+```yaml
+# .github/workflows/ci.yml
+# Good Example - Calling a reusable workflow
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: your-org/workflows/.github/workflows/reusable-ci.yml@v1
+    with:
+      bun-version: "1.2.2"
+      run-e2e: ${{ github.ref == 'refs/heads/main' }}
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+    # Or inherit all secrets:
+    # secrets: inherit
+```
+
+**Why good:** Single line per reusable workflow keeps caller minimal, version tag (@v1) ensures stability while allowing updates, secrets inherit option simplifies secret passing
+
+**Limits (as of Nov 2025):**
+- Up to 10 nested reusable workflows (increased from 4)
+- Up to 50 total workflows per run (increased from 20)
+
+---
+
+## Composite Actions
+
+### Basic Composite Action
+
+```yaml
+# .github/actions/setup-bun-turbo/action.yml
+# Good Example - Composite action for Bun + Turborepo setup
+name: "Setup Bun with Turborepo"
+description: "Install Bun and configure Turborepo remote cache"
+
+inputs:
+  bun-version:
+    description: "Bun version to install"
+    required: false
+    default: "1.2.2"
+  turbo-token:
+    description: "Turborepo remote cache token"
+    required: false
+  turbo-team:
+    description: "Turborepo team ID"
+    required: false
+
+outputs:
+  cache-hit:
+    description: "Whether dependencies were restored from cache"
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: ${{ inputs.bun-version }}
+
+    - name: Cache dependencies
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Configure Turborepo
+      if: inputs.turbo-token != ''
+      shell: bash
+      run: |
+        echo "TURBO_TOKEN=${{ inputs.turbo-token }}" >> $GITHUB_ENV
+        echo "TURBO_TEAM=${{ inputs.turbo-team }}" >> $GITHUB_ENV
+```
+
+**Why good:** Encapsulates common setup steps into single reusable action, reduces duplication across workflows, outputs allow subsequent steps to make decisions based on cache status
+
+### Using Composite Action
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Local composite action (same repo)
+      - name: Setup environment
+        uses: ./.github/actions/setup-bun-turbo
+        with:
+          bun-version: "1.2.2"
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          turbo-team: ${{ secrets.TURBO_TEAM }}
+
+      - name: Run tests
+        run: bunx turbo run test --filter=...[origin/main]
+```
+
+**Composite Actions vs Reusable Workflows:**
+- **Composite Actions**: Bundle steps within a job, cannot have multiple jobs, no secrets context directly
+- **Reusable Workflows**: Define entire jobs, can have multiple jobs, support secrets natively
+- **Use Composite Actions for**: Shared setup/teardown logic, step-level reuse
+- **Use Reusable Workflows for**: Full pipeline templates, job orchestration
+
+---
+
+## Matrix Builds
+
+### Basic Matrix Strategy
+
+```yaml
+# Good Example - Matrix for multi-version testing
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false  # Continue other jobs if one fails
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Test on ${{ matrix.os }} with Node ${{ matrix.node-version }}
+        run: npm test
+```
+
+**Why good:** Tests all supported Node versions and OS combinations in parallel, fail-fast: false ensures you see all failures not just first one
+
+### Matrix with Include/Exclude
+
+```yaml
+# Good Example - Matrix with specific inclusions and exclusions
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: [18, 20]
+        exclude:
+          # Skip Windows + Node 18 (known incompatibility)
+          - os: windows-latest
+            node-version: 18
+        include:
+          # Add specific experimental configuration
+          - os: ubuntu-latest
+            node-version: 22
+            experimental: true
+          # Use M2 macOS for performance testing
+          - os: macos-15-xlarge
+            node-version: 20
+            experimental: true
+
+    continue-on-error: ${{ matrix.experimental || false }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm ci
+      - run: npm test
+```
+
+**Why good:** exclude removes incompatible combinations without listing all valid ones, include adds special cases with extra variables (experimental), continue-on-error allows experimental builds to fail without blocking
+
+### Include-Only Strategy (Dynamic Matrix)
+
+```yaml
+# Good Example - Include-only for specific configurations
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - environment: staging
+            url: https://staging.example.com
+            auto_deploy: true
+          - environment: production
+            url: https://example.com
+            auto_deploy: false
+            require_approval: true
+
+    environment:
+      name: ${{ matrix.environment }}
+      url: ${{ matrix.url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to ${{ matrix.environment }}
+        if: matrix.auto_deploy || github.event_name == 'workflow_dispatch'
+        run: echo "Deploying to ${{ matrix.url }}"
+```
+
+**Why good:** Include-only strategy defines exactly the configurations you want without generating unwanted combinations, each configuration can have unique properties

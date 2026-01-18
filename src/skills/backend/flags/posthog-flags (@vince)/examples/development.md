@@ -54,11 +54,16 @@ export function initPostHog() {
 import posthog from "posthog-js";
 
 // Good Example - Bootstrap flags for immediate availability
-export function initPostHogWithBootstrap(bootstrapFlags: Record<string, boolean | string>) {
+export function initPostHogWithBootstrap(
+  bootstrapFlags: Record<string, boolean | string>,
+  distinctId: string
+) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     bootstrap: {
       featureFlags: bootstrapFlags,
+      distinctID: distinctId, // Match server-side ID
+      isIdentifiedID: true, // True if using email/DB ID, false for anonymous
     },
   });
 }
@@ -67,7 +72,42 @@ export function initPostHogWithBootstrap(bootstrapFlags: Record<string, boolean 
 // Fetch flags server-side, pass to client for immediate availability
 ```
 
-**Why good:** Bootstrap eliminates flash of wrong content, flags available immediately on page load, essential for SSR/SSG
+**Why good:** Bootstrap eliminates flash of wrong content, flags available immediately on page load, essential for SSR/SSG, distinctID ensures consistency with server evaluation
+
+---
+
+### Method 4: onFeatureFlags Callback
+
+```typescript
+// lib/posthog-client.ts
+import posthog from "posthog-js";
+
+// Good Example - Wait for flags to load before using
+export function initPostHogWithCallback() {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    loaded: (posthog) => {
+      // Called when PostHog SDK is loaded
+      posthog.onFeatureFlags(
+        (flagVariants, { errorsLoading }) => {
+          // flagVariants: Record<string, string | boolean>
+          // errorsLoading: boolean | undefined - true if request failed/timed out
+
+          if (errorsLoading) {
+            console.warn("Feature flags failed to load, using defaults");
+            return;
+          }
+
+          // Flags are now available
+          console.log("Feature flags loaded:", flagVariants);
+        }
+      );
+    },
+  });
+}
+```
+
+**Why good:** `errorsLoading` parameter enables graceful degradation, callback fires on every flag reload, essential for handling network failures
 
 ---
 
