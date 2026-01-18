@@ -317,6 +317,50 @@ cy.getBySel("email-input")
 
 ---
 
+## Cypress 14+ Requirements
+
+### cy.origin() for Multi-Origin Tests
+
+Cypress 14 requires `cy.origin()` for any test that navigates across different origins (scheme + hostname + port).
+
+```typescript
+// Required for OAuth, SSO, or any cross-origin navigation
+cy.visit("/login");
+cy.getBySel("oauth-button").click();
+
+cy.origin("https://auth.provider.com", { args: { email, password } }, ({ email, password }) => {
+  cy.get("#email").type(email);
+  cy.get("#password").type(password);
+  cy.get("#submit").click();
+});
+
+// Back on original origin
+cy.url().should("include", "/dashboard");
+```
+
+**Why required:** Chrome deprecated `document.domain`, which Cypress previously used for cross-origin testing.
+
+### Deprecated in Cypress 14
+
+| Deprecated | Replacement | Notes |
+|------------|-------------|-------|
+| `resourceType` on `cy.intercept()` | Use route matching instead | Deprecated in v14.0.0, may be removed in future |
+| `injectDocumentDomain` config | Use `cy.origin()` for multi-origin tests | Chrome deprecated document.domain |
+| `Cypress.Commands.overwrite()` for queries | Use `Cypress.Commands.overwriteQuery()` | Queries include .get(), .find(), .contains(), cy.location(), cy.window() |
+| Vue 2 support | Use `@cypress/vue2` package | Component testing only |
+| React < 18 support | Use `@cypress/react@8.x.x` package | Component testing only |
+| Angular < 17.2.0 support | Use `@cypress/angular@2.x.x` package | Component testing only |
+
+### Minimum Requirements (Cypress 14)
+
+- Node.js 18+
+- macOS 11 (Big Sur)+
+- React 18.0.0+ (for component testing)
+- Angular 17.2.0+ (for component testing)
+- Vue 3+ (for component testing)
+
+---
+
 ## Configuration Quick Reference
 
 ### Essential Configuration Options

@@ -383,6 +383,16 @@ test("can view order details", async ({ page, orderId }) => {
 | 7 | `getByTestId()` | No semantic role available | `getByTestId('user-avatar')` |
 | 8 | CSS/XPath | Legacy, avoid | `locator('.btn-primary')` |
 
+### Locator Operators (v1.50+)
+
+| Operator | Purpose | Example |
+|----------|---------|---------|
+| `.and()` | Match both conditions | `page.getByRole('button').and(page.getByTitle('Subscribe'))` |
+| `.or()` | Match either condition | `page.getByRole('button').or(page.getByRole('link'))` |
+| `.filter({ hasNot })` | Exclude matching elements | `items.filter({ hasNot: page.getByText('Sold') })` |
+| `.filter({ hasNotText })` | Exclude by text | `items.filter({ hasNotText: 'Out of stock' })` |
+| `.filter({ visible })` | Match only visible (v1.51+) | `buttons.filter({ visible: true })` |
+
 ### Common Role Mappings
 
 | HTML Element | ARIA Role | Example Locator |
@@ -426,6 +436,33 @@ test("can view order details", async ({ page, orderId }) => {
 | `toHaveURL()` | Page URL matches | `await expect(page).toHaveURL('/dashboard')` |
 | `toHaveTitle()` | Page title | `await expect(page).toHaveTitle('Home')` |
 | `toHaveScreenshot()` | Visual match | `await expect(page).toHaveScreenshot('home.png')` |
+| `toMatchAriaSnapshot()` | ARIA tree match (v1.49+) | `await expect(nav).toMatchAriaSnapshot('- link "Home"')` |
+| `toBeAttached()` | Element in DOM (v1.33+) | `await expect(element).toBeAttached()` |
+| `toContainClass()` | Has CSS classes (v1.52+) | `await expect(button).toContainClass('primary')` |
+| `toHaveAccessibleName()` | Accessible name (v1.44+) | `await expect(button).toHaveAccessibleName('Submit')` |
+| `toHaveAccessibleDescription()` | Accessible description (v1.44+) | `await expect(input).toHaveAccessibleDescription('Enter email')` |
+| `toHaveRole()` | ARIA role (v1.44+) | `await expect(element).toHaveRole('button')` |
+| `toHaveAccessibleErrorMessage()` | Error message (v1.50+) | `await expect(input).toHaveAccessibleErrorMessage(/required/)` |
+
+### Polling Assertions (v1.50+)
+
+```typescript
+// Custom polling for complex async conditions
+await expect(async () => {
+  const status = await page.getByTestId("status").textContent();
+  expect(status).toBe("Complete");
+}).toPass({
+  timeout: 30000,
+  intervals: [500, 1000, 2000], // Retry at these intervals
+});
+```
+
+### URL Assertions with Options (v1.50+)
+
+```typescript
+// Case-insensitive URL matching
+await expect(page).toHaveURL("/profile", { ignoreCase: true });
+```
 
 ### Negated Assertions
 
@@ -448,6 +485,24 @@ await expect.soft(element3).toBeEnabled();
 
 ---
 
+## Clock API Quick Reference (v1.45+)
+
+Control time in tests for time-dependent features like countdowns and session timeouts.
+
+| Method | Description | Example |
+|--------|-------------|---------|
+| `clock.install()` | Initialize clock at specific time | `await page.clock.install({ time: new Date('2024-01-01') })` |
+| `clock.pauseAt()` | Pause time at specific moment | `await page.clock.pauseAt(new Date('2024-01-01T10:00'))` |
+| `clock.fastForward()` | Jump time forward | `await page.clock.fastForward('30:00')` (30 minutes) |
+| `clock.resume()` | Resume normal time flow | `await page.clock.resume()` |
+| `clock.setFixedTime()` | Fix `Date.now()` while timers run | `await page.clock.setFixedTime(new Date())` |
+| `clock.runFor()` | Manually tick through time | `await page.clock.runFor(1000)` (1 second) |
+| `clock.setSystemTime()` | Update current system time | `await page.clock.setSystemTime(new Date())` |
+
+**CRITICAL:** `clock.install()` MUST be called before any other clock methods in your test.
+
+---
+
 ## Configuration Quick Reference
 
 ### Essential Configuration Options
@@ -465,6 +520,9 @@ await expect.soft(element3).toBeEnabled();
 | `use.trace` | When to capture trace | `'on-first-retry'` |
 | `use.screenshot` | When to capture screenshot | `'only-on-failure'` |
 | `use.video` | When to capture video | `'retain-on-failure'` |
+| `updateSnapshots` | When to update snapshots (v1.50+) | `'changed'` (only modified) |
+| `failOnFlakyTests` | Fail on flaky detection (v1.52+) | `true` |
+| `testProject.workers` | Workers per project (v1.52+) | `2` |
 
 ### CLI Commands
 
@@ -508,6 +566,26 @@ npx playwright show-report
 # View trace file
 npx playwright show-trace trace.zip
 ```
+
+---
+
+## Breaking Changes & Deprecations
+
+### v1.57 (Latest)
+- **Chrome for Testing**: Playwright now uses Chrome for Testing instead of Chromium for both headed and headless modes
+- **`page.accessibility` removed**: Use external libraries like Axe for accessibility auditing
+
+### v1.54
+- **Node.js 16 removed**: Minimum Node.js version is now 18
+- **Node.js 18 deprecated**: Plan to upgrade to Node.js 20+
+
+### v1.50
+- **`toBeEditable()` throws**: Now throws on non-editable elements instead of returning false
+- **`updateSnapshots: 'all'`**: Updates all snapshots; use `'changed'` for previous behavior
+
+### v1.48
+- **`route.continue()` Cookie change**: Cannot override Cookie header; use `browserContext.addCookies()` instead
+- **Glob patterns**: `?` and `[]` no longer supported in URL patterns; use regex instead
 
 ---
 

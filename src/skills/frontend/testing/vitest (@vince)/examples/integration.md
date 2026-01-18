@@ -68,8 +68,11 @@ describe("Features", () => {
 import { vi } from "vitest";
 import { getFeatures } from "../api";
 
+// Note: vi.mock is hoisted - runs before imports
+// Factory must return object with explicit exports (unlike Jest)
 vi.mock("../api", () => ({
   getFeatures: vi.fn(),
+  // For default exports: default: vi.fn()
 }));
 
 test("renders features", async () => {
@@ -79,6 +82,23 @@ test("renders features", async () => {
 ```
 
 **Why bad:** Module-level mocks break when import structure changes, mocking at wrong level defeats purpose of integration testing, doesn't test network layer or serialization, maintenance nightmare when refactoring
+
+**Vitest-specific notes:**
+
+- Unlike Jest, `vi.mock` factory must return an object with explicit exports
+- Default exports require `default` key in the returned object
+- Use `importOriginal` parameter to access original module when partially mocking:
+
+```typescript
+// If you must use module mocks, use importOriginal (v3+)
+vi.mock("../api", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("../api")>();
+  return {
+    ...mod,
+    getFeatures: vi.fn(), // Override only specific export
+  };
+});
+```
 
 ---
 

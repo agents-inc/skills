@@ -54,6 +54,11 @@ description: Playwright E2E testing patterns - test structure, Page Object Model
 - Network mocking and interception
 - Visual regression testing
 - Parallel execution and configuration
+- Clock API for time-dependent testing (v1.45+)
+- ARIA snapshot testing for accessibility (v1.49+)
+- Worker-scoped fixtures for performance
+- Locator operators: and(), or(), filter({ visible, hasNot }) (v1.50+)
+- New accessibility assertions (v1.44+): toHaveAccessibleName, toHaveRole
 
 **Detailed Resources:**
 
@@ -278,9 +283,34 @@ await page
   .filter({ has: page.getByText("Active") })
   .getByRole("button", { name: /edit/i })
   .click();
+
+// Filter by NOT having element (v1.50+)
+await page
+  .getByRole("listitem")
+  .filter({ hasNot: page.getByText("Out of stock") })
+  .first()
+  .click();
+
+// Filter only visible elements (v1.51+)
+await page.locator("button").filter({ visible: true }).click();
 ```
 
 **Why good:** Chains narrow down to specific elements without fragile selectors, filter() handles dynamic lists gracefully, scoping to regions prevents selecting wrong elements
+
+#### Locator Operators (v1.50+)
+
+```typescript
+// Combine conditions with .and() - element must match both
+const subscribedButton = page.getByRole("button").and(page.getByTitle("Subscribe"));
+await subscribedButton.click();
+
+// Match either alternative with .or() - useful for conditional UI
+const newEmail = page.getByRole("button", { name: "New" });
+const dialog = page.getByText("Confirm security settings");
+await expect(newEmail.or(dialog).first()).toBeVisible();
+```
+
+**Why good:** `.and()` creates precise matches without fragile selectors, `.or()` handles conditional UI states elegantly, both compose with existing locators
 
 ---
 

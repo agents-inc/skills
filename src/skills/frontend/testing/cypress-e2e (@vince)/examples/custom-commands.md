@@ -87,10 +87,12 @@ declare namespace Cypress {
 ```typescript
 // cypress/support/commands.ts
 const LOGIN_URL = "/login";
+const DASHBOARD_URL = "/dashboard";
 
 export function registerAuthCommands() {
   /**
    * Log in a user via UI with session caching
+   * Uses cacheAcrossSpecs for performance across spec files
    */
   Cypress.Commands.add("login", (email: string, password: string) => {
     cy.session(
@@ -100,12 +102,15 @@ export function registerAuthCommands() {
         cy.getBySel("email-input").type(email);
         cy.getBySel("password-input").type(password);
         cy.getBySel("submit-button").click();
-        cy.url().should("include", "/dashboard");
+        // GUARDING ASSERTION - ensures session is cached after auth flow completes
+        cy.url().should("include", DASHBOARD_URL);
       },
       {
         validate: () => {
           cy.getCookie("session").should("exist");
         },
+        // Cache session across spec files for faster test runs (Cypress 12.4+)
+        cacheAcrossSpecs: true,
       }
     );
   });
@@ -604,6 +609,104 @@ declare namespace Cypress {
   }
 }
 ```
+
+---
+
+## Pattern 7: Multi-Origin Testing with cy.origin() (Cypress 14+)
+
+Cypress 14 requires `cy.origin()` for tests that navigate across different origins (scheme + hostname + port). This is essential for OAuth, SSO, and cross-domain workflows.
+
+### OAuth/SSO Login Pattern
+
+```typescript
+// cypress/support/commands.ts
+const OAUTH_PROVIDER_URL = "https://auth.provider.com";
+
+export function registerOAuthCommands() {
+  /**
+   * Log in via external OAuth provider using cy.origin()
+   * Required in Cypress 14+ for cross-origin interactions
+   */
+  Cypress.Commands.add(
+    "loginViaOAuth",
+    (email: string, password: string, providerUrl: string = OAUTH_PROVIDER_URL) => {
+      cy.session(
+        ["oauth", email],
+        () => {
+          cy.visit("/login");
+          cy.getBySel("oauth-login-button").click();
+
+          // Handle external OAuth provider
+          cy.origin(providerUrl, { args: { email, password } }, ({ email, password }) => {
+            cy.get("#email").type(email);
+            cy.get("#password").type(password);
+            cy.get("#submit").click();
+          });
+
+          // Back on original origin after redirect
+          cy.url().should("include", "/dashboard");
+        },
+        {
+          validate: () => {
+            cy.getCookie("session").should("exist");
+          },
+          cacheAcrossSpecs: true,
+        }
+      );
+    }
+  );
+}
+
+// Usage in tests
+describe("OAuth Login", () => {
+  it("logs in via Google OAuth", () => {
+    cy.loginViaOAuth("user@gmail.com", "password", "https://accounts.google.com");
+    cy.visit("/profile");
+    cy.getBySel("user-email").should("contain", "user@gmail.com");
+  });
+});
+```
+
+### Type Declarations for OAuth
+
+```typescript
+// cypress/support/index.d.ts
+declare namespace Cypress {
+  interface Chainable<Subject = any> {
+    /**
+     * Log in via external OAuth provider
+     * Uses cy.origin() for cross-origin interaction (Cypress 14+)
+     * @param email - User email for OAuth provider
+     * @param password - User password for OAuth provider
+     * @param providerUrl - OAuth provider URL (optional)
+     */
+    loginViaOAuth(email: string, password: string, providerUrl?: string): Chainable<void>;
+  }
+}
+```
+
+### Cross-Subdomain Navigation
+
+```typescript
+// When navigating between subdomains (e.g., app.example.com and api.example.com)
+describe("Cross-Subdomain Flow", () => {
+  it("handles subdomain navigation", () => {
+    cy.visit("https://app.example.com/settings");
+
+    // Navigate to different subdomain
+    cy.origin("https://admin.example.com", () => {
+      cy.visit("/admin");
+      cy.getBySel("admin-panel").should("be.visible");
+    });
+
+    // Return to original subdomain
+    cy.visit("https://app.example.com/dashboard");
+    cy.getBySel("dashboard").should("be.visible");
+  });
+});
+```
+
+**Why cy.origin() is required:** Chrome deprecated `document.domain` setting and introduced origin-keyed agent clusters, which Cypress previously relied on for cross-origin testing. In Cypress 14+, `cy.origin()` is mandatory for any test that interacts with multiple origins (scheme + hostname + port).
 
 ---
 

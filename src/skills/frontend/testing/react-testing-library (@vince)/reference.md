@@ -119,6 +119,44 @@ Testing a custom hook?
 
 ---
 
+## within() Usage Reference
+
+| Use Case | Example |
+|----------|---------|
+| Table rows | `within(row).getByRole("button", { name: /edit/i })` |
+| Card components | `within(card).getByText(/price/i)` |
+| Form sections | `within(section).getByLabelText(/email/i)` |
+| Modal dialogs | `within(modal).getByRole("button", { name: /close/i })` |
+| Navigation | `within(nav).getByRole("link", { name: /home/i })` |
+
+**When to use within:**
+- Multiple elements with same role/text on page
+- Testing specific rows in tables
+- Testing specific cards in lists
+- Testing forms with repeated field labels
+
+---
+
+## Configuration Reference
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `testIdAttribute` | `"data-testid"` | Attribute used by `getByTestId` |
+| `asyncUtilTimeout` | `1000` | Default timeout for async utilities (ms) |
+| `reactStrictMode` | `false` | Enable React strict mode warnings |
+| `throwSuggestions` | `false` | Throw on deprecated usage |
+
+### userEvent Setup Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `advanceTimers` | `undefined` | Function to advance fake timers (required with fake timers) |
+| `delay` | `0` | Delay between events in ms (`null` = no delay) |
+| `pointerEventsCheck` | `2` | Pointer events validation (0=never, 1=once, 2=per API) |
+| `skipHover` | `false` | Skip hover events on click |
+
+---
+
 ## Common Role Reference
 
 | Role | Elements | Example Query |

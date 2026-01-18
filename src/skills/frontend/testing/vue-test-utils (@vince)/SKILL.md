@@ -301,9 +301,12 @@ See [examples/async.md](examples/async.md) for complete async testing examples.
 
 ---
 
-### Pattern 5: Testing Components with findComponent
+### Pattern 5: Testing Components with findComponent/getComponent
 
-Use `findComponent()` to interact with child Vue components directly. Useful for testing component communication.
+Use `findComponent()` or `getComponent()` to interact with child Vue components directly. Useful for testing component communication.
+
+- **`getComponent()`** - Throws error if not found (use when component **must** exist)
+- **`findComponent()`** - Returns empty wrapper if not found (use when component **may not** exist)
 
 #### Component Queries
 
@@ -317,8 +320,8 @@ test("passes props to child component", () => {
     props: { message: "Hello" },
   });
 
-  // Find child component by component definition
-  const child = wrapper.findComponent(ChildComponent);
+  // getComponent() - throws if not found (clearer error messages)
+  const child = wrapper.getComponent(ChildComponent);
 
   // Assert props passed correctly
   expect(child.props("message")).toBe("Hello");
@@ -326,13 +329,24 @@ test("passes props to child component", () => {
 
 test("receives emitted events from child", async () => {
   const wrapper = mount(ParentComponent);
-  const child = wrapper.findComponent(ChildComponent);
+  const child = wrapper.getComponent(ChildComponent);
 
   // Trigger event on child
   await child.vm.$emit("update", "new value");
 
   // Assert parent handled the event
   expect(wrapper.vm.value).toBe("new value");
+});
+
+test("conditionally rendered child component", () => {
+  const wrapper = mount(ParentComponent, {
+    props: { showChild: false },
+  });
+
+  // findComponent() - returns empty wrapper (check with .exists())
+  const child = wrapper.findComponent(ChildComponent);
+
+  expect(child.exists()).toBe(false);
 });
 
 test("finds component by name", () => {
@@ -345,7 +359,9 @@ test("finds component by name", () => {
 });
 ```
 
-**When to use findComponent:** When you need to test parent-child communication, verify props passed to children, or trigger events from child components.
+**When to use getComponent vs findComponent:**
+- Use `getComponent` when the child **must** exist - provides clearer error messages on failure
+- Use `findComponent` when the child **may not** exist - check with `.exists()` first
 
 ---
 
@@ -470,6 +486,8 @@ See [examples/mocking.md](examples/mocking.md) for complete mocking examples.
 - `shallowMount` stubs ALL child components including those from component libraries
 - `flushPromises()` only resolves Promises - not `setTimeout` (use fake timers)
 - Emitted events array grows across interactions - check specific index for assertions
+- **`setData()` does NOT work with Composition API** - it only works with Options API `data()` function
+- `isVisible()` requires `attachTo: document.body` to work correctly
 
 </red_flags>
 

@@ -4,6 +4,168 @@
 
 ---
 
+## Vitest v3/v4 Notes
+
+> **Current Stable:** Vitest 4.x (released 2025). v4 marks Browser Mode as stable and includes visual regression testing.
+
+**Test Options Syntax (v3+ breaking change):**
+
+```typescript
+// CORRECT (v3+): Options as second argument
+test("example", { retry: 2 }, () => {
+  /* ... */
+});
+
+// Include timeout in options object (NOT as third argument)
+test("heavy test", { retry: 2, timeout: 10_000 }, () => {
+  /* ... */
+});
+
+// DEPRECATED (v2): Options as third argument - NO LONGER WORKS in v4
+test("example", () => {}, { retry: 2 }); // INVALID
+```
+
+**CRITICAL:** When using options object, you cannot also pass timeout as third argument:
+
+```typescript
+// WRONG: Cannot combine options object with third argument
+test("test", { skip: true }, () => {}, 10_000); // INVALID
+
+// CORRECT: Include timeout in options object
+test("test", { skip: true, timeout: 10_000 }, () => {}); // VALID
+```
+
+**Workspace Migration (v3.2+ - workspace deprecated):**
+
+```typescript
+// OLD: vitest.workspace.js file (DEPRECATED in v3.2)
+// OLD: test: { workspace: './vitest.workspace.js' } (DEPRECATED)
+
+// NEW: use `projects` directly in vitest.config.ts
+export default defineConfig({
+  test: {
+    projects: ["./packages/*"],
+  },
+});
+
+// With inline configuration
+export default defineConfig({
+  test: {
+    projects: [
+      "packages/*",
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["tests/**/*.unit.test.ts"],
+        },
+      },
+    ],
+  },
+});
+```
+
+**Pool Configuration (v4 breaking change):**
+
+```typescript
+// OLD (v3): maxThreads/maxForks
+export default defineConfig({
+  test: {
+    poolOptions: {
+      threads: { maxThreads: 4 },
+    },
+  },
+});
+
+// NEW (v4): maxWorkers (unified)
+export default defineConfig({
+  test: {
+    maxWorkers: 4,
+    // For single-worker mode (replaces singleThread/singleFork):
+    // maxWorkers: 1, isolate: false
+  },
+});
+```
+
+**Coverage Changes (v4):**
+
+```typescript
+// REMOVED in v4: coverage.all option
+// V8 provider now uses AST-based analysis (more accurate)
+
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"], // REQUIRED: Must explicitly define
+      // REMOVED: all, ignoreEmptyLines, experimentalAstAwareRemapping
+    },
+  },
+});
+```
+
+**New Matchers (v4):**
+
+```typescript
+import { expect, test } from "vitest";
+import { z } from "zod";
+
+// Schema validation with Zod/Valibot/ArkType (Standard Schema v1)
+const userSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+});
+
+test("validates user schema", () => {
+  const user = { name: "John", email: "john@example.com" };
+  expect(user).toMatchSchema(userSchema);
+});
+
+// Chai assertions via expect.assert
+test("chai assertions", () => {
+  expect.assert.isArray([]);
+  expect.assert.isAbove(5, 2);
+});
+```
+
+**vi.mockObject (v3.2+):**
+
+```typescript
+import { vi } from "vitest";
+
+// Deep mock an object with all methods as spies
+const mockService = vi.mockObject({
+  getUser: () => ({ id: 1, name: "Test" }),
+  saveUser: (user: User) => user,
+});
+
+// With spy option to preserve implementations while tracking calls
+const trackedService = vi.mockObject(realService, { spy: true });
+```
+
+**vi.mock Factory with importOriginal:**
+
+```typescript
+import { vi } from "vitest";
+
+// Access original module in factory
+vi.mock("./module.js", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("./module.js")>();
+  return {
+    ...mod,
+    namedExport: vi.fn(), // Override specific export
+  };
+});
+
+// For default exports, must use `default` key
+vi.mock("./module.js", () => ({
+  default: vi.fn(),
+  namedExport: vi.fn(),
+}));
+```
+
+---
+
 ## Decision Framework
 
 ```
@@ -189,6 +351,11 @@ checkout-flow.spec.ts   (E2E test)
 - Network mock handlers are typically global - always reset handlers after each test to prevent test pollution
 - Async updates in React require `waitFor()` or `findBy*` queries - using `getBy*` queries immediately will cause flaky failures
 - Test files named `*.test.ts` run with Vitest, `*.spec.ts` run with Playwright - mixing these up causes wrong test runner to execute tests
+- **Vitest v4:** `vi.fn()` returns "vi.fn()" instead of "spy" by default - update any assertions checking mock names
+- **Vitest v4:** `vi.restoreAllMocks()` only affects manually created spies, not automocks - use `vi.resetAllMocks()` for full reset
+- **Vitest v4:** Automocked getters return `undefined` by default instead of calling original getters
+- **Vitest v3+:** Test options must be second argument, not third - `test("name", { timeout: 10_000 }, () => {})` NOT `test("name", () => {}, { timeout: 10_000 })`
+- **Vitest v3.2+:** `workspace` config deprecated in favor of `projects` - migrate to `test: { projects: [...] }`
 
 ---
 

@@ -8,6 +8,7 @@
 - [api-mocking.md](api-mocking.md) - Response interception and modification
 - [page-objects.md](page-objects.md) - Page object hierarchy, base page inheritance
 - [fixtures.md](fixtures.md) - Combined fixtures, database seeding
+- [advanced-features.md](advanced-features.md) - Clock API, ARIA snapshots, worker fixtures, toPass polling (v1.50+)
 
 ---
 
@@ -434,4 +435,4 @@ export { expect };
 
 ---
 
-_Extended examples: [visual-testing.md](visual-testing.md) | [configuration.md](configuration.md) | [api-mocking.md](api-mocking.md) | [page-objects.md](page-objects.md) | [fixtures.md](fixtures.md)_
+_Extended examples: [visual-testing.md](visual-testing.md) | [configuration.md](configuration.md) | [api-mocking.md](api-mocking.md) | [page-objects.md](page-objects.md) | [fixtures.md](fixtures.md) | [advanced-features.md](advanced-features.md)_

@@ -106,6 +106,10 @@ What selector to use?
 | `findComponent(comp)` | VueWrapper | No (empty wrapper) | Child component may not exist |
 | `findAllComponents(comp)` | VueWrapper[] | No (empty array) | Multiple child components |
 
+**Note:** `getComponent` vs `findComponent` follows the same pattern as `get` vs `find`:
+- Use `getComponent` when the component **must** exist (clearer error messages)
+- Use `findComponent` when the component **may not** exist (check with `.exists()`)
+
 ### DOM Interaction Methods
 
 | Method | Description | Returns | Must Await |
@@ -133,7 +137,7 @@ What selector to use?
 | `exists()` | Element exists in DOM | `wrapper.find('.error').exists()` |
 | `isVisible()` | Element is visible | `wrapper.get('.modal').isVisible()` |
 | `text()` | Get text content | `wrapper.get('h1').text()` |
-| `html()` | Get HTML content | `wrapper.html()` |
+| `html(options?)` | Get HTML content | `wrapper.html()` or `wrapper.html({ raw: true })` |
 | `classes()` | Get CSS classes | `wrapper.classes()` |
 | `classes(name)` | Check for class | `wrapper.classes('active')` |
 | `attributes()` | Get all attributes | `wrapper.attributes()` |
@@ -216,6 +220,26 @@ mount(Component, {
   // IMPORTANT: Clean up after test
   // wrapper.unmount() removes from document
 });
+```
+
+### Global Configuration
+
+```typescript
+import { config } from "@vue/test-utils";
+
+// Set project-wide defaults (same structure as mounting `global` options)
+config.global.stubs = {
+  RouterLink: true,
+  RouterView: true,
+};
+
+// Render default slot content even in shallow mounts
+config.global.renderStubDefaultSlot = true;
+
+// Auto-unmount wrappers after tests (Vitest example)
+import { enableAutoUnmount } from "@vue/test-utils";
+
+enableAutoUnmount(afterEach);
 ```
 
 ---
