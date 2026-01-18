@@ -29,7 +29,7 @@ description: Vue 3 Composition API patterns, reactivity primitives, composables,
 
 ---
 
-**Auto-detection:** Vue 3 Composition API, script setup, ref, reactive, computed, watch, watchEffect, composables, onMounted, onUnmounted, defineProps, defineEmits, defineExpose, provide, inject, Suspense
+**Auto-detection:** Vue 3 Composition API, script setup, ref, reactive, computed, watch, watchEffect, composables, onMounted, onUnmounted, defineProps, defineEmits, defineExpose, defineModel, useTemplateRef, useId, onWatcherCleanup, provide, inject, Suspense
 
 **When to use:**
 
@@ -45,7 +45,9 @@ description: Vue 3 Composition API patterns, reactivity primitives, composables,
 - Reactivity primitives (ref, reactive, computed, watch, watchEffect)
 - Lifecycle hooks (onMounted, onUnmounted, onUpdated)
 - Composables pattern for logic reuse
-- Template refs and component refs
+- Template refs with useTemplateRef() (Vue 3.5+)
+- defineModel() for v-model binding (Vue 3.4+)
+- useId() for SSR-safe unique IDs (Vue 3.5+)
 - Provide/Inject for dependency injection
 - Async components and Suspense
 
@@ -510,17 +512,140 @@ export function useFetch<T>(url: MaybeRefOrGetter<string>): UseFetchReturn<T> {
 
 ---
 
-### Pattern 6: Template Refs and Component Refs
+### Pattern 6: defineModel for v-model (Vue 3.4+)
 
-Access DOM elements and child component instances via template refs.
+Use `defineModel()` macro to simplify two-way binding on custom components. Replaces manual `defineProps` + `defineEmits` pattern.
 
-#### DOM Element Refs
+#### Basic defineModel
+
+```vue
+<!-- ✅ Good Example - Child component with defineModel -->
+<script setup lang="ts">
+// defineModel creates both the prop and emit automatically
+const model = defineModel<string>()
+</script>
+
+<template>
+  <input v-model="model" type="text" />
+</template>
+```
+
+```vue
+<!-- Parent component -->
+<script setup lang="ts">
+import { ref } from 'vue'
+import TextInput from './TextInput.vue'
+
+const text = ref('')
+</script>
+
+<template>
+  <TextInput v-model="text" />
+</template>
+```
+
+**Why good:** Single line replaces defineProps + defineEmits + manual emit, ref-like API for direct mutation, works directly with native v-model
+
+#### Named Models (Multiple v-models)
+
+```vue
+<!-- ✅ Good Example - Multiple v-model bindings -->
+<script setup lang="ts">
+const firstName = defineModel<string>('firstName')
+const lastName = defineModel<string>('lastName')
+</script>
+
+<template>
+  <input v-model="firstName" placeholder="First name" />
+  <input v-model="lastName" placeholder="Last name" />
+</template>
+```
+
+```vue
+<!-- Parent usage -->
+<template>
+  <UserName v-model:first-name="first" v-model:last-name="last" />
+</template>
+```
+
+**Why good:** Cleaner than manual prop/emit for multiple bindings, kebab-case in template maps to camelCase in script
+
+#### defineModel with Options
+
+```vue
+<script setup lang="ts">
+// Required model
+const title = defineModel<string>('title', { required: true })
+
+// Model with default
+const count = defineModel<number>({ default: 0 })
+</script>
+```
+
+#### defineModel with Modifiers
+
+```vue
+<!-- ✅ Good Example - Handling v-model modifiers -->
+<script setup lang="ts">
+const [model, modifiers] = defineModel<string>({
+  set(value) {
+    // Transform value on set based on modifiers
+    if (modifiers.capitalize && value) {
+      return value.charAt(0).toUpperCase() + value.slice(1)
+    }
+    return value
+  }
+})
+</script>
+
+<template>
+  <input v-model="model" type="text" />
+</template>
+```
+
+```vue
+<!-- Parent with modifier -->
+<template>
+  <TextInput v-model.capitalize="text" />
+</template>
+```
+
+**Why good:** Access to modifiers via destructure, setter transforms value before emit, clean handling of custom modifiers
+
+---
+
+### Pattern 7: Template Refs with useTemplateRef (Vue 3.5+)
+
+Use `useTemplateRef()` for template references, especially for dynamic refs. Falls back to `ref()` pattern for simple static refs.
+
+#### useTemplateRef (Vue 3.5+)
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef, onMounted } from 'vue'
+
+// ✅ Good Example - useTemplateRef for template refs
+const inputRef = useTemplateRef<HTMLInputElement>('input')
+
+onMounted(() => {
+  inputRef.value?.focus()
+})
+</script>
+
+<template>
+  <input ref="input" type="text" />
+</template>
+```
+
+**Why good:** String-based ref binding, works with dynamic ref IDs, clearer separation between reactive refs and template refs
+
+#### Traditional ref() Pattern (All Vue 3 versions)
 
 ```vue
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-// ✅ Ref name matches template ref attribute
+// ✅ Still valid - ref name matches template ref attribute
 const inputRef = ref<HTMLInputElement | null>(null)
 
 onMounted(() => {
@@ -590,7 +715,63 @@ function resetChild() {
 
 ---
 
-### Pattern 7: Provide/Inject Dependency Injection
+### Pattern 8: useId for Accessible IDs (Vue 3.5+)
+
+Use `useId()` to generate unique IDs for form elements and ARIA attributes. IDs are stable across SSR and client renders.
+
+```vue
+<script setup lang="ts">
+import { useId } from 'vue'
+
+// ✅ Good Example - SSR-safe unique ID for form accessibility
+const id = useId()
+</script>
+
+<template>
+  <div>
+    <label :for="id">Email address</label>
+    <input :id="id" type="email" />
+  </div>
+</template>
+```
+
+**Why good:** SSR-safe (no hydration mismatch), unique per component instance, multiple calls generate different IDs, replaces manual ID generation
+
+#### Multiple IDs in One Component
+
+```vue
+<script setup lang="ts">
+import { useId } from 'vue'
+
+// Each call generates a different ID
+const nameId = useId()
+const emailId = useId()
+const passwordId = useId()
+</script>
+
+<template>
+  <form>
+    <div>
+      <label :for="nameId">Name</label>
+      <input :id="nameId" type="text" />
+    </div>
+    <div>
+      <label :for="emailId">Email</label>
+      <input :id="emailId" type="email" />
+    </div>
+    <div>
+      <label :for="passwordId">Password</label>
+      <input :id="passwordId" type="password" />
+    </div>
+  </form>
+</template>
+```
+
+**Why good:** Each call produces unique ID, stable across server/client, no need for uuid libraries
+
+---
+
+### Pattern 10: Provide/Inject Dependency Injection
 
 Share data between ancestor and descendant components without prop drilling.
 
@@ -662,15 +843,16 @@ const { theme, toggleTheme } = themeContext
 
 ---
 
-### Pattern 8: Props and Emits with TypeScript
+### Pattern 11: Props and Emits with TypeScript
 
 Use defineProps and defineEmits with TypeScript for type-safe component interfaces.
 
-#### Props with Defaults (Vue 3.5+)
+#### Props with Reactive Destructure (Vue 3.5+) - Recommended
 
 ```vue
 <script setup lang="ts">
 // ✅ Reactive destructure with defaults (Vue 3.5+)
+// Props are automatically reactive - no .value needed
 const {
   title,
   count = 0,
@@ -680,15 +862,20 @@ const {
   count?: number
   items?: string[]
 }>()
+
+// ⚠️ IMPORTANT: Wrap destructured props in getter for watch/composables
+watch(() => count, (newCount) => {
+  console.log('Count changed:', newCount)
+})
 </script>
 ```
 
-#### Props with Defaults (Vue 3.4 and below)
+**Why good:** Native JavaScript default syntax, cleaner than withDefaults, automatically reactive in Vue 3.5+
+
+#### Props with withDefaults (Vue 3.4 and below)
 
 ```vue
 <script setup lang="ts">
-import { withDefaults } from 'vue'
-
 interface Props {
   title: string
   count?: number
@@ -701,6 +888,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 </script>
 ```
+
+**Why good:** Still works in Vue 3.5+, explicit about defaults, familiar pattern
 
 #### Emits with Validation
 
@@ -727,7 +916,7 @@ function handleDelete(id: string) {
 
 ---
 
-### Pattern 9: Async Components and Suspense
+### Pattern 12: Async Components and Suspense
 
 Lazy-load components and handle async operations gracefully.
 

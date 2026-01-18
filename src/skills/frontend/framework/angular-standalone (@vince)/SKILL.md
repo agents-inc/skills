@@ -1,11 +1,11 @@
 ---
 name: frontend/angular-standalone (@vince)
-description: Angular 17+ standalone components, signals, control flow, dependency injection patterns
+description: Angular 17-19 standalone components, signals, control flow, dependency injection patterns
 ---
 
 # Angular Standalone Components
 
-> **Quick Guide:** Use `standalone: true` for all components. Use `signal()`, `computed()`, `effect()` for reactive state. Use `input()`, `output()`, `model()` for component communication. Use `@if`, `@for`, `@switch`, `@defer` for template control flow. Use `inject()` for dependency injection.
+> **Quick Guide:** Components are standalone by default in Angular 19. Use `signal()`, `computed()`, `effect()`, `linkedSignal()` for reactive state. Use `input()`, `output()`, `model()` for component communication. Use `@if`, `@for`, `@switch`, `@defer` for template control flow. Use `inject()` for dependency injection. Use `resource()` for async data fetching.
 
 ---
 
@@ -15,7 +15,7 @@ description: Angular 17+ standalone components, signals, control flow, dependenc
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `standalone: true` on ALL components, directives, and pipes)**
+**(You MUST use `standalone: true` on ALL components, directives, and pipes - it's the default in Angular 19 but be explicit for clarity)**
 
 **(You MUST use `input()`, `output()`, `model()` functions instead of `@Input()`, `@Output()` decorators)**
 
@@ -25,28 +25,33 @@ description: Angular 17+ standalone components, signals, control flow, dependenc
 
 **(You MUST use `track` expression in ALL `@for` loops)**
 
+**(You MUST use `linkedSignal()` instead of manual signal synchronization for dependent writable state)**
+
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Angular component, standalone component, signal, computed, effect, input(), output(), model(), @if, @for, @switch, @defer, inject(), provideRouter
+**Auto-detection:** Angular component, standalone component, signal, computed, effect, linkedSignal, resource, rxResource, input(), output(), model(), @if, @for, @switch, @defer, inject(), provideRouter, afterRenderEffect
 
 **When to use:**
 
-- Building Angular 17+ components with standalone architecture
+- Building Angular 17-19 components with standalone architecture
 - Implementing reactive state with signals
 - Creating component communication with signal-based inputs/outputs
 - Setting up routing with standalone components
 - Lazy loading components with `@defer` or `loadComponent`
+- Fetching async data with `resource()` or `rxResource()`
 
 **Key patterns covered:**
 
-- Standalone component architecture
-- Signals for reactive state (signal, computed, effect)
+- Standalone component architecture (default in Angular 19)
+- Signals for reactive state (signal, computed, effect, linkedSignal)
+- Resource API for async data (resource, rxResource) [experimental]
 - Signal-based inputs and outputs (input, output, model)
 - Control flow blocks (@if, @for, @switch, @defer)
 - Dependency injection with inject()
 - Routing with provideRouter and loadComponent
+- DOM effects with afterRenderEffect()
 
 **When NOT to use:**
 
@@ -65,13 +70,14 @@ description: Angular 17+ standalone components, signals, control flow, dependenc
 
 ## Philosophy
 
-Angular 17+ embraces a standalone-first architecture that eliminates NgModule boilerplate. Signals provide synchronous, fine-grained reactivity for predictable state management. The new control flow syntax (`@if`, `@for`, `@switch`, `@defer`) is built into templates without imports, offering better type narrowing and smaller bundles. Components should be self-contained, lazy-loadable units that declare their own dependencies.
+Angular 17-19 embraces a standalone-first architecture that eliminates NgModule boilerplate. **In Angular 19, `standalone: true` is the default** - you only need to specify `standalone: false` for NgModule components. Signals provide synchronous, fine-grained reactivity for predictable state management. The new control flow syntax (`@if`, `@for`, `@switch`, `@defer`) is built into templates without imports, offering better type narrowing and smaller bundles. Components should be self-contained, lazy-loadable units that declare their own dependencies.
 
-**Angular's Three Pillars (17+):**
+**Angular's Four Pillars (17-19):**
 
-1. **Standalone Everything** - Components, directives, and pipes declare their own imports
-2. **Signal-Based Reactivity** - Synchronous, memoized, fine-grained change detection
+1. **Standalone by Default** - Components, directives, and pipes are standalone by default in v19
+2. **Signal-Based Reactivity** - Synchronous, memoized, fine-grained change detection with `signal()`, `computed()`, `linkedSignal()`
 3. **Built-In Control Flow** - Template syntax that requires no imports and optimizes at build time
+4. **Resource API** - Experimental async data fetching that integrates with signals (`resource()`, `rxResource()`)
 
 </philosophy>
 
@@ -83,7 +89,7 @@ Angular 17+ embraces a standalone-first architecture that eliminates NgModule bo
 
 ### Pattern 1: Standalone Component Structure
 
-All Angular 17+ components use `standalone: true` and declare their own imports.
+All Angular 17-19 components use `standalone: true` (the default in Angular 19) and declare their own imports.
 
 ```typescript
 // user-card.component.ts
@@ -753,7 +759,7 @@ const count$ = toObservable(this.count);
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use `standalone: true` on ALL components, directives, and pipes)**
+**(You MUST use `standalone: true` on ALL components, directives, and pipes - it's the default in Angular 19 but be explicit for clarity)**
 
 **(You MUST use `input()`, `output()`, `model()` functions instead of `@Input()`, `@Output()` decorators)**
 
@@ -762,6 +768,8 @@ const count$ = toObservable(this.count);
 **(You MUST use `@if`, `@for`, `@switch` control flow blocks, NOT `*ngIf`, `*ngFor`, `*ngSwitch`)**
 
 **(You MUST use `track` expression in ALL `@for` loops)**
+
+**(You MUST use `linkedSignal()` instead of manual signal synchronization for dependent writable state)**
 
 **Failure to follow these rules will produce legacy Angular code that misses performance optimizations and modern reactivity benefits.**
 

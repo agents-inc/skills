@@ -4,6 +4,23 @@
 
 ---
 
+## React Router v7 Migration Notice
+
+**Remix has merged into React Router v7.** The patterns documented here are for Remix v2 and remain valid for existing projects. However, several utilities are deprecated:
+
+| Remix v2 (Deprecated) | React Router v7 (Recommended) |
+|----------------------|-------------------------------|
+| `json(data)` | Return raw objects directly |
+| `json(data, { status, headers })` | `data(data, { status, headers })` |
+| `defer({ key: promise })` | Return `{ key: promise }` with Single Fetch |
+| `@remix-run/node` imports | `react-router` / `@react-router/node` |
+| `LoaderFunctionArgs` | `Route.LoaderArgs` (generated types) |
+| `ActionFunctionArgs` | `Route.ActionArgs` (generated types) |
+
+**See [Upgrading from Remix](https://reactrouter.com/upgrading/remix) for migration guide.**
+
+---
+
 ## Decision Framework
 
 ### When to Use Loader vs Action
@@ -16,23 +33,25 @@ Is this reading data?
     └─ NO → Neither (client-side only logic)
 ```
 
-### When to Use defer vs json
+### When to Use defer vs json (Remix v2)
+
+> **Note:** Both `json()` and `defer()` are deprecated in React Router v7. Use raw object returns and Single Fetch instead.
 
 ```
 Is this data critical for initial render?
-├─ YES → json() (wait for it)
+├─ YES → json() (wait for it) / await the data
 └─ NO → Can the page be useful without this data?
-    ├─ YES → defer() with Suspense fallback
-    └─ NO → json() (it's actually critical)
+    ├─ YES → defer() with Suspense fallback / return Promise directly
+    └─ NO → json() / await (it's actually critical)
 ```
 
-**Good candidates for defer():**
+**Good candidates for streaming (defer/Promises):**
 - Analytics and dashboard metrics
 - Comments and social features
 - Recommendations and suggestions
 - Secondary content below the fold
 
-**Keep in json() (critical data):**
+**Keep as awaited data (critical):**
 - User authentication state
 - Page title and main content
 - SEO-critical data
@@ -356,11 +375,21 @@ Forms default to GET, which won't trigger action.
 
 ### Response Utilities
 
-| Utility | Purpose |
-|---------|---------|
-| `json(data, init?)` | Return JSON response |
-| `redirect(url, init?)` | Redirect response |
-| `defer({ key: promise })` | Streaming response |
+| Utility | Purpose | Status |
+|---------|---------|--------|
+| `json(data, init?)` | Return JSON response | **Deprecated** - use raw objects |
+| `redirect(url, init?)` | Redirect response | Still valid |
+| `defer({ key: promise })` | Streaming response | **Deprecated** - use raw Promises |
+| `data(data, init?)` | Set headers/status (RR v7) | **New** in React Router v7 |
+
+### Action Types (React Router v7)
+
+| Type | Environment | Use Case |
+|------|------------|----------|
+| `action` | Server-only | Database operations, secure logic (recommended) |
+| `clientAction` | Browser-only | Client-side API calls, local state mutations |
+
+When both are defined, `clientAction` takes priority. Server actions are removed from client bundles.
 
 ### Component Reference
 

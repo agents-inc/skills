@@ -2,11 +2,14 @@
 category: framework
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1.1.0
 tags:
   - angular
+  - angular-19
   - standalone
   - signals
+  - linkedSignal
+  - resource
   - components
   - control-flow
   - dependency-injection

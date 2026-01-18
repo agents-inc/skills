@@ -1,6 +1,176 @@
 # SolidJS - Resource Examples
 
-> createResource for async data fetching. See [SKILL.md](../SKILL.md) for concepts.
+> createResource for async data fetching, plus SolidStart patterns with createAsync and query. See [SKILL.md](../SKILL.md) for concepts.
+
+---
+
+## SolidStart - createAsync with query (Recommended)
+
+### Good Example - Route data with query and createAsync
+
+```typescript
+// routes/users/[id].tsx - SolidStart file-based routing
+import { createAsync, query, type RouteDefinition } from '@solidjs/router';
+import { Suspense, ErrorBoundary, Show, type Component } from 'solid-js';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// Define the query with caching (replaces deprecated 'cache')
+const getUserQuery = query(async (userId: string) => {
+  'use server'; // Runs on server
+
+  const response = await fetch(`https://api.example.com/users/${userId}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user: ${response.status}`);
+  }
+
+  return response.json() as Promise<User>;
+}, 'user');
+
+// Preload function for route-level data loading
+export const route: RouteDefinition = {
+  preload: ({ params }) => getUserQuery(params.id)
+};
+
+// Page component
+const UserPage: Component = () => {
+  const params = useParams();
+
+  // createAsync is the recommended async primitive (thin wrapper over createResource)
+  // Will be the standard in Solid 2.0
+  const user = createAsync(() => getUserQuery(params.id));
+
+  return (
+    <ErrorBoundary fallback={(err) => <div>Error: {err.message}</div>}>
+      <Suspense fallback={<div class="skeleton">Loading user...</div>}>
+        <Show when={user()}>
+          {(userData) => (
+            <div class="user-profile">
+              <h1>{userData().name}</h1>
+              <p>{userData().email}</p>
+            </div>
+          )}
+        </Show>
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
+
+export default UserPage;
+```
+
+**Why good:** `query` provides caching and deduplication, `createAsync` is recommended for Solid 2.0, preload enables SSR data fetching, `'use server'` runs on server only
+
+### Good Example - Multiple queries with actions
+
+```typescript
+import { createAsync, query, action, useAction, revalidate } from '@solidjs/router';
+import { Show, For, type Component } from 'solid-js';
+
+interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+// Query for fetching todos
+const getTodosQuery = query(async () => {
+  'use server';
+  const response = await fetch('https://api.example.com/todos');
+  return response.json() as Promise<Todo[]>;
+}, 'todos');
+
+// Action for mutations (automatically revalidates queries)
+const toggleTodoAction = action(async (id: string) => {
+  'use server';
+  await fetch(`https://api.example.com/todos/${id}/toggle`, {
+    method: 'POST'
+  });
+  // Actions automatically revalidate all active queries by default
+}, 'toggleTodo');
+
+const addTodoAction = action(async (text: string) => {
+  'use server';
+  await fetch('https://api.example.com/todos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+}, 'addTodo');
+
+const TodoApp: Component = () => {
+  const todos = createAsync(() => getTodosQuery());
+  const toggleTodo = useAction(toggleTodoAction);
+  const addTodo = useAction(addTodoAction);
+
+  let inputRef: HTMLInputElement;
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    const text = inputRef.value.trim();
+    if (text) {
+      await addTodo(text);
+      inputRef.value = '';
+    }
+  };
+
+  return (
+    <div class="todo-app">
+      <form onSubmit={handleSubmit}>
+        <input ref={inputRef!} type="text" placeholder="Add todo..." />
+        <button type="submit">Add</button>
+      </form>
+
+      <ul>
+        <For each={todos()} fallback={<li>Loading...</li>}>
+          {(todo) => (
+            <li classList={{ completed: todo.completed }}>
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => toggleTodo(todo.id)}
+              />
+              <span>{todo.text}</span>
+            </li>
+          )}
+        </For>
+      </ul>
+    </div>
+  );
+};
+
+export { TodoApp };
+```
+
+**Why good:** `action` for server mutations with automatic revalidation, `useAction` for calling actions, queries deduplicate across components
+
+### Bad Example - Using deprecated cache API
+
+```typescript
+// BAD: 'cache' is deprecated since Solid Router v0.15.0
+import { cache, createAsync } from '@solidjs/router';
+
+// DEPRECATED - will be removed
+const getUser = cache(async (id: string) => {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}, 'user');
+
+// Use 'query' instead:
+import { query } from '@solidjs/router';
+
+const getUserQuery = query(async (id: string) => {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}, 'user');
+```
+
+**Why bad:** `cache` is deprecated since Solid Router v0.15.0, use `query` instead for the same functionality
 
 ---
 

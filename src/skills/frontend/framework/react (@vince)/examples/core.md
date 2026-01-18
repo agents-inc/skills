@@ -6,16 +6,16 @@
 - [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
 - [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
+- [react-19-hooks.md](react-19-hooks.md) - useActionState, useFormStatus, useOptimistic, use()
 
 ---
 
-## Component Architecture Examples
+## Component Architecture Examples (React 19)
 
-### Good Example - Component follows tier conventions
+### Good Example - React 19 ref as prop pattern
 
 ```typescript
 // packages/ui/src/components/button/button.tsx
-import { forwardRef } from "react";
 import { Slot } from "@radix-ui/react-slot";
 
 // Type-safe variant props
@@ -26,27 +26,49 @@ export type ButtonProps = React.ComponentProps<"button"> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   asChild?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
 };
 
+// React 19: ref is passed as a regular prop - no forwardRef needed
+export function Button({
+  variant = "default",
+  size = "default",
+  className,
+  asChild = false,
+  ref,
+  ...props
+}: ButtonProps) {
+  const Comp = asChild ? Slot : "button";
+  return (
+    <Comp
+      className={className}
+      data-variant={variant}
+      data-size={size}
+      ref={ref}
+      {...props}
+    />
+  );
+}
+```
+
+**Why good:** React 19 allows ref as a regular prop eliminating forwardRef boilerplate, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, data-attributes enable styling based on variants
+
+### Bad Example - Using deprecated forwardRef in React 19
+
+```typescript
+// WRONG - forwardRef is deprecated in React 19
+import { forwardRef } from "react";
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "default", size = "default", className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return (
-      <Comp
-        className={className}
-        data-variant={variant}
-        data-size={size}
-        ref={ref}
-        {...props}
-      />
-    );
+  ({ variant, size, className, ...props }, ref) => {
+    return <button className={className} ref={ref} {...props} />;
   }
 );
 
 Button.displayName = "Button";
 ```
 
-**Why good:** forwardRef enables ref forwarding for focus management and DOM access, named export enables tree-shaking and follows project conventions, className prop exposed for custom styling, displayName improves debugging in React DevTools, data-attributes enable styling based on variants
+**Why bad:** forwardRef is deprecated in React 19, adds unnecessary wrapper boilerplate, requires manual displayName assignment
 
 ### Bad Example - Missing critical patterns
 
@@ -60,17 +82,15 @@ export default function Button({ variant, size, onClick, children }) {
 }
 ```
 
-**Why bad:** default export prevents tree-shaking and violates project conventions, no ref forwarding breaks focus management and third-party library integrations, no className prop prevents customization, string interpolation for classes is not type-safe and prone to runtime errors, no TypeScript types means no compile-time safety
+**Why bad:** default export prevents tree-shaking and violates project conventions, no ref prop breaks focus management and third-party library integrations, no className prop prevents customization, string interpolation for classes is not type-safe and prone to runtime errors, no TypeScript types means no compile-time safety
 
 ---
 
-## Variant Props Examples
+## Variant Props Examples (React 19)
 
-### Good Example - Type-safe variant props
+### Good Example - Type-safe variant props with ref as prop
 
 ```typescript
-import { forwardRef } from "react";
-
 const ANIMATION_DURATION_MS = 200;
 
 // Define variant types explicitly
@@ -80,27 +100,32 @@ export type AlertSize = "sm" | "md" | "lg";
 export type AlertProps = React.ComponentProps<"div"> & {
   variant?: AlertVariant;
   size?: AlertSize;
+  ref?: React.Ref<HTMLDivElement>;
 };
 
-export const Alert = forwardRef<HTMLDivElement, AlertProps>(
-  ({ variant = "info", size = "md", className, style, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={className}
-        data-variant={variant}
-        data-size={size}
-        style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease`, ...style }}
-        {...props}
-      />
-    );
-  }
-);
-
-Alert.displayName = "Alert";
+// React 19: ref as a regular prop
+export function Alert({
+  variant = "info",
+  size = "md",
+  className,
+  style,
+  ref,
+  ...props
+}: AlertProps) {
+  return (
+    <div
+      ref={ref}
+      className={className}
+      data-variant={variant}
+      data-size={size}
+      style={{ transition: `all ${ANIMATION_DURATION_MS}ms ease`, ...style }}
+      {...props}
+    />
+  );
+}
 ```
 
-**Why good:** TypeScript union types provide autocomplete for variant values, data-attributes enable CSS styling based on variants, named constant for animation duration prevents magic numbers, forwardRef and displayName follow React conventions
+**Why good:** TypeScript union types provide autocomplete for variant values, data-attributes enable CSS styling based on variants, named constant for animation duration prevents magic numbers, React 19 ref as prop simplifies component definition
 
 ### Bad Example - Untyped variants with string interpolation
 

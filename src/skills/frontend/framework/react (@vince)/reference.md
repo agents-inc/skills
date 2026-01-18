@@ -6,15 +6,17 @@
 
 ## Decision Framework
 
-### When to Use forwardRef
+### When to Accept ref as a Prop (React 19)
 
 ```
 Does component need ref access?
 ├─ YES → Does it expose a DOM element?
-│   ├─ YES → Use forwardRef ✓
+│   ├─ YES → Add ref to props and pass to element (no forwardRef needed) ✓
 │   └─ NO → Use useImperativeHandle to expose custom methods
-└─ NO → Don't use forwardRef (unnecessary)
+└─ NO → Don't accept ref prop (unnecessary)
 ```
+
+> **Note:** React 19 deprecates `forwardRef`. Pass `ref` as a regular prop instead.
 
 ### When to Use Variant Props
 
@@ -48,17 +50,33 @@ Is this reusable logic?
 └─ NO → Keep inline in component
 ```
 
+### When to Use React 19 Form Hooks
+
+```
+Handling form submission?
+├─ YES → Need pending/error state?
+│   ├─ YES → Use useActionState ✓
+│   └─ NO → Simple form action on <form action={fn}>
+├─ Need form status in child components?
+│   └─ YES → Use useFormStatus in child component ✓
+├─ Need optimistic UI updates?
+│   └─ YES → Use useOptimistic ✓
+└─ Need to read promise/context conditionally?
+    └─ YES → Use use() API ✓
+```
+
 ---
 
 ## RED FLAGS
 
 ### High Priority Issues
 
-- Missing `forwardRef` on components that expose refs (breaks ref usage in parent components)
+- **Using `forwardRef` in React 19** - deprecated; pass `ref` as a regular prop instead
 - Not exposing `className` prop on reusable components (prevents customization and composition)
 - Using default exports in component libraries (prevents tree-shaking and violates project conventions)
 - Magic numbers in code (use named constants: `const MAX_ITEMS = 100`)
-- Missing `displayName` on forwardRef components (breaks React DevTools debugging)
+- Using `useState` for form pending/error when `useActionState` exists (unnecessary boilerplate)
+- Calling `useFormStatus` in the same component as `<form>` (won't work - must be child component)
 
 ### Medium Priority Issues
 
@@ -78,7 +96,10 @@ Is this reusable logic?
 
 ### Gotchas & Edge Cases
 
-- `forwardRef` components need `displayName` set manually (not inferred like regular components)
+- **React 19**: `forwardRef` is deprecated - pass `ref` as a regular prop directly
+- **React 19**: `use()` cannot be called in try-catch blocks - use Error Boundaries instead
+- **React 19**: `useFormStatus` must be called from a child component inside `<form>`, not the form component itself
+- **React 19**: Ref cleanup functions - return a cleanup function from ref callbacks instead of using `useEffect`
 - Error boundaries don't catch errors in event handlers or async code (use try/catch for those)
 - `useCallback` without memoized children adds overhead without benefit
 - Icons inherit `currentColor` by default - explicitly setting color breaks theming
@@ -90,19 +111,21 @@ Is this reusable logic?
 
 ## Anti-Patterns
 
-### Missing forwardRef on Interactive Components
+### Using forwardRef in React 19
 
-Components that expose DOM elements MUST use forwardRef. Without it, parent components cannot manage focus, trigger animations, or integrate with form libraries like react-hook-form.
+In React 19, `forwardRef` is deprecated. Pass `ref` as a regular prop instead.
 
 ```typescript
-// WRONG - Parent cannot access input ref
-export const Input = ({ ...props }) => <input {...props} />;
-
-// CORRECT - Parent can forward refs
+// WRONG (React 19) - forwardRef is deprecated
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => (
   <input ref={ref} {...props} />
 ));
 Input.displayName = "Input";
+
+// CORRECT (React 19) - ref as a regular prop
+export function Input({ ref, ...props }: InputProps & { ref?: React.Ref<HTMLInputElement> }) {
+  return <input ref={ref} {...props} />;
+}
 ```
 
 ### Default Exports in Component Libraries
@@ -165,16 +188,22 @@ export const Card = ({ className, children }: CardProps) => (
 
 ## Quick Reference
 
-### Component Checklist
+### Component Checklist (React 19)
 
-- [ ] Uses `forwardRef` if exposing DOM elements
+- [ ] Accepts `ref` as a regular prop if exposing DOM elements (no forwardRef)
 - [ ] Exposes `className` prop for customization
 - [ ] Exposes `style` prop for runtime values
 - [ ] Uses named exports (no default exports)
 - [ ] Uses named constants for all numbers
-- [ ] Has `displayName` set for forwardRef components
 - [ ] Uses typed variant props only when 2+ variant dimensions exist
 - [ ] Has proper accessibility attributes on interactive elements
+
+### React 19 Form Hooks Checklist
+
+- [ ] Uses `useActionState` for form submissions with pending/error state
+- [ ] Uses `useFormStatus` in child components (not in the form component itself)
+- [ ] Uses `useOptimistic` for instant UI feedback during async operations
+- [ ] Uses `use()` for reading promises/context conditionally
 
 ### Hook Checklist
 

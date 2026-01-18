@@ -2,13 +2,17 @@
 category: framework
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1.1.0
 tags:
   - vue
+  - vue-3-5
   - composition-api
   - script-setup
   - composables
   - reactivity
+  - defineModel
+  - useTemplateRef
+  - useId
 compatible_with:
   - frontend/styling/*
   - frontend/testing/*

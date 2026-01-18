@@ -59,10 +59,12 @@ How many conditions do you have?
 ```
 What environment are you in?
 ├─ SolidStart with @solidjs/router?
-│   └─ createAsync + cache ✓ (SSR-friendly)
+│   └─ createAsync + query ✓ (SSR-friendly, recommended for Solid 2.0)
 └─ Plain SolidJS without router?
     └─ createResource ✓
 ```
+
+**Note:** The `cache` API is deprecated since Solid Router v0.15.0. Use `query` instead.
 
 ### When to Use onCleanup
 

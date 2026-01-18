@@ -1,35 +1,42 @@
 # Angular Standalone Reference
 
-> Decision frameworks, anti-patterns, and red flags for Angular 17+ standalone development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and red flags for Angular 17-19 standalone development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
 
 ## Decision Frameworks
 
-### When to Use signal() vs computed()
+### When to Use signal() vs computed() vs linkedSignal()
 
 ```
 Is this value derived from other signals?
-├─ YES → Use computed() ✓
-│   (memoized, read-only, recalculates only when deps change)
+├─ YES → Does it need to be manually writable too?
+│   ├─ YES → Use linkedSignal() ✓ (Angular 19+)
+│   │   (writable + auto-updates when source changes)
+│   └─ NO → Use computed() ✓
+│       (memoized, read-only, recalculates only when deps change)
 └─ NO → Is this value that needs to be modified?
     ├─ YES → Use signal() ✓
     │   (writable, use .set() or .update())
     └─ NO → Use a plain constant
 ```
 
-### When to Use effect()
+### When to Use effect() vs afterRenderEffect()
 
 ```
 Do you need to perform side effects when signals change?
-├─ YES → Is it DOM manipulation?
-│   ├─ YES → Use afterNextRender() or afterRender() instead
+├─ YES → Is it DOM manipulation that needs post-render timing?
+│   ├─ YES → Use afterRenderEffect() ✓ (Angular 19+)
+│   │   (runs after DOM updates, supports phases for optimization)
 │   └─ NO → Is it modifying other signals?
-│       ├─ YES → AVOID - Consider computed() or restructure
+│       ├─ YES → Consider linkedSignal() or computed() instead
+│       │   (Note: Angular 19 allows signal writes in effect() by default)
 │       └─ NO → Use effect() ✓
-│           (logging, analytics, external API calls)
+│           (logging, analytics, localStorage, external API calls)
 └─ NO → Don't use effect()
 ```
+
+**Note:** In Angular 19, the `allowSignalWrites` flag was removed. Writing signals in effects is now allowed by default, but it's still recommended to use `linkedSignal()` or `computed()` for derived state.
 
 ### When to Use @defer
 
@@ -58,6 +65,20 @@ Is data coming from parent component?
         └─ YES → Use signal() ✓
 ```
 
+### When to Use resource() / rxResource() (Angular 19+, Experimental)
+
+```
+Do you need to fetch async data that depends on signals?
+├─ YES → Is it for GET requests (read-only data)?
+│   ├─ YES → Do you prefer Observables?
+│   │   ├─ YES → Use rxResource() ✓
+│   │   └─ NO → Use resource() ✓
+│   └─ NO → Use traditional HttpClient (resource is read-only)
+└─ NO → Use traditional HttpClient or fetch
+```
+
+**Note:** `resource()` and `rxResource()` are experimental in Angular 19. Do not use them for POST/PUT/DELETE operations.
+
 ### @if vs @switch
 
 ```
@@ -82,22 +103,25 @@ Do items have unique IDs?
 
 ### High Priority Issues
 
-- **Missing `standalone: true`** - Component requires NgModule, loses tree-shaking benefits
+- **Missing `standalone: true` in Angular < 19** - Component requires NgModule, loses tree-shaking benefits (Note: default in Angular 19)
 - **Using @Input/@Output decorators** - Legacy pattern without signal reactivity
 - **Using *ngIf/*ngFor/*ngSwitch** - Legacy directives require CommonModule, worse type narrowing
 - **Missing `track` in @for** - Poor performance, unnecessary DOM recreation
 - **Constructor injection instead of inject()** - More boilerplate, less flexible
 - **Mutating signal values directly** - `signal().push(item)` doesn't trigger updates, use `.update()`
-- **Writing to signals inside effect()** - Causes infinite loops or glitches
+- **Manual signal synchronization instead of linkedSignal()** - Use `linkedSignal()` for writable derived state (Angular 19+)
+- **Using resource() for mutations** - `resource()`/`rxResource()` are read-only; use HttpClient for POST/PUT/DELETE
 
 ### Medium Priority Issues
 
 - **@defer above the fold** - Hurts Core Web Vitals (LCP, CLS)
 - **Not using @empty with @for** - Missing empty state handling
 - **Nested @defer with same trigger** - Causes cascading requests
-- **effect() for derived state** - Use computed() instead for better performance
+- **effect() for derived state** - Use computed() or linkedSignal() instead for better performance
 - **toSignal() without initialValue** - Can cause runtime errors if observable hasn't emitted
 - **Forgetting `as` in @if** - Repeating signal calls: `@if (user(); as user)` is cleaner
+- **Using effect() instead of afterRenderEffect() for DOM** - DOM operations should use afterRenderEffect() with proper phases
+- **Not checking resource hasValue()** - Use `hasValue()` as type guard before accessing resource value
 
 ### Common Mistakes
 
@@ -107,17 +131,23 @@ Do items have unique IDs?
 - Not providing `{ initialValue: [] }` to `toSignal()` for lists
 - Using `ngOnChanges` instead of `effect()` to react to input changes
 - Calling `this.cdr.detectChanges()` manually with signals (not needed)
+- Using `allowSignalWrites` flag (removed in Angular 19)
+- Using `effect()` for DOM operations instead of `afterRenderEffect()`
 
 ### Gotchas & Edge Cases
 
 - **signal() equality**: By default uses `Object.is()`, provide custom equality for objects
 - **computed() laziness**: Not evaluated until first read, then memoized
-- **effect() cleanup**: Return a cleanup function for subscriptions/timers
+- **effect() cleanup**: Use `onCleanup` parameter for cleanup, not return value
+- **effect() timing (Angular 19)**: Effects now run during change detection, not as microtasks
 - **@defer in SSR**: Always renders @placeholder on server, triggers ignored
 - **model() vs input()**: model() creates two-way binding, input() is read-only
 - **inject() context**: Must be called in constructor or field initializer, not in methods
 - **@for $index**: Zero-based, use `{{ $index + 1 }}` for 1-based display
 - **withComponentInputBinding()**: Route params become `undefined` if not present, include in type
+- **linkedSignal() resets**: Value resets when source signal changes; use computation to preserve previous
+- **resource() status**: Check `hasValue()` before accessing `value()` for type safety
+- **afterRenderEffect() phases**: Specify `earlyRead`/`write`/`read` phases to avoid layout thrashing
 
 ---
 
@@ -293,6 +323,8 @@ export class UserCardComponent {
 | `.asReadonly()` | Get read-only version | `readonly = count.asReadonly()` |
 | `computed(fn)` | Derive from signals | `double = computed(() => count() * 2)` |
 | `effect(fn)` | Side effects | `effect(() => console.log(count()))` |
+| `linkedSignal(fn)` | Writable derived signal (v19) | `selected = linkedSignal(() => items()[0])` |
+| `afterRenderEffect(fn)` | DOM-related effects (v19) | `afterRenderEffect(() => measure(el))` |
 
 ### Input/Output Functions
 
@@ -346,9 +378,31 @@ export class UserCardComponent {
 | `when condition` | When expression becomes true |
 | `prefetch on X` | Prefetch on trigger, load on main trigger |
 
+### Resource API (Angular 19+, Experimental)
+
+| Function/Property | Purpose | Example |
+|-------------------|---------|---------|
+| `resource({ params, loader })` | Async data with signals | `resource({ params: () => ({ id: userId() }), loader: fetchUser })` |
+| `rxResource({ params, loader })` | Observable-based resource | `rxResource({ params: () => ({ id }), loader: () => http.get(...) })` |
+| `.value()` | Get loaded value | `users.value()` |
+| `.hasValue()` | Type guard for value | `@if (users.hasValue()) { ... }` |
+| `.error()` | Get error if failed | `users.error()` |
+| `.isLoading()` | Check loading state | `@if (users.isLoading()) { ... }` |
+| `.status()` | Get ResourceStatus | `users.status() === 'resolved'` |
+| `.reload()` | Re-fetch data | `users.reload()` |
+
+### afterRenderEffect Phases (Angular 19+)
+
+| Phase | Purpose | When to use |
+|-------|---------|-------------|
+| `earlyRead` | Read DOM before mutations | Measurements before writes |
+| `write` | Mutate DOM | Setting properties, styles |
+| `mixedReadWrite` | Read + write (default) | Avoid if possible |
+| `read` | Read DOM after mutations | Final measurements |
+
 ### Component Checklist
 
-- [ ] Uses `standalone: true`
+- [ ] Uses `standalone: true` (default in Angular 19, explicit for clarity)
 - [ ] Uses `input()` / `input.required()` for inputs
 - [ ] Uses `output()` for events
 - [ ] Uses `model()` for two-way binding
@@ -356,5 +410,8 @@ export class UserCardComponent {
 - [ ] Uses `@if`, `@for`, `@switch` control flow
 - [ ] Uses `track` in all `@for` loops
 - [ ] Uses named constants for magic numbers
-- [ ] Uses `computed()` for derived values
-- [ ] Uses `effect()` only for side effects
+- [ ] Uses `computed()` for derived read-only values
+- [ ] Uses `linkedSignal()` for writable derived values (Angular 19+)
+- [ ] Uses `effect()` only for side effects (not DOM ops)
+- [ ] Uses `afterRenderEffect()` for DOM operations (Angular 19+)
+- [ ] Uses `resource()` for reactive async data fetching (Angular 19+)

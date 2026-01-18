@@ -1,6 +1,6 @@
 ---
 name: frontend/nextjs-app-router (@vince)
-description: Next.js 14/15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes
+description: Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Turbopack, async params
 ---
 
 # Next.js App Router Patterns
@@ -29,7 +29,7 @@ description: Next.js 14/15 App Router patterns - file-based routing, Server/Clie
 
 ---
 
-**Auto-detection:** Next.js App Router, page.tsx, layout.tsx, loading.tsx, error.tsx, Server Components, Client Components, "use client", streaming, Suspense, parallel routes, intercepting routes, generateMetadata, generateStaticParams
+**Auto-detection:** Next.js App Router, page.tsx, layout.tsx, loading.tsx, error.tsx, Server Components, Client Components, "use client", streaming, Suspense, parallel routes, intercepting routes, generateMetadata, generateStaticParams, Turbopack, next/form, use cache, PPR, experimental_ppr, instrumentation.ts, after(), typedRoutes
 
 **When to use:**
 
@@ -49,6 +49,8 @@ description: Next.js 14/15 App Router patterns - file-based routing, Server/Clie
 - Route Groups and Dynamic Routes
 - Metadata API for SEO optimization
 - generateStaticParams for static generation
+- Next.js 15.5+ features (PPR, Turbopack builds, typed routes, after() API)
+- Next.js 16 migration preparation
 
 **When NOT to use:**
 
@@ -58,6 +60,7 @@ description: Next.js 14/15 App Router patterns - file-based routing, Server/Clie
 
 **Detailed Resources:**
 - For code examples, see [examples/](examples/) folder
+- For Next.js 15.5+ features (PPR, after(), typed routes), see [examples/nextjs-15-features.md](examples/nextjs-15-features.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---

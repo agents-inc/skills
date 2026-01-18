@@ -104,6 +104,9 @@ Do you know all specific paths that need updating?
 - Server Actions create encrypted IDs recalculated between builds
 - Dead code elimination removes unused actions from client bundle
 - CSRF protection is built-in via POST-only and Origin header checking
+- **Next.js 16 Preview:** `revalidateTag()` will require a `cacheLife` profile as second argument
+- **Next.js 16 Preview:** New `updateTag()` API for read-your-writes semantics in Server Actions
+- **Next.js 16 Preview:** New `refresh()` API for uncached data (vs revalidatePath for cached)
 
 ---
 
@@ -339,7 +342,7 @@ export async function action(
 }
 ```
 
-### useActionState Hook
+### useActionState Hook (React 19)
 
 ```typescript
 const [state, formAction, isPending] = useActionState(serverAction, initialState)
@@ -348,18 +351,22 @@ const [state, formAction, isPending] = useActionState(serverAction, initialState
 // isPending: Boolean indicating if action is running
 ```
 
-### useFormStatus Hook
+**React 19 Note:** Replaces deprecated `ReactDOM.useFormState` from React Canary. Now part of core React package.
+
+### useFormStatus Hook (React 19)
 
 ```typescript
 // Must be in component NESTED within form
 const { pending, data, method, action } = useFormStatus()
 // pending: Boolean, true while form is submitting
-// data: FormData being submitted
-// method: HTTP method (always 'POST' for Server Actions)
-// action: The action function
+// data: FormData being submitted (React 19+)
+// method: HTTP method (always 'POST' for Server Actions, React 19+)
+// action: The action function (React 19+)
 ```
 
-### useOptimistic Hook
+**React 19 Note:** In React 18, only `pending` is available. In React 19, `data`, `method`, and `action` are also returned.
+
+### useOptimistic Hook (React 19)
 
 ```typescript
 const [optimisticState, addOptimistic] = useOptimistic(
@@ -369,4 +376,66 @@ const [optimisticState, addOptimistic] = useOptimistic(
     return [...currentState, optimisticValue]
   }
 )
+```
+
+**React 19 Note:** New hook for optimistic UI updates during async operations.
+
+---
+
+## Next.js 16 Preview: API Changes
+
+**Prepare for upcoming Next.js 16 changes:**
+
+### revalidateTag() Change (v16)
+
+```typescript
+// Current (v15) - single argument (will show deprecation warning in v15.5+)
+revalidateTag('blog-posts');
+
+// Future (v16) - requires cacheLife profile as second argument
+revalidateTag('blog-posts', 'max');
+// Or with custom profiles:
+revalidateTag('news-feed', 'hours');
+revalidateTag('products', { expire: 3600 });
+```
+
+### New updateTag() API (v16)
+
+For Server Actions, use `updateTag()` instead of `revalidateTag()` for read-your-writes semantics:
+
+```typescript
+'use server';
+
+import { updateTag } from 'next/cache';
+
+export async function updateUserProfile(userId: string, formData: FormData) {
+  await db.users.update(userId, formData);
+
+  // updateTag ensures immediate consistency (read-your-writes)
+  updateTag(`user-${userId}`);
+}
+```
+
+### New refresh() API (v16)
+
+For uncached data that should be refetched:
+
+```typescript
+'use server';
+
+import { refresh } from 'next/cache';
+
+export async function markNotificationAsRead(notificationId: string) {
+  await db.notifications.markAsRead(notificationId);
+
+  // refresh() for uncached data (NOT tagged cache data)
+  refresh();
+}
+```
+
+### Migration Codemod
+
+```bash
+# Automated migration when v16 releases
+npx @next/codemod@canary upgrade latest
 ```

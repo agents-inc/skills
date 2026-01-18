@@ -9,6 +9,36 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 
 ---
 
+<migration_notice>
+
+## IMPORTANT: React Router v7 Migration
+
+**Remix has merged into React Router v7.** What was planned as Remix v3 is now React Router v7 "framework mode". Key changes:
+
+**Deprecated utilities (will be removed in React Router v7):**
+- `json()` - Return raw objects instead, or use `data()` for custom headers/status
+- `defer()` - Return Promises directly in objects with Single Fetch
+
+**New patterns in React Router v7:**
+- `data()` utility for setting headers/status: `return data(item, { status: 201 })`
+- Single Fetch enables returning raw objects and streaming Promises directly
+- Automatic type generation: Use `Route.LoaderArgs`, `Route.ActionArgs`, `Route.ComponentProps` from `./+types/route-name`
+- `clientAction` for browser-only mutations (complements server-only `action`)
+- Imports change from `@remix-run/*` to `react-router` and `@react-router/*`
+- Entry files: `RemixServer` → `ServerRouter`, `RemixBrowser` → `HydratedRouter`
+- Scripts: `remix vite:dev` → `react-router dev`, `remix vite:build` → `react-router build`
+
+**Migration resources:**
+- [Upgrading from Remix](https://reactrouter.com/upgrading/remix)
+- [Single Fetch Guide](https://v2.remix.run/docs/guides/single-fetch)
+- [React Router v7 Actions](https://reactrouter.com/start/framework/actions)
+
+**This skill documents Remix v2 patterns** which remain valid for existing projects. For new projects, consider using React Router v7 directly.
+
+</migration_notice>
+
+---
+
 <critical_requirements>
 
 ## CRITICAL: Before Using This Skill
@@ -23,13 +53,13 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 
 **(You MUST wrap state mutations after await in `runInAction()` if combining with MobX)**
 
-**(You MUST use `defer()` for non-critical data that can stream - keep critical data in direct returns)**
+**(You MUST use `defer()` for non-critical data that can stream - keep critical data in direct returns)** _(deprecated in React Router v7 - use raw Promises instead)_
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Remix routes, loader function, action function, useLoaderData, useActionData, useFetcher, defer, ErrorBoundary, Form component, meta function, links function
+**Auto-detection:** Remix routes, React Router v7, loader function, action function, clientAction, useLoaderData, useActionData, useFetcher, defer, ErrorBoundary, Form component, meta function, links function, Single Fetch, ServerRouter, HydratedRouter
 
 **When to use:**
 

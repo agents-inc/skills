@@ -86,6 +86,40 @@ Does parent need to call child methods?
     └─ NO → Don't use defineExpose (components are private by default)
 ```
 
+### When to Use defineModel vs defineProps/defineEmits (Vue 3.4+)
+
+```
+Does component need two-way binding (v-model)?
+├─ YES → How many v-model bindings?
+│   ├─ Single → defineModel() ✓
+│   └─ Multiple → defineModel('name') for each ✓
+└─ NO → Does component only read props (no emit)?
+    ├─ YES → defineProps() ✓
+    └─ NO → defineProps() + defineEmits() ✓
+```
+
+### When to Use useTemplateRef vs ref() (Vue 3.5+)
+
+```
+Need a template ref?
+├─ Is the ref attribute dynamic (changes at runtime)?
+│   └─ YES → useTemplateRef() ✓
+├─ Need to share ref logic in a composable?
+│   └─ YES → useTemplateRef() ✓
+└─ Simple static ref in single component?
+    └─ Either works, ref() is more familiar
+```
+
+### When to Use useId (Vue 3.5+)
+
+```
+Need unique ID for form element or ARIA attribute?
+├─ YES → Is this SSR or may become SSR?
+│   └─ YES → useId() ✓ (prevents hydration mismatch)
+└─ Client-only app with simple needs?
+    └─ useId() still recommended for consistency
+```
+
 ---
 
 ## RED FLAGS
@@ -119,11 +153,14 @@ Does parent need to call child methods?
 - **Refs in reactive objects are auto-unwrapped** at root level, but NOT in arrays or Map/Set
 - **watchEffect runs immediately** unlike watch which is lazy by default
 - **computed values are read-only** by default, use getter/setter object for writable
-- **Template refs must match variable name** exactly with the `ref="name"` attribute
+- **Template refs must match variable name** exactly with the `ref="name"` attribute (or use `useTemplateRef()` in Vue 3.5+)
 - **defineExpose is required** for parent to access script setup component's properties
 - **Top-level await makes component async** and requires Suspense in parent
 - **Provide values are not reactive by default** - wrap in ref() or reactive() if needed
 - **onUnmounted won't run if component errors** during setup - use error boundaries
+- **Destructured props require getter in watch** (Vue 3.5+) - `watch(() => count)` not `watch(count)`
+- **useId() must not be called in computed** - generates new ID each call, use in setup only
+- **defineModel returns a ref** - use `.value` in script, auto-unwrapped in template
 
 ---
 

@@ -43,9 +43,14 @@ description: Server Actions patterns for mutations, revalidation, and form handl
 - Server Action definition (`'use server'` directive)
 - Form actions with progressive enhancement
 - Cache revalidation patterns (revalidatePath, revalidateTag)
-- Pending states (useActionState, useFormStatus)
-- Optimistic updates (useOptimistic)
+- Pending states (useActionState from React 19, useFormStatus from React 19)
+- Optimistic updates (useOptimistic from React 19)
 - Error handling and validation
+
+**React 19 Integration:**
+- `useActionState`, `useFormStatus`, and `useOptimistic` are React 19 hooks (not Next.js-specific)
+- `useActionState` replaces the deprecated `ReactDOM.useFormState` from React Canary
+- These hooks work with Server Actions for form state management
 
 **When NOT to use:**
 

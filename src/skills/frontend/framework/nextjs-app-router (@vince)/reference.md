@@ -125,9 +125,131 @@ How should this page be rendered?
 - **Intercepting routes use file-system conventions** - `(.)` for same level, `(..)` for parent, etc.
 - **params and searchParams are Promises in Next.js 15** - Must await them: `const { id } = await params`
 - **Layout components don't re-render on navigation** - Use template.tsx if you need re-render
-- **fetch requests in Server Components are cached by default** - Use `cache: 'no-store'` for dynamic data
+- **In Next.js 15, fetch requests are NOT cached by default for dynamic rendering** - Use `cache: 'force-cache'` to opt into caching
 - **generateMetadata blocks HTML streaming** - Metadata included in first streamed chunk
 - **Route groups can have their own root layouts** - Multiple `(group)/layout.tsx` files act as separate roots
+- **GET Route Handlers are NOT cached by default in Next.js 15** - Opt-in with `export const dynamic = 'force-static'`
+- **Client Router Cache doesn't cache Page components by default in Next.js 15** - Use `staleTimes.dynamic` config to restore old behavior
+
+---
+
+## Next.js 15 Specific Changes
+
+### Breaking Changes from v14
+
+| Change | Impact | Migration |
+|--------|--------|-----------|
+| **Async Request APIs** | `cookies()`, `headers()`, `params`, `searchParams` must be awaited | Use codemod: `npx @next/codemod@canary next-async-request-api .` |
+| **GET Routes uncached** | Route Handlers no longer cached by default | Opt-in with `export const dynamic = 'force-static'` |
+| **Client Router Cache** | Page components not cached (staleTime: 0) | Use `staleTimes.dynamic` config if needed |
+| **`experimental-edge` removed** | Runtime value deprecated | Switch to `runtime = 'edge'` |
+| **React 19 required** | App Router requires React 19 | Update `react` and `react-dom` to v19 |
+
+### New Features in Next.js 15.0+
+
+#### `<Form>` Component
+Enhanced HTML forms with prefetching and client-side navigation:
+```tsx
+import Form from 'next/form';
+
+export default function SearchPage() {
+  return (
+    <Form action="/search">
+      <input name="query" />
+      <button type="submit">Search</button>
+    </Form>
+  );
+}
+```
+
+#### `unstable_after()` (Experimental)
+Execute code after response finishes streaming (useful for logging, analytics):
+```tsx
+import { unstable_after as after } from 'next/server';
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  after(() => {
+    // Logging, analytics, cleanup - runs after response is sent
+    logPageView();
+  });
+  return <>{children}</>;
+}
+```
+
+#### Turbopack (Stable for Dev)
+Use `next dev --turbo` for faster development:
+- 76.7% faster local server startup
+- 96.3% faster code updates with Fast Refresh
+- 45.8% faster initial route compilation
+
+#### `use cache` Directive (Experimental)
+Explicit caching with `dynamicIO` flag enabled:
+```tsx
+// next.config.ts
+const nextConfig = {
+  experimental: {
+    dynamicIO: true,
+  },
+};
+
+// app/page.tsx
+import { cacheLife } from 'next/cache';
+
+export default async function Page() {
+  'use cache';
+  cacheLife('hours'); // Built-in profile
+  const data = await fetchData();
+  return <div>{data}</div>;
+}
+```
+
+### New Features in Next.js 15.5+
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Turbopack Builds** | `next build --turbopack` for 2x-5x faster builds | Beta |
+| **Node.js Middleware** | `runtime: 'nodejs'` in middleware config | Stable |
+| **Typed Routes** | `typedRoutes: true` for compile-time route validation | Stable |
+| **Route Props Helpers** | Global `PageProps`, `LayoutProps`, `RouteContext` types | Stable |
+| **`next typegen`** | Manual type generation command | Stable |
+
+### Next.js 16 Migration Preview
+
+**Deprecation warnings in 15.5+:**
+- `legacyBehavior` on `<Link>` - remove wrapper `<a>` tags
+- AMP support - remove all AMP code
+- `next lint` - use ESLint or Biome directly (codemod: `npx @next/codemod@latest next-lint-to-eslint-cli .`)
+- `devIndicators` config options
+- `serverRuntimeConfig`, `publicRuntimeConfig` - use env variables
+
+**Breaking changes coming in v16:**
+- `middleware.ts` → `proxy.ts` (file rename + export rename)
+- `revalidateTag()` requires `cacheLife` profile as second argument:
+  ```tsx
+  // v15 (deprecated)
+  revalidateTag('blog-posts');
+
+  // v16 (required)
+  revalidateTag('blog-posts', 'max');
+  ```
+- New `updateTag()` for Server Actions (read-your-writes semantics):
+  ```tsx
+  'use server';
+  import { updateTag } from 'next/cache';
+
+  export async function updateProfile(userId: string) {
+    await db.users.update(userId, data);
+    updateTag(`user-${userId}`); // Expires cache & refreshes immediately
+  }
+  ```
+- New `refresh()` for uncached data revalidation (Server Actions only)
+- **Cache Components** replace `experimental.ppr` flag (enable with `cacheComponents: true`)
+- **Turbopack** becomes default bundler (opt out: `next build --webpack`)
+- Node.js 20.9+ required (18 no longer supported)
+- TypeScript 5.1.0+ required
+- Parallel routes require explicit `default.js` in all slots
+
+For detailed examples, see [examples/nextjs-15-features.md](examples/nextjs-15-features.md).
 
 ---
 
@@ -388,7 +510,7 @@ export default function DashboardError({ error, reset }) {
 | `dynamic` | `'auto'`, `'force-dynamic'`, `'error'`, `'force-static'` | Control dynamic rendering |
 | `revalidate` | `false`, `0`, number | Cache revalidation time |
 | `fetchCache` | `'auto'`, `'default-cache'`, `'only-cache'`, `'force-cache'`, `'force-no-store'`, `'default-no-store'`, `'only-no-store'` | Default fetch caching |
-| `runtime` | `'nodejs'`, `'edge'` | Runtime environment |
+| `runtime` | `'nodejs'`, `'edge'` | Runtime environment (note: `'experimental-edge'` is deprecated) |
 | `preferredRegion` | `'auto'`, `'global'`, `'home'`, string[] | Deployment region preference |
 
 ```tsx

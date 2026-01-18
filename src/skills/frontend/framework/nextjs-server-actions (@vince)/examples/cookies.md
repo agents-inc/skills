@@ -23,6 +23,7 @@ export async function setTheme(formData: FormData) {
     throw new Error('Invalid theme')
   }
 
+  // Next.js 15+: cookies() is async
   const cookieStore = await cookies()
 
   cookieStore.set('theme', theme, {
@@ -36,7 +37,7 @@ export async function setTheme(formData: FormData) {
 }
 ```
 
-**Why good:** Named constant for max age. Validates input. Secure cookie settings. Server Action can set cookies that trigger UI updates.
+**Why good:** Named constant for max age. Validates input. Secure cookie settings. Server Action can set cookies that trigger UI updates. Uses async cookies() API (Next.js 15+).
 
 ---
 

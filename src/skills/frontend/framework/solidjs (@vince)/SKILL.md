@@ -29,7 +29,7 @@ description: SolidJS fine-grained reactivity patterns - signals, effects, memos,
 
 ---
 
-**Auto-detection:** SolidJS, createSignal, createEffect, createMemo, createStore, createResource, Show, For, Switch, Match, splitProps, mergeProps, onCleanup, onMount, Suspense, ErrorBoundary, solid-js, @solidjs/router, SolidStart
+**Auto-detection:** SolidJS, createSignal, createEffect, createMemo, createStore, createResource, createAsync, query, action, Show, For, Switch, Match, splitProps, mergeProps, onCleanup, onMount, Suspense, ErrorBoundary, solid-js, @solidjs/router, SolidStart
 
 **When to use:**
 
@@ -45,10 +45,11 @@ description: SolidJS fine-grained reactivity patterns - signals, effects, memos,
 - Component patterns (props, splitProps, mergeProps, refs)
 - Control flow components (Show, For, Index, Switch, Match)
 - Stores for complex nested state
-- createResource for async data fetching
+- createResource for async data fetching (plain SolidJS)
+- createAsync + query for data fetching (SolidStart, recommended for Solid 2.0)
 - Context for dependency injection
 - Suspense and ErrorBoundary for async handling
-- SolidStart patterns (server functions, cache, actions)
+- SolidStart patterns (server functions, query, actions)
 
 **When NOT to use:**
 
