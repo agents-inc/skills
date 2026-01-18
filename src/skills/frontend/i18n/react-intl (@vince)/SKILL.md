@@ -1,6 +1,8 @@
 # React-Intl (FormatJS) Internationalization Patterns
 
 > **Quick Guide:** Use react-intl for internationalization with ICU Message Format. `FormattedMessage` for JSX content, `useIntl` for string attributes and programmatic use, `defineMessages` for extractable message descriptors. Wrap app with `IntlProvider` and configure `onError` for missing translations.
+>
+> **Version Note:** react-intl v8+ requires React 19+. For React 18 projects, use react-intl v6.x.
 
 ---
 
@@ -14,9 +16,9 @@
 
 **(You MUST include the `other` category in ALL plural and select ICU messages - omission causes runtime errors)**
 
-**(You MUST use `runInAction` pattern via `runInAction(() => { ... })` for async state updates after await when using `useIntl` with state management)**
-
 **(You MUST use named constants for locale codes - NO inline locale strings)**
+
+**(You MUST verify React version compatibility: v8+ requires React 19+, use v6.x for React 18)**
 
 </critical_requirements>
 
@@ -611,9 +613,9 @@ function Good() {
 
 **(You MUST include the `other` category in ALL plural and select ICU messages - omission causes runtime errors)**
 
-**(You MUST use `runInAction` pattern via `runInAction(() => { ... })` for async state updates after await when using `useIntl` with state management)**
-
 **(You MUST use named constants for locale codes - NO inline locale strings)**
+
+**(You MUST verify React version compatibility: v8+ requires React 19+, use v6.x for React 18)**
 
 **Failure to follow these rules will cause runtime errors and broken internationalization.**
 

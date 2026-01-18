@@ -85,7 +85,7 @@ src/
     routing.ts       # Locale configuration
     request.ts       # Server-side locale resolution
     navigation.ts    # Locale-aware Link, useRouter
-  middleware.ts      # Locale detection and routing
+  proxy.ts           # Locale detection and routing (middleware.ts before Next.js 16)
   app/
     [locale]/
       layout.tsx     # Root layout with NextIntlClientProvider
@@ -94,6 +94,8 @@ messages/
   en.json            # English translations
   de.json            # German translations
 ```
+
+> **Note:** In Next.js 16+, `middleware.ts` was renamed to `proxy.ts`. If using Next.js 15 or earlier, use `middleware.ts`.
 
 #### Configuration Files
 
@@ -147,18 +149,18 @@ export const { Link, redirect, usePathname, useRouter, getPathname } =
 **Why good:** wraps Next.js navigation APIs with locale awareness, Link automatically includes locale prefix
 
 ```typescript
-// src/middleware.ts
+// src/proxy.ts (Next.js 16+) or src/middleware.ts (Next.js 15 and earlier)
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 
 export default createMiddleware(routing);
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
 };
 ```
 
-**Why good:** middleware handles locale detection from URL, cookies, and Accept-Language header, matcher excludes API routes and static files
+**Why good:** proxy/middleware handles locale detection from URL, cookies, and Accept-Language header, matcher excludes API routes, tRPC routes, and static files
 
 ---
 
@@ -473,19 +475,21 @@ export function LocaleSwitcher() {
 
 ### Pattern 9: TypeScript Integration
 
-Enable type-safe translation keys with TypeScript augmentation.
+Enable type-safe translation keys with TypeScript augmentation using the `AppConfig` interface (next-intl v4.0+).
 
 #### Configuration
 
 ```typescript
-// src/i18n/types.ts
+// src/i18n/types.ts (or global.d.ts)
 import type en from "../../messages/en.json";
-
-type Messages = typeof en;
+import { routing } from "./routing";
+import type { formats } from "./request";
 
 declare module "next-intl" {
   interface AppConfig {
-    Messages: Messages;
+    Locale: (typeof routing.locales)[number];
+    Messages: typeof en;
+    Formats: typeof formats;
   }
 }
 ```
@@ -499,7 +503,26 @@ declare module "next-intl" {
 }
 ```
 
-**Why good:** typos in translation keys become compile-time errors, IDE autocomplete for translation keys, refactoring keys updates all usages
+**Why good:** typos in translation keys become compile-time errors, IDE autocomplete for translation keys, strictly-typed locales prevent invalid locale strings, Formats registration enables type-safe formatting
+
+#### Optional: Type-Safe Message Arguments (Experimental)
+
+For automatic type inference of ICU message arguments, configure `createMessagesDeclaration`:
+
+```typescript
+// next.config.mjs
+import { createNextIntlPlugin } from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin({
+  experimental: {
+    createMessagesDeclaration: "./messages/en.json",
+  },
+});
+
+export default withNextIntl({});
+```
+
+This generates type declarations enabling autocomplete for message arguments like `{name}` or `{count, plural, ...}`.
 
 ---
 

@@ -92,7 +92,7 @@ Is the app multi-locale?
 - Using `dateTimeFormats` instead of `datetimeFormats` (lowercase 't')
 - Not handling loading states during lazy locale loading
 - Expecting `t()` to return ReactNode (it returns string, use `<i18n-t>` for components)
-- Using `$tc` (removed in v9) instead of `t()` with count parameter
+- Using `$tc` (deprecated in v10, removed in v11) instead of `t()` with count parameter
 
 ### Gotchas & Edge Cases
 
@@ -100,7 +100,8 @@ Is the app multi-locale?
 - Custom `pluralRules` function receives `choicesLength` - return index into array, not the form itself
 - `@:linked.message` syntax doesn't work with local scope - only global messages
 - `datetimeFormats` uses camelCase in config, but `dateTimeFormats` is a common typo
-- Legacy API mode is deprecated in v11 and will be removed in v12 - always use Composition API
+- Legacy API mode is deprecated in v11 and will be removed in v12 - always use Composition API with `legacy: false`
+- `v-t` directive is deprecated in v11 and will be removed in v12 - use `t()` or `<i18n-t>` instead
 
 ---
 
@@ -364,9 +365,18 @@ With count:  "no items | {n} item | {n} items"
 | `getChoiceIndex` | `pluralRules` option | Custom plural rules |
 | Returns object/array | Returns string only | Use `tm()` for objects |
 
-### Deprecated in v11 (Removed in v12)
+### Deprecated in v11 (Will Be Removed in v12)
 
-- Legacy API mode (`legacy: true`)
-- `$tc()` function (use `$t()` with number)
-- Rails i18n format (`%{variable}`)
+- Legacy API mode (`legacy: true`) - use Composition API with `legacy: false`
+- `v-t` directive - use `t()` function or `<i18n-t>` component
+- Rails i18n format (`%{variable}`) - use named interpolation `{variable}`
+
+### Already Removed in v10/v11
+
+- `$tc()` function - use `$t()` or `t()` with count parameter
 - Custom formatter support
+- `allowComposition` option
+- `vue-i18n-bridge` (Vue 2 EOL)
+- Modulo `%` syntax for named interpolation
+- `preserveDirectiveContent` option
+- `preserve` modifier on `v-t` directive

@@ -96,7 +96,7 @@ Is your message catalog large (100+ messages)?
 
 ### Gotchas & Edge Cases
 
-- `FormatMessage` returns `ReactNode`, not `string` - cannot use for HTML attributes
+- `FormattedMessage` returns `ReactNode`, not `string` - cannot use for HTML attributes
 - Rich text tag functions receive `chunks` array, not single element
 - `formatNumber` with `style: "percent"` expects decimal (0.25 for 25%), not percentage
 - `formatRelativeTime` value is relative to NOW - negative for past, positive for future
@@ -447,6 +447,9 @@ Hello, {name}!
 | `FormattedMessage` | ReactNode | Translated text in JSX |
 | `FormattedDate` | ReactNode | Locale-aware dates |
 | `FormattedTime` | ReactNode | Locale-aware times |
+| `FormattedDateTimeRange` | ReactNode | Date/time ranges "Jan 15-20" |
 | `FormattedNumber` | ReactNode | Numbers/currency |
 | `FormattedRelativeTime` | ReactNode | "5 minutes ago" |
 | `FormattedList` | ReactNode | "A, B, and C" |
+| `FormattedDisplayName` | ReactNode | Language/region names |
+| `FormattedPlural` | ReactNode | Plural category selection |

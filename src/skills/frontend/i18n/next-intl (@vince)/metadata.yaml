@@ -2,7 +2,7 @@
 category: i18n
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1.1.0
 tags:
   - next-intl
   - i18n
@@ -10,3 +10,4 @@ tags:
   - localization
   - translations
   - ICU
+  - next-intl-v4

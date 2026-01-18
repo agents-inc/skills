@@ -1,6 +1,6 @@
 # vue-i18n Internationalization Patterns
 
-> **Quick Guide:** Use vue-i18n v9+ for type-safe internationalization in Vue 3. `useI18n` composable for translations, `d()` for dates, `n()` for numbers, `i18n-t` component for rich text. Set `legacy: false` for Composition API mode.
+> **Quick Guide:** Use vue-i18n v11+ for type-safe internationalization in Vue 3. `useI18n` composable for translations, `d()` for dates, `n()` for numbers, `i18n-t` component for rich text. Set `legacy: false` for Composition API mode (Legacy API is deprecated in v11, removed in v12).
 
 ---
 
@@ -108,7 +108,7 @@ export const i18n = createI18n({
   legacy: false, // REQUIRED for Composition API
   locale: DEFAULT_LOCALE,
   fallbackLocale: DEFAULT_LOCALE,
-  globalInjection: true, // Injects $t, $d, $n into templates
+  globalInjection: true, // Default since v9.2, injects $t, $d, $n into templates
   messages: {
     en,
   },
@@ -117,7 +117,7 @@ export const i18n = createI18n({
 export { i18n };
 ```
 
-**Why good:** `legacy: false` enables Composition API mode, named constants for locales enable type-safe usage, fallbackLocale prevents missing translation errors, globalInjection enables template shorthand
+**Why good:** `legacy: false` enables Composition API mode, named constants for locales enable type-safe usage, fallbackLocale prevents missing translation errors, globalInjection enables template shorthand (default true since v9.2)
 
 ```typescript
 // main.ts
