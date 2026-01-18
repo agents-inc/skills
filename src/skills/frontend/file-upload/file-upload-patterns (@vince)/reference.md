@@ -78,6 +78,8 @@ What is the expected upload duration?
 | Image preview | 15 minutes with auto-refresh |
 | Background job | Match job timeout |
 
+**Security Note:** Treat presigned URLs as bearer tokens. Anyone with the URL can perform the specified operation until it expires. Share only with intended recipients and prefer shorter expiration times when possible. AWS allows up to 7 days, but shorter is more secure.
+
 ---
 
 ## Anti-Patterns
@@ -178,6 +180,8 @@ xhr.upload.addEventListener('progress', (e) => {
   }
 });
 ```
+
+**Note:** The Fetch API currently lacks native upload progress support. While streams can be used, they measure bytes taken from your stream, not actual network transmission (see [Jake Archibald's analysis](https://jakearchibald.com/2025/fetch-streams-not-for-progress/)). A native fetch progress API is in development by Igalia. Until then, use XHR for upload progress.
 
 ---
 
@@ -353,6 +357,8 @@ For security-critical uploads, validate in this order:
 ```
 
 **Note:** `ExposeHeaders: ["ETag"]` is required for multipart uploads to complete successfully.
+
+**Cloudflare R2 Note:** R2 presigned URLs work similarly to S3 but do NOT support `POST` multipart form uploads via HTML forms. Use PUT with presigned URLs instead. R2 presigned URLs also cannot be used with custom domains - only the S3 API domain.
 
 ---
 

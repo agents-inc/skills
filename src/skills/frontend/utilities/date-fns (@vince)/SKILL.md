@@ -5,7 +5,7 @@ description: date-fns patterns for TypeScript - formatting, parsing, manipulatio
 
 # date-fns Date Utility Patterns
 
-> **Quick Guide:** Use date-fns for modular, tree-shakeable date operations. Import only what you need. Use `parseISO` for ISO strings, `format` with Unicode tokens for display, and pure functions that return new Date objects. For timezones, use `@date-fns/tz` (v4) or `date-fns-tz` (v3). Never mutate dates.
+> **Quick Guide:** Use date-fns for modular, tree-shakeable date operations. Import only what you need. Use `parseISO` for ISO strings, `format` with Unicode tokens for display, and pure functions that return new Date objects. For timezones, use `@date-fns/tz` with `TZDate` (v4+) or `date-fns-tz` with `formatInTimeZone` (v3.x). Never mutate dates.
 
 ---
 
@@ -27,7 +27,7 @@ description: date-fns patterns for TypeScript - formatting, parsing, manipulatio
 
 ---
 
-**Auto-detection:** date-fns, format, parseISO, addDays, subMonths, differenceInDays, formatDistance, isAfter, isBefore, eachDayOfInterval, date-fns-tz, @date-fns/tz, locale
+**Auto-detection:** date-fns, format, parseISO, addDays, subMonths, differenceInDays, formatDistance, isAfter, isBefore, eachDayOfInterval, date-fns-tz, @date-fns/tz, @date-fns/utc, TZDate, TZDateMini, UTCDate, UTCDateMini, tz(), transpose, tzName, tzScan, withTimeZone, locale
 
 **When to use:**
 
@@ -415,9 +415,24 @@ const sameDay =
 - **i18n libraries**: Use with locale imports for internationalized formatting
 
 **Version Notes:**
-- v3+ uses `@date-fns/tz` for timezone handling
-- v2.x uses `date-fns-tz` package
+- **v4+** (current): Uses `@date-fns/tz` for timezone handling with `TZDate` class and `tz()` helper
+- **v3.x**: Uses `date-fns-tz` package with `formatInTimeZone`, `toZonedTime`, `fromZonedTime`
+- v4 is ESM-first; constants must be imported from `date-fns/constants`
+- v4 returns Invalid Date/NaN instead of throwing errors for invalid inputs
 - All versions are 100% TypeScript with built-in types
+
+**v4 Bundle Size Reference:**
+- Core date-fns function: ~2KB each (tree-shakeable)
+- `TZDate`: 1.2 KB | `TZDateMini`: 916 B (use Mini for internal calculations)
+- `UTCDate`: 504 B | `UTCDateMini`: 239 B (use Mini for internal calculations)
+- Recommendation: Use `TZDateMini`/`UTCDateMini` internally, full classes when exposing from libraries
+
+**v4 Key Functions:**
+- `tz()`: Creates timezone context for the `in` option
+- `transpose()`: Converts dates between timezones (replaces `toZonedTime`/`fromZonedTime`)
+- `tzName()`: Returns human-readable timezone name (short, long, generic formats)
+- `tzScan()`: Detects DST transitions within a date range
+- `.withTimeZone()`: TZDate method for timezone conversion
 
 </integration>
 

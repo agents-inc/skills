@@ -17,7 +17,7 @@ description: Client-side image handling - preview generation, Canvas API resizin
 
 **(You MUST cleanup object URLs with `URL.revokeObjectURL()` in useEffect cleanup or when replacing URLs)**
 
-**(You MUST handle EXIF orientation for mobile photos - images may appear rotated without normalization)**
+**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling may cause double rotation)**
 
 **(You MUST use step-down scaling when reducing images by more than 50% - single-pass resize loses quality)**
 
@@ -459,6 +459,16 @@ export async function stepDownResize(
 
 Normalize image orientation from mobile photo metadata.
 
+> **Important (2020+):** Modern browsers automatically respect EXIF orientation:
+> - `<img>` elements: CSS `image-orientation` defaults to `from-image`
+> - Canvas `drawImage()`: Chromium browsers (Chrome 81+) auto-apply EXIF rotation
+>
+> **Only use manual EXIF handling when:**
+> - Processing images for upload/output files (server may not handle EXIF)
+> - Supporting legacy browsers (pre-2020)
+> - Using Node.js canvas (doesn't auto-rotate)
+> - You need to detect orientation without rendering
+
 #### Constants
 
 ```typescript
@@ -687,7 +697,7 @@ Results can be converted to Files for form submission.
 - Not calling `URL.revokeObjectURL()` - causes memory leaks that accumulate indefinitely
 - Canvas dimensions exceeding 4096px - crashes browser tab or silently fails
 - Processing images on main thread without Web Workers - UI freezes for large images
-- Ignoring EXIF orientation - mobile photos appear rotated
+- Double EXIF rotation - applying manual rotation in browsers that auto-rotate (Chrome 81+, Safari, Firefox)
 
 **Medium Priority Issues:**
 
@@ -706,9 +716,11 @@ Results can be converted to Files for form submission.
 
 - Object URLs are session-scoped - they work until page unload even without cleanup (but waste memory)
 - Canvas `toBlob()` is async, `toDataURL()` is sync - use toBlob for better performance
-- EXIF orientation varies by device/camera - always normalize before display
+- Modern browsers auto-rotate EXIF (since 2020) - manual rotation causes double-rotation issues
+- Use `image-orientation: none` CSS to bypass auto-rotation when needed
 - PNG with transparency converted to JPEG needs white background fill
 - Very large images may exceed WebGL limits even within canvas limits
+- Node.js canvas does NOT auto-rotate - still needs manual EXIF handling on server
 
 </red_flags>
 
@@ -722,7 +734,7 @@ Results can be converted to Files for form submission.
 
 **(You MUST cleanup object URLs with `URL.revokeObjectURL()` in useEffect cleanup or when replacing URLs)**
 
-**(You MUST handle EXIF orientation for mobile photos - images may appear rotated without normalization)**
+**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling may cause double rotation)**
 
 **(You MUST use step-down scaling when reducing images by more than 50% - single-pass resize loses quality)**
 

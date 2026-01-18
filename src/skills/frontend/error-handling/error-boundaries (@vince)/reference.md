@@ -46,6 +46,20 @@ Should you use react-error-boundary library?
 └─ Production app → YES, use library (more features, maintained)
 ```
 
+### React 19+ createRoot Error Options
+
+```
+Which createRoot error handler to use?
+├─ Error caught by ErrorBoundary → onCaughtError (logged + UI handled)
+├─ Error NOT caught by any boundary → onUncaughtError (fatal, log immediately)
+└─ React auto-recovered (hydration mismatch) → onRecoverableError (warning-level)
+
+Should you use both ErrorBoundary AND createRoot options?
+├─ YES → ErrorBoundary for UI, createRoot options for logging
+├─ They serve different purposes and complement each other
+└─ createRoot options catch errors that escape ALL boundaries
+```
+
 ### Boundary Placement
 
 ```
@@ -106,9 +120,44 @@ Should error boundary auto-reset?
 - `resetKeys` comparison is shallow - objects/arrays need stable references
 - SSR hydration errors may not be caught by client-side boundaries
 
+**React 19+ Specific Gotchas:**
+
+- `captureOwnerStack()` returns `null` in production - always check `process.env.NODE_ENV`
+- `onCaughtError` runs AFTER boundary's `componentDidCatch`, not before
+- React 19 logs single consolidated error message (not duplicate console.error calls like React 18)
+- `onRecoverableError` error may have `error.cause` with original thrown error
+- SSR hydration mismatches trigger `onRecoverableError`, not `onUncaughtError`
+- createRoot error options are silently ignored on React 18 (check version before relying on them)
+
 ---
 
 ## Anti-Patterns
+
+### Missing createRoot Error Options (React 19+)
+
+In React 19+, not configuring `createRoot` error options means you miss centralized error logging. Errors caught by boundaries are logged only if the boundary has an `onError` callback, and uncaught errors have no unified handling.
+
+```typescript
+// WRONG - No centralized error logging in React 19
+const root = createRoot(container);
+root.render(<App />);
+
+// CORRECT - Centralized error logging
+const root = createRoot(container, {
+  onCaughtError: (error, errorInfo) => {
+    sendToMonitoring("caught", error, errorInfo);
+  },
+  onUncaughtError: (error, errorInfo) => {
+    sendToMonitoring("uncaught", error, errorInfo);
+  },
+  onRecoverableError: (error, errorInfo) => {
+    sendToMonitoring("recoverable", error, errorInfo);
+  },
+});
+root.render(<App />);
+```
+
+---
 
 ### No Error Boundary
 
@@ -336,3 +385,19 @@ function GoodFallback({ error, resetErrorBoundary }) {
 | `onError` | `(error, info) => void` | Error logging callback |
 | `onReset` | `(details) => void` | Called when boundary resets |
 | `resetKeys` | `unknown[]` | Dependencies that trigger reset |
+
+### React 19+ createRoot Error Options
+
+| Option | Type | When Called |
+|--------|------|-------------|
+| `onCaughtError` | `(error, errorInfo) => void` | Error caught by an ErrorBoundary |
+| `onUncaughtError` | `(error, errorInfo) => void` | Error NOT caught by any boundary (fatal) |
+| `onRecoverableError` | `(error, errorInfo) => void` | React auto-recovered (hydration, suspense) |
+
+**errorInfo parameter contains:**
+- `componentStack: string | null` - Component tree at error time
+
+**captureOwnerStack() (React 19+, dev only):**
+- Returns owner stack as string or `null`
+- Shows which components CREATED the element (not just tree position)
+- Only available in development mode

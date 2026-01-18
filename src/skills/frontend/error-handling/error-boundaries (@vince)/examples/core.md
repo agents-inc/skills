@@ -3,6 +3,7 @@
 > Complete code examples for error boundary patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Extended Examples:**
+- [react-19-hooks.md](react-19-hooks.md) - **React 19+ error hooks** (`onCaughtError`, `onUncaughtError`, `captureOwnerStack`)
 - [testing.md](testing.md) - Testing patterns for error boundaries
 - [typescript.md](typescript.md) - TypeScript patterns and HOC
 - [nested-boundaries.md](nested-boundaries.md) - Layered error handling architecture

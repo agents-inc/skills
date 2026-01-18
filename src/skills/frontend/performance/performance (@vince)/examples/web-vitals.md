@@ -1,6 +1,6 @@
 # Core Web Vitals
 
-> LCP, FID/INP, CLS patterns and real-user monitoring. See [core.md](core.md) for React runtime patterns.
+> LCP, INP (formerly FID), CLS patterns and real-user monitoring. See [core.md](core.md) for React runtime patterns.
 
 ---
 
@@ -43,7 +43,9 @@ export function Hero() {
 
 ---
 
-## FID/INP (First Input Delay / Interaction to Next Paint)
+## INP (Interaction to Next Paint)
+
+**Note:** INP replaced FID (First Input Delay) as a Core Web Vital on March 12, 2024. FID is now deprecated.
 
 ### Good Example - Web Worker for Heavy Computation
 
@@ -89,7 +91,7 @@ export function DataProcessor({ data }: Props) {
 }
 ```
 
-**Why good:** Heavy computation runs off main thread, main thread stays responsive to user input, prevents FID/INP issues
+**Why good:** Heavy computation runs off main thread, main thread stays responsive to user input, prevents INP issues
 
 ### Bad Example - Heavy Computation on Main Thread
 
@@ -102,7 +104,7 @@ export function DataProcessor({ data }: Props) {
 }
 ```
 
-**Why bad:** Blocks main thread during computation, user interactions delayed by processing time, causes high FID/INP scores
+**Why bad:** Blocks main thread during computation, user interactions delayed by processing time, causes high INP scores
 
 ---
 
@@ -178,7 +180,7 @@ body {
 
 ```typescript
 // lib/analytics.ts
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
+import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals';
 import type { Metric } from 'web-vitals';
 
 interface AnalyticsEvent {
@@ -219,16 +221,19 @@ function sendToAnalytics(metric: Metric) {
 }
 
 // Initialize Web Vitals tracking
+// Note: onINP replaced onFID - FID was deprecated March 2024
 export function initWebVitals() {
-  getCLS(sendToAnalytics);
-  getFID(sendToAnalytics);
-  getFCP(sendToAnalytics);
-  getLCP(sendToAnalytics);
-  getTTFB(sendToAnalytics);
+  onCLS(sendToAnalytics);
+  onINP(sendToAnalytics);  // INP replaced FID as Core Web Vital
+  onFCP(sendToAnalytics);
+  onLCP(sendToAnalytics);
+  onTTFB(sendToAnalytics);
 }
 ```
 
-**Why good:** Tracks real user performance (not lab metrics), measures all Core Web Vitals, sends to analytics for trend analysis, keepalive ensures data sent even on page unload
+**Why good:** Tracks real user performance (not lab metrics), measures all Core Web Vitals (LCP, INP, CLS), sends to analytics for trend analysis, keepalive ensures data sent even on page unload
+
+**Note:** The `onFID` function is deprecated. INP (Interaction to Next Paint) replaced FID (First Input Delay) as a Core Web Vital on March 12, 2024. Use `onINP` instead.
 
 ### Usage in App
 

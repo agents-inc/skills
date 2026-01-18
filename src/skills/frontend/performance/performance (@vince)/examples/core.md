@@ -2,10 +2,12 @@
 
 > Core React performance optimization patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
+**React Compiler (React 19+):** The React Compiler automatically memoizes components, values, and functions. With the compiler enabled, you typically don't need manual `useMemo`, `useCallback`, or `React.memo`. The patterns below are still useful for projects without the compiler or for edge cases (third-party library interop, React Native, non-pure computations).
+
 **For advanced patterns**: See topic-specific files in this folder:
 - [turborepo.md](turborepo.md) - Build system caching, TypeScript optimization
 - [code-splitting.md](code-splitting.md) - Lazy loading, tree shaking, bundle budgets
-- [web-vitals.md](web-vitals.md) - LCP, FID/INP, CLS patterns and monitoring
+- [web-vitals.md](web-vitals.md) - LCP, INP, CLS patterns and monitoring
 - [image-optimization.md](image-optimization.md) - Image formats, lazy loading, Next.js Image
 - [ci-tooling.md](ci-tooling.md) - Lighthouse CI, React DevTools Profiler
 
@@ -63,12 +65,14 @@ export const SimpleButton = memo(({ label }: { label: string }) => {
 - Component renders frequently with same props
 - Component is expensive to render (> 5ms)
 - Component is deep in the tree
+- **Not using React Compiler** (compiler handles this automatically)
 
 **When not to use:**
 
 - Props change frequently (memoization never helps)
 - Component is cheap to render (overhead > benefit)
 - Before profiling (premature optimization)
+- **Using React Compiler** (React 19+) - compiler auto-memoizes
 
 ---
 
@@ -130,12 +134,14 @@ const doubled = useMemo(() => value * 2, [value]);
 - Expensive calculations (filtering, sorting large arrays > 1000 items)
 - Creating objects/arrays passed to memoized components
 - Preventing referential equality issues
+- **Not using React Compiler** (compiler handles this automatically)
 
 **When not to use:**
 
 - Simple calculations (addition, string concatenation)
 - Values used only in JSX (not passed as props)
 - Before profiling
+- **Using React Compiler** (React 19+) - compiler auto-memoizes
 
 ---
 
@@ -181,12 +187,14 @@ export function Form() {
 - Functions passed to memoized child components
 - Functions used in dependency arrays
 - Event handlers in optimized components
+- **Not using React Compiler** (compiler handles this automatically)
 
 **When not to use:**
 
 - Functions not passed to memoized children
 - Functions that change on every render anyway
 - Inline event handlers in non-optimized components
+- **Using React Compiler** (React 19+) - compiler auto-memoizes
 
 ---
 

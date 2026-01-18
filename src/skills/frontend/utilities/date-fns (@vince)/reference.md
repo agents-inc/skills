@@ -76,14 +76,70 @@ Need locale-aware format?
 
 ```
 Does the date have timezone significance?
-├─ YES → Is it user-entered local time?
-│   ├─ YES → Use TZDate from @date-fns/tz
-│   └─ NO → Is it a UTC timestamp from API?
-│       ├─ YES → parseISO (handles Z suffix)
-│       └─ NO → Use formatInTimeZone from date-fns-tz
+├─ YES → Which date-fns version?
+│   ├─ v4+ → Use TZDate from @date-fns/tz
+│   │   ├─ Need timezone context? → Use `in: tz("America/New_York")` option
+│   │   ├─ Convert between zones? → Use transpose()
+│   │   └─ Create zoned date? → new TZDate(2026, 0, 15, "America/New_York")
+│   └─ v3.x → Use date-fns-tz package
+│       ├─ Format in zone → formatInTimeZone()
+│       ├─ UTC to local → toZonedTime()
+│       └─ Local to UTC → fromZonedTime()
 └─ NO → Is it date-only (no time)?
     ├─ YES → Use startOfDay to normalize
-    └─ NO → Store/transmit as ISO UTC
+    └─ NO → Store/transmit as ISO UTC, use parseISO to read
+```
+
+---
+
+## v4 Breaking Changes
+
+### Constants Import Path (v3+)
+
+```typescript
+// ❌ WRONG (v2 style - no longer works)
+import { daysInYear } from 'date-fns';
+
+// ✅ CORRECT (v3+ and v4)
+import { daysInYear } from 'date-fns/constants';
+```
+
+### Named Exports for CommonJS (v4)
+
+```typescript
+// ❌ WRONG (v3 style)
+const addDays = require('date-fns/addDays');
+
+// ✅ CORRECT (v4)
+const { addDays } = require('date-fns/addDays');
+```
+
+### Error Handling (v4)
+
+```typescript
+// v3: Throws errors for invalid inputs
+// v4: Returns Invalid Date or NaN instead
+
+import { parse, isValid } from "date-fns";
+
+const result = parse("invalid", "yyyy-MM-dd", new Date());
+// v4 returns Invalid Date, doesn't throw
+
+// Always check validity
+if (isValid(result)) {
+  // Safe to use
+}
+```
+
+### Rounding Method (v4)
+
+```typescript
+// v3: Used Math.floor (rounds toward -Infinity)
+// v4: Uses Math.trunc (rounds toward zero)
+
+// This affects negative differences:
+// v3: differenceInDays(earlier, later) might return -4
+// v4: differenceInDays(earlier, later) might return -3
 ```
 
 ---
@@ -301,6 +357,27 @@ import {
   it,     // Italian
 } from "date-fns/locale";
 ```
+
+### @date-fns/tz Utilities (v4+)
+
+| Function | Purpose | Example |
+|----------|---------|---------|
+| `TZDate` | Timezone-aware Date (1.2 KB) | `new TZDate(2026, 0, 15, "America/New_York")` |
+| `TZDateMini` | Lightweight TZDate (916 B) | `new TZDateMini(2026, 0, 15, "America/New_York")` |
+| `tz()` | Context function for `in` option | `addDays(date, 7, { in: tz("America/New_York") })` |
+| `transpose()` | Convert between timezones | `transpose(sgDate, tz("America/New_York"))` |
+| `tzName()` | Get timezone display name | `tzName("America/New_York", date, "long")` |
+| `tzScan()` | Find DST transitions | `tzScan("America/New_York", startDate, endDate)` |
+| `tzOffset()` | Get UTC offset in minutes | `tzOffset("America/New_York", date)` |
+| `.withTimeZone()` | TZDate method for conversion | `nyDate.withTimeZone("Europe/London")` |
+| `.timeZone` | TZDate property (read-only) | `nyDate.timeZone // "America/New_York"` |
+
+### @date-fns/utc Utilities (v4+)
+
+| Class | Size | Use Case |
+|-------|------|----------|
+| `UTCDate` | 504 B | Full API, formats in UTC - use for library APIs |
+| `UTCDateMini` | 239 B | Minimal API - use for internal calculations |
 
 ---
 

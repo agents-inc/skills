@@ -651,6 +651,11 @@ export type { SyncCursor, DeltaSyncResult };
 
 Queue sync operations for reliable background execution.
 
+**IMPORTANT: Browser Support Limitation**
+The Background Sync API is **experimental** and only supported in Chrome/Edge (Chromium-based browsers). Firefox and Safari do NOT support this API. Always implement a fallback using the `online` event listener.
+
+**Status:** Experimental - HTTPS required, Service Worker dependent, specification still under development.
+
 ```typescript
 // service-worker/sync-handler.ts
 // This code runs in the service worker context
@@ -769,7 +774,7 @@ export { registerBackgroundSync };
 
 async function requestSyncWhenOnline(collection: string): Promise<void> {
   if (!navigator.onLine) {
-    // Will sync when online via background sync
+    // Will sync when online via background sync or fallback
     return;
   }
 
@@ -784,10 +789,25 @@ async function requestSyncWhenOnline(collection: string): Promise<void> {
   }
 }
 
-export { requestSyncWhenOnline };
+// Fallback for browsers without Background Sync API (Firefox, Safari)
+function setupSyncFallback(syncFn: () => Promise<void>): void {
+  window.addEventListener('online', async () => {
+    try {
+      await syncFn();
+    } catch (error) {
+      console.error('Sync fallback failed:', error);
+    }
+  });
+}
+
+export { requestSyncWhenOnline, setupSyncFallback };
 ```
 
-**Why good:** Sync continues even if app is closed, browser retries automatically on failure, queue persisted in IndexedDB, graceful fallback
+**Why good:** Sync continues even if app is closed (Chrome/Edge only), browser retries automatically on failure, queue persisted in IndexedDB, graceful fallback for unsupported browsers
+
+**Browser Support:**
+- Chrome/Edge: Full Background Sync support
+- Firefox/Safari: Must use `online` event fallback
 
 ---
 

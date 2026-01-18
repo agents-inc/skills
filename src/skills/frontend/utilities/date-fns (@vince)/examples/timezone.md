@@ -1,6 +1,6 @@
 # date-fns Timezone Examples
 
-> Timezone handling patterns for date-fns v3+ (@date-fns/tz) and v2.x (date-fns-tz). See [SKILL.md](../SKILL.md) for core concepts.
+> Timezone handling patterns for date-fns v4+ (@date-fns/tz) and v3.x (date-fns-tz). See [SKILL.md](../SKILL.md) for core concepts.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ```typescript
 import { format, addDays } from "date-fns";
-import { TZDate } from "@date-fns/tz";
+import { TZDate, tz } from "@date-fns/tz";
 
 // Timezone constants
 const TZ_NEW_YORK = "America/New_York";
@@ -34,23 +34,71 @@ const nyDate = new TZDate(2026, 0, 15, 10, 30, 0, TZ_NEW_YORK);
 const formatted = format(nyDate, "yyyy-MM-dd HH:mm:ss zzz");
 // "2026-01-15 10:30:00 EST"
 
-// Arithmetic maintains timezone
+// Arithmetic maintains timezone - returns TZDate
 const nextWeek = addDays(nyDate, 7);
-// Still in New York timezone
+// Still in New York timezone, type is TZDate
 
-// Convert between timezones
-function convertTimezone(date: TZDate, targetTimezone: string): TZDate {
-  return new TZDate(
-    date.getTime(),
-    targetTimezone
-  );
-}
-
-const laDate = convertTimezone(nyDate, TZ_LOS_ANGELES);
-// Same instant, displayed as Los Angeles time
+// v4 type preservation: input type determines output type
+const regularDate = new Date();
+const resultDate = addDays(regularDate, 7); // Returns Date
+const resultTZ = addDays(nyDate, 7);        // Returns TZDate
 ```
 
-**Why good:** timezone is part of the date object, arithmetic preserves timezone, explicit timezone handling
+**Why good:** timezone is part of the date object, arithmetic preserves timezone and type, explicit timezone handling
+
+---
+
+### Good Example - Using the `in` Context Option (v4)
+
+```typescript
+import { differenceInBusinessDays, addDays, format } from "date-fns";
+import { tz } from "@date-fns/tz";
+
+const TZ_NEW_YORK = "America/New_York";
+const TZ_TOKYO = "Asia/Tokyo";
+
+// Use `in` option to specify timezone context for calculations
+const date1 = new Date("2026-01-15T10:00:00Z");
+const date2 = new Date("2026-01-20T10:00:00Z");
+
+// Calculate business days in New York timezone
+const businessDaysNY = differenceInBusinessDays(date2, date1, {
+  in: tz(TZ_NEW_YORK),
+});
+
+// Add days and get result in specific timezone
+const futureDate = addDays(date1, 7, { in: tz(TZ_TOKYO) });
+// Returns TZDate in Tokyo timezone
+
+// Format with timezone context
+const formatted = format(futureDate, "yyyy-MM-dd HH:mm zzz");
+```
+
+**Why good:** `in` option provides explicit timezone context without creating TZDate first, works with any date input type
+
+---
+
+### Good Example - transpose Function (v4)
+
+```typescript
+import { TZDate, tz, transpose } from "@date-fns/tz";
+
+const TZ_TOKYO = "Asia/Tokyo";
+const TZ_NEW_YORK = "America/New_York";
+
+// Create date in Tokyo timezone
+const tokyoDate = new TZDate(2026, 0, 15, 10, 0, 0, TZ_TOKYO);
+
+// Convert to New York timezone (same instant, different display)
+const nyDate = transpose(tokyoDate, tz(TZ_NEW_YORK));
+// Same moment in time, now represented in NY timezone
+
+// transpose is the v4 equivalent of date-fns-tz's:
+// - fromZonedTime (local to UTC)
+// - toZonedTime (UTC to local)
+```
+
+**Why good:** `transpose` provides clean timezone conversion, replaces `toZonedTime`/`fromZonedTime` from date-fns-tz
 
 ---
 
@@ -348,6 +396,237 @@ const meetingTimes = getMeetingTimesForTimezones(
 ```
 
 **Why good:** shows meeting time in all relevant timezones, identifies organizer timezone, handles date changes
+
+---
+
+## v4 Additional Timezone Utilities
+
+### Good Example - withTimeZone Method on TZDate
+
+```typescript
+import { TZDate } from "@date-fns/tz";
+import { format } from "date-fns";
+
+const TZ_SINGAPORE = "Asia/Singapore";
+const TZ_NEW_YORK = "America/New_York";
+const TZ_LONDON = "Europe/London";
+
+const DISPLAY_FORMAT = "yyyy-MM-dd HH:mm:ss zzz";
+
+// Create date in Singapore timezone
+const sgDate = new TZDate(2026, 0, 15, 10, 30, 0, TZ_SINGAPORE);
+console.log(format(sgDate, DISPLAY_FORMAT));
+// "2026-01-15 10:30:00 SGT"
+
+// Convert to New York using withTimeZone method (same instant, different display)
+const nyDate = sgDate.withTimeZone(TZ_NEW_YORK);
+console.log(format(nyDate, DISPLAY_FORMAT));
+// "2026-01-14 21:30:00 EST" (previous day due to time difference)
+
+// Access the timezone property
+console.log(sgDate.timeZone);  // "Asia/Singapore"
+console.log(nyDate.timeZone);  // "America/New_York"
+
+// Chain timezone conversions
+const londonDate = sgDate.withTimeZone(TZ_LONDON);
+console.log(format(londonDate, DISPLAY_FORMAT));
+// "2026-01-15 02:30:00 GMT"
+```
+
+**Why good:** `withTimeZone` is a convenient method for timezone conversion, preserves the same instant while changing display timezone
+
+---
+
+### Good Example - tzName for Human-Readable Timezone Names
+
+```typescript
+import { TZDate, tzName } from "@date-fns/tz";
+
+const TZ_NEW_YORK = "America/New_York";
+const TZ_LONDON = "Europe/London";
+
+const winterDate = new Date(2026, 0, 15); // January (winter)
+const summerDate = new Date(2026, 6, 15); // July (summer)
+
+// Short format (e.g., "EST", "EDT")
+console.log(tzName(TZ_NEW_YORK, winterDate, "short"));   // "EST"
+console.log(tzName(TZ_NEW_YORK, summerDate, "short"));   // "EDT"
+
+// Long format (e.g., "Eastern Standard Time")
+console.log(tzName(TZ_NEW_YORK, winterDate, "long"));
+// "Eastern Standard Time"
+console.log(tzName(TZ_NEW_YORK, summerDate, "long"));
+// "Eastern Daylight Time"
+
+// Short generic format (ignores DST, e.g., "ET")
+console.log(tzName(TZ_NEW_YORK, winterDate, "shortGeneric")); // "ET"
+console.log(tzName(TZ_NEW_YORK, summerDate, "shortGeneric")); // "ET"
+
+// Long generic format (e.g., "Eastern Time")
+console.log(tzName(TZ_NEW_YORK, winterDate, "longGeneric"));
+// "Eastern Time"
+
+// London examples
+console.log(tzName(TZ_LONDON, winterDate, "short"));  // "GMT"
+console.log(tzName(TZ_LONDON, summerDate, "short"));  // "BST"
+console.log(tzName(TZ_LONDON, winterDate, "longGeneric")); // "United Kingdom Time"
+```
+
+**Why good:** provides user-friendly timezone display names, handles DST naming automatically, supports generic names that don't change with seasons
+
+---
+
+### Good Example - tzScan for DST Transition Detection
+
+```typescript
+import { tzScan, TZDate } from "@date-fns/tz";
+
+const TZ_NEW_YORK = "America/New_York";
+
+// Scan for DST changes in 2026
+const scanStart = new TZDate(2026, 0, 1, TZ_NEW_YORK);
+const scanEnd = new TZDate(2026, 11, 31, TZ_NEW_YORK);
+
+const transitions = tzScan(TZ_NEW_YORK, scanStart, scanEnd);
+// Returns array of DST transition objects
+
+// Each transition contains:
+// - date: The exact moment of the transition
+// - change: Offset change in minutes (e.g., 60 for spring forward, -60 for fall back)
+// - offset: New offset in minutes
+
+// Example output:
+// [
+//   { date: Date(March 8, 2026 02:00), change: -60, offset: -240 },  // Spring forward
+//   { date: Date(November 1, 2026 02:00), change: 60, offset: -300 } // Fall back
+// ]
+
+// Utility: Check if date is near a DST transition
+const DST_WARNING_HOURS = 24;
+
+function isNearDSTTransition(
+  date: Date,
+  timezone: string,
+  hoursThreshold: number = DST_WARNING_HOURS
+): { isNear: boolean; nextTransition: Date | null } {
+  const scanEnd = new Date(date.getTime() + hoursThreshold * 60 * 60 * 1000);
+  const transitions = tzScan(timezone, date, scanEnd);
+
+  if (transitions.length > 0) {
+    return { isNear: true, nextTransition: transitions[0].date };
+  }
+  return { isNear: false, nextTransition: null };
+}
+
+// Usage
+const meetingDate = new Date("2026-03-08T06:00:00Z");
+const dstCheck = isNearDSTTransition(meetingDate, TZ_NEW_YORK);
+if (dstCheck.isNear) {
+  console.log(`Warning: DST transition at ${dstCheck.nextTransition}`);
+}
+```
+
+**Why good:** proactively detects DST transitions for scheduling apps, helps warn users about potential time confusion
+
+---
+
+## @date-fns/utc for UTC Operations
+
+### Good Example - UTCDate for UTC-Only Calculations
+
+```typescript
+import { UTCDate, UTCDateMini } from "@date-fns/utc";
+import { addDays, format, differenceInHours } from "date-fns";
+
+// UTCDateMini - lightweight (239 B), uses system timezone for formatting
+// UTCDate - full API (504 B), formats in UTC
+
+// Create UTC dates
+const utcDate = new UTCDate(2026, 0, 15, 10, 30, 0);
+console.log(utcDate.toISOString()); // "2026-01-15T10:30:00.000Z"
+
+// Get current time in UTC
+const nowUTC = UTCDate.now();
+
+// Arithmetic preserves UTCDate type
+const nextWeekUTC = addDays(utcDate, 7);
+console.log(nextWeekUTC instanceof UTCDate); // true
+
+// Format in UTC (no timezone offset)
+const formatted = format(utcDate, "yyyy-MM-dd HH:mm:ss");
+// "2026-01-15 10:30:00" (always UTC)
+
+// Compare with regular Date
+const localDate = new Date(2026, 0, 15, 10, 30, 0);
+const hoursDiff = differenceInHours(localDate, utcDate);
+// Difference depends on your system timezone
+
+// When to use UTCDate vs TZDate:
+// - UTCDate: Server-side operations, storing timestamps, API responses
+// - TZDate: User-facing display, local time calculations, scheduling
+
+// Utility: API response formatter
+interface APIResponse<T> {
+  data: T;
+  timestamp: string;
+}
+
+function wrapWithUTCTimestamp<T>(data: T): APIResponse<T> {
+  return {
+    data,
+    timestamp: new UTCDate().toISOString(),
+  };
+}
+```
+
+**Why good:** ensures all calculations are in UTC, no timezone surprises on servers, type preservation maintains consistency
+
+---
+
+## TZDate vs TZDateMini Selection
+
+### Good Example - Choosing the Right Class
+
+```typescript
+import { TZDate, TZDateMini, tz } from "@date-fns/tz";
+import { addDays } from "date-fns";
+
+const TZ_NEW_YORK = "America/New_York";
+
+// TZDateMini (916 B) - recommended for internal use
+// - Implements only getters, setters, getTimezoneOffset
+// - Formats in SYSTEM timezone (not the specified timezone!)
+// - Lighter bundle size
+
+const miniDate = new TZDateMini(2026, 0, 15, 10, 0, 0, TZ_NEW_YORK);
+console.log(miniDate.toString()); // Formats in YOUR system timezone, not NY!
+// Calculations still work correctly in NY timezone
+
+// TZDate (1.2 KB) - recommended for library APIs
+// - Full Date API including formatters
+// - Formats in the SPECIFIED timezone
+// - Use when exposing dates from libraries
+
+const fullDate = new TZDate(2026, 0, 15, 10, 0, 0, TZ_NEW_YORK);
+console.log(fullDate.toString()); // Formats in New York timezone
+
+// Decision Guide:
+// Use TZDateMini when:
+// - Internal calculations only
+// - You format with date-fns format() (not toString())
+// - Bundle size is critical
+
+// Use TZDate when:
+// - Exposing dates from a library
+// - Need toString() to show correct timezone
+// - Debugging (toString shows expected timezone)
+
+// Both work identically with date-fns functions
+const future1 = addDays(miniDate, 7); // Returns TZDateMini
+const future2 = addDays(fullDate, 7); // Returns TZDate
+```
+
+**Why good:** optimizes bundle size by choosing appropriate class, avoids confusion between toString() behavior
 
 ---
 

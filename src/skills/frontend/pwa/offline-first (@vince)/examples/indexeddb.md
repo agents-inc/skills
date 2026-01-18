@@ -4,9 +4,9 @@
 
 ---
 
-## Pattern 12: Dexie.js Database Setup
+## Pattern 12: Dexie.js Database Setup (v4.x)
 
-Initialize IndexedDB with Dexie.js for type-safe database operations.
+Initialize IndexedDB with Dexie.js 4.x for type-safe database operations. Dexie 4.0+ includes improved TypeScript support with `Entity<T>` generics and class mappings.
 
 ### Database Schema Definition
 
@@ -293,9 +293,11 @@ export {
 
 ---
 
-## Pattern 14: idb Library Alternative
+## Pattern 14: idb Library Alternative (v8.x)
 
-Using the lighter-weight idb library instead of Dexie.
+Using the lighter-weight idb library (~1.2KB brotli) instead of Dexie. Version 8.x is current as of 2024.
+
+**CRITICAL:** Do not await non-IndexedDB operations (like `fetch()`) mid-transaction. Transactions auto-close when control returns to the event loop without pending requests.
 
 ```typescript
 // db/idb-database.ts
@@ -429,7 +431,11 @@ export { initIdbDatabase, IdbTodoRepository };
 export type { AppDBSchema };
 ```
 
-**Why good:** Lighter weight than Dexie (smaller bundle), strongly typed with DBSchema, proper index usage, migration support via upgrade function
+**Why good:** Lighter weight than Dexie (~1.2KB vs ~22KB), strongly typed with DBSchema, proper index usage, migration support via upgrade function, promises instead of event listeners
+
+**Version Notes:**
+- idb 8.x: Current version (2024), CDN available at `https://cdn.jsdelivr.net/npm/idb@8/+esm`
+- For simple key-value storage: Use `idb-keyval` (~295 bytes) instead
 
 ---
 

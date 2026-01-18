@@ -1,6 +1,6 @@
-# Moment.js to date-fns Migration Guide
+# date-fns Migration Guide
 
-> Patterns for migrating from Moment.js to date-fns. See [SKILL.md](../SKILL.md) for core concepts.
+> Patterns for migrating from Moment.js to date-fns and from date-fns v3 to v4. See [SKILL.md](../SKILL.md) for core concepts.
 
 ---
 
@@ -462,9 +462,101 @@ import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 formatInTimeZone(date, 'America/New_York', 'yyyy-MM-dd HH:mm zzz');
 
 // @DATE-FNS/TZ (v4)
-import { TZDate } from "@date-fns/tz";
-import { format } from "date-fns";
+import { TZDate, tz } from "@date-fns/tz";
+import { format, addDays } from "date-fns";
 
 const nyDate = new TZDate(2026, 0, 15, 10, 0, 0, 'America/New_York');
 format(nyDate, 'yyyy-MM-dd HH:mm zzz');
+
+// Or use the `in` option
+const result = addDays(date, 7, { in: tz('America/New_York') });
+```
+
+---
+
+## date-fns v3 to v4 Migration
+
+### Constants Import
+
+```typescript
+// v3 (worked)
+import { daysInYear } from 'date-fns';
+
+// v4 (required)
+import { daysInYear } from 'date-fns/constants';
+```
+
+### CommonJS Named Exports
+
+```typescript
+// v3
+const addDays = require('date-fns/addDays');
+
+// v4
+const { addDays } = require('date-fns/addDays');
+```
+
+### Timezone Package Change
+
+```typescript
+// v3 - using date-fns-tz
+import { formatInTimeZone, toZonedTime, fromZonedTime } from "date-fns-tz";
+
+const zonedDate = toZonedTime(utcDate, 'America/New_York');
+const utcDate = fromZonedTime(localDate, 'America/New_York');
+formatInTimeZone(date, 'America/New_York', 'yyyy-MM-dd');
+
+// v4 - using @date-fns/tz
+import { TZDate, tz, transpose } from "@date-fns/tz";
+import { format, addDays } from "date-fns";
+
+// Create timezone-aware date
+const nyDate = new TZDate(2026, 0, 15, 10, 0, 0, 'America/New_York');
+
+// Format (timezone preserved)
+format(nyDate, 'yyyy-MM-dd HH:mm zzz');
+
+// Convert between timezones (replaces toZonedTime/fromZonedTime)
+const laDate = transpose(nyDate, tz('America/Los_Angeles'));
+
+// Use `in` option for timezone context
+const result = addDays(date, 7, { in: tz('America/New_York') });
+```
+
+### Error Handling Change
+
+```typescript
+// v3 - Threw errors for invalid inputs
+try {
+  const result = someOperation(invalidInput);
+} catch (e) {
+  // Handle error
+}
+
+// v4 - Returns Invalid Date or NaN instead
+import { isValid } from "date-fns";
+
+const result = someOperation(invalidInput);
+if (isValid(result)) {
+  // Safe to use
+} else {
+  // Handle invalid result
+}
+```
+
+### Type Preservation (New in v4)
+
+```typescript
+import { addDays } from "date-fns";
+import { TZDate } from "@date-fns/tz";
+import { UTCDate } from "@date-fns/utc";
+
+// v4 returns the same type as the first argument
+const date = new Date();
+const tzDate = new TZDate(date, 'America/New_York');
+const utcDate = new UTCDate();
+
+addDays(date, 7);   // Returns Date
+addDays(tzDate, 7); // Returns TZDate
+addDays(utcDate, 7); // Returns UTCDate
 ```

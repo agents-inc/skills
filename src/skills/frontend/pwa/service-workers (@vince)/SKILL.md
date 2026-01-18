@@ -608,6 +608,11 @@ async function handleNavigationFailure(request: Request): Promise<Response> {
 - Background Sync API (for queuing failed requests)
 - Push API (for push notifications)
 - IndexedDB (for offline data storage beyond cache)
+- Navigation Preload API (for parallel navigation fetching during SW bootup)
+
+**Recommended Tools:**
+
+- **Workbox** - Google's production-ready library for service workers. Provides pre-built caching strategies, precaching with revision management, background sync plugins, and navigation preload support. Use Workbox for production applications instead of hand-rolling all patterns.
 
 </integration>
 

@@ -102,6 +102,8 @@ How should updates be applied?
 - **Chrome DevTools "Update on reload" bypasses waiting** - Useful for dev, not representative of production
 - **Manifest changes don't update service worker** - Only byte changes to SW file trigger update
 - **IndexedDB transactions can't span await** - Complete DB work in single transaction
+- **Navigation preload causes double requests if misused** - If you enable `navigationPreload.enable()`, you MUST use `event.preloadResponse` instead of `fetch(event.request)` for navigation requests
+- **Service worker bootup time varies** - ~50ms on desktop, ~250ms on mobile, can be 500ms+ on slow devices - navigation preload helps mitigate this
 
 ---
 
@@ -279,11 +281,13 @@ const response = await Promise.race([
 | Event | When it Fires | Common Use |
 |-------|---------------|------------|
 | `install` | New SW downloaded and parsed | Precache critical assets |
-| `activate` | SW takes control (after waiting) | Clean up old caches |
+| `activate` | SW takes control (after waiting) | Clean up old caches, enable navigation preload |
 | `fetch` | Any network request in scope | Serve cached responses |
 | `message` | Client sends message | Handle skip waiting, get version |
 | `push` | Push notification received | Show notification |
 | `sync` | Background sync triggered | Retry failed requests |
+| `pushsubscriptionchange` | Push subscription invalidated | Re-subscribe and update server |
+| `notificationclick` | User clicks notification | Open app or navigate to URL |
 
 ### Registration States
 
@@ -309,6 +313,22 @@ const response = await Promise.race([
 | `cache.match(request)` | Find matching response |
 | `cache.delete(request)` | Remove from cache |
 | `cache.keys()` | List all cached requests |
+
+### Navigation Preload API
+
+Navigation preload allows fetching navigation requests in parallel with service worker bootup, reducing latency for network-first HTML strategies.
+
+| Method | Description |
+|--------|-------------|
+| `registration.navigationPreload.enable()` | Enable navigation preloading |
+| `registration.navigationPreload.disable()` | Disable navigation preloading |
+| `registration.navigationPreload.setHeaderValue(value)` | Set custom `Service-Worker-Navigation-Preload` header |
+| `registration.navigationPreload.getState()` | Returns `{enabled: boolean, headerValue: string}` |
+| `event.preloadResponse` | Promise resolving to preloaded Response (in fetch handler) |
+
+**When to use:** Network-first HTML pages where content cannot be precached (e.g., dynamic/authenticated pages). Not needed for precached app shells.
+
+**Warning:** If you enable navigation preload, you MUST use `event.preloadResponse` in your fetch handler. Using `fetch(event.request)` instead will result in double requests.
 
 ---
 

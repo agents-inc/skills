@@ -12,17 +12,23 @@
 What type of data are you storing?
 ├─ Structured data (entities, records)
 │   ├─ Need reactive queries?
-│   │   └─ YES → Dexie.js with useLiveQuery
-│   │   └─ NO → idb (lighter weight)
+│   │   └─ YES → Dexie.js 4.x with useLiveQuery
+│   │   └─ NO → idb 8.x (lighter weight, ~1.2KB)
 │   └─ Complex relational queries?
-│       └─ YES → Consider PouchDB or RxDB
+│       └─ YES → Consider SQLite via WebAssembly, PouchDB, or RxDB
 │       └─ NO → Dexie.js or idb
-├─ Simple key-value data
-│   └─ localStorage or sessionStorage
+├─ Simple key-value data (< 5MB, not critical)
+│   └─ localStorage (sync, blocks UI) or idb-keyval (~295 bytes)
 ├─ Large files (images, videos)
-│   └─ Cache API or File System Access API
+│   └─ Cache API, OPFS, or File System Access API
 └─ Sensitive data
     └─ Web Crypto API + IndexedDB (encrypt before storing)
+
+Storage Limits:
+├─ localStorage: 5MB per origin (sync, blocks UI)
+├─ IndexedDB: 50% of available disk space (async)
+├─ Safari: 7-day eviction on script-writable storage
+└─ Request persistent storage to prevent eviction
 ```
 
 ### Framework 2: Conflict Resolution Strategy
@@ -50,9 +56,13 @@ How critical is data freshness?
 ├─ Near real-time (1-30s)
 │   └─ Polling + optimistic updates
 ├─ Background sync (30s - 5min)
-│   └─ Service Worker Background Sync
+│   └─ Service Worker Background Sync (Chrome/Edge only - experimental)
+│   └─ Fallback: online event listener + manual sync
 └─ Manual/on-demand
     └─ User-triggered sync button
+
+Note: Background Sync API is experimental - only Chrome/Edge support it.
+Always implement fallback sync using 'online' event listener.
 ```
 
 ### Framework 4: Offline Capability Scope
@@ -343,6 +353,40 @@ async function saveData(key: string, data: unknown): Promise<void> {
 
 ---
 
+### Anti-Pattern 9: Awaiting Non-IndexedDB Operations Mid-Transaction
+
+```typescript
+// ❌ Bad - Awaiting fetch inside transaction
+async function updateWithServerData(id: string): Promise<void> {
+  const tx = db.transaction('todos', 'readwrite');
+  const store = tx.objectStore('todos');
+
+  // Transaction will auto-close during this await!
+  const serverData = await fetch(`/api/todos/${id}`).then(r => r.json());
+
+  // TRANSACTION_INACTIVE_ERR - transaction already closed
+  await store.put(serverData);
+}
+```
+
+```typescript
+// ✅ Good - Fetch first, then transaction
+async function updateWithServerData(id: string): Promise<void> {
+  // Fetch outside transaction
+  const serverData = await fetch(`/api/todos/${id}`).then(r => r.json());
+
+  // Short-lived transaction
+  const tx = db.transaction('todos', 'readwrite');
+  const store = tx.objectStore('todos');
+  await store.put(serverData);
+  await tx.done;
+}
+```
+
+**Why bad:** IndexedDB transactions auto-close when control returns to the event loop without pending requests. Any `await` on non-IndexedDB operations (fetch, setTimeout, etc.) causes the transaction to close, resulting in `TRANSACTION_INACTIVE_ERR`.
+
+---
+
 ## Troubleshooting Guide
 
 ### Issue: Data "Disappears" After Sync
@@ -432,6 +476,24 @@ async function saveData(key: string, data: unknown): Promise<void> {
 2. Implement tombstone cleanup (Pattern 12)
 3. Monitor storage with quota management (Pattern 17)
 4. Implement data eviction strategy (LRU cache)
+
+---
+
+### Issue: Safari Data Eviction (7-Day Cap)
+
+**Symptoms:**
+- Data disappears after ~7 days on iOS Safari
+- Users report losing offline data on Safari
+
+**Causes:**
+Safari (iOS 13.4+, macOS Safari 13.1+) enforces a 7-day cap on all script-writable storage including IndexedDB, service worker registration, and Cache API if the user doesn't interact with the site.
+
+**Solutions:**
+1. Request persistent storage: `navigator.storage.persist()` - Safari may still ignore this
+2. Educate users to add the app to home screen (PWA mode has longer retention)
+3. Implement server-side backup with periodic sync
+4. Show warning banner on Safari about potential data loss
+5. Use Service Worker to maintain site engagement
 
 ---
 

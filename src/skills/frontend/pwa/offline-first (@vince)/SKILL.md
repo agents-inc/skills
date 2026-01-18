@@ -1,6 +1,6 @@
 # Offline-First Application Patterns
 
-> **Quick Guide:** Build applications that work primarily with local data, treating network connectivity as an enhancement. Use IndexedDB (via Dexie.js or idb) as the single source of truth. Implement sync queues for reliable background synchronization. Use optimistic UI patterns for instant feedback.
+> **Quick Guide:** Build applications that work primarily with local data, treating network connectivity as an enhancement. Use IndexedDB (via Dexie.js 4.x or idb 8.x) as the single source of truth. Implement sync queues for reliable background synchronization. Use optimistic UI patterns for instant feedback. Note: Background Sync API is experimental with limited browser support (Chrome/Edge only).
 
 ---
 
@@ -19,6 +19,8 @@
 **(You MUST use soft deletes (tombstones) for deletions to enable proper sync across devices)**
 
 **(You MUST implement exponential backoff with jitter for ALL sync retry logic)**
+
+**(You MUST NOT await non-IndexedDB operations mid-transaction - transactions auto-close when control returns to event loop)**
 
 </critical_requirements>
 
@@ -49,6 +51,12 @@
 - Financial transactions requiring immediate server confirmation
 - Simple read-only apps where cache-first is sufficient
 - Apps where offline capability adds no user value
+
+**Storage Considerations:**
+
+- IndexedDB: Up to 50% of available disk space (typically 1GB+), async, supports complex queries
+- LocalStorage: Limited to 5MB per origin, synchronous (blocks UI), simple key-value only
+- Safari: 7-day cap on script-writable storage (IndexedDB, Cache API) may evict data
 
 **Detailed Resources:**
 - For code examples, see [examples/](examples/)
@@ -755,6 +763,8 @@ export type { FetchResult, LocalCache };
 **(You MUST use soft deletes (tombstones) for deletions to enable proper sync across devices)**
 
 **(You MUST implement exponential backoff with jitter for ALL sync retry logic)**
+
+**(You MUST NOT await non-IndexedDB operations mid-transaction - transactions auto-close when control returns to event loop)**
 
 **Failure to follow these rules will result in data loss, sync conflicts, and poor offline user experience.**
 

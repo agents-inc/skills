@@ -580,3 +580,82 @@ export type { StorageEstimate };
 ```
 
 **Why good:** Uses Storage API for quota awareness, configurable thresholds, FIFO cleanup, logs cleanup actions
+
+---
+
+## Pattern 22: Navigation Preload
+
+Fetch navigation requests in parallel with service worker bootup to reduce latency for network-first HTML.
+
+```typescript
+// sw.ts - Navigation preload for network-first HTML
+
+declare const self: ServiceWorkerGlobalScope;
+
+const PAGES_CACHE = "pages-v1";
+
+// Enable navigation preload in activate
+self.addEventListener("activate", (event: ExtendableEvent) => {
+  event.waitUntil(
+    (async () => {
+      // Feature detection - not all browsers support this
+      if (self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable();
+        console.log("[SW] Navigation preload enabled");
+      }
+
+      await self.clients.claim();
+    })()
+  );
+});
+
+// Use preloaded response in fetch handler
+self.addEventListener("fetch", (event: FetchEvent) => {
+  if (event.request.mode !== "navigate") {
+    return; // Only handle navigation requests
+  }
+
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(PAGES_CACHE);
+
+      try {
+        // Use preloaded response if available (avoids double fetch)
+        const preloadResponse = await event.preloadResponse;
+        if (preloadResponse) {
+          console.log("[SW] Using preloaded response:", event.request.url);
+          // Cache for offline fallback
+          cache.put(event.request, preloadResponse.clone());
+          return preloadResponse;
+        }
+
+        // Fallback to normal fetch if preload not available
+        const networkResponse = await fetch(event.request);
+        if (networkResponse.ok) {
+          cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        console.log("[SW] Navigation failed, trying cache:", event.request.url);
+
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // Return offline page
+        const offlinePage = await caches.match("/offline.html");
+        if (offlinePage) return offlinePage;
+
+        throw error;
+      }
+    })()
+  );
+});
+```
+
+**When to use:** Network-first HTML pages with dynamic content that cannot be precached (e.g., authenticated pages, personalized content). Not needed for precached app shells.
+
+**Why good:** Uses feature detection, avoids double fetch by using `event.preloadResponse`, caches response for offline fallback, proper error handling chain
+
+**Warning:** If you enable navigation preload, you MUST use `event.preloadResponse`. Using `fetch(event.request)` instead results in two network requests for the same resource.

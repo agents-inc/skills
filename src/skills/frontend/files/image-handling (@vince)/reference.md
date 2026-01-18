@@ -247,21 +247,41 @@ async function goodThumbnail(file: File) {
 }
 ```
 
-### Ignoring EXIF Orientation
+### EXIF Orientation (Modern Browsers Auto-Handle)
 
 ```typescript
-// BAD: iPhone photos appear sideways
-async function badDisplay(file: File) {
+// Modern browsers (2020+): No manual handling needed for display!
+// image-orientation: from-image is the default CSS
+
+// GOOD: Modern browsers auto-rotate
+function modernDisplay(file: File) {
   const url = URL.createObjectURL(file);
-  return <img src={url} />;  // May be rotated wrong
+  return <img src={url} />;  // Browser handles EXIF rotation automatically
 }
 
-// GOOD: Normalize orientation first
-async function goodDisplay(file: File) {
-  const normalized = await normalizeOrientation(file);
+// BAD: Double rotation in modern browsers
+async function doubleRotation(file: File) {
+  const normalized = await normalizeOrientation(file);  // Rotates once
   const url = URL.createObjectURL(normalized);
-  // Use cleanup effect...
-  return <img src={url} />;
+  return <img src={url} />;  // Browser rotates again = wrong!
+}
+
+// GOOD: Manual handling ONLY for output files or Node.js
+async function prepareForUpload(file: File) {
+  // Normalize orientation for server that doesn't handle EXIF
+  const normalized = await normalizeOrientation(file);
+  await uploadToServer(normalized);
+}
+
+// GOOD: Bypass auto-rotation when needed
+function rawOrientation(file: File) {
+  const url = URL.createObjectURL(file);
+  return (
+    <img
+      src={url}
+      style={{ imageOrientation: 'none' }}  // Show raw without auto-rotation
+    />
+  );
 }
 ```
 
@@ -315,17 +335,23 @@ function goodLargePreview(file: File) {
 - `FileReader` API
 - Canvas `toBlob()` / `toDataURL()`
 - `canvas.getContext('2d')`
+- `image-orientation: from-image` (auto EXIF rotation) - Baseline since April 2020
 
 ### Good Support (Modern Browsers, Not IE)
 
 - `createImageBitmap()` - Chrome 50+, Firefox 42+, Safari 15+
 - Canvas `filter` property - Chrome 52+, Firefox 49+, Safari 9.1+
 - `imageSmoothingQuality` - Chrome 54+, Firefox 51+, Safari 10+
+- Canvas auto-EXIF rotation - Chrome 81+, Firefox 78+, Safari 14+
+
+### Good Support (2023+)
+
+- `OffscreenCanvas` - Chrome 69+, Firefox 105+, Safari 16.4+ (widely available now)
+- WebP encoding via `toBlob()` - All modern browsers including Safari 14+
 
 ### Limited Support
 
-- `OffscreenCanvas` - Chrome 69+, Firefox 105+, Safari 16.4+
-- WebP encoding via `toBlob()` - Chrome, Firefox, Edge (not Safari < 14)
+- AVIF encoding via `toBlob()` - Chrome 121+, Firefox 113+ (Safari not yet)
 
 ### Feature Detection
 
@@ -368,5 +394,5 @@ async function supportsWebPEncoding(): Promise<boolean> {
 - Processing large images on main thread
 - Using `toDataURL()` for files >1MB
 - Canvas dimensions >4096px
-- Ignoring EXIF orientation for user photos
+- Manual EXIF rotation in modern browsers (causes double-rotation)
 - Re-processing already-optimized images

@@ -5,7 +5,7 @@ description: Error boundary patterns, fallback UI, reset/retry functionality, re
 
 # React Error Boundaries
 
-> **Quick Guide:** Error boundaries catch JavaScript errors in component trees and display fallback UI. Use `react-error-boundary` library for production apps. Place boundaries strategically around features (not just root). Boundaries do NOT catch event handler, async, or SSR errors.
+> **Quick Guide:** Error boundaries catch JavaScript errors in component trees and display fallback UI. Use `react-error-boundary` library for production apps. Place boundaries strategically around features (not just root). Boundaries do NOT catch event handler, async, or SSR errors. **React 19+**: Use `createRoot` options (`onCaughtError`, `onUncaughtError`, `onRecoverableError`) for centralized error logging.
 
 ---
 
@@ -25,11 +25,13 @@ description: Error boundary patterns, fallback UI, reset/retry functionality, re
 
 **(You MUST use `role="alert"` on fallback UI for accessibility)**
 
+**(You MUST use `createRoot` error options (`onCaughtError`, `onUncaughtError`, `onRecoverableError`) for centralized error logging in React 19+)**
+
 </critical_requirements>
 
 ---
 
-**Auto-detection:** error boundary, ErrorBoundary, getDerivedStateFromError, componentDidCatch, fallback UI, react-error-boundary, useErrorBoundary, error recovery, error fallback
+**Auto-detection:** error boundary, ErrorBoundary, getDerivedStateFromError, componentDidCatch, fallback UI, react-error-boundary, useErrorBoundary, error recovery, error fallback, onCaughtError, onUncaughtError, onRecoverableError, captureOwnerStack
 
 **When to use:**
 
@@ -46,6 +48,8 @@ description: Error boundary patterns, fallback UI, reset/retry functionality, re
 - Fallback UI with reset functionality
 - Strategic boundary placement (granular vs coarse)
 - TypeScript error boundary patterns
+- **React 19+**: `createRoot` error options (`onCaughtError`, `onUncaughtError`, `onRecoverableError`)
+- **React 19+**: `captureOwnerStack()` for enhanced debugging
 
 **When NOT to use:**
 
@@ -56,6 +60,7 @@ description: Error boundary patterns, fallback UI, reset/retry functionality, re
 
 **Detailed Resources:**
 - For code examples, see [examples/core.md](examples/core.md)
+- For React 19 error hooks, see [examples/react-19-hooks.md](examples/react-19-hooks.md)
 - For testing patterns, see [examples/testing.md](examples/testing.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -73,6 +78,7 @@ Error boundaries provide **graceful degradation** - when one component fails, th
 2. **Recovery over failure** - Provide reset/retry when possible
 3. **User feedback over silent failure** - Show meaningful fallback UI
 4. **Logging integration** - Pass errors to monitoring via `onError` callback
+5. **Centralized observability (React 19+)** - Use `createRoot` error options for unified error tracking across all boundaries
 
 </philosophy>
 
@@ -476,6 +482,91 @@ function ChartFallback({ resetErrorBoundary }: FallbackProps) {
 
 **Why good:** Fallback UI matches the context of the failed component, users understand what feature is unavailable
 
+---
+
+### Pattern 7: React 19+ Error Hooks (createRoot Options)
+
+React 19 introduces three new root-level error handlers that complement error boundaries. These run at the `createRoot` level and provide centralized error logging.
+
+#### Three Error Handlers
+
+| Handler | When Called | Use Case |
+|---------|-------------|----------|
+| `onCaughtError` | Error caught by an Error Boundary | Log errors that are handled by boundaries |
+| `onUncaughtError` | Error NOT caught by any boundary | Log/report fatal errors |
+| `onRecoverableError` | React auto-recovers from error | Log hydration mismatches, suspense errors |
+
+#### Basic Setup
+
+```typescript
+// ✅ Good Example - React 19 createRoot with error handlers
+import { createRoot } from "react-dom/client";
+
+const ROOT_ELEMENT_ID = "root";
+
+function logError(
+  error: Error,
+  errorInfo: { componentStack?: string | null }
+) {
+  // Send to your error tracking service
+  console.error("React error:", error);
+  console.error("Component stack:", errorInfo.componentStack);
+}
+
+const container = document.getElementById(ROOT_ELEMENT_ID);
+if (!container) throw new Error("Root element not found");
+
+const root = createRoot(container, {
+  onCaughtError: (error, errorInfo) => {
+    // Error caught by an Error Boundary
+    logError(error, errorInfo);
+  },
+  onUncaughtError: (error, errorInfo) => {
+    // Error NOT caught - fatal
+    logError(error, errorInfo);
+  },
+  onRecoverableError: (error, errorInfo) => {
+    // React auto-recovered (e.g., hydration mismatch)
+    logError(error, errorInfo);
+  },
+});
+
+root.render(<App />);
+```
+
+**Why good:** Centralized error logging for ALL React errors, captures errors even when no boundary catches them, provides component stack for debugging
+
+#### With Error Monitoring Service
+
+```typescript
+// ✅ Good Example - Integration with error monitoring
+import { createRoot } from "react-dom/client";
+import * as Sentry from "@sentry/react";
+
+const ROOT_ELEMENT_ID = "root";
+
+const container = document.getElementById(ROOT_ELEMENT_ID);
+if (!container) throw new Error("Root element not found");
+
+const root = createRoot(container, {
+  onCaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    // Custom handling for caught errors (optional)
+    console.warn("Caught error:", error.message);
+  }),
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    // Custom handling for uncaught errors (optional)
+    console.error("Uncaught error:", error.message);
+  }),
+  onRecoverableError: Sentry.reactErrorHandler(),
+});
+
+root.render(<App />);
+```
+
+**Why good:** Error monitoring integration at root level, single point of configuration, `Sentry.reactErrorHandler()` adds proper React context to reports
+
+> **See [examples/react-19-hooks.md](examples/react-19-hooks.md) for complete examples including `captureOwnerStack()` and advanced patterns.**
+
 </patterns>
 
 ---
@@ -517,6 +608,8 @@ function ChartFallback({ resetErrorBoundary }: FallbackProps) {
 **(You MUST provide reset/retry functionality for recoverable errors)**
 
 **(You MUST use `role="alert"` on fallback UI for accessibility)**
+
+**(You MUST use `createRoot` error options (`onCaughtError`, `onUncaughtError`, `onRecoverableError`) for centralized error logging in React 19+)**
 
 **Failure to follow these rules will result in poor error handling, inaccessible UIs, or unrecoverable error states.**
 

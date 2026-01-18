@@ -45,13 +45,13 @@ description: WCAG, ARIA, keyboard navigation
 - Creating documentation or non-rendered content
 - Working with CLI tools (different accessibility considerations)
 
-**Target:** WCAG 2.1 Level AA compliance (minimum), AAA where feasible
+**Target:** WCAG 2.2 Level AA compliance (minimum), AAA where feasible
 
 **Key patterns covered:**
 
 - Keyboard navigation standards (tab order, focus management, skip links, Escape to close)
 - ARIA patterns with Radix UI components (prefer Radix for built-in accessibility)
-- WCAG AA compliance minimum (contrast ratios, semantic HTML, touch targets 44x44px)
+- WCAG 2.2 AA compliance minimum (contrast ratios, semantic HTML, touch targets 24x24px minimum)
 - Screen reader support (role-based queries, hidden content, live regions)
 
 **Detailed Resources:**
@@ -271,17 +271,26 @@ Key philosophy:
 
 ### Touch Target Sizes
 
-**TARGET: 44x44px minimum (WCAG 2.1 Level AAA)**
+**WCAG 2.2 Target Size Requirements:**
+
+**Level AA (2.5.8 Target Size Minimum):**
+- Minimum: 24x24 CSS pixels
+- OR adequate spacing from adjacent targets (24px between closest points)
+- Exceptions: inline text links, user agent controls, essential designs
+
+**Level AAA (2.5.5 Target Size Enhanced):**
+- Minimum: 44x44 CSS pixels (recommended for best UX)
 
 **Interactive elements:**
-- Buttons: 44x44px minimum
-- Links in text: Increase padding to meet 44x44px
-- Form inputs: 44px height minimum
-- Icons: 24x24px minimum, 44x44px touch target
+- Buttons: 24x24px minimum (44x44px recommended)
+- Links in text: Inline exemption applies, but increase padding where feasible
+- Form inputs: 24px height minimum (44px recommended)
+- Icons: 24x24px minimum touch target
 
 **Spacing:**
 - 8px minimum between adjacent touch targets
 - More spacing on mobile (12-16px recommended)
+- Alternative: 24px spacing allows smaller targets
 
 ---
 
@@ -295,6 +304,65 @@ Key philosophy:
 **Hidden from Screen Readers:**
 - `aria-hidden="true"` for decorative content
 - Empty `alt=""` for decorative images
+
+---
+
+### Motion and Animation Accessibility
+
+**WCAG 2.3.3 Animation from Interactions (AAA):**
+
+Motion can cause nausea, dizziness, or vestibular disorders for some users. Provide motion alternatives:
+
+**Use `prefers-reduced-motion` media query:**
+```css
+/* Approach 1: Disable animations when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Approach 2: Only animate when user has no preference */
+@media (prefers-reduced-motion: no-preference) {
+  .animated-element {
+    animation: slide-in 300ms ease-out;
+  }
+}
+```
+
+**Key principles:**
+- `reduce` means minimize, not eliminate all motion - essential animations can remain
+- Replace motion effects (scale, rotate, slide) with non-motion effects (fade, dissolve, color change)
+- Provide pause/stop controls for auto-playing content longer than 5 seconds
+- Avoid parallax scrolling effects or provide alternatives
+
+---
+
+### WCAG 2.2 New Success Criteria
+
+**WCAG 2.2** (October 2023) added 9 new success criteria. Key ones for developers:
+
+**Level A:**
+- **3.2.6 Consistent Help** - Help mechanisms (contact, chat) must appear in same relative order across pages
+- **3.3.7 Redundant Entry** - Previously entered info must be auto-populated or available for selection
+
+**Level AA:**
+- **2.4.11 Focus Not Obscured (Minimum)** - Focused element must not be entirely hidden by other content (sticky headers, modals)
+- **2.5.7 Dragging Movements** - Provide single-pointer alternative to drag operations
+- **2.5.8 Target Size (Minimum)** - 24x24px minimum or adequate spacing
+- **3.3.8 Accessible Authentication** - No cognitive function tests (CAPTCHAs) unless alternatives exist
+
+**Level AAA:**
+- **2.4.12 Focus Not Obscured (Enhanced)** - No part of focus indicator hidden
+- **2.4.13 Focus Appearance** - Focus indicator 2px perimeter, 3:1 contrast
+- **3.3.9 Accessible Authentication (Enhanced)** - Stricter CAPTCHA requirements
+
+**Removed from WCAG 2.2:**
+- **4.1.1 Parsing** - Obsolete due to modern browser error correction
 
 </patterns>
 
@@ -315,9 +383,13 @@ const switchElement = within(feature).getByRole('switch');
 ```
 
 **Additional tools:**
-- **jest-axe** - Automated accessibility testing in unit tests
-- **axe-core** - Runtime accessibility testing
+- **jest-axe** - Automated accessibility testing in Jest unit tests
+- **vitest-axe** - Same API as jest-axe, but for Vitest projects
+- **cypress-axe** - E2E accessibility testing with Cypress
+- **axe-core** - Runtime accessibility testing (v4.10+ supports WCAG 2.2)
 - **eslint-plugin-jsx-a11y** - Lint-time accessibility checks
+
+**Note:** axe-core finds ~57% of WCAG issues automatically. Always combine with manual testing.
 
 ### Manual Testing Checklist
 
@@ -343,8 +415,9 @@ const switchElement = within(feature).getByRole('switch');
 - [ ] Color contrast meets WCAG AA (4.5:1 text, 3:1 UI)
 - [ ] Information not conveyed by color alone
 - [ ] Text resizable to 200% without horizontal scroll
-- [ ] Touch targets meet 44x44px minimum
+- [ ] Touch targets meet 24x24px minimum (AA) or 44x44px (AAA recommended)
 - [ ] Focus indicators have 3:1 contrast
+- [ ] Animations respect prefers-reduced-motion
 
 ### Screen Reader Testing
 
@@ -361,15 +434,25 @@ const switchElement = within(feature).getByRole('switch');
 ## Resources
 
 **Official guidelines:**
-- WCAG 2.1 Guidelines: https://www.w3.org/WAI/WCAG21/quickref/
+- WCAG 2.2 Guidelines: https://www.w3.org/WAI/WCAG22/quickref/
+- What's New in WCAG 2.2: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
 - WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
+- WAI-ARIA 1.3 Draft (new roles: suggestion, comment, mark): https://w3c.github.io/aria/
+
+**Note:** WAI-ARIA 1.3 is still in draft (as of January 2024). New roles like `suggestion`, `comment`, and `mark` are not yet widely supported by browsers and assistive technologies.
 
 **Tools:**
 - axe DevTools: https://www.deque.com/axe/devtools/
+- axe-core API: https://github.com/dequelabs/axe-core/blob/develop/doc/API.md
 - WAVE: https://wave.webaim.org/
 - WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
 
-**Testing:**
+**Testing libraries:**
+- jest-axe: https://github.com/nickcolley/jest-axe
+- vitest-axe: https://github.com/chaance/vitest-axe
+- cypress-axe: https://github.com/component-driven/cypress-axe
+
+**Screen readers:**
 - NVDA Screen Reader: https://www.nvaccess.org/
 - Keyboard Navigation Guide: https://webaim.org/articles/keyboard/
 
@@ -389,6 +472,6 @@ const switchElement = within(feature).getByRole('switch');
 
 **(You MUST never use color alone to convey information - always add icons, text, or patterns)**
 
-**Failure to follow these rules will make the site unusable for keyboard users, screen reader users, and color-blind users - violating WCAG 2.1 Level AA compliance.**
+**Failure to follow these rules will make the site unusable for keyboard users, screen reader users, and color-blind users - violating WCAG 2.2 Level AA compliance.**
 
 </critical_reminders>
