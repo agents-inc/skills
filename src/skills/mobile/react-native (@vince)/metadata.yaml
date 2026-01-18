@@ -2,7 +2,7 @@
 category: mobile
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 2.0.0
 requires: []
 compatible_with:
   - frontend/state-zustand (@vince)
@@ -21,4 +21,12 @@ tags:
   - reanimated
   - gesture-handler
   - flatlist
+  - flashlist
   - performance
+  - new-architecture
+  - fabric
+  - turbomodules
+  - jsi
+  - react-19
+  - boxShadow
+  - filter

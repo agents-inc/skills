@@ -1,6 +1,126 @@
 # Performance Optimization Patterns
 
-FlatList optimization, memoization, image handling, and profiling.
+FlashList/FlatList optimization, memoization, image handling, and profiling.
+
+---
+
+## FlashList (Recommended for New Architecture)
+
+FlashList v2 provides superior performance through cell recycling instead of virtualization. **FlashList v2 is New Architecture only.** Key improvements: no more estimatedItemSize required, up to 50% reduced blank area, built-in masonry layout support, and automatic item resizing.
+
+```typescript
+import { FlashList } from "@shopify/flash-list";
+import { memo, useCallback } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+
+// Constants
+const ITEM_HEIGHT = 80;
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
+
+interface ProductItemProps {
+  item: Product;
+  onPress: (id: string) => void;
+}
+
+// Memoized item component - CRITICAL: Do NOT add key prop (breaks recycling)
+const ProductItem = memo(function ProductItem({ item, onPress }: ProductItemProps) {
+  const handlePress = useCallback(() => {
+    onPress(item.id);
+  }, [item.id, onPress]);
+
+  return (
+    <Pressable onPress={handlePress} style={styles.item}>
+      <View style={styles.details}>
+        <Text style={styles.name} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+      </View>
+    </Pressable>
+  );
+});
+
+// Main list component with FlashList
+interface ProductListProps {
+  products: Product[];
+  onProductPress: (id: string) => void;
+  onEndReached?: () => void;
+}
+
+export function ProductListFlash({
+  products,
+  onProductPress,
+  onEndReached,
+}: ProductListProps) {
+  // Stable renderItem with useCallback
+  const renderItem = useCallback(
+    ({ item }: { item: Product }) => (
+      <ProductItem item={item} onPress={onProductPress} />
+    ),
+    [onProductPress]
+  );
+
+  // Use getItemType for different item types (improves recycling)
+  const getItemType = useCallback((item: Product) => {
+    return item.category; // Items of same category share recycling pool
+  }, []);
+
+  return (
+    <FlashList
+      data={products}
+      renderItem={renderItem}
+      // FlashList v2: estimatedItemSize is OPTIONAL (auto-calculates from actual measurements)
+      // FlashList v1: estimatedItemSize is REQUIRED for performance
+      // Providing it in v2 can still help with initial render
+      estimatedItemSize={ITEM_HEIGHT}
+      // Use getItemType for heterogeneous lists
+      getItemType={getItemType}
+      // Performance optimizations
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      showsVerticalScrollIndicator={false}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  item: {
+    height: ITEM_HEIGHT,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+  },
+  details: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A1A",
+  },
+  price: {
+    fontSize: 14,
+    color: "#007AFF",
+    marginTop: 4,
+  },
+});
+```
+
+**Why FlashList v2 is better:**
+- Cell recycling instead of virtualization (reuses component instances)
+- Up to 50% less blank area while scrolling (v2 on New Architecture)
+- Maintains 60 FPS even with complex items
+- Automatic item sizing in v2 (no estimatedItemSize required - measures real items)
+- Built-in masonry layout support via `overrideItemLayout` prop
+- `maintainVisibleContentPosition` enabled by default (no layout jumps)
+- Items can be dynamically resized without issues
 
 ---
 

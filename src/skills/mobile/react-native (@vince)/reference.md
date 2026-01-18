@@ -6,6 +6,24 @@
 
 ## Decision Framework
 
+### New Architecture (React Native 0.76+)
+
+```
+Is your app on React Native 0.76+?
+├─ YES → New Architecture is ENABLED by default
+│   └─ Check library compatibility (90%+ of popular libs support it)
+└─ NO → Consider upgrading (legacy architecture is deprecated with warnings)
+
+Need to opt out temporarily?
+├─ Add to app.json (Expo): newArchEnabled: false
+├─ Add to gradle.properties (bare): newArchEnabled=false
+└─ WARNING: App will crash in 0.78+ if legacy architecture is forced
+
+Are you using Reanimated?
+├─ Reanimated 4.x → New Architecture ONLY (requires react-native-worklets)
+└─ Reanimated 3.x → Supports both architectures (still maintained)
+```
+
 ### Expo vs Bare Workflow
 
 ```
@@ -61,17 +79,31 @@ Is the team familiar with Tailwind?
 ```
 How many items in the list?
 ├─ < 10 items → ScrollView + map() is fine
-├─ 10-50 items → FlatList recommended
-├─ 50+ items → FlatList REQUIRED
-└─ 1000+ items → FlatList + getItemLayout + removeClippedSubviews
+├─ 10-50 items → FlashList or FlatList recommended
+├─ 50+ items → FlashList STRONGLY recommended (or FlatList REQUIRED)
+└─ 1000+ items → FlashList v2 (best performance)
 
-Are items fixed height?
-├─ YES → Use getItemLayout (major performance win)
-└─ NO → Skip getItemLayout (measurement needed)
+Are you on New Architecture (0.76+)?
+├─ YES → FlashList v2 (auto-sizes items, 50% less blank area)
+│   └─ No estimatedItemSize needed (measures real items)
+└─ NO → FlashList v1 or FlatList
+    └─ estimatedItemSize REQUIRED for FlashList v1
+
+Do items have variable heights?
+├─ FlashList v2 → Handles automatically, items can resize dynamically
+├─ FlashList v1 → Provide estimatedItemSize or overrideItemLayout
+└─ FlatList → Cannot use getItemLayout (performance hit)
 
 Need sections with headers?
-├─ YES → SectionList
-└─ NO → FlatList
+├─ YES → SectionList (or FlashList with getItemType)
+└─ NO → FlashList or FlatList
+
+FlashList v2 vs FlatList Decision:
+├─ Complex items, low-end Android → FlashList v2 (cell recycling)
+├─ Simple items, high-end devices → Either works
+├─ Need masonry layout → FlashList v2 (built-in support)
+├─ Need maintainVisibleContentPosition → FlashList v2 (enabled by default)
+└─ Default recommendation → FlashList v2 (better performance)
 ```
 
 ### Navigation Pattern
@@ -83,6 +115,12 @@ What type of navigation flow?
 ├─ Settings/menu → Drawer Navigator
 ├─ Modals → Stack with presentation: 'modal'
 └─ Deep linking required → Configure linking config
+
+React Navigation 7+ API Choice:
+├─ Simple app, TypeScript-first → Static API (less boilerplate)
+├─ Complex dynamic navigation → Dynamic API (more flexible)
+├─ Mix of both → Use static for top-level, dynamic for nested
+└─ Expo Router → Built on React Navigation, file-based routing
 
 Auth flow pattern?
 ├─ Switch between auth/main navigators based on auth state
@@ -156,11 +194,14 @@ Platform files:   name.ios.tsx, name.android.tsx
 
 ### High Priority Issues
 
-- **Using ScrollView + map() for lists with 50+ items** - causes severe performance issues, use FlatList with virtualization
+- **Using ScrollView + map() for lists with 50+ items** - causes severe performance issues, use FlashList or FlatList
 - **Not using keyExtractor with stable keys** - using index as key causes incorrect recycling and visual bugs
+- **Adding key prop to FlashList items** - BREAKS cell recycling, eliminates FlashList's main benefit
+- **Using React Native's built-in SafeAreaView** - deprecated in 0.81+ and will be removed, use react-native-safe-area-context
 - **Missing safe area handling** - content hidden behind notch/Dynamic Island on iOS, broken UX
 - **Not testing on both platforms** - iOS/Android differences compound; test daily on both
-- **Inline functions in FlatList renderItem** - creates new function every render, breaks memoization
+- **Inline functions in FlatList/FlashList renderItem** - creates new function every render, breaks memoization
+- **Using Reanimated 4 with old architecture** - Reanimated 4.x is New Architecture ONLY
 
 ### Medium Priority Issues
 
@@ -188,6 +229,14 @@ Platform files:   name.ios.tsx, name.android.tsx
 - **AsyncStorage is asynchronous** - can't read values synchronously on app start
 - **React Native doesn't have CSS cascade** - each component must have complete styles
 - **Text must be wrapped in `<Text>` component** - raw strings cause crashes
+- **New Architecture enabled by default in 0.76+** - some older libraries may need updates
+- **FlashList v2 is New Architecture only** - use v1 or FlatList if on old architecture
+- **React Native 0.78+ uses React 19** - check for breaking changes (propTypes removed)
+- **Expo SDK 53+ uses React 19** - check for breaking changes in your dependencies
+- **Android 15/16 enforces edge-to-edge** - must handle safe areas properly
+- **Reanimated 4 requires react-native-worklets** - Reanimated 3 will not work with it installed
+- **boxShadow and filter props are New Architecture only** - not available on legacy architecture
+- **forwardRef no longer required in React 19** - ref can be passed as regular prop
 
 ---
 

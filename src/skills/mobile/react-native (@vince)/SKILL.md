@@ -1,11 +1,11 @@
 ---
 name: mobile/react-native (@vince)
-description: React Native mobile development patterns - component architecture, React Navigation, styling with StyleSheet/NativeWind, FlatList optimization, gestures with Reanimated, platform-specific code, Expo vs bare workflow
+description: React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, styling with StyleSheet/NativeWind, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, Expo SDK 52-54, React 19 features
 ---
 
 # React Native Development Patterns
 
-> **Quick Guide:** Build cross-platform mobile apps with React Native. Use Expo for most projects (faster development, OTA updates), StyleSheet for performance-critical styles, FlatList for long lists, and React Navigation with type-safe hooks. Keep components small, memoize callbacks passed to lists, and test on both platforms from day one.
+> **Quick Guide:** Build cross-platform mobile apps with React Native's New Architecture (default since 0.76). Use Expo for most projects (faster development, OTA updates), FlashList for performant lists (or FlatList with proper optimization), React Navigation 7+ with type-safe hooks or static API. Keep components small, memoize callbacks passed to lists, and test on both platforms from day one.
 
 ---
 
@@ -15,42 +15,45 @@ description: React Native mobile development patterns - component architecture, 
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use FlatList for lists with more than 20 items - NEVER ScrollView with .map() for long lists)**
+**(You MUST use FlashList (preferred) or FlatList for lists with more than 20 items - NEVER ScrollView with .map() for long lists)**
 
-**(You MUST memoize renderItem callbacks and use stable keyExtractor functions in FlatList)**
+**(You MUST memoize renderItem callbacks and use stable keyExtractor functions - avoid key props on FlashList items as it breaks recycling)**
 
-**(You MUST wrap async state updates after await in proper state management - React Native has the same stale closure issues as React)**
+**(You MUST use react-native-safe-area-context for safe areas - React Native's built-in SafeAreaView is deprecated in 0.81+ and will be removed)**
 
 **(You MUST test on BOTH iOS AND Android from day one - platform differences cause bugs)**
 
-**(You MUST handle safe areas using react-native-safe-area-context - content behind notches breaks UX)**
-
 **(You MUST use Platform.select() or platform-specific files for platform differences - shadows, fonts, and feedback differ)**
+
+**(You MUST be aware the New Architecture is enabled by default since React Native 0.76 - Fabric, TurboModules, and bridgeless mode)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** React Native, react-native, Expo, expo-router, React Navigation, @react-navigation, StyleSheet, NativeWind, FlatList, ScrollView, View, Text, Pressable, TouchableOpacity, Platform.OS, Platform.select, SafeAreaView, KeyboardAvoidingView, Reanimated, Gesture Handler
+**Auto-detection:** React Native, react-native, Expo, expo-router, React Navigation, @react-navigation, StyleSheet, NativeWind, FlatList, FlashList, ScrollView, View, Text, Pressable, TouchableOpacity, Platform.OS, Platform.select, SafeAreaView, KeyboardAvoidingView, Reanimated, Gesture Handler, TurboModules, Fabric, JSI, New Architecture
 
 **When to use:**
 
 - Building cross-platform iOS and Android mobile applications
 - Creating native mobile UIs with React patterns
 - Implementing mobile navigation with stack, tab, or drawer patterns
-- Optimizing list performance with FlatList and virtualization
-- Adding gestures and animations with Reanimated
+- Optimizing list performance with FlashList/FlatList and virtualization
+- Adding gestures and animations with Reanimated 4
 - Handling platform-specific code for iOS vs Android differences
+- Working with React Native's New Architecture (Fabric, TurboModules, JSI)
 
 **Key patterns covered:**
 
+- New Architecture fundamentals (Fabric, TurboModules, JSI, bridgeless mode)
 - Component architecture with forwardRef and accessibility props
-- React Navigation with type-safe hooks and auth flows
+- React Navigation 7+ with type-safe hooks, static API, and auth flows
 - Styling with StyleSheet, NativeWind, and CVA variants
-- FlatList optimization with memoization and getItemLayout
+- FlashList/FlatList optimization with memoization and cell recycling
 - Platform-specific code with Platform.select and file extensions
-- Gesture handling with Reanimated 3+ and Gesture Handler
-- Expo vs bare workflow decision making
+- Gesture handling with Reanimated 4 and Gesture Handler
+- Expo SDK 52-54 vs bare workflow decision making
+- React 19 features (React Native 0.78+): useOptimistic, `use`, ref as props
 
 **When NOT to use:**
 
@@ -73,11 +76,22 @@ React Native enables building native mobile apps using React patterns. The key i
 
 **Core principles:**
 
-1. **Platform-first thinking** - iOS and Android have different UX conventions (haptics, ripples, navigation patterns)
-2. **Performance by default** - Mobile devices are constrained; use FlatList, memoize callbacks, avoid inline styles
-3. **Native feel matters** - Use native components, proper keyboard handling, safe area insets
-4. **Type safety prevents bugs** - Type navigation params, props, and native module interfaces
-5. **Test both platforms early** - Platform bugs compound over time; test daily on both
+1. **New Architecture first** - React Native 0.76+ uses the New Architecture by default (Fabric, TurboModules, JSI, bridgeless mode)
+2. **Platform-first thinking** - iOS and Android have different UX conventions (haptics, ripples, navigation patterns)
+3. **Performance by default** - Mobile devices are constrained; use FlashList/FlatList, memoize callbacks, avoid inline styles
+4. **Native feel matters** - Use native components, proper keyboard handling, safe area insets
+5. **Type safety prevents bugs** - Type navigation params, props, and native module interfaces
+6. **Test both platforms early** - Platform bugs compound over time; test daily on both
+
+**New Architecture (React Native 0.76+):**
+
+The New Architecture removes the legacy bridge and provides:
+- **Fabric** - Modern rendering engine with synchronous layout effects
+- **TurboModules** - Lazy-loaded native modules with type-safe interfaces
+- **JSI (JavaScript Interface)** - Direct synchronous JS-to-native calls without serialization
+- **Bridgeless Mode** - Complete removal of the async bridge for better performance
+
+Performance improvements with New Architecture: ~15ms faster app startup (~8% improvement), ~3.8MB smaller app size (20% reduction), ~15x faster Metro resolver, ~4x faster warm builds.
 
 **Mental model:**
 
@@ -499,6 +513,61 @@ export const useIsAuthenticated = () =>
 
 **Why good:** Zustand with AsyncStorage for persistence, selectors prevent unnecessary re-renders, devtools for debugging, partialize only persists needed state
 
+---
+
+### Pattern 6: React 19 Features (React Native 0.78+)
+
+React Native 0.78+ includes React 19 with new hooks and simplified patterns.
+
+```typescript
+import { use, useOptimistic } from "react";
+
+// useOptimistic - optimistic UI updates
+interface Message {
+  id: string;
+  text: string;
+  sending?: boolean;
+}
+
+function ChatInput({ onSend }: { onSend: (text: string) => Promise<void> }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+    messages,
+    (state, newMessage: Message) => [...state, { ...newMessage, sending: true }]
+  );
+
+  const handleSend = async (text: string) => {
+    const tempId = Date.now().toString();
+    addOptimisticMessage({ id: tempId, text });
+    await onSend(text);
+    // React automatically reverts if the promise rejects
+  };
+
+  return <MessageList messages={optimisticMessages} />;
+}
+
+// ref as props - no more forwardRef wrapper needed (React 19)
+interface InputProps {
+  ref?: React.Ref<TextInput>;
+  placeholder?: string;
+  onChangeText: (text: string) => void;
+}
+
+// Before React 19: Required forwardRef wrapper
+// After React 19: ref is just a regular prop
+function Input({ ref, placeholder, onChangeText }: InputProps) {
+  return (
+    <TextInput
+      ref={ref}
+      placeholder={placeholder}
+      onChangeText={onChangeText}
+    />
+  );
+}
+```
+
+**Why good:** useOptimistic provides automatic rollback on errors, ref as props eliminates forwardRef boilerplate, cleaner component APIs
+
 </patterns>
 
 ---
@@ -543,17 +612,17 @@ export const useIsAuthenticated = () =>
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use FlatList for lists with more than 20 items - NEVER ScrollView with .map() for long lists)**
+**(You MUST use FlashList (preferred) or FlatList for lists with more than 20 items - NEVER ScrollView with .map() for long lists)**
 
-**(You MUST memoize renderItem callbacks and use stable keyExtractor functions in FlatList)**
+**(You MUST memoize renderItem callbacks and use stable keyExtractor functions - avoid key props on FlashList items as it breaks recycling)**
 
-**(You MUST wrap async state updates after await in proper state management - React Native has the same stale closure issues as React)**
+**(You MUST use react-native-safe-area-context for safe areas - React Native's built-in SafeAreaView is deprecated in 0.81+ and will be removed)**
 
 **(You MUST test on BOTH iOS AND Android from day one - platform differences cause bugs)**
 
-**(You MUST handle safe areas using react-native-safe-area-context - content behind notches breaks UX)**
-
 **(You MUST use Platform.select() or platform-specific files for platform differences - shadows, fonts, and feedback differ)**
+
+**(You MUST be aware the New Architecture is enabled by default since React Native 0.76 - Fabric, TurboModules, and bridgeless mode)**
 
 **Failure to follow these rules will result in poor performance, platform-specific bugs, and broken UX on mobile devices.**
 

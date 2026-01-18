@@ -178,6 +178,67 @@ export const cardStyles = StyleSheet.create<CardStyles>({
 
 ---
 
+## New Architecture Style Props (React Native 0.76+)
+
+The New Architecture introduces `boxShadow` and `filter` props that work cross-platform.
+
+```typescript
+import { View, StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  // boxShadow - works on BOTH iOS and Android (New Architecture only)
+  cardWithBoxShadow: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    // String syntax (CSS-like)
+    boxShadow: "5 5 5 0 rgba(0, 0, 0, 0.2)",
+    // OR object syntax:
+    // boxShadow: {
+    //   offsetX: 5,
+    //   offsetY: 5,
+    //   blurRadius: 5,
+    //   spreadDistance: 0,
+    //   color: "rgba(0, 0, 0, 0.2)",
+    // },
+  },
+
+  // Inset shadow (New Architecture only, Android 10+)
+  insetShadowCard: {
+    boxShadow: "inset 0 2 4 0 rgba(0, 0, 0, 0.1)",
+  },
+
+  // filter - apply visual effects (New Architecture only)
+  blurredOverlay: {
+    filter: "blur(10)",
+  },
+
+  grayscaleImage: {
+    filter: "grayscale(1)",
+  },
+
+  // Multiple filters
+  combinedFilters: {
+    filter: "saturate(0.5) brightness(1.2)",
+    // OR array syntax:
+    // filter: [{ saturate: 0.5 }, { brightness: 1.2 }],
+  },
+});
+
+// NOTE: filter implies overflow: hidden and clips children outside parent bounds
+// NOTE: iOS filter only supports brightness and opacity
+// NOTE: Android blur and dropShadow require Android 12+
+```
+
+**Why use boxShadow over legacy shadow props:**
+- Works on both iOS AND Android (legacy shadow props are iOS-only)
+- Supports inset shadows
+- Includes spread parameter
+- Works on Views without background color
+- Web-aligned syntax
+
+---
+
 ## Platform-Specific Styling
 
 ```typescript

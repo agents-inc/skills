@@ -22,6 +22,24 @@ keywords:
   - development builds
   - app.config.ts
   - eas.json
+  - expo-video
+  - expo-audio
+  - expo-router/ui
+  - headless tabs
+  - TabList
+  - TabTrigger
+  - TabSlot
+  - native tabs
+  - NativeTabs
+  - expo-router/unstable-native-tabs
+  - edge-to-edge
+  - expo/fetch
+  - expo-file-system
+  - expo-glass-effect
+  - expo-app-integrity
+  - dismissTo
+  - dismissAll
+  - prefetch
 
 triggers:
   - expo
@@ -45,5 +63,20 @@ triggers:
   - expo-location
   - expo-image
   - expo-font
+  - expo-video
+  - expo-audio
+  - expo-router/ui
+  - TabList
+  - TabTrigger
+  - TabSlot
+  - headless tabs
+  - native tabs
+  - edge-to-edge Android
+  - expo/fetch
+  - expo-router/unstable-native-tabs
+  - NativeTabs
+  - expo-file-system
+  - dismissTo
+  - dismissAll
 
 version: 1.0.0

@@ -120,8 +120,14 @@ How to navigate?
 │   └─ router.replace("/path")
 ├─ Go back?
 │   └─ router.back()
-└─ Dismiss modal to specific route?
-    └─ router.dismissTo("/path")
+├─ Dismiss modal to specific route?
+│   └─ router.dismissTo("/path")
+├─ Dismiss all screens in stack?
+│   └─ router.dismissAll()
+├─ Prefetch for performance?
+│   └─ router.prefetch("/path")
+└─ Check if can go back/dismiss?
+    └─ router.canGoBack() / router.canDismiss()
 ```
 
 ---
@@ -135,6 +141,10 @@ How to navigate?
 - **Storing secrets in EXPO_PUBLIC_ variables** - these are embedded in JavaScript bundle, visible to anyone
 - **Manually editing android/ios in managed workflow** - changes lost on `prebuild --clean`; use config plugins instead
 - **Mixing version numbers incorrectly** - iOS buildNumber must be string, Android versionCode must be integer
+- **Using expo-av Video API** - deprecated in SDK 52+; migrate to `expo-video` (expo-av removed in SDK 55)
+- **Using expo-av Audio API** - deprecated in SDK 53+; migrate to `expo-audio` (expo-av removed in SDK 55)
+- **Not handling edge-to-edge display (Android)** - mandatory in SDK 54, cannot be disabled; use react-native-safe-area-context (React Native's SafeAreaView is deprecated)
+- **Using expo-file-system without updating imports (SDK 54+)** - default imports changed; legacy API moved to `expo-file-system/legacy`
 
 ### Medium Priority Issues
 
@@ -160,6 +170,15 @@ How to navigate?
 - **EAS Update has ~50MB limit** - large assets should use CDN, not bundled
 - **expo-dev-client overrides Expo Go** - can't use both in same build
 - **Android versionCode must strictly increase** - Play Store rejects same or lower values
+- **Push notifications removed from Expo Go (Android) in SDK 53** - use development builds
+- **Google Maps removed from Expo Go (Android) in SDK 53** - use development builds or expo-maps
+- **React 19 breaking changes in SDK 53** - state updates are batched differently; review React 19 upgrade guide
+- **AppDelegate is Swift in SDK 53+** - config plugins must use Swift modifications, not Objective-C
+- **package.json exports enforced in SDK 53** - Metro enforces ES Module resolution; some libraries may break
+- **expo-av completely removed in SDK 55** - must migrate to expo-video/expo-audio before upgrading
+- **Legacy Architecture removed after SDK 54** - React Native 0.82+ won't permit opting out
+- **Native tabs are alpha (SDK 54+)** - import from `expo-router/unstable-native-tabs`, API may change
+- **Android limited to 5 native tabs** - Material Design constraint, cannot be overridden
 
 ---
 
@@ -351,19 +370,39 @@ eas build --profile preview --platform all
 
 ## Expo SDK Compatibility Reference
 
-### SDK 51+ Features (Current)
+### SDK 52
 
-- New Architecture (Fabric, TurboModules) optional
-- Expo Router v3+
-- expo-dev-client improvements
-- React Native 0.74+
+- New Architecture enabled by default for new projects
+- React Native 0.76
+- Expo Router v4 with `dismissTo`
+- iOS 18 support, iOS minimum raised to 15.1
+- Android minSdkVersion 24, compileSdkVersion 35
+- `expo-video` stable (replaces expo-av Video)
+- Headless `<Tabs />` component (expo-router/ui)
 
-### SDK 52 (Latest)
+### SDK 53
 
-- New Architecture enabled by default
-- React Native 0.76+
-- Expo Router v4 with dismissTo
-- Improved iOS 18 support
+- New Architecture enabled by default for ALL projects
+- React Native 0.79 with React 19
+- Edge-to-edge display enabled by default (Android)
+- `expo-audio` stable (replaces expo-av Audio)
+- `expo-background-task` (replaces expo-background-fetch)
+- `expo/fetch` with streaming support
+- AppDelegate migrated to Swift (iOS)
+- Push notifications removed from Expo Go (Android)
+
+### SDK 54 (Latest)
+
+- React Native 0.81 with React 19.1
+- Expo Router v6 with Native Tabs (alpha via `expo-router/unstable-native-tabs`)
+- iOS 26 Liquid Glass support with Expo UI (beta)
+- Android 16 target (API 36), edge-to-edge mandatory and cannot be disabled
+- Precompiled React Native XCFrameworks for faster iOS builds (~10x improvement)
+- expo-file-system new API is default (legacy moved to `expo-file-system/legacy`)
+- **Final SDK supporting Legacy Architecture** - React Native 0.82+ won't permit opting out
+- Deprecated expo-notifications function exports removed
+- Minimum Node.js bumped to 20.19.4
+- Minimum Xcode bumped to 16.1 (Xcode 26 recommended)
 
 ### Migration Checklist
 

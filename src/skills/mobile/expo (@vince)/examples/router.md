@@ -726,3 +726,133 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+---
+
+## Headless Tabs (Custom Tab Layouts)
+
+SDK 52+ provides headless tab components via `expo-router/ui` for fully custom tab layouts. This feature is experimentally available in SDK 52 and later.
+
+### Basic Headless Tabs
+
+```typescript
+// app/(tabs)/_layout.tsx
+import { Tabs, TabList, TabTrigger, TabSlot } from "expo-router/ui";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+
+const TAB_BAR_HEIGHT = 60;
+
+export default function CustomTabLayout() {
+  return (
+    <Tabs>
+      {/* Content area */}
+      <TabSlot />
+
+      {/* Custom tab bar */}
+      <TabList style={styles.tabBar}>
+        <TabTrigger name="home" href="/" asChild>
+          <Pressable style={styles.tab}>
+            {({ isFocused }) => (
+              <Text style={[styles.tabText, isFocused && styles.tabTextFocused]}>
+                Home
+              </Text>
+            )}
+          </Pressable>
+        </TabTrigger>
+
+        <TabTrigger name="search" href="/search" asChild>
+          <Pressable style={styles.tab}>
+            {({ isFocused }) => (
+              <Text style={[styles.tabText, isFocused && styles.tabTextFocused]}>
+                Search
+              </Text>
+            )}
+          </Pressable>
+        </TabTrigger>
+
+        <TabTrigger name="profile" href="/profile" asChild>
+          <Pressable style={styles.tab}>
+            {({ isFocused }) => (
+              <Text style={[styles.tabText, isFocused && styles.tabTextFocused]}>
+                Profile
+              </Text>
+            )}
+          </Pressable>
+        </TabTrigger>
+      </TabList>
+    </Tabs>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabBar: {
+    flexDirection: "row",
+    height: TAB_BAR_HEIGHT,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabText: {
+    fontSize: 14,
+    color: "#8E8E93",
+  },
+  tabTextFocused: {
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+});
+```
+
+### TabTrigger Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `name` | string | Required identifier for the tab |
+| `href` | string | Required route destination (in TabList) |
+| `reset` | "always" \| "onLongPress" \| "never" | Navigation state reset behavior |
+| `asChild` | boolean | Pass navigation to child component |
+| `isFocused` | boolean | Forwarded prop indicating active state |
+
+### Native Tabs (SDK 54+ Alpha)
+
+SDK 54 introduces true native tabs with iOS 26 Liquid Glass support. **Note: This API is in alpha and subject to change.**
+
+```typescript
+// app/(tabs)/_layout.tsx
+// IMPORTANT: Import from unstable-native-tabs, not expo-router
+import { NativeTabs, Icon, Label, Badge } from "expo-router/unstable-native-tabs";
+
+const TAB_BAR_TINT_COLOR = "#007AFF";
+
+export default function TabLayout() {
+  return (
+    <NativeTabs
+      tintColor={TAB_BAR_TINT_COLOR}
+      minimizeBehavior="onScrollDown" // iOS 26+
+    >
+      <NativeTabs.Trigger name="index">
+        <Icon sf="house.fill" />
+        <Label>Home</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="search">
+        <Icon sf="magnifyingglass" />
+        <Label>Search</Label>
+        <Badge>3</Badge>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="profile">
+        <Icon sf="person.fill" />
+        <Label>Profile</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
+  );
+}
+
+// NOTE: Android has a limit of 5 tabs (Material Design constraint)
+```
