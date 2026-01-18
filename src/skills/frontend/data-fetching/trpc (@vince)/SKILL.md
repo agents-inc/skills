@@ -315,9 +315,9 @@ export type { AppRouter };
 
 ---
 
-### Pattern 5: React Query Client Setup
+### Pattern 5: React Query Client Setup (tRPC v11)
 
-Configure tRPC with React Query for data fetching, caching, and mutations.
+Configure tRPC with React Query v5 for data fetching, caching, and mutations.
 
 #### Constants
 
@@ -327,18 +327,19 @@ const DEFAULT_RETRY_ATTEMPTS = 3;
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/trpc";
 ```
 
-#### Implementation
+#### Implementation (New v11 TanStack Integration - Recommended)
 
 ```typescript
 // apps/client/lib/trpc.ts
-import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
+import { createTRPCContext } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@repo/api";
 
-// Create typed tRPC React hooks
-export const trpc = createTRPCReact<AppRouter>();
+// v11: Create typed context providers and hooks
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+  createTRPCContext<AppRouter>();
 
-// Named export
-export { trpc };
+// Named exports
+export { TRPCProvider, useTRPC, useTRPCClient };
 ```
 
 ```typescript
@@ -347,31 +348,49 @@ export { trpc };
 
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
-import { trpc } from "./trpc";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import superjson from "superjson";
+import { TRPCProvider } from "./trpc";
+import type { AppRouter } from "@repo/api";
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/trpc";
 
-export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: FIVE_MINUTES_MS,
-            retry: DEFAULT_RETRY_ATTEMPTS,
-          },
-        },
-      })
-  );
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: FIVE_MINUTES_MS,
+        retry: DEFAULT_RETRY_ATTEMPTS,
+      },
+      mutations: {
+        retry: false, // Don't retry mutations
+      },
+    },
+  });
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+function getQueryClient() {
+  if (typeof window === "undefined") {
+    return makeQueryClient();
+  }
+  if (!browserQueryClient) browserQueryClient = makeQueryClient();
+  return browserQueryClient;
+}
+
+export function AppTRPCProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
-    trpc.createClient({
+    createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
           url: API_URL,
+          // v11: transformer goes INSIDE the link (not at client level)
+          transformer: superjson,
           // Include credentials for auth cookies
           fetch(url, options) {
             return fetch(url, {
@@ -385,17 +404,35 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        {children}
+      </TRPCProvider>
+    </QueryClientProvider>
   );
 }
 
 // Named export
-export { TRPCProvider };
+export { AppTRPCProvider };
 ```
 
-**Why good:** httpBatchLink combines multiple requests into single HTTP call, QueryClient provides caching layer, credentials include ensures cookies flow for authentication
+#### Implementation (Classic Integration - Still Supported)
+
+```typescript
+// apps/client/lib/trpc-classic.ts
+import { createTRPCReact } from "@trpc/react-query";
+import type { AppRouter } from "@repo/api";
+
+// Classic v10/v11 compatible pattern
+export const trpc = createTRPCReact<AppRouter>();
+
+// Named export
+export { trpc };
+```
+
+**Why good:** httpBatchLink combines multiple requests into single HTTP call, transformer inside link (v11 pattern), QueryClient provides caching layer, credentials include ensures cookies flow for authentication
+
+**v11 CRITICAL:** Transformer must be inside `httpBatchLink()`, NOT at the `createTRPCClient()` level. Placing it at client level will cause errors.
 
 ---
 
@@ -403,7 +440,7 @@ export { TRPCProvider };
 
 Use generated hooks with full type inference from your backend procedures.
 
-#### Implementation
+#### Classic Pattern (tRPC v10/v11 compatible)
 
 ```typescript
 // apps/client/components/user-profile.tsx
@@ -413,7 +450,7 @@ export function UserProfile({ userId }: { userId: string }) {
   // Access query utilities for cache manipulation (declare before mutations that use it)
   const utils = trpc.useUtils();
 
-  // Query with full type inference
+  // Query with full type inference (classic pattern)
   const { data: user, isPending, error } = trpc.user.getById.useQuery({ id: userId });
 
   // Mutation with automatic type inference
@@ -445,7 +482,56 @@ export function UserProfile({ userId }: { userId: string }) {
 export { UserProfile };
 ```
 
-**Why good:** Full autocompletion from backend types, useUtils provides cache access, invalidation ensures data consistency after mutations
+#### New v11 Pattern with queryOptions/mutationOptions (Recommended)
+
+```typescript
+// apps/client/components/user-profile-v11.tsx
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/lib/trpc";
+
+export function UserProfileV11({ userId }: { userId: string }) {
+  // useTRPC from createTRPCContext provides typed procedure access
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  // v11: Use queryOptions for direct React Query integration
+  const { data: user, isPending, error } = useQuery(
+    trpc.user.getById.queryOptions({ id: userId })
+  );
+
+  // v11: Use mutationOptions for mutations with custom handlers
+  const updateUser = useMutation({
+    ...trpc.user.update.mutationOptions(),
+    onSuccess: () => {
+      // Use queryKey for type-safe invalidation
+      queryClient.invalidateQueries({
+        queryKey: trpc.user.getById.queryKey({ id: userId }),
+      });
+    },
+  });
+
+  if (isPending) return <Skeleton />;
+  if (error) return <Error message={error.message} />;
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+      <button
+        onClick={() => updateUser.mutate({ id: userId, name: "New Name" })}
+        disabled={updateUser.isPending}
+      >
+        {updateUser.isPending ? "Saving..." : "Update Name"}
+      </button>
+    </div>
+  );
+}
+
+// Named export
+export { UserProfileV11 };
+```
+
+**Why good:** Classic pattern works in v10/v11, new v11 pattern provides direct React Query access with `queryOptions`/`mutationOptions` factories, `queryKey` enables type-safe cache manipulation, follows TanStack Query patterns directly
 
 ---
 

@@ -282,6 +282,8 @@ const { data } = useQuery(GET_USER, {
 - **Missing keyArgs in paginated type policies** - Different filters overwrite each other in cache
 - **Default exports** - Use named exports for tree-shaking
 - **Magic numbers for polling/timeouts** - Use named constants like `POLL_INTERVAL_MS`
+- **(v4) Importing React hooks from `@apollo/client`** - Must use `@apollo/client/react` in v4
+- **(v4) Using `uri` option directly on ApolloClient** - Must use explicit `HttpLink` in v4
 
 **Medium Priority Issues:**
 
@@ -309,6 +311,21 @@ const { data } = useQuery(GET_USER, {
 - `refetchQueries` runs after `update` callback, not before
 - `pollInterval: 0` disables polling; omit the option entirely for no polling
 - Type policies with `keyFields: false` embed objects in parent (no separate cache entry)
+
+**v3.9+ Suspense Gotchas:**
+
+- `useSuspenseQuery` has no `loading` state - it suspends instead
+- Suspense errors throw to Error Boundaries, not returned as `error` prop
+- `queryRef` from `useLoadableQuery` must be passed to `useReadQuery` in a Suspense boundary
+- `createQueryPreloader` requires being called outside React tree (router loaders)
+
+**v4 Migration Gotchas:**
+
+- `notifyOnNetworkStatusChange` defaults to `true` in v4 (was `false` in v3)
+- `ApolloError` class removed - use `CombinedGraphQLErrors.is()` for type checking
+- `useMutation` types now enforce required variables at call site
+- `rxjs` is a peer dependency in v4 - must install explicitly
+- `defaultOptions` removed from `useQuery` - use global client defaults instead
 
 </red_flags>
 
@@ -441,3 +458,9 @@ typePolicies: {
 - [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions)
 - [Local State with Reactive Variables](https://www.apollographql.com/blog/apollo-client/caching/local-state-management-with-reactive-variables/)
 - [Fragment Colocation](https://www.apollographql.com/blog/optimizing-data-fetching-with-apollo-client-leveraging-usefragment-and-colocated-fragments)
+- [Apollo Client 3.9 Announcement](https://www.apollographql.com/blog/whats-new-in-apollo-client-3-9)
+- [Apollo Client 3.10 Announcement](https://www.apollographql.com/blog/whats-new-in-apollo-client-3-10)
+- [Apollo Client 4.0 Announcement](https://www.apollographql.com/blog/announcing-apollo-client-4-0)
+- [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration)
+- [Suspense Documentation](https://www.apollographql.com/docs/react/data/suspense)
+- [useFragment Documentation](https://www.apollographql.com/docs/react/api/react/hooks/#usefragment)

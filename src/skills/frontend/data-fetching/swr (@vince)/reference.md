@@ -36,7 +36,7 @@ Need data fetching in React?
 | Feature | SWR | React Query |
 |---------|-----|-------------|
 | Bundle size | 5.3KB | 16.2KB |
-| DevTools | No | Yes |
+| DevTools | Yes (v2+, browser extension) | Yes (built-in) |
 | Request cancellation | Manual | Built-in |
 | Mutations | useSWRMutation | useMutation (more features) |
 | Infinite queries | useSWRInfinite | useInfiniteQuery |
@@ -351,6 +351,7 @@ const fetcher = async (url) => {
 | `focusThrottleInterval` | `5000` | Focus revalidation throttle (ms) |
 | `keepPreviousData` | `false` | Keep data when key changes |
 | `suspense` | `false` | Enable Suspense mode |
+| `throwOnError` | `false` | Throw errors to error boundary (v2+) |
 | `fallback` | `{}` | Pre-fetched data for SSR |
 
 ### useSWR Return Values
@@ -381,6 +382,10 @@ const fetcher = async (url) => {
 - **SWR**: 5.3KB (minified + gzipped)
 - **React Query**: 16.2KB (roughly 3x larger)
 
+### DevTools
+- **SWR**: SWR DevTools browser extension (zero setup for v2+)
+- **React Query**: Built-in DevTools component with rich debugging UI
+
 ### API Philosophy
 - **SWR**: Minimal API, convention over configuration
 - **React Query**: Feature-rich, more options for fine-grained control
@@ -393,10 +398,6 @@ const fetcher = async (url) => {
 - **SWR**: useSWRMutation with optimisticData, rollbackOnError
 - **React Query**: useMutation with more lifecycle callbacks, better cancellation
 
-### DevTools
-- **SWR**: No built-in DevTools
-- **React Query**: Excellent DevTools for debugging
-
 ### When SWR Wins
 - Smaller bundle requirement
 - Simpler read-heavy applications
@@ -405,9 +406,9 @@ const fetcher = async (url) => {
 
 ### When React Query Wins
 - Complex mutation workflows
-- Need DevTools for debugging
 - Request cancellation required
 - Component-level cache control needed
+- More lifecycle hooks for mutations needed
 
 ---
 
@@ -416,5 +417,6 @@ const fetcher = async (url) => {
 - [SWR Documentation](https://swr.vercel.app/)
 - [SWR 2.0 Announcement](https://swr.vercel.app/blog/swr-v2)
 - [SWR GitHub Repository](https://github.com/vercel/swr)
+- [SWR DevTools](https://swr-devtools.vercel.app/)
 - [React Query vs SWR Comparison](https://tanstack.com/query/v4/docs/framework/react/comparison)
 - [Data Fetching in Next.js with useSWR](https://blog.logrocket.com/handling-data-fetching-next-js-useswr/)

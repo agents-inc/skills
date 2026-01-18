@@ -5,7 +5,7 @@ description: URQL GraphQL client patterns - useQuery, useMutation, exchange arch
 
 # URQL GraphQL Client Patterns
 
-> **Quick Guide:** Use URQL for GraphQL APIs when you need a lightweight, customizable client with exchange-based architecture. Start minimal with document caching, add normalized caching via Graphcache when needed. Bundle size is ~12-17KB gzipped.
+> **Quick Guide:** Use URQL for GraphQL APIs when you need a lightweight, customizable client with exchange-based architecture. Start minimal with document caching, add normalized caching via Graphcache when needed. Bundle size is ~12KB gzipped (core), ~20KB with Graphcache. **Current version: @urql/core v6.0.1 (urql v5.0.1)**
 
 ---
 
@@ -15,9 +15,9 @@ description: URQL GraphQL client patterns - useQuery, useMutation, exchange arch
 
 **(You MUST configure exchange order correctly - synchronous exchanges (cacheExchange) before asynchronous (fetchExchange))**
 
-**(You MUST wrap ALL state updates after `await` in `runInAction()` or similar when using reactive stores)**
-
 **(You MUST include `__typename` in optimistic responses for Graphcache cache normalization)**
+
+**(You MUST set `preferGetMethod: false` if your GraphQL server does NOT support GET requests - v6+ defaults to GET for queries under 2048 characters)**
 
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
 
@@ -58,6 +58,7 @@ description: URQL GraphQL client patterns - useQuery, useMutation, exchange arch
 - For code examples, see [examples/core.md](examples/core.md)
 - For exchange patterns, see [examples/exchanges.md](examples/exchanges.md)
 - For real-time subscriptions, see [examples/subscriptions.md](examples/subscriptions.md)
+- For v6 features and breaking changes, see [examples/v6-features.md](examples/v6-features.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -70,7 +71,7 @@ URQL follows the principle of **progressive enhancement**. The core package prov
 
 **Core Principles:**
 
-1. **Minimal by Default**: Start with ~12KB, add features as needed
+1. **Minimal by Default**: Start with ~10KB, add features as needed
 2. **Exchange-Based Architecture**: Middleware-style plugins for extensibility
 3. **Stream-Based Operations**: All operations are Observable streams via Wonka
 4. **Document Caching Default**: Simple query+variables hash caching, opt-in normalized cache
@@ -429,9 +430,9 @@ Mock GraphQL operations at the network level using your mocking solution. URQL p
 
 **(You MUST configure exchange order correctly - synchronous exchanges (cacheExchange) before asynchronous (fetchExchange))**
 
-**(You MUST wrap ALL state updates after `await` in `runInAction()` or similar when using reactive stores)**
-
 **(You MUST include `__typename` in optimistic responses for Graphcache cache normalization)**
+
+**(You MUST set `preferGetMethod: false` if your GraphQL server does NOT support GET requests - v6+ defaults to GET for queries under 2048 characters)**
 
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
 

@@ -14,7 +14,7 @@
 Is your API GraphQL?
 ├─ NO → Use your REST data fetching solution
 └─ YES → Consider these factors:
-    ├─ Bundle size critical? (~12KB vs ~30KB)
+    ├─ Bundle size critical? (~12KB core vs ~30KB+)
     │   └─ YES → URQL is lighter
     ├─ Need highly customizable middleware?
     │   └─ YES → URQL exchanges are more flexible
@@ -47,9 +47,9 @@ How should this query fetch data?
 ```
 What caching do you need?
 ├─ Simple query caching (query + variables = cache key)?
-│   └─ cacheExchange (default) - ~12KB
+│   └─ cacheExchange (default)
 ├─ Need normalized cache (entities stored once)?
-│   └─ Graphcache - adds ~8KB
+│   └─ Graphcache - adds ~8KB to core
 ├─ Need offline support with persistence?
 │   └─ offlineExchange from Graphcache
 └─ No caching needed?
@@ -305,6 +305,9 @@ if (error && data) {
 - Subscriptions auto-unsubscribe on component unmount - no manual cleanup needed
 - `pollInterval` is not built-in - use `requestPolicyExchange` for TTL-based refresh
 - Exchange order determines data flow - sync exchanges process operations first
+- **v6.0.0 BREAKING:** Default behavior uses GET for queries under 2048 characters - set `preferGetMethod: false` if your server doesn't support GET (see [examples/v6-features.md](examples/v6-features.md))
+- **v6.0.1:** Fixed `preferGetMethod: false` handling - now properly uses POST when explicitly set to false
+- **v5.0.0 BREAKING:** `dedupExchange` was removed - deduplication is now built into the core client (no migration needed, just remove from exchanges array)
 
 </red_flags>
 

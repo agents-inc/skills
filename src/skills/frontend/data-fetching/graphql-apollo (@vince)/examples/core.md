@@ -8,6 +8,7 @@
 - [fragments.md](fragments.md) - Reusable field selections
 - [subscriptions.md](subscriptions.md) - Real-time data with WebSockets
 - [testing.md](testing.md) - MockedProvider, component tests, cache testing
+- [suspense.md](suspense.md) - v3.9+ Suspense hooks (useSuspenseQuery, useLoadableQuery)
 
 ---
 

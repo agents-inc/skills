@@ -5,7 +5,7 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 # Apollo Client GraphQL Patterns
 
-> **Quick Guide:** Use Apollo Client for GraphQL APIs. Provides automatic caching, optimistic updates, and real-time subscriptions. Use GraphQL Codegen for type safety.
+> **Quick Guide:** Use Apollo Client for GraphQL APIs. Provides automatic caching, optimistic updates, and real-time subscriptions. Use GraphQL Codegen for type safety. **v3.9+** adds Suspense hooks (`useSuspenseQuery`, `useLoadableQuery`); **v4.0** moves React imports to `@apollo/client/react`.
 
 ---
 
@@ -27,7 +27,7 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 ---
 
-**Auto-detection:** Apollo Client, useQuery, useMutation, useSubscription, ApolloClient, InMemoryCache, gql, GraphQL, optimistic updates, cache policies
+**Auto-detection:** Apollo Client, useQuery, useMutation, useSubscription, useSuspenseQuery, useLoadableQuery, useBackgroundQuery, useFragment, ApolloClient, InMemoryCache, gql, GraphQL, optimistic updates, cache policies, createQueryPreloader
 
 **When to use:**
 
@@ -53,9 +53,13 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 - Fragment colocation with useFragment
 - GraphQL Codegen integration for type safety
 - Local state with reactive variables
+- **v3.9+**: useSuspenseQuery, useLoadableQuery, useBackgroundQuery for Suspense
+- **v3.9+**: createQueryPreloader for preloading outside React
+- **v3.10+**: Schema-based testing with createTestSchema
 
 **Detailed Resources:**
 - For code examples, see [examples/core.md](examples/core.md)
+- For v3.9+ Suspense patterns, see [examples/suspense.md](examples/suspense.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -787,6 +791,67 @@ export { CartBadge };
 
 **Why good:** Reactive variables provide simple local state without Redux complexity, useReactiveVar hook triggers re-renders on changes, can be queried via type policies if needed, helper functions encapsulate state mutations
 
+---
+
+### Pattern 9: Suspense with useSuspenseQuery (v3.9+)
+
+Use `useSuspenseQuery` for Suspense-enabled data fetching that integrates with React's concurrent features.
+
+See [examples/suspense.md](examples/suspense.md) for complete implementation patterns including:
+- `useSuspenseQuery` for component-level Suspense
+- `useLoadableQuery` for user-interaction triggered loading
+- `useBackgroundQuery` + `useReadQuery` for background loading
+- `createQueryPreloader` for preloading outside React (router integration)
+
+---
+
+### Pattern 10: useFragment for Data Masking (v3.8+)
+
+Use `useFragment` to read fragment data directly from the cache with automatic updates.
+
+```typescript
+// components/user-card.tsx
+import { useFragment, gql } from "@apollo/client";
+import type { FragmentType, useFragment as useFragmentType } from "@/generated/graphql";
+
+const USER_CARD_FRAGMENT = gql`
+  fragment UserCardFragment on User {
+    id
+    name
+    avatar
+    email
+  }
+`;
+
+interface UserCardProps {
+  userRef: FragmentType<typeof USER_CARD_FRAGMENT>;
+}
+
+function UserCard({ userRef }: UserCardProps) {
+  // Reads fragment data from cache, updates automatically
+  const { data: user, complete } = useFragment({
+    fragment: USER_CARD_FRAGMENT,
+    from: userRef,
+  });
+
+  if (!complete) {
+    return <UserCardSkeleton />;
+  }
+
+  return (
+    <div className="user-card">
+      <img src={user.avatar} alt={user.name} />
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+
+export { UserCard, USER_CARD_FRAGMENT };
+```
+
+**Why good:** useFragment reads directly from cache without additional queries, `complete` flag indicates if all fragment fields are available, automatic re-render when fragment data updates in cache
+
 </patterns>
 
 ---
@@ -812,6 +877,100 @@ export { CartBadge };
 
 ---
 
+<version_migration>
+
+## Apollo Client v4 Migration Notes
+
+**Apollo Client v4** (released September 2025) introduces significant breaking changes. If upgrading from v3, review:
+
+### Import Path Changes (CRITICAL)
+
+```typescript
+// v3 imports (DEPRECATED in v4)
+import { useQuery, useMutation, ApolloProvider } from "@apollo/client";
+
+// v4 imports (REQUIRED)
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { useQuery, useMutation, ApolloProvider } from "@apollo/client/react";
+```
+
+### New `dataState` Property (v4)
+
+```typescript
+// v4: Use dataState for TypeScript-safe state checking
+const { data, dataState } = useQuery(GET_USER);
+
+// dataState values: "empty" | "partial" | "streaming" | "complete"
+if (dataState === "complete") {
+  // TypeScript knows data is fully populated
+  return <UserCard user={data.user} />;
+}
+```
+
+### Error Handling Changes (v4)
+
+```typescript
+// v3: Single ApolloError class
+import { ApolloError } from "@apollo/client";
+if (error instanceof ApolloError) { ... }
+
+// v4: Specific error classes
+import { CombinedGraphQLErrors, ServerError, ServerParseError } from "@apollo/client";
+if (CombinedGraphQLErrors.is(error)) { ... }
+if (ServerError.is(error)) { ... }
+```
+
+### RxJS Dependency (v4)
+
+```bash
+# v4 requires rxjs as peer dependency
+npm install rxjs
+```
+
+### Client Initialization (v4)
+
+```typescript
+// v3: uri option on ApolloClient (DEPRECATED)
+const client = new ApolloClient({
+  uri: "https://api.example.com/graphql",
+  name: "my-app",
+  version: "1.0.0",
+  cache: new InMemoryCache(),
+});
+
+// v4: Explicit HttpLink + clientAwareness (REQUIRED)
+import { HttpLink } from "@apollo/client/link/http";
+const client = new ApolloClient({
+  link: new HttpLink({ uri: "https://api.example.com/graphql" }),
+  cache: new InMemoryCache(),
+  clientAwareness: {
+    name: "my-app",
+    version: "1.0.0",
+  },
+});
+```
+
+### notifyOnNetworkStatusChange Default (v4)
+
+```typescript
+// v3: Defaults to false
+useQuery(GET_USER); // notifyOnNetworkStatusChange: false
+
+// v4: Defaults to true (BREAKING CHANGE)
+useQuery(GET_USER); // notifyOnNetworkStatusChange: true
+
+// Explicitly set to false in v4 if you want v3 behavior
+useQuery(GET_USER, { notifyOnNetworkStatusChange: false });
+```
+
+**Codemod available:** `npx @apollo/client-codemod-migrate-3-to-4`
+
+See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration) for complete details.
+
+</version_migration>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS
@@ -825,6 +984,8 @@ export { CartBadge };
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
 
 **(You MUST use named exports only - NO default exports)**
+
+**(For v4: You MUST import React hooks from `@apollo/client/react` - NOT from `@apollo/client`)**
 
 **Failure to follow these rules will cause cache inconsistencies, type drift, and production bugs.**
 

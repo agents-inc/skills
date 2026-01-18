@@ -2,7 +2,7 @@
 category: data-fetching
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 2.0.0
 compatible_with:
   - frontend/react
   - frontend/client-state
@@ -14,3 +14,7 @@ tags:
   - real-time
   - subscriptions
   - optimistic-updates
+  - suspense
+  - useSuspenseQuery
+  - useLoadableQuery
+  - apollo-client-v4
