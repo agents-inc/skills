@@ -23,8 +23,19 @@ Single app or tight monorepo?
 Where is the event triggered?
 ├─ Browser/React component → posthog-js (usePostHog hook)
 ├─ API route/server action → posthog-node (getPostHogServerClient)
+│   └─ Serverless (Vercel/Lambda)?
+│       ├─ YES → Use captureImmediate() (simplest)
+│       └─ Or → Use capture() + await flush()
 ├─ React Server Component → posthog-node (but consider if needed)
 └─ Hono middleware → posthog-node with analyticsMiddleware
+```
+
+### Next.js Setup Approach
+
+```
+Which Next.js version?
+├─ 15.3+ → Use instrumentation-client.js (simpler)
+└─ < 15.3 → Use PostHogProvider component
 ```
 
 ### US vs EU Hosting
@@ -82,10 +93,12 @@ Where are your users?
 
 **Gotchas & Edge Cases:**
 
-- `posthog-js` must be initialized after `window` is available (hence useEffect)
-- Server-side SDK requires explicit `flush()` or `shutdown()` - doesn't auto-flush like client
+- `posthog-js` must be initialized after `window` is available (hence useEffect or instrumentation-client.js)
+- Server-side SDK requires explicit `flush()`, `shutdown()`, or `captureImmediate()` - doesn't auto-flush like client
+- `captureImmediate()` is simpler for serverless but sends one HTTP request per event (no batching)
 - Free tier resets monthly - 1M events then stops capturing until next month
 - `person_profiles: 'identified_only'` reduces costs but means no anonymous user profiles
+- Next.js 15.3+ `instrumentation-client.js` values remain fixed for the session - bootstrapping only works if flags are evaluated on the server before render
 
 ---
 

@@ -80,6 +80,13 @@ Resend is a **developer-first email API** built by the creators of React Email. 
 3. **Monorepo separation** - Email templates in dedicated package, not mixed with app code
 4. **Type-safe sending** - Full TypeScript support from template to API call
 
+**React Email 5.0 (Current):**
+
+- Requires Tailwind 4 (compatibility checker only supports Tailwind 4)
+- Supports React 19.2 and Next.js 16
+- Dark mode theming support with tested email client compatibility
+- Templates can be uploaded directly to Resend dashboard via CLI
+
 **When to use Resend:**
 
 - Transactional emails (verification, password reset, notifications)
@@ -221,12 +228,12 @@ bun add -D react-email typescript @types/react
     "export": "email export --outDir dist"
   },
   "dependencies": {
-    "@react-email/components": "^0.0.37",
-    "resend": "^4.1.0"
+    "@react-email/components": "^1.0.4",
+    "resend": "^6.7.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "react-email": "^3.0.0",
+    "@types/react": "^19.0.0",
+    "react-email": "^5.0.0",
     "typescript": "^5.0.0"
   }
 }

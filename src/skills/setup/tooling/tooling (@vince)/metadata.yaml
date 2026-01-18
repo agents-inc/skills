@@ -2,13 +2,16 @@
 category: setup
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1.1.0
 compatible_with:
   - setup/turborepo
 tags:
   - eslint
   - prettier
   - typescript
+  - vite
+  - rolldown
   - configuration
   - linting
   - formatting
+  - bundler

@@ -19,6 +19,33 @@ export const POSTHOG_DEFAULTS_VERSION = "2025-11-30";
 
 ---
 
+## Pattern 1b: Next.js 15.3+ with instrumentation-client.js
+
+For Next.js 15.3+, use the simpler `instrumentation-client.js` approach instead of a provider.
+
+```typescript
+// ✅ Good Example - instrumentation-client.js (Next.js 15.3+)
+// instrumentation-client.js (in project root)
+import posthog from "posthog-js";
+
+posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+  api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  defaults: "2025-11-30",
+  person_profiles: "identified_only",
+});
+
+// Optional: Enable debug mode in development
+if (process.env.NODE_ENV === "development") {
+  posthog.debug();
+}
+```
+
+**Why good:** Simpler setup for Next.js 15.3+, no provider component needed, PostHog auto-initializes on client, works with both App Router and Pages Router
+
+**When to use:** Next.js 15.3+ projects. For older versions, use the PostHogProvider pattern below.
+
+---
+
 ## Pattern 2: PostHogProvider Component
 
 Create the provider component for client-side analytics.

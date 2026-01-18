@@ -29,7 +29,7 @@ description: Environment configuration, Zod validation
 
 ---
 
-**Auto-detection:** Environment variables, .env files, Zod validation, secrets management, NEXT*PUBLIC* prefix, VITE\_ prefix, feature flags
+**Auto-detection:** Environment variables, .env files, Zod validation, t3-env, @t3-oss/env, secrets management, NEXT*PUBLIC* prefix, VITE\_ prefix, feature flags, z.stringbool
 
 **When to use:**
 
@@ -49,12 +49,14 @@ description: Environment configuration, Zod validation
 
 - Per-app .env files (not root-level, prevents conflicts)
 - Zod validation at startup for type safety and early failure
+- T3 Env pattern for Next.js/Vite projects (recommended)
 - Framework-specific prefixes (NEXT*PUBLIC*\_ for client, VITE\_\_ for Vite client)
 - .env.example templates for documentation and onboarding
 
 **Detailed Resources:**
 - For code examples, see [examples/](examples/) folder:
   - [examples/core.md](examples/core.md) - Essential patterns (per-app .env, Zod validation)
+  - [examples/t3-env.md](examples/t3-env.md) - T3 Env pattern for Next.js/Vite (recommended)
   - [examples/naming-and-templates.md](examples/naming-and-templates.md) - Framework prefixes, .env.example
   - [examples/security-and-secrets.md](examples/security-and-secrets.md) - Secret management
   - [examples/feature-flags-and-config.md](examples/feature-flags-and-config.md) - Feature flags, centralized config
@@ -169,7 +171,9 @@ const envSchema = z.object({
   // Public variables (VITE_ prefix)
   VITE_API_URL: z.string().url(),
   VITE_API_TIMEOUT: z.coerce.number().default(DEFAULT_API_TIMEOUT_MS),
-  VITE_ENABLE_ANALYTICS: z.coerce.boolean().default(false),
+  // Use z.stringbool() for boolean env vars (Zod 4+)
+  // Handles "true"/"false"/"1"/"0"/"yes"/"no" correctly
+  VITE_ENABLE_ANALYTICS: z.stringbool().default(false),
   VITE_ENVIRONMENT: z.enum(["development", "staging", "production"]),
 
   // Build-time variables
@@ -203,6 +207,8 @@ console.log(env.VITE_ENABLE_ANALYTICS); // boolean
 ```
 
 **Why good:** Type safety prevents runtime errors from typos or wrong types, runtime validation fails fast at startup with clear error messages, default values reduce required configuration, IDE autocomplete improves DX
+
+> **Note:** For Next.js/Vite projects, consider using T3 Env (`@t3-oss/env-nextjs` or `@t3-oss/env-core`) which provides additional features like client/server variable separation and build-time validation. See [examples/t3-env.md](examples/t3-env.md).
 
 See [examples/core.md](examples/core.md) for complete good/bad comparisons.
 
@@ -246,6 +252,7 @@ See [examples/naming-and-templates.md](examples/naming-and-templates.md) for com
 **Works with:**
 
 - **Zod**: Runtime validation and type inference for environment variables
+- **T3 Env**: Recommended wrapper for Zod validation with client/server separation (`@t3-oss/env-nextjs`, `@t3-oss/env-core`)
 - **Turborepo**: Declare shared env vars in turbo.json for cache invalidation (see setup/monorepo/basic.md)
 - **CI/CD**: GitHub Secrets, Vercel Environment Variables for production secrets (see backend/ci-cd/basic.md)
 - **Next.js**: Automatic .env file loading with NEXT_PUBLIC_* prefix for client-side
@@ -301,7 +308,9 @@ See [reference.md](reference.md) for complete decision frameworks including feat
 
 **Gotchas:**
 - Next.js/Vite embed prefixed variables at **build time**, not runtime - requires rebuild to change
-- Environment variables are strings - use `z.coerce.number()` or `z.coerce.boolean()` for conversion
+- Environment variables are strings - use `z.coerce.number()` for numbers, use `z.stringbool()` for booleans (Zod 4+)
+- **CRITICAL:** `z.coerce.boolean()` converts "false" to `true` (string is truthy) - use `z.stringbool()` instead
+- Empty string env vars are NOT `undefined` - use T3 Env's `emptyStringAsUndefined: true` option
 - Turborepo cache is NOT invalidated by env changes unless declared in `turbo.json` env array
 
 See [reference.md](reference.md) for complete RED FLAGS, anti-patterns, and checklists.

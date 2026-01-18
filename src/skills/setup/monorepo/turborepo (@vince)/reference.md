@@ -214,13 +214,96 @@ Is this a monorepo?
 
 ---
 
+## Turborepo 2.x Features
+
+### New in Turborepo 2.7
+
+**Devtools (Visual Graph Exploration):**
+
+```bash
+# Launch visual devtools for Package/Task Graph exploration
+turbo devtools
+# Opens turborepo.dev/devtools with hot-reloading
+```
+
+**Composable Configuration (`$TURBO_EXTENDS$`):**
+
+Package configurations can now extend and append to inherited arrays instead of overwriting:
+
+```json
+// packages/web/turbo.json - Extend root config and ADD to arrays
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["$TURBO_EXTENDS$", "public/**"]
+    }
+  }
+}
+```
+
+**New Task Options:**
+
+| Option | Type | Purpose |
+|--------|------|---------|
+| `description` | `string` | Human-readable task documentation |
+| `interruptible` | `boolean` | Allow `turbo watch` to restart persistent tasks |
+| `with` | `string[]` | Tasks to run alongside this task |
+
+**Package Boundaries (Tags):**
+
+```json
+// turbo.json - Define package boundaries
+{
+  "boundaries": {
+    "tags": {
+      "@repo/ui": ["ui"],
+      "@repo/api": ["api"]
+    }
+  }
+}
+
+// Package turbo.json - Restrict dependencies
+{
+  "tags": ["ui"],
+  "boundaries": {
+    "allow": ["shared"],
+    "deny": ["api"]
+  }
+}
+```
+
+**Biome Integration:**
+
+Turborepo 2.7+ includes a Biome rule `noUndeclaredEnvVars` to lint for undeclared environment variables (requires Biome 2.3.10+).
+
+### Breaking Changes (Turborepo 2.0)
+
+If migrating from Turborepo 1.x, run the codemod:
+
+```bash
+npx @turbo/codemod migrate
+```
+
+Key changes:
+- `pipeline` renamed to `tasks`
+- `outputMode` renamed to `outputLogs`
+- `globalDotEnv` and `dotEnv` removed (use `inputs` instead)
+- Strict Mode for environment variables is now default
+- `--ignore` removed (use `--filter` instead)
+- `packageManager` field required in root package.json
+
+---
+
 ## Resources
 
 **Official documentation:**
 
-- Turborepo: https://turbo.build/repo/docs
-- Turborepo CI/CD: https://turbo.build/repo/docs/ci
-- Turborepo Caching: https://turbo.build/repo/docs/core-concepts/caching
+- Turborepo: https://turborepo.dev/docs
+- Turborepo Configuration: https://turborepo.dev/docs/reference/configuration
+- Turborepo CI/CD: https://turborepo.dev/docs/ci
+- Turborepo Caching: https://turborepo.dev/docs/core-concepts/caching
+- Turborepo Upgrading: https://turborepo.dev/docs/crafting-your-repository/upgrading
 - Bun Workspaces: https://bun.sh/docs/install/workspaces
 
 **Tools:**
