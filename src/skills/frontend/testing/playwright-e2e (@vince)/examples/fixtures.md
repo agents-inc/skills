@@ -124,4 +124,25 @@ export const test = base.extend<DatabaseFixtures>({
 
 ---
 
+## Pattern: IndexedDB Storage State (v1.51+)
+
+Save and restore IndexedDB contents for authentication tokens (useful for Firebase Auth, etc.).
+
+```typescript
+// Save storage state including IndexedDB
+await context.storageState({
+  path: 'auth.json',
+  indexedDB: true  // v1.51+ feature
+});
+
+// Restore in another context
+const context = await browser.newContext({
+  storageState: 'auth.json'
+});
+```
+
+**Why good:** Handles modern auth systems that store tokens in IndexedDB, eliminates re-authentication between tests, works with Firebase and similar platforms
+
+---
+
 _See [core.md](core.md) for foundational patterns: User Flows, Basic Page Objects, Network Mocking, and Configuration._

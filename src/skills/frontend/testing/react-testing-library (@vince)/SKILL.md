@@ -29,7 +29,7 @@ description: React Testing Library patterns - query hierarchy, userEvent, async 
 
 ---
 
-**Auto-detection:** React Testing Library, @testing-library/react, render, screen, userEvent, fireEvent, waitFor, findBy, getByRole, getByLabelText, renderHook, within, cleanup, prettyDOM
+**Auto-detection:** React Testing Library, @testing-library/react, render, screen, userEvent, fireEvent, waitFor, findBy, getByRole, getByLabelText, renderHook, within, cleanup, prettyDOM, configure, logRoles, logTestingPlaygroundURL
 
 **When to use:**
 
@@ -56,6 +56,8 @@ description: React Testing Library patterns - query hierarchy, userEvent, async 
 - Custom render with providers
 - Accessibility testing patterns
 - Debug utilities (screen.debug, prettyDOM, logRoles)
+- Scoped queries with `within`
+- Global configuration options
 
 **Detailed Resources:**
 - For code examples, see `examples/` folder:
@@ -66,6 +68,8 @@ description: React Testing Library patterns - query hierarchy, userEvent, async 
   - [examples/hooks.md](examples/hooks.md) - renderHook patterns
   - [examples/accessibility.md](examples/accessibility.md) - Accessibility testing patterns
   - [examples/debugging.md](examples/debugging.md) - Debug utilities and snapshot testing
+  - [examples/scoped-queries.md](examples/scoped-queries.md) - within() for scoped queries
+  - [examples/configuration.md](examples/configuration.md) - Global configuration options
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -388,6 +392,104 @@ See [examples/debugging.md](examples/debugging.md) for complete debug examples.
 - Need to understand current DOM state
 
 **Remove before committing:** Debug statements are for development only.
+
+---
+
+### Pattern 8: Scoped Queries with within
+
+Use `within` to scope queries to a specific container element. Essential when testing components with repeated structures.
+
+#### Basic Usage
+
+```typescript
+import { render, screen, within } from "@testing-library/react";
+
+test("selects item in specific section", () => {
+  render(<Dashboard />);
+
+  // Get a specific section
+  const sidebar = screen.getByRole("navigation");
+
+  // Query only within that section
+  const homeLink = within(sidebar).getByRole("link", { name: /home/i });
+  expect(homeLink).toBeInTheDocument();
+});
+```
+
+#### Testing List Items
+
+```typescript
+test("each row has edit button", () => {
+  render(<UserTable users={mockUsers} />);
+
+  const rows = screen.getAllByRole("row");
+
+  // Skip header row, check each data row
+  rows.slice(1).forEach((row) => {
+    const editButton = within(row).getByRole("button", { name: /edit/i });
+    expect(editButton).toBeInTheDocument();
+  });
+});
+```
+
+See [examples/scoped-queries.md](examples/scoped-queries.md) for complete within() examples.
+
+**When to use within:**
+- Components with repeated structures (tables, lists, cards)
+- Multiple sections with similar elements
+- Testing specific regions of a page
+
+---
+
+### Pattern 9: Global Configuration
+
+Configure Testing Library defaults for your project using `configure`.
+
+#### Configuration Options
+
+```typescript
+import { configure } from "@testing-library/react";
+
+// In test setup file
+configure({
+  // Custom test ID attribute (default: "data-testid")
+  testIdAttribute: "data-test-id",
+
+  // Async utility timeout (default: 1000ms)
+  asyncUtilTimeout: 5000,
+
+  // Enable React strict mode warnings in tests
+  reactStrictMode: true,
+});
+```
+
+#### userEvent Setup Options
+
+```typescript
+import userEvent from "@testing-library/user-event";
+
+// With fake timers (Vitest/Jest)
+const user = userEvent.setup({
+  advanceTimers: vi.advanceTimersByTime, // Required for fake timers
+});
+
+// Skip pointer events check (for elements with pointer-events: none)
+const user = userEvent.setup({
+  pointerEventsCheck: 0, // 0 = never check, 1 = check once, 2 = check per API
+});
+
+// Custom delay between events
+const user = userEvent.setup({
+  delay: null, // null = no delay (faster tests)
+});
+```
+
+See [examples/configuration.md](examples/configuration.md) for complete configuration examples.
+
+**When to configure:**
+- Project uses custom test ID attribute
+- Tests need longer async timeouts
+- Using fake timers with userEvent
 
 </patterns>
 

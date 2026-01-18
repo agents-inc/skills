@@ -29,7 +29,7 @@ description: Cypress E2E testing patterns - test structure, data-cy selectors, c
 
 ---
 
-**Auto-detection:** Cypress, cy.visit, cy.get, cy.intercept, data-cy, describe, it, beforeEach, cy.fixture, cy.mount, cypress-axe
+**Auto-detection:** Cypress, cy.visit, cy.get, cy.intercept, cy.origin, cy.session, data-cy, describe, it, beforeEach, cy.fixture, cy.mount, cypress-axe
 
 **When to use:**
 
@@ -493,6 +493,8 @@ npx cypress run --browser chrome
 - Using CSS selectors like `.btn-primary` or `#submit-btn` - fragile and break on refactoring, use data-cy
 - Tests that depend on previous tests - coupled tests fail randomly, each it() must be independent
 - Storing values in `const` for later use - Cypress commands are async, use aliases with `.as()` instead
+- **Cypress 14+:** Not using `cy.origin()` for multi-origin tests - required due to Chrome's deprecation of document.domain
+- Using deprecated `resourceType` option on `cy.intercept()` - deprecated in Cypress 14.0.0, may be removed in future versions
 
 **Medium Priority Issues:**
 
