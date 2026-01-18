@@ -10,7 +10,8 @@ description: Investigation flow (Glob -> Grep -> Read), evidence-based research 
 ---
 
 **Detailed Resources:**
-- For code examples and templates, see [examples.md](examples.md)
+- For code examples and templates, see [examples/core.md](examples/core.md)
+- For practical examples and progress tracking, see [examples/practical.md](examples/practical.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -108,7 +109,7 @@ The three-step investigation flow ensures thorough and efficient research.
 
 **Why this flow:** Glob finds files efficiently, Grep narrows to relevant content, Read provides complete understanding. This prevents speculation and ensures evidence-based claims.
 
-For detailed code examples, see [examples.md](examples.md#pattern-1-investigation-flow).
+For detailed code examples, see [examples/core.md](examples/core.md#pattern-1-investigation-flow).
 
 ---
 
@@ -135,7 +136,7 @@ Every claim in research findings must have supporting evidence with file paths a
 
 **Why this matters:** Developer agents will use your research to implement features. Inaccurate or unverified claims will lead them astray.
 
-For good/bad comparison examples, see [examples.md](examples.md#pattern-2-evidence-based-claims).
+For good/bad comparison examples, see [examples/core.md](examples/core.md#pattern-2-evidence-based-claims).
 
 ---
 

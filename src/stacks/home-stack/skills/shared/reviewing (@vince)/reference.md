@@ -1,8 +1,12 @@
 # Reviewing Patterns - Reference
 
+[Back to SKILL.md](SKILL.md) | [examples/core.md](examples/core.md) | [examples/feedback-patterns.md](examples/feedback-patterns.md) | [examples/anti-patterns.md](examples/anti-patterns.md)
+
 > Decision frameworks, red flags, and detailed guidance for code reviews.
 
 ---
+
+<decision_framework>
 
 ## Decision Framework
 
@@ -61,7 +65,11 @@ Use consistent criteria for approval decisions.
 
 **Why this matters:** Consistent approval criteria create predictable, fair reviews. Authors know what to expect.
 
+</decision_framework>
+
 ---
+
+<red_flags>
 
 ## RED FLAGS
 
@@ -97,6 +105,8 @@ Use consistent criteria for approval decisions.
 - "Convention violations" may be new patterns not yet documented
 - Test coverage percentages don't guarantee quality tests
 - "Out of scope" changes may be necessary dependencies
+
+</red_flags>
 
 ---
 

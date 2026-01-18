@@ -1,12 +1,14 @@
 # Backend API Reference
 
-> Decision frameworks, anti-patterns, and red flags for Hono + OpenAPI. Referenced from [skill.md](skill.md).
+> Decision frameworks, anti-patterns, and red flags for Hono + OpenAPI. Referenced from [SKILL.md](SKILL.md).
 
 ---
 
+<decision_framework>
+
 ## Decision Framework
 
-**Hono + OpenAPI:** Public/multi-client APIs, need docs, complex validation, type generation with hey-api
+**Hono + OpenAPI:** Public/multi-client APIs, need docs, complex validation, type generation with OpenAPI client generators
 
 **Server Actions:** Simple forms, internal-only, no external API consumers, no complex validation
 
@@ -51,7 +53,45 @@
 
 **Deep `/health/deep`:** Includes dependency checks. Use for readiness probes and monitoring.
 
+### RPC vs REST Client Decision (v4.x)
+
+**Use Hono RPC (`hc`):**
+- Full-stack TypeScript monorepo
+- Same Hono version on client and server
+- Want end-to-end type safety without code generation
+- Building internal APIs consumed by your own frontend
+
+**Use REST/OpenAPI Client:**
+- Multi-language clients (Python, Go, etc.)
+- External consumers need generated SDKs
+- Different teams own server and client
+- Need formal OpenAPI documentation
+
+### Context Storage vs Props Drilling Decision (v4.6.0+)
+
+**Use Context Storage (`getContext`):**
+- Accessing Cloudflare Workers bindings in utility functions
+- Deep call stacks where passing context is cumbersome
+- Typed variables needed across module boundaries
+
+**Use Props Drilling:**
+- Simple handlers with shallow call stacks
+- Testing is easier with explicit dependencies
+- Functions need to work outside request context
+
+### Combine Middleware Decision
+
+**Use `some()`:** First successful auth wins (premium API key skips rate limiting)
+
+**Use `every()`:** All checks must pass (IP restriction AND bearer auth)
+
+**Use `except()`:** Apply middleware to all paths except specific ones (public endpoints)
+
+</decision_framework>
+
 ---
+
+<red_flags>
 
 ## RED FLAGS
 
@@ -62,6 +102,7 @@
 - **Not handling validation errors properly** - Hono validates, but you must return proper error shapes
 - **Not exporting `app` instance** - Can't generate OpenAPI spec at build time
 - **Missing `operationId` in routes** - Generated client has ugly method names like `get_api_v1_jobs`
+- **JWT/JWK without explicit `alg` option** - Vulnerable to algorithm confusion attacks (CVE-2026-22818) allowing forged tokens
 
 ### Medium Priority Issues
 
@@ -96,8 +137,20 @@
 - **CORS preflight:** OPTIONS requests bypass auth middleware - configure CORS before auth
 - **ETags with dynamic content:** Don't use for user-specific data (generates new ETag per user)
 - **Correlation IDs:** Forward from client if present (`X-Correlation-ID` header)
+- **JWT `alg` option:** Required since v4.11.4 - omitting it allows algorithm confusion attacks where attackers forge tokens
+- **RPC version mismatch:** Client and server MUST use same Hono version for RPC types to work correctly
+- **RPC route chaining:** Routes must be chained (`.get().post()`) for type inference - separate `app.get()` calls break inference
+- **RPC TypeScript strict mode:** Both client and server `tsconfig.json` MUST have `"strict": true` for RPC type inference to work properly
+- **Context Storage requires middleware:** `contextStorage()` middleware must be registered BEFORE any code calls `getContext()`
+- **getContext() throws:** Use `tryGetContext()` (v4.11.0+) in code that may run outside request context (tests, background jobs)
+- **Middleware `next()` never throws:** Since Hono catches errors, wrapping `await next()` in try/catch is unnecessary
+- **some/every execution order:** Middleware in `some()` runs sequentially until first success; in `every()` runs until first failure
+
+</red_flags>
 
 ---
+
+<anti_patterns>
 
 ## Anti-Patterns to Avoid
 
@@ -249,6 +302,73 @@ try {
 
 ---
 
+### Missing RPC Route Chaining
+
+```typescript
+// ANTI-PATTERN: Separate route definitions break type inference
+const app = new OpenAPIHono();
+
+app.openapi(getUserRoute, async (c) => { /* ... */ });
+app.openapi(createUserRoute, async (c) => { /* ... */ });
+
+export type AppType = typeof app; // Types won't include route details!
+```
+
+**Why it's wrong:** Separate `app.openapi()` calls don't chain types - client won't have route type info.
+
+**What to do instead:** Chain route definitions: `const routes = app.openapi(route1, handler1).openapi(route2, handler2);` then export `typeof routes`.
+
+---
+
+### Using getContext() Without contextStorage Middleware
+
+```typescript
+// ANTI-PATTERN: getContext() without middleware setup
+import { getContext } from "hono/context-storage";
+
+// This will throw "Context is not available" error!
+export function getDatabase() {
+  const ctx = getContext();
+  return ctx.env.DATABASE;
+}
+```
+
+**Why it's wrong:** `getContext()` requires `contextStorage()` middleware to be registered first.
+
+**What to do instead:** Register `app.use(contextStorage())` before any routes, or use `tryGetContext()` for optional access.
+
+---
+
+### Complex Auth Logic Without Combine Middleware
+
+```typescript
+// ANTI-PATTERN: Nested if/else auth logic
+app.use("/api/*", async (c, next) => {
+  const token = c.req.header("Authorization");
+  const ip = c.req.header("X-Forwarded-For");
+
+  if (token === ADMIN_TOKEN) {
+    await next();
+  } else if (INTERNAL_IPS.includes(ip || "")) {
+    if (token === INTERNAL_TOKEN) {
+      await next();
+    } else {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+  } else {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+});
+```
+
+**Why it's wrong:** Hard to read, hard to test, easy to have logic bugs.
+
+**What to do instead:** Use `some()`, `every()`, `except()` from `hono/combine` for declarative auth composition.
+
+</anti_patterns>
+
+---
+
 ## Production Checklist
 
 ### Before Deploying API Routes
@@ -267,3 +387,12 @@ try {
 - [ ] Logging with correlation IDs
 - [ ] PII sanitization in logs
 - [ ] Cache-Control headers set
+- [ ] JWT/JWK middleware has explicit `alg` option (security requirement since v4.11.4)
+
+### Hono v4.x Features Checklist
+
+- [ ] If using RPC: Routes chained for type inference, `AppType` exported
+- [ ] If using RPC: Same Hono version on client and server
+- [ ] If using Context Storage: `contextStorage()` middleware registered first
+- [ ] If accessing context in utilities: Use `tryGetContext()` for optional access
+- [ ] If complex auth logic: Use `some`/`every`/`except` from `hono/combine`

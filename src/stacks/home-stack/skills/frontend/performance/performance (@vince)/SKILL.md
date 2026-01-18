@@ -5,7 +5,7 @@ description: Bundle optimization, render performance
 
 # Performance Standards
 
-> **Quick Guide:** Build performance? Turborepo caching with >80% hit rate. Bundle budgets? < 200KB main bundle. Core Web Vitals? LCP < 2.5s, FID < 100ms, CLS < 0.1. React patterns? Strategic memo/useMemo, lazy loading, virtualization for 100+ items. Monitoring? Real User Monitoring with web-vitals library.
+> **Quick Guide:** Build performance? Turborepo caching with >80% hit rate. Bundle budgets? < 200KB main bundle. Core Web Vitals? LCP < 2.5s, INP < 200ms, CLS < 0.1. React patterns? Strategic memo/useMemo (or React Compiler), lazy loading, virtualization for 100+ items. Monitoring? Real User Monitoring with web-vitals library.
 
 ---
 
@@ -19,7 +19,7 @@ description: Bundle optimization, render performance
 
 **(You MUST use named constants for ALL performance thresholds - no magic numbers like `< 200KB` or `< 2.5s`)**
 
-**(You MUST monitor Core Web Vitals in production with web-vitals library - track LCP, FID/INP, CLS for real users)**
+**(You MUST monitor Core Web Vitals in production with web-vitals library - track LCP, INP, CLS for real users)**
 
 **(You MUST lazy load route components and heavy libraries - code splitting prevents large initial bundles)**
 
@@ -33,11 +33,11 @@ description: Bundle optimization, render performance
 
 ---
 
-**Auto-detection:** Core Web Vitals, bundle size optimization, LCP, FID, CLS, lazy loading, memoization, performance monitoring, web-vitals library, Turborepo caching, bundle budget, virtualization
+**Auto-detection:** Core Web Vitals, bundle size optimization, LCP, INP, CLS, FID, lazy loading, memoization, React Compiler, performance monitoring, web-vitals library, Turborepo caching, bundle budget, virtualization
 
 **When to use:**
 
-- Optimizing Core Web Vitals (LCP < 2.5s, FID < 100ms, CLS < 0.1)
+- Optimizing Core Web Vitals (LCP < 2.5s, INP < 200ms, CLS < 0.1)
 - Setting and enforcing bundle size budgets (< 200KB main bundle)
 - Implementing React performance patterns (strategic memo, lazy loading, virtualization)
 - Monitoring performance with web-vitals library in production
@@ -52,7 +52,7 @@ description: Bundle optimization, render performance
 
 **Key patterns covered:**
 
-- Core Web Vitals targets (LCP < 2.5s, FID < 100ms, CLS < 0.1)
+- Core Web Vitals targets (LCP < 2.5s, INP < 200ms, CLS < 0.1)
 - Bundle size budgets (< 200KB main, < 500KB total initial load)
 - Strategic React optimization (memo/useMemo when needed, not everywhere - profile first)
 - Image optimization (WebP/AVIF, lazy loading, Next.js Image component)
@@ -163,7 +163,9 @@ For code splitting and bundle analysis examples, see [examples.md](examples.md#c
 
 ### Pattern 3: Core Web Vitals Optimization
 
-Optimize for Google's Core Web Vitals: LCP < 2.5s, FID < 100ms, CLS < 0.1. These metrics impact SEO and user experience.
+Optimize for Google's Core Web Vitals: LCP < 2.5s, INP < 200ms, CLS < 0.1. These metrics impact SEO and user experience.
+
+**Note:** INP (Interaction to Next Paint) replaced FID (First Input Delay) as a Core Web Vital on March 12, 2024. FID is now deprecated.
 
 #### Core Web Vitals Constants
 
@@ -192,16 +194,19 @@ Measures loading performance. When largest element becomes visible.
 - Use CDN for static assets
 - Server-side rendering (SSR) or Static Site Generation (SSG)
 
-#### FID (First Input Delay): < 100ms → INP: < 200ms
+#### INP (Interaction to Next Paint): < 200ms
 
-Measures interactivity. Time from user interaction to browser response.
+Measures interactivity. Time from user interaction to next visual update. INP replaced FID as a Core Web Vital on March 12, 2024.
+
+**Why INP replaced FID:** FID only measured the first interaction and only the input delay. INP measures ALL interactions throughout the page visit, including input delay, processing time, and presentation delay.
 
 **How to improve:**
 
 - Minimize JavaScript execution time
 - Code splitting (load less JS upfront)
 - Use web workers for heavy computation
-- Debounce expensive operations
+- Debounce/throttle expensive event handlers
+- Break up long tasks (> 50ms) with `scheduler.yield()` or `setTimeout`
 
 #### CLS (Cumulative Layout Shift): < 0.1
 
@@ -230,7 +235,7 @@ For detailed Core Web Vitals examples and production monitoring setup, see [exam
 
 **(You MUST use named constants for ALL performance thresholds - no magic numbers like `< 200KB` or `< 2.5s`)**
 
-**(You MUST monitor Core Web Vitals in production with web-vitals library - track LCP, FID/INP, CLS for real users)**
+**(You MUST monitor Core Web Vitals in production with web-vitals library - track LCP, INP, CLS for real users)**
 
 **(You MUST lazy load route components and heavy libraries - code splitting prevents large initial bundles)**
 

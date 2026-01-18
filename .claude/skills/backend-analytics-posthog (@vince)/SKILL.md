@@ -8,7 +8,7 @@ description: PostHog event tracking, user identification, group analytics for B2
 > **Quick Guide:** Use PostHog for product analytics with structured event naming (category:object_action), server-side tracking for reliability, and proper user identification integrated with your authentication flow. Client-side for UI interactions, server-side for business events.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md) (start here)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -130,7 +130,7 @@ Use the **category:object_action** framework for consistent, queryable event nam
 - `is_` or `has_` for booleans: `is_first_purchase`, `has_completed_onboarding`
 - `_date` or `_timestamp` suffix: `trial_end_date`, `last_login_timestamp`
 
-For complete code examples, see [examples.md](examples.md#pattern-1-event-naming-conventions).
+For complete code examples, see [examples/core.md](examples/core.md#pattern-1-event-naming-conventions).
 
 ---
 
@@ -167,7 +167,7 @@ const handleLogout = async () => {
 };
 ```
 
-For complete implementation with constants and hooks, see [examples.md](examples.md#pattern-2-user-identification-with-authentication).
+For complete implementation with constants and hooks, see [examples/core.md](examples/core.md#pattern-2-user-identification-with-authentication).
 
 ---
 
@@ -177,8 +177,9 @@ Track business events reliably from your backend with posthog-node.
 
 **Key Rules:**
 1. Always include `distinctId` (user's database ID)
-2. Always call `flush()` before returning in serverless
-3. Configure `flushAt: 1` and `flushInterval: 0` for serverless
+2. Use `captureImmediate()` for serverless (guarantees HTTP completion)
+3. Always call `shutdown()` before returning in serverless
+4. Configure `flushAt: 1` and `flushInterval: 0` for serverless
 
 **Server Client Setup:**
 ```typescript
@@ -199,10 +200,10 @@ posthogServer.capture({
     is_first_project: user.projectCount === 0,
   },
 });
-await posthogServer.flush(); // REQUIRED for serverless
+await posthogServer.shutdown(); // REQUIRED for serverless
 ```
 
-For complete Hono route examples, see [examples.md](examples.md#pattern-4-server-side-tracking-with-posthog-node).
+For complete Hono route examples, see [examples/server-tracking.md](examples/server-tracking.md).
 
 </patterns>
 
@@ -220,13 +221,19 @@ posthog.init(POSTHOG_KEY, {
 });
 ```
 
-**Serverless (immediate flush):**
+**Serverless (immediate delivery):**
 ```typescript
 const posthogServer = new PostHog(POSTHOG_KEY, {
   flushAt: 1,        // Flush after 1 event
   flushInterval: 0,  // No interval batching
 });
-await posthogServer.flush(); // Always await
+
+// Option 1: Use captureImmediate (preferred - guarantees completion)
+await posthogServer.captureImmediate({ distinctId, event, properties });
+
+// Option 2: Use capture + shutdown
+posthogServer.capture({ distinctId, event, properties });
+await posthogServer.shutdown(); // Ensures all events sent before termination
 ```
 
 **Reducing Costs:**

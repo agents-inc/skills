@@ -8,7 +8,7 @@ description: MSW handlers, browser/server workers, test data. Use when setting u
 > **Quick Guide:** Centralized mocks in `@repo/api-mocks`. Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Type-safe using generated types from `@repo/api/types`.
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) (core, browser, node, testing, advanced)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -109,7 +109,7 @@ packages/api-mocks/
 └── package.json
 ```
 
-For package configuration examples, see [examples.md](examples.md#package-configuration).
+For package configuration examples, see [examples/core.md](examples/core.md#package-configuration).
 
 ---
 
@@ -117,7 +117,7 @@ For package configuration examples, see [examples.md](examples.md#package-config
 
 Define mock data as typed constants in `mocks/` directory, completely separate from MSW handlers. This enables type safety from generated API types and reusability across handlers.
 
-For code examples, see [examples.md](examples.md#mock-data-separation).
+For code examples, see [examples/core.md](examples/core.md#mock-data-separation).
 
 **When not to use:** When mock data is truly one-off and specific to a single test case (use inline data in the test instead).
 
@@ -133,7 +133,7 @@ Key principles:
 - Variant switching via centralized state
 - Explicit handler exports for per-test overrides
 
-For implementation examples, see [examples.md](examples.md#variant-handlers).
+For implementation examples, see [examples/core.md](examples/core.md#variant-handlers).
 
 ---
 
@@ -144,7 +144,7 @@ Set up MSW browser worker to intercept requests during development. Key consider
 - Await worker start before rendering app
 - Configure `onUnhandledRequest: "bypass"` for unmocked requests
 
-For app integration examples, see [examples.md](examples.md#browser-worker).
+For app integration examples, see [examples/browser.md](examples/browser.md).
 
 ---
 
@@ -155,7 +155,7 @@ Set up MSW server worker for Node.js test environment:
 - Lifecycle: `beforeAll` listen, `afterEach` reset, `afterAll` close
 - Always reset handlers to prevent test pollution
 
-For test setup examples, see [examples.md](examples.md#server-worker).
+For test setup examples, see [examples/node.md](examples/node.md).
 
 </patterns>
 

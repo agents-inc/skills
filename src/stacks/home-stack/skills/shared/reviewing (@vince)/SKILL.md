@@ -10,8 +10,10 @@ description: Code review patterns, feedback principles. Use when reviewing PRs, 
 ---
 
 **Detailed Resources:**
-- For code examples and comparisons, see [examples.md](examples.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- For core examples (progress tracking, retrieval), see [examples/core.md](examples/core.md)
+- For feedback pattern examples, see [examples/feedback-patterns.md](examples/feedback-patterns.md)
+- For anti-pattern examples, see [examples/anti-patterns.md](examples/anti-patterns.md)
+- For decision frameworks and red flags, see [reference.md](reference.md)
 
 ---
 
@@ -156,7 +158,7 @@ For multi-file reviews, track your progress to maintain orientation.
 
 **Why this matters:** Multi-file reviews are complex. Tracking progress prevents missed files, forgotten criteria, and lost context.
 
-For detailed tracking examples, see [examples.md](examples.md).
+For detailed tracking examples, see [examples/core.md](examples/core.md).
 
 ---
 
@@ -190,7 +192,7 @@ Use clear markers to communicate priority:
 
 Always include positive feedback. Positive reinforcement teaches what to repeat. Reviews that only criticize demotivate and miss teaching opportunities.
 
-For detailed examples of each principle, see [examples.md](examples.md).
+For detailed examples of each principle, see [examples/feedback-patterns.md](examples/feedback-patterns.md).
 
 </patterns>
 

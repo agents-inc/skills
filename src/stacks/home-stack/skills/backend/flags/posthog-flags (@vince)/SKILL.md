@@ -10,8 +10,16 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 ---
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
+
+**Topic-Specific Examples:**
+- [examples/payloads.md](examples/payloads.md) - Remote configuration with JSON payloads
+- [examples/server-side.md](examples/server-side.md) - Server-side evaluation with posthog-node
+- [examples/rollouts.md](examples/rollouts.md) - Gradual rollouts and user targeting
+- [examples/experiments.md](examples/experiments.md) - A/B testing with experiments
+- [examples/development.md](examples/development.md) - Local development overrides
+- [examples/lifecycle.md](examples/lifecycle.md) - Flag cleanup and lifecycle management
 
 ---
 
@@ -23,7 +31,7 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
-**(You MUST use the feature flag secure API key for server-side local evaluation - NEVER expose it on the client)**
+**(You MUST use the feature flags secure API key (phs_*) for server-side local evaluation - personal API keys are deprecated for this use)**
 
 **(You MUST handle the `undefined` state when flags are loading - never assume a flag is immediately available)**
 
@@ -147,7 +155,7 @@ export const CheckoutButton = () => {
 
 **Why good:** Named constant prevents typos, undefined check prevents flash of wrong content, explicit handling of all states
 
-For more examples including bad patterns, see [examples.md](examples.md#pattern-1-client-side-boolean-flags).
+For more examples including bad patterns, see [examples/core.md](examples/core.md#pattern-1-client-side-boolean-flags).
 
 ---
 
@@ -204,7 +212,7 @@ export const PricingPage = () => {
 
 **Why good:** Variant constants prevent typos, switch statement handles all cases, default fallback to control variant, loading state prevents flash
 
-For more examples, see [examples.md](examples.md#pattern-2-multivariate-flags-and-variants).
+For more examples, see [examples/core.md](examples/core.md#pattern-2-multivariate-flags-and-variants).
 
 ---
 
@@ -219,14 +227,19 @@ Use `posthog-node` for server-side evaluation. Use local evaluation for performa
 import { PostHog } from "posthog-node";
 
 const POSTHOG_POLL_INTERVAL_MS = 30000; // 30 seconds
+const FLAG_REQUEST_TIMEOUT_MS = 3000; // 3 seconds (default)
 
 // Initialize with local evaluation
+// Use the Feature Flags Secure API Key (phs_*) from project settings
+// Personal API keys are deprecated for local evaluation
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
-  host: process.env.POSTHOG_HOST || "https://app.posthog.com",
-  // Enable local evaluation with feature flag secure key
+  host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
+  // Enable local evaluation with feature flags secure key (phs_*)
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
   // Poll for flag definition updates
   featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS,
+  // Timeout for flag evaluation requests
+  featureFlagsRequestTimeoutMs: FLAG_REQUEST_TIMEOUT_MS,
 });
 
 // Named export
@@ -271,9 +284,9 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-**Why good:** Local evaluation reduces latency (500ms to 50ms), personProperties enable targeting, server-side prevents client manipulation
+**Why good:** Local evaluation reduces latency (500ms to 10-50ms), personProperties enable targeting, server-side prevents client manipulation
 
-For more examples including bad patterns and local-only evaluation, see [examples.md](examples.md#pattern-5-server-side-flag-evaluation).
+For more examples including bad patterns, local-only evaluation, and distributed environments, see [examples/server-side.md](examples/server-side.md).
 
 </patterns>
 
@@ -287,7 +300,7 @@ For more examples including bad patterns and local-only evaluation, see [example
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
-**(You MUST use the feature flag secure API key for server-side local evaluation - NEVER expose it on the client)**
+**(You MUST use the feature flags secure API key (phs_*) for server-side local evaluation - personal API keys are deprecated for this use)**
 
 **(You MUST handle the `undefined` state when flags are loading - never assume a flag is immediately available)**
 

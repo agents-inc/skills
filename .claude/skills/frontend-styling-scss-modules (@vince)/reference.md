@@ -31,9 +31,9 @@ Need to show different states?
 │
 Need to manipulate colors?
 ├─ Transparency?
-│   └─ rgb(from var(--color-primary) r g b / 0.5)
+│   └─ hsl(var(--color-primary) / 0.5)
 ├─ Color mixing?
-│   └─ color-mix(in srgb, var(--color-primary), black 5%)
+│   └─ color-mix(in srgb, hsl(var(--color-primary)), black 5%)
 ├─ NEVER use Sass color functions (darken, lighten)
 │
 Need dark mode support?
@@ -112,9 +112,43 @@ Avoid `darken()`, `lighten()`, `transparentize()` and other Sass color functions
 
 // ✅ CORRECT - CSS color function
 .hover {
-  background: color-mix(in srgb, var(--color-primary), black 10%);
+  background: color-mix(in srgb, hsl(var(--color-primary)), black 10%);
 }
 ```
+
+### Using @import Instead of @use
+
+`@import` is **deprecated as of Dart Sass 1.80.0** and will be **removed in Dart Sass 3.0.0**. Use `@use` for all imports.
+
+```scss
+// ❌ WRONG - Deprecated @import
+@import "variables";
+@import "mixins";
+
+// ✅ CORRECT - Modern @use
+@use "variables" as *;
+@use "mixins" as m;
+```
+
+**Why @use is better:** Namespaced (prevents collisions), loads once per compilation, supports explicit configuration, works with private members (`_` prefix).
+
+### Using / for Division
+
+The `/` operator for division is deprecated. Use `math.div()` instead.
+
+```scss
+// ❌ WRONG - Deprecated division operator
+$half-width: 100% / 2;
+$column: 1 / 12 * 100%;
+
+// ✅ CORRECT - Modern math.div()
+@use "sass:math";
+
+$half-width: math.div(100%, 2);
+$column: math.div(1, 12) * 100%;
+```
+
+**Why:** `/` is ambiguous with CSS separator syntax (e.g., `grid-template: 1fr / 2fr`). `math.div()` is explicit.
 
 ### Theme Logic in Components
 
@@ -151,6 +185,8 @@ Never use hardcoded pixel values, hex colors, or raw numbers. All design values 
 - **Using Sass color functions** - No `darken()`, `lighten()`, `transparentize()` - use CSS color functions (`color-mix()`, relative color syntax)
 - **Hardcoded color/spacing values** - Must use design tokens, breaks consistency and theming
 - **Theme logic in components** - Components should use semantic tokens and remain theme-agnostic
+- **Using `@import` instead of `@use`** - `@import` is deprecated (Dart Sass 1.80.0) and will be removed in Dart Sass 3.0.0
+- **Using `/` for division** - The `/` operator for division is deprecated; use `math.div()` from `sass:math` instead
 
 **Medium Priority Issues:**
 
@@ -179,3 +215,8 @@ Never use hardcoded pixel values, hex colors, or raw numbers. All design values 
 - **Data-attribute syntax:** Use string values (`data-state="open"`) not boolean attributes, works better with CSS selectors
 - **:has() browser support:** Modern CSS feature, ensure you have fallbacks for older browsers if needed
 - **Layer precedence:** Within a layer, normal specificity rules apply. Layers only affect inter-layer precedence.
+- **@use configuration is one-time:** A module configured with `with` keeps that configuration even if loaded elsewhere without config. First load wins.
+- **@use must be at top:** `@use` rules must come before any rules except `@forward` and `@charset`. Variable declarations for config can precede `@use`.
+- **Built-in module variables are read-only:** Variables like `math.$pi` cannot be reassigned.
+- **Private members with `_` or `-`:** Members starting with underscore or hyphen are private and not accessible to importing files.
+- **Division ambiguity:** `/` in `calc()` still works for division. The deprecation only affects `/` used directly in Sass expressions outside `calc()`.

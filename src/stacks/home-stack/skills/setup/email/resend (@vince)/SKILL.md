@@ -58,7 +58,11 @@ description: Resend email setup, domain verification
 - Vercel deployment setup
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/):
+  - [core.md](examples/core.md) - Client setup, constants, package exports
+  - [templates.md](examples/templates.md) - Base layout, components, email templates
+  - [integrations.md](examples/integrations.md) - Better Auth, Next.js API routes
+  - [deployment.md](examples/deployment.md) - Preview server, Vercel config, checklist
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -75,6 +79,13 @@ Resend is a **developer-first email API** built by the creators of React Email. 
 2. **Preview before send** - Local development server shows exact email rendering
 3. **Monorepo separation** - Email templates in dedicated package, not mixed with app code
 4. **Type-safe sending** - Full TypeScript support from template to API call
+
+**React Email 5.0 (Current):**
+
+- Requires Tailwind 4 (compatibility checker only supports Tailwind 4)
+- Supports React 19.2 and Next.js 16
+- Dark mode theming support with tested email client compatibility
+- Templates can be uploaded directly to Resend dashboard via CLI
 
 **When to use Resend:**
 
@@ -217,12 +228,12 @@ bun add -D react-email typescript @types/react
     "export": "email export --outDir dist"
   },
   "dependencies": {
-    "@react-email/components": "^0.0.37",
-    "resend": "^4.1.0"
+    "@react-email/components": "^1.0.4",
+    "resend": "^6.7.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "react-email": "^3.0.0",
+    "@types/react": "^19.0.0",
+    "react-email": "^5.0.0",
     "typescript": "^5.0.0"
   }
 }
@@ -289,3 +300,7 @@ packages/emails/
 - [Better Auth Email Configuration](https://www.better-auth.com/docs/concepts/email)
 - [Resend + Better Auth Integration](https://resend.com/customers/better-auth)
 - [Resend Error Handling](https://resend.com/docs/api-reference/errors)
+
+---
+
+**VERIFY ALL CRITICAL REQUIREMENTS BEFORE IMPLEMENTATION. RE-READ FILES AFTER EDITING TO CONFIRM CHANGES.**

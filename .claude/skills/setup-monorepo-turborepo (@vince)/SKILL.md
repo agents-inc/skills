@@ -5,7 +5,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 # Monorepo Orchestration with Turborepo
 
-> **Quick Guide:** Turborepo 2.4.2 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency. Internal packages use `@repo/*` naming, explicit `exports` fields, and `workspace:*` protocol.
+> **Quick Guide:** Turborepo 2.7 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency. Internal packages use `@repo/*` naming, explicit `exports` fields, and `workspace:*` protocol.
 
 ---
 
@@ -56,7 +56,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 **Key patterns covered:**
 
-- Turborepo 2.4.2 task pipeline (dependsOn, outputs, inputs, cache)
+- Turborepo 2.7 task pipeline (dependsOn, outputs, inputs, cache)
 - Local and remote caching strategies
 - Bun workspaces for package linking
 - Syncpack for dependency version consistency
@@ -67,7 +67,10 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 - Internal dependencies with workspace protocol
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md) (always start here)
+  - [examples/caching.md](examples/caching.md) - Remote caching, CI/CD integration
+  - [examples/workspaces.md](examples/workspaces.md) - Workspace protocol, syncpack, dependency boundaries
+  - [examples/packages.md](examples/packages.md) - Internal package conventions, exports, creating packages
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -142,7 +145,7 @@ Define task dependencies and caching behavior in turbo.json to enable intelligen
 
 **Why good:** `dependsOn: ["^build"]` ensures topological task execution (dependencies build first), `env` array includes all environment variables for proper cache invalidation, `cache: false` prevents caching tasks with side effects (dev servers, code generation), `outputs` specifies cacheable artifacts while excluding cache directories
 
-See [examples.md](examples.md) for good/bad comparison examples.
+See [examples/core.md](examples/core.md) for good/bad comparison examples.
 
 ---
 
@@ -171,7 +174,7 @@ Turborepo's caching system dramatically speeds up builds by reusing previous tas
 
 **Setup:** Link Vercel account, set `TURBO_TOKEN` and `TURBO_TEAM` environment variables to enable remote cache sharing.
 
-See [examples.md](examples.md) for remote caching configuration and CI integration examples.
+See [examples/caching.md](examples/caching.md) for remote caching configuration and CI integration examples.
 
 ---
 
@@ -212,7 +215,7 @@ my-monorepo/
 └── package.json          # Root package.json with workspaces
 ```
 
-See [examples.md](examples.md) for workspace protocol good/bad comparison examples.
+See [examples/workspaces.md](examples/workspaces.md) for workspace protocol good/bad comparison examples.
 
 </patterns>
 
@@ -248,6 +251,64 @@ bun run build --filter=...[HEAD^1]
 ```
 
 </performance>
+
+---
+
+<decision_framework>
+
+## Decision Framework
+
+### When to Create a New Package
+
+```
+New code to write?
+├─ Is it a deployable application? → apps/
+├─ Is it shared across 2+ apps? → packages/
+├─ Is it app-specific? → Keep in app directory
+└─ Is it a build tool? → tools/
+```
+
+### When to Use Turborepo
+
+```
+Is this a monorepo with multiple packages/apps?
+├─ NO → Use standard build tools
+└─ YES → Do builds take > 30s or is caching important?
+    ├─ YES → Use Turborepo
+    └─ NO → Standard tools may suffice
+```
+
+For comprehensive decision trees and package creation criteria, see [reference.md](reference.md).
+
+</decision_framework>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+- Missing `dependsOn: ["^build"]` for build tasks (breaks topological ordering)
+- Missing `env` array in turbo.json (causes cache misses across environments)
+- Caching dev servers or code generation (incorrect outputs reused)
+- Default exports in library packages (breaks tree-shaking)
+- Missing `exports` field in package.json (allows internal path imports)
+
+**Common Mistakes:**
+- Hardcoded versions instead of `workspace:*` for internal deps
+- React in `dependencies` instead of `peerDependencies`
+- Giant barrel files re-exporting everything (negates tree-shaking)
+- Running full test suite without `--filter=...[HEAD^]` affected detection
+
+**Gotchas:**
+- `dependsOn: ["^task"]` runs dependencies' tasks; `dependsOn: ["task"]` runs same package's task
+- `--filter=...[HEAD^]` requires `fetch-depth: 2` in GitHub Actions
+- Exclude cache directories in outputs: `!.next/cache/**`
+
+For detailed anti-patterns and checklists, see [reference.md](reference.md).
+
+</red_flags>
 
 ---
 

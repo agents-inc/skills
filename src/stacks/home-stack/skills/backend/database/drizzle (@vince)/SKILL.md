@@ -5,7 +5,7 @@ description: Drizzle ORM, queries, migrations
 
 # Database with Drizzle ORM + Neon
 
-> **Quick Guide:** Use Drizzle ORM for type-safe queries, Neon serverless Postgres for edge-compatible connections. Schema-first design with automatic TypeScript types. Relational queries with `.with()` avoid N+1 problems. Use transactions for atomic operations.
+> **Quick Guide:** Use Drizzle ORM for type-safe queries, Neon serverless Postgres for edge-compatible connections. Schema-first design with automatic TypeScript types. Use RQB v2 with `defineRelations()` and object-based `where` syntax. Relational queries with `.with()` avoid N+1 problems. Use transactions for atomic operations.
 
 ---
 
@@ -21,17 +21,25 @@ description: Drizzle ORM, queries, migrations
 
 **(You MUST use `.with()` for relational queries to avoid N+1 problems - fetches all data in single SQL query)**
 
+**(You MUST use `defineRelations()` for RQB v2 - the old `relations()` per-table syntax is deprecated)**
+
 </critical_requirements>
 
 ---
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Connection setup and schema definition (always loaded)
+  - [queries.md](examples/queries.md) - Relational queries and query builder
+  - [relations-v2.md](examples/relations-v2.md) - RQB v2 with defineRelations() (NEW)
+  - [transactions.md](examples/transactions.md) - Atomic operations
+  - [migrations.md](examples/migrations.md) - Drizzle Kit workflow
+  - [seeding.md](examples/seeding.md) - Development data population (includes drizzle-seed)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
-**Auto-detection:** drizzle-orm, @neondatabase/serverless, neon-http, db.query, db.transaction, drizzle-kit, pgTable, relations
+**Auto-detection:** drizzle-orm, @neondatabase/serverless, neon-http, db.query, db.transaction, drizzle-kit, pgTable, defineRelations, drizzle-seed
 
 **When to use:**
 
@@ -50,11 +58,14 @@ description: Drizzle ORM, queries, migrations
 
 - Neon serverless connection (HTTP and WebSocket)
 - Drizzle schema design (tables, relations, enums)
+- RQB v2 with `defineRelations()` and object-based syntax (NEW)
 - Relational queries with `.with()` (single SQL query)
 - Query builder for complex filters
+- Many-to-many with `.through()` (eliminates junction table boilerplate)
 - Transactions for atomic operations
 - Database migrations with Drizzle Kit
-- Performance optimization (indexes, prepared statements)
+- drizzle-seed for deterministic test data
+- Performance optimization (indexes, prepared statements, batch API)
 
 ---
 
@@ -132,7 +143,7 @@ export default defineConfig({
 });
 ```
 
-For more connection examples (WebSocket, error handling), see [examples.md](examples.md#pattern-1-database-connection).
+For more connection examples (WebSocket, error handling), see [examples/core.md](examples/core.md).
 
 ---
 
@@ -193,7 +204,7 @@ export const companies = pgTable("companies", {
 
 **Why good:** `uuid().defaultRandom()` generates secure unique IDs, `.notNull()` enforces required fields preventing null errors, enums constrain values to valid options, `deletedAt` enables soft deletes preserving data history, `createdAt`/`updatedAt` track record lifecycle
 
-For complete schema examples (relations, junction tables), see [examples.md](examples.md#pattern-2-schema-definition).
+For complete schema examples (relations, junction tables), see [examples/core.md](examples/core.md).
 
 ---
 
@@ -239,7 +250,7 @@ if (job) {
 
 **When not to use:** Simple queries without relations (use `db.select()`), need custom JOINs with complex conditions (use query builder)
 
-For more query examples (N+1 anti-pattern, complex filtering), see [examples.md](examples.md#pattern-3-relational-queries).
+For more query examples (N+1 anti-pattern, complex filtering), see [examples/queries.md](examples/queries.md).
 
 </patterns>
 
@@ -247,12 +258,12 @@ For more query examples (N+1 anti-pattern, complex filtering), see [examples.md]
 
 ## Additional Patterns
 
-The following patterns are documented with full examples in [examples.md](examples.md):
+The following patterns are documented with full examples in [examples/](examples/):
 
-- **Pattern 4: Query Builder** - Complex filters, dynamic conditions, custom JOINs
-- **Pattern 5: Transactions** - Atomic operations, error handling, rollback
-- **Pattern 6: Database Migrations** - Drizzle Kit workflow, `generate` vs `push`
-- **Pattern 7: Database Seeding** - Development data, safe cleanup
+- **Query Builder** - Complex filters, dynamic conditions, custom JOINs - see [queries.md](examples/queries.md)
+- **Transactions** - Atomic operations, error handling, rollback - see [transactions.md](examples/transactions.md)
+- **Database Migrations** - Drizzle Kit workflow, `generate` vs `push` - see [migrations.md](examples/migrations.md)
+- **Database Seeding** - Development data, safe cleanup - see [seeding.md](examples/seeding.md)
 
 Performance optimization (indexes, prepared statements, pagination) is documented in [reference.md](reference.md#performance-optimization).
 
@@ -270,6 +281,8 @@ Performance optimization (indexes, prepared statements, pagination) is documente
 
 **(You MUST use `.with()` for relational queries to avoid N+1 problems - fetches all data in single SQL query)**
 
-**Failure to follow these rules will cause field name mismatches, break transaction atomicity, and create N+1 performance issues.**
+**(You MUST use `defineRelations()` for RQB v2 - the old `relations()` per-table syntax is deprecated)**
+
+**Failure to follow these rules will cause field name mismatches, break transaction atomicity, create N+1 performance issues, and use deprecated APIs.**
 
 </critical_reminders>

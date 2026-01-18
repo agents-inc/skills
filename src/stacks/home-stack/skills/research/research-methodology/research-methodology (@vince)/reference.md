@@ -2,6 +2,8 @@
 
 > Decision frameworks, anti-patterns, and red flags for research methodology.
 
+**Navigation:** [Back to SKILL.md](SKILL.md) | [Core Examples](examples/core.md) | [Practical Examples](examples/practical.md)
+
 ---
 
 ## Decision Framework

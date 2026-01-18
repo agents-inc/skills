@@ -10,7 +10,13 @@ description: Pino, Axiom, Sentry installation - one-time project setup for loggi
 ---
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [examples/core.md](examples/core.md) - Essential setup patterns (dependencies, env vars, next.config.js)
+  - [examples/sentry-config.md](examples/sentry-config.md) - Sentry configuration files and instrumentation
+  - [examples/pino-logger.md](examples/pino-logger.md) - Pino logger setup with redaction
+  - [examples/axiom-integration.md](examples/axiom-integration.md) - Web Vitals and dashboard queries
+  - [examples/ci-cd.md](examples/ci-cd.md) - GitHub Actions source maps upload
+  - [examples/health-check.md](examples/health-check.md) - Health check endpoints
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -98,7 +104,7 @@ npm install -D pino-pretty
 
 **Why:** `pino-pretty` as devDependency prevents production bundle bloat (~500KB), all core packages are production dependencies for runtime use.
 
-For detailed code examples with good/bad comparisons, see [examples.md](examples.md#pattern-1-dependency-installation).
+For detailed code examples with good/bad comparisons, see [examples/core.md](examples/core.md#pattern-1-dependency-installation).
 
 ---
 
@@ -115,7 +121,7 @@ Key variables needed:
 - `NEXT_PUBLIC_ENVIRONMENT` - Current environment identifier
 - `NEXT_PUBLIC_APP_VERSION` - App version for Sentry releases
 
-For complete template with all variables, see [examples.md](examples.md#pattern-2-environment-variables-template).
+For complete template with all variables, see [examples/core.md](examples/core.md#pattern-2-environment-variables-template).
 
 ---
 
@@ -129,7 +135,7 @@ Key configuration points:
 - Source map upload disabled locally (`!process.env.CI`)
 - `hideSourceMaps: true` prevents exposing source code
 
-For complete configuration example, see [examples.md](examples.md#pattern-3-nextconfigjs-with-withaxiom).
+For complete configuration example, see [examples/core.md](examples/core.md#pattern-3-nextconfigjs-with-withaxiom).
 
 ---
 
@@ -148,7 +154,7 @@ Key considerations:
 - Filter expected errors with `beforeSend`
 - Configure replay for debugging user sessions
 
-For complete file templates, see [examples.md](examples.md#pattern-4-sentry-configuration-files).
+For complete file templates, see [examples/sentry-config.md](examples/sentry-config.md#pattern-4-sentry-configuration-files).
 
 ---
 
@@ -181,7 +187,7 @@ Add `<AxiomWebVitals />` component to root layout for automatic Core Web Vitals 
 
 **Note:** Web Vitals are only sent from production deployments, not local development.
 
-For implementation example, see [examples.md](examples.md#pattern-6-web-vitals-component).
+For implementation example, see [examples/axiom-integration.md](examples/axiom-integration.md#pattern-6-web-vitals-component).
 
 ---
 
@@ -193,7 +199,7 @@ Configure CI/CD to upload source maps to Sentry on deployment. Key requirements:
 - Create Sentry release with `getsentry/action-release@v1`
 - Tie version to git SHA for release tracking
 
-For complete workflow template, see [examples.md](examples.md#pattern-7-github-actions-source-maps-upload).
+For complete workflow template, see [examples/ci-cd.md](examples/ci-cd.md#pattern-7-github-actions-source-maps-upload).
 
 ---
 
@@ -203,7 +209,7 @@ Add health check endpoints for monitoring and load balancer integration:
 - **Shallow check** (`/health`) - Fast, for frequent LB checks
 - **Deep check** (`/health/deep`) - With dependency checks (database, etc.)
 
-For Hono and Next.js implementations, see [examples.md](examples.md#pattern-8-health-check-endpoint).
+For Hono and Next.js implementations, see [examples/health-check.md](examples/health-check.md#pattern-8-health-check-endpoint).
 
 ---
 
@@ -215,7 +221,7 @@ Configure Pino with development/production modes:
 - Base fields for context in every log
 - Redaction of sensitive fields
 
-For complete configuration, see [examples.md](examples.md#pattern-9-pino-logger-setup).
+For complete configuration, see [examples/pino-logger.md](examples/pino-logger.md#pattern-9-pino-logger-setup).
 
 ---
 
@@ -228,9 +234,43 @@ After setting up, create initial dashboards in Axiom:
 - Top errors
 - Web Vitals metrics
 
-For APL query examples, see [examples.md](examples.md#pattern-10-axiom-dashboard-setup).
+For APL query examples, see [examples/axiom-integration.md](examples/axiom-integration.md#pattern-10-axiom-dashboard-setup).
 
 </patterns>
+
+---
+
+<decision_framework>
+
+## Decision Framework
+
+See [reference.md](reference.md#decision-framework) for complete decision trees:
+
+- **Log Destinations**: Where logs should go in each environment
+- **Sentry vs Axiom for Errors**: Which system handles which error types
+
+</decision_framework>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+See [reference.md](reference.md#red-flags) for complete list.
+
+**High Priority:**
+- Committing Axiom tokens or Sentry DSN to version control
+- Using pino-pretty in production
+- Missing source maps upload
+- Same Axiom dataset for all environments
+
+**Common Mistakes:**
+- Forgetting to wrap `next.config.js` with `withAxiom`
+- Missing `instrumentation.ts`
+- Hardcoding sample rates instead of named constants
+
+</red_flags>
 
 ---
 

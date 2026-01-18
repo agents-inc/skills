@@ -1,6 +1,6 @@
 # Email Reference
 
-> Decision frameworks, anti-patterns, red flags, and integration guides for the Email skill.
+> Decision frameworks, anti-patterns, red flags, and integration guides for the Email skill. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) folder for code examples.
 
 ---
 
@@ -48,6 +48,34 @@ What type of email is this?
 │   └── Check preferences, include unsubscribe
 └── Marketing (promotions, newsletters)
     └── Require explicit opt-in, include unsubscribe
+```
+
+### Scheduled vs Immediate Sending
+
+```
+Should email be sent now?
+├── Time-sensitive (password reset, verification)
+│   └── Send immediately
+├── User timezone matters (reminders, digests)
+│   └── Schedule for appropriate local time
+├── Campaign with specific launch time
+│   └── Schedule using scheduledAt parameter
+└── Batch notification
+    └── Note: scheduled_at not supported in batch API
+```
+
+### Idempotency Key Usage
+
+```
+Should you use an idempotency key?
+├── Payment/order confirmations
+│   └── YES - use order ID as key
+├── User-triggered actions (signup, password reset)
+│   └── YES - use request ID or user+action combo
+├── Retryable requests (webhook handlers, queues)
+│   └── YES - prevents duplicate sends on retry
+└── One-off manual sends
+    └── Optional - not strictly necessary
 ```
 
 </decision_framework>
@@ -191,10 +219,17 @@ async function sendNewsletter(users: User[]) {
 **Gotchas & Edge Cases:**
 
 - Resend batch API limited to 100 emails per request
+- Batch API does NOT support `attachments` or `scheduledAt` fields
 - render() is async - must await before send
-- Webhooks use svix-signature header for verification
+- React Email 5.0+ deprecated `renderAsync` - use `render()` instead
+- Webhooks require all three Svix headers: `svix-id`, `svix-timestamp`, `svix-signature`
+- Webhook verification requires raw request body - JSON parsing breaks signature
 - Some email clients strip JavaScript entirely
-- Tailwind in emails requires @react-email/tailwind wrapper
+- Tailwind in emails requires @react-email/tailwind wrapper (Tailwind 4 supported in React Email 5.0+)
 - Images must be absolute URLs (no relative paths)
+- Scheduled emails cannot use batch API (but DO support tags in v4+)
+- Idempotency keys expire after 24 hours and have 256 character limit
+- Tags must use ASCII alphanumeric characters, underscores, or dashes only
+- Tags with scheduled emails is a v4+ feature (2025 update)
 
 </red_flags>

@@ -5,7 +5,7 @@ description: Hono routes, OpenAPI, Zod validation
 
 # API Development with Hono + OpenAPI
 
-> **Quick Guide:** Use Hono with @hono/zod-openapi for type-safe REST APIs that auto-generate OpenAPI specs. Zod schemas provide validation AND documentation. Export your Hono app for spec generation with hey-api on the frontend.
+> **Quick Guide:** Use Hono with @hono/zod-openapi for type-safe REST APIs that auto-generate OpenAPI specs. Zod schemas provide validation AND documentation. Export your Hono app for spec generation to enable client code generation.
 
 ---
 
@@ -25,7 +25,7 @@ description: Hono routes, OpenAPI, Zod validation
 
 ---
 
-**Auto-detection:** Hono, @hono/zod-openapi, OpenAPIHono, createRoute, Zod schemas with .openapi(), app.route(), createMiddleware, rate limiting, CORS configuration, health checks
+**Auto-detection:** Hono, @hono/zod-openapi, OpenAPIHono, createRoute, Zod schemas with .openapi(), app.route(), createMiddleware, rate limiting, CORS configuration, health checks, hc client, RPC mode, getContext, tryGetContext, contextStorage, some/every/except middleware
 
 **When to use:**
 
@@ -60,9 +60,12 @@ description: Hono routes, OpenAPI, Zod validation
 - Health check endpoints (shallow and deep)
 - Request/response logging with PII sanitization
 - Caching strategies (Cache-Control, ETags)
+- RPC client (hc) with end-to-end type safety (v4.11.0+)
+- Context Storage for accessing context outside handlers (v4.6.0+)
+- Combine Middleware (some/every/except) for complex auth logic (v4.x)
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) (core.md, validation.md, routes.md, middleware.md, etc.)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -71,7 +74,7 @@ description: Hono routes, OpenAPI, Zod validation
 
 ## Philosophy
 
-**Type safety + documentation from code.** Zod schemas serve both validation AND OpenAPI spec generation. Single source of truth flows to frontend via hey-api.
+**Type safety + documentation from code.** Zod schemas serve both validation AND OpenAPI spec generation. Single source of truth flows to frontend via your chosen client code generator.
 
 **Use Hono + OpenAPI when:** Building public/multi-client APIs, need auto-generated documentation, require formal OpenAPI specs.
 

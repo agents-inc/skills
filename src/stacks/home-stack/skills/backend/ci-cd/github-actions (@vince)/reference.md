@@ -49,6 +49,36 @@ Deploying to production?
         └─ YES → Auto-deploy (PR review)
 ```
 
+### When to use reusable workflows vs composite actions?
+
+```
+Need to reuse CI/CD logic across repos?
+├─ YES → Need multiple jobs or full pipeline?
+│   ├─ YES → Reusable Workflow (workflow_call)
+│   │   - Supports multiple jobs
+│   │   - Native secrets context
+│   │   - Up to 10 nested, 50 total per run
+│   └─ NO → Need step-level reuse within a job?
+│       ├─ YES → Composite Action
+│       │   - Bundle steps into single action
+│       │   - Runs within caller's job
+│       │   - No direct secrets context
+│       └─ NO → Inline steps (no reuse needed)
+└─ NO → Define steps directly in workflow
+```
+
+### When to use matrix builds?
+
+```
+Testing multiple configurations?
+├─ YES → All combinations valid?
+│   ├─ YES → Basic matrix (arrays)
+│   └─ NO → Need specific inclusions/exclusions?
+│       ├─ Many exclusions → Use include-only strategy
+│       └─ Few exclusions → Use exclude keyword
+└─ NO → Single configuration (no matrix)
+```
+
 ---
 
 ## RED FLAGS
@@ -87,6 +117,13 @@ Deploying to production?
 - **Vercel remote cache free tier is per-user** not per-organization (each developer needs individual Vercel account linked)
 - **OIDC requires `id-token: write` permission** or token generation fails silently
 - **Environment secrets override repository secrets** with same name (can cause confusion)
+- **Artifact attestations require `attestations: write` permission** in addition to `id-token: write` and `contents: read`
+- **Cache action v4.2.0+ required since Feb 2025** - older versions will fail (runner 2.231.0+ also required)
+- **`actions/create-release` is deprecated** - use `softprops/action-gh-release@v2` instead
+- **workflow_dispatch now supports 25 inputs** (increased from 10) - use `type: environment` for environment selection
+- **Reusable workflow limits increased (Nov 2025)** - now supports 10 nested levels (was 4) and 50 total workflows (was 20)
+- **OIDC tokens now include `check_run_id` claim (Nov 2025)** - enables tracing tokens to exact job/compute for compliance
+- **M2 macOS runners available** - use `macos-latest-xlarge`, `macos-15-xlarge` for Apple Silicon with GPU
 
 ---
 

@@ -19,22 +19,27 @@ Have you measured the performance issue?
         │   └─ > 80% → Optimize TypeScript config
         └─ Runtime → Which Core Web Vital is failing?
             ├─ LCP (> 2.5s) → Optimize images, preload critical assets
-            ├─ FID/INP (> 100ms/200ms) → Code split, use web workers
+            ├─ INP (> 200ms) → Code split, use web workers, break up long tasks
             └─ CLS (> 0.1) → Set image dimensions, reserve space
 ```
 
 ### Should I memoize this?
 
 ```
-Is the component/calculation expensive?
-├─ NO (< 5ms) → Don't memoize (overhead > benefit)
-└─ YES (> 5ms) → Does it re-render frequently?
-    ├─ NO → Don't memoize (rarely helps)
-    └─ YES → Which memoization?
-        ├─ Component → React.memo
-        ├─ Calculation → useMemo
-        └─ Function → useCallback (if passed to memoized child)
+Are you using React Compiler (React 19+)?
+├─ YES → Let the compiler handle it (automatic memoization)
+│   └─ Only add manual memo for: third-party interop, React Native, non-pure computations
+└─ NO → Is the component/calculation expensive?
+    ├─ NO (< 5ms) → Don't memoize (overhead > benefit)
+    └─ YES (> 5ms) → Does it re-render frequently?
+        ├─ NO → Don't memoize (rarely helps)
+        └─ YES → Which memoization?
+            ├─ Component → React.memo
+            ├─ Calculation → useMemo
+            └─ Function → useCallback (if passed to memoized child)
 ```
+
+**React Compiler (React 19+):** The React Compiler automatically memoizes components, values, and functions, eliminating the need for manual `useMemo`, `useCallback`, and `React.memo` in most cases. Write simple code and let the compiler optimize it.
 
 ### Should I use virtual scrolling?
 
@@ -97,7 +102,7 @@ Performance optimization integrates across the entire stack.
 - ❌ **Not lazy loading routes** - Massive initial bundles, slow Time to Interactive
 - ❌ **Importing entire libraries** (`import _ from 'lodash'`) - Bundles unused code, prevents tree shaking
 - ❌ **Not optimizing images** - Images are 50%+ of page weight, WebP/AVIF reduce size by 30-50%
-- ❌ **Blocking main thread with heavy computation** - Causes high FID/INP, use web workers
+- ❌ **Blocking main thread with heavy computation** - Causes high INP, use web workers or break up long tasks
 
 **Medium Priority Issues:**
 
@@ -119,6 +124,7 @@ Performance optimization integrates across the entire stack.
 
 - React.memo uses shallow comparison - deep object props always trigger re-render
 - useMemo/useCallback have overhead - only use for expensive operations (> 5ms)
+- **React Compiler (React 19+) handles memoization automatically** - manual memo is rarely needed
 - Lighthouse scores differ from real users - always monitor RUM with web-vitals
 - Code splitting can increase total bundle size (webpack runtime overhead)
 - Virtual scrolling breaks browser find-in-page (Cmd+F)
@@ -127,6 +133,7 @@ Performance optimization integrates across the entire stack.
 - Bundle size budgets should account for gzip/brotli compression
 - Turborepo cache invalidated by any env var change - declare all vars explicitly
 - Next.js Image requires width/height or fill prop - prevents CLS
+- **FID is deprecated (March 2024)** - use INP (Interaction to Next Paint) instead
 
 ---
 
@@ -197,8 +204,8 @@ Lab metrics (Lighthouse) differ from real-world performance. Always track produc
 // "Lighthouse says 95, ship it!"
 
 // ✅ CORRECT - Track real user metrics
-import { onLCP, onFID, onCLS } from 'web-vitals';
+import { onLCP, onINP, onCLS } from 'web-vitals';
 onLCP(sendToAnalytics);
-onFID(sendToAnalytics);
+onINP(sendToAnalytics);  // INP replaced FID (March 2024)
 onCLS(sendToAnalytics);
 ```

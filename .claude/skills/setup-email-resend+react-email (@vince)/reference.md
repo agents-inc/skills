@@ -92,6 +92,8 @@ When should emails be sent?
 - DNS propagation takes up to 48 hours for verification
 - React Email dev server needs .react-email folder in monorepos
 - Server Actions have 1MB limit for attachments
+- React Email 5.0 compatibility checker ONLY supports Tailwind 4 - must update both packages together
+- In Resend SDK v6.1.0+, Turbopack may error on `@react-email/render` - add "resend" to `serverExternalPackages` in next.config.js
 
 ---
 
@@ -259,6 +261,61 @@ return { success: true };
 ```
 
 **Why bad:** Ignores errors, no logging, reports success even on failure
+
+---
+
+### Webhook Verification
+
+```typescript
+// ✅ Good Example
+import { NextRequest, NextResponse } from "next/server";
+import { getResendClient } from "@repo/emails";
+
+export async function POST(req: NextRequest) {
+  const resend = getResendClient();
+  const payload = await req.text();
+
+  try {
+    const event = resend.webhooks.verify({
+      payload,
+      headers: {
+        id: req.headers.get("svix-id") ?? "",
+        timestamp: req.headers.get("svix-timestamp") ?? "",
+        signature: req.headers.get("svix-signature") ?? "",
+      },
+      webhookSecret: process.env.RESEND_WEBHOOK_SECRET!,
+    });
+
+    // Handle verified event
+    switch (event.type) {
+      case "email.sent":
+        console.log("Email sent:", event.data.email_id);
+        break;
+      case "email.bounced":
+        console.error("Email bounced:", event.data.email_id);
+        break;
+    }
+
+    return NextResponse.json({ received: true });
+  } catch {
+    return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
+  }
+}
+```
+
+**Why good:** Uses SDK's built-in `webhooks.verify()` method, validates signature before processing, handles different event types
+
+```typescript
+// ❌ Bad Example
+export async function POST(req: NextRequest) {
+  const body = await req.json(); // Parsing as JSON breaks signature!
+  // No signature verification - anyone can send fake webhooks
+  await processEmailEvent(body);
+  return NextResponse.json({ ok: true });
+}
+```
+
+**Why bad:** Parsing as JSON before verification breaks cryptographic signature, no authentication allows fake webhook attacks
 
 ---
 

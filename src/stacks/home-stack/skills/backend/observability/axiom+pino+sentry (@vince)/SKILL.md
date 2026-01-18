@@ -60,8 +60,16 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 - Debugging guide: tracing a request through the system
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md) (essential patterns always loaded)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
+
+**Extended Examples:**
+- [examples/correlation-ids.md](examples/correlation-ids.md) - Middleware for request tracing
+- [examples/tracing.md](examples/tracing.md) - OpenTelemetry spans and custom instrumentation
+- [examples/error-boundaries.md](examples/error-boundaries.md) - React error boundaries with Sentry
+- [examples/sentry-config.md](examples/sentry-config.md) - User context and error filtering
+- [examples/axiom.md](examples/axiom.md) - Monitors, alerts, and debugging queries
+- [examples/performance.md](examples/performance.md) - Query and API call tracking
 
 ---
 
@@ -118,7 +126,7 @@ What are you logging?
 | `warn` | Visible | Recoverable issues, retries, fallbacks |
 | `error` | Visible + Alert | Unrecoverable issues, failures, exceptions |
 
-For code examples, see [examples.md](examples.md#pattern-1-log-levels).
+For code examples, see [examples/core.md](examples/core.md#pattern-1-log-levels).
 
 ---
 
@@ -136,7 +144,7 @@ Every log statement should include structured context for searchability.
 | `userId` | string? | User performing the action (if authenticated) |
 | `duration` | number? | Time taken in milliseconds (for completed operations) |
 
-For code examples, see [examples.md](examples.md#pattern-2-structured-logging).
+For code examples, see [examples/core.md](examples/core.md#pattern-2-structured-logging).
 
 ---
 
@@ -150,7 +158,11 @@ Generate and propagate correlation IDs to trace requests across services.
 2. **Request Logger Middleware** - Creates request-scoped logger with correlation context
 3. **Route Handler Usage** - Child loggers inherit correlation ID automatically
 
-For implementation examples, see [examples.md](examples.md#pattern-3-correlation-ids).
+**Modern Alternative: AsyncLocalStorage + Mixin**
+
+For larger applications, use AsyncLocalStorage with Pino's `mixin` option for automatic context injection without manual child logger creation in every handler.
+
+For implementation examples of both approaches, see [examples/correlation-ids.md](examples/correlation-ids.md).
 
 ---
 
@@ -163,7 +175,7 @@ Add custom instrumentation for performance debugging.
 - `withSpan()` - Wrap async operations in traced spans
 - `createSpan()` - Create simple spans for synchronous operations
 
-For code examples, see [examples.md](examples.md#pattern-4-opentelemetry-tracing).
+For code examples, see [examples/tracing.md](examples/tracing.md).
 
 ---
 
@@ -177,7 +189,7 @@ Catch and report React component errors with recovery capability.
 2. **global-error.tsx** - App Router global error handler
 3. **Feature-level boundaries** - Wrap feature sections with custom fallbacks
 
-For implementation examples, see [examples.md](examples.md#pattern-5-sentry-error-boundaries).
+For implementation examples, see [examples/error-boundaries.md](examples/error-boundaries.md).
 
 ---
 
@@ -191,7 +203,7 @@ Add user information to Sentry after authentication for better debugging.
 - `clearSentryUser()` - Call on logout
 - `setSentryContext()` - Add additional context per-feature
 
-For code examples, see [examples.md](examples.md#pattern-6-sentry-user-context).
+For code examples, see [examples/sentry-config.md](examples/sentry-config.md#pattern-setting-user-context).
 
 ---
 
@@ -205,7 +217,7 @@ Prevent expected errors from polluting Sentry quota and alerts.
 2. **HTTP status filtering** - Skip 404, 401, 403
 3. **beforeBreadcrumb hook** - Remove noisy console.log breadcrumbs
 
-For configuration examples, see [examples.md](examples.md#pattern-7-error-filtering).
+For configuration examples, see [examples/sentry-config.md](examples/sentry-config.md#pattern-error-filtering-configuration).
 
 ---
 
@@ -219,7 +231,7 @@ Set up proactive monitoring for production issues.
 2. **Latency Monitor** - Alert when P95 > 2 seconds
 3. **Specific Error Monitor** - Alert on database connection errors
 
-For APL query examples, see [examples.md](examples.md#pattern-8-axiom-monitors).
+For APL query examples, see [examples/axiom.md](examples/axiom.md#pattern-axiom-monitors).
 
 ---
 
@@ -232,7 +244,7 @@ Track and optimize slow operations.
 - `trackedQuery()` - Wrap database queries with performance tracking
 - `trackedApiCall()` - Wrap external API calls with performance tracking
 
-For implementation examples, see [examples.md](examples.md#pattern-9-performance-monitoring).
+For implementation examples, see [examples/performance.md](examples/performance.md).
 
 ---
 
@@ -248,7 +260,7 @@ How to trace a request through the system when debugging.
 4. Find related errors and stack traces
 5. Check Sentry for additional context
 
-For detailed APL queries and checklist, see [examples.md](examples.md#pattern-10-debugging-guide).
+For detailed APL queries and checklist, see [examples/axiom.md](examples/axiom.md#pattern-debugging-guide---tracing-a-request).
 
 </patterns>
 
@@ -272,6 +284,24 @@ For detailed APL queries and checklist, see [examples.md](examples.md#pattern-10
 - Use performance wrappers from Pattern 9 for external calls
 
 </integration>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+For comprehensive anti-patterns and red flags, see [reference.md](reference.md#red-flags).
+
+**Quick Reference - High Priority Issues:**
+
+- Missing correlation ID in logs - Impossible to trace requests
+- Using `console.log` instead of structured logger - Not searchable, no levels
+- Logging sensitive data - Security vulnerability
+- Not filtering expected errors in Sentry - Wastes quota, buries real issues
+- Error logs without stack traces - Can't debug without knowing where error occurred
+
+</red_flags>
 
 ---
 

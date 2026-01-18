@@ -57,9 +57,21 @@ description: Resend + React Email templates
 - Type-safe email props
 - Testing templates locally
 - Unsubscribe and preferences handling
+- Scheduled email sending (up to 30 days in advance)
+- Idempotency keys for duplicate prevention
+- Tags for analytics and campaign tracking
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Template structure, basic sending (start here)
+  - [templates.md](examples/templates.md) - Password Reset, Notification templates
+  - [retry.md](examples/retry.md) - Retry logic with exponential backoff
+  - [async-batch.md](examples/async-batch.md) - Async sending, batch API
+  - [auth-integration.md](examples/auth-integration.md) - Auth system integration
+  - [webhooks.md](examples/webhooks.md) - Webhook handler for tracking
+  - [preferences.md](examples/preferences.md) - Unsubscribe, email preferences
+  - [testing.md](examples/testing.md) - Template testing patterns
+  - [advanced-features.md](examples/advanced-features.md) - Scheduled sending, idempotency keys, tags
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -408,9 +420,13 @@ const resend = getResendClient(); // Same instance across requests
 ## Sources
 
 - [Resend Node.js SDK](https://resend.com/docs/send-with-nodejs)
+- [Resend Send Email API](https://resend.com/docs/api-reference/emails/send-email)
 - [Resend Batch API](https://resend.com/docs/api-reference/emails/send-batch-emails)
-- [Resend Webhooks](https://resend.com/docs/dashboard/webhooks)
+- [Resend Webhooks Verification](https://resend.com/docs/dashboard/webhooks/verify-webhooks-requests)
+- [Resend Idempotency Keys](https://resend.com/blog/engineering-idempotency-keys)
+- [Resend Extended Scheduling](https://resend.com/changelog/extended-email-scheduling)
 - [Resend Error Handling](https://resend.com/docs/api-reference/errors)
 - [React Email Components](https://react.email/docs/components)
-- [React Email Tailwind](https://react.email/docs/components/tailwind)
+- [React Email 5.0 Release](https://resend.com/blog/react-email-5)
+- [React Email Changelog](https://react.email/docs/changelog)
 - [CAN-SPAM Compliance](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business)

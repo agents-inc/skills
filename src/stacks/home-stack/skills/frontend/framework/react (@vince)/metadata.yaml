@@ -2,10 +2,16 @@
 category: framework
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 2.0.0
 tags:
   - react
+  - react-19
   - components
   - hooks
+  - useActionState
+  - useFormStatus
+  - useOptimistic
+  - use
+  - actions
   - jsx
   - tsx

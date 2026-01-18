@@ -1,6 +1,6 @@
 # Observability Reference
 
-Decision frameworks, anti-patterns, and red flags for observability patterns.
+> Decision frameworks, anti-patterns, and red flags for observability patterns. Back to [SKILL.md](SKILL.md) | See [examples/core.md](examples/core.md) for code examples.
 
 ---
 
@@ -82,10 +82,21 @@ How should I handle this error?
 ### Gotchas & Edge Cases
 
 - **Pino is async by default** - Logs may appear out of order in development
-- **Child loggers inherit context** - Don't add conflicting keys
+- **Child loggers inherit context** - Don't add conflicting keys; if parent and child use the same key, both appear in JSON output (last value wins when parsed)
 - **Sentry has 250 character limit** - Some fields truncated
-- **Edge runtime limitations** - Not all Node.js logging features work
+- **Edge runtime limitations** - Not all Node.js logging features work; redaction is NOT supported in browser environments
 - **OpenTelemetry spans must be ended** - Forgetting to call `span.end()` leaks resources
+- **Pino v10 breaking change** - Only dropped Node 18 support (Node 20+ required); otherwise API-compatible with v9
+- **Transport options serialization** - Transport options must be compatible with Structured Clone Algorithm (no functions, symbols, or class instances)
+- **formatters.level incompatibility** - Cannot use `formatters.level` when logging to multiple transport targets
+- **Sentry v9: beforeSendSpan cannot drop spans** - Return value of `null` no longer supported; use integrations to control span recording instead
+- **Sentry v9: enableTracing removed** - Use `tracesSampleRate` directly instead of `enableTracing: true`
+- **Sentry v9: captureUserFeedback renamed** - Now `captureFeedback()` with `message` field instead of `comments`
+- **Sentry v9: getCurrentHub removed** - Use `Sentry.getClient()`, `Sentry.getCurrentScope()`, or top-level functions instead
+- **React 19 error hooks** - Use `Sentry.reactErrorHandler()` for `createRoot`/`hydrateRoot` hooks (requires SDK v8.6.0+)
+- **captureReactException vs captureException** - Use `captureReactException` (v9.8.0+) in custom error boundaries for proper React component stacks
+- **Session Replay v8+** - `unblock` and `unmask` options no longer add default DOM selectors; add explicitly if needed
+- **Sentry Metrics API removed** - Completely removed in v9 (was deprecated in v8)
 
 ---
 
@@ -211,6 +222,115 @@ const logger = pino({
   },
 });
 ```
+
+### Redaction Options (Pino v9+)
+
+**Complete Field Removal:**
+
+Use `remove: true` to completely remove sensitive fields from output (instead of censoring):
+
+```typescript
+const logger = pino({
+  redact: {
+    paths: ["password", "*.token", "headers.authorization"],
+    remove: true, // Field is removed entirely, not replaced with censor
+  },
+});
+
+// Input: { user: { password: "secret" }, name: "John" }
+// Output: { user: {}, name: "John" } - password field gone
+```
+
+**Wildcard Patterns:**
+
+- `a.b.*` - Redact all properties of `a.b`
+- `a[*].b` - Redact `b` in all array elements of `a`
+- `["a-b"].c` - Bracket notation for hyphenated properties
+
+**Performance Notes (Pino v10+):**
+
+- Pino v10+ uses `@pinojs/redact` (replaced `fast-redact`)
+- No wildcards: ~2% overhead on JSON.stringify
+- With wildcards: ~50% overhead when redacting multiple paths
+- Redaction is NOT supported in browser environments
+
+---
+
+## Pino Transport Configuration (v7+)
+
+Pino transports run in worker threads for non-blocking log processing.
+
+### Basic Transport Setup
+
+```typescript
+import pino from "pino";
+
+// Single transport to Axiom
+const logger = pino(
+  { level: "info" },
+  pino.transport({
+    target: "@axiomhq/pino",
+    options: {
+      dataset: process.env.AXIOM_DATASET,
+      token: process.env.AXIOM_TOKEN,
+    },
+  })
+);
+```
+
+### Multiple Transports
+
+Log to multiple destinations with different levels:
+
+```typescript
+const logger = pino(
+  { level: "debug" },
+  pino.transport({
+    targets: [
+      // Console output for development
+      {
+        target: "pino-pretty",
+        level: "debug",
+        options: { colorize: true },
+      },
+      // Axiom for production (only info and above)
+      {
+        target: "@axiomhq/pino",
+        level: "info",
+        options: {
+          dataset: process.env.AXIOM_DATASET,
+          token: process.env.AXIOM_TOKEN,
+        },
+      },
+      // File for audit trail (only errors)
+      {
+        target: "pino/file",
+        level: "error",
+        options: { destination: "/var/log/app-errors.log" },
+      },
+    ],
+  })
+);
+```
+
+### Dedupe Option
+
+Prevent duplicate logs when using multiple transports with overlapping levels:
+
+```typescript
+const logger = pino(
+  { level: "debug" },
+  pino.transport({
+    dedupe: true, // Send only to highest matching level transport
+    targets: [
+      { target: "pino/file", level: "error", options: { destination: 1 } },
+      { target: "pino/file", level: "info", options: { destination: 1 } },
+    ],
+  })
+);
+```
+
+**Note:** The `formatters.level` function cannot be used when logging to multiple destinations.
 
 ---
 

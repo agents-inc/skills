@@ -40,8 +40,10 @@ Need to configure client?
 How to handle errors?
 ├─ Component-level?
 │   └─ Use isPending, error states from useQuery ✓
-├─ Global mutations?
-│   └─ Use onError in QueryClient defaultOptions ✓
+├─ Global query errors?
+│   └─ Use QueryCache.onError in QueryClient constructor (v5) ✓
+├─ Global mutation errors?
+│   └─ Use MutationCache.onError in QueryClient constructor (v5) ✓
 └─ Browser APIs (localStorage)?
     └─ Wrap in try/catch with context logging ✓
 ```
@@ -173,7 +175,22 @@ staleTime: STALE_TIME_MS,
 - `NEXT_PUBLIC_` prefix required for client-side env variables in Next.js
 - `client.setConfig()` merges with existing config, doesn't replace it
 - Generated query keys are immutable tuples (safe for React Query key equality)
-- Fetch timeout is different from React Query's staleTime/cacheTime
+- Fetch timeout is different from React Query's staleTime/gcTime (renamed from cacheTime in v5)
 - Generated types change when OpenAPI schema changes—commit generated files to catch breaking changes in code review
+
+**React Query v5 Breaking Changes:**
+
+- ❌ `onSuccess`, `onError`, `onSettled` callbacks **removed** from `useQuery` (still available in `useMutation`)
+- ⚠️ `cacheTime` renamed to `gcTime` (garbage collection time)
+- ⚠️ `isLoading` renamed to `isPending` for queries
+- ⚠️ `keepPreviousData` replaced with `placeholderData: (prev) => prev`
+- ⚠️ `useInfiniteQuery` now requires `initialPageParam` option
+- ⚠️ Server-side retry defaults to 0 (was 3 in v4)
+- ✅ New `useSuspenseQuery`, `useSuspenseInfiniteQuery`, `useSuspenseQueries` hooks
+- ✅ New `useMutationState` hook for accessing mutation state across components
+- ✅ New `queryOptions` helper for type-safe shared query definitions
+- ✅ New `maxPages` option for infinite queries to limit cached pages
+- ✅ New `experimental_createPersister` plugin for fine-grained query persistence
+- ✅ Requires React 18.0+
 
 </red_flags>

@@ -186,7 +186,7 @@ export function isNewFeatureEnabled(flag: boolean | undefined) {
 **High Priority Issues:**
 
 - Using `useFeatureFlagPayload` alone for experiments (no exposure tracking)
-- Exposing feature flag secure API key on client (security violation)
+- Exposing Feature Flags Secure API key (`phs_*`) on client (security violation)
 - No loading state handling (causes UI flash)
 - Flags without owners or expiry dates (becomes permanent debt)
 
@@ -209,8 +209,11 @@ export function isNewFeatureEnabled(flag: boolean | undefined) {
 
 - PostHog uses deterministic hashing - same user always gets same variant
 - Decreasing rollout percentage can remove users who were previously included
-- Local evaluation requires feature flag secure key (separate from API key)
+- Local evaluation requires Feature Flags Secure API Key (`phs_*`) - personal API keys are deprecated
 - Flags load asynchronously - first render always has undefined
 - GeoIP targeting uses server IP by default in posthog-node v3+
 - Experiments need minimum 50 exposures per variant for results
 - Stale flag = 100% rollout + not evaluated in 30 days
+- `onFeatureFlags` callback receives `{ errorsLoading?: boolean }` as second parameter
+- External cache providers (Redis, KV) are experimental - Node.js/Python SDKs only
+- Evaluation environments feature requires Boost add-on (currently in alpha)

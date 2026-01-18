@@ -1,6 +1,12 @@
 # Security Patterns - Reference Guide
 
-This file contains decision frameworks, red flags, and anti-patterns for security. Referenced from [skill.md](skill.md).
+This file contains decision frameworks, red flags, and anti-patterns for security. Referenced from [SKILL.md](SKILL.md).
+
+**Examples:**
+- [examples/core.md](examples/core.md) - Essential patterns (secrets, CSRF, cookies)
+- [examples/xss-prevention.md](examples/xss-prevention.md) - XSS protection, DOMPurify, CSP headers
+- [examples/dependency-security.md](examples/dependency-security.md) - Dependabot, CI security checks
+- [examples/access-control.md](examples/access-control.md) - CODEOWNERS, rate limiting, branch protection
 
 ---
 
@@ -70,11 +76,15 @@ Is it a secret (API key, password, token)?
 - `.env.local` is gitignored by default in Next.js, but not in all frameworks - verify
 - DOMPurify sanitization happens client-side - also sanitize on server for defense in depth
 - CSRF tokens need refresh on expiration - handle gracefully without breaking UX
-- SameSite=Strict blocks legitimate cross-site requests - use Lax for non-critical cookies
+- SameSite=Lax is the modern browser default and recommended for session cookies (balances security/UX)
+- SameSite=Strict blocks legitimate cross-site requests - use for sensitive operations only, not general session cookies
 - Dependabot PRs can be noisy - group non-security updates to reduce noise
 - HttpOnly cookies not accessible in JavaScript - plan token refresh strategy accordingly
 - CSP nonces must be unique per request - generate fresh nonces server-side
 - Branch protection "enforce_admins" can lock out admins during emergencies - plan hotfix process
+- X-XSS-Protection header is deprecated (2025) - set to "0" or omit, use CSP instead
+- NIST SP 800-63-4 (2025) recommends against periodic password rotation for users - rotate on compromise only
+- DOMPurify's default config allows `<style>` and `<form>` tags - use explicit whitelist for security-critical apps
 
 </red_flags>
 

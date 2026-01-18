@@ -1,6 +1,6 @@
 # Environment Reference
 
-> Decision frameworks, anti-patterns, and red flags for environment configuration. See [skill.md](skill.md) for core concepts and [examples.md](examples.md) for code examples.
+> Decision frameworks, anti-patterns, and red flags for environment configuration. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
 
@@ -66,9 +66,12 @@ Need a feature flag?
 
 - Next.js embeds NEXT_PUBLIC_* variables at build time (not runtime) - requires rebuild to change
 - Vite embeds VITE_* variables at build time - same limitation as Next.js
-- Environment variables are strings - use z.coerce.number() or z.coerce.boolean() for non-string types
+- Environment variables are strings - use `z.coerce.number()` for numbers
+- **CRITICAL: `z.coerce.boolean()` converts "false" to `true`** - JavaScript's `Boolean("false")` is `true` (non-empty string is truthy). Use `z.stringbool()` (Zod 4+) instead which correctly handles "true"/"false"/"1"/"0"/"yes"/"no"
+- Empty string env vars (`PORT=`) are NOT `undefined` - use T3 Env's `emptyStringAsUndefined: true` or handle explicitly
 - .env.local takes precedence over .env - can cause confusion when local overrides exist
 - Turborepo cache is NOT invalidated by env changes unless declared in turbo.json env array
+- Next.js tree-shakes unused `process.env` access - use T3 Env's `runtimeEnv` for explicit mapping
 
 ---
 
@@ -99,6 +102,27 @@ const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT); // Could be NaN!
 **Why it's wrong:** Missing variables cause runtime failures with unclear errors, type coercion fails silently.
 
 **What to do instead:** Validate all env vars with Zod at application startup.
+
+---
+
+### Using z.coerce.boolean() for Env Vars
+
+```typescript
+// ANTI-PATTERN: z.coerce.boolean() breaks on "false" string
+const envSchema = z.object({
+  VITE_ENABLE_FEATURE: z.coerce.boolean().default(false),
+});
+
+// .env file: VITE_ENABLE_FEATURE=false
+// Result: true (!)
+
+// z.coerce.boolean() uses JavaScript's Boolean()
+// Boolean("false") === true because non-empty strings are truthy
+```
+
+**Why it's wrong:** `z.coerce.boolean()` converts ANY non-empty string to `true`, including "false", "0", "no". This breaks environment variable semantics.
+
+**What to do instead:** Use `z.stringbool()` (Zod 4+) which correctly parses "true"/"false"/"1"/"0"/"yes"/"no"/"on"/"off".
 
 ---
 
@@ -175,10 +199,12 @@ const enabled = process.env.VITE_ENABLE_ANALYTICS === "true";
 ### Zod Validation Checklist
 
 - [ ] All env vars validated at startup
-- [ ] z.coerce used for number/boolean types
+- [ ] `z.coerce.number()` used for number types
+- [ ] `z.stringbool()` used for boolean types (NOT `z.coerce.boolean()`)
 - [ ] Default values for optional variables
 - [ ] Clear error messages on validation failure
 - [ ] Type-safe env object exported
+- [ ] Consider T3 Env for Next.js/Vite projects (`@t3-oss/env-nextjs`)
 
 ### Secret Management Checklist
 

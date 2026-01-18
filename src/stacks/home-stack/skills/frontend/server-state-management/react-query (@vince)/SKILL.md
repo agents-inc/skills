@@ -49,7 +49,7 @@ description: REST APIs, React Query, data fetching
 - Type safety from generated types (never manual type definitions)
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---

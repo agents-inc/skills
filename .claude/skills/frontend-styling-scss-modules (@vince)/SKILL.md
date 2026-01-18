@@ -25,6 +25,8 @@ description: SCSS Modules, cva, design tokens
 
 **(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
 
+**(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
+
 </critical_requirements>
 
 ---
@@ -56,7 +58,7 @@ description: SCSS Modules, cva, design tokens
 - Projects requiring comprehensive utility classes (use Tailwind CSS instead)
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -112,7 +114,7 @@ The design system uses a two-tier token architecture: **Tier 1 (Core tokens)** p
 
 **Why this matters:** Semantic tokens make purpose clear (what the token is for), theme changes only update token values (not component code), components remain theme-agnostic.
 
-For complete implementation examples, see [examples.md](examples.md#pattern-1-two-tier-token-system).
+For complete implementation examples, see [examples/core.md](examples/core.md#pattern-1-two-tier-token-system).
 
 ---
 
@@ -125,14 +127,15 @@ Store HSL values without the `hsl()` wrapper in tokens, apply `hsl()` wrapper wh
 - Store HSL values without `hsl()` wrapper: `--color-gray-900: 222 47% 11%;`
 - Use `hsl()` wrapper when applying: `background-color: hsl(var(--color-primary))`
 - Use CSS color functions for derived colors:
-  - Transparency: `hsl(var(--color-primary) / 0.5)` or `hsl(from var(--color-primary) h s l / 0.5)`
+  - Transparency: `hsl(var(--color-primary) / 0.5)` (append alpha to HSL components)
   - Color mixing: `color-mix(in srgb, hsl(var(--color-primary)), white 10%)`
+  - Channel manipulation: `hsl(from hsl(var(--color-primary)) h s calc(l * 0.8))` (wrap origin in `hsl()` first)
 - **NEVER use Sass color functions:** No `darken()`, `lighten()`, `transparentize()`
 - Always use semantic color tokens (not raw HSL in components)
 
 **Why HSL:** HSL format eliminates Sass dependencies, CSS color functions work natively in browsers, semantic naming clarifies purpose (not just value), theme changes update token values without touching components.
 
-For complete implementation examples, see [examples.md](examples.md#pattern-2-hsl-color-format-with-css-color-functions).
+For complete implementation examples, see [examples/core.md](examples/core.md#pattern-2-hsl-color-format-with-css-color-functions).
 
 ---
 
@@ -154,7 +157,7 @@ Use CSS Cascade Layers to control style precedence across the monorepo, ensuring
 
 **Why layers:** Wrapping in `@layer components {}` ensures app styles can override without specificity wars, loading order becomes irrelevant, predictable precedence across monorepo.
 
-For complete implementation examples, see [examples.md](examples.md#pattern-3-css-cascade-layers-for-predictable-precedence).
+For complete implementation examples, see [examples/core.md](examples/core.md#pattern-3-css-cascade-layers-for-predictable-precedence).
 
 ---
 
@@ -169,24 +172,46 @@ Implement dark mode by adding `.dark` class to root element, which overrides sem
 - Only override **Tier 2 semantic tokens** in `.dark` class, never Tier 1 core tokens
 - Theme switching is instant (just CSS variable changes)
 
-For complete implementation examples, see [examples.md](examples.md#pattern-4-dark-mode-with-dark-class-and-mixin).
+For complete implementation examples, see [examples/theming.md](examples/theming.md#pattern-4-dark-mode-with-dark-class-and-mixin).
 
 ---
 
 ### Additional Patterns
 
-The following patterns are documented with full examples in [examples.md](examples.md):
+The following patterns are documented with full examples in the examples/ folder:
 
-- **Pattern 5:** SCSS Module Structure with Cascade Layers
-- **Pattern 6:** Spacing System with Semantic Tokens
-- **Pattern 7:** Typography System with REM-Based Sizing
-- **Pattern 8:** Data-Attributes for State Styling
-- **Pattern 9:** SCSS Mixins for Reusable Patterns
-- **Pattern 10:** Global Styles Organization
-- **Pattern 11:** Icon Styling
-- **Pattern 12:** Advanced CSS Features
+- **Pattern 5:** SCSS Module Structure with Cascade Layers - [examples/patterns.md](examples/patterns.md#pattern-5-scss-module-structure-with-cascade-layers)
+- **Pattern 6:** Spacing System with Semantic Tokens - [examples/tokens.md](examples/tokens.md#pattern-6-spacing-system-with-semantic-tokens)
+- **Pattern 7:** Typography System with REM-Based Sizing - [examples/tokens.md](examples/tokens.md#pattern-7-typography-system-with-rem-based-sizing)
+- **Pattern 8:** Data-Attributes for State Styling - [examples/patterns.md](examples/patterns.md#pattern-8-data-attributes-for-state-styling)
+- **Pattern 9:** SCSS Mixins for Reusable Patterns - [examples/patterns.md](examples/patterns.md#pattern-9-scss-mixins-for-reusable-patterns)
+- **Pattern 10:** Global Styles Organization - [examples/patterns.md](examples/patterns.md#pattern-10-global-styles-organization)
+- **Pattern 11:** Icon Styling - [examples/patterns.md](examples/patterns.md#pattern-11-icon-styling)
+- **Pattern 12:** cva Integration - [examples/cva.md](examples/cva.md#pattern-12-cva-class-variance-authority-integration)
+- **Pattern 13:** Advanced CSS Features - [examples/advanced.md](examples/advanced.md#pattern-13-advanced-css-features)
+- **Pattern 14:** Sass Module System (@use and @forward) - [examples/modules.md](examples/modules.md#pattern-14-sass-module-system-use-and-forward)
 
 </patterns>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+For complete anti-patterns and red flags, see [reference.md](reference.md#red-flags).
+
+**High Priority Issues:**
+
+- Using core tokens directly in components (use semantic tokens)
+- Component styles not wrapped in `@layer components {}`
+- Using Sass color functions (`darken()`, `lighten()`)
+- Hardcoded color/spacing values
+- Theme logic in components
+- Using `@import` instead of `@use` (deprecated in Dart Sass 1.80.0, removed in 3.0.0)
+- Using `/` for division instead of `math.div()` (deprecated)
+
+</red_flags>
 
 ---
 
@@ -205,6 +230,8 @@ The following patterns are documented with full examples in [examples.md](exampl
 **(You MUST use data-attributes for state styling - NOT className toggling)**
 
 **(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
+
+**(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
 
 **Failure to follow these rules will break theming, create cascade precedence issues, and violate design system conventions.**
 

@@ -5,7 +5,7 @@ description: Better Auth patterns, sessions, OAuth
 
 # Authentication with Better Auth
 
-> **Quick Guide:** Use Better Auth for type-safe, self-hosted authentication in TypeScript apps. It provides email/password, OAuth, 2FA, sessions, and organization multi-tenancy out of the box. Integrates seamlessly with Hono and Drizzle ORM.
+> **Quick Guide:** Use Better Auth (v1.4+) for type-safe, self-hosted authentication in TypeScript apps. It provides email/password, OAuth, 2FA, sessions, stateless auth, and organization multi-tenancy out of the box. Integrates seamlessly with Hono and Drizzle ORM. Auth.js is now maintained by the Better Auth team.
 
 ---
 
@@ -21,15 +21,17 @@ description: Better Auth patterns, sessions, OAuth
 
 **(You MUST use environment variables for ALL secrets (clientId, clientSecret, BETTER_AUTH_SECRET) - NEVER hardcode)**
 
-**(You MUST run `npx @better-auth/cli generate` after adding plugins to update database schema)**
+**(You MUST run `npx @better-auth/cli generate` then `npx drizzle-kit generate` and `npx drizzle-kit migrate` after adding plugins - `migrate` only works with Kysely adapter)**
 
 **(You MUST use `auth.$Infer.Session` types for type-safe session access in middleware)**
+
+**(You MUST use `authClient.requestPasswordReset` - `authClient.forgotPassword` was renamed in v1.4)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Better Auth, betterAuth, createAuthClient, auth.handler, auth.api.getSession, socialProviders, twoFactor plugin, organization plugin, drizzleAdapter, session management, OAuth providers
+**Auto-detection:** Better Auth, betterAuth, createAuthClient, auth.handler, auth.api.getSession, socialProviders, twoFactor plugin, organization plugin, drizzleAdapter, session management, OAuth providers, stateless sessions, cookieCache, genericOAuth, passkey, SCIM
 
 **When to use:**
 
@@ -42,24 +44,34 @@ description: Better Auth patterns, sessions, OAuth
 **When NOT to use:**
 
 - Serverless with strict cold start requirements (consider Clerk/Auth0)
-- Need managed authentication with zero setup (use Auth.js/NextAuth)
+- Need managed authentication with zero setup (consider Clerk)
 - Simple static sites without user accounts
 - Mobile-only apps (consider Firebase Auth)
+
+**Note:** Auth.js/NextAuth is now maintained by the Better Auth team - consider Better Auth for new projects.
 
 **Key patterns covered:**
 
 - Server configuration (auth.ts) with plugins
 - Hono integration with session middleware
 - Email/password authentication flows
-- OAuth providers (GitHub, Google, etc.)
+- OAuth providers (GitHub, Google, etc.) and Generic OAuth plugin
 - Two-factor authentication (TOTP)
 - Organization and multi-tenancy
-- Session management and cookie configuration
+- Session management, cookie caching, and stateless sessions
 - Drizzle ORM database adapter
-- Client-side React integration
+- Client-side React integration with useSession
+- Performance optimization with cookieCache and experimental joins
+- Passkey authentication (separate package: @better-auth/passkey)
 
 **Detailed Resources:**
-- For all code examples and patterns, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/) folder:
+  - [core.md](examples/core.md) - Sign up, sign in, client setup, Drizzle adapter
+  - [oauth.md](examples/oauth.md) - GitHub, Google OAuth providers, Generic OAuth plugin
+  - [two-factor.md](examples/two-factor.md) - TOTP setup, enable, verify
+  - [organizations.md](examples/organizations.md) - Multi-tenancy, invitations
+  - [sessions.md](examples/sessions.md) - Session config, cookie caching, stateless sessions
+  - [v1.4-features.md](examples/v1.4-features.md) - Stateless auth, performance, Generic OAuth
 - For decision frameworks, anti-patterns, and red flags, see [reference.md](reference.md)
 
 ---
@@ -70,25 +82,29 @@ description: Better Auth patterns, sessions, OAuth
 
 Better Auth follows a **TypeScript-first, self-hosted** approach to authentication. Your user data stays in your database, with no vendor lock-in. The plugin architecture enables progressive complexity - start simple and add features as needed.
 
+**Note on Auth.js:** Auth.js (formerly NextAuth.js) is now maintained and overseen by the Better Auth team. Better Auth is the recommended path forward for new TypeScript projects.
+
 **Core principles:**
 
 1. **Type safety throughout** - Session types flow from server to client
-2. **Database as source of truth** - Sessions stored in your DB, not JWTs only
-3. **Plugin-based extensibility** - Add 2FA, organizations, etc. when needed
-4. **Framework-agnostic** - Works with Hono, Next.js, SvelteKit, etc.
+2. **Database as source of truth** - Sessions stored in your DB, not JWTs only (with optional stateless mode in v1.4+)
+3. **Plugin-based extensibility** - Add 2FA, organizations, passkeys, SCIM when needed
+4. **Framework-agnostic** - Works with Hono, Next.js, SvelteKit, Remix, etc.
+5. **Performance-focused** - Experimental joins (2-3x faster), cookie caching, stateless sessions
 
 **When to use Better Auth:**
 
 - Self-hosted authentication with full control
 - Multi-tenant SaaS with organizations/teams
-- Need 2FA, passkeys, or enterprise SSO
+- Need 2FA, passkeys, or enterprise SSO (SCIM)
 - TypeScript projects requiring type-safe auth
+- High-performance auth with database optimization
 
 **When NOT to use:**
 
 - Need managed auth with zero maintenance
-- Serverless with aggressive cold start budgets
-- Simple apps where Auth.js suffices
+- Serverless with aggressive cold start budgets (though stateless mode helps)
+- Cloudflare Workers without `nodejs_compat` flag (v1.4+ requirement)
 
 </philosophy>
 
@@ -385,9 +401,11 @@ export { auth };
 
 **(You MUST use environment variables for ALL secrets (clientId, clientSecret, BETTER_AUTH_SECRET) - NEVER hardcode)**
 
-**(You MUST run `npx @better-auth/cli generate` after adding plugins to update database schema)**
+**(You MUST run `npx @better-auth/cli generate` then `npx drizzle-kit generate` and `npx drizzle-kit migrate` after adding plugins - `migrate` only works with Kysely adapter)**
 
 **(You MUST use `auth.$Infer.Session` types for type-safe session access in middleware)**
+
+**(You MUST use `authClient.requestPasswordReset` - `authClient.forgotPassword` was renamed in v1.4)**
 
 **Failure to follow these rules will cause authentication failures, security vulnerabilities, or runtime errors.**
 

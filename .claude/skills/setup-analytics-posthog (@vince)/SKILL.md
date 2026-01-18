@@ -54,7 +54,10 @@ description: PostHog analytics and feature flags setup
 - Initial dashboard recommendations
 
 **Detailed Resources:**
-- For code examples, see [examples.md](examples.md)
+- For code examples, see [examples/](examples/):
+  - [core.md](examples/core.md) - Provider setup, layout integration, user identification
+  - [server.md](examples/server.md) - Server client singleton, API routes, Hono middleware
+  - [deployment.md](examples/deployment.md) - Environment variables, Vercel deployment
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
@@ -123,9 +126,9 @@ phc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-### Pattern 2: Client-Side Setup with PostHogProvider
+### Pattern 2: Client-Side Setup
 
-Install dependencies and create the provider component for Next.js App Router.
+Install dependencies and configure for Next.js App Router.
 
 #### Installation
 
@@ -144,7 +147,12 @@ NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_api_key_here
 NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
-The PostHogProvider must be a 'use client' component with proper initialization. See [examples.md](examples.md) for the full provider implementation and root layout integration.
+#### Setup Options
+
+**Next.js 15.3+:** Use `instrumentation-client.js` (simpler, recommended)
+**Next.js < 15.3:** Use PostHogProvider component (traditional approach)
+
+See [examples/core.md](examples/core.md) for both approaches with full implementation examples.
 
 **Why good:** `defaults: "2025-11-30"` enables automatic SPA page/leave tracking, `person_profiles: "identified_only"` reduces event costs, debug mode in development aids troubleshooting
 
@@ -171,9 +179,14 @@ POSTHOG_API_KEY=phc_your_project_api_key_here
 POSTHOG_HOST=https://us.i.posthog.com
 ```
 
-Create a server client singleton for reuse across API routes. See [examples.md](examples.md) for the full implementation including API route and Hono middleware examples.
+Create a server client singleton for reuse across API routes. See [examples/server.md](examples/server.md) for the full implementation including API route and Hono middleware examples.
 
-**Why good:** Singleton prevents multiple client instances, flushInterval/flushAt configure batching, shutdown function for graceful cleanup, works in serverless (Vercel)
+#### Serverless Options
+
+**Option 1:** Use `captureImmediate()` - simplest, awaits HTTP request directly
+**Option 2:** Use `capture()` + `await flush()` - batched, requires explicit flush
+
+**Why good:** Singleton prevents multiple client instances, flushInterval/flushAt configure batching, shutdown function for graceful cleanup, captureImmediate for simple serverless usage
 
 </patterns>
 
