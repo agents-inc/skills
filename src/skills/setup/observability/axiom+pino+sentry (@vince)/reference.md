@@ -225,11 +225,28 @@ Sentry.init({ /* ... */ });
 
 ---
 
+## Sentry v9 Migration Checklist
+
+If upgrading from v8 to v9:
+
+- [ ] Remove `enableTracing` option (use `tracesSampleRate` directly)
+- [ ] Remove `hideSourceMaps` option (now default behavior)
+- [ ] Update `beforeSendSpan` if returning null (no longer supported)
+- [ ] Rename `captureUserFeedback()` to `captureFeedback()`
+- [ ] Rename `comments` field to `message` in feedback
+- [ ] Remove any Metrics API usage (completely removed)
+- [ ] Ensure Node.js 18.0.0+ (minimum version)
+- [ ] Add explicit `unmask`/`unblock` selectors if relying on defaults
+- [ ] Test React 19 error hooks if using React 19
+
+---
+
 ## Resources
 
 **Official Documentation:**
 - [Axiom Documentation](https://axiom.co/docs)
 - [Sentry Next.js SDK](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
+- [Sentry v8 to v9 Migration](https://docs.sentry.io/platforms/javascript/guides/nextjs/migration/v8-to-v9/)
 - [Pino Documentation](https://getpino.io/)
 - [next-axiom GitHub](https://github.com/axiomhq/next-axiom)
 

@@ -52,7 +52,9 @@ const envSchema = z.object({
   // Public variables (VITE_ prefix)
   VITE_API_URL: z.string().url(),
   VITE_API_TIMEOUT: z.coerce.number().default(DEFAULT_API_TIMEOUT_MS),
-  VITE_ENABLE_ANALYTICS: z.coerce.boolean().default(false),
+  // Use z.stringbool() for boolean env vars (Zod 4+)
+  // Correctly handles "true"/"false"/"1"/"0"/"yes"/"no"
+  VITE_ENABLE_ANALYTICS: z.stringbool().default(false),
   VITE_ENVIRONMENT: z.enum(["development", "staging", "production"]),
 
   // Build-time variables
@@ -96,3 +98,22 @@ const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT); // Could be NaN!
 ```
 
 **Why bad:** No validation means runtime failures with unclear error messages, type coercion fails silently (NaN), missing variables only discovered during usage not startup
+
+---
+
+### Bad Example - Using z.coerce.boolean() for env vars
+
+```typescript
+// lib/env.ts - WRONG!
+const envSchema = z.object({
+  // DON'T use z.coerce.boolean() for env vars!
+  VITE_ENABLE_ANALYTICS: z.coerce.boolean().default(false),
+});
+
+// Problem: z.coerce.boolean() uses JavaScript's Boolean()
+// Boolean("false") === true (non-empty string is truthy!)
+// Boolean("0") === true
+// This breaks env var semantics where "false" should mean false
+```
+
+**Why bad:** `z.coerce.boolean()` converts ANY non-empty string to `true` including "false", "0", "no" - use `z.stringbool()` (Zod 4+) which correctly parses "true"/"false"/"1"/"0"/"yes"/"no"

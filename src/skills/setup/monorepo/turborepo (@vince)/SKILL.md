@@ -5,7 +5,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 # Monorepo Orchestration with Turborepo
 
-> **Quick Guide:** Turborepo 2.4.2 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency. Internal packages use `@repo/*` naming, explicit `exports` fields, and `workspace:*` protocol.
+> **Quick Guide:** Turborepo 2.7 with Bun for monorepo orchestration. Task pipelines with dependency ordering. Local + remote caching for massive speed gains. Workspaces for package linking. Syncpack for dependency version consistency. Internal packages use `@repo/*` naming, explicit `exports` fields, and `workspace:*` protocol.
 
 ---
 
@@ -56,7 +56,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 **Key patterns covered:**
 
-- Turborepo 2.4.2 task pipeline (dependsOn, outputs, inputs, cache)
+- Turborepo 2.7 task pipeline (dependsOn, outputs, inputs, cache)
 - Local and remote caching strategies
 - Bun workspaces for package linking
 - Syncpack for dependency version consistency

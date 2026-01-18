@@ -10,7 +10,9 @@
 
 ---
 
-## Prettier Configuration
+## Prettier Configuration (v3.0+)
+
+> **Note:** Prettier 3.0+ uses `trailingComma: "all"` as the default. The option is only needed if you want a different value.
 
 ### Shared Config Pattern
 
@@ -22,10 +24,12 @@ const config = {
   tabWidth: 2,
   semi: true,
   singleQuote: false,
-  trailingComma: "all",
+  // trailingComma: "all" is the default in Prettier 3.0+
   bracketSpacing: true,
   arrowParens: "always",
   endOfLine: "lf",
+  // bracketSameLine replaces deprecated jsxBracketSameLine (Prettier 2.4+)
+  bracketSameLine: false,
 };
 
 export default config;
@@ -62,6 +66,73 @@ export default config;
 ```
 
 **Why bad:** Different configs per package creates inconsistent formatting across monorepo, manually syncing changes is error-prone, developers switching between packages see formatting churn, code reviews show formatting noise instead of logic changes
+
+---
+
+### TypeScript Configuration Files (v3.5+)
+
+Prettier 3.5+ supports TypeScript configuration files. Requires Node.js 22.6.0+.
+
+```typescript
+// packages/prettier-config/prettier.config.ts
+import type { Config } from "prettier";
+
+const config: Config = {
+  printWidth: 100,
+  useTabs: false,
+  tabWidth: 2,
+  semi: true,
+  singleQuote: false,
+  bracketSpacing: true,
+  arrowParens: "always",
+  endOfLine: "lf",
+  bracketSameLine: false,
+};
+
+export default config;
+```
+
+**Requirements:**
+- Node.js 22.6.0 or later
+- Before Node.js v24.3.0, run with: `NODE_OPTIONS="--experimental-strip-types" prettier . --write`
+
+**Supported file names:**
+- `.prettierrc.ts`, `.prettierrc.mts`, `.prettierrc.cts`
+- `prettier.config.ts`, `prettier.config.mts`, `prettier.config.cts`
+
+---
+
+### Experimental Options (v3.1+)
+
+Prettier provides experimental options for specific formatting behaviors. These may be removed or changed in future versions.
+
+```javascript
+// prettier.config.mjs - with experimental options
+const config = {
+  printWidth: 100,
+  semi: true,
+  singleQuote: false,
+  bracketSpacing: true,
+
+  // Experimental: ternary formatting (v3.1+)
+  // Changes how ternary expressions are formatted across lines
+  experimentalTernaries: true,
+
+  // Experimental: object wrapping (v3.5+)
+  // "preserve" (default): keeps multi-line objects as-is
+  // "collapse": collapses objects that fit on one line
+  objectWrap: "preserve",
+
+  // Experimental: operator position (v3.5+)
+  // "end" (default): operators at end of line
+  // "start": operators at start of new lines
+  experimentalOperatorPosition: "end",
+};
+
+export default config;
+```
+
+**Why experimental options exist:** These address long-standing formatting debates where no single solution fits all preferences. They follow Prettier's experimental option policy and may be removed or changed.
 
 ---
 

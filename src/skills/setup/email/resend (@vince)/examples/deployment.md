@@ -49,6 +49,7 @@ Configure environment variables for production deployment.
 | `RESEND_API_KEY` | Production, Preview | `re_xxx...` |
 | `EMAIL_FROM_ADDRESS` | Production | `noreply@yourdomain.com` |
 | `EMAIL_FROM_NAME` | Production | `Your App Name` |
+| `RESEND_WEBHOOK_SECRET` | Production, Preview | `whsec_xxx...` (from Resend webhook dashboard) |
 
 ### .env.example Template
 
@@ -71,6 +72,10 @@ EMAIL_FROM_NAME="Your App"
 
 # Optional: Reply-to address for customer support
 EMAIL_REPLY_TO=support@yourdomain.com
+
+# Webhook secret for verifying Resend webhook signatures
+# Get this from Resend Dashboard > Webhooks > Your webhook > Signing secret
+RESEND_WEBHOOK_SECRET=whsec_your_secret_here
 ```
 
 ---
@@ -115,6 +120,13 @@ Complete checklist for first-time Resend setup.
 - [ ] Created .env.example for team
 - [ ] Tested email sending in preview deployment
 - [ ] Confirmed production emails not landing in spam
+
+### Webhooks (Optional)
+- [ ] Created webhook in Resend Dashboard > Webhooks
+- [ ] Selected events to track (sent, delivered, bounced, etc.)
+- [ ] Copied webhook signing secret to RESEND_WEBHOOK_SECRET env var
+- [ ] Implemented webhook endpoint with signature verification
+- [ ] Tested webhook delivery in Resend dashboard
 ```
 
 ---

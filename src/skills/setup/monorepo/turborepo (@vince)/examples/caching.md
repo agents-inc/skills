@@ -34,16 +34,16 @@
 
 ### Good Example - Full turbo.json with advanced caching
 
-```typescript
-// turbo.json - Advanced caching configuration
+```json
+// turbo.json - Advanced caching configuration (Turborepo 2.x)
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [
     ".env",
     "tsconfig.json",
-    ".eslintrc.js"
+    "eslint.config.js"
   ],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "build/**"],

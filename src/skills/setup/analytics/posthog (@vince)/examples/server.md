@@ -81,6 +81,45 @@ export async function POST(request: Request) {
 
 **Why good:** `flush()` ensures events are sent before function terminates (important for serverless), distinctId uses user identifier, properties add context
 
+---
+
+## Pattern 2b: Alternative - captureImmediate for Serverless
+
+For simpler serverless usage, use `captureImmediate` which awaits the HTTP request directly.
+
+```typescript
+// ✅ Good Example - Using captureImmediate (recommended for serverless)
+// app/api/signup/route.ts
+import { NextResponse } from "next/server";
+
+import { getPostHogServerClient } from "@/lib/posthog/server";
+
+export async function POST(request: Request) {
+  const posthog = getPostHogServerClient();
+  const body = await request.json();
+
+  // captureImmediate awaits the HTTP request - no flush needed
+  await posthog.captureImmediate({
+    distinctId: body.email,
+    event: "user_signed_up",
+    properties: {
+      plan: body.plan,
+      source: body.source,
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}
+```
+
+**Why good:** `captureImmediate` guarantees the HTTP request finishes before the function continues or shuts down, simpler than managing flush() calls, recommended for serverless by PostHog
+
+---
+
+## Pattern 3: Next.js API Route with Flush
+
+Capture events in Next.js API routes with proper flush handling.
+
 ```typescript
 // ❌ Bad Example - Not flushing events
 // app/api/action/route.ts
