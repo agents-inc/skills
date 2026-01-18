@@ -81,6 +81,7 @@ Do you need static generation (SSG)?
 - **Missing `NextIntlClientProvider` in root layout** - Client Components cannot access translations
 - **Hardcoded locale strings** - Use named constants from routing.ts for type safety
 - **Not validating locale against routing.locales** - Invalid locales cause cryptic errors
+- **Using middleware.ts on Next.js 16+** - Must rename to proxy.ts (see Next.js 16 migration)
 
 ### Medium Priority Issues
 
@@ -104,8 +105,9 @@ Do you need static generation (SSG)?
 - `generateMetadata` runs outside the component tree - requires explicit locale param
 - `t.rich()` tag functions receive `chunks` (ReactNode[]), not a single element
 - `useNow()` only updates on client - SSR shows initial value until hydration
-- Middleware runs on every request - keep it lightweight
-- Cookie locale preference persists across sessions - may surprise users
+- Proxy/middleware runs on every request - keep it lightweight
+- **v4.0+ GDPR cookie changes**: Locale cookies now expire when browser closes (session cookies) and are only set when user switches to a locale different from Accept-Language header. Customize with `localeCookie` config if needed.
+- **Next.js 16 proxy.ts**: `middleware.ts` was renamed to `proxy.ts` - runs on Node.js runtime, not Edge
 
 ---
 
@@ -274,15 +276,18 @@ export default getRequestConfig(async ({ requestLocale }) => {
 - [ ] Include all locales defined in routing.ts
 - [ ] Match structure across all locale files
 
-### Middleware Checklist
+### Proxy/Middleware Checklist
 
+- [ ] File is named `proxy.ts` (Next.js 16+) or `middleware.ts` (Next.js 15 and earlier)
 - [ ] Import `createMiddleware` from `next-intl/middleware`
 - [ ] Pass `routing` configuration
 - [ ] Configure matcher to exclude:
   - `/api` routes
+  - `/trpc` routes
   - `/_next` system files
   - `/_vercel` system files
-  - Files with extensions (`.*\\..*`)
+  - Files with extensions (`.*\\..*)`)
+- [ ] If using Next.js 16+, ensure file is `proxy.ts` not `middleware.ts`
 
 ---
 

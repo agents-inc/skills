@@ -52,23 +52,23 @@ export const { Link, redirect, usePathname, useRouter, getPathname } =
 ```
 
 ```typescript
-// src/middleware.ts
+// src/proxy.ts (Next.js 16+) or src/middleware.ts (Next.js 15 and earlier)
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 
 export default createMiddleware(routing);
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
 };
 ```
 
-**Why good:** modular file structure separates concerns, named constants for locales enable type safety, Locale type exported for use throughout app, middleware matcher excludes appropriate routes
+**Why good:** modular file structure separates concerns, named constants for locales enable type safety, Locale type exported for use throughout app, proxy/middleware matcher excludes appropriate routes including tRPC
 
 ### Bad Example - Inline Configuration
 
 ```typescript
-// src/middleware.ts
+// src/proxy.ts (or middleware.ts)
 import createMiddleware from "next-intl/middleware";
 
 export default createMiddleware({
@@ -579,22 +579,23 @@ export function LocaleLinks() {
 
 ## TypeScript Examples
 
-### Good Example - Full Type Safety Setup
+### Good Example - Full Type Safety Setup (next-intl v4.0+)
 
 ```typescript
-// src/i18n/types.ts
+// src/i18n/types.ts (or global.d.ts)
 import type en from "../../messages/en.json";
-
-type Messages = typeof en;
+import { routing } from "./routing";
+import type { formats } from "./request";
 
 declare module "next-intl" {
   interface AppConfig {
-    Messages: Messages;
-    Locale: (typeof import("./routing").routing.locales)[number];
+    Locale: (typeof routing.locales)[number];
+    Messages: typeof en;
+    Formats: typeof formats;
   }
 }
 
-export type { Messages };
+export type Messages = typeof en;
 ```
 
 ```typescript

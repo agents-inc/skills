@@ -179,6 +179,39 @@ export { Timestamp };
 
 **Why good:** semantic time element, optional time display, combines date and time formatting
 
+### Good Example - FormattedDateTimeRange Component
+
+```typescript
+// src/components/event-date-range.tsx
+import { FormattedDateTimeRange } from "react-intl";
+
+type Props = {
+  startDate: Date;
+  endDate: Date;
+};
+
+export function EventDateRange({ startDate, endDate }: Props) {
+  return (
+    <span>
+      <FormattedDateTimeRange
+        from={startDate}
+        to={endDate}
+        year="numeric"
+        month="short"
+        day="numeric"
+      />
+    </span>
+  );
+}
+
+// Output (en-US): "Jan 15 - 20, 2024" (same month) or "Jan 15 - Feb 3, 2024"
+// Output (de-DE): "15. - 20. Jan. 2024" or "15. Jan. - 3. Feb. 2024"
+
+export { EventDateRange };
+```
+
+**Why good:** built-in range formatting handles same-month vs cross-month cases intelligently, locale-aware separators and format
+
 ---
 
 ## Number Formatting
