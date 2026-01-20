@@ -1,0 +1,317 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/skills-matrix.schema.json",
+  "title": "Skills Matrix Configuration",
+  "description": "Schema for skills-matrix.yaml - defines categories, relationships, stacks, and skill aliases for the CLI wizard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "categories", "relationships", "suggested_stacks", "skill_aliases"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the matrix schema",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.-]+)?$",
+      "examples": ["1.0.0", "1.0.0-mvp"]
+    },
+    "categories": {
+      "type": "object",
+      "description": "Category definitions indexed by category ID",
+      "additionalProperties": {
+        "$ref": "#/$defs/CategoryDefinition"
+      },
+      "minProperties": 1
+    },
+    "relationships": {
+      "$ref": "#/$defs/RelationshipDefinitions"
+    },
+    "suggested_stacks": {
+      "type": "array",
+      "description": "Pre-configured technology combinations for quick setup",
+      "items": {
+        "$ref": "#/$defs/SuggestedStack"
+      }
+    },
+    "skill_aliases": {
+      "type": "object",
+      "description": "Maps short alias names to full skill IDs",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Full skill ID (e.g., 'frontend/react (@vince)')"
+      },
+      "examples": [
+        {
+          "react": "frontend/framework/react (@vince)",
+          "zustand": "frontend/client-state-management/zustand (@vince)"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "CategoryDefinition": {
+      "type": "object",
+      "description": "Definition for a category (top-level or subcategory)",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "exclusive", "required", "order"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique category identifier",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "examples": ["frontend", "styling", "state-management"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable display name",
+          "minLength": 1,
+          "examples": ["Frontend", "State Management"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description shown in wizard",
+          "minLength": 1
+        },
+        "parent": {
+          "type": "string",
+          "description": "Parent category ID for subcategories (omit for top-level)",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "examples": ["frontend", "backend"]
+        },
+        "exclusive": {
+          "type": "boolean",
+          "description": "If true, only one skill from this category can be selected",
+          "default": true
+        },
+        "required": {
+          "type": "boolean",
+          "description": "If true, user MUST select something from this category",
+          "default": false
+        },
+        "order": {
+          "type": "integer",
+          "description": "Display order within parent category (lower = earlier)",
+          "minimum": 0
+        },
+        "icon": {
+          "type": "string",
+          "description": "Optional emoji icon for display",
+          "examples": ["⚛️", "🔌", "📱"]
+        }
+      }
+    },
+    "RelationshipDefinitions": {
+      "type": "object",
+      "description": "All relationship types between skills",
+      "additionalProperties": false,
+      "required": ["conflicts", "recommends", "requires", "alternatives"],
+      "properties": {
+        "conflicts": {
+          "type": "array",
+          "description": "Mutual exclusion rules - selecting one disables the others",
+          "items": {
+            "$ref": "#/$defs/ConflictRule"
+          }
+        },
+        "recommends": {
+          "type": "array",
+          "description": "Soft suggestions - selecting one highlights recommended companions",
+          "items": {
+            "$ref": "#/$defs/RecommendRule"
+          }
+        },
+        "requires": {
+          "type": "array",
+          "description": "Hard dependencies - skill A requires skill B to be selected first",
+          "items": {
+            "$ref": "#/$defs/RequireRule"
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "description": "Groups of interchangeable skills for the same purpose",
+          "items": {
+            "$ref": "#/$defs/AlternativeGroup"
+          }
+        }
+      }
+    },
+    "ConflictRule": {
+      "type": "object",
+      "description": "Skills that cannot be selected together",
+      "additionalProperties": false,
+      "required": ["skills", "reason"],
+      "properties": {
+        "skills": {
+          "type": "array",
+          "description": "List of skill aliases/IDs that conflict with each other",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "uniqueItems": true,
+          "examples": [
+            ["scss-modules", "tailwind"],
+            ["zustand", "redux", "mobx"]
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation shown when option is disabled",
+          "minLength": 1,
+          "examples": ["Different CSS paradigms - choose one approach"]
+        }
+      }
+    },
+    "RecommendRule": {
+      "type": "object",
+      "description": "Suggests skills based on current selection",
+      "additionalProperties": false,
+      "required": ["when", "suggest", "reason"],
+      "properties": {
+        "when": {
+          "type": "string",
+          "description": "Skill alias/ID that triggers this recommendation",
+          "examples": ["react", "hono"]
+        },
+        "suggest": {
+          "type": "array",
+          "description": "List of skill aliases/IDs to highlight as recommended",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [["zustand", "react-query", "vitest"]]
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation shown with recommendation",
+          "minLength": 1,
+          "examples": ["Works great with React"]
+        }
+      }
+    },
+    "RequireRule": {
+      "type": "object",
+      "description": "Enforces hard dependencies between skills",
+      "additionalProperties": false,
+      "required": ["skill", "needs", "reason"],
+      "properties": {
+        "skill": {
+          "type": "string",
+          "description": "Skill alias/ID that has requirements",
+          "examples": ["zustand", "drizzle"]
+        },
+        "needs": {
+          "type": "array",
+          "description": "Skills that must be selected before this one",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "examples": [["react"], ["hono", "express"]]
+        },
+        "needs_any": {
+          "type": "boolean",
+          "description": "If true, only ONE of the needs skills is required (OR logic). If false, ALL are required (AND logic).",
+          "default": false
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation shown when requirement not met",
+          "minLength": 1,
+          "examples": ["Zustand is React-only"]
+        }
+      }
+    },
+    "AlternativeGroup": {
+      "type": "object",
+      "description": "Skills that serve the same purpose",
+      "additionalProperties": false,
+      "required": ["purpose", "skills"],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "description": "Description of what these skills are for",
+          "minLength": 1,
+          "examples": ["State Management (React)", "Styling", "Database ORM"]
+        },
+        "skills": {
+          "type": "array",
+          "description": "List of interchangeable skill aliases/IDs",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [["zustand", "redux", "mobx", "jotai"]]
+        }
+      }
+    },
+    "SuggestedStack": {
+      "type": "object",
+      "description": "Pre-configured stack of skills for a specific use case",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "audience", "skills", "philosophy"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this stack",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "examples": ["modern-react", "vue-stack", "minimal-backend"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable display name",
+          "minLength": 1,
+          "examples": ["Modern React Stack", "Minimal Backend"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the stack's purpose",
+          "minLength": 1
+        },
+        "audience": {
+          "type": "array",
+          "description": "Target audiences",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "examples": [
+            ["startups", "mvp"],
+            ["enterprise", "large-teams"]
+          ]
+        },
+        "skills": {
+          "type": "object",
+          "description": "Skill selections organized by category",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "examples": [
+            {
+              "frontend": {
+                "framework": "react",
+                "styling": "scss-modules",
+                "state": "zustand"
+              },
+              "backend": {
+                "api": "hono",
+                "database": "drizzle"
+              }
+            }
+          ]
+        },
+        "philosophy": {
+          "type": "string",
+          "description": "Guiding principle for this stack",
+          "minLength": 1,
+          "examples": ["Ship fast, iterate faster", "Just the essentials"]
+        }
+      }
+    }
+  }
+}
