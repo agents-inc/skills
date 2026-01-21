@@ -1,13 +1,12 @@
 import path from 'path';
 import { fileExists } from '../utils/fs';
-import { verbose } from '../utils/logger';
 import { DIRS } from '../consts';
 import { loadStack } from './loader';
 import type {
   AgentConfig,
   AgentDefinition,
-  ProfileAgentConfig,
-  ProfileConfig,
+  CompileAgentConfig,
+  CompileConfig,
   Skill,
   SkillAssignment,
   SkillDefinition,
@@ -16,48 +15,31 @@ import type {
 } from '../types';
 
 /**
- * Resolve agent template with cascade: Profile -> Stack -> Default
+ * Resolve agent template: Stack -> Default
  */
 export async function resolveTemplate(
   projectRoot: string,
-  profile: string,
-  stack: string | undefined
+  stackId: string
 ): Promise<string> {
-  // 1. Profile-specific template
-  const profileTemplate = path.join(projectRoot, DIRS.profiles, profile, 'agent.liquid');
-  if (await fileExists(profileTemplate)) return profileTemplate;
+  // 1. Stack-specific template
+  const stackTemplate = path.join(projectRoot, DIRS.stacks, stackId, 'agent.liquid');
+  if (await fileExists(stackTemplate)) return stackTemplate;
 
-  // 2. Stack-specific template
-  if (stack) {
-    const stackTemplate = path.join(projectRoot, DIRS.stacks, stack, 'agent.liquid');
-    if (await fileExists(stackTemplate)) return stackTemplate;
-  }
-
-  // 3. Default template
+  // 2. Default template
   return path.join(projectRoot, DIRS.templates, 'agent.liquid');
 }
 
 /**
- * Resolve CLAUDE.md with cascade: Profile -> Stack
+ * Resolve CLAUDE.md from stack
  */
 export async function resolveClaudeMd(
   projectRoot: string,
-  profile: string,
-  stack: string | undefined
+  stackId: string
 ): Promise<string> {
-  // 1. Profile-specific CLAUDE.md
-  const profileClaude = path.join(projectRoot, DIRS.profiles, profile, 'CLAUDE.md');
-  if (await fileExists(profileClaude)) return profileClaude;
+  const stackClaude = path.join(projectRoot, DIRS.stacks, stackId, 'CLAUDE.md');
+  if (await fileExists(stackClaude)) return stackClaude;
 
-  // 2. Stack-specific CLAUDE.md
-  if (stack) {
-    const stackClaude = path.join(projectRoot, DIRS.stacks, stack, 'CLAUDE.md');
-    if (await fileExists(stackClaude)) return stackClaude;
-  }
-
-  throw new Error(
-    `No CLAUDE.md found for profile ${profile}${stack ? ` or stack ${stack}` : ''}`
-  );
+  throw new Error(`No CLAUDE.md found for stack ${stackId}`);
 }
 
 /**
@@ -165,54 +147,54 @@ export function resolveStackSkills(
  */
 export async function getAgentSkills(
   agentName: string,
-  profileAgentConfig: ProfileAgentConfig,
-  profileConfig: ProfileConfig,
+  agentConfig: CompileAgentConfig,
+  compileConfig: CompileConfig,
   skills: Record<string, SkillDefinition>,
   projectRoot: string
 ): Promise<SkillReference[]> {
   // If agent has explicit skills defined, use those
-  if (profileAgentConfig.skills && profileAgentConfig.skills.length > 0) {
-    return profileAgentConfig.skills;
+  if (agentConfig.skills && agentConfig.skills.length > 0) {
+    return agentConfig.skills;
   }
 
-  // If profile has a stack, resolve from stack
-  if (profileConfig.stack) {
-    console.log(`  Resolving skills from stack "${profileConfig.stack}" for ${agentName}`);
-    const stack = await loadStack(profileConfig.stack, projectRoot);
+  // Resolve from stack
+  if (compileConfig.stack) {
+    console.log(`  Resolving skills from stack "${compileConfig.stack}" for ${agentName}`);
+    const stack = await loadStack(compileConfig.stack, projectRoot);
     return resolveStackSkills(stack, agentName, skills);
   }
 
-  // No skills defined and no stack
+  // No skills defined
   return [];
 }
 
 /**
- * Resolve agents by merging definitions with profile config
+ * Resolve agents by merging definitions with compile config
  */
 export async function resolveAgents(
   agents: Record<string, AgentDefinition>,
   skills: Record<string, SkillDefinition>,
-  profileConfig: ProfileConfig,
+  compileConfig: CompileConfig,
   projectRoot: string
 ): Promise<Record<string, AgentConfig>> {
   const resolved: Record<string, AgentConfig> = {};
-  const agentNames = Object.keys(profileConfig.agents);
+  const agentNames = Object.keys(compileConfig.agents);
 
   for (const agentName of agentNames) {
     const definition = agents[agentName];
     if (!definition) {
       throw new Error(
-        `Agent "${agentName}" in profile config but not found in scanned agents`
+        `Agent "${agentName}" in compile config but not found in scanned agents`
       );
     }
 
-    const profileAgentConfig = profileConfig.agents[agentName];
+    const agentConfig = compileConfig.agents[agentName];
 
     // Get skills (from explicit config or stack)
     const skillRefs = await getAgentSkills(
       agentName,
-      profileAgentConfig,
-      profileConfig,
+      agentConfig,
+      compileConfig,
       skills,
       projectRoot
     );
@@ -226,8 +208,8 @@ export async function resolveAgents(
       description: definition.description,
       model: definition.model,
       tools: definition.tools,
-      core_prompts: profileAgentConfig.core_prompts,
-      ending_prompts: profileAgentConfig.ending_prompts,
+      core_prompts: agentConfig.core_prompts,
+      ending_prompts: agentConfig.ending_prompts,
       output_format: definition.output_format,
       skills: resolvedSkills,
     };
@@ -237,13 +219,13 @@ export async function resolveAgents(
 }
 
 /**
- * Convert a stack config to a profile-like config for compilation
+ * Convert a stack config to a compile config
  */
-export function stackToProfileConfig(
+export function stackToCompileConfig(
   stackId: string,
   stack: StackConfig
-): ProfileConfig {
-  const agents: Record<string, ProfileAgentConfig> = {};
+): CompileConfig {
+  const agents: Record<string, CompileAgentConfig> = {};
 
   for (const agentId of stack.agents) {
     agents[agentId] = {

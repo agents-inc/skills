@@ -56,7 +56,7 @@
      - `<decision_framework>` (when to use what)
      - `<red_flags>` (from PITFALLS.md + WORK-STANDARDS anti-patterns)
      - `<critical_reminders>` at BOTTOM (repeat critical rules)
-  4. Write to `src/profiles/work/skills/frontend/{skill}.md`
+  4. Write to `src/stacks/work/skills/frontend/{skill}.md`
   5. Verify file was written before proceeding
 
   ### CRITICAL CONSTRAINTS:
@@ -69,7 +69,7 @@
   - **Faithful reproduction** - Match documented patterns exactly
 
   ### After ALL skills complete:
-  - Run `npm run compile:work`
+  - Run `bunx compile -s work`
   - Verify all skills compile without errors
 
   Process all 8 frontend skills autonomously. Do not pause for user input between skills.

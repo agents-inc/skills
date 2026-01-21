@@ -254,9 +254,9 @@ src/
 │   ├── write-verification.md
 │   └── ...
 │
-├── profiles/{profile}/
+├── stacks/{stack}/
 │   ├── config.yaml               # Agent and skill configuration
-│   └── skills/                   # Profile-specific skills
+│   └── skills/                   # Stack-specific skills
 │
 └── templates/
     └── agent.liquid              # Main agent template
@@ -430,9 +430,9 @@ Output Location: src/agents/[name]/  (directory with 5 modular files)
 - `src/agents/{name}/` - Source files (modular) - **CREATE ALL NEW AGENTS HERE**
 - `.claude/agents/` - Compiled agents (auto-generated) - **DO NOT CREATE FILES HERE**
 
-**Build process:** Running `npm run compile:{profile}` or `bun src/compile.ts --profile={profile}`:
+**Build process:** Running `bunx compile -s <stack-name>`:
 
-- Reads agent configuration from `src/profiles/{profile}/config.yaml`
+- Reads agent configuration from `src/stacks/{stack}/config.yaml`
 - Compiles modular source files using LiquidJS templates
 - Injects core_prompts, skills, and output_format based on config
 - Outputs compiled `.md` files to `.claude/agents/`
@@ -518,7 +518,7 @@ Show complete, high-quality example of agent's work.
 
 **Step 3: Configure Agent in config.yaml**
 
-**(You MUST add agent configuration to `src/profiles/{profile}/config.yaml`)**
+**(You MUST add agent configuration to `src/stacks/{stack}/config.yaml`)**
 
 **Add agent entry under `agents:` section:**
 
@@ -604,10 +604,8 @@ Your job:
 **Step 7: Compile and Verify**
 
 ```bash
-# Compile all agents for current profile
-npm run compile:{profile}
-# Or for a specific agent:
-npm run compile:{profile}:{agent-name}
+# Compile all agents for current stack
+bunx compile -s <stack-name>
 
 # Verify the compiled output
 ls -la .claude/agents/{agent-name}.md
@@ -629,10 +627,10 @@ After compilation, verify the compiled `.md` file has:
 
 ```bash
 AGENT="{agent-name}"
-grep -c "<role>" .claude/agents/$AGENT.md && echo "✅ <role>"
-grep -c "<critical_requirements>" .claude/agents/$AGENT.md && echo "✅ <critical_requirements>"
-grep -c "<critical_reminders>" .claude/agents/$AGENT.md && echo "✅ <critical_reminders>"
-grep -q "DISPLAY ALL 5 CORE PRINCIPLES" .claude/agents/$AGENT.md && echo "✅ Self-reminder loop"
+grep -c "<role>" .claude/agents/$AGENT.md && echo "[check] <role>"
+grep -c "<critical_requirements>" .claude/agents/$AGENT.md && echo "[check] <critical_requirements>"
+grep -c "<critical_reminders>" .claude/agents/$AGENT.md && echo "[check] <critical_reminders>"
+grep -q "DISPLAY ALL 5 CORE PRINCIPLES" .claude/agents/$AGENT.md && echo "[check] Self-reminder loop"
 ```
 
 **Only report completion AFTER verification passes.**
@@ -1069,7 +1067,7 @@ For each improvement, provide:
 </directory_structure>
 
 <config_entry>
-**Add to `src/profiles/{profile}/config.yaml`:**
+**Add to `src/stacks/{stack}/config.yaml`:**
 ```yaml
 agents:
   {agent-name}:
@@ -1123,7 +1121,7 @@ agents:
 <improvement_analysis>
 **Agent:** [name]
 **Source Directory:** `src/agents/{name}/`
-**Config:** `src/profiles/{profile}/config.yaml`
+**Config:** `src/stacks/{stack}/config.yaml`
 **Current State:** [Brief assessment - working well / needs work / critical issues]
 </improvement_analysis>
 
@@ -1248,7 +1246,7 @@ agents:
 - [ ] Did NOT create files in `.claude/agents/` directory
 
 **Config.yaml Entry:**
-- [ ] Agent entry added to `src/profiles/{profile}/config.yaml`
+- [ ] Agent entry added to `src/stacks/{stack}/config.yaml`
 - [ ] Has name, title, description, model, tools
 - [ ] Has core_prompts (references core_prompt_sets)
 - [ ] Has ending_prompts (references ending_prompt_sets)
@@ -1269,7 +1267,7 @@ agents:
 - [ ] `critical-reminders.md` repeats rules from critical-requirements.md
 - [ ] `critical-reminders.md` has failure consequence statement
 
-**Compiled Output Verification (after `npm run compile:{profile}`):**
+**Compiled Output Verification (after `bunx compile -s <stack-name>`):**
 - [ ] Compiled file exists at `.claude/agents/{name}.md`
 - [ ] Has `<role>` wrapper
 - [ ] Has `<preloaded_content>` section
@@ -1450,7 +1448,7 @@ mkdir -p src/agents/my-agent/
 ❌ Bad: Creating source files but not adding to config.yaml
 Result: Agent won't compile
 
-✅ Good: Add complete entry to `src/profiles/{profile}/config.yaml`
+Good: Add complete entry to `src/stacks/{stack}/config.yaml`
 
 ```yaml
 agents:

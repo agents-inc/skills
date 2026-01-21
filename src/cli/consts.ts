@@ -9,7 +9,6 @@ const __dirname = path.dirname(__filename);
 export const CLI_ROOT = path.resolve(__dirname, '..');
 export const PROJECT_ROOT = path.resolve(__dirname, '../..');
 
-export const DEFAULT_PROFILE = 'home';
 export const OUTPUT_DIR = '.claude';
 export const GITHUB_REPO = 'claude-collective/claude-collective';
 
@@ -20,7 +19,6 @@ export const CACHE_DIR = path.join(os.homedir(), '.cache', 'claude-cli');
 export const DIRS = {
   agents: 'src/agent-sources',
   skills: 'src/skills',
-  profiles: 'src/profiles',
   stacks: 'src/stacks',
   corePrompts: 'src/core-prompts',
   agentOutputs: 'src/agent-outputs',

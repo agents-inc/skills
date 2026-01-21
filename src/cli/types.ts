@@ -5,7 +5,6 @@ export * from '../types';
 
 /** Options for the compile command */
 export interface CompileOptions {
-  profile?: string;
   stack?: string;
   verbose?: boolean;
 }
@@ -26,9 +25,7 @@ export interface ValidationSummary {
 
 /** Compilation context passed through the compile pipeline */
 export interface CompileContext {
-  profileId?: string;
-  stackId?: string;
-  isStackMode: boolean;
+  stackId: string;
   verbose: boolean;
   projectRoot: string;
   outputDir: string;

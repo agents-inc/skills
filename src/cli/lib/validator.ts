@@ -4,7 +4,7 @@ import { DIRS } from '../consts';
 import { resolveClaudeMd } from './resolver';
 import type {
   AgentConfig,
-  ProfileConfig,
+  CompileConfig,
   ValidationResult,
 } from '../types';
 
@@ -13,34 +13,19 @@ import type {
  * Returns errors (fatal) and warnings (non-fatal)
  */
 export async function validate(
-  profileConfig: ProfileConfig,
+  compileConfig: CompileConfig,
   resolvedAgents: Record<string, AgentConfig>,
-  profileId: string | undefined,
-  stackId: string | undefined,
+  stackId: string,
   projectRoot: string
 ): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Check CLAUDE.md (using cascade)
+  // Check CLAUDE.md from stack
   try {
-    if (!profileId && stackId) {
-      // Stack mode - check stack's CLAUDE.md directly
-      const stackClaude = path.join(projectRoot, DIRS.stacks, stackId, 'CLAUDE.md');
-      if (!(await fileExists(stackClaude))) {
-        throw new Error('Stack CLAUDE.md not found');
-      }
-    } else if (profileId) {
-      // Profile mode - use cascade
-      await resolveClaudeMd(projectRoot, profileId, profileConfig.stack);
-    }
+    await resolveClaudeMd(projectRoot, stackId);
   } catch {
-    const location = profileId ? `profile "${profileId}"` : `stack "${stackId}"`;
-    errors.push(
-      `CLAUDE.md not found in ${location}${
-        profileConfig.stack && profileId ? ` or stack "${profileConfig.stack}"` : ''
-      }`
-    );
+    errors.push(`CLAUDE.md not found in stack "${stackId}"`);
   }
 
   // Check core prompts directory exists

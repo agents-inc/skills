@@ -298,13 +298,13 @@ Cross-domain content clearly marked and justified:
 
 ### Files Analyzed
 
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/react.md`
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/styling.md`
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/client-state.md`
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/testing.md`
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/mocking.md`
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/api.md`
-- `/home/vince/dev/claude-subagents/src/profiles/home/skills/frontend/accessibility.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/react/SKILL.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/styling/SKILL.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/client-state/SKILL.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/testing/SKILL.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/mocking/SKILL.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/api/SKILL.md`
+- `/home/vince/dev/claude-subagents/src/skills/frontend/accessibility/SKILL.md`
 
 ---
 
@@ -567,7 +567,7 @@ $ bun compile home
   Category "state-management" is exclusive: cannot use both
   frontend/zustand and frontend/mobx.
 
-  Resolution: Edit profiles/home/config.yaml and remove one.
+  Resolution: Edit stacks/home-stack/config.yaml and remove one.
 ```
 
 #### CLI Interactive Mode

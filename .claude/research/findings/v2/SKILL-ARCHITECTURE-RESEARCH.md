@@ -312,7 +312,7 @@ export interface StackConfig {
   preloaded_skills?: Record<string, string[]> // NEW
 }
 
-export interface ProfileAgentConfig {
+export interface CompileAgentConfig {
   // ... existing
   preloaded_skills?: string[] // NEW (optional override)
 }
@@ -951,7 +951,7 @@ The generated schemas provide IDE autocomplete. The CLI provides runtime validat
 
 **Phase E: Preloaded Skills Content**
 
-1. Add `preloaded_skills` to StackConfig and ProfileAgentConfig
+1. Add `preloaded_skills` to StackConfig and CompileAgentConfig
 2. Update CLI resolver to partition skills (preloaded vs dynamic)
 3. Update template with preloaded_skills_content section
 

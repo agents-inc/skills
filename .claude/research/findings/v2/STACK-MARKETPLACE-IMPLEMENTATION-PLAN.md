@@ -60,7 +60,7 @@ These decisions are confirmed and will not change during implementation.
 | Community from Day 1 | Not "curated first, community later" | User confirmed |
 | Upvotes Only | No downvotes, no badges, no tiers | User confirmed |
 | Build Before Launch | All features ready before going live | User confirmed |
-| Stacks Separate from Profiles | Profiles can reference stacks, but they're independent | User confirmed |
+| Stacks Are Primary Unit | Stacks are the compilation unit | User confirmed |
 | PR-based Ownership | Stack creators are CODEOWNERS for their stacks | User confirmed |
 | Full Marketplace MVP | Community submissions from day 1 | User confirmed |
 | Single Repository | No separate community repo (for now) | User confirmed |
@@ -125,7 +125,7 @@ src/
 **Why This Works**:
 - Forking = copy from `.claude/skills/{id}/SKILL.md` to `stack/skills/{id}/SKILL.md`
 - Claude Code already expects this structure
-- Profiles continue to use source format, compile as usual
+- Skills in central repository used by all stacks
 - Stacks are ready-to-use without compilation
 
 ### Question 2: Skill Versioning Approach - DECIDED
@@ -246,9 +246,9 @@ bun stacks submit                  # Create PR for community stack
 5. [ ] Document stack compilation in README
 
 **Deliverables**:
-- Profile can specify `stack: @community/react-zustand-scss`
+- Users compile with `--stack=@community/react-zustand-scss`
 - Compilation pulls skills from stack definition
-- Existing profiles still work (backward compatible)
+- Stack compilation is the primary compilation method
 
 ### Phase 3: Smart Filtering Engine (Day 2 Morning)
 
@@ -510,26 +510,25 @@ categories:
         suggests: [vitest, jest]
 ```
 
-### Profile Integration
+### Stack Configuration Example
 
 ```yaml
-# src/profiles/home/config.yaml
+# src/stacks/home-stack/config.yaml
 
-name: home
-description: Personal projects
-claude_md: ./CLAUDE.md
+name: home-stack
+description: Personal projects stack
 
-# NEW: Reference a stack
-stack: "@community/react-zustand-scss"
+skills:
+  - frontend/react (@vince)
+  - frontend/scss-modules (@vince)
+  - frontend/zustand (@vince)
+  # ... more skills
 
-# Optional: Override specific slots from the stack
-slot_overrides:
-  testing: frontend/playwright    # Use Playwright instead of Vitest
-
-# Existing: Additional agents beyond stack
 agents:
-  orchestrator:
-    # ... existing config
+  - frontend-developer
+  - backend-developer
+  - tester
+  # ... more agents
 ```
 
 ### votes.json Format
@@ -610,7 +609,7 @@ agents:
 |---------|-------------|------|
 | Stack Arena | Compare outputs of different stacks | After 50+ stacks |
 | Web Catalog | Browse stacks in browser | After CLI stable |
-| Creator Profiles | Full creator pages | After 20+ contributors |
+| Creator Pages | Full creator pages | After 20+ contributors |
 | Trending Algorithm | Sophisticated popularity | After 6 months data |
 | Comments | Stack-level discussions | Use GitHub Discussions for now |
 | Forking | "Based on" lineage | Start with independent stacks |

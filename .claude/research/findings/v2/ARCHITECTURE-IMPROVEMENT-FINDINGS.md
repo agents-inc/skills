@@ -94,7 +94,7 @@ function resolveSkillReference(ref: SkillReference, skillsConfig: SkillsConfig):
 
 **1.1.2 Config File Redundancy (HIGH)**
 
-**Location:** `src/profiles/home/config.yaml` (625 lines), work/config.yaml (231 lines)
+**Location:** `src/stacks/home-stack/config.yaml` (625 lines), work-stack/config.yaml (231 lines)
 
 **Evidence:** `frontend/react` appears 9 times in home/config.yaml for different agents.
 

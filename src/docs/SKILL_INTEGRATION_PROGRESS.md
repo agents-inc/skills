@@ -92,7 +92,7 @@
 
 ## Files Modified
 
-- `src/profiles/home/config.yaml` - All skill assignments added (including pattern-scout and pattern-critique)
+- `src/stacks/home/config.yaml` - All skill assignments added (including pattern-scout and pattern-critique)
 
 ---
 

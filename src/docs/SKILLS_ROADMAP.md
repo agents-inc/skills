@@ -6,7 +6,7 @@
 
 ## Current Skills Inventory
 
-### Frontend (`profiles/home/skills/frontend/`)
+### Frontend (`stacks/home/skills/frontend/`)
 
 - [x] `react.md` - Component patterns, hooks, state
 - [x] `styling.md` - SCSS Modules, design tokens
@@ -17,7 +17,7 @@
 - [x] `testing.md` - React Testing Library, Vitest
 - [x] `mocking.md` - MSW, test mocks
 
-### Backend (`profiles/home/skills/backend/`)
+### Backend (`stacks/home/skills/backend/`)
 
 - [x] `api.md` - Hono + OpenAPI
 - [x] `database.md` - Drizzle ORM patterns
@@ -26,18 +26,18 @@
 - [x] `ci-cd.md` - GitHub Actions, deployment
 - [x] `authentication.md` - Better Auth (NEW)
 
-### Setup (`profiles/home/skills/setup/`)
+### Setup (`stacks/home/skills/setup/`)
 
 - [x] `monorepo.md` - Turborepo patterns
 - [x] `package.md` - Package configuration
 - [x] `env.md` - Environment variables
 - [x] `tooling.md` - ESLint, Prettier, TypeScript
 
-### Security (`profiles/home/skills/security/`)
+### Security (`stacks/home/skills/security/`)
 
 - [x] `security.md` - Secrets, XSS, CSRF, Dependabot
 
-### Shared (`profiles/home/skills/shared/`)
+### Shared (`stacks/home/skills/shared/`)
 
 - [x] `reviewing.md` - Code review patterns
 

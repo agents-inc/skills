@@ -2573,9 +2573,9 @@ philosophy: "Less is more"
 ### Files Analyzed
 
 - `/home/vince/dev/claude-subagents/src/registry.yaml`
-- `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml`
+- `/home/vince/dev/claude-subagents/src/stacks/home-stack/config.yaml`
 - `/home/vince/dev/claude-subagents/src/schemas/registry.schema.json`
-- `/home/vince/dev/claude-subagents/src/schemas/profile-config.schema.json`
+- `/home/vince/dev/claude-subagents/src/schemas/stack-config.schema.json`
 - `/home/vince/dev/claude-subagents/.claude/research/findings/COMMUNITY-REGISTRY-PROPOSAL-RESEARCH.md`
 
 ---

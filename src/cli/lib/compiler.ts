@@ -8,7 +8,7 @@ import type {
   Skill,
   AgentConfig,
   CompiledAgentData,
-  ProfileConfig,
+  CompileConfig,
   CompileContext,
 } from '../types';
 
@@ -36,7 +36,7 @@ async function readCorePrompts(
 async function compileAgent(
   name: string,
   agent: AgentConfig,
-  config: ProfileConfig,
+  config: CompileConfig,
   projectRoot: string,
   engine: Liquid
 ): Promise<string> {
@@ -121,7 +121,7 @@ async function compileAgent(
  */
 export async function compileAllAgents(
   resolvedAgents: Record<string, AgentConfig>,
-  config: ProfileConfig,
+  config: CompileConfig,
   ctx: CompileContext,
   engine: Liquid
 ): Promise<void> {
@@ -207,29 +207,15 @@ export async function compileAllSkills(
  * Copy CLAUDE.md to output
  */
 export async function copyClaude(
-  config: ProfileConfig,
+  config: CompileConfig,
   ctx: CompileContext
 ): Promise<void> {
-  let claudePath: string;
-
-  if (!ctx.profileId && ctx.stackId) {
-    // Stack mode - use stack's CLAUDE.md directly
-    claudePath = path.join(ctx.projectRoot, DIRS.stacks, ctx.stackId, 'CLAUDE.md');
-    if (!(await fileExists(claudePath))) {
-      throw new Error(`Stack ${ctx.stackId} missing CLAUDE.md`);
-    }
-  } else if (ctx.profileId) {
-    // Profile mode - use cascade
-    claudePath = await resolveClaudeMd(ctx.projectRoot, ctx.profileId, config.stack);
-  } else {
-    throw new Error('Either profileId or stackId must be provided');
-  }
+  const claudePath = await resolveClaudeMd(ctx.projectRoot, ctx.stackId);
 
   const content = await readFile(claudePath);
   const outputPath = path.join(ctx.outputDir, '..', 'CLAUDE.md');
   await writeFile(outputPath, content);
-  const source = claudePath.includes('/stacks/') ? 'stack' : 'profile';
-  console.log(`  ✓ CLAUDE.md (from ${source})`);
+  console.log(`  ✓ CLAUDE.md (from stack)`);
 }
 
 /**

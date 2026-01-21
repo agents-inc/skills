@@ -28,7 +28,7 @@ The proposed stack structure (`skills/react/SKILL.md`) is **incompatible** with 
 
 ## Current Infrastructure Analysis
 
-### Source Structure (`src/profiles/home/skills/`)
+### Source Structure (`src/skills/`)
 
 ```
 skills/
@@ -337,7 +337,7 @@ current_checksum: sha256:xyz789...
 | Aspect | Profile Skills | Stack Skills |
 |--------|----------------|--------------|
 | Defined in | `registry.yaml` | `stack.yaml` |
-| Source location | `src/profiles/{profile}/skills/` | `{stack}/skills/` |
+| Source location | `src/skills/` | `{stack}/skills/` |
 | Compilation | Yes (via compile.ts) | No (pre-compiled format) |
 | ID format | `category/name` | `category-name` |
 | Output location | `.claude/skills/{category-name}/` | Already in final format |
@@ -471,7 +471,7 @@ This is the **canonical transformation**. Stacks should use the same convention.
 | File | Purpose |
 |------|---------|
 | `/home/vince/dev/claude-subagents/src/compile.ts` | Compilation logic |
-| `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml` | Profile config example |
+| `/home/vince/dev/claude-subagents/src/stacks/home-stack/config.yaml` | Stack config example |
 | `/home/vince/dev/claude-subagents/src/registry.yaml` | Skill definitions |
 | `/home/vince/dev/claude-subagents/src/types.ts` | TypeScript types |
 | `/home/vince/dev/claude-subagents/.claude/research/findings/SKILL-FORKING-RESEARCH.md` | Forking proposal |
@@ -482,7 +482,7 @@ This is the **canonical transformation**. Stacks should use the same convention.
 
 ### Source Skills (28 files)
 ```
-src/profiles/home/skills/
+src/skills/
 ├── frontend/ (8 files)
 ├── backend/ (10 files)
 ├── setup/ (7 files)

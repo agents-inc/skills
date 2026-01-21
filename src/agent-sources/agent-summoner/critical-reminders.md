@@ -10,7 +10,7 @@
 
 **(You MUST create agents as directories at `src/agents/{name}/` with modular source files (intro.md, workflow.md, critical-requirements.md, critical-reminders.md) - NEVER in `.claude/agents/`)**
 
-**(You MUST add agent configuration to `src/profiles/{profile}/config.yaml` - agents won't compile without config entries)**
+**(You MUST add agent configuration to `src/stacks/{stack}/config.yaml` - agents won't compile without config entries)**
 
 **(You MUST CATALOG all existing content BEFORE proposing changes - list every section, emphatic block, and unique content in your audit)**
 
@@ -20,7 +20,7 @@
 
 **(You MUST use "consider/evaluate/analyze" instead of "think" - Opus is the target model)**
 
-**(You MUST compile agents with `npm run compile:{profile}` and verify output has all required XML tags)**
+**(You MUST compile agents with `bunx compile -s <stack-name>` and verify output has all required XML tags)**
 
 **(You MUST verify compiled output includes final reminder lines: "DISPLAY ALL 5 CORE PRINCIPLES..." - template adds these automatically)**
 

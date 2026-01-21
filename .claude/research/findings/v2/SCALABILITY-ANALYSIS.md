@@ -32,7 +32,7 @@ The modular agent/skill architecture has **critical scalability issues** that wi
 | `pm.md`                 | **39KB**  | 0 skills           |
 | `orchestrator.md`       | **32KB**  | 0 skills           |
 
-### Skill File Sizes (Home Profile)
+### Skill File Sizes (Central Repository)
 
 | Skill                       | Size |
 | --------------------------- | ---- |
@@ -154,22 +154,16 @@ Average 30-40 lines per agent. At 50 agents = 1500-2000 lines just for agent con
 
 **Issue:** Skill metadata is repeated across configs. Same skill like `frontend/react` is defined with different `usage` strings for frontend-developer, frontend-reviewer, tester, pm, skill-summoner, etc.
 
-### At 10+ Profiles
+### At 10+ Stacks
 
 | Aspect                | Impact                                   | Severity |
 | --------------------- | ---------------------------------------- | -------- |
-| Profile directories   | 10 directories with skills/ subdirs      | Low      |
-| Skill duplication     | Same skill content in multiple profiles  | **High** |
-| CLAUDE.md duplication | Profile-specific, acceptable             | Low      |
-| No inheritance        | Cannot share base skills across profiles | **High** |
+| Stack directories     | 10 directories with config files         | Low      |
+| Skill references      | All stacks reference central skills      | **Low** (resolved) |
+| CLAUDE.md duplication | Stack-specific, acceptable               | Low      |
+| Skill inheritance     | Central skill repository used by all     | **Resolved** |
 
-**Skill duplication is critical.** If `frontend/react.md` needs updating:
-
-- Work profile: Update `profiles/work/skills/frontend/react.md`
-- Home profile: Update `profiles/home/skills/frontend/react.md`
-- Future profiles: Update each one separately
-
-No mechanism to share skills across profiles or inherit from a base.
+**Skill duplication has been resolved.** Skills now live in a central repository (`src/skills/`) and stacks reference them by name. If `frontend/react` needs updating, you update it once in the central location.
 
 ---
 
@@ -207,11 +201,11 @@ No mechanism to share skills across profiles or inherit from a base.
    )
    ```
 
-4. **Add skill inheritance system**
+4. **Central skill repository** ✅ RESOLVED
 
-   - Shared skills in `profiles/_shared/skills/`
-   - Profile-specific overrides in `profiles/{profile}/skills/`
-   - Compiler checks profile first, falls back to shared
+   - All skills live in `src/skills/`
+   - Stacks reference skills from central repository
+   - One location to update skills
 
 5. **Implement incremental compilation**
    - Track source file timestamps
@@ -239,10 +233,10 @@ No mechanism to share skills across profiles or inherit from a base.
 
 ### Low Priority
 
-8. **Profile composition/layering**
+8. **Stack composition/layering**
 
-   - Base profile with common settings
-   - Child profiles inherit and override
+   - Base stack with common settings
+   - Child stacks inherit and override
 
 9. **Skill versioning**
    - Version field in skills.yaml
@@ -259,7 +253,7 @@ No mechanism to share skills across profiles or inherit from a base.
 | Sequential compilation             | Medium       | Low            |
 | Config verbosity O(A\*S)           | High         | Medium         |
 | No incremental rebuild             | Medium       | Medium         |
-| Skill duplication across profiles  | High         | Medium         |
+| Central skill repository           | Low (resolved) | N/A          |
 
 ---
 
@@ -271,9 +265,9 @@ No mechanism to share skills across profiles or inherit from a base.
 - `/home/vince/dev/claude-subagents/src/skills.yaml`
 - `/home/vince/dev/claude-subagents/src/templates/agent.liquid`
 - `/home/vince/dev/claude-subagents/src/types.ts`
-- `/home/vince/dev/claude-subagents/src/profiles/home/config.yaml`
-- `/home/vince/dev/claude-subagents/src/profiles/work/config.yaml`
-- All skill files in both profiles
+- `/home/vince/dev/claude-subagents/src/stacks/home-stack/config.yaml`
+- `/home/vince/dev/claude-subagents/src/stacks/work-stack/config.yaml`
+- All skill files in central repository (`src/skills/`)
 
 ---
 

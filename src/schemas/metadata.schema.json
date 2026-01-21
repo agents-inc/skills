@@ -2,9 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://claude-subagents.local/schemas/metadata.schema.json",
   "title": "Skill Metadata",
-  "description": "Metadata schema for individual metadata.yaml files (Phase 0B). Identity (name, description) comes from SKILL.md frontmatter. This file contains relationship and catalog data.",
+  "description": "Metadata schema for individual metadata.yaml files (Phase 0B). Identity (name, description) comes from SKILL.md frontmatter. This file contains relationship, catalog, and CLI display data.",
   "type": "object",
   "additionalProperties": false,
+  "required": ["category", "author", "version", "cli_name", "cli_description", "usage_guidance"],
   "properties": {
     "category": {
       "$ref": "#/$defs/SkillCategory",
@@ -14,6 +15,38 @@
       "type": "boolean",
       "description": "If true, only one skill from this category can be active. Defaults to true.",
       "default": true
+    },
+    "author": {
+      "type": "string",
+      "description": "Author handle with @ prefix (for community contributions and display)",
+      "pattern": "^@[a-z][a-z0-9-]*$",
+      "examples": ["@vince", "@photoroom"]
+    },
+    "version": {
+      "type": "integer",
+      "description": "Integer version of the skill (1, 2, 3, etc.). NOT semantic versioning.",
+      "minimum": 1,
+      "examples": [1, 2, 3]
+    },
+    "cli_name": {
+      "type": "string",
+      "description": "Short display name for CLI (combined with author as 'React @vince')",
+      "minLength": 1,
+      "maxLength": 30,
+      "examples": ["React", "Zustand", "TanStack Query"]
+    },
+    "cli_description": {
+      "type": "string",
+      "description": "Brief description (5-6 words max) for CLI display",
+      "minLength": 1,
+      "maxLength": 60,
+      "examples": ["React component patterns", "Lightweight client state", "Server state with caching"]
+    },
+    "usage_guidance": {
+      "type": "string",
+      "description": "When an AI agent should invoke this skill (decision criteria)",
+      "minLength": 10,
+      "examples": ["Use when building React components, hooks, or following React 19 patterns.", "Use when managing global UI state, replacing Context misuse, or handling cross-component state."]
     },
     "requires": {
       "type": "array",
@@ -41,18 +74,6 @@
       },
       "uniqueItems": true,
       "examples": [["state/mobx", "state/redux", "state/pinia"]]
-    },
-    "author": {
-      "type": "string",
-      "description": "Author of the skill (for community contributions)",
-      "pattern": "^@[a-z][a-z0-9-]*$",
-      "examples": ["@vince", "@photoroom"]
-    },
-    "version": {
-      "type": "string",
-      "description": "Semantic version of the skill",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.-]+)?(\\+[a-z0-9.-]+)?$",
-      "examples": ["1.0.0", "2.1.0-beta.1"]
     },
     "tags": {
       "type": "array",
@@ -87,20 +108,43 @@
   "$defs": {
     "SkillCategory": {
       "type": "string",
-      "description": "Valid skill category names",
+      "description": "Valid skill category names. Must be one of the allowed values.",
       "enum": [
         "framework",
-        "state",
+        "meta-framework",
+        "client-state",
+        "server-state",
         "styling",
         "testing",
         "mocking",
-        "data-fetching",
-        "backend",
+        "api",
+        "database",
+        "auth",
+        "analytics",
+        "observability",
+        "email",
+        "forms",
+        "ui-components",
+        "i18n",
+        "error-handling",
+        "files",
+        "file-upload",
+        "utilities",
+        "tooling",
+        "monorepo",
+        "mobile-framework",
         "frontend",
+        "backend",
         "security",
         "shared",
         "setup",
-        "research"
+        "research",
+        "performance",
+        "ci-cd",
+        "flags",
+        "accessibility",
+        "frontend/realtime",
+        "frontend/animation"
       ]
     },
     "SkillReference": {

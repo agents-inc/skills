@@ -1,34 +1,34 @@
 # Agent Architecture Refactor
 
 > **Status:** In Progress
-> **Goal:** Single source of truth for agents, profiles only select which agents to use
+> **Goal:** Single source of truth for agents, stacks only select which agents to use
 
 ## Summary
 
 Restructure so that:
 1. **Agent definitions** live in ONE file (`agents.yaml`) - single source of truth
-2. **Profile configs** just reference which agents they want + assign skills
+2. **Stack configs** just reference which agents they want + assign skills
 3. **Agent source files** (intro.md, workflow.md) remain generic in `agent-sources/`
 
 ## Current State (Before Refactor)
 
 ```
 src/
-├── agent-sources/           # ✅ DONE - renamed from agents/ to avoid Claude Code detection
+├── agent-sources/           # DONE - renamed from agents/ to avoid Claude Code detection
 │   └── {agent-name}/
 │       ├── intro.md
 │       ├── workflow.md
 │       └── ...
-├── profiles/
+├── stacks/
 │   ├── work/
-│   │   ├── config.yaml      # ❌ Contains FULL agent definitions (duplicated)
+│   │   ├── config.yaml      # Contains FULL agent definitions (duplicated)
 │   │   └── skills/
 │   └── home/
-│       ├── config.yaml      # ❌ Contains FULL agent definitions (duplicated)
+│       ├── config.yaml      # Contains FULL agent definitions (duplicated)
 │       └── skills/
 ```
 
-**Problem:** Agent definitions (title, description, model, tools, core_prompts, output_format) are duplicated in each profile's config.yaml.
+**Problem:** Agent definitions (title, description, model, tools, core_prompts, output_format) are duplicated in each stack's config.yaml.
 
 ## Target State (After Refactor)
 
@@ -40,7 +40,7 @@ src/
 │       ├── workflow.md
 │       └── ...
 ├── agents.yaml              # NEW: Single source of truth for ALL agent definitions
-├── profiles/
+├── stacks/
 │   ├── work/
 │   │   ├── config.yaml      # SIMPLIFIED: Just lists agents + skill assignments
 │   │   └── skills/
@@ -89,7 +89,7 @@ agents:
   # ... all other agents
 ```
 
-### SIMPLIFIED: profiles/{profile}/config.yaml
+### SIMPLIFIED: stacks/{stack}/config.yaml
 
 ```yaml
 name: work
@@ -111,7 +111,7 @@ ending_prompt_sets:
     - improvement-protocol
   # ...
 
-# NEW: Just list which agents this profile uses
+# NEW: Just list which agents this stack uses
 use_agents:
   - frontend-developer
   - frontend-reviewer
@@ -119,7 +119,7 @@ use_agents:
   - pm
   - skill-summoner
 
-# NEW: Profile-specific skill assignments per agent
+# NEW: Stack-specific skill assignments per agent
 agent_skills:
   frontend-developer:
     precompiled:
@@ -161,12 +161,12 @@ agent_skills:
 - [x] Update `src/types.ts` with new type definitions
 - [x] Update `src/compile.ts` to:
   - [x] Load agents from `agents.yaml`
-  - [x] Load profile config with `use_agents` and `agent_skills`
-  - [x] Merge agent definition + profile skill assignments at compile time
-- [x] Simplify `src/profiles/work/config.yaml` (remove agent definitions, keep only `use_agents` + `agent_skills`)
-- [x] Simplify `src/profiles/home/config.yaml` (same)
-- [x] Test compilation for both profiles
-- [x] Verify Claude Code only sees active profile's agents
+  - [x] Load stack config with `use_agents` and `agent_skills`
+  - [x] Merge agent definition + stack skill assignments at compile time
+- [x] Simplify `src/stacks/work/config.yaml` (remove agent definitions, keep only `use_agents` + `agent_skills`)
+- [x] Simplify `src/stacks/home/config.yaml` (same)
+- [x] Test compilation for both stacks
+- [x] Verify Claude Code only sees active stack's agents
 
 ### To Do
 - [x] Update `CLAUDE_ARCHITECTURE_BIBLE.md` documentation to reflect new structure
@@ -175,9 +175,9 @@ agent_skills:
 
 All checklist items have been implemented. The system now has:
 1. **Single source of truth** for agent definitions in `agents.yaml`
-2. **Simplified profile configs** with `use_agents` and `agent_skills`
+2. **Simplified stack configs** with `use_agents` and `agent_skills`
 3. **Updated types** in `types.ts` with `AgentDefinition`, `AgentsConfig`, and `SkillAssignment`
-4. **Updated compiler** that loads agents from `agents.yaml` and merges with profile skills
+4. **Updated compiler** that loads agents from `agents.yaml` and merges with stack skills
 
 ## Files Modified
 
@@ -185,9 +185,9 @@ All checklist items have been implemented. The system now has:
 |------|--------|--------|
 | `src/agents.yaml` | CREATED - all agent definitions | ✅ Done |
 | `src/types.ts` | UPDATED - new types (AgentDefinition, AgentsConfig, SkillAssignment) | ✅ Done |
-| `src/compile.ts` | UPDATED - loads agents.yaml, merges with profile skills | ✅ Done |
-| `src/profiles/work/config.yaml` | SIMPLIFIED - uses use_agents + agent_skills | ✅ Done |
-| `src/profiles/home/config.yaml` | SIMPLIFIED - uses use_agents + agent_skills | ✅ Done |
+| `src/compile.ts` | UPDATED - loads agents.yaml, merges with stack skills | Done |
+| `src/stacks/work/config.yaml` | SIMPLIFIED - uses use_agents + agent_skills | Done |
+| `src/stacks/home/config.yaml` | SIMPLIFIED - uses use_agents + agent_skills | Done |
 | `src/docs/CLAUDE_ARCHITECTURE_BIBLE.md` | UPDATED - documented new structure | ✅ Done |
 
 ---
@@ -200,10 +200,10 @@ Use this prompt in a clean Claude Code context to continue:
 Continue the agent architecture refactor documented in src/docs/REFACTOR-AGENT-ARCHITECTURE.md
 
 The goal is to create a single source of truth for agent definitions:
-1. Create src/agents.yaml with all agent definitions extracted from the current profile configs
+1. Create src/agents.yaml with all agent definitions extracted from the current stack configs
 2. Update types.ts with new type definitions
-3. Update compile.ts to load agents from agents.yaml and merge with profile-specific skill assignments
-4. Simplify both profile config.yaml files to only contain use_agents and agent_skills
+3. Update compile.ts to load agents from agents.yaml and merge with stack-specific skill assignments
+4. Simplify both stack config.yaml files to only contain use_agents and agent_skills
 
 Read the REFACTOR-AGENT-ARCHITECTURE.md file first to understand the current state and target state, then implement the remaining checklist items. Use ultrathink for this task.
 ```

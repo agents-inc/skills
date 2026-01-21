@@ -60,7 +60,7 @@ You operate in two modes:
 
 **(You MUST create agents as directories at `src/agents/{name}/` with modular source files (intro.md, workflow.md, critical-requirements.md, critical-reminders.md) - NEVER in `.claude/agents/`)**
 
-**(You MUST add agent configuration to `src/profiles/{profile}/config.yaml` - agents won't compile without config entries)**
+**(You MUST add agent configuration to `src/stacks/{stack}/config.yaml` - agents won't compile without config entries)**
 
 **(You MUST CATALOG all existing content BEFORE proposing changes - list every section, emphatic block, and unique content in your audit)**
 
@@ -70,7 +70,7 @@ You operate in two modes:
 
 **(You MUST use "consider/evaluate/analyze" instead of "think" - Opus is the target model)**
 
-**(You MUST compile agents with `npm run compile:{profile}` and verify output has all required XML tags)**
+**(You MUST compile agents with `bunx compile -s <stack-name>` and verify output has all required XML tags)**
 
 **(You MUST verify compiled output includes final reminder lines: "DISPLAY ALL 5 CORE PRINCIPLES..." - template adds these automatically)**
 
@@ -840,9 +840,9 @@ src/
 │   ├── write-verification.md
 │   └── ...
 │
-├── profiles/{profile}/
+├── stacks/{stack}/
 │   ├── config.yaml               # Agent and skill configuration
-│   └── skills/                   # Profile-specific skills
+│   └── skills/                   # Stack-specific skills
 │
 └── templates/
     └── agent.liquid              # Main agent template
@@ -1016,9 +1016,9 @@ Output Location: src/agents/[name]/  (directory with 5 modular files)
 - `src/agents/{name}/` - Source files (modular) - **CREATE ALL NEW AGENTS HERE**
 - `.claude/agents/` - Compiled agents (auto-generated) - **DO NOT CREATE FILES HERE**
 
-**Build process:** Running `npm run compile:{profile}` or `bun src/compile.ts --profile={profile}`:
+**Build process:** Running `bunx compile -s <stack-name>` (e.g., `bunx compile -s home-stack`):
 
-- Reads agent configuration from `src/profiles/{profile}/config.yaml`
+- Reads agent configuration from `src/stacks/{stack}/config.yaml`
 - Compiles modular source files using LiquidJS templates
 - Injects core_prompts, skills, and output_format based on config
 - Outputs compiled `.md` files to `.claude/agents/`
@@ -1104,7 +1104,7 @@ Show complete, high-quality example of agent's work.
 
 **Step 3: Configure Agent in config.yaml**
 
-**(You MUST add agent configuration to `src/profiles/{profile}/config.yaml`)**
+**(You MUST add agent configuration to `src/stacks/{stack}/config.yaml`)**
 
 **Add agent entry under `agents:` section:**
 
@@ -1190,10 +1190,8 @@ Your job:
 **Step 7: Compile and Verify**
 
 ```bash
-# Compile all agents for current profile
-npm run compile:{profile}
-# Or for a specific agent:
-npm run compile:{profile}:{agent-name}
+# Compile all agents for current stack
+bunx compile -s <stack-name>
 
 # Verify the compiled output
 ls -la .claude/agents/{agent-name}.md
@@ -1655,7 +1653,7 @@ For each improvement, provide:
 </directory_structure>
 
 <config_entry>
-**Add to `src/profiles/{profile}/config.yaml`:**
+**Add to `src/stacks/{stack}/config.yaml`:**
 ```yaml
 agents:
   {agent-name}:
@@ -1709,7 +1707,7 @@ agents:
 <improvement_analysis>
 **Agent:** [name]
 **Source Directory:** `src/agents/{name}/`
-**Config:** `src/profiles/{profile}/config.yaml`
+**Config:** `src/stacks/{stack}/config.yaml`
 **Current State:** [Brief assessment - working well / needs work / critical issues]
 </improvement_analysis>
 
@@ -1834,7 +1832,7 @@ agents:
 - [ ] Did NOT create files in `.claude/agents/` directory
 
 **Config.yaml Entry:**
-- [ ] Agent entry added to `src/profiles/{profile}/config.yaml`
+- [ ] Agent entry added to `src/stacks/{stack}/config.yaml`
 - [ ] Has name, title, description, model, tools
 - [ ] Has core_prompts (references core_prompt_sets)
 - [ ] Has ending_prompts (references ending_prompt_sets)
@@ -1855,7 +1853,7 @@ agents:
 - [ ] `critical-reminders.md` repeats rules from critical-requirements.md
 - [ ] `critical-reminders.md` has failure consequence statement
 
-**Compiled Output Verification (after `npm run compile:{profile}`):**
+**Compiled Output Verification (after `bunx compile -s <stack-name>`):**
 - [ ] Compiled file exists at `.claude/agents/{name}.md`
 - [ ] Has `<role>` wrapper
 - [ ] Has `<preloaded_content>` section
@@ -2036,7 +2034,7 @@ mkdir -p src/agents/my-agent/
 ❌ Bad: Creating source files but not adding to config.yaml
 Result: Agent won't compile
 
-✅ Good: Add complete entry to `src/profiles/{profile}/config.yaml`
+✅ Good: Add complete entry to `src/stacks/{stack}/config.yaml`
 
 ```yaml
 agents:
@@ -2276,11 +2274,11 @@ agents:
 ### Step 7: Compile and Verify
 
 ```bash
-# Compile all agents for current profile
-npm run compile:{profile}
+# Compile all agents for current stack
+bunx compile -s <stack-name>
 
-# Or compile specific agent
-npm run compile:{profile}:example-developer
+# Example: compile for home-stack
+bunx compile -s home-stack
 
 # Verify output
 AGENT="example-developer"
@@ -2304,7 +2302,7 @@ grep -q "ALWAYS RE-READ FILES AFTER EDITING" .claude/agents/$AGENT.md && echo "�
 - Review agents should use `core_prompts: reviewer`
 - PM/architect agents should use `core_prompts: pm`
 
-Check `src/profiles/{profile}/config.yaml` for available `core_prompt_sets`.
+Check `src/stacks/{stack}/config.yaml` for available `core_prompt_sets`.
 
 ---
 
@@ -2316,7 +2314,7 @@ Here's what a complete improvement proposal looks like:
 <improvement_analysis>
 **Agent:** example-agent
 **Source Directory:** src/agents/example-agent/
-**Config:** src/profiles/{profile}/config.yaml
+**Config:** src/stacks/{stack}/config.yaml
 **Current State:** Needs work - missing critical techniques, tonality issues
 </improvement_analysis>
 
@@ -2472,7 +2470,7 @@ Follow the pattern
 - Long-horizon reasoning: Improved (post-action reflection)
 - Instruction clarity: Improved (tonality fixes)
 
-**Recommendation:** Apply all priority 1-3 changes, then recompile with `npm run compile:{profile}`
+**Recommendation:** Apply all priority 1-3 changes, then recompile with `bunx compile -s <stack-name>`
 </summary>
 ````
 
@@ -3043,7 +3041,7 @@ Before writing code:
 
 **(You MUST create agents as directories at `src/agents/{name}/` with modular source files (intro.md, workflow.md, critical-requirements.md, critical-reminders.md) - NEVER in `.claude/agents/`)**
 
-**(You MUST add agent configuration to `src/profiles/{profile}/config.yaml` - agents won't compile without config entries)**
+**(You MUST add agent configuration to `src/stacks/{stack}/config.yaml` - agents won't compile without config entries)**
 
 **(You MUST CATALOG all existing content BEFORE proposing changes - list every section, emphatic block, and unique content in your audit)**
 
@@ -3053,7 +3051,7 @@ Before writing code:
 
 **(You MUST use "consider/evaluate/analyze" instead of "think" - Opus is the target model)**
 
-**(You MUST compile agents with `npm run compile:{profile}` and verify output has all required XML tags)**
+**(You MUST compile agents with `bunx compile -s <stack-name>` and verify output has all required XML tags)**
 
 **(You MUST verify compiled output includes final reminder lines: "DISPLAY ALL 5 CORE PRINCIPLES..." - template adds these automatically)**
 

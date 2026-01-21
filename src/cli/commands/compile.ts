@@ -1,13 +1,11 @@
-import { Command, Option } from 'commander';
+import { Command } from 'commander';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
-import { parse as parseYaml } from 'yaml';
-import { readFile } from '../utils/fs';
 import { setVerbose } from '../utils/logger';
-import { OUTPUT_DIR, DEFAULT_PROFILE, DIRS } from '../consts';
-import { loadAllAgents, loadAllSkills, loadStackSkills, loadStack } from '../lib/loader';
-import { resolveAgents, stackToProfileConfig } from '../lib/resolver';
+import { OUTPUT_DIR } from '../consts';
+import { loadAllAgents, loadStackSkills, loadStack } from '../lib/loader';
+import { resolveAgents, stackToCompileConfig } from '../lib/resolver';
 import { validate, printValidationResult } from '../lib/validator';
 import {
   compileAllAgents,
@@ -17,16 +15,11 @@ import {
   createLiquidEngine,
   cleanOutputDir,
 } from '../lib/compiler';
-import type { ProfileConfig, CompileContext } from '../types';
+import type { CompileConfig, CompileContext } from '../types';
 
 export const compileCommand = new Command('compile')
-  .description('Compile agents from profiles or stacks')
-  .addOption(
-    new Option('-p, --profile <name>', 'Profile to compile').conflicts('stack')
-  )
-  .addOption(
-    new Option('-s, --stack <name>', 'Stack to compile').conflicts('profile')
-  )
+  .description('Compile agents from a stack')
+  .requiredOption('-s, --stack <name>', 'Stack to compile')
   .option('-v, --verbose', 'Enable verbose logging', false)
   .configureOutput({
     writeErr: (str) => console.error(pc.red(str)),
@@ -38,66 +31,36 @@ export const compileCommand = new Command('compile')
     // Set verbose mode globally
     setVerbose(options.verbose);
 
-    // Determine mode
-    const isStackMode = !!options.stack;
     const stackId = options.stack;
-    const profileId = isStackMode ? undefined : (options.profile || DEFAULT_PROFILE);
 
     // Determine project root (where we're running from)
     const projectRoot = process.cwd();
     const outputDir = path.join(projectRoot, OUTPUT_DIR);
 
-    console.log(
-      `\n📦 Compiling ${isStackMode ? `stack: ${stackId}` : `profile: ${profileId}`}\n`
-    );
+    console.log(`\n📦 Compiling stack: ${stackId}\n`);
 
     try {
-      // Load agents first (shared across all stacks/profiles)
+      // Load agents first (shared across all stacks)
       s.start('Loading agents...');
       const agents = await loadAllAgents(projectRoot);
       s.stop(`Loaded ${Object.keys(agents).length} agents`);
 
-      // Load profile or stack config to determine effective stack ID
-      let profileConfig: ProfileConfig;
-      let effectiveStackId: string | undefined;
+      // Load stack configuration
+      s.start('Loading stack configuration...');
+      const stack = await loadStack(stackId, projectRoot);
+      const compileConfig: CompileConfig = stackToCompileConfig(stackId, stack);
+      s.stop(`Stack loaded: ${stack.agents.length} agents, ${stack.skills.length} skills`);
 
-      if (isStackMode && stackId) {
-        s.start('Loading stack configuration...');
-        const stack = await loadStack(stackId, projectRoot);
-        profileConfig = stackToProfileConfig(stackId, stack);
-        effectiveStackId = stackId;
-        s.stop(`Stack loaded: ${stack.agents.length} agents, ${stack.skills.length} skills`);
-      } else {
-        s.start('Loading profile configuration...');
-        const configPath = path.join(projectRoot, DIRS.profiles, profileId!, 'config.yaml');
-        try {
-          const content = await readFile(configPath);
-          profileConfig = parseYaml(content) as ProfileConfig;
-          effectiveStackId = profileConfig.stack;
-          s.stop(`Profile loaded: ${Object.keys(profileConfig.agents).length} agents`);
-        } catch (error) {
-          s.stop('Failed to load profile');
-          p.log.error(`Failed to load config: ${configPath}`);
-          process.exit(1);
-        }
-      }
-
-      // Load skills from stack (if available) or central repository
+      // Load skills from stack
       s.start('Loading skills...');
-      let skills;
-      if (effectiveStackId) {
-        skills = await loadStackSkills(effectiveStackId, projectRoot);
-        s.stop(`Loaded ${Object.keys(skills).length} skills from stack: ${effectiveStackId}`);
-      } else {
-        skills = await loadAllSkills(projectRoot);
-        s.stop(`Loaded ${Object.keys(skills).length} skills from central repository`);
-      }
+      const skills = await loadStackSkills(stackId, projectRoot);
+      s.stop(`Loaded ${Object.keys(skills).length} skills from stack: ${stackId}`);
 
       // Resolve agents
       s.start('Resolving agents...');
       let resolvedAgents;
       try {
-        resolvedAgents = await resolveAgents(agents, skills, profileConfig, projectRoot);
+        resolvedAgents = await resolveAgents(agents, skills, compileConfig, projectRoot);
         s.stop(`Resolved ${Object.keys(resolvedAgents).length} agents`);
       } catch (error) {
         s.stop('Failed to resolve agents');
@@ -108,19 +71,16 @@ export const compileCommand = new Command('compile')
       // Validate
       s.start('Validating configuration...');
       const ctx: CompileContext = {
-        profileId,
-        stackId: effectiveStackId,
-        isStackMode,
+        stackId,
         verbose: options.verbose,
         projectRoot,
         outputDir,
       };
 
       const validation = await validate(
-        profileConfig,
+        compileConfig,
         resolvedAgents,
-        profileId,
-        effectiveStackId,
+        stackId,
         projectRoot
       );
       s.stop('Validation complete');
@@ -141,7 +101,7 @@ export const compileCommand = new Command('compile')
 
       // Compile agents
       console.log('\nCompiling agents...');
-      await compileAllAgents(resolvedAgents, profileConfig, ctx, engine);
+      await compileAllAgents(resolvedAgents, compileConfig, ctx, engine);
 
       // Compile skills
       console.log('\nCompiling skills...');
@@ -153,7 +113,7 @@ export const compileCommand = new Command('compile')
 
       // Copy CLAUDE.md
       console.log('\nCopying CLAUDE.md...');
-      await copyClaude(profileConfig, ctx);
+      await copyClaude(compileConfig, ctx);
 
       p.outro(pc.green('✨ Compilation complete!'));
     } catch (error) {

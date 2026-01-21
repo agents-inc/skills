@@ -378,16 +378,16 @@ Available templates:
   fullstack      - Full stack with Hono, Drizzle, auth (16 agents)
   minimal        - Just the essentials (5 agents)
 
-What would you like to name your profile? (e.g., "home", "work")
-> home
+What would you like to name your stack? (e.g., "home-stack", "work-stack")
+> home-stack
 
-Creating profile "home" from template "react-zustand"...
-  - Created src/profiles/local/home/
+Creating stack "home-stack" from template "react-zustand"...
+  - Created src/stacks/home-stack/
   - Copied 16 agent configs
   - Copied 28 skills
   - Generated CLAUDE.md
 
-Ready! Run "bun run compile home" to compile your agents.
+Ready! Run "bun run compile --stack=home-stack" to compile your agents.
 ```
 
 ---
@@ -398,10 +398,10 @@ Ready! Run "bun run compile home" to compile your agents.
 
 **A: Use both for different purposes:**
 - **Inquirer.js** for interactive prompts (what the user sees)
-- **Commander.js** or **yargs** for CLI argument parsing (`--preset`, `--profile`, etc.)
+- **Commander.js** or **yargs** for CLI argument parsing (`--preset`, `--stack`, etc.)
 - This is the standard pattern used by create-next-app, Vue CLI, and Yeoman
 
-**Q: What's the best UX for profile creation?**
+**Q: What's the best UX for stack creation?**
 
 **A:** The hybrid approach recommended above:
 1. Single-question fast path ("Quick start or customize?")
@@ -793,12 +793,12 @@ src/
 │   │       └── skills/
 │   └── local/                   # User profiles (gitignored, private)
 │       ├── home/                # User's personal profile
-│       └── work/                # User's work profile
+│       └── work-stack/          # User's work stack
 ├── registry.yaml
 └── compile.ts
 
 # In .gitignore:
-src/profiles/local/
+src/stacks/local/
 ```
 
 ### Design Decisions
@@ -809,9 +809,9 @@ src/profiles/local/
 
 3. **Descriptive template names**: `react-zustand`, `react-mobx`, `fullstack` describe the tech stack, not the user context. Users understand what they're getting.
 
-4. **Complete working templates**: Templates are fully functional profiles that compile and work out-of-box, not empty stubs. Users can reference them even after creating their own.
+4. **Complete working templates**: Templates are fully functional stacks that compile and work out-of-box, not empty stubs. Users can reference them even after creating their own.
 
-5. **CLI-assisted profile creation**: Interactive prompts guide users through creating profiles based on templates.
+5. **CLI-assisted stack creation**: Interactive prompts guide users through creating stacks based on templates.
 
 ### CLI Onboarding Flow
 
@@ -820,8 +820,8 @@ $ bun run setup
 
 Welcome to Claude Agents!
 
-? What would you like to name your profile? (e.g., "home", "work", "project-x")
-> home
+? What would you like to name your stack? (e.g., "home-stack", "work-stack", "project-x")
+> home-stack
 
 ? Choose a base template:
   > react-zustand (React, Zustand, SCSS Modules, Vitest, MSW)
@@ -835,7 +835,7 @@ Welcome to Claude Agents!
     Redux Toolkit
     None (useState only)
 
-Creating profile at src/profiles/local/home/...
+Creating stack at src/stacks/home-stack/...
   ✓ Copied template: react-zustand
   ✓ Created config.yaml
   ✓ Created CLAUDE.md
@@ -876,18 +876,18 @@ Done! Run "bun run compile home" anytime to recompile.
 - Generic CLAUDE.md with placeholder patterns
 - Users customize from scratch
 
-### Profile Naming Conventions
+### Stack Naming Conventions
 
 | Context | Naming Pattern | Examples |
 |---------|---------------|----------|
-| **Template profiles** | Tech stack descriptors | `react-zustand`, `react-mobx`, `fullstack`, `minimal` |
-| **User profiles** | Personal context names | `home`, `work`, `project-x`, `client-acme` |
+| **Template stacks** | Tech stack descriptors | `react-zustand`, `react-mobx`, `fullstack`, `minimal` |
+| **User stacks** | Personal context names | `home-stack`, `work-stack`, `project-x`, `client-acme` |
 
 ### What Goes in `.gitignore`
 
 ```gitignore
-# User-specific profile configurations (contains personal tech stack choices)
-src/profiles/local/
+# User-specific stack configurations (contains personal tech stack choices)
+src/stacks/local/
 
 # Compiled output (regenerated on compile)
 .claude/agents/
@@ -901,14 +901,14 @@ One-time migration script:
 
 ```bash
 # migration.sh
-mkdir -p src/profiles/local
-mv src/profiles/home src/profiles/local/
-mv src/profiles/work src/profiles/local/
+mkdir -p src/stacks/local
+mv src/stacks/home-stack src/stacks/local/
+mv src/stacks/work-stack src/stacks/local/
 
 # Add to .gitignore if not already present
-echo "src/profiles/local/" >> .gitignore
+echo "src/stacks/local/" >> .gitignore
 
-echo "Migration complete! Your personal profiles are now in local/"
+echo "Migration complete! Your personal stacks are now in local/"
 ```
 
 ### Skill Bundle Considerations
@@ -916,9 +916,9 @@ echo "Migration complete! Your personal profiles are now in local/"
 Current skill organization by domain (frontend/, backend/, setup/, security/, shared/, research/) is good for OSS:
 
 1. **Templates include appropriate bundles**: `react-zustand` includes all bundles; `react-mobx` includes frontend only
-2. **Users can mix and match**: Copy skills from templates to local profile
+2. **Users can mix and match**: Copy skills from templates to local stack
 3. **Bundle documentation**: Each template's CLAUDE.md explains which skills are included and why
-4. **Future: Bundle presets**: CLI could offer "Add backend bundle to existing profile" functionality
+4. **Future: Bundle presets**: CLI could offer "Add backend bundle to existing stack" functionality
 
 ### Recommendations Summary
 

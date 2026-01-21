@@ -136,12 +136,12 @@ conflicts_with:
 
 ### 1. Stacks Replace Profiles
 
-**Before:** Profiles contained skills, agents, and CLAUDE.md
-**After:** Stacks ARE profiles - complete tech stack configurations
+**Before:** Skills were mixed with stack config
+**After:** Stacks are the compilation unit - complete tech stack configurations
 
 ```
-OLD: src/profiles/home/ → skills, agents, config
-NEW: stacks/modern-react.yaml → references skills, defines agents
+OLD: mixed skills and config in same place
+NEW: stacks/modern-react/ → references central skills, defines agents
 ```
 
 ### 2. Skills Are Atomic (No Bleeding)

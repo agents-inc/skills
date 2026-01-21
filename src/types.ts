@@ -1,5 +1,5 @@
 /**
- * TypeScript types for the Profile-Based Agent Compilation System
+ * TypeScript types for the Stack-Based Agent Compilation System
  */
 
 // =============================================================================
@@ -90,30 +90,30 @@ export interface AgentsConfig {
 }
 
 // =============================================================================
-// Profile Config Types (agent-centric structure)
+// Compile Config Types (agent-centric structure)
 // =============================================================================
 
 /**
- * Profile-specific agent configuration
- * Contains prompts and skills for a specific agent in this profile
+ * Agent configuration for compilation
+ * Contains prompts and skills for a specific agent
  */
-export interface ProfileAgentConfig {
+export interface CompileAgentConfig {
   core_prompts: string[] // Prompt names for beginning of agent
   ending_prompts: string[] // Prompt names for end of agent
-  skills?: SkillReference[] // Optional - can come from stack if profile has one
+  skills?: SkillReference[] // Optional - can come from stack
 }
 
 /**
- * Profile configuration
+ * Compile configuration (derived from stack)
  * Agents to compile are derived from the keys of `agents`
  */
-export interface ProfileConfig {
+export interface CompileConfig {
   name: string
   description: string
   claude_md: string
-  /** Optional stack reference - resolves stack skills for agents without explicit skills */
+  /** Stack reference - resolves stack skills for agents */
   stack?: string
-  agents: Record<string, ProfileAgentConfig> // Keys determine which agents to compile
+  agents: Record<string, CompileAgentConfig> // Keys determine which agents to compile
 }
 
 // =============================================================================
@@ -121,8 +121,8 @@ export interface ProfileConfig {
 // =============================================================================
 
 /**
- * Fully resolved agent config (agent definition + profile config)
- * This is what the compiler uses after merging agents.yaml with profile config
+ * Fully resolved agent config (agent definition + compile config)
+ * This is what the compiler uses after merging agent definitions with stack config
  */
 export interface AgentConfig {
   name: string

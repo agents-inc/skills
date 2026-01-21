@@ -98,8 +98,8 @@
 
 **Files affected:**
 
-- `src/profiles/work/config.yaml`
-- `src/profiles/home/config.yaml`
+- `src/stacks/work/config.yaml`
+- `src/stacks/home/config.yaml`
 
 **Duplication pattern:**
 Every agent definition repeats the same `core_prompts` list:
@@ -123,7 +123,7 @@ ending_prompts:
 
 This is repeated 15+ times per config file.
 
-**Recommendation:** Define `default_core_prompts` and `default_ending_prompts` at profile level. Agents only specify overrides.
+**Recommendation:** Define `default_core_prompts` and `default_ending_prompts` at stack level. Agents only specify overrides.
 
 ---
 
@@ -142,7 +142,7 @@ Multiple agents have identical or near-identical dynamic skill lists:
 ### 5.7 Skill Structure Duplication
 
 **Pattern observed:**
-All skills in both profiles follow the exact same structure:
+All skills in both stacks follow the exact same structure:
 
 1. Quick Guide block
 2. Critical Requirements section
@@ -158,8 +158,7 @@ All skills in both profiles follow the exact same structure:
 
 **Files affected:** All files in:
 
-- `src/profiles/work/skills/`
-- `src/profiles/home/skills/`
+- `src/skills/` (central skill repository)
 
 **Issue:** This structure is manually maintained in each skill file rather than enforced via template.
 

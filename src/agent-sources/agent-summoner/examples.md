@@ -135,11 +135,8 @@ agents:
 ### Step 7: Compile and Verify
 
 ```bash
-# Compile all agents for current profile
-npm run compile:{profile}
-
-# Or compile specific agent
-npm run compile:{profile}:example-developer
+# Compile all agents for current stack
+bunx compile -s <stack-name>
 
 # Verify output
 AGENT="example-developer"
@@ -163,7 +160,7 @@ grep -q "ALWAYS RE-READ FILES AFTER EDITING" .claude/agents/$AGENT.md && echo "â
 - Review agents should use `core_prompts: reviewer`
 - PM/architect agents should use `core_prompts: pm`
 
-Check `src/profiles/{profile}/config.yaml` for available `core_prompt_sets`.
+Check `src/stacks/{stack}/config.yaml` for available `core_prompt_sets`.
 
 ---
 
@@ -175,7 +172,7 @@ Here's what a complete improvement proposal looks like:
 <improvement_analysis>
 **Agent:** example-agent
 **Source Directory:** src/agents/example-agent/
-**Config:** src/profiles/{profile}/config.yaml
+**Config:** src/stacks/{stack}/config.yaml
 **Current State:** Needs work - missing critical techniques, tonality issues
 </improvement_analysis>
 
@@ -331,7 +328,7 @@ Follow the pattern
 - Long-horizon reasoning: Improved (post-action reflection)
 - Instruction clarity: Improved (tonality fixes)
 
-**Recommendation:** Apply all priority 1-3 changes, then recompile with `npm run compile:{profile}`
+**Recommendation:** Apply all priority 1-3 changes, then recompile with `bunx compile -s <stack-name>`
 </summary>
 ````
 
