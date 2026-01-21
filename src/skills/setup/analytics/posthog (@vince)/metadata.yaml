@@ -3,6 +3,8 @@ category: setup
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: PostHog initial setup
+usage_guidance: Use when setting up PostHog analytics or feature flags for the first time.
 compatible_with:
   - backend/posthog-analytics
   - backend/posthog-flags

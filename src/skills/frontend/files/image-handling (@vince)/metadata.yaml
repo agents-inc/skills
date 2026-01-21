@@ -3,6 +3,8 @@ category: files
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Client-side image processing
+usage_guidance: Use when processing images client-side, resizing, or format conversion.
 tags:
   - image-preview
   - canvas-api

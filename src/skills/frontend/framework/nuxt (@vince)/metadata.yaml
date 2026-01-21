@@ -3,6 +3,8 @@ category: meta-framework
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_description: Nuxt 3 full-stack framework
+usage_guidance: Use when building Nuxt 3 apps with useFetch, useState, or server routes.
 requires:
   - frontend/framework/vue-composition-api (@vince)
 compatible_with:

@@ -3,6 +3,8 @@ category: backend
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: CI/CD pipelines
+usage_guidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
 compatible_with:
   - setup/monorepo
   - setup/tooling

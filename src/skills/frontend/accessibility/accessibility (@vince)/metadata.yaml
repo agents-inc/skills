@@ -3,6 +3,8 @@ category: frontend
 category_exclusive: false
 author: "@vince"
 version: 1.1.0
+cli_description: WCAG accessibility patterns
+usage_guidance: Use when implementing WCAG compliance, ARIA attributes, or keyboard navigation.
 compatible_with:
   - frontend/react
 tags:

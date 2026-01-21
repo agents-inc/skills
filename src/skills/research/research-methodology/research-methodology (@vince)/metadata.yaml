@@ -3,6 +3,8 @@ category: research
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Codebase investigation
+usage_guidance: Use when investigating codebase patterns, researching implementations, or discovering how things work.
 tags:
   - research
   - investigation

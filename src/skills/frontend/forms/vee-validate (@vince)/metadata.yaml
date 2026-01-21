@@ -3,6 +3,8 @@ category: forms
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Vue form validation
+usage_guidance: Use when building forms in Vue with useForm, useField, or schema validation.
 tags:
   - forms
   - vee-validate

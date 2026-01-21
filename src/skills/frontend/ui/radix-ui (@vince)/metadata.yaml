@@ -3,6 +3,8 @@ category: ui-components
 category_exclusive: false
 author: "@vince"
 version: 1.1.0
+cli_description: Accessible UI primitives
+usage_guidance: Use when building accessible UI with Radix primitives.
 tags:
   - radix
   - radix-ui

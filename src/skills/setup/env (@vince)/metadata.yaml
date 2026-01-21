@@ -3,6 +3,8 @@ category: setup
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Environment variable management
+usage_guidance: Use when setting up environment variables, .env files, or Zod validation for config.
 compatible_with:
   - security/security
   - setup/turborepo

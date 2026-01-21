@@ -3,6 +3,8 @@ category: api
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Hono API framework
+usage_guidance: Use when building API routes with Hono, implementing OpenAPI specs, or Zod validation.
 compatible_with:
   - backend/authentication
   - backend/database

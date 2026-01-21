@@ -3,6 +3,8 @@ category: i18n
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: React internationalization
+usage_guidance: Use when implementing i18n in React with FormatJS/react-intl.
 tags:
   - react-intl
   - formatjs

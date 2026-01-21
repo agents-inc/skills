@@ -3,6 +3,8 @@ category: server-state
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: URQL GraphQL client
+usage_guidance: Use when working with URQL client for GraphQL.
 compatible_with:
   - frontend/react
   - frontend/client-state

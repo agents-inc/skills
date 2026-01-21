@@ -3,6 +3,8 @@ category: styling
 category_exclusive: true
 author: "@vince"
 version: 2.0.0
+cli_description: Tailwind CSS utility styling
+usage_guidance: Use when styling with Tailwind CSS utility classes or design tokens.
 compatible_with:
   - frontend/react-mobx (@vince)
 tags:

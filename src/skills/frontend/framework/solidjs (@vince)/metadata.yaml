@@ -3,6 +3,8 @@ category: framework
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_description: SolidJS reactive patterns
+usage_guidance: Use when building SolidJS apps with signals, effects, or SolidStart.
 tags:
   - solidjs
   - signals

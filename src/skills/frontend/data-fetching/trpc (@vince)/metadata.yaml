@@ -3,6 +3,8 @@ category: server-state
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Type-safe API layer
+usage_guidance: Use when building type-safe APIs with tRPC procedures and React Query.
 compatible_with:
   - frontend/react
   - frontend/client-state

@@ -3,6 +3,8 @@ category: mocking
 category_exclusive: false
 author: "@vince"
 version: "1.0.0"
+cli_description: Sinon mocks (Photoroom)
+usage_guidance: Use when working with Sinon mocks in Photoroom codebase.
 compatible_with:
   - frontend/testing
   - frontend/state-management

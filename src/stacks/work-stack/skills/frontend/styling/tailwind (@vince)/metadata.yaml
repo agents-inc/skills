@@ -3,6 +3,8 @@ category: styling
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_description: Tailwind CSS utility styling
+usage_guidance: Use when styling with Tailwind CSS in Photoroom webapp.
 compatible_with:
   - frontend/react-mobx (@vince)
 conflicts_with:

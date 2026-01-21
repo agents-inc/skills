@@ -3,6 +3,8 @@ category: styling
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_description: SCSS Modules styling
+usage_guidance: Use when styling with SCSS Modules, design tokens, or CSS cascade layers.
 compatible_with:
   - frontend/react
 tags:

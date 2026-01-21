@@ -1,6 +1,8 @@
 id: frontend/pwa/service-workers
 version: 1.0.0
 author: "@vince"
+cli_description: Offline caching strategies
+usage_guidance: Use when implementing service workers, caching strategies, or offline support.
 
 name: Service Worker Patterns
 description: >-

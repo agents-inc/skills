@@ -3,6 +3,8 @@ category: monorepo
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Monorepo orchestration
+usage_guidance: Use when configuring monorepo pipelines, workspaces, or package architecture.
 compatible_with:
   - setup/tooling
   - backend/ci-cd

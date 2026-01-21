@@ -3,6 +3,8 @@ category: api
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_description: Fastify API framework
+usage_guidance: Use when building Fastify APIs, using JSON Schema validation, or plugin architecture.
 tags:
   - fastify
   - nodejs

@@ -3,6 +3,8 @@ category: error-handling
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Error UI handling
+usage_guidance: Use when implementing React error boundaries, fallback UIs, or retry logic.
 compatible_with:
   - frontend/react
 tags:

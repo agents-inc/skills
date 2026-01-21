@@ -3,6 +3,8 @@ category: frontend
 category_exclusive: false
 author: "@vince"
 version: "1.0.0"
+cli_description: MobX performance (Photoroom)
+usage_guidance: Use when optimizing MobX observers in Photoroom codebase.
 compatible_with:
   - frontend/react
   - frontend/client-state-management

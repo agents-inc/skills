@@ -3,6 +3,8 @@ category: forms
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: React form handling
+usage_guidance: Use when building forms in React with validation, field arrays, or Controller.
 tags:
   - forms
   - react-hook-form

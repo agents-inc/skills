@@ -3,6 +3,8 @@ category: frontend
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Bidirectional real-time communication
+usage_guidance: Use when implementing WebSocket connections, reconnection, or message handling.
 compatible_with:
   - frontend/react
   - frontend/client-state

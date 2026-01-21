@@ -3,6 +3,8 @@ category: shared
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Code review guidance
+usage_guidance: Use when reviewing code, PRs, or making approval/rejection decisions.
 tags:
   - code-review
   - feedback

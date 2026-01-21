@@ -3,6 +3,8 @@ category: meta-framework
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Next.js Server Actions
+usage_guidance: Use when implementing Server Actions for mutations, revalidation, or form handling.
 requires:
   - framework/react*
 compatible_with:

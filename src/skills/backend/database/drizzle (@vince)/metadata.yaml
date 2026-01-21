@@ -3,6 +3,8 @@ category: database
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Drizzle ORM patterns
+usage_guidance: Use when writing database queries, migrations, or working with Drizzle ORM.
 compatible_with:
   - backend/api
   - backend/authentication

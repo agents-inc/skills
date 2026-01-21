@@ -3,6 +3,8 @@ category: error-handling
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Type-safe error handling
+usage_guidance: Use when implementing Result/Either types for type-safe error handling.
 compatible_with:
   - frontend/react
   - backend/typescript

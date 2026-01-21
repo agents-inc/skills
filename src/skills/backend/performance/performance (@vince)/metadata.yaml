@@ -3,6 +3,8 @@ category: performance
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_description: Query and caching optimization
+usage_guidance: Use when optimizing database queries, implementing caching, or improving API response times.
 compatible_with:
   - backend/database
   - backend/api

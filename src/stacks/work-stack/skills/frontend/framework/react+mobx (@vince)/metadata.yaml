@@ -3,6 +3,8 @@ category: framework
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_description: React with MobX (Photoroom)
+usage_guidance: Use when building React components with MobX observers in Photoroom webapp.
 compatible_with:
   - frontend/mobx (@vince)
   - frontend/tailwind (@vince)
