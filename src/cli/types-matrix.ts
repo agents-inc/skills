@@ -226,8 +226,11 @@ export interface ExtractedSkillMetadata {
    */
   name: string
 
-  /** Brief description of the skill's purpose */
+  /** Brief description of the skill's purpose (for CLI display) */
   description: string
+
+  /** When an AI agent should invoke this skill (decision criteria) */
+  usageGuidance?: string
 
   // --- Catalog Data (from metadata.yaml) ---
 
@@ -361,8 +364,11 @@ export interface ResolvedSkill {
   /** Human-readable display name */
   name: string
 
-  /** Brief description */
+  /** Brief description (for CLI display) */
   description: string
+
+  /** When an AI agent should invoke this skill (decision criteria) */
+  usageGuidance?: string
 
   // --- Categorization ---
 

@@ -3,25 +3,23 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import path from 'path'
 import { PROJECT_ROOT } from '../consts'
-import { ensureDir } from '../utils/fs'
 import { runWizard, clearTerminal, renderSelectionsHeader } from '../lib/wizard'
 import { loadAndMergeSkillsMatrix } from '../lib/matrix-loader'
 import {
   isInitialized,
   readLockFile,
   writeLockFile,
-  createLockFile,
   addStackToLockFile,
+  getStackNames,
 } from '../lib/lock-file'
-import { createStack, promptStackName, displayStackSummary, CLI_VERSION } from '../lib/stack-creator'
+import { createStack, promptStackName, displayStackSummary } from '../lib/stack-creator'
 
 // Default path to skills matrix config
 const DEFAULT_MATRIX_PATH = 'src/config/skills-matrix.yaml'
 
-export const initCommand = new Command('init')
-  .description('Initialize Claude Collective in your project')
+export const addCommand = new Command('add')
+  .description('Add a new stack to your project')
   .option('--matrix <path>', 'Path to skills-matrix.yaml config', DEFAULT_MATRIX_PATH)
-  .option('-y, --yes', 'Skip prompts and use defaults')
   .configureOutput({
     writeErr: str => console.error(pc.red(str)),
   })
@@ -30,14 +28,27 @@ export const initCommand = new Command('init')
     // Determine target directory (current working directory)
     const projectDir = process.cwd()
 
-    p.intro(pc.cyan('Claude Collective Setup'))
+    p.intro(pc.cyan('Add New Stack'))
 
-    // Check if already initialized
+    // Check if initialized
     const initialized = await isInitialized(projectDir)
-    if (initialized) {
-      p.log.warn('Project already initialized.')
-      p.log.info(`Use ${pc.cyan('cc add')} to add another stack, or ${pc.cyan('cc update')} to modify existing stacks.`)
-      process.exit(0)
+    if (!initialized) {
+      p.log.error('Project not initialized.')
+      p.log.info(`Run ${pc.cyan('cc init')} first to set up Claude Collective.`)
+      process.exit(1)
+    }
+
+    // Read existing lock file
+    const lockFile = await readLockFile(projectDir)
+    if (!lockFile) {
+      p.log.error('Could not read lock file.')
+      process.exit(1)
+    }
+
+    const existingStacks = getStackNames(lockFile)
+    if (existingStacks.length > 0) {
+      console.log(pc.dim(`Existing stacks: ${existingStacks.join(', ')}`))
+      console.log('')
     }
 
     // Load skills matrix config
@@ -57,11 +68,19 @@ export const initCommand = new Command('init')
       process.exit(1)
     }
 
+    // Prompt for stack name first
+    const stackName = await promptStackName(existingStacks, 'new-stack')
+
+    if (p.isCancel(stackName)) {
+      p.cancel('Cancelled')
+      process.exit(0)
+    }
+
     // Run the wizard
     const result = await runWizard(matrix)
 
     if (!result) {
-      p.cancel('Setup cancelled')
+      p.cancel('Cancelled')
       process.exit(0)
     }
 
@@ -87,25 +106,6 @@ export const initCommand = new Command('init')
       console.log('')
     }
 
-    // Prompt for stack name
-    const stackName = await promptStackName([], 'my-stack')
-
-    if (p.isCancel(stackName)) {
-      p.cancel('Setup cancelled')
-      process.exit(0)
-    }
-
-    // Create .claude directory
-    s.start('Creating .claude directory...')
-    const claudeDir = path.join(projectDir, '.claude')
-    await ensureDir(claudeDir)
-    s.stop('Created .claude directory')
-
-    // Create the lock file
-    s.start('Creating lock file...')
-    const lockFile = createLockFile(CLI_VERSION)
-    s.stop('Lock file created')
-
     // Create the stack
     s.start(`Creating stack "${stackName}"...`)
     try {
@@ -126,7 +126,7 @@ export const initCommand = new Command('init')
       // Display summary
       displayStackSummary(createResult)
 
-      p.outro(pc.green('Claude Collective initialized successfully!'))
+      p.outro(pc.green(`Stack "${stackName}" added successfully!`))
     } catch (error) {
       s.stop('Failed to create stack')
       p.log.error(`Error: ${error}`)

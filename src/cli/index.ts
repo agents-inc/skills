@@ -3,6 +3,8 @@ import { Command } from 'commander';
 import pc from 'picocolors';
 import { compileCommand } from './commands/compile';
 import { initCommand } from './commands/init';
+import { addCommand } from './commands/add';
+import { updateCommand } from './commands/update';
 
 async function main() {
   const program = new Command();
@@ -18,6 +20,8 @@ async function main() {
 
   // Register commands
   program.addCommand(initCommand);
+  program.addCommand(addCommand);
+  program.addCommand(updateCommand);
   program.addCommand(compileCommand);
 
   // Parse arguments

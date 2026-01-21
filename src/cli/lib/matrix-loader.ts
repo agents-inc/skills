@@ -23,6 +23,10 @@ interface RawMetadata {
   category_exclusive?: boolean
   author: string
   version: string
+  /** Short description for CLI display (5-6 words) */
+  cli_description?: string
+  /** When an AI agent should invoke this skill */
+  usage_guidance?: string
   tags?: string[]
   compatible_with?: string[]
   conflicts_with?: string[]
@@ -129,11 +133,14 @@ export async function extractAllSkills(skillsDir: string): Promise<ExtractedSkil
     const skillId = frontmatter.name
 
     // Build extracted skill metadata
+    // Use cli_description from metadata.yaml for CLI display (short, 5-6 words)
+    // Falls back to SKILL.md description if cli_description not set
     const extracted: ExtractedSkillMetadata = {
       // Identity (from SKILL.md)
       id: skillId,
       name: extractDisplayName(skillId),
-      description: frontmatter.description,
+      description: metadata.cli_description || frontmatter.description,
+      usageGuidance: metadata.usage_guidance,
 
       // Catalog data (from metadata.yaml)
       category: metadata.category,
@@ -348,6 +355,7 @@ function buildResolvedSkill(
     alias: aliasesReverse[skill.id],
     name: skill.name,
     description: skill.description,
+    usageGuidance: skill.usageGuidance,
 
     // Categorization
     category: skill.category,
