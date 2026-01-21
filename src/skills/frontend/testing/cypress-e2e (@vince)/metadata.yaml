@@ -2,7 +2,7 @@
 category: testing
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Cypress
 cli_description: E2E browser testing
 usage_guidance: Use when writing Cypress E2E tests, custom commands, or component tests.

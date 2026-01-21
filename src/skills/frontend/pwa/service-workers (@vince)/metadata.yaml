@@ -1,5 +1,5 @@
 id: frontend/pwa/service-workers
-version: 1.0.0
+version: 1
 author: "@vince"
 cli_name: Service Workers
 cli_description: Offline caching strategies

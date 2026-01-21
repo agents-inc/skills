@@ -2,7 +2,7 @@
 category: server-state
 category_exclusive: false
 author: "@vince"
-version: 2.0.0
+version: 1
 cli_name: Apollo Client
 cli_description: Apollo GraphQL client
 usage_guidance: Use when working with Apollo Client for GraphQL queries and mutations.

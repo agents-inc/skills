@@ -2,7 +2,7 @@
 category: client-state
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Pinia
 cli_description: Vue client state
 usage_guidance: Use when managing state in Vue apps with Options or Setup stores.

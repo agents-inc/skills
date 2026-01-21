@@ -2,7 +2,7 @@
 category: forms
 category_exclusive: false
 author: "@vince"
-version: 1.1.0
+version: 1
 library_version: "v3.23 (v4 notes included)"
 cli_name: Zod
 cli_description: Schema validation

@@ -2,7 +2,7 @@
 category: meta-framework
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Next.js App Router
 cli_description: Next.js App Router
 usage_guidance: Use when building Next.js apps with App Router, Server/Client Components, or streaming.

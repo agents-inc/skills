@@ -2,7 +2,7 @@
 category: styling
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: SCSS Modules
 cli_description: SCSS Modules styling
 usage_guidance: Use when styling with SCSS Modules, design tokens, or CSS cascade layers.

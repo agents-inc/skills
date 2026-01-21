@@ -2,7 +2,7 @@
 category: styling
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1
 library_version: "1.0.0"
 cli_name: CVA
 cli_description: Component variant styling

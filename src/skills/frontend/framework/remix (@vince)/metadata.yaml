@@ -2,7 +2,7 @@
 category: meta-framework
 category_exclusive: true
 author: "@vince"
-version: 1.2.0
+version: 1
 cli_name: Remix
 cli_description: Remix full-stack framework
 usage_guidance: Use when building Remix apps with loaders, actions, or useFetcher.

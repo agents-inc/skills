@@ -2,7 +2,7 @@
 category: client-state
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Jotai
 cli_description: Atomic client state
 usage_guidance: Use when managing atomic state with bottom-up composition.

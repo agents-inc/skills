@@ -2,7 +2,7 @@
 category: testing
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Playwright
 cli_description: E2E browser testing
 usage_guidance: Use when writing E2E tests, Page Object Models, or visual regression tests.

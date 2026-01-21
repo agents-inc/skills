@@ -2,7 +2,7 @@
 category: auth
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Better Auth
 cli_description: Authentication and sessions
 usage_guidance: Use when implementing authentication, sessions, OAuth, or user management.

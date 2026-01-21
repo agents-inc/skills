@@ -2,7 +2,7 @@
 category: testing
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: Vitest
 cli_description: Unit and integration testing
 usage_guidance: Use when writing unit tests, integration tests, or configuring Vitest.

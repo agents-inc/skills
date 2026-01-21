@@ -31,6 +31,6 @@ keywords:
   - LLM streaming
   - AI streaming
   - token streaming
-version: 1.0.0
+version: 1
 cli_name: Server-Sent Events
 author: "@vince"

@@ -5,7 +5,7 @@ description: >
   Native View Transitions API patterns - same-document SPA transitions,
   cross-document MPA transitions, shared element hero animations,
   pseudo-element styling, feature detection, and accessibility.
-version: 1.0.0
+version: 1
 author: vince
 cli_name: View Transitions
 cli_description: Page transition animations

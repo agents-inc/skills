@@ -2,7 +2,7 @@
 category: frontend
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: CSS Animations
 cli_description: Native CSS animations
 usage_guidance: Use when implementing CSS transitions, keyframes, or scroll-driven animations.

@@ -79,7 +79,7 @@ triggers:
   - dismissTo
   - dismissAll
 
-version: 1.0.0
+version: 1
 cli_name: Expo
 cli_description: Expo managed workflow
 usage_guidance: Use when building React Native apps with Expo, configuring EAS builds, or using Expo Router.

@@ -2,7 +2,7 @@
 category: styling
 category_exclusive: true
 author: "@vince"
-version: 2.0.0
+version: 1
 cli_name: Tailwind
 cli_description: Tailwind CSS utility styling
 usage_guidance: Use when styling with Tailwind CSS utility classes or design tokens.

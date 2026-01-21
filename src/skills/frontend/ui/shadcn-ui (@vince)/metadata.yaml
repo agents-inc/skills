@@ -2,7 +2,7 @@
 category: ui-components
 category_exclusive: false
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: shadcn/ui
 cli_description: Tailwind component library
 usage_guidance: Use when using shadcn/ui components, theming, or customization.

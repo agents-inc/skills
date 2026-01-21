@@ -2,7 +2,7 @@
 category: state
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: MobX
 cli_description: Observable client state
 usage_guidance: Use when working with MobX stores, RootStore pattern, or observable state in Photoroom webapp.

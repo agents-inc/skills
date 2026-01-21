@@ -2,7 +2,7 @@
 category: server-state
 category_exclusive: true
 author: "@vince"
-version: 1.1.0
+version: 1
 cli_name: SWR
 cli_description: Server state and caching
 usage_guidance: Use when implementing stale-while-revalidate data fetching patterns.

@@ -2,7 +2,7 @@
 category: framework
 category_exclusive: true
 author: "@vince"
-version: 1.0.0
+version: 1
 cli_name: SolidJS
 cli_description: SolidJS reactive patterns
 usage_guidance: Use when building SolidJS apps with signals, effects, or SolidStart.

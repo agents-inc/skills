@@ -2,7 +2,7 @@
 category: frontend
 category_exclusive: false
 author: "@vince"
-version: "1.0.0"
+version: 1
 cli_name: MobX Performance
 cli_description: MobX performance (Photoroom)
 usage_guidance: Use when optimizing MobX observers, computed values, or WebGL cleanup in Photoroom.
