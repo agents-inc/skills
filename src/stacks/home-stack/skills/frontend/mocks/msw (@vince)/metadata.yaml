@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+# yaml-language-server: $schema=../../../../../../schemas/metadata.schema.json
 category: mocking
 category_exclusive: true
 author: "@vince"
