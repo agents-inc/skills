@@ -3,19 +3,29 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import path from 'path'
 import { PROJECT_ROOT } from '../consts'
+import { directoryExists, listDirectories } from '../utils/fs'
 import { runWizard, clearTerminal, renderSelectionsHeader } from '../lib/wizard'
 import { loadAndMergeSkillsMatrix } from '../lib/matrix-loader'
-import {
-  isInitialized,
-  readLockFile,
-  writeLockFile,
-  addStackToLockFile,
-  getStackNames,
-} from '../lib/lock-file'
 import { createStack, promptStackName, displayStackSummary } from '../lib/stack-creator'
 
 // Default path to skills matrix config
 const DEFAULT_MATRIX_PATH = 'src/config/skills-matrix.yaml'
+
+/**
+ * Check if a project has been initialized (.claude/stacks/ directory exists)
+ */
+async function isInitialized(projectDir: string): Promise<boolean> {
+  const stacksDir = path.join(projectDir, '.claude', 'stacks')
+  return directoryExists(stacksDir)
+}
+
+/**
+ * Get list of existing stack names by reading .claude/stacks/ directory
+ */
+async function getExistingStacks(projectDir: string): Promise<string[]> {
+  const stacksDir = path.join(projectDir, '.claude', 'stacks')
+  return listDirectories(stacksDir)
+}
 
 export const addCommand = new Command('add')
   .description('Add a new stack to your project')
@@ -38,14 +48,8 @@ export const addCommand = new Command('add')
       process.exit(1)
     }
 
-    // Read existing lock file
-    const lockFile = await readLockFile(projectDir)
-    if (!lockFile) {
-      p.log.error('Could not read lock file.')
-      process.exit(1)
-    }
-
-    const existingStacks = getStackNames(lockFile)
+    // Get existing stacks from filesystem
+    const existingStacks = await getExistingStacks(projectDir)
     if (existingStacks.length > 0) {
       console.log(pc.dim(`Existing stacks: ${existingStacks.join(', ')}`))
       console.log('')
@@ -118,10 +122,6 @@ export const addCommand = new Command('add')
         PROJECT_ROOT,
       )
       s.stop(`Stack created with ${createResult.skillCount} skills`)
-
-      // Update and write lock file
-      addStackToLockFile(lockFile, stackName as string, createResult.skillCount)
-      await writeLockFile(projectDir, lockFile)
 
       // Display summary
       displayStackSummary(createResult)

@@ -18,6 +18,24 @@ export async function fileExists(filePath: string): Promise<boolean> {
   return fs.pathExists(filePath);
 }
 
+export async function directoryExists(dirPath: string): Promise<boolean> {
+  try {
+    const stat = await fs.stat(dirPath);
+    return stat.isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+export async function listDirectories(dirPath: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    return entries.filter(e => e.isDirectory()).map(e => e.name);
+  } catch {
+    return [];
+  }
+}
+
 export async function glob(pattern: string, cwd: string): Promise<string[]> {
   return fg(pattern, { cwd, onlyFiles: true });
 }

@@ -25,14 +25,16 @@
   },
   "homepage": "https://github.com/vincentbollaert/claude-subagents#readme",
   "dependencies": {
-    "liquidjs": "^10.24.0",
-    "yaml": "^2.8.2",
-    "commander": "^12.1.0",
     "@clack/prompts": "^0.11.0",
-    "picocolors": "^1.1.0",
-    "giget": "^1.2.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "commander": "^12.1.0",
     "fast-glob": "^3.3.0",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "giget": "^1.2.0",
+    "liquidjs": "^10.24.0",
+    "picocolors": "^1.1.0",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.0",

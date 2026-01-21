@@ -3,20 +3,21 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import path from 'path'
 import { PROJECT_ROOT } from '../consts'
-import { ensureDir } from '../utils/fs'
+import { ensureDir, directoryExists } from '../utils/fs'
 import { runWizard, clearTerminal, renderSelectionsHeader } from '../lib/wizard'
 import { loadAndMergeSkillsMatrix } from '../lib/matrix-loader'
-import {
-  isInitialized,
-  readLockFile,
-  writeLockFile,
-  createLockFile,
-  addStackToLockFile,
-} from '../lib/lock-file'
-import { createStack, promptStackName, displayStackSummary, CLI_VERSION } from '../lib/stack-creator'
+import { createStack, promptStackName, displayStackSummary } from '../lib/stack-creator'
 
 // Default path to skills matrix config
 const DEFAULT_MATRIX_PATH = 'src/config/skills-matrix.yaml'
+
+/**
+ * Check if a project has been initialized (.claude/stacks/ directory exists)
+ */
+async function isInitialized(projectDir: string): Promise<boolean> {
+  const stacksDir = path.join(projectDir, '.claude', 'stacks')
+  return directoryExists(stacksDir)
+}
 
 export const initCommand = new Command('init')
   .description('Initialize Claude Collective in your project')
@@ -101,11 +102,6 @@ export const initCommand = new Command('init')
     await ensureDir(claudeDir)
     s.stop('Created .claude directory')
 
-    // Create the lock file
-    s.start('Creating lock file...')
-    const lockFile = createLockFile(CLI_VERSION)
-    s.stop('Lock file created')
-
     // Create the stack
     s.start(`Creating stack "${stackName}"...`)
     try {
@@ -118,10 +114,6 @@ export const initCommand = new Command('init')
         PROJECT_ROOT,
       )
       s.stop(`Stack created with ${createResult.skillCount} skills`)
-
-      // Update and write lock file
-      addStackToLockFile(lockFile, stackName as string, createResult.skillCount)
-      await writeLockFile(projectDir, lockFile)
 
       // Display summary
       displayStackSummary(createResult)

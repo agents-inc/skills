@@ -4,7 +4,6 @@ import pc from 'picocolors'
 import { ensureDir } from '../utils/fs'
 import { PROJECT_ROOT } from '../consts'
 import { copySkillsToStack, getStackDir } from './skill-copier'
-import { generateStackLock, writeStackLock } from './stack-lock'
 import { createStackConfig, createStackConfigFromSuggested, writeStackConfig } from './stack-config'
 import type { MergedSkillsMatrix, ResolvedStack } from '../types-matrix'
 import type { CopiedSkill } from './skill-copier'
@@ -38,7 +37,7 @@ export interface CreateStackResult {
 
 /**
  * Create a stack from wizard result
- * Handles copying skills, generating lock files, and config
+ * Handles copying skills and generating config
  */
 export async function createStack(
   stackName: string,
@@ -55,10 +54,6 @@ export async function createStack(
 
   // Copy skills to stack
   const copiedSkills = await copySkillsToStack(selectedSkillIds, stackDir, matrix, registryRoot)
-
-  // Generate and write stack lock file
-  const stackLock = generateStackLock(stackName, copiedSkills)
-  await writeStackLock(stackDir, stackLock)
 
   // Generate and write stack config
   let stackConfig
@@ -128,7 +123,6 @@ export function displayStackSummary(result: CreateStackResult): void {
   console.log(pc.dim('Files created:'))
   console.log(`  ${pc.cyan(path.relative(process.cwd(), result.stackDir))}`)
   console.log(`    ${pc.dim('config.yaml')}`)
-  console.log(`    ${pc.dim('stack.lock.yaml')}`)
   console.log(`    ${pc.dim(`skills/ (${result.skillCount} skills)`)}`)
   console.log('')
 }

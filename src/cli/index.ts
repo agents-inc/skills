@@ -5,6 +5,7 @@ import { compileCommand } from './commands/compile';
 import { initCommand } from './commands/init';
 import { addCommand } from './commands/add';
 import { updateCommand } from './commands/update';
+import { validateCommand } from './commands/validate';
 
 async function main() {
   const program = new Command();
@@ -23,6 +24,7 @@ async function main() {
   program.addCommand(addCommand);
   program.addCommand(updateCommand);
   program.addCommand(compileCommand);
+  program.addCommand(validateCommand);
 
   // Parse arguments
   await program.parseAsync(process.argv);

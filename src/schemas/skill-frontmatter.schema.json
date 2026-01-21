@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/skill-frontmatter.schema.json",
+  "title": "Skill Frontmatter",
+  "description": "Schema for YAML frontmatter at the top of SKILL.md files. Contains skill identity (name, description) and optional loading behavior.",
+  "type": "object",
+  "required": ["name", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Skill display name including category path and author (e.g., 'frontend/react (@vince)')",
+      "minLength": 1,
+      "examples": ["frontend/react (@vince)", "backend/api-hono (@vince)", "frontend/state-zustand (@vince)"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the skill's purpose and when to use it",
+      "minLength": 1,
+      "examples": [
+        "Component architecture, hooks, patterns",
+        "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state."
+      ]
+    },
+    "preloaded": {
+      "type": "boolean",
+      "description": "If true, skill content is embedded directly in compiled agent prompts. Default: false (loaded dynamically on demand)",
+      "default": false
+    }
+  },
+  "examples": [
+    {
+      "name": "frontend/react (@vince)",
+      "description": "Component architecture, hooks, patterns"
+    },
+    {
+      "name": "frontend/state-zustand (@vince)",
+      "description": "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.",
+      "preloaded": true
+    }
+  ]
+}

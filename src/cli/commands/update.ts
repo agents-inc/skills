@@ -3,33 +3,57 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import path from 'path'
 import { PROJECT_ROOT } from '../consts'
-import { remove } from '../utils/fs'
+import { remove, directoryExists, listDirectories } from '../utils/fs'
 import { runWizard, clearTerminal, renderSelectionsHeader } from '../lib/wizard'
 import { loadAndMergeSkillsMatrix } from '../lib/matrix-loader'
-import {
-  isInitialized,
-  readLockFile,
-  writeLockFile,
-  addStackToLockFile,
-  getStackNames,
-  type LockFile,
-} from '../lib/lock-file'
 import { readStackConfig, updateStackConfig, writeStackConfig } from '../lib/stack-config'
 import { copySkillsToStack, getStackDir } from '../lib/skill-copier'
-import { generateStackLock, writeStackLock } from '../lib/stack-lock'
 import { displayStackSummary, type CreateStackResult } from '../lib/stack-creator'
 
 // Default path to skills matrix config
 const DEFAULT_MATRIX_PATH = 'src/config/skills-matrix.yaml'
 
 /**
+ * Check if a project has been initialized (.claude/stacks/ directory exists)
+ */
+async function isInitialized(projectDir: string): Promise<boolean> {
+  const stacksDir = path.join(projectDir, '.claude', 'stacks')
+  return directoryExists(stacksDir)
+}
+
+/**
+ * Get list of existing stack names by reading .claude/stacks/ directory
+ */
+async function getExistingStacks(projectDir: string): Promise<string[]> {
+  const stacksDir = path.join(projectDir, '.claude', 'stacks')
+  return listDirectories(stacksDir)
+}
+
+/**
+ * Get skill count for a stack by reading its config
+ */
+async function getStackSkillCount(projectDir: string, stackName: string): Promise<number> {
+  const stackDir = getStackDir(projectDir, stackName)
+  const config = await readStackConfig(stackDir)
+  return config?.skill_ids.length ?? 0
+}
+
+/**
  * Prompt user to select a stack from the list
  */
-async function selectStack(lockFile: LockFile): Promise<string | symbol> {
-  const options = lockFile.stacks.map(stack => ({
-    value: stack.name,
-    label: `${stack.name} ${pc.dim(`(${stack.skill_count} skills)`)}`,
-  }))
+async function selectStack(
+  projectDir: string,
+  stackNames: string[],
+): Promise<string | symbol> {
+  const options = await Promise.all(
+    stackNames.map(async name => {
+      const skillCount = await getStackSkillCount(projectDir, name)
+      return {
+        value: name,
+        label: `${name} ${pc.dim(`(${skillCount} skills)`)}`,
+      }
+    }),
+  )
 
   const result = await p.select({
     message: 'Select a stack to update:',
@@ -61,14 +85,8 @@ export const updateCommand = new Command('update')
       process.exit(1)
     }
 
-    // Read existing lock file
-    const lockFile = await readLockFile(projectDir)
-    if (!lockFile) {
-      p.log.error('Could not read lock file.')
-      process.exit(1)
-    }
-
-    const existingStacks = getStackNames(lockFile)
+    // Get existing stacks from filesystem
+    const existingStacks = await getExistingStacks(projectDir)
     if (existingStacks.length === 0) {
       p.log.error('No stacks found.')
       p.log.info(`Run ${pc.cyan('cc add')} to create a stack.`)
@@ -88,7 +106,7 @@ export const updateCommand = new Command('update')
       stackName = options.stack
     } else {
       // Prompt user to select a stack
-      const selected = await selectStack(lockFile)
+      const selected = await selectStack(projectDir, existingStacks)
 
       if (p.isCancel(selected)) {
         p.cancel('Cancelled')
@@ -184,10 +202,6 @@ export const updateCommand = new Command('update')
       // Copy new skills
       const copiedSkills = await copySkillsToStack(result.selectedSkills, stackDir, matrix, PROJECT_ROOT)
 
-      // Generate and write new stack lock
-      const stackLock = generateStackLock(stackName, copiedSkills)
-      await writeStackLock(stackDir, stackLock)
-
       // Update stack config
       const updatedConfig = updateStackConfig(
         existingConfig,
@@ -197,10 +211,6 @@ export const updateCommand = new Command('update')
       await writeStackConfig(stackDir, updatedConfig)
 
       s.stop(`Stack updated with ${copiedSkills.length} skills`)
-
-      // Update lock file
-      addStackToLockFile(lockFile, stackName, copiedSkills.length)
-      await writeLockFile(projectDir, lockFile)
 
       // Display summary
       const updateResult: CreateStackResult = {
