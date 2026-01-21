@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: database
+category_exclusive: true
+author: "@vince"
+version: 1.0.0
+compatible_with:
+  - backend/api
+  - backend/authentication
+  - backend/testing
+tags:
+  - prisma
+  - orm
+  - database
+  - typescript
+  - migrations
+  - queries
+  - postgresql
+  - mysql
+  - sqlite
+  - type-safety
+conflicts_with:
+  - backend/database/drizzle
