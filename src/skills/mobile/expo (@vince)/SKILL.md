@@ -1,3 +1,8 @@
+---
+name: mobile/expo (@vince)
+description: Expo managed workflow
+---
+
 # Expo Development Patterns
 
 > **Quick Guide:** Build production-ready React Native apps with Expo. Use managed workflow with Continuous Native Generation for most projects, Expo Router for file-based navigation, and EAS for builds/updates. Development builds replace Expo Go for production testing.

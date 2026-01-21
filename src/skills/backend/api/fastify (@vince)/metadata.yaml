@@ -20,8 +20,3 @@ compatible_with:
   - backend/logging
   - backend/caching
   - security/security
-conflicts_with:
-  - backend/api/hono
-  - backend/api/express
-  - backend/api/koa
-  - backend/api/nestjs

@@ -1,7 +1,7 @@
 id: mobile/expo (@vince)
 name: Expo Development
 description: Build production-ready React Native apps with Expo managed workflow, Expo Router for file-based navigation, and EAS for cloud builds and OTA updates
-category: mobile
+category: mobile-framework
 author: vince
 
 keywords:

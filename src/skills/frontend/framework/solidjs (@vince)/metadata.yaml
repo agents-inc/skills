@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
 category: framework
 category_exclusive: true
 author: "@vince"
@@ -14,7 +14,3 @@ tags:
 compatible_with:
   - frontend/styling/*
   - frontend/testing/*
-conflicts_with:
-  - frontend/framework/react (@vince)
-  - frontend/framework/vue-composition-api (@vince)
-  - frontend/framework/angular-standalone (@vince)

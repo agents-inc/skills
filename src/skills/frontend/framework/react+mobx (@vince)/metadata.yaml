@@ -6,8 +6,6 @@ version: 1.0.0
 compatible_with:
   - frontend/mobx (@vince)
   - frontend/tailwind (@vince)
-conflicts_with:
-  - frontend/react
 tags:
   - react
   - mobx

@@ -8,10 +8,6 @@ compatible_with:
   - backend/database
   - security/security
   - backend/observability
-conflicts_with:
-  - backend/api/hono
-  - backend/api/fastify
-  - backend/api/koa
 tags:
   - express
   - expressjs

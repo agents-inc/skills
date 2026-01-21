@@ -1,5 +1,5 @@
-# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
-category: framework
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: meta-framework
 category_exclusive: true
 author: "@vince"
 version: 1.2.0
@@ -19,9 +19,8 @@ tags:
 compatible_with:
   - frontend/styling/*
   - frontend/testing/*
-conflicts_with:
-  - frontend/framework/nextjs-server-actions (@vince)
 notes: |
   Remix has merged into React Router v7. This skill documents Remix v2 patterns
   which remain valid. json() and defer() are deprecated - see migration notice.
   Added React Router v7 patterns: clientAction, generated types, Single Fetch.
+

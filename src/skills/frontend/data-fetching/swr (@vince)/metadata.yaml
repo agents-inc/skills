@@ -1,8 +1,6 @@
-# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
-category: data-fetching
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: server-state
 category_exclusive: true
-conflicts_with:
-  - frontend/server-state-react-query
 author: "@vince"
 version: 1.1.0
 compatible_with:

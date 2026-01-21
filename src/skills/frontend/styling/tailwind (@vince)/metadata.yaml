@@ -5,8 +5,6 @@ author: "@vince"
 version: 2.0.0
 compatible_with:
   - frontend/react-mobx (@vince)
-conflicts_with:
-  - frontend/styling
 tags:
   - tailwind
   - tailwind-v4

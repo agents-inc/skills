@@ -1,5 +1,5 @@
-# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
-category: framework
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+category: meta-framework
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
@@ -8,9 +8,6 @@ requires:
 compatible_with:
   - frontend/forms/zod-validation (@vince)
   - frontend/testing/playwright-e2e (@vince)
-conflicts_with:
-  - frontend/framework/nextjs-app-router (@vince)
-  - frontend/framework/remix (@vince)
 tags:
   - nuxt
   - nuxt3

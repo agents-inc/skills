@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=../../schemas/metadata.schema.json
-category: setup
+category: monorepo
 category_exclusive: false
 author: "@vince"
 version: 1.0.0

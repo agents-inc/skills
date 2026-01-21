@@ -18,5 +18,3 @@ tags:
   - mysql
   - sqlite
   - type-safety
-conflicts_with:
-  - backend/database/drizzle

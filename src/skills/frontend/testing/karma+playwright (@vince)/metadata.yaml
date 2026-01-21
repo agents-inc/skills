@@ -2,12 +2,11 @@
 category: testing
 category_exclusive: false
 author: "@vince"
-version: "1.0.0"
+version: 1.0.0
 compatible_with:
   - frontend/react
   - frontend/mobx
-conflicts_with: []
-requires: []
+requires:
 tags:
   - testing
   - karma

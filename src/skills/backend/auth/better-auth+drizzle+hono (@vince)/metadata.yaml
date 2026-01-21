@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=../../../schemas/metadata.schema.json
-category: backend
+category: auth
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
 requires:
-  - backend/database
+  - drizzle
 compatible_with:
   - backend/api
   - security/security
