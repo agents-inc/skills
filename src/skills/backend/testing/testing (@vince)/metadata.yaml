@@ -3,6 +3,7 @@ category: testing
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Backend Testing
 cli_description: API and integration tests
 usage_guidance: Use when writing API tests, integration tests, or testing backend services.
 compatible_with:

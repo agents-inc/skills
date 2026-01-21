@@ -32,4 +32,5 @@ keywords:
   - AI streaming
   - token streaming
 version: 1.0.0
+cli_name: Server-Sent Events
 author: "@vince"

@@ -3,6 +3,7 @@ category: database
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: Prisma
 cli_description: Prisma ORM patterns
 usage_guidance: Use when writing database queries, migrations, or working with Prisma ORM.
 compatible_with:

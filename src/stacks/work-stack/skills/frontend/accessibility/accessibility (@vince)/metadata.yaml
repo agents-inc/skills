@@ -3,6 +3,7 @@ category: accessibility
 category_exclusive: false
 author: "@vince"
 version: "1.0.0"
+cli_name: Accessibility
 cli_description: WCAG accessibility patterns
 usage_guidance: Use when implementing accessibility in Photoroom webapp.
 compatible_with: []

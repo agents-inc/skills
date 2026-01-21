@@ -3,6 +3,7 @@ category: testing
 category_exclusive: false
 author: "@vince"
 version: "1.0.0"
+cli_name: Karma + Playwright
 cli_description: Karma testing (Photoroom)
 usage_guidance: Use when writing Karma/Mocha unit tests or Playwright E2E tests in Photoroom.
 compatible_with:

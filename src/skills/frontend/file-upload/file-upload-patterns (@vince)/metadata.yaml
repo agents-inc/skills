@@ -3,6 +3,7 @@ category: file-upload
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: File Upload
 cli_description: File upload handling
 usage_guidance: Use when implementing file uploads, drag-drop, or chunked uploads.
 tags:

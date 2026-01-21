@@ -3,6 +3,7 @@ category: client-state
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: MobX
 cli_description: Observable client state
 usage_guidance: Use when working with MobX observables, stores, or computed values.
 compatible_with:

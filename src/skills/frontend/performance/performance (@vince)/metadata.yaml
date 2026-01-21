@@ -3,6 +3,7 @@ category: frontend
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Frontend Performance
 cli_description: Bundle and render optimization
 usage_guidance: Use when optimizing bundle size, render performance, or implementing memoization.
 compatible_with:

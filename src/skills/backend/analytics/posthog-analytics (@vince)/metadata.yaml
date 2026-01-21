@@ -3,6 +3,7 @@ category: analytics
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: PostHog Analytics
 cli_description: Product analytics tracking
 usage_guidance: Use when tracking user events, setting up funnels, or implementing GDPR-compliant analytics.
 compatible_with:

@@ -3,6 +3,7 @@ category: framework
 category_exclusive: true
 author: "@vince"
 version: 2.0.0
+cli_name: React
 cli_description: React component patterns
 usage_guidance: Use when building React components, hooks, or following React 19 patterns.
 tags:

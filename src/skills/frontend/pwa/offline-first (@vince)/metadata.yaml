@@ -3,6 +3,7 @@ category: frontend
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Offline First
 cli_description: Offline-first patterns
 usage_guidance: Use when building offline-first apps with IndexedDB or sync queues.
 compatible_with:

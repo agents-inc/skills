@@ -3,6 +3,7 @@ category: server-state
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: React Query
 cli_description: Server state and caching
 usage_guidance: Use when fetching API data, caching responses, or managing server state.
 compatible_with:

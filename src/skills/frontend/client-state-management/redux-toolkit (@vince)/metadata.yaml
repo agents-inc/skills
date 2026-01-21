@@ -3,6 +3,7 @@ category: client-state
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: Redux Toolkit
 cli_description: Enterprise client state
 usage_guidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
 compatible_with:

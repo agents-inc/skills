@@ -3,6 +3,7 @@ category: testing
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: React Testing Library
 cli_description: React component testing
 usage_guidance: Use when testing React components with user-centric queries.
 compatible_with:

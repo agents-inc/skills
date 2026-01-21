@@ -3,6 +3,7 @@ category: client-state
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: Zustand
 cli_description: Lightweight client state
 usage_guidance: Use when managing global UI state, replacing Context misuse, or handling cross-component state.
 compatible_with:

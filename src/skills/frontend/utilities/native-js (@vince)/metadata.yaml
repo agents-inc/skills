@@ -3,6 +3,7 @@ category: utilities
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Native JS
 cli_description: Native JS utilities
 usage_guidance: Use when using modern JS methods instead of lodash utilities.
 tags:

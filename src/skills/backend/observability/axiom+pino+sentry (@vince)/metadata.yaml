@@ -3,6 +3,7 @@ category: observability
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Observability
 cli_description: Logging and error tracking
 usage_guidance: Use when implementing structured logging, error tracking, or performance monitoring.
 compatible_with: []

@@ -3,6 +3,7 @@ category: i18n
 category_exclusive: false
 author: "@vince"
 version: 1.1.0
+cli_name: next-intl
 cli_description: Next.js internationalization
 usage_guidance: Use when implementing i18n in Next.js with next-intl.
 tags:

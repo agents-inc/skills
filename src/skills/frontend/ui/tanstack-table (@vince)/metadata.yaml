@@ -3,6 +3,7 @@ category: ui-components
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: TanStack Table
 cli_description: Data table component
 usage_guidance: Use when building data tables with sorting, filtering, or pagination.
 tags:

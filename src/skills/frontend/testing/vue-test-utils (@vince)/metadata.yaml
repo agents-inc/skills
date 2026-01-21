@@ -3,6 +3,7 @@ category: testing
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Vue Test Utils
 cli_description: Vue component testing
 usage_guidance: Use when testing Vue components with mount, shallowMount, or testing composables.
 compatible_with:

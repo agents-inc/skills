@@ -3,6 +3,7 @@ category: utilities
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: date-fns
 cli_description: Date utilities
 usage_guidance: Use when formatting, parsing, or manipulating dates with date-fns.
 tags:

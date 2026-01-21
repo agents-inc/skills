@@ -3,6 +3,7 @@ category: framework
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: React + MobX
 cli_description: React with MobX (Photoroom)
 usage_guidance: Use when working with MobX stores in React (Photoroom-specific patterns).
 compatible_with:

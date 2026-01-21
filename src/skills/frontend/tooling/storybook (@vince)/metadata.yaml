@@ -3,6 +3,7 @@ category: tooling
 category_exclusive: false
 author: "@vince"
 version: 1.0.0
+cli_name: Storybook
 cli_description: Component documentation
 usage_guidance: Use when documenting components with Storybook, writing stories, or interaction tests.
 compatible_with:

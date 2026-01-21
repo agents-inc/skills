@@ -3,6 +3,7 @@ category: api
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: Express
 cli_description: Express API framework
 usage_guidance: Use when building Express.js APIs, middleware chains, or error handling.
 compatible_with:

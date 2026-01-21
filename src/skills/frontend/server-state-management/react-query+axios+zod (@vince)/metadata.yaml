@@ -3,6 +3,7 @@ category: server-state
 category_exclusive: true
 author: "@vince"
 version: 1.0.0
+cli_name: React Query + Axios
 cli_description: React Query + Axios (Photoroom)
 usage_guidance: Use when working with React Query + Axios in Photoroom codebase.
 compatible_with:

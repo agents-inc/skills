@@ -3,6 +3,7 @@ category: mobile-framework
 category_exclusive: true
 author: "@vince"
 version: 2.0.0
+cli_name: React Native
 cli_description: React Native mobile apps
 usage_guidance: Use when building cross-platform mobile apps, working with native modules, or React Navigation.
 requires: []
