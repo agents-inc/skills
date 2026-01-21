@@ -23,6 +23,8 @@ interface RawMetadata {
   category_exclusive?: boolean
   author: string
   version: string
+  /** Short display name for CLI (e.g., "React", "Zustand", "SolidJS") */
+  cli_name?: string
   /** Short description for CLI display (5-6 words) */
   cli_description?: string
   /** When an AI agent should invoke this skill */
@@ -133,12 +135,13 @@ export async function extractAllSkills(skillsDir: string): Promise<ExtractedSkil
     const skillId = frontmatter.name
 
     // Build extracted skill metadata
+    // Use cli_name from metadata.yaml for display name (combined with author)
     // Use cli_description from metadata.yaml for CLI display (short, 5-6 words)
     // Falls back to SKILL.md description if cli_description not set
     const extracted: ExtractedSkillMetadata = {
       // Identity (from SKILL.md)
       id: skillId,
-      name: extractDisplayName(skillId),
+      name: metadata.cli_name ? `${metadata.cli_name} ${metadata.author}` : extractDisplayName(skillId),
       description: metadata.cli_description || frontmatter.description,
       usageGuidance: metadata.usage_guidance,
 
