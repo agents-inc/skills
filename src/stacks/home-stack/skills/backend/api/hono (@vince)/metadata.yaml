@@ -16,3 +16,8 @@ tags:
   - zod
   - rest-api
   - validation
+forked_from:
+  skill_id: backend/api/hono (@vince)
+  version: 1
+  content_hash: b09ff1f
+  date: 2026-01-22

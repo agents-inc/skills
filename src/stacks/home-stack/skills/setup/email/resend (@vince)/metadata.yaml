@@ -17,3 +17,8 @@ tags:
   - email
   - domain-verification
   - installation
+forked_from:
+  skill_id: setup/email/resend (@vince)
+  version: 1
+  content_hash: 3c8d952
+  date: 2026-01-22

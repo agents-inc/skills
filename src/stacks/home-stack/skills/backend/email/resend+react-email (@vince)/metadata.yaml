@@ -15,3 +15,8 @@ tags:
   - email
   - templates
   - transactional
+forked_from:
+  skill_id: backend/email/resend+react-email (@vince)
+  version: 1
+  content_hash: 33804c7
+  date: 2026-01-22

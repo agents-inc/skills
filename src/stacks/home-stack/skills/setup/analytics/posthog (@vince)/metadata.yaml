@@ -19,3 +19,8 @@ tags:
   - analytics
   - feature-flags
   - installation
+forked_from:
+  skill_id: setup/analytics/posthog (@vince)
+  version: 1
+  content_hash: befa7de
+  date: 2026-01-22

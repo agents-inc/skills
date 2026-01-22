@@ -20,3 +20,8 @@ tags:
   - conventions
   - internal-packages
   - typescript
+forked_from:
+  skill_id: setup/monorepo/turborepo (@vince)
+  version: 1
+  content_hash: fdadeb1
+  date: 2026-01-22

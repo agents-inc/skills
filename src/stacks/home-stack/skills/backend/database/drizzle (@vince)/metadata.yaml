@@ -16,3 +16,8 @@ tags:
   - migrations
   - queries
   - postgresql
+forked_from:
+  skill_id: backend/database/drizzle (@vince)
+  version: 1
+  content_hash: a232808
+  date: 2026-01-22

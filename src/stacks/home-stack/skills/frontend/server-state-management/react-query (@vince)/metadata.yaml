@@ -15,3 +15,8 @@ tags:
   - data-fetching
   - rest-api
   - caching
+forked_from:
+  skill_id: frontend/server-state-management/react-query (@vince)
+  version: 1
+  content_hash: 78b0908
+  date: 2026-01-22

@@ -1,8 +1,35 @@
 import path from 'path'
-import { copy, ensureDir, readFile } from '../utils/fs'
+import { stringify as stringifyYaml, parse as parseYaml } from 'yaml'
+import { copy, ensureDir, readFile, writeFile } from '../utils/fs'
 import { hashFile } from './hash'
 import { PROJECT_ROOT, DIRS } from '../consts'
 import type { MergedSkillsMatrix, ResolvedSkill } from '../types-matrix'
+
+/**
+ * Forked from metadata for provenance tracking
+ */
+interface ForkedFromMetadata {
+  skill_id: string
+  version: number
+  content_hash: string
+  date: string
+}
+
+/**
+ * Metadata structure (subset needed for forked_from injection)
+ */
+interface SkillMetadata {
+  version: number
+  content_hash?: string
+  forked_from?: ForkedFromMetadata
+  // Allow other properties
+  [key: string]: unknown
+}
+
+/**
+ * Metadata file name
+ */
+const METADATA_FILE_NAME = 'metadata.yaml'
 
 /**
  * Result of copying a skill
@@ -43,6 +70,59 @@ async function generateSkillHash(skillSourcePath: string): Promise<string> {
 }
 
 /**
+ * Get the current date in YYYY-MM-DD format
+ */
+function getCurrentDate(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
+/**
+ * Inject forked_from metadata into a copied skill's metadata.yaml
+ * - Preserves the yaml-language-server schema comment
+ * - Records the original skill_id, version, and content_hash
+ * - Resets local version to 1 (fresh fork)
+ */
+async function injectForkedFromMetadata(
+  destPath: string,
+  skillId: string,
+  contentHash: string,
+): Promise<void> {
+  const metadataPath = path.join(destPath, METADATA_FILE_NAME)
+  const rawContent = await readFile(metadataPath)
+
+  // Extract the schema comment line if present
+  const lines = rawContent.split('\n')
+  let schemaComment = ''
+  let yamlContent = rawContent
+
+  if (lines[0]?.startsWith('# yaml-language-server:')) {
+    schemaComment = lines[0] + '\n'
+    yamlContent = lines.slice(1).join('\n')
+  }
+
+  // Parse the metadata
+  const metadata = parseYaml(yamlContent) as SkillMetadata
+
+  // Store the original version before resetting
+  const originalVersion = metadata.version
+
+  // Add forked_from provenance
+  metadata.forked_from = {
+    skill_id: skillId,
+    version: originalVersion,
+    content_hash: contentHash,
+    date: getCurrentDate(),
+  }
+
+  // Reset local version to 1 (fresh fork)
+  metadata.version = 1
+
+  // Write back with schema comment preserved
+  const newYamlContent = stringifyYaml(metadata, { lineWidth: 0 })
+  await writeFile(metadataPath, schemaComment + newYamlContent)
+}
+
+/**
  * Copy a single skill from registry to local stack
  */
 export async function copySkill(
@@ -59,6 +139,9 @@ export async function copySkill(
   // Ensure destination directory exists and copy
   await ensureDir(path.dirname(destPath))
   await copy(sourcePath, destPath)
+
+  // Inject forked_from provenance tracking into the copied skill's metadata
+  await injectForkedFromMetadata(destPath, skill.id, contentHash)
 
   return {
     skillId: skill.id,

@@ -14,3 +14,8 @@ tags:
   - code-splitting
   - lazy-loading
   - memoization
+forked_from:
+  skill_id: frontend/performance/performance (@vince)
+  version: 1
+  content_hash: ed2e6b1
+  date: 2026-01-22

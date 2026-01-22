@@ -16,3 +16,8 @@ tags:
   - e2e
   - unit-testing
   - integration-testing
+forked_from:
+  skill_id: frontend/testing/vitest (@vince)
+  version: 1
+  content_hash: 5892fc5
+  date: 2026-01-22

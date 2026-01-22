@@ -1,202 +1,530 @@
-# TODO
+# Consolidated Outstanding Tasks
 
-See `.claude/research/findings/FINAL-DECISION.md` for full architectural decisions.
-
----
-
-## Phase 0A: Co-located Config ✅ COMPLETE
-
-- [x] Created agent.yaml in each of the 16 agent folders
-- [x] Deleted registry.yaml
-- [x] compile.ts scans directories for agents and skills
+> **Generated**: 2026-01-21
+> **Purpose**: Single source of truth for all outstanding work
+> **Replaces**: `CLI-IMPLEMENTATION-TRACKER.md`, `OUTSTANDING-TASKS.md` (safe to delete)
 
 ---
 
-## Phase 0B: SKILL.md as Source of Truth ✅ COMPLETE
+## Related Files (Do Not Delete)
 
-SKILL.md frontmatter is the single source of truth for skill identity. No `id` field - `name` IS the identifier.
+These files contain detailed research referenced by this document:
 
-### Completed Tasks
+| File                                  | Purpose                                         | Location                        |
+| ------------------------------------- | ----------------------------------------------- | ------------------------------- |
+| `CONFIGURABLE-SOURCE-EDGE-CASES.md`   | Private repo support research, giget limits     | `.claude/research/`             |
+| `SKILLS-RESEARCH-TRACKING.md`         | New skills backlog (42 skills identified)       | `.claude/research/`             |
+| `VERSIONING-PROPOSALS.md`             | Versioning decision rationale                   | `.claude/research/`             |
+| `CLI-TEST-PROGRESS.md`                | Wizard testing results, stack validation        | Root                            |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md`     | Matrix schema, data flow, repository separation | `src/docs/`                     |
+| `CLI-FRAMEWORK-RESEARCH.md`           | @clack vs Ink vs Inquirer comparison            | `src/docs/`                     |
+| `CLI-SIMPLIFIED-ARCHITECTURE.md`      | While-loop wizard design                        | `.claude/research/findings/v2/` |
+| `SKILLS-MATRIX-STRUCTURE-RESEARCH.md` | Why relationship-centric beats skill-centric    | `.claude/research/findings/v2/` |
 
-- [x] Add frontmatter parser to compile.ts (parse `---` blocks from markdown)
-- [x] Update loadAllSkills() to read from SKILL.md frontmatter instead of skill.yaml
-- [x] Rename all skill.yaml → metadata.yaml (32 files)
-- [x] Remove `id`, `name`, `description` from metadata.yaml files
-- [x] Keep in metadata.yaml: category, category_exclusive, author, version, tags, requires, compatible_with, conflicts_with
-- [x] Create metadata.schema.json for metadata.yaml validation
-- [x] Update types.ts with new interfaces (SkillFrontmatter, SkillMetadataConfig)
-- [x] Fixed skill ID mismatches in work profile (react-mobx → react, react-query-mobx → react-query)
-
-### SKILL.md Frontmatter (Final)
-
-```yaml
 ---
-name: frontend/react (@vince) # This IS the identifier
-description: Component architecture, hooks, patterns
-model: opus # Optional
+
+## Summary by Category
+
+### 1. CLI Implementation
+
+| Priority | Task                         | Description                                  | Status                     |
+| -------- | ---------------------------- | -------------------------------------------- | -------------------------- |
+| Critical | Phase 4: Versioning          | Integer version + content hash on compile    | Not Started                |
+| Critical | Phase 5: Validation          | Comprehensive metadata.yaml validation       | Done (`cc validate`)       |
+| Critical | Phase 6: Schema Distribution | GitHub raw URLs, SchemaStore PR              | Not Started                |
+| Critical | Phase 7: Private Repos       | Configurable source, auth, pre-flight checks | Not Started                |
+| Critical | Phase 8: Multi-Source        | Community + private skills composition       | Not Started                |
+| Critical | Phase 9: Skill Reorg         | Separate PhotoRoom from community skills     | Not Started                |
+| High     | `cc cache`                   | Cache management commands                    | Not Started                |
+| High     | `cc validate`                | Validate selections against matrix           | Done (metadata validation) |
+| High     | `cc create skill`            | Scaffold new skill                           | Not Started                |
+| High     | `cc create agent`            | Scaffold new agent                           | Not Started                |
+| High     | `cc doctor`                  | Diagnose connectivity/auth issues            | Not Started                |
+| Medium   | SIGINT handler               | Graceful Ctrl+C                              | Not Started                |
+| Medium   | `--dry-run` flag             | Preview without executing                    | Not Started                |
+| Medium   | Exit codes                   | Define 4 codes (currently only 0/1)          | Not Started                |
+| Medium   | Pre-populate wizard          | `cc update` shows current selections         | Not Started                |
+| Medium   | Test all flows               | Manual testing (Phase 3 checklist)           | Not Started                |
+| Medium   | Parity verification          | Old compile.ts vs new CLI                    | Not Started                |
+| Medium   | Config redundancy            | `frontend/react` appears 9x                  | Not Started                |
+| Medium   | Template issues              | Whitespace, monolithic (95 lines)            | Not Started                |
+| Medium   | Configuration system         | Global + project config files                | Not Started                |
+| Low      | Marketplace foundation       | Stack Marketplace Phase 1-2                  | Deferred                   |
+| Low      | Community submission         | `cc submit` flow                             | Deferred                   |
+
 ---
+
+### 2. Testing & CI/CD
+
+| Priority | Task                          | Description                                                           | Status           |
+| -------- | ----------------------------- | --------------------------------------------------------------------- | ---------------- |
+| Critical | Test suite                    | Zero `*.test.ts` files exist                                          | Not Started      |
+| Critical | CI/CD pipeline                | No `.github/workflows/`                                               | Not Started      |
+| High     | Directory check bug           | `Bun.file().exists()` fails for directories                           | Not Started      |
+| High     | Path sanitization             | Only replaces first `/`                                               | Not Started      |
+| High     | Schema paths in copied skills | `skill-copier.ts:61` copies without updating paths (~35 broken files) | Not Started      |
+| High     | Sequential compilation        | 3-5x slower than necessary                                            | Not Started      |
+| High     | Verification scripts          | `verify-agent.sh` documented but not implemented                      | Not Started      |
+| High     | Pre-commit hooks              | Bad code can be committed                                             | Not Started      |
+| High     | Compiled output validation    | XML tags, final lines not verified                                    | Not Started      |
+| High     | Content linting               | Skills can omit sections                                              | Not Started      |
+| High     | Skill structure validation    | Missing required sections undetected                                  | Not Started      |
+| Medium   | Schema validation             | IDE-only, no runtime Zod                                              | Done (AJV added) |
+| Medium   | Private repo blockers         | Bitbucket, Azure DevOps unsupported                                   | Document         |
+
+---
+
+### 3. Skills & Content
+
+| Priority | Task                           | Description                                             | Status      |
+| -------- | ------------------------------ | ------------------------------------------------------- | ----------- |
+| High     | `backend/observability`        | Has Hono, Drizzle, React references                     | Not Started |
+| High     | `backend/auth/better-auth`     | Has Hono, Drizzle references                            | Not Started |
+| High     | `backend/analytics/posthog`    | Has Better Auth, Email references                       | Not Started |
+| High     | `backend/email/resend`         | Needs generic "authentication flow"                     | Not Started |
+| High     | `backend/ci-cd/github-actions` | Has React Query, Zustand references                     | Not Started |
+| Medium   | Skill ID inconsistency         | `frontend/react` vs `frontend-react`                    | Deferred    |
+| Medium   | Skill bundles                  | Issue #7 - not implemented                              | Deferred    |
+| Low      | New skills (Critical)          | nx, docker, kubernetes, vite, svelte, supabase, AI SDKs | Backlog     |
+| Low      | New skills (High)              | astro, firebase, clerk, cloudflare, terraform, etc.     | Backlog     |
+| Low      | Roadmap Phase 3-5              | background-jobs, caching, i18n, payments, etc.          | Backlog     |
+
+---
+
+### 4. Versioning
+
+| Priority | Task                            | Description                              | Status                          |
+| -------- | ------------------------------- | ---------------------------------------- | ------------------------------- |
+| High     | Update schema                   | `metadata.yaml` integer version          | Not Started                     |
+| High     | Compiler auto-increment         | Version bump on hash change              | Not Started                     |
+| High     | Display version                 | Show in CLI listings                     | Not Started                     |
+| High     | Pre-flight checks               | Token validation before download         | Not Started                     |
+| Medium   | `skill-frontmatter.schema.json` | Validate SKILL.md frontmatter            | Done                            |
+| Medium   | `agent.schema.json`             | Validate compiled agent frontmatter      | Done (EXISTS at `src/schemas/`) |
+| Low      | Archive outdated schemas        | skills.schema.json, registry.schema.json | Not Started                     |
+
+---
+
+### 5. Documentation
+
+| Priority | Task                      | Description                                 | Status      |
+| -------- | ------------------------- | ------------------------------------------- | ----------- |
+| Medium   | GitHub raw URLs           | Update `yaml-language-server` references    | Not Started |
+| Medium   | SchemaStore PR            | Automatic IDE detection                     | Not Started |
+| Medium   | Platform support docs     | GitHub, GitLab, GitHub Enterprise           | Not Started |
+| Medium   | Unsupported platforms     | Bitbucket private, Azure DevOps, CodeCommit | Not Started |
+| Low      | Generalize MobX skill     | Remove PhotoRoom-specific patterns          | Not Started |
+| Low      | Generalize Tailwind skill | Remove PhotoRoom-specific patterns          | Not Started |
+| Low      | Contribution guidelines   | For community skills                        | Not Started |
+| Low      | Private skill guidelines  | For company-specific skills                 | Not Started |
+| Low      | Voting system             | GitHub Discussions integration              | Deferred    |
+
+---
+
+## Totals by Priority
+
+| Priority     | Count  | Examples                                                         |
+| ------------ | ------ | ---------------------------------------------------------------- |
+| **Critical** | 8      | Test suite, CI/CD, CLI Phases 4-9                                |
+| **High**     | 23     | CLI commands, atomicity fixes, compilation bugs, schema path fix |
+| **Medium**   | 18     | CLI polish, schema validation, documentation                     |
+| **Low**      | 12     | New skills, marketplace, voting                                  |
+| **Total**    | **61** |                                                                  |
+
+---
+
+## Completed Recently
+
+### CLI Implementation (Phase 1-3)
+
+- [x] `cc init` - Creates .claude/, copies skills
+- [x] `cc compile` - Compiles agents with skills
+- [x] `cc add` - Add additional stacks after init
+- [x] `cc update` - Update existing stack's skill selection
+- [x] `src/cli/lib/hash.ts` - content hashing utility
+- [x] `src/cli/lib/skill-copier.ts` - copy skills to local stack
+- [x] `src/cli/lib/stack-config.ts` - stack config handling
+- [x] `src/cli/lib/stack-creator.ts` - shared stack creation logic
+
+### Versioning & Provenance (2026-01-22)
+
+- [x] `forked_from` provenance tracking - Added to metadata.schema.json
+- [x] `skill-copier.ts` - Injects forked_from when copying skills
+- [x] All 35 existing stack skills updated with forked_from metadata
+
+### Skills Research
+
+- [x] All 76 skills researched and aliases verified
+- [x] Matrix loader connected - uses full skill extraction
+- [x] 11 pre-built stacks validate correctly
+- [x] 99.5% of automated tests pass
+
+### Architecture Decisions
+
+- [x] Versioning: Content-hash + date hybrid (decided)
+- [x] Skills-matrix structure: Keep relationship-centric (decided)
+- [x] CLI architecture: While-loop wizard beats action/reducer (decided)
+
+---
+
+## Files to Commit
+
+### New Files (Staged)
+
+```
+A  .claude/research/CLI-IMPLEMENTATION-TRACKER.md
+A  .claude/research/CONFIGURABLE-SOURCE-EDGE-CASES.md
+A  .claude/research/OUTSTANDING-TASKS.md
+A  .claude/research/SKILLS-RESEARCH-TRACKING.md
+A  .claude/research/VERSIONING-PROPOSALS.md
+A  .claude/research/findings/v2/CLI-MVP-ARCHITECTURE-PROPOSAL.md
+A  .claude/research/findings/v2/CLI-SIMPLIFIED-ARCHITECTURE.md
+A  .claude/research/findings/v2/SKILLS-MATRIX-STRUCTURE-RESEARCH.md
+A  CLI-TEST-PROGRESS.md
+A  src/docs/CLI-DATA-DRIVEN-ARCHITECTURE.md
+A  src/docs/CLI-FRAMEWORK-RESEARCH.md
+A  src/docs/INDEX.md
 ```
 
-### metadata.yaml (Final)
+### Modified Files
 
-```yaml
-category: framework
-category_exclusive: true
-author: '@vince'
-version: '1.0.0'
-compatible_with: [...]
-conflicts_with: [...]
-requires: [...]
-tags: [...]
+```
+M  src/docs/TODO.md
+M  src/schemas/metadata.schema.json
+```
+
+### Deleted Files
+
+```
+D  src/schemas/skill-marketplace.schema.json
 ```
 
 ---
 
-## Phase 0D: Stack Architecture ✅ COMPLETE
+## Implementation Order Recommendation
 
-Stacks converted from single YAML files to directories.
+### Week 1: Foundation
 
-### Completed Tasks
+1. Add basic test infrastructure (Vitest setup)
+2. Add SIGINT handler
+3. Define 4 exit codes
+4. Add `--dry-run` flag
 
-- [x] Create stack directory structure: `src/stacks/{stack-id}/`
-- [x] Move modern-react.yaml → modern-react/config.yaml
-- [x] Move minimal-react.yaml → minimal-react/config.yaml
-- [x] Move photoroom-webapp.yaml → photoroom-webapp/config.yaml
-- [x] Create CLAUDE.md for each stack (from profiles)
-- [x] Update stack config.yaml format (skills as array, not object)
-- [x] Update compile.ts to load stacks from directories
-- [x] Add template cascade: resolveTemplate(profile, stack)
-- [x] Add CLAUDE.md cascade: resolveClaudeMd(profile, stack)
-- [x] Update types.ts StackConfig (skills: string[] instead of Record)
-- [x] Delete old stack .yaml files
+### Week 2: Versioning
 
-### Stack Directory (Final)
+1. Update metadata.yaml schema (integer version)
+2. Implement compiler version auto-increment
+3. Create missing schemas
 
-```
-src/stacks/{stack-id}/
-├── config.yaml           # Stack configuration
-├── CLAUDE.md             # Stack conventions
-└── agent.liquid          # Optional: stack-specific template
-```
+### Week 3: CLI Polish
+
+1. `cc cache` commands
+2. `cc validate` command
+3. Pre-populate wizard for `cc update`
+
+### Week 4+: Phase 7 (Private Repos)
+
+1. Configuration system
+2. Pre-flight auth checks
+3. Custom error wrapper
+4. Documentation
 
 ---
 
-## Phase 0D.1: Stack Compilation ✅ COMPLETE
+## Decision Log
 
-Add `--stack` flag to compile.ts for direct stack compilation.
+| Date       | Decision                         | Rationale                                                   |
+| ---------- | -------------------------------- | ----------------------------------------------------------- |
+| 2026-01-21 | Keep relationship-centric matrix | Authoring is easier; skill-centric view computed at runtime |
+| 2026-01-21 | While-loop wizard                | Simpler than action/reducer; better for MVP                 |
+| 2026-01-21 | Integer versioning               | Zero friction; semver overkill for markdown skills          |
+| 2026-01-21 | Document giget limitations       | Bitbucket private, Azure DevOps unsupported                 |
 
-### Completed Tasks
+---
 
-- [x] Add `--stack=<stack-id>` option to compile.ts
-- [x] Stack compilation outputs to same `.claude/` directory as profile compilation
-- [x] Create `home-stack` - exact 1:1 mapping of current home profile
-- [x] Create `work-stack` - exact 1:1 mapping of current work profile
-- [x] Simplified home profile (removed explicit skills, standardized prompts)
-- [x] Simplified work profile (removed explicit skills, standardized prompts)
+## Quick Reference
 
-### Verification Results
+### Run CLI
 
 ```bash
-# Home profile vs home-stack: IDENTICAL ✅
-bun src/compile.ts --profile=home && cp -r .claude .claude-profile-home
-bun src/compile.ts --stack=home-stack && cp -r .claude .claude-stack-home
-diff -rq .claude-profile-home .claude-stack-home  # Empty - no differences
-
-# Work profile vs work-stack: IDENTICAL ✅
-bun src/compile.ts --profile=work && cp -r .claude .claude-profile-work
-bun src/compile.ts --stack=work-stack && cp -r .claude .claude-stack-work
-diff -rq .claude-profile-work .claude-stack-work  # Empty - no differences
+bun src/cli/index.ts init
+bun src/cli/index.ts add
+bun src/cli/index.ts update
 ```
 
-**Verification complete. Proceeding to Phase 0E.**
+### Compile Agents
+
+```bash
+bunx compile -s home-stack
+bunx compile -s work-stack
+```
+
+### Test Matrix Loading
+
+```bash
+bun src/cli/index.ts init  # Loads 76 skills, 11 stacks
+```
 
 ---
 
-## Phase 0E: Profile Simplification ✅ MOSTLY COMPLETE
+# Detailed Context
 
-Convert profiles to thin overlays pointing to stacks.
+> The sections below contain implementation details, specifications, and architectural context from the original tracker files.
 
-### Completed Tasks
+---
 
-- [x] Simplify home/config.yaml - uses home-stack, no explicit skills
-- [x] Simplify work/config.yaml - uses work-stack, no explicit skills
-- [x] Keep CLAUDE.md in profiles (optional override) - working
-- [x] Remove explicit skill definitions from profile configs
-- [x] Update compile.ts to use stack for all skill/agent resolution
+## Versioning System Specification
 
-### Remaining Tasks (Optional)
-
-- [ ] Support optional agent.liquid in profiles (optional override)
-- [ ] Further simplify profile config.yaml (remove agent definitions entirely, use stack defaults)
-
-### Current Profile config.yaml
+### Target Format
 
 ```yaml
-# Profiles still define agents with prompts, but no skills
-name: home
-stack: home-stack
-agents:
-  frontend-developer:
-    core_prompts: [...]
-    ending_prompts: [...]
+# In metadata.yaml (auto-generated fields)
+version: 4 # Integer, auto-incremented on content change
+content_hash: a1b2c3d # 7-char SHA-256 of skill folder
+updated: 2026-01-21 # File modification date
+
+# In SKILL.md frontmatter (optional author-maintained)
+history:
+  - v: 4
+    why: Add React 19 useActionState patterns
 ```
 
-### Future Profile config.yaml (After full simplification)
+### Implementation
+
+- Hash utility: 15 lines using Node.js `crypto` (built-in) - **DONE** (`src/cli/lib/hash.ts`)
+- Hash entire skill folder (SKILL.md + reference.md + examples/)
+- Compiler auto-populates `version`, `content_hash`, `updated`
+- Author optionally adds `history` entries for changelog
+
+---
+
+## Directory Structure (User's Project)
+
+After running `cc init` + `cc add work-stack`:
+
+```
+my-project/
+├── .claude/
+│   └── stacks/
+│       ├── home-stack/
+│       │   ├── config.yaml        # Stack config
+│       │   ├── CLAUDE.md          # Project conventions
+│       │   └── skills/            # Copied skills (each has metadata.yaml with version)
+│       │       ├── frontend/
+│       │       │   └── react (@vince)/
+│       │       │       ├── SKILL.md
+│       │       │       ├── metadata.yaml
+│       │       │       └── examples/
+│       │       └── backend/
+│       └── work-stack/
+│           └── ... (same structure)
+├── src/
+└── package.json
+```
+
+---
+
+## Phase 7: Private Repository Support (Detailed)
+
+### 7.1 Configuration
 
 ```yaml
-name: home
-stack: home-stack
-# That's it - all agent/prompt config comes from stack
+# ~/.claude-collective/config.yaml (global)
+source: github.com/mycompany/private-skills
+
+# .claude/cc-config.yaml (project - overrides global)
+source: github.com/team/team-skills
+```
+
+**Precedence**: CLI flag > Project config > Global config > Env var > Default
+
+### 7.2 CLI Changes
+
+- `--source <url>` flag on `cc init`, `cc add`, `cc update`
+- `cc config set source <url>` - set source URL
+- `cc config get source` - show current source
+- `cc config show` - show all effective configuration
+
+### 7.3 Authentication
+
+| Method            | Environment Variable    | Notes                   |
+| ----------------- | ----------------------- | ----------------------- |
+| giget native      | `GIGET_AUTH`            | Primary method          |
+| GitHub fallback   | `GITHUB_TOKEN`          | Auto-detected           |
+| Corporate proxy   | `FORCE_NODE_FETCH=true` | Node 20+ bug workaround |
+| Self-signed certs | `NODE_EXTRA_CA_CERTS`   | Path to CA bundle       |
+
+### 7.4 Error Mapping
+
+| HTTP Code | User Message                                               |
+| --------- | ---------------------------------------------------------- |
+| 401       | "Authentication required. Set GIGET_AUTH or GITHUB_TOKEN"  |
+| 403       | "Access denied. Check token permissions (needs repo read)" |
+| 404       | "Repository not found or private. Check URL and auth"      |
+
+---
+
+## Phase 8: Multi-Source Composition (Detailed)
+
+### 8.1 Configuration
+
+```yaml
+# ~/.claude-collective/config.yaml
+sources:
+  - url: github.com/claude-collective/skills
+    name: Community
+  - url: github.com/company/private-skills
+    name: Company
+    auth_env: GITHUB_TOKEN
+```
+
+### 8.2 Matrix Merging Rules
+
+1. Fetch `skills-matrix.yaml` from each source
+2. Merge categories (private extends/overrides public)
+3. Merge `skill_aliases` with source tagging
+4. Merge relationships (`conflicts`, `recommends`, `requires`)
+5. Handle naming conflicts (prefix with source name)
+
+### 8.3 Wizard Visual Separation
+
+```
+┌─ Framework ────────────────────────────────────┐
+│  Community                                     │
+│  ○ React @vince                                │
+│  ○ Vue @vince                                  │
+│                                                │
+│  ─────────────────────────────────────────     │
+│                                                │
+│  Company (Private)                             │
+│  ○ React + Company Patterns @company           │
+└────────────────────────────────────────────────┘
+```
+
+### 8.4 Edge Cases to Resolve
+
+- Same skill in both sources → Namespace with source prefix or error?
+- Private source unreachable → Graceful degradation or hard fail?
+- Schema version mismatch → Version check before merge?
+
+---
+
+## Phase 9: Skill Repository Reorganization (Detailed)
+
+### 9.1 PhotoRoom Skills to Migrate
+
+**Criteria for private repo:**
+
+- Skills with `@photoroom` author
+- Company-specific patterns, conventions, internal tooling
+- References to internal APIs or services
+
+### 9.2 Community Skills Criteria
+
+**Must be:**
+
+- No company-specific conventions
+- Follows official library documentation
+- Useful to broader developer community
+- Author tagged as `@vince` or community contributor
+
+**Skills to generalize:**
+
+- MobX → General patterns (remove PhotoRoom conventions)
+- Tailwind → General patterns (remove PhotoRoom conventions)
+
+---
+
+## Architecture Clarifications
+
+### Preloaded Skills (Already Working)
+
+The system already implements progressive loading correctly:
+
+| Skill Type                    | What Loads           | When                       |
+| ----------------------------- | -------------------- | -------------------------- |
+| Preloaded (`preloaded: true`) | Full SKILL.md        | Immediately on agent start |
+| Dynamic (not preloaded)       | Only 4-line metadata | In agent prompt            |
+| Invoked via Skill tool        | Full SKILL.md        | On explicit invocation     |
+| Examples/reference.md         | Nothing auto-loaded  | Agent reads if needed      |
+
+**Implementation locations:**
+
+- `compiler.ts:82-92` - partitions preloaded vs dynamic
+- `agent.liquid:6` - outputs skills in frontmatter
+- `home-stack/config.yaml:71` - `preloaded: true` flag
+
+### Forking System (Simplified)
+
+**Approach:** Skills copied locally on `cc init`/`cc add`, no diff/merge complexity.
+
+- Each skill's `metadata.yaml` contains version and content_hash
+- `cc update` = re-run wizard, replace with latest (no diffs)
+- User owns local copies - can modify freely
+
+**NOT implementing:** `skill diff/updates/merge` - too complex, not needed for MVP.
+
+---
+
+## CLI Command Specifications
+
+### `cc init`
+
+```
+cc init
+    ↓
+┌─────────────────────────────┐
+│  Select a stack or build    │
+│  > Use pre-built stack      │
+│    Build custom stack       │
+└─────────────────────────────┘
+    ↓ (wizard)
+Creates:
+  .claude/stacks/{name}/config.yaml
+  .claude/stacks/{name}/skills/...
+```
+
+**Detection:** If `.claude/stacks/` exists → "Already initialized. Use `cc add` or `cc update`"
+
+### `cc add`
+
+```
+cc add
+    ↓
+┌─────────────────────────────┐
+│  Stack name: my-new-stack   │
+│  (validates kebab-case)     │
+└─────────────────────────────┘
+    ↓ (same wizard as init)
+Creates new stack in .claude/stacks/
+```
+
+### `cc update`
+
+```
+cc update
+    ↓
+┌─────────────────────────────┐
+│  Your Stacks                │
+│  > home-stack (25 skills)   │
+│    work-stack (18 skills)   │
+└─────────────────────────────┘
+    ↓ (select)
+┌─────────────────────────────┐
+│  Same wizard UI as init     │
+│  (TODO: Pre-populate with   │
+│   current selections)       │
+└─────────────────────────────┘
 ```
 
 ---
 
-## Phase 0C: Skills Truly Atomic ⏳ LAST
+## Exit Codes (To Implement)
 
-Skills reference other domains they shouldn't own. 12 skills need cleanup.
-
-### HIGH Priority (6 skills)
-
-- [x] React - remove SCSS Modules, React Query, Zustand references
-- [x] Performance (frontend) - remove React Query, SCSS, Vitest references
-- [x] React Query - remove Zustand, MSW references
-- [ ] Observability - remove Hono, Drizzle, React references
-- [ ] Better Auth - remove Hono, Drizzle references
-- [ ] PostHog Analytics - remove Better Auth, Email references
-
-### MEDIUM Priority (6 skills)
-
-- [x] SCSS Modules - remove lucide-react reference
-- [x] Zustand - remove React Query reference
-- [x] Vitest - remove MSW from description
-- [x] MSW - remove React Testing Library references
-- [x] Accessibility - remove testing/tooling references
-- [ ] Resend Email - use generic "authentication flow" language
-- [ ] GitHub Actions - remove React Query, Zustand references
-
----
-
-## Phase 3: CLI Commands ⏸️ BLOCKED
-
-Blocked until 0B-0E complete.
-
-- [ ] Research CLI framework (commander, oclif, etc.)
-- [ ] claude-stacks list
-- [ ] claude-stacks use <id>
-- [ ] claude-stacks build (wizard)
-- [ ] claude-stacks export
-
----
-
-## Deferred (Future)
-
-- [ ] Copy skills into stacks for independent versioning (after skills stabilize)
-- [ ] Stack Arena (side-by-side comparison)
-- [ ] Web catalog
-- [ ] Community features (upvotes, submissions)
-
----
-
-## Later
-
-- [ ] Try https://github.com/anthropics/claude-plugins-official/blob/main/plugins/code-simplifier/agents/code-simplifier.md
+| Code | Meaning                 |
+| ---- | ----------------------- |
+| 0    | Success                 |
+| 1    | General error           |
+| 2    | Invalid arguments       |
+| 3    | Network/auth error      |
+| 4    | User cancelled (Ctrl+C) |

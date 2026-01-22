@@ -21,3 +21,8 @@ tags:
   - e2e
   - unit-testing
   - page-object-model
+forked_from:
+  skill_id: frontend/testing/karma+playwright (@vince)
+  version: 1
+  content_hash: b4a2597
+  date: 2026-01-22

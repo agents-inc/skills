@@ -18,3 +18,8 @@ tags:
   - mobx-computed
   - lazy-loading
   - virtualization
+forked_from:
+  skill_id: frontend/performance/performance+mobx (@vince)
+  version: 1
+  content_hash: de4c4e1
+  date: 2026-01-22

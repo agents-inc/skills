@@ -17,3 +17,8 @@ tags:
   - oauth
   - authentication
   - authorization
+forked_from:
+  skill_id: backend/auth/better-auth+drizzle+hono (@vince)
+  version: 1
+  content_hash: 1f7abec
+  date: 2026-01-22

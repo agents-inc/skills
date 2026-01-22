@@ -103,6 +103,36 @@
       },
       "uniqueItems": true,
       "examples": [["backend/posthog-analytics", "backend/posthog-flags"], ["backend/resend"]]
+    },
+    "forked_from": {
+      "type": "object",
+      "description": "Provenance tracking for forked skills (only present on copies in user stacks)",
+      "additionalProperties": false,
+      "properties": {
+        "skill_id": {
+          "type": "string",
+          "description": "Original skill identifier (e.g., 'frontend/react (@vince)')"
+        },
+        "version": {
+          "type": "integer",
+          "description": "Upstream version at fork time",
+          "minimum": 1
+        },
+        "content_hash": {
+          "type": "string",
+          "description": "Content hash at fork time"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source repository (for multi-source support)"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when forked"
+        }
+      },
+      "required": ["skill_id", "version", "content_hash", "date"]
     }
   },
   "$defs": {

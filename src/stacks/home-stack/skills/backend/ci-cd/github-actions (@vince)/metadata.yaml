@@ -16,3 +16,8 @@ tags:
   - ci
   - cd
   - automation
+forked_from:
+  skill_id: backend/ci-cd/github-actions (@vince)
+  version: 1
+  content_hash: a5bbf1e
+  date: 2026-01-22

@@ -16,3 +16,8 @@ tags:
   - zod
   - validation
   - dotenv
+forked_from:
+  skill_id: setup/env (@vince)
+  version: 1
+  content_hash: 984eab9
+  date: 2026-01-22

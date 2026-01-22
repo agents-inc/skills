@@ -16,3 +16,8 @@ tags:
   - rollouts
   - ab-testing
   - experiments
+forked_from:
+  skill_id: backend/flags/posthog-flags (@vince)
+  version: 1
+  content_hash: a93694d
+  date: 2026-01-22

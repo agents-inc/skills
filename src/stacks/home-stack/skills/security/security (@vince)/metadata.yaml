@@ -18,3 +18,8 @@ tags:
   - xss
   - csrf
   - input-validation
+forked_from:
+  skill_id: security/security (@vince)
+  version: 1
+  content_hash: ef294ff
+  date: 2026-01-22

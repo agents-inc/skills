@@ -15,3 +15,8 @@ tags:
   - analytics
   - event-tracking
   - user-identification
+forked_from:
+  skill_id: backend/analytics/posthog-analytics (@vince)
+  version: 1
+  content_hash: 3f0e6a6
+  date: 2026-01-22

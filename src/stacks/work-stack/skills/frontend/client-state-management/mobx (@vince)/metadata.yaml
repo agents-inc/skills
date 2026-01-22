@@ -17,3 +17,8 @@ tags:
   - rootstore
   - stores
   - photoroom
+forked_from:
+  skill_id: frontend/client-state-management/mobx (@vince)
+  version: 1
+  content_hash: c9d0442
+  date: 2026-01-22

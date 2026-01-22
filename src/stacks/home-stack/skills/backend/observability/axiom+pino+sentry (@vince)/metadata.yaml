@@ -16,3 +16,8 @@ tags:
   - logging
   - error-tracking
   - monitoring
+forked_from:
+  skill_id: backend/observability/axiom+pino+sentry (@vince)
+  version: 1
+  content_hash: cfd9d0d
+  date: 2026-01-22
