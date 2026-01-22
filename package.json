@@ -23,7 +23,14 @@
     "cc:compile:home": "bun src/cli/index.ts compile -s home-stack",
     "cc:compile:work": "bun src/cli/index.ts compile -s work-stack",
     "cc:compile:mobx": "bun src/cli/index.ts compile -s mobx-tailwind",
-    "cc:validate": "bun src/cli/index.ts validate"
+    "cc:validate": "bun src/cli/index.ts validate",
+    "cc:dry-run": "bun src/cli/index.ts --dry-run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,yaml,yml,md}": "prettier --write"
   },
   "repository": {
     "type": "git",
@@ -51,6 +58,9 @@
     "@types/fs-extra": "^11.0.0",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"
