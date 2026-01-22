@@ -104,6 +104,18 @@
       "uniqueItems": true,
       "examples": [["backend/posthog-analytics", "backend/posthog-flags"], ["backend/resend"]]
     },
+    "content_hash": {
+      "type": "string",
+      "description": "7-character SHA-256 hash of skill folder content. Auto-generated on compile.",
+      "pattern": "^[a-f0-9]{7}$",
+      "examples": ["a1b2c3d", "f4e5d6c"]
+    },
+    "updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when skill was last modified. Auto-generated on compile.",
+      "examples": ["2026-01-22"]
+    },
     "forked_from": {
       "type": "object",
       "description": "Provenance tracking for forked skills (only present on copies in user stacks)",

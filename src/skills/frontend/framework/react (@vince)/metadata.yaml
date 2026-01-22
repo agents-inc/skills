@@ -2,7 +2,7 @@
 category: framework
 category_exclusive: true
 author: "@vince"
-version: 1
+version: 2
 cli_name: React
 cli_description: React component patterns
 usage_guidance: Use when building React components, hooks, or following React 19 patterns.
@@ -18,3 +18,5 @@ tags:
   - actions
   - jsx
   - tsx
+content_hash: c48bfef
+updated: 2026-01-22
