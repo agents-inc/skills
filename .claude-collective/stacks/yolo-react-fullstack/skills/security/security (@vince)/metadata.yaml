@@ -1,0 +1,24 @@
+category: security
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Security
+cli_description: Application security patterns
+usage_guidance: Use when implementing authentication, authorization, XSS prevention, CSRF protection, CSP headers, or managing secrets.
+compatible_with:
+  - backend/authentication
+  - backend/api
+  - setup/env
+tags:
+  - security
+  - authentication
+  - authorization
+  - secrets
+  - xss
+  - csrf
+  - input-validation
+forked_from:
+  skill_id: security/security (@vince)
+  version: 1
+  content_hash: ef294ff
+  date: 2026-01-22

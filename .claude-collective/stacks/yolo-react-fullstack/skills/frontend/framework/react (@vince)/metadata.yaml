@@ -1,0 +1,26 @@
+category: framework
+category_exclusive: true
+author: "@vince"
+version: 1
+cli_name: React
+cli_description: React component patterns
+usage_guidance: Use when building React components, hooks, or following React 19 patterns.
+tags:
+  - react
+  - react-19
+  - components
+  - hooks
+  - use-action-state
+  - use-form-status
+  - use-optimistic
+  - use
+  - actions
+  - jsx
+  - tsx
+content_hash: c48bfef
+updated: 2026-01-22
+forked_from:
+  skill_id: frontend/react (@vince)
+  version: 2
+  content_hash: 8eabfbd
+  date: 2026-01-22

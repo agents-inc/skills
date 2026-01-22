@@ -1,0 +1,20 @@
+category: frontend
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Frontend Performance
+cli_description: Bundle and render optimization
+usage_guidance: Use when optimizing bundle size, render performance, or implementing memoization.
+compatible_with:
+  - frontend/react
+tags:
+  - bundle-optimization
+  - render-performance
+  - code-splitting
+  - lazy-loading
+  - memoization
+forked_from:
+  skill_id: frontend/performance (@vince)
+  version: 1
+  content_hash: ed2e6b1
+  date: 2026-01-22
