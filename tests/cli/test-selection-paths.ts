@@ -5,15 +5,15 @@
  */
 
 import path from 'path'
-import { loadAndMergeSkillsMatrix } from './lib/matrix-loader'
+import { loadAndMergeSkillsMatrix } from '../../src/cli/lib/matrix-loader'
 import {
   getTopLevelCategories,
   getSubcategories,
   getAvailableSkills,
   validateSelection,
   isDisabled,
-} from './lib/matrix-resolver'
-import type { MergedSkillsMatrix } from './types-matrix'
+} from '../../src/cli/lib/matrix-resolver'
+import type { MergedSkillsMatrix } from '../../src/cli/types-matrix'
 
 const PROJECT_ROOT = path.resolve(__dirname, '../..')
 const MATRIX_PATH = path.join(PROJECT_ROOT, 'src/config/skills-matrix.yaml')

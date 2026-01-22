@@ -2,16 +2,13 @@ import { Command } from 'commander'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import path from 'path'
-import { PROJECT_ROOT } from '../consts'
+import { PROJECT_ROOT, DEFAULT_MATRIX_PATH } from '../consts'
 import { remove, directoryExists, listDirectories } from '../utils/fs'
 import { runWizard, clearTerminal, renderSelectionsHeader } from '../lib/wizard'
 import { loadAndMergeSkillsMatrix } from '../lib/matrix-loader'
 import { readStackConfig, updateStackConfig, writeStackConfig } from '../lib/stack-config'
 import { copySkillsToStack, getStackDir } from '../lib/skill-copier'
 import { displayStackSummary, type CreateStackResult } from '../lib/stack-creator'
-
-// Default path to skills matrix config
-const DEFAULT_MATRIX_PATH = 'src/config/skills-matrix.yaml'
 
 /**
  * Check if a project has been initialized (.claude/stacks/ directory exists)

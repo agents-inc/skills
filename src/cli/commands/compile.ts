@@ -113,7 +113,7 @@ export const compileCommand = new Command('compile')
 
       // Copy CLAUDE.md
       console.log('\nCopying CLAUDE.md...');
-      await copyClaude(compileConfig, ctx);
+      await copyClaude(ctx);
 
       p.outro(pc.green('✨ Compilation complete!'));
     } catch (error) {

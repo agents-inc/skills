@@ -127,15 +127,6 @@ categories:
     required: false
     order: 8
 
-  i18n:
-    id: i18n
-    name: Internationalization
-    description: Multi-language support
-    parent: frontend
-    exclusive: true
-    required: false
-    order: 9
-
   mocking:
     id: mocking
     name: API Mocking
@@ -871,11 +862,6 @@ skill_aliases:
   shadcn-ui: 'frontend/ui-shadcn-ui (@vince)'
   tanstack-table: 'frontend/ui-tanstack-table (@vince)'
   # Note: radix-ui skill does not exist yet
-
-  # ─────────────────────────────────────────────────────────────────
-  # i18n
-  # ─────────────────────────────────────────────────────────────────
-  # Note: i18n skills (next-intl, react-intl, vue-i18n) do not exist yet
 
   # ─────────────────────────────────────────────────────────────────
   # Backend

@@ -56,5 +56,3 @@ export async function remove(filePath: string): Promise<void> {
 export async function copy(src: string, dest: string): Promise<void> {
   await fs.copy(src, dest);
 }
-
-export { fs };

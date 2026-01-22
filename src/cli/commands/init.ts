@@ -2,14 +2,11 @@ import { Command } from 'commander'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import path from 'path'
-import { PROJECT_ROOT } from '../consts'
+import { PROJECT_ROOT, DEFAULT_MATRIX_PATH } from '../consts'
 import { ensureDir, directoryExists } from '../utils/fs'
 import { runWizard, clearTerminal, renderSelectionsHeader } from '../lib/wizard'
 import { loadAndMergeSkillsMatrix } from '../lib/matrix-loader'
 import { createStack, promptStackName, displayStackSummary } from '../lib/stack-creator'
-
-// Default path to skills matrix config
-const DEFAULT_MATRIX_PATH = 'src/config/skills-matrix.yaml'
 
 /**
  * Check if a project has been initialized (.claude/stacks/ directory exists)
@@ -22,7 +19,6 @@ async function isInitialized(projectDir: string): Promise<boolean> {
 export const initCommand = new Command('init')
   .description('Initialize Claude Collective in your project')
   .option('--matrix <path>', 'Path to skills-matrix.yaml config', DEFAULT_MATRIX_PATH)
-  .option('-y, --yes', 'Skip prompts and use defaults')
   .configureOutput({
     writeErr: str => console.error(pc.red(str)),
   })

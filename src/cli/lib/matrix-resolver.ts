@@ -516,14 +516,3 @@ export function getTopLevelCategories(matrix: MergedSkillsMatrix): string[] {
   return topLevel
 }
 
-/**
- * Get a suggested stack by ID
- */
-export function getSuggestedStack(stackId: string, matrix: MergedSkillsMatrix): ResolvedSkill[] | undefined {
-  const stack = matrix.suggestedStacks.find(s => s.id === stackId)
-  if (!stack) {
-    return undefined
-  }
-
-  return stack.allSkillIds.map(id => matrix.skills[id]).filter((skill): skill is ResolvedSkill => skill !== undefined)
-}

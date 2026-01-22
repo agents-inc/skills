@@ -23,12 +23,3 @@ export async function hashFile(filePath: string): Promise<string> {
   return hashContent(content)
 }
 
-/**
- * Generate a combined hash for multiple files (sorted for consistency)
- * Used for generating stack digest from all skill hashes
- */
-export function combineHashes(hashes: string[]): string {
-  const sorted = [...hashes].sort()
-  const combined = sorted.join('')
-  return hashContent(combined)
-}

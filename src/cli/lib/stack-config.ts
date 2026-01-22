@@ -21,13 +21,6 @@ export interface StackConfig {
 }
 
 /**
- * Get the stack config file path
- */
-export function getStackConfigPath(stackDir: string): string {
-  return path.join(stackDir, STACK_CONFIG_NAME)
-}
-
-/**
  * Create a stack config from wizard result
  */
 export function createStackConfig(
@@ -66,7 +59,7 @@ export function createStackConfigFromSuggested(
  * Write the stack config file
  */
 export async function writeStackConfig(stackDir: string, config: StackConfig): Promise<void> {
-  const configPath = getStackConfigPath(stackDir)
+  const configPath = path.join(stackDir, STACK_CONFIG_NAME)
   const content = stringifyYaml(config, { lineWidth: 0 })
   await writeFile(configPath, content)
 }
@@ -76,7 +69,7 @@ export async function writeStackConfig(stackDir: string, config: StackConfig): P
  * Returns null if the file doesn't exist
  */
 export async function readStackConfig(stackDir: string): Promise<StackConfig | null> {
-  const configPath = getStackConfigPath(stackDir)
+  const configPath = path.join(stackDir, STACK_CONFIG_NAME)
   const exists = await fileExists(configPath)
 
   if (!exists) {

@@ -589,23 +589,6 @@ export interface SkillOption {
   alternatives: string[]
 }
 
-/**
- * Category with its available skill options
- * Used by wizard to render each selection step
- */
-export interface CategoryWithOptions {
-  /** Category definition */
-  category: CategoryDefinition
-
-  /** Available skills in this category with computed state */
-  options: SkillOption[]
-
-  /** Whether any selection is required */
-  required: boolean
-
-  /** Whether this is a single-select (exclusive) or multi-select category */
-  exclusive: boolean
-}
 
 /**
  * Current wizard state for computing available options
@@ -665,51 +648,4 @@ export interface ValidationWarning {
 
   /** Skill IDs involved */
   skills: string[]
-}
-
-// =============================================================================
-// SECTION 6: Utility Types
-// =============================================================================
-
-/**
- * Lookup tables built from the merged matrix for efficient runtime queries
- */
-export interface MatrixLookupTables {
-  /** Map alias -> full skill ID */
-  aliasToId: Map<string, string>
-
-  /** Map full skill ID -> alias */
-  idToAlias: Map<string, string>
-
-  /** Map skill ID -> all skills it conflicts with */
-  conflictsBySkill: Map<string, Set<string>>
-
-  /** Map skill ID -> all skills it recommends */
-  recommendsBySkill: Map<string, Set<string>>
-
-  /** Map skill ID -> all skills it requires */
-  requiresBySkill: Map<string, SkillRequirement[]>
-
-  /** Map skill ID -> all skills that require it */
-  requiredBySkill: Map<string, Set<string>>
-
-  /** Map category ID -> all skills in that category */
-  skillsByCategory: Map<string, string[]>
-
-  /** Map parent category -> child subcategories */
-  subcategoriesByParent: Map<string, string[]>
-}
-
-/**
- * Result of resolving an alias or ID
- */
-export interface ResolvedId {
-  /** The full skill ID */
-  fullId: string
-
-  /** The alias if one exists */
-  alias?: string
-
-  /** Whether the input was an alias */
-  wasAlias: boolean
 }

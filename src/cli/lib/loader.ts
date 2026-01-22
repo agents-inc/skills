@@ -71,44 +71,6 @@ export async function loadAllAgents(
 }
 
 /**
- * Load all skills by scanning skills/{category}/{skillId}/SKILL.md
- * Used for central skill repository (authoring mode)
- */
-export async function loadAllSkills(
-  projectRoot: string
-): Promise<Record<string, SkillDefinition>> {
-  const skills: Record<string, SkillDefinition> = {};
-  const skillsDir = path.join(projectRoot, DIRS.skills);
-
-  const files = await glob('**/SKILL.md', skillsDir);
-
-  for (const file of files) {
-    const fullPath = path.join(skillsDir, file);
-    const content = await readFile(fullPath);
-
-    const frontmatter = parseFrontmatter(content);
-    if (!frontmatter) {
-      console.warn(`  Warning: Skipping ${file}: Missing or invalid frontmatter`);
-      continue;
-    }
-
-    const folderPath = file.replace('/SKILL.md', '');
-    const skillPath = `skills/${folderPath}/`;
-    const skillId = frontmatter.name;
-
-    skills[skillId] = {
-      path: skillPath,
-      name: extractDisplayName(frontmatter.name),
-      description: frontmatter.description,
-    };
-
-    verbose(`Loaded skill: ${skillId} from ${file}`);
-  }
-
-  return skills;
-}
-
-/**
  * Load skills from a stack's embedded skills directory
  * Scans stacks/{stackId}/skills/**\/SKILL.md for Phase 1 architecture
  */
@@ -174,9 +136,3 @@ export async function loadStack(
   }
 }
 
-/**
- * Clear the stack cache (useful for testing)
- */
-export function clearStackCache(): void {
-  stackCache.clear();
-}

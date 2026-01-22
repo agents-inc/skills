@@ -36,7 +36,6 @@ async function readCorePrompts(
 async function compileAgent(
   name: string,
   agent: AgentConfig,
-  config: CompileConfig,
   projectRoot: string,
   engine: Liquid
 ): Promise<string> {
@@ -130,7 +129,7 @@ export async function compileAllAgents(
 
   for (const [name, agent] of Object.entries(resolvedAgents)) {
     try {
-      const output = await compileAgent(name, agent, config, ctx.projectRoot, engine);
+      const output = await compileAgent(name, agent, ctx.projectRoot, engine);
       await writeFile(path.join(outDir, `${name}.md`), output);
       console.log(`  ✓ ${name}.md`);
     } catch (error) {
@@ -206,10 +205,7 @@ export async function compileAllSkills(
 /**
  * Copy CLAUDE.md to output
  */
-export async function copyClaude(
-  config: CompileConfig,
-  ctx: CompileContext
-): Promise<void> {
+export async function copyClaude(ctx: CompileContext): Promise<void> {
   const claudePath = await resolveClaudeMd(ctx.projectRoot, ctx.stackId);
 
   const content = await readFile(claudePath);

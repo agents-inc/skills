@@ -9,21 +9,9 @@ import type { MergedSkillsMatrix, ResolvedStack } from '../types-matrix'
 import type { CopiedSkill } from './skill-copier'
 
 /**
- * CLI version - should match package.json
- */
-export const CLI_VERSION = '0.1.0'
-
-/**
  * Regex for valid stack names (kebab-case)
  */
 const STACK_NAME_REGEX = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
-
-/**
- * Validate a stack name follows kebab-case convention
- */
-export function isValidStackName(name: string): boolean {
-  return STACK_NAME_REGEX.test(name)
-}
 
 /**
  * Result of creating a stack
@@ -94,7 +82,7 @@ export async function promptStackName(
 
       const name = value.trim().toLowerCase()
 
-      if (!isValidStackName(name)) {
+      if (!STACK_NAME_REGEX.test(name)) {
         return 'Stack name must be kebab-case (e.g., my-stack, work-project)'
       }
 

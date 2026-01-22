@@ -1,4 +1,4 @@
-import Ajv from 'ajv'
+import Ajv, { type ValidateFunction, type ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import path from 'path'
 import { readFile, fileExists } from '../utils/fs'
@@ -129,7 +129,7 @@ const VALIDATION_TARGETS: ValidationTarget[] = [
 // =============================================================================
 
 const schemaCache = new Map<string, object>()
-const validatorCache = new Map<string, Ajv['validate']>()
+const validatorCache = new Map<string, ValidateFunction>()
 
 /**
  * Load a JSON schema from the schemas directory
@@ -149,7 +149,7 @@ async function loadSchema(schemaName: string): Promise<object> {
 /**
  * Get or create a validator for a schema
  */
-async function getValidator(schemaName: string): Promise<Ajv['validate']> {
+async function getValidator(schemaName: string): Promise<ValidateFunction> {
   if (validatorCache.has(schemaName)) {
     return validatorCache.get(schemaName)!
   }
@@ -169,7 +169,7 @@ async function getValidator(schemaName: string): Promise<Ajv['validate']> {
 /**
  * Format ajv errors into readable strings
  */
-function formatAjvErrors(errors: Ajv['errors']): string[] {
+function formatAjvErrors(errors: ErrorObject[] | null | undefined): string[] {
   if (!errors) return []
 
   return errors.map((err) => {
@@ -203,7 +203,7 @@ function formatAjvErrors(errors: Ajv['errors']): string[] {
  */
 async function validateFile(
   filePath: string,
-  validate: Ajv['validate'],
+  validate: ValidateFunction,
   extractor?: ContentExtractor
 ): Promise<{ valid: boolean; errors: string[] }> {
   try {
@@ -317,7 +317,6 @@ export function printValidationResults(result: FullValidationResult): void {
     if (schemaResult.totalFiles === 0) continue
 
     const status = schemaResult.valid ? '✓' : '✗'
-    const color = schemaResult.valid ? '' : ''
     console.log(
       `\n  ${status} ${schemaResult.schemaName}: ${schemaResult.validFiles}/${schemaResult.totalFiles} valid`
     )
