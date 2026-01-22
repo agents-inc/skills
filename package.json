@@ -15,7 +15,15 @@
     "cli:dev": "bun src/cli/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "cc:init": "bun src/cli/index.ts init",
+    "cc:add": "bun src/cli/index.ts add",
+    "cc:update": "bun src/cli/index.ts update",
+    "cc:compile": "bun src/cli/index.ts compile",
+    "cc:compile:home": "bun src/cli/index.ts compile -s home-stack",
+    "cc:compile:work": "bun src/cli/index.ts compile -s work-stack",
+    "cc:compile:mobx": "bun src/cli/index.ts compile -s mobx-tailwind",
+    "cc:validate": "bun src/cli/index.ts validate"
   },
   "repository": {
     "type": "git",
