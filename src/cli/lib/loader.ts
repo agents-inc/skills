@@ -39,11 +39,11 @@ export async function detectCompileMode(
 export function getDirs(mode: CompileMode) {
   if (mode === "user") {
     return {
-      agents: "src/agent-sources", // Always from CLI repo for now
+      agents: "src/agents", // Always from CLI repo for now
       skills: `${COLLECTIVE_DIR}/skills`, // Future: user-defined skills
       stacks: `${COLLECTIVE_DIR}/${COLLECTIVE_STACKS_SUBDIR}`,
-      corePrompts: "src/core-prompts",
-      templates: "src/templates",
+      principles: "src/agents/_principles",
+      templates: "src/agents/_templates",
       commands: "src/commands",
     } as const;
   }
@@ -82,7 +82,7 @@ function extractDisplayName(skillId: string): string {
 }
 
 /**
- * Load all agents by scanning agent-sources/{agentId}/agent.yaml
+ * Load all agents by scanning agents/{category}/{agentId}/agent.yaml
  */
 export async function loadAllAgents(
   projectRoot: string,

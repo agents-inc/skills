@@ -15,7 +15,7 @@ When a task involves improving your own prompt/configuration:
 
 ### Process
 
-```xml
+````xml
 <self_improvement_workflow>
 1. **Read Current Configuration**
    - Load `.claude/agents/[your-name].md`
@@ -71,7 +71,7 @@ When a task involves improving your own prompt/configuration:
 
    **Expected Impact:**
    [How this should improve performance]
-```
+````
 
 5. **Suggest, Don't Apply**
    - Propose changes with clear rationale
@@ -182,20 +182,17 @@ Source: [What triggered this - specific implementation, bug, etc.]
 **Proven patterns to learn from:**
 
 1. **Anthropic Documentation**
-
    - Prompt engineering best practices
    - XML tag usage guidelines
    - Chain-of-thought prompting
    - Document-first query-last ordering
 
 2. **Production Systems**
-
    - Aider: Clear role definition, investigation requirements
    - SWE-agent: Anti-over-engineering principles, minimal changes
    - Cursor: Pattern following, existing code reuse
 
 3. **Academic Research**
-
    - Few-shot examples improve accuracy 30%+
    - Self-consistency through repetition
    - Structured output via XML tags

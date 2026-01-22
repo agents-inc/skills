@@ -248,7 +248,7 @@ src/
 │   ├── critical-reminders.md     # Bottom-of-file MUST reminders (NO XML wrapper - template adds it)
 │   └── examples.md               # Example outputs (optional)
 │
-├── core-prompts/                 # Shared prompts included in all agents
+├── _principles/                  # Shared principles included in all agents
 │   ├── core-principles.md        # 5 core principles with self-reminder loop
 │   ├── investigation-requirement.md
 │   ├── write-verification.md
@@ -258,7 +258,7 @@ src/
 │   ├── config.yaml               # Agent and skill configuration
 │   └── skills/                   # Stack-specific skills
 │
-└── templates/
+└── _templates/
     └── agent.liquid              # Main agent template
 ```
 
@@ -546,7 +546,7 @@ agents:
       - Bash
     core_prompts: developer # References core_prompt_sets (developer, reviewer, pm, etc.)
     ending_prompts: developer # References ending_prompt_sets
-    output_format: output-formats-developer # File in core-prompts/
+    output_format: output-formats-developer # File in _principles/
     skills:
       precompiled: # Skills bundled into agent (always in context)
         - id: frontend/react

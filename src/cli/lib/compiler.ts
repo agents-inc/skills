@@ -26,17 +26,17 @@ import type {
 } from "../types";
 
 /**
- * Read and concatenate core prompt files
+ * Read and concatenate principle files
  */
-async function readCorePrompts(
+async function readPrinciples(
   promptNames: string[],
   projectRoot: string,
 ): Promise<string> {
   const contents: string[] = [];
-  const corePromptsDir = path.join(projectRoot, DIRS.corePrompts);
+  const principlesDir = path.join(projectRoot, DIRS.principles);
 
   for (const name of promptNames) {
-    const content = await readFile(path.join(corePromptsDir, `${name}.md`));
+    const content = await readFile(path.join(principlesDir, `${name}.md`));
     contents.push(content);
   }
 
@@ -73,8 +73,8 @@ async function compileAgent(
     "",
   );
 
-  // Read core prompts
-  const corePromptsContent = await readCorePrompts(
+  // Read principles (core prompts)
+  const principlesContent = await readPrinciples(
     agent.core_prompts,
     projectRoot,
   );
@@ -98,8 +98,8 @@ async function compileAgent(
     );
   }
 
-  // Read ending prompts
-  const endingPromptsContent = await readCorePrompts(
+  // Read ending principles
+  const endingPrinciplesContent = await readPrinciples(
     agent.ending_prompts,
     projectRoot,
   );
@@ -133,10 +133,10 @@ async function compileAgent(
     criticalRequirementsTop,
     criticalReminders,
     corePromptNames: formattedCorePromptNames,
-    corePromptsContent,
+    corePromptsContent: principlesContent,
     outputFormat,
     endingPromptNames: formattedEndingPromptNames,
-    endingPromptsContent,
+    endingPromptsContent: endingPrinciplesContent,
     skills: agent.skills,
     preloadedSkills,
     dynamicSkills,

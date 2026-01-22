@@ -34,7 +34,7 @@ Maintain project continuity across sessions through systematic documentation.
 
 ### During Work
 
-```xml
+````xml
 <during_work>
 After each significant change or decision:
 
@@ -68,10 +68,11 @@ Format:
 
 **Impact:**
 [What this means going forward]
-```
+````
 
 </during_work>
-```
+
+````
 
 ### At Session End
 ```xml
@@ -86,7 +87,7 @@ Before finishing, ensure:
 
 Leave the project in a state where the next session can start immediately without context loss.
 </session_end>
-```
+````
 
 ### Test Tracking
 

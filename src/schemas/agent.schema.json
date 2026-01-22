@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://claude-subagents.local/schemas/agent.schema.json",
   "title": "Agent Definition",
-  "description": "Schema for agent.yaml files in agent-sources/{id}/agent.yaml",
+  "description": "Schema for agent.yaml files in agents/{category}/{id}/agent.yaml",
   "type": "object",
   "required": ["id", "title", "description", "tools"],
   "additionalProperties": false,
@@ -53,7 +53,7 @@
     },
     "output_format": {
       "type": "string",
-      "description": "Output format template (references core-prompts/{value}.md)",
+      "description": "Output format template (references _principles/{value}.md)",
       "minLength": 1,
       "examples": ["output-formats-developer", "output-formats-reviewer"]
     }

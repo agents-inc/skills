@@ -9,13 +9,13 @@ Restructure so that:
 
 1. **Agent definitions** live in ONE file (`agents.yaml`) - single source of truth
 2. **Stack configs** just reference which agents they want + assign skills
-3. **Agent source files** (intro.md, workflow.md) remain generic in `agent-sources/{category}/{agent}/`
+3. **Agent source files** (intro.md, workflow.md) remain generic in `agents/{category}/{agent}/`
 
 ## Current State (After Refactor)
 
 ```
 src/
-├── agent-sources/           # Agent source files (organized by category)
+├── agents/           # Agent source files (organized by category)
 │   ├── developer/           # Developer category
 │   │   ├── frontend-developer/
 │   │   │   ├── intro.md
@@ -156,7 +156,7 @@ agent_skills:
 
 ### Completed
 
-- [x] Renamed `src/agents/` to `src/agent-sources/` to avoid Claude Code auto-detection
+- [x] Renamed `src/agents/` to `src/agents/` to avoid Claude Code auto-detection
 - [x] Updated `compile.ts` to use new path
 - [x] Updated `CLAUDE_ARCHITECTURE_BIBLE.md` with new directory structure
 - [x] Verified compilation still works
@@ -181,7 +181,7 @@ All checklist items have been implemented. The system now has:
 2. **Simplified stack configs** with `use_agents` and `agent_skills`
 3. **Updated types** in `types.ts` with `AgentDefinition`, `AgentsConfig`, and `SkillAssignment`
 4. **Updated compiler** that loads agents from `agents.yaml` and merges with stack skills
-5. **Category-based organization** in `agent-sources/` for better discoverability
+5. **Category-based organization** in `agents/` for better discoverability
 
 ## Agent Categories
 
@@ -207,7 +207,7 @@ Agents are now organized into semantic categories:
 | `src/stacks/work/config.yaml`           | SIMPLIFIED - uses use_agents + agent_skills                          | Done   |
 | `src/stacks/home/config.yaml`           | SIMPLIFIED - uses use_agents + agent_skills                          | Done   |
 | `src/docs/CLAUDE_ARCHITECTURE_BIBLE.md` | UPDATED - documented new structure                                   | Done   |
-| `src/agent-sources/`                    | REORGANIZED - agents moved into category subdirectories              | Done   |
+| `src/agents/`                           | REORGANIZED - agents moved into category subdirectories              | Done   |
 
 ---
 

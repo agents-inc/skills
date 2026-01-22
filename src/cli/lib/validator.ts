@@ -23,11 +23,11 @@ export async function validate(
     errors.push(`CLAUDE.md not found in stack "${stackId}"`);
   }
 
-  // Check core prompts directory exists
-  const corePromptsDir = path.join(projectRoot, DIRS.corePrompts);
-  const corePromptsCheck = path.join(corePromptsDir, "core-principles.md");
-  if (!(await fileExists(corePromptsCheck))) {
-    errors.push(`Core prompts directory missing or empty: ${corePromptsDir}`);
+  // Check principles directory exists
+  const principlesDir = path.join(projectRoot, DIRS.principles);
+  const principlesCheck = path.join(principlesDir, "core-principles.md");
+  if (!(await fileExists(principlesCheck))) {
+    errors.push(`Principles directory missing or empty: ${principlesDir}`);
   }
 
   // Collect all prompt names for validation
@@ -93,11 +93,11 @@ export async function validate(
     }
   }
 
-  // Check all prompt files exist
+  // Check all principle files exist
   for (const prompt of allPromptNames) {
-    const promptPath = path.join(corePromptsDir, `${prompt}.md`);
+    const promptPath = path.join(principlesDir, `${prompt}.md`);
     if (!(await fileExists(promptPath))) {
-      errors.push(`Core prompt not found: ${prompt}.md`);
+      errors.push(`Principle not found: ${prompt}.md`);
     }
   }
 
