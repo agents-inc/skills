@@ -27,30 +27,30 @@ These files contain detailed research referenced by this document:
 
 ### 1. CLI Implementation
 
-| Priority | Task                         | Description                                  | Status                     |
-| -------- | ---------------------------- | -------------------------------------------- | -------------------------- |
-| Critical | Phase 4: Versioning          | Integer version + content hash on compile    | Not Started                |
-| Critical | Phase 5: Validation          | Comprehensive metadata.yaml validation       | Done (`cc validate`)       |
-| Critical | Phase 6: Schema Distribution | GitHub raw URLs, SchemaStore PR              | Not Started                |
-| Critical | Phase 7: Private Repos       | Configurable source, auth, pre-flight checks | Not Started                |
-| Critical | Phase 8: Multi-Source        | Community + private skills composition       | Not Started                |
-| Critical | Phase 9: Skill Reorg         | Separate PhotoRoom from community skills     | Not Started                |
-| High     | `cc cache`                   | Cache management commands                    | Not Started                |
-| High     | `cc validate`                | Validate selections against matrix           | Done (metadata validation) |
-| High     | `cc create skill`            | Scaffold new skill                           | Not Started                |
-| High     | `cc create agent`            | Scaffold new agent                           | Not Started                |
-| High     | `cc doctor`                  | Diagnose connectivity/auth issues            | Not Started                |
-| Medium   | SIGINT handler               | Graceful Ctrl+C                              | Not Started                |
-| Medium   | `--dry-run` flag             | Preview without executing                    | Not Started                |
-| Medium   | Exit codes                   | Define 4 codes (currently only 0/1)          | Not Started                |
-| Medium   | Pre-populate wizard          | `cc update` shows current selections         | Not Started                |
-| Medium   | Test all flows               | Manual testing (Phase 3 checklist)           | Not Started                |
-| Medium   | Parity verification          | Old compile.ts vs new CLI                    | Not Started                |
-| Medium   | Config redundancy            | `frontend/react` appears 9x                  | Not Started                |
-| Medium   | Template issues              | Whitespace, monolithic (95 lines)            | Not Started                |
-| Medium   | Configuration system         | Global + project config files                | Not Started                |
-| Low      | Marketplace foundation       | Stack Marketplace Phase 1-2                  | Deferred                   |
-| Low      | Community submission         | `cc submit` flow                             | Deferred                   |
+| Priority | Task                         | Description                                                  | Status                     |
+| -------- | ---------------------------- | ------------------------------------------------------------ | -------------------------- |
+| Critical | Phase 4: Versioning          | Integer version + content hash on compile                    | Not Started                |
+| Critical | Phase 5: Validation          | Comprehensive metadata.yaml validation                       | Done (`cc validate`)       |
+| Critical | Phase 6: Schema Distribution | GitHub raw URLs, SchemaStore PR                              | Not Started                |
+| Critical | Phase 7: Private Repos       | Configurable source, auth, pre-flight checks                 | Not Started                |
+| Critical | Phase 8: Multi-Source        | Community + private skills composition                       | Not Started                |
+| Critical | Phase 9: Skill Reorg         | Separate PhotoRoom from community skills                     | Not Started                |
+| High     | `cc cache`                   | Cache management commands                                    | Not Started                |
+| High     | `cc validate`                | Validate selections against matrix                           | Done (metadata validation) |
+| High     | `cc create skill`            | Scaffold new skill + output prompt for Claude Code           | Not Started                |
+| High     | `cc create agent`            | Scaffold new agent + output prompt for Claude Code           | Not Started                |
+| High     | `cc doctor`                  | Diagnose connectivity/auth issues                            | Not Started                |
+| Medium   | SIGINT handler               | Graceful Ctrl+C                                              | Not Started                |
+| Medium   | `--dry-run` flag             | Preview without executing                                    | Not Started                |
+| Medium   | Exit codes                   | Define 4 codes (currently only 0/1)                          | Not Started                |
+| Medium   | Pre-populate wizard          | `cc update` shows current selections                         | Not Started                |
+| Medium   | Test all flows               | Manual testing (Phase 3 checklist)                           | Not Started                |
+| Medium   | Parity verification          | Old compile.ts vs new CLI                                    | Done                       |
+| Medium   | Config redundancy            | `frontend/react` appears 9x (CLI-generated, not user-facing) | Won't Fix                  |
+| Medium   | Template issues              | Whitespace, monolithic (95 lines)                            | Not Started                |
+| Medium   | Configuration system         | Global + project config files                                | Not Started                |
+| Low      | Marketplace foundation       | Stack Marketplace Phase 1-2                                  | Deferred                   |
+| Low      | Community submission         | `cc submit` flow                                             | Deferred                   |
 
 ---
 
@@ -516,6 +516,40 @@ cc update
 │   current selections)       │
 └─────────────────────────────┘
 ```
+
+### `cc create skill`
+
+```
+cc create skill <category>/<name>
+    ↓
+Creates:
+  src/skills/<category>/<name> (@author)/
+    ├── metadata.yaml    # Template with TODOs
+    ├── SKILL.md         # Empty template with sections
+    ├── reference.md     # Empty
+    └── examples/
+        └── .gitkeep
+    ↓
+Outputs prompt for Claude Code:
+  "Use the skill-summoner agent to flesh out <category>/<name>"
+```
+
+**Note:** The CLI only scaffolds. AI-generated content requires Claude Code with the `skill-summoner` agent.
+
+### `cc create agent`
+
+```
+cc create agent <name>
+    ↓
+Creates:
+  src/agent-sources/<name>/
+    └── agent.yaml       # Template with TODOs
+    ↓
+Outputs prompt for Claude Code:
+  "Use the agent-summoner agent to design the <name> agent"
+```
+
+**Note:** The CLI only scaffolds. AI-generated content requires Claude Code with the `agent-summoner` agent.
 
 ---
 
