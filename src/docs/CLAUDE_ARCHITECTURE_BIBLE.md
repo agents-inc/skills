@@ -7,7 +7,7 @@
 This system compiles modular source files into standalone agent/skill markdown files using:
 
 - **TypeScript compiler**: `src/compile.ts`
-- **LiquidJS templates**: `src/templates/agent.liquid`
+- **LiquidJS templates**: `src/agents/_templates/agent.liquid`
 - **Agent definitions**: `src/agents.yaml` (single source of truth)
 - **Stack configuration**: `src/stacks/{stack}/config.yaml` (skill assignments)
 
@@ -15,11 +15,11 @@ This system compiles modular source files into standalone agent/skill markdown f
 
 **Agents are GENERIC. Skills are STACK-SPECIFIC.**
 
-| Layer      | Location                                | Purpose                             | Changes Per Stack        |
-| ---------- | --------------------------------------- | ----------------------------------- | ------------------------ |
-| **Agents** | `src/agent-sources/{category}/{agent}/` | Define _role_ + _workflow_          | NO - single source       |
-| **Skills** | `src/stacks/{stack}/skills/`            | Define _implementation patterns_    | YES - vary by tech stack |
-| **Config** | `src/stacks/{stack}/config.yaml`        | Control which agents/skills compile | YES - stack-specific     |
+| Layer      | Location                         | Purpose                             | Changes Per Stack        |
+| ---------- | -------------------------------- | ----------------------------------- | ------------------------ |
+| **Agents** | `src/agents/{category}/{agent}/` | Define _role_ + _workflow_          | NO - single source       |
+| **Skills** | `src/stacks/{stack}/skills/`     | Define _implementation patterns_    | YES - vary by tech stack |
+| **Config** | `src/stacks/{stack}/config.yaml` | Control which agents/skills compile | YES - stack-specific     |
 
 **Example:**
 
@@ -56,7 +56,19 @@ src/
 ├── agents.yaml                # Single source of truth for ALL agent definitions
 │                              # Contains: title, description, model, tools, core_prompts, output_format
 │
-├── agent-sources/             # Agent source files (GENERIC - shared across stacks)
+├── agents/                    # Agent source files (GENERIC - shared across stacks)
+│   ├── _principles/           # Shared principles included in all agents
+│   │   ├── core-principles.md     # 5 core principles with self-reminder loop
+│   │   ├── investigation-requirement.md
+│   │   ├── write-verification.md
+│   │   ├── anti-over-engineering.md
+│   │   ├── context-management.md
+│   │   ├── improvement-protocol.md
+│   │   └── output-formats-{type}.md  # Role-specific output formats
+│   │
+│   ├── _templates/            # LiquidJS templates
+│   │   └── agent.liquid       # Main agent template
+│   │
 │   ├── developer/             # Developer category
 │   │   ├── frontend-developer/
 │   │   │   ├── intro.md
@@ -83,15 +95,6 @@ src/
 │   └── tester/                # Tester category
 │       └── tester-agent/
 │
-├── core-prompts/              # Shared prompts included in all agents
-│   ├── core-principles.md     # 5 core principles with self-reminder loop
-│   ├── investigation-requirement.md
-│   ├── write-verification.md
-│   ├── anti-over-engineering.md
-│   ├── context-management.md
-│   ├── improvement-protocol.md
-│   └── output-formats-{type}.md  # Role-specific output formats
-│
 ├── stacks/                    # Stack-specific configuration
 │   └── {stack}/
 │       ├── config.yaml        # agent_skills (keys determine which agents compile)
@@ -100,12 +103,10 @@ src/
 │           └── {category}/
 │               └── {skill}.md
 │
-├── templates/
-│   └── agent.liquid           # Main agent template
+├── cli/                       # CLI implementation
+│   └── lib/compiler.ts        # Compiler (loads agents.yaml + merges with stack skills)
 │
 ├── types.ts                   # TypeScript type definitions
-│
-├── compile.ts                 # Compiler (loads agents.yaml + merges with stack skills)
 │
 └── docs/
     └── CLAUDE_ARCHITECTURE_BIBLE.md  # This file
@@ -461,15 +462,15 @@ These tags MUST appear in compiled agents:
 | `<critical_requirements>`       | Template wraps critical-requirements.md   | Top MUST rules                                     |
 | `<skill_activation_protocol>`   | Template                                  | Three-step skill activation with emphatic warnings |
 | `<critical_reminders>`          | Template wraps critical-reminders.md      | Bottom MUST reminders                              |
-| `<core_principles>`             | core-prompts/core-principles.md           | 5 principles + self-reminder                       |
-| `<investigation_requirement>`   | core-prompts/investigation-requirement.md | Investigation-first                                |
-| `<write_verification_protocol>` | core-prompts/write-verification.md        | Verify writes                                      |
-| `<anti_over_engineering>`       | core-prompts/anti-over-engineering.md     | Minimal changes                                    |
+| `<core_principles>`             | \_principles/core-principles.md           | 5 principles + self-reminder                       |
+| `<investigation_requirement>`   | \_principles/investigation-requirement.md | Investigation-first                                |
+| `<write_verification_protocol>` | \_principles/write-verification.md        | Verify writes                                      |
+| `<anti_over_engineering>`       | \_principles/anti-over-engineering.md     | Minimal changes                                    |
 | `<self_correction_triggers>`    | workflow.md                               | Mid-task corrections                               |
 | `<post_action_reflection>`      | workflow.md                               | After-step evaluation                              |
-| `<output_format>`               | core-prompts/output-formats-\*.md         | Response structure                                 |
-| `<context_management>`          | core-prompts/context-management.md        | Token management                                   |
-| `<improvement_protocol>`        | core-prompts/improvement-protocol.md      | Self-improvement                                   |
+| `<output_format>`               | \_principles/output-formats-\*.md         | Response structure                                 |
+| `<context_management>`          | \_principles/context-management.md        | Token management                                   |
+| `<improvement_protocol>`        | \_principles/improvement-protocol.md      | Self-improvement                                   |
 
 ## Technique Compliance Mapping
 
@@ -479,21 +480,21 @@ This section maps the 13 Essential Techniques from `PROMPT_BIBLE.md` to their im
 
 ### Technique-to-Implementation Mapping
 
-| #   | Technique                       | Impact                  | Implemented In                                              | How                                                              |
-| --- | ------------------------------- | ----------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| 1   | **Self-Reminder Loop**          | 60-70% ↓ off-task       | `core-prompts/core-principles.md` + template final lines    | Core principles displayed every response + dual closing reminder |
-| 2   | **Investigation-First**         | 80% ↓ hallucination     | `core-prompts/investigation-requirement.md` + `workflow.md` | Investigation requirement + agent-specific investigation steps   |
-| 3   | **Emphatic Repetition**         | 70% ↓ scope creep       | `critical-requirements.md` + `critical-reminders.md`        | Template wraps both with XML tags, rules repeated top AND bottom |
-| 4   | **XML Semantic Tags**           | 30% ↑ accuracy          | All files                                                   | Template adds semantic tags; source files use semantic XML       |
-| 5   | **Documents First, Query Last** | 30% ↑ performance       | Template ordering                                           | Template places content before instructions (for 20K+ agents)    |
-| 6   | **Expansion Modifiers**         | Unlocks capability      | `intro.md`                                                  | MUST include "comprehensive and thorough" (see intro.md section) |
-| 7   | **Self-Correction Triggers**    | 74.4% SWE-bench         | `workflow.md`                                               | `<self_correction_triggers>` with "If you notice yourself..."    |
-| 8   | **Post-Action Reflection**      | ↑ long-horizon          | `workflow.md`                                               | `<post_action_reflection>` after major workflow steps            |
-| 9   | **Progress Tracking**           | 30+ hour focus          | `workflow.md`                                               | `<progress_tracking>` section for extended sessions              |
-| 10  | **Positive Framing**            | Better adherence        | All files                                                   | Writing Style Guidelines: "Use X" not "Don't do Y"               |
-| 11  | **"Think" Alternatives**        | Prevents Opus confusion | All files                                                   | Writing Style Guidelines: consider/evaluate/analyze              |
-| 12  | **Just-in-Time Loading**        | Preserves context       | `workflow.md`                                               | `<retrieval_strategy>` with Glob → Grep → Read pattern           |
-| 13  | **Write Verification**          | Prevents false-success  | `core-prompts/write-verification.md` + template             | Write verification protocol + second closing reminder            |
+| #   | Technique                       | Impact                  | Implemented In                                             | How                                                              |
+| --- | ------------------------------- | ----------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1   | **Self-Reminder Loop**          | 60-70% ↓ off-task       | `_principles/core-principles.md` + template final lines    | Core principles displayed every response + dual closing reminder |
+| 2   | **Investigation-First**         | 80% ↓ hallucination     | `_principles/investigation-requirement.md` + `workflow.md` | Investigation requirement + agent-specific investigation steps   |
+| 3   | **Emphatic Repetition**         | 70% ↓ scope creep       | `critical-requirements.md` + `critical-reminders.md`       | Template wraps both with XML tags, rules repeated top AND bottom |
+| 4   | **XML Semantic Tags**           | 30% ↑ accuracy          | All files                                                  | Template adds semantic tags; source files use semantic XML       |
+| 5   | **Documents First, Query Last** | 30% ↑ performance       | Template ordering                                          | Template places content before instructions (for 20K+ agents)    |
+| 6   | **Expansion Modifiers**         | Unlocks capability      | `intro.md`                                                 | MUST include "comprehensive and thorough" (see intro.md section) |
+| 7   | **Self-Correction Triggers**    | 74.4% SWE-bench         | `workflow.md`                                              | `<self_correction_triggers>` with "If you notice yourself..."    |
+| 8   | **Post-Action Reflection**      | ↑ long-horizon          | `workflow.md`                                              | `<post_action_reflection>` after major workflow steps            |
+| 9   | **Progress Tracking**           | 30+ hour focus          | `workflow.md`                                              | `<progress_tracking>` section for extended sessions              |
+| 10  | **Positive Framing**            | Better adherence        | All files                                                  | Writing Style Guidelines: "Use X" not "Don't do Y"               |
+| 11  | **"Think" Alternatives**        | Prevents Opus confusion | All files                                                  | Writing Style Guidelines: consider/evaluate/analyze              |
+| 12  | **Just-in-Time Loading**        | Preserves context       | `workflow.md`                                              | `<retrieval_strategy>` with Glob → Grep → Read pattern           |
+| 13  | **Write Verification**          | Prevents false-success  | `_principles/write-verification.md` + template             | Write verification protocol + second closing reminder            |
 
 ### Validation Checklist
 
@@ -563,9 +564,9 @@ grep -q "ALWAYS RE-READ FILES AFTER EDITING" .claude/agents/$AGENT.md && echo "�
 ```bash
 # Find bare "think" usage in source files (should be 0 for Opus agents)
 AGENT="{agent}"
-CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
+CATEGORY=$(find src/agents -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 echo "=== 'Think' Usage Check for $AGENT ==="
-grep -n -w "think" src/agent-sources/$CATEGORY/$AGENT/*.md | grep -v "ultrathink\|megathink" | wc -l
+grep -n -w "think" src/agents/$CATEGORY/$AGENT/*.md | grep -v "ultrathink\|megathink" | wc -l
 # If count > 0, review matches and replace with consider/evaluate/analyze
 ```
 
@@ -574,9 +575,9 @@ grep -n -w "think" src/agent-sources/$CATEGORY/$AGENT/*.md | grep -v "ultrathink
 ```bash
 # Check intro.md has expansion modifiers
 AGENT="{agent}"
-CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
+CATEGORY=$(find src/agents -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 echo "=== Expansion Modifier Check for $AGENT ==="
-grep -q "comprehensive\|thorough" src/agent-sources/$CATEGORY/$AGENT/intro.md && echo "✅ Expansion modifiers found" || echo "❌ Add 'comprehensive and thorough' to intro.md"
+grep -q "comprehensive\|thorough" src/agents/$CATEGORY/$AGENT/intro.md && echo "✅ Expansion modifiers found" || echo "❌ Add 'comprehensive and thorough' to intro.md"
 ```
 
 **5. Verify Critical Rules Repetition (if optional files exist):**
@@ -584,10 +585,10 @@ grep -q "comprehensive\|thorough" src/agent-sources/$CATEGORY/$AGENT/intro.md &&
 ```bash
 # Check that critical-reminders repeats rules from critical-requirements
 AGENT="{agent}"
-CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
+CATEGORY=$(find src/agents -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 echo "=== Critical Rules Repetition Check for $AGENT ==="
-REQ_COUNT=$(grep -c "You MUST" src/agent-sources/$CATEGORY/$AGENT/critical-requirements.md 2>/dev/null || echo 0)
-REM_COUNT=$(grep -c "You MUST" src/agent-sources/$CATEGORY/$AGENT/critical-reminders.md 2>/dev/null || echo 0)
+REQ_COUNT=$(grep -c "You MUST" src/agents/$CATEGORY/$AGENT/critical-requirements.md 2>/dev/null || echo 0)
+REM_COUNT=$(grep -c "You MUST" src/agents/$CATEGORY/$AGENT/critical-reminders.md 2>/dev/null || echo 0)
 echo "critical-requirements.md: $REQ_COUNT rules"
 echo "critical-reminders.md: $REM_COUNT rules"
 [ "$REQ_COUNT" -eq "$REM_COUNT" ] && echo "✅ Rule counts match" || echo "⚠️ Rule counts differ - ensure key rules are repeated"
@@ -602,7 +603,7 @@ AGENT="$1"
 if [ -z "$AGENT" ]; then echo "Usage: ./verify-agent.sh agent-name"; exit 1; fi
 
 # Find agent category
-CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
+CATEGORY=$(find src/agents -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 if [ -z "$CATEGORY" ]; then echo "Agent not found: $AGENT"; exit 1; fi
 
 echo "========================================"
@@ -612,22 +613,22 @@ echo "========================================"
 # REQUIRED source files check
 echo -e "\n--- Required Source Files ---"
 for f in intro.md workflow.md; do
-  [ -f "src/agent-sources/$CATEGORY/$AGENT/$f" ] && echo "✅ $f" || echo "❌ $f MISSING (REQUIRED)"
+  [ -f "src/agents/$CATEGORY/$AGENT/$f" ] && echo "✅ $f" || echo "❌ $f MISSING (REQUIRED)"
 done
 
 # OPTIONAL source files check
 echo -e "\n--- Optional Source Files ---"
 for f in critical-requirements.md critical-reminders.md examples.md; do
-  [ -f "src/agent-sources/$CATEGORY/$AGENT/$f" ] && echo "✅ $f" || echo "⚠️ $f (optional, recommended)"
+  [ -f "src/agents/$CATEGORY/$AGENT/$f" ] && echo "✅ $f" || echo "⚠️ $f (optional, recommended)"
 done
 
 # Expansion modifiers
 echo -e "\n--- Expansion Modifiers ---"
-grep -q "comprehensive\|thorough" src/agent-sources/$CATEGORY/$AGENT/intro.md 2>/dev/null && echo "✅ Found" || echo "❌ MISSING in intro.md"
+grep -q "comprehensive\|thorough" src/agents/$CATEGORY/$AGENT/intro.md 2>/dev/null && echo "✅ Found" || echo "❌ MISSING in intro.md"
 
 # Think usage
 echo -e "\n--- 'Think' Usage (should be 0) ---"
-THINK_COUNT=$(grep -rw "think" src/agent-sources/$CATEGORY/$AGENT/*.md 2>/dev/null | grep -v "ultrathink\|megathink" | wc -l)
+THINK_COUNT=$(grep -rw "think" src/agents/$CATEGORY/$AGENT/*.md 2>/dev/null | grep -v "ultrathink\|megathink" | wc -l)
 echo "Count: $THINK_COUNT"
 
 # Compiled agent checks (only if compiled file exists)
@@ -978,10 +979,10 @@ Agents are **generic** - define them once in `agents.yaml`, then enable them in 
 
 ### Step 1: Create Agent Source Files
 
-Create directory: `src/agent-sources/{category}/{agent-name}/`
+Create directory: `src/agents/{category}/{agent-name}/`
 
 ```
-src/agent-sources/{category}/my-new-agent/
+src/agents/{category}/my-new-agent/
 ├── intro.md                  # REQUIRED: Role definition (no <role> tags)
 ├── workflow.md               # REQUIRED: Agent-specific processes with XML tags
 ├── critical-requirements.md  # OPTIONAL: Top MUST rules (no XML wrapper)
@@ -1059,7 +1060,7 @@ bunx compile -s work-stack
 ### Key Points
 
 - **Agent definitions** live in `src/agents.yaml` (single source of truth)
-- **Agent source files** live in `src/agent-sources/{category}/{agent}/` (organized by category, shared across all stacks)
+- **Agent source files** live in `src/agents/{category}/{agent}/` (organized by category, shared across all stacks)
 - **Skill assignments** live in each stack's `config.yaml` under `agents`
 - **Which agents compile** is determined by the keys in `agents` (no separate list)
 - Same agent can have **different skill bundles** per stack

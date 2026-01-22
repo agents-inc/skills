@@ -13,7 +13,7 @@
 | Create AI-optimized documentation           | [DOCUMENTATION_BIBLE.md](#3-documentation-bible)             |
 | Design atomic, portable skills              | [SKILL-ATOMICITY-BIBLE.md](#4-skill-atomicity-bible)         |
 | **Build or extend the CLI**                 | [CLI Documentation](#cli-documentation)                      |
-| Find core instructions loaded in all agents | [Core Prompts](#core-prompts-loaded-in-all-agents)           |
+| Find core instructions loaded in all agents | [Principles](#principles-loaded-in-all-agents)               |
 | See compiled agent prompts                  | [Agent Definitions](#agent-definitions)                      |
 | Review architecture research & decisions    | [Research & Findings](#research--findings)                   |
 
@@ -31,11 +31,11 @@ The source of truth for the modular agent & skill compilation system.
 
 - TypeScript + LiquidJS compilation pipeline
 - Stack-switching workflow (`bunx compile -s home` vs `bunx compile -s work`)
-- Directory structure (`src/agents.yaml`, `src/agent-sources/{category}/{agent}/`, `src/stacks/`)
+- Directory structure (`src/agents.yaml`, `src/agents/{category}/{agent}/`, `src/stacks/`)
 - Agent categories (developer, reviewer, researcher, planning, pattern, meta, tester)
 - How agents are generic (role + workflow) while skills are stack-specific (implementation patterns)
 - Adding new agents and skills
-- Template system (`src/templates/agent.liquid`)
+- Template system (`src/agents/_templates/agent.liquid`)
 - **Skill schema requirements** (metadata.yaml, SKILL.md frontmatter, validation rules)
 
 **Use when:** Creating or modifying agents, understanding the build system, switching stacks, authoring new skills.
@@ -150,19 +150,19 @@ The CLI (`cc`) is the user-facing tool for managing skills, stacks, and agents.
 
 ---
 
-## Core Prompts (Loaded in All Agents)
+## Principles (Loaded in All Agents)
 
 These foundational instructions are compiled into every agent's context:
 
-| File                                            | Purpose                                                                                                                                         |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/core-prompts/core-principles.md`           | The 5 core principles (Investigation First, Follow Patterns, Minimal Changes, Anti-Over-Engineering, Verify Everything) with self-reminder loop |
-| `src/core-prompts/investigation-requirement.md` | Never speculate about unread code; read first, then claim                                                                                       |
-| `src/core-prompts/write-verification.md`        | Re-read files after editing; never report success without verification                                                                          |
-| `src/core-prompts/anti-over-engineering.md`     | Explicit constraints on what NOT to do (no new abstractions, no unrequested features)                                                           |
-| `src/core-prompts/context-management.md`        | How to manage long-term context across sessions (`progress.md`, `decisions.md`, `insights.md`)                                                  |
-| `src/core-prompts/improvement-protocol.md`      | How to improve agent prompts based on evidence                                                                                                  |
-| `src/core-prompts/success-criteria-template.md` | Template for defining and verifying success criteria                                                                                            |
+| File                                                  | Purpose                                                                                                                                         |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/agents/_principles/core-principles.md`           | The 5 core principles (Investigation First, Follow Patterns, Minimal Changes, Anti-Over-Engineering, Verify Everything) with self-reminder loop |
+| `src/agents/_principles/investigation-requirement.md` | Never speculate about unread code; read first, then claim                                                                                       |
+| `src/agents/_principles/write-verification.md`        | Re-read files after editing; never report success without verification                                                                          |
+| `src/agents/_principles/anti-over-engineering.md`     | Explicit constraints on what NOT to do (no new abstractions, no unrequested features)                                                           |
+| `src/agents/_principles/context-management.md`        | How to manage long-term context across sessions (`progress.md`, `decisions.md`, `insights.md`)                                                  |
+| `src/agents/_principles/improvement-protocol.md`      | How to improve agent prompts based on evidence                                                                                                  |
+| `src/agents/_principles/success-criteria-template.md` | Template for defining and verifying success criteria                                                                                            |
 
 ---
 
@@ -172,17 +172,17 @@ Compiled agent prompts live in `.claude/agents/`. Each agent has a specific role
 
 ### Agent Organization
 
-Agents are organized into 7 categories in `src/agent-sources/`:
+Agents are organized into 7 categories in `src/agents/`:
 
-| Category      | Path                            | Purpose                           |
-| ------------- | ------------------------------- | --------------------------------- |
-| `developer/`  | `src/agent-sources/developer/`  | Implementation agents             |
-| `reviewer/`   | `src/agent-sources/reviewer/`   | Code review agents                |
-| `researcher/` | `src/agent-sources/researcher/` | Read-only research agents         |
-| `planning/`   | `src/agent-sources/planning/`   | Planning and coordination         |
-| `pattern/`    | `src/agent-sources/pattern/`    | Pattern discovery and critique    |
-| `meta/`       | `src/agent-sources/meta/`       | Meta-level agents (create agents) |
-| `tester/`     | `src/agent-sources/tester/`     | Testing agents                    |
+| Category      | Path                     | Purpose                           |
+| ------------- | ------------------------ | --------------------------------- |
+| `developer/`  | `src/agents/developer/`  | Implementation agents             |
+| `reviewer/`   | `src/agents/reviewer/`   | Code review agents                |
+| `researcher/` | `src/agents/researcher/` | Read-only research agents         |
+| `planning/`   | `src/agents/planning/`   | Planning and coordination         |
+| `pattern/`    | `src/agents/pattern/`    | Pattern discovery and critique    |
+| `meta/`       | `src/agents/meta/`       | Meta-level agents (create agents) |
+| `tester/`     | `src/agents/tester/`     | Testing agents                    |
 
 ### Development Agents
 

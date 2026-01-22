@@ -45,7 +45,7 @@ See ARCHITECTURE_AGENT_PROMPT.md for the complete tech stack that the architectu
 ## Files to Create
 
 1. **ARCHITECTURE_AGENT_PROMPT.md** - Detailed spec for agent-summoner
-2. Agent source files (created by agent-summoner in `src/agent-sources/developer/architecture/`):
+2. Agent source files (created by agent-summoner in `src/agents/developer/architecture/`):
    - intro.md
    - workflow.md
    - critical-requirements.md
@@ -59,7 +59,7 @@ See ARCHITECTURE_AGENT_PROMPT.md for the complete tech stack that the architectu
 If partial files were created manually, remove them:
 
 ```bash
-rm -rf src/agent-sources/developer/architecture/
+rm -rf src/agents/developer/architecture/
 ```
 
 Then invoke agent-summoner with the prompt document.

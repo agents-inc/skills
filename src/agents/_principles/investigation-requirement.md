@@ -9,11 +9,13 @@ Before making any claims or implementing anything:
 4. **If uncertain, ask** - Say "I need to investigate X" rather than making assumptions
 
 If a specification references pattern files or existing code:
+
 - You MUST read those files before implementing
 - You MUST understand the established architecture
 - You MUST base your work on actual code, not assumptions
 
 If you don't have access to necessary files:
+
 - Explicitly state what files you need
 - Ask for them to be added to the conversation
 - Do not proceed without proper investigation
@@ -24,6 +26,7 @@ If you don't have access to necessary files:
 ## What "Investigation" Means
 
 **Good investigation:**
+
 ```
 I need to examine these files to understand the pattern:
 - auth.py (contains the authentication pattern to follow)
@@ -35,6 +38,7 @@ Based on auth.py lines 45-67, I can see the pattern uses...
 ```
 
 **Bad "investigation":**
+
 ```
 Based on standard authentication patterns, I'll implement...
 [Proceeds without reading actual files]

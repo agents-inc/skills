@@ -106,7 +106,7 @@ const VALIDATION_TARGETS: ValidationTarget[] = [
     name: "Agent Definition",
     schema: "agent.schema.json",
     pattern: "**/agent.yaml",
-    baseDir: "src/agent-sources",
+    baseDir: "src/agents",
   },
   {
     name: "Skill Frontmatter",

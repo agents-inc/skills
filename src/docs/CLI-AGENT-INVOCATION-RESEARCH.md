@@ -28,12 +28,13 @@ Skills Repository                    User's Repository
 ├── agent-summoner.md                    └── skills/  (copied skills)
 └── pattern-scout.md
                                      ❌ No meta-agents
-src/core-prompts/                    ❌ No core prompts
+src/agents/_principles/              ❌ No principles
 ├── core-principles.md               ❌ No generation capability
 └── ...
 ```
 
 Users can:
+
 - ✅ Use pre-built skills (via `cc init`)
 - ❌ Generate custom skills (requires meta-agents)
 - ❌ Generate custom agents (requires meta-agents)
@@ -76,6 +77,7 @@ claude --agents '{
 ```
 
 This means:
+
 - **No files need to be written to the user's repository**
 - **The meta-agent is ephemeral** - fetched, used, discarded
 - **Full agent semantics preserved** - model, tools, prompt
@@ -162,9 +164,9 @@ This means:
 ```typescript
 // src/cli/commands/create-skill.ts
 
-import { execSync } from 'child_process';
-import { downloadTemplate } from 'giget';
-import matter from 'gray-matter';
+import { execSync } from "child_process";
+import { downloadTemplate } from "giget";
+import matter from "gray-matter";
 
 interface AgentDefinition {
   description: string;
@@ -176,17 +178,17 @@ interface AgentDefinition {
 async function createSkillWithGeneration(
   skillPath: string,
   topic: string,
-  options: { source?: string }
+  options: { source?: string },
 ) {
-  const source = options.source ?? 'github:claude-collective/skills';
+  const source = options.source ?? "github:claude-collective/skills";
 
   // 1. Scaffold local skill template (the only file written to user's repo)
   await scaffoldSkillTemplate(skillPath);
 
   // 2. Fetch skill-summoner from remote (in memory via temp dir)
   const tempDir = await downloadTemplate(`${source}/.claude/agents`, {
-    dir: '.cc-temp',
-    force: true
+    dir: ".cc-temp",
+    force: true,
   });
 
   const agentContent = await Bun.file(`${tempDir}/skill-summoner.md`).text();
@@ -199,10 +201,10 @@ async function createSkillWithGeneration(
     description: frontmatter.description,
     prompt: body,
     model: frontmatter.model,
-    tools: frontmatter.tools?.split(',').map((t: string) => t.trim())
+    tools: frontmatter.tools?.split(",").map((t: string) => t.trim()),
   };
 
-  const agentsJson = JSON.stringify({ 'skill-summoner': agentDef });
+  const agentsJson = JSON.stringify({ "skill-summoner": agentDef });
 
   // 5. Clean up temp directory
   await rm(tempDir, { recursive: true });
@@ -212,7 +214,7 @@ async function createSkillWithGeneration(
 
   execSync(
     `claude --agents '${agentsJson}' --agent skill-summoner -p "${prompt}"`,
-    { stdio: 'inherit' }
+    { stdio: "inherit" },
   );
 }
 ```
@@ -221,13 +223,13 @@ async function createSkillWithGeneration(
 
 ## Agent Semantics Comparison
 
-| Mechanism | Fresh Context | Tool Restrictions | Model Selection | Progressive Skill Loading |
-|-----------|---------------|-------------------|-----------------|---------------------------|
-| **Task tool sub-agent** | ✅ | ✅ | ✅ | ✅ (via frontmatter) |
-| **`--agent` flag** | ✅ | ✅ | ✅ | ⚠️ (baked into prompt) |
-| **`--agents` inline JSON** | ✅ | ✅ | ✅ | ⚠️ (baked into prompt) |
-| **`--system-prompt`** | ✅ | ❌ | ❌ | ❌ |
-| **"Follow this file"** | ❌ | ❌ | ❌ | ❌ |
+| Mechanism                  | Fresh Context | Tool Restrictions | Model Selection | Progressive Skill Loading |
+| -------------------------- | ------------- | ----------------- | --------------- | ------------------------- |
+| **Task tool sub-agent**    | ✅            | ✅                | ✅              | ✅ (via frontmatter)      |
+| **`--agent` flag**         | ✅            | ✅                | ✅              | ⚠️ (baked into prompt)    |
+| **`--agents` inline JSON** | ✅            | ✅                | ✅              | ⚠️ (baked into prompt)    |
+| **`--system-prompt`**      | ✅            | ❌                | ❌              | ❌                        |
+| **"Follow this file"**     | ❌            | ❌                | ❌              | ❌                        |
 
 The `--agents` inline JSON approach provides **nearly full sub-agent semantics**. The only limitation is that skills must be baked into the prompt rather than progressively loaded, which is acceptable for meta-agents that have their context pre-compiled.
 
@@ -237,15 +239,16 @@ The `--agents` inline JSON approach provides **nearly full sub-agent semantics**
 
 These pre-compiled agents should be available for CLI invocation:
 
-| Agent | Purpose | Key Tools |
-|-------|---------|-----------|
-| `skill-summoner` | Create new skills via research | WebSearch, WebFetch, Write |
-| `agent-summoner` | Create new agents | Read, Write, Grep |
-| `pattern-scout` | Extract patterns from codebases | Read, Grep, Glob |
+| Agent            | Purpose                         | Key Tools                  |
+| ---------------- | ------------------------------- | -------------------------- |
+| `skill-summoner` | Create new skills via research  | WebSearch, WebFetch, Write |
+| `agent-summoner` | Create new agents               | Read, Write, Grep          |
+| `pattern-scout`  | Extract patterns from codebases | Read, Grep, Glob           |
 
 ### Pre-Compilation Requirements
 
 Meta-agents must be **self-contained** with all context baked in:
+
 - Core prompts embedded (not referenced)
 - Bibles summarized or embedded
 - No dependencies on local files
@@ -318,6 +321,7 @@ CLI agent invocation works!
 ```
 
 **Confirmed:**
+
 - Auth is inherited through subprocesses
 - `--agents` JSON flag works for inline agent definitions
 - `--agent` flag can reference an inline-defined agent
@@ -352,13 +356,13 @@ This runs the inline agent invocation test and confirms the full chain works.
 
 ### What Users Can Do Without Cloning
 
-| Capability | Before | After |
-|------------|--------|-------|
-| Use pre-built skills | ✅ `cc init` | ✅ `cc init` |
-| Create custom skills | ❌ Clone repo | ✅ `cc create skill --generate` |
-| Create custom agents | ❌ Clone repo | ✅ `cc create agent --generate` |
-| Modify core prompts | ❌ Clone repo | ⚠️ `cc fetch core-prompts` (future) |
-| Contribute back | ❌ Clone repo | ❌ Clone repo (intentional) |
+| Capability           | Before        | After                             |
+| -------------------- | ------------- | --------------------------------- |
+| Use pre-built skills | ✅ `cc init`  | ✅ `cc init`                      |
+| Create custom skills | ❌ Clone repo | ✅ `cc create skill --generate`   |
+| Create custom agents | ❌ Clone repo | ✅ `cc create agent --generate`   |
+| Modify principles    | ❌ Clone repo | ⚠️ `cc fetch principles` (future) |
+| Contribute back      | ❌ Clone repo | ❌ Clone repo (intentional)       |
 
 ### Repository Separation
 
@@ -384,19 +388,19 @@ Bibles                                Compiled agents
 
 ## Related Documents
 
-| Document | Purpose |
-|----------|---------|
-| `TODO.md` | Implementation tracking |
-| `CLI-DATA-DRIVEN-ARCHITECTURE.md` | Overall CLI architecture |
-| `SKILL-ATOMICITY-BIBLE.md` | Skill design principles |
-| `PROMPT_BIBLE.md` | Prompt engineering patterns |
+| Document                          | Purpose                     |
+| --------------------------------- | --------------------------- |
+| `TODO.md`                         | Implementation tracking     |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md` | Overall CLI architecture    |
+| `SKILL-ATOMICITY-BIBLE.md`        | Skill design principles     |
+| `PROMPT_BIBLE.md`                 | Prompt engineering patterns |
 
 ---
 
 ## Decision Log
 
-| Date | Decision | Rationale |
-|------|----------|-----------|
+| Date       | Decision                   | Rationale                               |
+| ---------- | -------------------------- | --------------------------------------- |
 | 2026-01-22 | Use `--agents` inline JSON | No file writes needed, ephemeral agents |
-| 2026-01-22 | Pre-compile meta-agents | Self-contained, no dependencies |
-| 2026-01-22 | Fetch via giget to temp | Leverage existing infrastructure |
+| 2026-01-22 | Pre-compile meta-agents    | Self-contained, no dependencies         |
+| 2026-01-22 | Fetch via giget to temp    | Leverage existing infrastructure        |

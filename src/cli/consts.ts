@@ -29,10 +29,10 @@ export const SKILLS_DIR_PATH = "src/skills";
 
 // Directory paths relative to project root
 export const DIRS = {
-  agents: "src/agent-sources",
+  agents: "src/agents",
   skills: "src/skills",
   stacks: "src/stacks",
-  corePrompts: "src/core-prompts",
-  templates: "src/templates",
+  principles: "src/agents/_principles",
+  templates: "src/agents/_templates",
   commands: "src/commands",
 } as const;

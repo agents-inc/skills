@@ -285,7 +285,7 @@ apps/{app-name}/
 
 When creating this agent:
 
-1. Create source files in `src/agent-sources/developer/architecture/`
+1. Create source files in `src/agents/developer/architecture/`
 2. Use all required XML tags from CLAUDE_ARCHITECTURE_BIBLE.md
 3. Include expansion modifiers in intro.md
 4. Use `**(You MUST ...)**` format for critical requirements
