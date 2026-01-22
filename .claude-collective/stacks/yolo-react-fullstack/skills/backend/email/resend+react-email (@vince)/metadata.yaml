@@ -1,0 +1,21 @@
+category: email
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Resend
+cli_description: Transactional email templates
+usage_guidance: Use when sending transactional emails or building React Email templates.
+compatible_with: []
+requires_setup:
+  - setup/resend
+tags:
+  - resend
+  - react-email
+  - email
+  - templates
+  - transactional
+forked_from:
+  skill_id: backend/email-resend+react-email (@vince)
+  version: 1
+  content_hash: 33804c7
+  date: 2026-01-22

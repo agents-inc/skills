@@ -1,0 +1,22 @@
+category: observability
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Observability
+cli_description: Logging and error tracking
+usage_guidance: Use when implementing structured logging, error tracking, or performance monitoring.
+compatible_with: []
+requires_setup:
+  - setup/observability
+tags:
+  - pino
+  - sentry
+  - axiom
+  - logging
+  - error-tracking
+  - monitoring
+forked_from:
+  skill_id: backend/observability+axiom+pino+sentry (@vince)
+  version: 1
+  content_hash: cfd9d0d
+  date: 2026-01-22

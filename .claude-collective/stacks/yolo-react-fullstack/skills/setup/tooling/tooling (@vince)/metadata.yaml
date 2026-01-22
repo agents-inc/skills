@@ -1,0 +1,24 @@
+category: tooling
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Build Tooling
+cli_description: Build tooling and linting
+usage_guidance: Use when configuring ESLint, Prettier, TypeScript, Vite, or git hooks for a project.
+compatible_with:
+  - setup/turborepo
+tags:
+  - eslint
+  - prettier
+  - typescript
+  - vite
+  - rolldown
+  - configuration
+  - linting
+  - formatting
+  - bundler
+forked_from:
+  skill_id: setup/tooling (@vince)
+  version: 1
+  content_hash: e89a14d
+  date: 2026-01-22

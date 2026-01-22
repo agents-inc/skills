@@ -1,0 +1,21 @@
+category: performance
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Backend Performance
+cli_description: Query and caching optimization
+usage_guidance: Use when optimizing database queries, implementing caching, or improving API response times.
+compatible_with:
+  - backend/database
+  - backend/api
+tags:
+  - performance
+  - query-optimization
+  - caching
+  - indexing
+  - backend
+forked_from:
+  skill_id: backend/performance (@vince)
+  version: 1
+  content_hash: "2258087"
+  date: 2026-01-22

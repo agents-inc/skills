@@ -1,0 +1,28 @@
+category: frontend
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Accessibility
+cli_description: WCAG accessibility patterns
+usage_guidance: Use when implementing WCAG compliance, ARIA attributes, or keyboard navigation.
+compatible_with:
+  - frontend/react
+tags:
+  - wcag
+  - wcag-22
+  - aria
+  - keyboard-navigation
+  - a11y
+  - accessibility
+  - screen-reader
+  - axe-core
+  - jest-axe
+  - vitest-axe
+  - cypress-axe
+  - prefers-reduced-motion
+  - focus-management
+forked_from:
+  skill_id: frontend/accessibility (@vince)
+  version: 1
+  content_hash: 275150f
+  date: 2026-01-22
