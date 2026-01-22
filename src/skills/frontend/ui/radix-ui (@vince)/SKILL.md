@@ -1,3 +1,8 @@
+---
+name: frontend/radix-ui (@vince)
+description: Unstyled accessible UI primitives
+---
+
 # Radix UI Primitives
 
 > **Quick Guide:** Radix UI provides unstyled, accessible primitives for building design systems. Use compound component patterns (Root, Trigger, Content), `asChild` for polymorphism, and `data-state` attributes for animations. Focus on behavior and accessibility - defer styling decisions to your styling solution. **Current: v1.4.x (May 2025)** - Full React 19 and RSC compatibility with new preview primitives.

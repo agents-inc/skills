@@ -1,36 +1,17 @@
-name: sse
-id: frontend/realtime/sse (@vince)
+# yaml-language-server: $schema=../../../../../schemas/metadata.schema.json
 category: frontend/realtime
-description: Server-Sent Events for unidirectional server-to-client streaming, EventSource API, fetch streaming, reconnection patterns, message parsing
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Server-Sent Events
 cli_description: Server-to-client streaming
 usage_guidance: Use when implementing Server-Sent Events for server-to-client streaming.
 tags:
   - sse
   - server-sent-events
   - eventsource
-  - text/event-stream
   - streaming
   - realtime
   - server-push
-  - one-way-streaming
   - fetch-streaming
   - llm-streaming
-keywords:
-  - SSE
-  - Server-Sent Events
-  - EventSource
-  - text/event-stream
-  - onmessage
-  - server push
-  - one-way streaming
-  - real-time updates
-  - Last-Event-ID
-  - fetch streaming
-  - ReadableStream
-  - streaming response
-  - LLM streaming
-  - AI streaming
-  - token streaming
-version: 1
-cli_name: Server-Sent Events
-author: "@vince"

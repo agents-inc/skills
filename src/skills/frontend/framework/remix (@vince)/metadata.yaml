@@ -16,14 +16,10 @@ tags:
   - ssr
   - loaders
   - actions
-  - clientAction
+  - client-action
   - single-fetch
   - progressive-enhancement
 compatible_with:
   - frontend/styling/*
   - frontend/testing/*
-notes: |
-  Remix has merged into React Router v7. This skill documents Remix v2 patterns
-  which remain valid. json() and defer() are deprecated - see migration notice.
-  Added React Router v7 patterns: clientAction, generated types, Single Fetch.
 

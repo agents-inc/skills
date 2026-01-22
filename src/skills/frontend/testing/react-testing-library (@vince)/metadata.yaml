@@ -14,7 +14,7 @@ tags:
   - testing
   - component-testing
   - accessibility
-  - userEvent
+  - user-event
   - queries
   - async-testing
-  - renderHook
+  - render-hook

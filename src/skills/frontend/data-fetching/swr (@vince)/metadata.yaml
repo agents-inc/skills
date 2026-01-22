@@ -18,5 +18,5 @@ tags:
   - stale-while-revalidate
   - react-hooks
   - vercel
-  - useSWRMutation
+  - use-swr-mutation
   - preload

@@ -11,7 +11,7 @@ tags:
   - angular-19
   - standalone
   - signals
-  - linkedSignal
+  - linked-signal
   - resource
   - components
   - control-flow

@@ -10,7 +10,7 @@ compatible_with:
   - frontend/react
 tags:
   - wcag
-  - wcag-2.2
+  - wcag-2-2
   - aria
   - keyboard-navigation
   - a11y

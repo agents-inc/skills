@@ -1,3 +1,8 @@
+---
+name: frontend/jotai (@vince)
+description: Atomic state management with auto-dependency tracking
+---
+
 # Jotai Atomic State Management
 
 > **Quick Guide:** Jotai provides atomic, bottom-up state management with automatic dependency tracking. Use primitive atoms for simple values, derived atoms for computed state, and async atoms with Suspense for data loading. Components only re-render when their specific atoms change.

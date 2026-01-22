@@ -11,9 +11,9 @@ tags:
   - react-19
   - components
   - hooks
-  - useActionState
-  - useFormStatus
-  - useOptimistic
+  - use-action-state
+  - use-form-status
+  - use-optimistic
   - use
   - actions
   - jsx

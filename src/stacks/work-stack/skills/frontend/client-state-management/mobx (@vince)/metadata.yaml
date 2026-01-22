@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=../../../../../../schemas/metadata.schema.json
-category: state
+category: client-state
 category_exclusive: true
 author: "@vince"
 version: 1

@@ -13,6 +13,6 @@ tags:
   - internationalization
   - localization
   - translations
-  - ICU
-  - FormattedMessage
-  - useIntl
+  - icu
+  - formatted-message
+  - use-intl

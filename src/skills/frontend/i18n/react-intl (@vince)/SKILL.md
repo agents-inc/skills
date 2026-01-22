@@ -1,3 +1,8 @@
+---
+name: frontend/react-intl (@vince)
+description: ICU message format internationalization
+---
+
 # React-Intl (FormatJS) Internationalization Patterns
 
 > **Quick Guide:** Use react-intl for internationalization with ICU Message Format. `FormattedMessage` for JSX content, `useIntl` for string attributes and programmatic use, `defineMessages` for extractable message descriptors. Wrap app with `IntlProvider` and configure `onError` for missing translations.

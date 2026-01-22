@@ -8,14 +8,14 @@ cli_description: Vue 3 Composition API
 usage_guidance: Use when building Vue 3 apps with Composition API, composables, or reactivity.
 tags:
   - vue
-  - vue-3-5
+  - vue-35
   - composition-api
   - script-setup
   - composables
   - reactivity
-  - defineModel
-  - useTemplateRef
-  - useId
+  - define-model
+  - use-template-ref
+  - use-id
 compatible_with:
   - frontend/styling/*
   - frontend/testing/*

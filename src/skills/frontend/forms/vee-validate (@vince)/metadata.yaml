@@ -10,8 +10,8 @@ tags:
   - forms
   - vee-validate
   - vue
-  - useForm
-  - useField
-  - defineField
-  - useFieldArray
+  - use-form
+  - use-field
+  - define-field
+  - use-field-array
   - validation

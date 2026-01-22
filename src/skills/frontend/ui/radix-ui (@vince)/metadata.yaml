@@ -13,7 +13,7 @@ tags:
   - headless
   - accessibility
   - compound-components
-  - asChild
+  - as-child
   - dialog
   - popover
   - tooltip

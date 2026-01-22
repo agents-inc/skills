@@ -1,3 +1,8 @@
+---
+name: frontend/next-intl (@vince)
+description: Type-safe i18n for Next.js App Router
+---
+
 # next-intl Internationalization Patterns
 
 > **Quick Guide:** Use next-intl for type-safe internationalization in Next.js App Router. `useTranslations` for messages, `useFormatter` for dates/numbers, middleware for locale detection. Call `setRequestLocale(locale)` for static rendering.

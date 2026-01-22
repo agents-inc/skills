@@ -14,10 +14,10 @@ tags:
   - testing
   - component-testing
   - mount
-  - shallowMount
+  - shallow-mount
   - wrapper
   - trigger
-  - setValue
-  - flushPromises
+  - set-value
+  - flush-promises
   - composables
   - pinia-testing

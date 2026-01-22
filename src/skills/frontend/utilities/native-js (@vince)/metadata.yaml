@@ -15,6 +15,6 @@ tags:
   - array-methods
   - object-methods
   - set-operations
-  - structuredClone
+  - structured-clone
   - optional-chaining
   - immutable-arrays

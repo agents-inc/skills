@@ -18,6 +18,6 @@ tags:
   - subscriptions
   - optimistic-updates
   - suspense
-  - useSuspenseQuery
-  - useLoadableQuery
+  - use-suspense-query
+  - use-loadable-query
   - apollo-client-v4

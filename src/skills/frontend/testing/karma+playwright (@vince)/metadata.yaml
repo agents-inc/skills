@@ -9,7 +9,7 @@ usage_guidance: Use when working with Karma/Mocha tests in Photoroom codebase.
 compatible_with:
   - frontend/react
   - frontend/mobx
-requires:
+requires: []
 tags:
   - testing
   - karma

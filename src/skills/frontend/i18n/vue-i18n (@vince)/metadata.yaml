@@ -12,6 +12,6 @@ tags:
   - internationalization
   - localization
   - translations
-  - Vue 3
-  - Composition API
+  - vue-3
+  - composition-api
   - pluralization

@@ -16,6 +16,6 @@ tags:
   - design-tokens
   - photoroom
   - container-queries
-  - 3d-transforms
+  - transforms-3d
   - oklch
   - theme-directive

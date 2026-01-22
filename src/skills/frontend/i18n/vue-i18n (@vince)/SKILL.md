@@ -1,3 +1,8 @@
+---
+name: frontend/vue-i18n (@vince)
+description: Type-safe i18n for Vue 3 Composition API
+---
+
 # vue-i18n Internationalization Patterns
 
 > **Quick Guide:** Use vue-i18n v11+ for type-safe internationalization in Vue 3. `useI18n` composable for translations, `d()` for dates, `n()` for numbers, `i18n-t` component for rich text. Set `legacy: false` for Composition API mode (Legacy API is deprecated in v11, removed in v12).

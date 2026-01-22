@@ -1,3 +1,8 @@
+---
+name: frontend/offline-first (@vince)
+description: Local-first architecture with sync queues
+---
+
 # Offline-First Application Patterns
 
 > **Quick Guide:** Build applications that work primarily with local data, treating network connectivity as an enhancement. Use IndexedDB (via Dexie.js 4.x or idb 8.x) as the single source of truth. Implement sync queues for reliable background synchronization. Use optimistic UI patterns for instant feedback. Note: Background Sync API is experimental with limited browser support (Chrome/Edge only).

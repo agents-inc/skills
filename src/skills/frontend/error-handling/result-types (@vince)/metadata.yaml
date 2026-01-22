@@ -15,9 +15,9 @@ tags:
   - error-handling
   - railway-oriented-programming
   - typed-errors
-  - flatMap
-  - andThen
-  - tryCatch
+  - flat-map
+  - and-then
+  - try-catch
   - discriminated-union
   - neverthrow
   - fp-ts

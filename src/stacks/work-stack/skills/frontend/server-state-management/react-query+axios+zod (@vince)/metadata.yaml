@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=../../../../../../schemas/metadata.schema.json
-category: data-fetching
+category: server-state
 category_exclusive: true
 author: "@vince"
 version: 1

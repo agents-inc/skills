@@ -11,7 +11,7 @@ tags:
   - signals
   - fine-grained-reactivity
   - stores
-  - createResource
+  - create-resource
   - jsx
   - suspense
 compatible_with:

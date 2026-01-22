@@ -1,76 +1,16 @@
-name: View Transitions API
-id: frontend/animation/view-transitions (@vince)
+# yaml-language-server: $schema=../../../../../schemas/metadata.schema.json
 category: frontend/animation
-description: >
-  Native View Transitions API patterns - same-document SPA transitions,
-  cross-document MPA transitions, shared element hero animations,
-  pseudo-element styling, feature detection, and accessibility.
+category_exclusive: false
+author: "@vince"
 version: 1
-author: vince
 cli_name: View Transitions
 cli_description: Page transition animations
 usage_guidance: Use when implementing page transitions with View Transitions API.
-
-keywords:
-  - View Transitions API
-  - startViewTransition
-  - view-transition-name
-  - view-transition-class
-  - "@view-transition"
-  - "::view-transition"
-  - "::view-transition-old"
-  - "::view-transition-new"
-  - "::view-transition-group"
-  - "::view-transition-image-pair"
-  - pageswap
-  - pagereveal
-  - ViewTransition
-  - active-view-transition-type
-  - shared element transition
-  - hero animation
-  - page transitions
-  - MPA transitions
-  - cross-document navigation
-  - match-element
-
-triggers:
-  - view transition
-  - page transition
-  - state transition animation
-  - cross document transition
-  - shared element
-  - hero image animation
-  - startViewTransition
-  - view-transition-name
-  - MPA animation
-  - native page animation
-
-files:
-  - SKILL.md
-  - reference.md
-  - examples/core.md
-  - examples/spa.md
-  - examples/shared-elements.md
-
-related_skills:
-  - frontend/animation/framer-motion (@vince)
-  - frontend/accessibility (@vince)
-
-prerequisites: []
-
-tech_stack:
-  - View Transitions API (browser native)
-  - CSS animations
-  - Web Animations API
-  - JavaScript/TypeScript
-
-browser_support:
-  chrome: "111+"
-  safari: "18+"
-  firefox: "144+"
-  edge: "111+"
-  cross_document:
-    chrome: "126+"
-    safari: partial
-    firefox: planned
-    edge: "126+"
+tags:
+  - view-transitions
+  - page-transitions
+  - shared-element
+  - hero-animation
+  - spa-transitions
+  - mpa-transitions
+  - css-animations

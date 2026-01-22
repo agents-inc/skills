@@ -9,7 +9,7 @@ usage_guidance: Use when building forms in React with validation, field arrays, 
 tags:
   - forms
   - react-hook-form
-  - useForm
-  - useFieldArray
-  - Controller
+  - use-form
+  - use-field-array
+  - controller
   - validation

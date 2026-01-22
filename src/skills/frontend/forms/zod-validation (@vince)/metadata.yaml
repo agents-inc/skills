@@ -3,7 +3,6 @@ category: forms
 category_exclusive: false
 author: "@vince"
 version: 1
-library_version: "v3.23 (v4 notes included)"
 cli_name: Zod
 cli_description: Schema validation
 usage_guidance: Use when defining validation schemas, type inference, or data transforms.
