@@ -54,6 +54,7 @@ description: Playwright E2E, Vitest, React Testing Library - E2E for user flows,
 - Feature-based test organization (co-located with code)
 
 **Detailed Resources:**
+
 - For E2E and unit test examples, see [examples/core.md](examples/core.md)
 - For integration test examples, see [examples/integration.md](examples/integration.md)
 - For anti-patterns (what NOT to test), see [examples/anti-patterns.md](examples/anti-patterns.md)

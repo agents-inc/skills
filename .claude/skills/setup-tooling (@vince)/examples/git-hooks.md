@@ -55,7 +55,12 @@ cd apps/client-react && bun run lint
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ]
 }
 ```
 
@@ -102,6 +107,7 @@ echo "bunx lint-staged" > .husky/pre-commit
 ```
 
 **What `husky init` does:**
+
 - Creates `.husky/` directory with a default `pre-commit` hook
 - Adds `"prepare": "husky"` to your `package.json` scripts
 
@@ -184,14 +190,14 @@ export default {
 
 ## Pre-commit Timing Guidelines
 
-| Task | Time | Pre-commit? |
-|------|------|-------------|
-| lint-staged (staged files only) | < 5s | Yes |
-| Prettier format | < 2s | Yes |
-| Type check (--noEmit) | < 10s | Yes |
-| Full test suite | > 30s | No (CI) |
-| E2E tests | > 60s | No (CI) |
-| Full build | > 30s | No (CI) |
+| Task                            | Time  | Pre-commit? |
+| ------------------------------- | ----- | ----------- |
+| lint-staged (staged files only) | < 5s  | Yes         |
+| Prettier format                 | < 2s  | Yes         |
+| Type check (--noEmit)           | < 10s | Yes         |
+| Full test suite                 | > 30s | No (CI)     |
+| E2E tests                       | > 60s | No (CI)     |
+| Full build                      | > 30s | No (CI)     |
 
 **Rule of thumb:** Pre-commit should take < 10 seconds. Anything slower goes to pre-push or CI.
 

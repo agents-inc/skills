@@ -70,6 +70,7 @@
 ### Step 1: Get Correlation ID
 
 Find the correlation ID from:
+
 - Response headers: `x-correlation-id`
 - Error reports in Sentry
 - User-reported issue (if client shows correlation ID)
@@ -106,6 +107,7 @@ Find the correlation ID from:
 ### Step 5: Check Sentry
 
 If an error was captured:
+
 1. Search Sentry by correlation ID tag
 2. Review stack trace with source maps
 3. Check user context and breadcrumbs

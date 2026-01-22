@@ -78,15 +78,11 @@ export async function GET(request: NextRequest) {
 ### Good Example - Local-only evaluation for performance
 
 ```typescript
-const flag = await posthog.isFeatureEnabled(
-  FLAG_BETA_DASHBOARD,
-  userId,
-  {
-    personProperties: { plan: "enterprise" },
-    // Only evaluate locally - don't fall back to server
-    onlyEvaluateLocally: true,
-  }
-);
+const flag = await posthog.isFeatureEnabled(FLAG_BETA_DASHBOARD, userId, {
+  personProperties: { plan: "enterprise" },
+  // Only evaluate locally - don't fall back to server
+  onlyEvaluateLocally: true,
+});
 
 // Returns undefined if local evaluation fails
 if (flag === undefined) {

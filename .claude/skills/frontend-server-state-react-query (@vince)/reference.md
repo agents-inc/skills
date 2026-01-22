@@ -157,7 +157,7 @@ staleTime: STALE_TIME_MS,
 **Medium Priority Issues:**
 
 - ⚠️ **Not using `import type` for type-only imports** - increases bundle size unnecessarily
-- ⚠️ **Incorrect import order** - should be React → external → @repo/* → relative → styles
+- ⚠️ **Incorrect import order** - should be React → external → @repo/\* → relative → styles
 - ⚠️ **Mutating global client config in query functions** - causes race conditions, use per-request meta instead
 - ⚠️ **Missing error boundaries** - unhandled errors crash entire app, wrap with QueryErrorResetBoundary
 - ⚠️ **No try/catch around localStorage** - crashes in private browsing mode

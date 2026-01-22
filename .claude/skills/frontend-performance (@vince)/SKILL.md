@@ -28,6 +28,7 @@ description: Bundle optimization, render performance
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples.md](examples.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -173,13 +174,13 @@ Optimize for Google's Core Web Vitals: LCP < 2.5s, INP < 200ms, CLS < 0.1. These
 // constants/web-vitals.ts
 export const CORE_WEB_VITALS_THRESHOLDS = {
   LCP_SECONDS: 2.5, // Largest Contentful Paint
-  FID_MS: 100,      // First Input Delay
-  INP_MS: 200,      // Interaction to Next Paint (replacing FID)
-  CLS_SCORE: 0.1,   // Cumulative Layout Shift
+  FID_MS: 100, // First Input Delay
+  INP_MS: 200, // Interaction to Next Paint (replacing FID)
+  CLS_SCORE: 0.1, // Cumulative Layout Shift
   FCP_SECONDS: 1.8, // First Contentful Paint
   TTI_SECONDS: 3.8, // Time to Interactive
-  TBT_MS: 300,      // Total Blocking Time
-  TTFB_MS: 800,     // Time to First Byte
+  TBT_MS: 300, // Total Blocking Time
+  TTFB_MS: 800, // Time to First Byte
 } as const;
 ```
 

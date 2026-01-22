@@ -43,7 +43,6 @@ export function getDirs(mode: CompileMode) {
       skills: `${COLLECTIVE_DIR}/skills`, // Future: user-defined skills
       stacks: `${COLLECTIVE_DIR}/${COLLECTIVE_STACKS_SUBDIR}`,
       corePrompts: "src/core-prompts",
-      agentOutputs: "src/agent-outputs",
       templates: "src/templates",
       commands: "src/commands",
     } as const;
@@ -91,19 +90,22 @@ export async function loadAllAgents(
   const agents: Record<string, AgentDefinition> = {};
   const agentSourcesDir = path.join(projectRoot, DIRS.agents);
 
-  const files = await glob("*/agent.yaml", agentSourcesDir);
+  const files = await glob("**/agent.yaml", agentSourcesDir);
 
   for (const file of files) {
     const fullPath = path.join(agentSourcesDir, file);
     const content = await readFile(fullPath);
     const config = parseYaml(content) as AgentYamlConfig;
 
+    // Extract relative directory path (e.g., "backend-developer" or "developer/backend-developer")
+    const agentPath = path.dirname(file);
+
     agents[config.id] = {
       title: config.title,
       description: config.description,
       model: config.model,
       tools: config.tools,
-      output_format: config.output_format,
+      path: agentPath,
     };
 
     verbose(`Loaded agent: ${config.id} from ${file}`);

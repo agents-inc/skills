@@ -3,6 +3,7 @@
 Form state and validation patterns with good/bad comparisons.
 
 **Related Examples:**
+
 - [Core Examples](core.md) - Essential state management patterns (useState, Zustand, Context, URL state)
 
 ---
@@ -102,7 +103,12 @@ const MIN_SALARY = 0;
 const JobFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
-    description: z.string().min(MIN_DESCRIPTION_LENGTH, `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`),
+    description: z
+      .string()
+      .min(
+        MIN_DESCRIPTION_LENGTH,
+        `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+      ),
     salaryMin: z.number().positive().optional(),
     salaryMax: z.number().positive().optional(),
   })

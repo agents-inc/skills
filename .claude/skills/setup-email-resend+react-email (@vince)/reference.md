@@ -323,18 +323,18 @@ export async function POST(req: NextRequest) {
 
 ### Supported CSS Properties
 
-| Property | Gmail | Outlook | Apple Mail |
-|----------|-------|---------|------------|
-| `background-color` | Yes | Yes | Yes |
-| `color` | Yes | Yes | Yes |
-| `font-size` | Yes | Yes | Yes |
-| `padding` | Yes | Yes | Yes |
-| `margin` | Yes | Partial | Yes |
-| `border` | Yes | Yes | Yes |
-| `display: flex` | No | No | Yes |
-| `display: grid` | No | No | Yes |
-| `box-shadow` | No | No | Yes |
-| `border-radius` | Yes | No | Yes |
+| Property           | Gmail | Outlook | Apple Mail |
+| ------------------ | ----- | ------- | ---------- |
+| `background-color` | Yes   | Yes     | Yes        |
+| `color`            | Yes   | Yes     | Yes        |
+| `font-size`        | Yes   | Yes     | Yes        |
+| `padding`          | Yes   | Yes     | Yes        |
+| `margin`           | Yes   | Partial | Yes        |
+| `border`           | Yes   | Yes     | Yes        |
+| `display: flex`    | No    | No      | Yes        |
+| `display: grid`    | No    | No      | Yes        |
+| `box-shadow`       | No    | No      | Yes        |
+| `border-radius`    | Yes   | No      | Yes        |
 
 ### Best Practices for Compatibility
 

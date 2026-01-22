@@ -54,7 +54,8 @@ async function compileAgent(
 ): Promise<string> {
   verbose(`Reading agent files for ${name}...`);
 
-  const agentDir = path.join(projectRoot, DIRS.agents, name);
+  // Use stored path if available, otherwise fall back to name (for backwards compatibility)
+  const agentDir = path.join(projectRoot, DIRS.agents, agent.path || name);
 
   // Read agent-specific files
   const intro = await readFile(path.join(agentDir, "intro.md"));
@@ -78,11 +79,24 @@ async function compileAgent(
     projectRoot,
   );
 
-  // Read output format
-  const outputFormat = await readFileOptional(
-    path.join(projectRoot, DIRS.agentOutputs, `${agent.output_format}.md`),
+  // Extract category from agent path (e.g., "developer" from "developer/backend-developer")
+  const agentPath = agent.path || name;
+  const category = agentPath.split("/")[0];
+  const categoryDir = path.join(projectRoot, DIRS.agents, category);
+
+  // Read output format with cascading resolution:
+  // 1. Try agent-level output-format.md
+  // 2. Fallback to category-level output-format.md
+  let outputFormat = await readFileOptional(
+    path.join(agentDir, "output-format.md"),
     "",
   );
+  if (!outputFormat) {
+    outputFormat = await readFileOptional(
+      path.join(categoryDir, "output-format.md"),
+      "",
+    );
+  }
 
   // Read ending prompts
   const endingPromptsContent = await readCorePrompts(

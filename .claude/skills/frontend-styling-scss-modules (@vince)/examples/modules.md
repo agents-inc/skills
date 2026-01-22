@@ -12,13 +12,13 @@ The Sass module system (`@use` and `@forward`) is the modern way to organize Sas
 
 ### Key Differences from @import
 
-| Feature | @import (Deprecated) | @use (Recommended) |
-|---------|---------------------|-------------------|
-| Scope | Global (pollutes namespace) | Namespaced (explicit) |
-| Loading | Loads multiple times | Loads once per compilation |
-| Private members | Not supported | `_` or `-` prefix = private |
-| Configuration | Implicit via global vars | Explicit via `with` clause |
-| Built-in functions | Global (`darken()`) | Namespaced (`color.scale()`) |
+| Feature            | @import (Deprecated)        | @use (Recommended)           |
+| ------------------ | --------------------------- | ---------------------------- |
+| Scope              | Global (pollutes namespace) | Namespaced (explicit)        |
+| Loading            | Loads multiple times        | Loads once per compilation   |
+| Private members    | Not supported               | `_` or `-` prefix = private  |
+| Configuration      | Implicit via global vars    | Explicit via `with` clause   |
+| Built-in functions | Global (`darken()`)         | Namespaced (`color.scale()`) |
 
 ---
 
@@ -59,7 +59,7 @@ The Sass module system (`@use` and `@forward`) is the modern way to organize Sas
 @use "design-tokens" as *;
 
 .button {
-  padding: $space-md;  // Direct access
+  padding: $space-md; // Direct access
   color: $color-primary;
 }
 ```
@@ -106,8 +106,8 @@ $font-family: system-ui !default;
 
 ```scss
 // Bad Example - Old @import pattern
-@import "variables";  // DEPRECATED
-$primary-color: #ff6600;  // Overwrites globally - dangerous!
+@import "variables"; // DEPRECATED
+$primary-color: #ff6600; // Overwrites globally - dangerous!
 @import "theme";
 ```
 
@@ -145,11 +145,13 @@ $primary-color: #ff6600;  // Overwrites globally - dangerous!
 ```scss
 // _forms.scss
 $border-width: 1px !default;
-@mixin input-base { }
+@mixin input-base {
+}
 
 // _buttons.scss
 $border-width: 2px !default;
-@mixin button-base { }
+@mixin button-base {
+}
 
 // styles/_index.scss
 @forward "forms" as form-*;
@@ -195,35 +197,35 @@ Sass provides built-in modules for common operations. These replace global funct
 @use "sass:math";
 
 // Division (/ operator is deprecated for division)
-$half-width: math.div(100%, 2);  // 50%
+$half-width: math.div(100%, 2); // 50%
 $column: math.div(1, 12) * 100%; // 8.333...%
 
 // Math functions
-$rounded: math.round(4.7);  // 5
-$ceiling: math.ceil(4.1);   // 5
-$floor: math.floor(4.9);    // 4
-$absolute: math.abs(-10);   // 10
-$minimum: math.min(1px, 2px, 3px);  // 1px
-$maximum: math.max(1px, 2px, 3px);  // 3px
+$rounded: math.round(4.7); // 5
+$ceiling: math.ceil(4.1); // 5
+$floor: math.floor(4.9); // 4
+$absolute: math.abs(-10); // 10
+$minimum: math.min(1px, 2px, 3px); // 1px
+$maximum: math.max(1px, 2px, 3px); // 3px
 
 // Constants
-$pi: math.$pi;  // 3.14159...
-$e: math.$e;    // 2.71828...
+$pi: math.$pi; // 3.14159...
+$e: math.$e; // 2.71828...
 
 // Powers and roots
-$squared: math.pow(2, 3);   // 8
-$root: math.sqrt(16);       // 4
+$squared: math.pow(2, 3); // 8
+$root: math.sqrt(16); // 4
 
 // Percentages
-$percent: math.percentage(0.5);  // 50%
+$percent: math.percentage(0.5); // 50%
 ```
 
 **Why good:** Explicit math operations, no ambiguity with CSS `/` separator, access to constants
 
 ```scss
 // Bad Example - Deprecated / operator
-$half: 100px / 2;  // DEPRECATED - ambiguous with CSS separator
-$ratio: 16 / 9;    // DEPRECATED
+$half: 100px / 2; // DEPRECATED - ambiguous with CSS separator
+$ratio: 16 / 9; // DEPRECATED
 ```
 
 **Why bad:** `/` is deprecated for division, ambiguous with CSS grid syntax (`1fr / 2fr`)
@@ -261,8 +263,8 @@ $lightness: color.lightness($primary);
 $alpha: color.alpha($primary);
 
 // Adjust (fixed amount) vs Scale (relative)
-$adjusted: color.adjust($primary, $lightness: -10%);  // Fixed: subtract 10%
-$scaled: color.scale($primary, $lightness: -10%);     // Relative: 10% toward 0%
+$adjusted: color.adjust($primary, $lightness: -10%); // Fixed: subtract 10%
+$scaled: color.scale($primary, $lightness: -10%); // Relative: 10% toward 0%
 
 // Mix colors
 $mixed: color.mix($primary, white, 50%);
@@ -285,14 +287,14 @@ $gray: color.grayscale($primary);
 
 $class-name: "button";
 
-$upper: string.to-upper-case($class-name);  // "BUTTON"
-$lower: string.to-lower-case($class-name);  // "button"
-$length: string.length($class-name);        // 6
-$slice: string.slice($class-name, 1, 4);    // "butt"
-$index: string.index($class-name, "tt");    // 3
-$insert: string.insert($class-name, "-lg", 7);  // "button-lg"
-$quoted: string.quote(button);              // "button"
-$unquoted: string.unquote("button");        // button
+$upper: string.to-upper-case($class-name); // "BUTTON"
+$lower: string.to-lower-case($class-name); // "button"
+$length: string.length($class-name); // 6
+$slice: string.slice($class-name, 1, 4); // "butt"
+$index: string.index($class-name, "tt"); // 3
+$insert: string.insert($class-name, "-lg", 7); // "button-lg"
+$quoted: string.quote(button); // "button"
+$unquoted: string.unquote("button"); // button
 ```
 
 #### sass:list
@@ -302,12 +304,12 @@ $unquoted: string.unquote("button");        // button
 
 $sizes: sm, md, lg, xl;
 
-$first: list.nth($sizes, 1);       // sm
-$length: list.length($sizes);       // 4
+$first: list.nth($sizes, 1); // sm
+$length: list.length($sizes); // 4
 $appended: list.append($sizes, xxl); // sm, md, lg, xl, xxl
 $joined: list.join($sizes, (xxs, xs)); // sm, md, lg, xl, xxs, xs
-$index: list.index($sizes, lg);     // 3
-$has-md: list.index($sizes, md) != null;  // true
+$index: list.index($sizes, lg); // 3
+$has-md: list.index($sizes, md) != null; // true
 ```
 
 #### sass:map
@@ -319,16 +321,21 @@ $breakpoints: (
   sm: 640px,
   md: 768px,
   lg: 1024px,
-  xl: 1280px
+  xl: 1280px,
 );
 
-$value: map.get($breakpoints, md);  // 768px
-$has-key: map.has-key($breakpoints, md);  // true
-$keys: map.keys($breakpoints);      // sm, md, lg, xl
-$values: map.values($breakpoints);  // 640px, 768px, 1024px, 1280px
-$merged: map.merge($breakpoints, (xxl: 1536px));
+$value: map.get($breakpoints, md); // 768px
+$has-key: map.has-key($breakpoints, md); // true
+$keys: map.keys($breakpoints); // sm, md, lg, xl
+$values: map.values($breakpoints); // 640px, 768px, 1024px, 1280px
+$merged: map.merge(
+  $breakpoints,
+  (
+    xxl: 1536px,
+  )
+);
 $removed: map.remove($breakpoints, sm);
-$deep: map.deep-get($nested-map, key1, key2);  // For nested maps
+$deep: map.deep-get($nested-map, key1, key2); // For nested maps
 ```
 
 ---

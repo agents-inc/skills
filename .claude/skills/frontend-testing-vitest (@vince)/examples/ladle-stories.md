@@ -56,6 +56,7 @@ export const FeaturesPage = () => { ... };
 ---
 
 _For more patterns, see:_
+
 - [core.md](core.md) - E2E and Unit testing essentials
 - [integration.md](integration.md) - Integration tests with network mocking
 - [anti-patterns.md](anti-patterns.md) - What NOT to test

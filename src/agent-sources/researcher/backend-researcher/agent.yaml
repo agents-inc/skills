@@ -1,0 +1,9 @@
+id: backend-researcher
+title: Backend Researcher Agent
+description: Read-only backend research specialist - discovers API route patterns, understands database schemas and ORM patterns, catalogs middleware and authentication flows, finds similar service implementations - produces structured findings for backend-developer - invoke for backend research before implementation
+model: opus
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash

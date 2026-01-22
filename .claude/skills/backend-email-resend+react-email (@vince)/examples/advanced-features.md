@@ -35,20 +35,25 @@ interface ScheduledEmailResult {
 }
 
 export async function sendScheduledEmail(
-  options: ScheduledEmailOptions
+  options: ScheduledEmailOptions,
 ): Promise<ScheduledEmailResult> {
   const resend = getResendClient();
 
   // Validate scheduling window (up to 30 days in advance)
   const now = new Date();
-  const maxScheduleDate = new Date(now.getTime() + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000);
+  const maxScheduleDate = new Date(
+    now.getTime() + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000,
+  );
 
   if (options.scheduledAt <= now) {
     return { success: false, error: "Scheduled time must be in the future" };
   }
 
   if (options.scheduledAt > maxScheduleDate) {
-    return { success: false, error: `Cannot schedule more than ${MAX_SCHEDULE_DAYS} days in advance` };
+    return {
+      success: false,
+      error: `Cannot schedule more than ${MAX_SCHEDULE_DAYS} days in advance`,
+    };
   }
 
   try {
@@ -68,7 +73,12 @@ export async function sendScheduledEmail(
       return { success: false, error: error.message };
     }
 
-    console.log("[Email] Scheduled successfully:", data?.id, "for", options.scheduledAt);
+    console.log(
+      "[Email] Scheduled successfully:",
+      data?.id,
+      "for",
+      options.scheduledAt,
+    );
     return { success: true, id: data?.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
@@ -97,7 +107,10 @@ import { ReminderEmail } from "@repo/emails";
 
 const REMINDER_HOUR = 9;
 
-async function scheduleReminderForTomorrow(user: { email: string; name: string }) {
+async function scheduleReminderForTomorrow(user: {
+  email: string;
+  name: string;
+}) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(REMINDER_HOUR, 0, 0, 0);
@@ -150,7 +163,7 @@ interface IdempotentEmailResult {
 }
 
 export async function sendIdempotentEmail(
-  options: IdempotentEmailOptions
+  options: IdempotentEmailOptions,
 ): Promise<IdempotentEmailResult> {
   const resend = getResendClient();
 
@@ -287,13 +300,16 @@ interface TaggedEmailResult {
 }
 
 export async function sendTaggedEmail(
-  options: TaggedEmailOptions
+  options: TaggedEmailOptions,
 ): Promise<TaggedEmailResult> {
   const resend = getResendClient();
 
   // Validate tags
   for (const tag of options.tags) {
-    if (tag.name.length > TAG_KEY_MAX_LENGTH || tag.value.length > TAG_VALUE_MAX_LENGTH) {
+    if (
+      tag.name.length > TAG_KEY_MAX_LENGTH ||
+      tag.value.length > TAG_VALUE_MAX_LENGTH
+    ) {
       return {
         success: false,
         error: `Tag keys and values must be ${TAG_KEY_MAX_LENGTH} characters or less`,
@@ -303,7 +319,8 @@ export async function sendTaggedEmail(
     if (!/^[a-zA-Z0-9_-]+$/.test(tag.name)) {
       return {
         success: false,
-        error: "Tag names must contain only ASCII alphanumeric characters, underscores, or dashes",
+        error:
+          "Tag names must contain only ASCII alphanumeric characters, underscores, or dashes",
       };
     }
   }
@@ -350,7 +367,7 @@ import { NewsletterEmail } from "@repo/emails";
 
 async function sendCampaignEmail(
   user: { email: string; name: string },
-  campaign: { id: string; name: string; variant: "A" | "B" }
+  campaign: { id: string; name: string; variant: "A" | "B" },
 ) {
   const result = await sendTaggedEmail({
     to: user.email,
@@ -398,12 +415,14 @@ interface ScheduledTaggedEmailOptions {
 }
 
 export async function sendScheduledTaggedEmail(
-  options: ScheduledTaggedEmailOptions
+  options: ScheduledTaggedEmailOptions,
 ) {
   const resend = getResendClient();
 
   const now = new Date();
-  const maxScheduleDate = new Date(now.getTime() + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000);
+  const maxScheduleDate = new Date(
+    now.getTime() + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000,
+  );
 
   if (options.scheduledAt <= now || options.scheduledAt > maxScheduleDate) {
     return {
@@ -446,12 +465,12 @@ export type { ScheduledTaggedEmailOptions };
 
 ## Feature Comparison
 
-| Feature | Use Case | Limit | Batch Support |
-|---------|----------|-------|---------------|
-| Scheduled sending | Reminders, time-zone aware | Up to 30 days in advance | ❌ Not supported |
-| Idempotency keys | Prevent duplicates, retry safety | 256 chars, expires 24 hours | ✅ Supported |
-| Tags | Analytics, filtering, A/B testing | 256 chars per key/value | ✅ Supported |
-| Tags + Scheduled | Campaign tracking for scheduled emails | Combined limits apply | ❌ Not supported |
+| Feature           | Use Case                               | Limit                       | Batch Support    |
+| ----------------- | -------------------------------------- | --------------------------- | ---------------- |
+| Scheduled sending | Reminders, time-zone aware             | Up to 30 days in advance    | ❌ Not supported |
+| Idempotency keys  | Prevent duplicates, retry safety       | 256 chars, expires 24 hours | ✅ Supported     |
+| Tags              | Analytics, filtering, A/B testing      | 256 chars per key/value     | ✅ Supported     |
+| Tags + Scheduled  | Campaign tracking for scheduled emails | Combined limits apply       | ❌ Not supported |
 
 ---
 

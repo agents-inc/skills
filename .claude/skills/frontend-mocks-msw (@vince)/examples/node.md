@@ -3,6 +3,7 @@
 > Server worker setup for Node.js test environment. Reference from [SKILL.md](../SKILL.md).
 
 **Related examples:**
+
 - [core.md](core.md) - Package configuration, mock data, variant handlers
 - [browser.md](browser.md) - Browser worker for development
 - [testing.md](testing.md) - Per-test handler overrides

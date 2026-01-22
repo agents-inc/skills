@@ -123,7 +123,12 @@ app.on(["POST", "GET"], "/auth/*", (c) => {
 });
 
 // CORS after auth - preflight requests fail!
-app.use("/auth/*", cors({ /* ... */ }));
+app.use(
+  "/auth/*",
+  cors({
+    /* ... */
+  }),
+);
 ```
 
 **Why it's wrong:** CORS middleware must run before route handlers to handle OPTIONS preflight requests.
@@ -183,6 +188,7 @@ export const auth = betterAuth({
 **Why it's wrong:** Plugins require database tables that don't exist yet.
 
 **What to do instead (Drizzle adapter):** Run the 3-step workflow:
+
 1. `npx @better-auth/cli generate` (generate Better Auth schema)
 2. `npx drizzle-kit generate` (generate migration file)
 3. `npx drizzle-kit migrate` (apply migration)

@@ -21,7 +21,7 @@ const tracer = trace.getTracer("api");
 export async function withSpan<T>(
   spanName: string,
   attributes: Record<string, string | number | boolean>,
-  fn: (span: Span) => Promise<T>
+  fn: (span: Span) => Promise<T>,
 ): Promise<T> {
   return tracer.startActiveSpan(spanName, { attributes }, async (span) => {
     try {
@@ -44,7 +44,10 @@ export async function withSpan<T>(
 /**
  * Create a simple span for synchronous operations
  */
-export function createSpan(spanName: string, attributes?: Record<string, string | number | boolean>): Span {
+export function createSpan(
+  spanName: string,
+  attributes?: Record<string, string | number | boolean>,
+): Span {
   return tracer.startSpan(spanName, { attributes });
 }
 ```
@@ -75,7 +78,7 @@ async function getJobWithCompany(jobId: string) {
 
       span.setAttribute("db.rows_returned", result ? 1 : 0);
       return result;
-    }
+    },
   );
 }
 ```

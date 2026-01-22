@@ -56,7 +56,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 export async function sendEmailWithRetry(
-  options: SendWithRetryOptions
+  options: SendWithRetryOptions,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   const resend = getResendClient();
   const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS;
@@ -82,12 +82,16 @@ export async function sendEmailWithRetry(
 
         // Check if error is retryable
         const isRetryable = RETRYABLE_ERRORS.some((e) =>
-          error.name?.toLowerCase().includes(e)
+          error.name?.toLowerCase().includes(e),
         );
 
         if (isRetryable && attempt < maxRetries) {
-          const delay = INITIAL_RETRY_DELAY_MS * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
-          console.log(`[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`);
+          const delay =
+            INITIAL_RETRY_DELAY_MS *
+            Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+          console.log(
+            `[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`,
+          );
           await sleep(delay);
           continue;
         }
@@ -100,7 +104,9 @@ export async function sendEmailWithRetry(
       lastError = err instanceof Error ? err.message : "Unknown error";
 
       if (attempt < maxRetries) {
-        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+        const delay =
+          INITIAL_RETRY_DELAY_MS *
+          Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
         console.log(`[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`);
         await sleep(delay);
         continue;

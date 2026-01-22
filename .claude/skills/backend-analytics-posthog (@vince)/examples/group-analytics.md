@@ -92,6 +92,7 @@ export { trackMemberInvited };
 
 ```markdown
 In PostHog:
+
 - Trends: "Unique companies" aggregation
 - Funnels: "Aggregating by Unique organizations"
 - Retention: Organization-level retention curves

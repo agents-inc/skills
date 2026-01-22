@@ -62,6 +62,7 @@ description: Resend + React Email templates
 - Tags for analytics and campaign tracking
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Template structure, basic sending (start here)
   - [templates.md](examples/templates.md) - Password Reset, Notification templates
@@ -224,7 +225,9 @@ interface SendEmailResult {
   error?: string;
 }
 
-export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
+export async function sendEmail(
+  options: SendEmailOptions,
+): Promise<SendEmailResult> {
   const resend = getResendClient();
 
   try {
@@ -294,7 +297,7 @@ const RETRYABLE_ERRORS = [
 ```typescript
 // lib/email/send-with-retry.ts
 export async function sendEmailWithRetry(
-  options: SendWithRetryOptions
+  options: SendWithRetryOptions,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   const resend = getResendClient();
   const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS;
@@ -320,12 +323,16 @@ export async function sendEmailWithRetry(
 
         // Check if error is retryable
         const isRetryable = RETRYABLE_ERRORS.some((e) =>
-          error.name?.toLowerCase().includes(e)
+          error.name?.toLowerCase().includes(e),
         );
 
         if (isRetryable && attempt < maxRetries) {
-          const delay = INITIAL_RETRY_DELAY_MS * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
-          console.log(`[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`);
+          const delay =
+            INITIAL_RETRY_DELAY_MS *
+            Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+          console.log(
+            `[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`,
+          );
           await sleep(delay);
           continue;
         }
@@ -338,7 +345,9 @@ export async function sendEmailWithRetry(
       lastError = err instanceof Error ? err.message : "Unknown error";
 
       if (attempt < maxRetries) {
-        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+        const delay =
+          INITIAL_RETRY_DELAY_MS *
+          Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
         await sleep(delay);
         continue;
       }

@@ -31,7 +31,8 @@ The source of truth for the modular agent & skill compilation system.
 
 - TypeScript + LiquidJS compilation pipeline
 - Stack-switching workflow (`bunx compile -s home` vs `bunx compile -s work`)
-- Directory structure (`src/agents.yaml`, `src/agent-sources/`, `src/stacks/`)
+- Directory structure (`src/agents.yaml`, `src/agent-sources/{category}/{agent}/`, `src/stacks/`)
+- Agent categories (developer, reviewer, researcher, planning, pattern, meta, tester)
 - How agents are generic (role + workflow) while skills are stack-specific (implementation patterns)
 - Adding new agents and skills
 - Template system (`src/templates/agent.liquid`)
@@ -69,7 +70,7 @@ Standards for creating AI-optimized documentation (NOT human documentation).
 
 **Covers:**
 
-- Document hierarchy (`llms.txt` → `CONCEPTS.md` → features/)
+- Document hierarchy (`llms.txt` -> `CONCEPTS.md` -> features/)
 - Loading decision trees for AI agents
 - Progressive loading strategy
 - Why AI agents need different documentation than humans
@@ -167,7 +168,21 @@ These foundational instructions are compiled into every agent's context:
 
 ## Agent Definitions
 
-Compiled agent prompts live in `.claude/agents/`. Each agent has a specific role:
+Compiled agent prompts live in `.claude/agents/`. Each agent has a specific role.
+
+### Agent Organization
+
+Agents are organized into 7 categories in `src/agent-sources/`:
+
+| Category      | Path                            | Purpose                           |
+| ------------- | ------------------------------- | --------------------------------- |
+| `developer/`  | `src/agent-sources/developer/`  | Implementation agents             |
+| `reviewer/`   | `src/agent-sources/reviewer/`   | Code review agents                |
+| `researcher/` | `src/agent-sources/researcher/` | Read-only research agents         |
+| `planning/`   | `src/agent-sources/planning/`   | Planning and coordination         |
+| `pattern/`    | `src/agent-sources/pattern/`    | Pattern discovery and critique    |
+| `meta/`       | `src/agent-sources/meta/`       | Meta-level agents (create agents) |
+| `tester/`     | `src/agent-sources/tester/`     | Testing agents                    |
 
 ### Development Agents
 

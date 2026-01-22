@@ -24,36 +24,45 @@ type AuthVariables = {
   userRole: "admin" | "user";
 };
 
-export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
-  const authHeader = c.req.header("Authorization");
+export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
+  async (c, next) => {
+    const authHeader = c.req.header("Authorization");
 
-  if (!authHeader?.startsWith(BEARER_PREFIX)) {
-    return c.json(
-      { error: "unauthorized", message: "Missing or invalid Authorization header" },
-      HTTP_STATUS_UNAUTHORIZED,
-    );
-  }
-
-  const token = authHeader.slice(BEARER_PREFIX_LENGTH);
-
-  try {
-    // IMPORTANT: Always specify the algorithm explicitly (required since v4.11.4)
-    const payload = await verify(token, process.env.JWT_SECRET!, JWT_ALGORITHM);
-
-    if (!payload.userId || typeof payload.userId !== "string") {
-      throw new Error("Invalid token payload");
+    if (!authHeader?.startsWith(BEARER_PREFIX)) {
+      return c.json(
+        {
+          error: "unauthorized",
+          message: "Missing or invalid Authorization header",
+        },
+        HTTP_STATUS_UNAUTHORIZED,
+      );
     }
 
-    c.set("userId", payload.userId);
-    c.set("userRole", (payload.role as "admin" | "user") || "user");
-    await next();
-  } catch (error) {
-    return c.json(
-      { error: "unauthorized", message: "Invalid or expired token" },
-      HTTP_STATUS_UNAUTHORIZED,
-    );
-  }
-});
+    const token = authHeader.slice(BEARER_PREFIX_LENGTH);
+
+    try {
+      // IMPORTANT: Always specify the algorithm explicitly (required since v4.11.4)
+      const payload = await verify(
+        token,
+        process.env.JWT_SECRET!,
+        JWT_ALGORITHM,
+      );
+
+      if (!payload.userId || typeof payload.userId !== "string") {
+        throw new Error("Invalid token payload");
+      }
+
+      c.set("userId", payload.userId);
+      c.set("userRole", (payload.role as "admin" | "user") || "user");
+      await next();
+    } catch (error) {
+      return c.json(
+        { error: "unauthorized", message: "Invalid or expired token" },
+        HTTP_STATUS_UNAUTHORIZED,
+      );
+    }
+  },
+);
 ```
 
 **Why good:** Type-safe Variables means c.get("userId") is typed, explicit algorithm prevents algorithm confusion attacks (CVE-2026-22818), payload validation prevents accepting garbage tokens, default role prevents undefined access
@@ -157,7 +166,8 @@ const RETRY_AFTER_SECONDS = 60;
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 export const rateLimitMiddleware = createMiddleware(async (c, next) => {
-  const clientId = c.req.header("X-API-Key") || c.req.header("X-Forwarded-For") || "anonymous";
+  const clientId =
+    c.req.header("X-API-Key") || c.req.header("X-Forwarded-For") || "anonymous";
   const now = Date.now();
 
   let record = rateLimitStore.get(clientId);
@@ -198,7 +208,7 @@ export const rateLimitMiddleware = createMiddleware(async (c, next) => {
 });
 ```
 
-**Why good:** X-RateLimit-* headers let clients track usage before hitting limit, Retry-After enables proper backoff, API key fallback to IP covers both auth'd and anon
+**Why good:** X-RateLimit-\* headers let clients track usage before hitting limit, Retry-After enables proper backoff, API key fallback to IP covers both auth'd and anon
 
 **Usage:**
 
@@ -266,7 +276,11 @@ export const corsMiddleware = cors({
   },
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization", "X-API-Key"],
-  exposeHeaders: ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+  exposeHeaders: [
+    "X-RateLimit-Limit",
+    "X-RateLimit-Remaining",
+    "X-RateLimit-Reset",
+  ],
   credentials: true,
   maxAge: MAX_AGE_SECONDS,
 });
@@ -373,7 +387,12 @@ export const loggingMiddleware = createMiddleware(async (c, next) => {
 
   console.log(
     JSON.stringify({
-      level: status >= 500 ? LOG_LEVEL_ERROR : status >= 400 ? LOG_LEVEL_WARN : LOG_LEVEL_INFO,
+      level:
+        status >= 500
+          ? LOG_LEVEL_ERROR
+          : status >= 400
+            ? LOG_LEVEL_WARN
+            : LOG_LEVEL_INFO,
       type: "response",
       correlationId,
       method: c.req.method,
@@ -430,7 +449,10 @@ export const cacheMiddleware = createMiddleware(async (c, next) => {
   // Only cache successful GET requests
   if (c.req.method === "GET" && c.res.status === 200) {
     // Public resources (job listings, company profiles)
-    if (c.req.path.startsWith("/api/jobs") || c.req.path.startsWith("/api/companies")) {
+    if (
+      c.req.path.startsWith("/api/jobs") ||
+      c.req.path.startsWith("/api/companies")
+    ) {
       c.header(
         "Cache-Control",
         `public, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`,

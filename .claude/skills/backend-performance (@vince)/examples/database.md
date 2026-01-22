@@ -143,7 +143,10 @@ interface PaginationParams {
 }
 
 async function getJobsPaginated(params: PaginationParams) {
-  const pageSize = Math.min(params.pageSize || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+  const pageSize = Math.min(
+    params.pageSize || DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+  );
   const offset = (params.page - 1) * pageSize;
 
   const [jobsResult, countResult] = await Promise.all([
@@ -205,7 +208,10 @@ async function getJobsCursor(params: CursorParams) {
       query = query.where(
         or(
           lt(jobs.createdAt, cursorJob.createdAt),
-          and(eq(jobs.createdAt, cursorJob.createdAt), lt(jobs.id, cursorJob.id)),
+          and(
+            eq(jobs.createdAt, cursorJob.createdAt),
+            lt(jobs.id, cursorJob.id),
+          ),
         ),
       );
     }
@@ -320,6 +326,7 @@ Solution: PgBouncer in transaction mode
 ```
 
 **When to use PgBouncer:**
+
 - More than 5 application instances
 - Serverless functions (many short-lived connections)
 - Hitting PostgreSQL connection limits

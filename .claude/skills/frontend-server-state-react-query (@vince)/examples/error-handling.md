@@ -215,7 +215,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   const setValue = (value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
 
       if (typeof window !== "undefined") {
@@ -272,7 +273,7 @@ export class APIError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public endpoint: string
+    public endpoint: string,
   ) {
     super(message);
     this.name = "APIError";
@@ -292,7 +293,10 @@ try {
   }
 } catch (error) {
   if (error instanceof APIError) {
-    console.error(`API Error [${error.statusCode}] ${error.endpoint}:`, error.message);
+    console.error(
+      `API Error [${error.statusCode}] ${error.endpoint}:`,
+      error.message,
+    );
   }
 }
 ```

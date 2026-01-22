@@ -19,7 +19,10 @@ interface AuthUser {
 }
 
 // Use these functions in your auth system's email callbacks
-export async function sendVerificationEmail(user: AuthUser, verificationUrl: string) {
+export async function sendVerificationEmail(
+  user: AuthUser,
+  verificationUrl: string,
+) {
   const result = await sendEmailWithRetry({
     to: user.email,
     subject: "Verify your email address",
@@ -69,7 +72,10 @@ Example integration with Better Auth email callbacks.
 ```typescript
 // lib/auth.ts
 import { betterAuth } from "better-auth";
-import { sendVerificationEmail, sendPasswordResetEmail } from "./email/auth-emails";
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "./email/auth-emails";
 
 export const auth = betterAuth({
   // ... other config
@@ -90,12 +96,14 @@ export const auth = betterAuth({
 ## Key Integration Points
 
 **Works with:**
+
 - Authentication systems: sendVerificationEmail and sendResetPassword callbacks
 - API routes: Server-side email sending
 - Analytics: Track email events via webhooks
 - Databases: Store email preferences and events
 
 **Security considerations:**
+
 - Never expose email sending to unauthenticated routes
 - Log failures for monitoring, but don't leak details to users
 - Use retry logic for critical auth emails (verification, password reset)

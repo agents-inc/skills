@@ -221,8 +221,8 @@ export async function resolveAgents(
       tools: definition.tools,
       core_prompts: agentConfig.core_prompts,
       ending_prompts: agentConfig.ending_prompts,
-      output_format: definition.output_format,
       skills: resolvedSkills,
+      path: definition.path,
     };
   }
 

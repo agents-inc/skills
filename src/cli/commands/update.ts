@@ -175,16 +175,10 @@ export const updateCommand = new Command("update")
 
     const matrix = sourceResult.matrix;
 
-    // TODO: Pre-populate wizard with existing selections
-    // For now, start fresh wizard
-    p.log.info("Starting wizard to select new skills...");
-    p.log.info(
-      pc.dim("(Pre-population of existing selections is not yet implemented)"),
-    );
-    console.log("");
-
-    // Run the wizard
-    const result = await runWizard(matrix);
+    // Run the wizard with existing selections pre-populated
+    const result = await runWizard(matrix, {
+      initialSkills: existingConfig.skill_ids,
+    });
 
     if (!result) {
       p.cancel("Cancelled");

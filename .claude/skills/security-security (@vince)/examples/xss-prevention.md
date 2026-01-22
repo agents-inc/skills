@@ -3,6 +3,7 @@
 > XSS prevention patterns including React escaping, DOMPurify sanitization, and CSP headers. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Related Examples:**
+
 - [core.md](core.md) - Essential patterns (secrets, CSRF, cookies)
 - [dependency-security.md](dependency-security.md) - Dependabot, CI security checks
 - [access-control.md](access-control.md) - CODEOWNERS, rate limiting, branch protection
@@ -95,7 +96,7 @@ const securityHeaders = [
       "frame-ancestors 'none'",
       "base-uri 'none'", // Prevent base tag hijacking
       "form-action 'self'",
-    ].join('; ')
+    ].join("; "),
   },
   {
     key: "X-Content-Type-Options",

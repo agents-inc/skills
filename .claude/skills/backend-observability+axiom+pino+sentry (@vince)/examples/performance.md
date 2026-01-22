@@ -20,7 +20,7 @@ const SLOW_API_CALL_THRESHOLD_MS = 3000;
 export async function trackedQuery<T>(
   operation: string,
   query: () => Promise<T>,
-  log: ReturnType<typeof logger.child>
+  log: ReturnType<typeof logger.child>,
 ): Promise<T> {
   const startTime = performance.now();
 
@@ -38,7 +38,10 @@ export async function trackedQuery<T>(
     return result;
   } catch (error) {
     const duration = Math.round(performance.now() - startTime);
-    log.error({ operation, duration, error: (error as Error).message }, "Query failed");
+    log.error(
+      { operation, duration, error: (error as Error).message },
+      "Query failed",
+    );
     throw error;
   }
 }
@@ -50,7 +53,7 @@ export async function trackedApiCall<T>(
   service: string,
   endpoint: string,
   apiCall: () => Promise<T>,
-  log: ReturnType<typeof logger.child>
+  log: ReturnType<typeof logger.child>,
 ): Promise<T> {
   const startTime = performance.now();
 
@@ -69,7 +72,7 @@ export async function trackedApiCall<T>(
     const duration = Math.round(performance.now() - startTime);
     log.error(
       { service, endpoint, duration, error: (error as Error).message },
-      "External API call failed"
+      "External API call failed",
     );
     throw error;
   }
@@ -89,15 +92,18 @@ async function getJobsWithExternalData(log: Logger) {
   const dbJobs = await trackedQuery(
     "jobs.findMany",
     () => db.query.jobs.findMany({ limit: 100 }),
-    log
+    log,
   );
 
   // Track external API call
   const enrichedData = await trackedApiCall(
     "enrichment-api",
     "/api/v1/enrich",
-    () => fetch("https://api.enrichment.com/enrich", { body: JSON.stringify(dbJobs) }),
-    log
+    () =>
+      fetch("https://api.enrichment.com/enrich", {
+        body: JSON.stringify(dbJobs),
+      }),
+    log,
   );
 
   return enrichedData;

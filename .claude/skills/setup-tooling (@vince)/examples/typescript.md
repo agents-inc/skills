@@ -82,16 +82,16 @@
 
 ## Strict Mode Options Explained
 
-| Option | Purpose |
-|--------|---------|
-| `strict: true` | Enables all strict type-checking options |
-| `noImplicitAny: true` | Error on expressions with implied `any` |
-| `strictNullChecks: true` | `null` and `undefined` are distinct types |
-| `noUncheckedIndexedAccess: true` | Add `undefined` to index signature results |
-| `exactOptionalPropertyTypes: true` | Optional properties can't be `undefined` |
-| `noImplicitOverride: true` | Require `override` keyword for inherited methods |
-| `noUnusedLocals: true` | Error on unused local variables |
-| `noUnusedParameters: true` | Error on unused parameters |
+| Option                             | Purpose                                          |
+| ---------------------------------- | ------------------------------------------------ |
+| `strict: true`                     | Enables all strict type-checking options         |
+| `noImplicitAny: true`              | Error on expressions with implied `any`          |
+| `strictNullChecks: true`           | `null` and `undefined` are distinct types        |
+| `noUncheckedIndexedAccess: true`   | Add `undefined` to index signature results       |
+| `exactOptionalPropertyTypes: true` | Optional properties can't be `undefined`         |
+| `noImplicitOverride: true`         | Require `override` keyword for inherited methods |
+| `noUnusedLocals: true`             | Error on unused local variables                  |
+| `noUnusedParameters: true`         | Error on unused parameters                       |
 
 ---
 

@@ -244,11 +244,11 @@ Package configurations can now extend and append to inherited arrays instead of 
 
 **New Task Options:**
 
-| Option | Type | Purpose |
-|--------|------|---------|
-| `description` | `string` | Human-readable task documentation |
-| `interruptible` | `boolean` | Allow `turbo watch` to restart persistent tasks |
-| `with` | `string[]` | Tasks to run alongside this task |
+| Option          | Type       | Purpose                                         |
+| --------------- | ---------- | ----------------------------------------------- |
+| `description`   | `string`   | Human-readable task documentation               |
+| `interruptible` | `boolean`  | Allow `turbo watch` to restart persistent tasks |
+| `with`          | `string[]` | Tasks to run alongside this task                |
 
 **Package Boundaries (Tags):**
 
@@ -286,6 +286,7 @@ npx @turbo/codemod migrate
 ```
 
 Key changes:
+
 - `pipeline` renamed to `tasks`
 - `outputMode` renamed to `outputLogs`
 - `globalDotEnv` and `dotEnv` removed (use `inputs` instead)

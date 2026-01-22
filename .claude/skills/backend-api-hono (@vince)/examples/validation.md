@@ -97,7 +97,10 @@ export const ErrorResponseSchema = z
     message: z.string(),
   })
   .openapi("ErrorResponse", {
-    example: { error: "Failed to fetch jobs", message: "Database connection timeout" },
+    example: {
+      error: "Failed to fetch jobs",
+      message: "Database connection timeout",
+    },
   });
 
 // Type Exports

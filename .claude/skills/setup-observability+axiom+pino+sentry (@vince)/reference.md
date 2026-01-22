@@ -189,12 +189,15 @@ beforeSend(event, hint) {
 ```typescript
 // ❌ ANTI-PATTERN: One config file for everything
 // sentry.config.ts
-Sentry.init({ /* ... */ });
+Sentry.init({
+  /* ... */
+});
 ```
 
 **Why it's wrong:** Client, server, and edge runtimes have different capabilities and requirements.
 
 **What to do instead:** Create three separate config files:
+
 - `sentry.client.config.ts` - With replay integration
 - `sentry.server.config.ts` - With local variables capture
 - `sentry.edge.config.ts` - With limited features
@@ -244,6 +247,7 @@ If upgrading from v8 to v9:
 ## Resources
 
 **Official Documentation:**
+
 - [Axiom Documentation](https://axiom.co/docs)
 - [Sentry Next.js SDK](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
 - [Sentry v8 to v9 Migration](https://docs.sentry.io/platforms/javascript/guides/nextjs/migration/v8-to-v9/)
@@ -251,6 +255,7 @@ If upgrading from v8 to v9:
 - [next-axiom GitHub](https://github.com/axiomhq/next-axiom)
 
 **Related Skills:**
+
 - `backend/observability.md` - Ongoing logging patterns and alerts
 - `setup/env.md` - Environment variable management
 - `backend/ci-cd.md` - GitHub Actions configuration

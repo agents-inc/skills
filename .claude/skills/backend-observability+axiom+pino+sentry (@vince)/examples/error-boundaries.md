@@ -214,12 +214,12 @@ export function JobsPage() {
 
 ## Sentry SDK Version Reference
 
-| Feature | Minimum Version | Notes |
-|---------|-----------------|-------|
-| `Sentry.ErrorBoundary` | v7.x | Built-in component |
-| `reactErrorHandler()` | v8.6.0 | For React 19 hooks |
-| `captureReactException()` | v9.8.0 | For custom boundaries |
-| `onRequestError` | v8.28.0 | For Next.js 15 |
+| Feature                   | Minimum Version | Notes                 |
+| ------------------------- | --------------- | --------------------- |
+| `Sentry.ErrorBoundary`    | v7.x            | Built-in component    |
+| `reactErrorHandler()`     | v8.6.0          | For React 19 hooks    |
+| `captureReactException()` | v9.8.0          | For custom boundaries |
+| `onRequestError`          | v8.28.0         | For Next.js 15        |
 
 ---
 

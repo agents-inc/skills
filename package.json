@@ -24,6 +24,7 @@
     "cc:compile:work": "bun src/cli/index.ts compile -s work-stack",
     "cc:compile:mobx": "bun src/cli/index.ts compile -s mobx-tailwind",
     "cc:validate": "bun src/cli/index.ts validate",
+    "cc:config": "bun src/cli/index.ts config",
     "cc:list": "bun src/cli/index.ts list",
     "cc:switch": "bun src/cli/index.ts switch",
     "cc:dry-run": "bun src/cli/index.ts --dry-run",

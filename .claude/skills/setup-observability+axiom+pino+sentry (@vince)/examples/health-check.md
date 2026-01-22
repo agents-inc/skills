@@ -25,7 +25,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       version: process.env.NEXT_PUBLIC_APP_VERSION || "unknown",
     },
-    { status: HTTP_STATUS_OK }
+    { status: HTTP_STATUS_OK },
   );
 }
 ```
@@ -82,7 +82,7 @@ app.openapi(healthRoute, async (c) => {
       timestamp: new Date().toISOString(),
       version: process.env.APP_VERSION || "unknown",
     },
-    HTTP_STATUS_OK
+    HTTP_STATUS_OK,
   );
 });
 
@@ -109,7 +109,7 @@ app.openapi(healthDeepRoute, async (c) => {
 
   try {
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout")), HEALTH_CHECK_TIMEOUT_MS)
+      setTimeout(() => reject(new Error("Timeout")), HEALTH_CHECK_TIMEOUT_MS),
     );
 
     await Promise.race([db.execute("SELECT 1"), timeoutPromise]);
@@ -129,7 +129,7 @@ app.openapi(healthDeepRoute, async (c) => {
         database: dbStatus,
       },
     },
-    isHealthy ? HTTP_STATUS_OK : HTTP_STATUS_SERVICE_UNAVAILABLE
+    isHealthy ? HTTP_STATUS_OK : HTTP_STATUS_SERVICE_UNAVAILABLE,
   );
 });
 

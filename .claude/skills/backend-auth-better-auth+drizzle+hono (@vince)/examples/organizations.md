@@ -3,6 +3,7 @@
 > Organization and multi-tenancy patterns for team management. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Sign up, sign in, client setup
 - [oauth.md](oauth.md) - GitHub, Google OAuth providers
 - [two-factor.md](two-factor.md) - TOTP setup and verification

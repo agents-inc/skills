@@ -3,6 +3,7 @@
 > OAuth provider patterns for GitHub, Google, and other social providers. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Sign up, sign in, client setup
 - [two-factor.md](two-factor.md) - TOTP setup and verification
 - [organizations.md](organizations.md) - Multi-tenancy and invitations

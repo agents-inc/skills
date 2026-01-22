@@ -3,6 +3,7 @@
 > Affected detection and quality gates for CI pipelines. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Pipeline config, jobs, caching basics
 - [caching.md](caching.md) - Remote caching, Turborepo
 - [security.md](security.md) - OIDC auth, secrets rotation

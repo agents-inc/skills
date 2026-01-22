@@ -3,6 +3,7 @@
 > Essential patterns for Hono with OpenAPI. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [validation.md](validation.md) - Zod schema definitions and OpenAPI integration
 - [routes.md](routes.md) - Filtering, pagination, and data transformation
 - [middleware.md](middleware.md) - Auth, rate limiting, CORS, logging, caching
@@ -83,7 +84,11 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { and, eq, desc, isNull } from "drizzle-orm";
 
 import { db, jobs, companies } from "@/lib/db";
-import { JobsQuerySchema, JobsResponseSchema, ErrorResponseSchema } from "../schemas";
+import {
+  JobsQuerySchema,
+  JobsResponseSchema,
+  ErrorResponseSchema,
+} from "../schemas";
 
 const DEFAULT_QUERY_LIMIT = 100;
 const app = new OpenAPIHono();
@@ -174,10 +179,13 @@ const getJobByIdRoute = createRoute({
   summary: "Get job by ID",
   request: {
     params: z.object({
-      id: z.string().uuid().openapi({
-        param: { name: "id", in: "path" },
-        example: "550e8400-e29b-41d4-a716-446655440000",
-      }),
+      id: z
+        .string()
+        .uuid()
+        .openapi({
+          param: { name: "id", in: "path" },
+          example: "550e8400-e29b-41d4-a716-446655440000",
+        }),
     }),
   },
   responses: {
@@ -202,7 +210,11 @@ app.openapi(getJobByIdRoute, async (c) => {
     const { id } = c.req.valid("param");
 
     const job = await db.query.jobs.findFirst({
-      where: and(eq(jobs.id, id), eq(jobs.isActive, true), isNull(jobs.deletedAt)),
+      where: and(
+        eq(jobs.id, id),
+        eq(jobs.isActive, true),
+        isNull(jobs.deletedAt),
+      ),
       with: {
         company: {
           with: { locations: true },
@@ -214,7 +226,10 @@ app.openapi(getJobByIdRoute, async (c) => {
     });
 
     if (!job) {
-      return c.json({ error: "Job not found", message: `Job with ID ${id} does not exist` }, 404);
+      return c.json(
+        { error: "Job not found", message: `Job with ID ${id} does not exist` },
+        404,
+      );
     }
 
     return c.json(job, 200);
@@ -246,7 +261,11 @@ app.get("/jobs", async (c) => {
 
   // BAD: No soft delete check
   // BAD: Magic number limit(100)
-  const results = await db.select().from(jobs).where(eq(jobs.country, country)).limit(100);
+  const results = await db
+    .select()
+    .from(jobs)
+    .where(eq(jobs.country, country))
+    .limit(100);
 
   // BAD: No error handling
   return c.json({ jobs: results });

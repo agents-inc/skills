@@ -76,7 +76,7 @@ export async function checkFeatureForUser(
     email: string;
     plan: string;
     company?: string;
-  }
+  },
 ) {
   const isEnabled = await posthog.isFeatureEnabled(
     FLAG_ENTERPRISE_FEATURE,
@@ -88,7 +88,7 @@ export async function checkFeatureForUser(
         plan: userProperties.plan,
         company: userProperties.company,
       },
-    }
+    },
   );
 
   return isEnabled;

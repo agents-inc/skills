@@ -15,11 +15,11 @@ This system compiles modular source files into standalone agent/skill markdown f
 
 **Agents are GENERIC. Skills are STACK-SPECIFIC.**
 
-| Layer      | Location                         | Purpose                             | Changes Per Stack        |
-| ---------- | -------------------------------- | ----------------------------------- | ------------------------ |
-| **Agents** | `src/agent-sources/`             | Define _role_ + _workflow_          | NO - single source       |
-| **Skills** | `src/stacks/{stack}/skills/`     | Define _implementation patterns_    | YES - vary by tech stack |
-| **Config** | `src/stacks/{stack}/config.yaml` | Control which agents/skills compile | YES - stack-specific     |
+| Layer      | Location                                | Purpose                             | Changes Per Stack        |
+| ---------- | --------------------------------------- | ----------------------------------- | ------------------------ |
+| **Agents** | `src/agent-sources/{category}/{agent}/` | Define _role_ + _workflow_          | NO - single source       |
+| **Skills** | `src/stacks/{stack}/skills/`            | Define _implementation patterns_    | YES - vary by tech stack |
+| **Config** | `src/stacks/{stack}/config.yaml`        | Control which agents/skills compile | YES - stack-specific     |
 
 **Example:**
 
@@ -57,12 +57,31 @@ src/
 │                              # Contains: title, description, model, tools, core_prompts, output_format
 │
 ├── agent-sources/             # Agent source files (GENERIC - shared across stacks)
-│   └── {agent-name}/          # Named "agent-sources" to avoid Claude Code auto-detection
-│       ├── intro.md           # REQUIRED: Role definition (NO <role> tags - template adds them)
-│       ├── workflow.md        # REQUIRED: Agent-specific workflow and processes
-│       ├── critical-requirements.md  # OPTIONAL: Top-of-file MUST rules
-│       ├── critical-reminders.md     # OPTIONAL: Bottom-of-file MUST reminders
-│       └── examples.md        # OPTIONAL: Example outputs
+│   ├── developer/             # Developer category
+│   │   ├── frontend-developer/
+│   │   │   ├── intro.md
+│   │   │   ├── workflow.md
+│   │   │   └── ...
+│   │   └── backend-developer/
+│   ├── reviewer/              # Reviewer category
+│   │   ├── frontend-reviewer/
+│   │   └── backend-reviewer/
+│   ├── researcher/            # Researcher category
+│   │   ├── frontend-researcher/
+│   │   └── backend-researcher/
+│   ├── planning/              # Planning category
+│   │   ├── pm/
+│   │   ├── architecture/
+│   │   └── orchestrator/
+│   ├── pattern/               # Pattern category
+│   │   ├── pattern-scout/
+│   │   └── pattern-critique/
+│   ├── meta/                  # Meta category (creates other agents/skills)
+│   │   ├── agent-summoner/
+│   │   ├── skill-summoner/
+│   │   └── documentor/
+│   └── tester/                # Tester category
+│       └── tester-agent/
 │
 ├── core-prompts/              # Shared prompts included in all agents
 │   ├── core-principles.md     # 5 core principles with self-reminder loop
@@ -424,7 +443,7 @@ agents:
       - id: frontend/styling
         usage: when implementing styles
       - id: frontend/api
-        usage: when implementing data fetching
+        usage: when implementing data fetching, API calls, or React Query integrations
 ```
 
 **Note**: There is no `precompiled` vs `dynamic` distinction. All skills are loaded via the Skill tool when needed.
@@ -544,8 +563,9 @@ grep -q "ALWAYS RE-READ FILES AFTER EDITING" .claude/agents/$AGENT.md && echo "�
 ```bash
 # Find bare "think" usage in source files (should be 0 for Opus agents)
 AGENT="{agent}"
+CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 echo "=== 'Think' Usage Check for $AGENT ==="
-grep -n -w "think" src/agent-sources/$AGENT/*.md | grep -v "ultrathink\|megathink" | wc -l
+grep -n -w "think" src/agent-sources/$CATEGORY/$AGENT/*.md | grep -v "ultrathink\|megathink" | wc -l
 # If count > 0, review matches and replace with consider/evaluate/analyze
 ```
 
@@ -554,8 +574,9 @@ grep -n -w "think" src/agent-sources/$AGENT/*.md | grep -v "ultrathink\|megathin
 ```bash
 # Check intro.md has expansion modifiers
 AGENT="{agent}"
+CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 echo "=== Expansion Modifier Check for $AGENT ==="
-grep -q "comprehensive\|thorough" src/agent-sources/$AGENT/intro.md && echo "✅ Expansion modifiers found" || echo "❌ Add 'comprehensive and thorough' to intro.md"
+grep -q "comprehensive\|thorough" src/agent-sources/$CATEGORY/$AGENT/intro.md && echo "✅ Expansion modifiers found" || echo "❌ Add 'comprehensive and thorough' to intro.md"
 ```
 
 **5. Verify Critical Rules Repetition (if optional files exist):**
@@ -563,9 +584,10 @@ grep -q "comprehensive\|thorough" src/agent-sources/$AGENT/intro.md && echo "✅
 ```bash
 # Check that critical-reminders repeats rules from critical-requirements
 AGENT="{agent}"
+CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
 echo "=== Critical Rules Repetition Check for $AGENT ==="
-REQ_COUNT=$(grep -c "You MUST" src/agent-sources/$AGENT/critical-requirements.md 2>/dev/null || echo 0)
-REM_COUNT=$(grep -c "You MUST" src/agent-sources/$AGENT/critical-reminders.md 2>/dev/null || echo 0)
+REQ_COUNT=$(grep -c "You MUST" src/agent-sources/$CATEGORY/$AGENT/critical-requirements.md 2>/dev/null || echo 0)
+REM_COUNT=$(grep -c "You MUST" src/agent-sources/$CATEGORY/$AGENT/critical-reminders.md 2>/dev/null || echo 0)
 echo "critical-requirements.md: $REQ_COUNT rules"
 echo "critical-reminders.md: $REM_COUNT rules"
 [ "$REQ_COUNT" -eq "$REM_COUNT" ] && echo "✅ Rule counts match" || echo "⚠️ Rule counts differ - ensure key rules are repeated"
@@ -579,29 +601,33 @@ echo "critical-reminders.md: $REM_COUNT rules"
 AGENT="$1"
 if [ -z "$AGENT" ]; then echo "Usage: ./verify-agent.sh agent-name"; exit 1; fi
 
+# Find agent category
+CATEGORY=$(find src/agent-sources -type d -name "$AGENT" -printf "%P\n" | head -1 | cut -d/ -f1)
+if [ -z "$CATEGORY" ]; then echo "Agent not found: $AGENT"; exit 1; fi
+
 echo "========================================"
-echo "Verifying agent: $AGENT"
+echo "Verifying agent: $AGENT (category: $CATEGORY)"
 echo "========================================"
 
 # REQUIRED source files check
 echo -e "\n--- Required Source Files ---"
 for f in intro.md workflow.md; do
-  [ -f "src/agent-sources/$AGENT/$f" ] && echo "✅ $f" || echo "❌ $f MISSING (REQUIRED)"
+  [ -f "src/agent-sources/$CATEGORY/$AGENT/$f" ] && echo "✅ $f" || echo "❌ $f MISSING (REQUIRED)"
 done
 
 # OPTIONAL source files check
 echo -e "\n--- Optional Source Files ---"
 for f in critical-requirements.md critical-reminders.md examples.md; do
-  [ -f "src/agent-sources/$AGENT/$f" ] && echo "✅ $f" || echo "⚠️ $f (optional, recommended)"
+  [ -f "src/agent-sources/$CATEGORY/$AGENT/$f" ] && echo "✅ $f" || echo "⚠️ $f (optional, recommended)"
 done
 
 # Expansion modifiers
 echo -e "\n--- Expansion Modifiers ---"
-grep -q "comprehensive\|thorough" src/agent-sources/$AGENT/intro.md 2>/dev/null && echo "✅ Found" || echo "❌ MISSING in intro.md"
+grep -q "comprehensive\|thorough" src/agent-sources/$CATEGORY/$AGENT/intro.md 2>/dev/null && echo "✅ Found" || echo "❌ MISSING in intro.md"
 
 # Think usage
 echo -e "\n--- 'Think' Usage (should be 0) ---"
-THINK_COUNT=$(grep -rw "think" src/agent-sources/$AGENT/*.md 2>/dev/null | grep -v "ultrathink\|megathink" | wc -l)
+THINK_COUNT=$(grep -rw "think" src/agent-sources/$CATEGORY/$AGENT/*.md 2>/dev/null | grep -v "ultrathink\|megathink" | wc -l)
 echo "Count: $THINK_COUNT"
 
 # Compiled agent checks (only if compiled file exists)
@@ -952,16 +978,26 @@ Agents are **generic** - define them once in `agents.yaml`, then enable them in 
 
 ### Step 1: Create Agent Source Files
 
-Create directory: `src/agent-sources/{agent-name}/`
+Create directory: `src/agent-sources/{category}/{agent-name}/`
 
 ```
-src/agent-sources/my-new-agent/
+src/agent-sources/{category}/my-new-agent/
 ├── intro.md                  # REQUIRED: Role definition (no <role> tags)
 ├── workflow.md               # REQUIRED: Agent-specific processes with XML tags
 ├── critical-requirements.md  # OPTIONAL: Top MUST rules (no XML wrapper)
 ├── critical-reminders.md     # OPTIONAL: Bottom reminders (no XML wrapper)
 └── examples.md               # OPTIONAL: Example outputs
 ```
+
+**Categories available:**
+
+- `developer/` - Implementation agents (frontend-developer, backend-developer, architecture)
+- `reviewer/` - Code review agents (frontend-reviewer, backend-reviewer)
+- `researcher/` - Read-only research agents (frontend-researcher, backend-researcher)
+- `planning/` - Planning agents (pm, orchestrator)
+- `pattern/` - Pattern discovery agents (pattern-scout, pattern-critique)
+- `meta/` - Meta-level agents (agent-summoner, skill-summoner, documentor)
+- `tester/` - Testing agents (tester-agent)
 
 **Note:** Only `intro.md` and `workflow.md` are required. The optional files enhance agent behavior but compilation will succeed without them.
 
@@ -1023,7 +1059,7 @@ bunx compile -s work-stack
 ### Key Points
 
 - **Agent definitions** live in `src/agents.yaml` (single source of truth)
-- **Agent source files** live in `src/agent-sources/` (shared across all stacks)
+- **Agent source files** live in `src/agent-sources/{category}/{agent}/` (organized by category, shared across all stacks)
 - **Skill assignments** live in each stack's `config.yaml` under `agents`
 - **Which agents compile** is determined by the keys in `agents` (no separate list)
 - Same agent can have **different skill bundles** per stack

@@ -9,11 +9,13 @@
 ### WCAG 2.2 Requirements
 
 **2.5.8 Target Size (Minimum) - Level AA:**
+
 - Minimum: 24x24 CSS pixels
 - OR: Adequate spacing (24px between closest points of adjacent targets)
 - Exceptions: inline text, user agent controls, essential designs
 
 **2.5.5 Target Size (Enhanced) - Level AAA:**
+
 - Minimum: 44x44 CSS pixels (recommended for best UX)
 
 ### Example: Meeting WCAG 2.2 AA (24x24px Minimum)

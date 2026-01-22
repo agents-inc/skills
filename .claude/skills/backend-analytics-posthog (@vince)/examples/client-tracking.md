@@ -97,7 +97,7 @@ export function useAnalytics() {
       }
       posthog.capture(event, properties);
     },
-    [posthog]
+    [posthog],
   );
 
   const trackFeatureUsed = useCallback(
@@ -107,7 +107,7 @@ export function useAnalytics() {
         ...properties,
       });
     },
-    [track]
+    [track],
   );
 
   const trackOnboardingStep = useCallback(
@@ -117,7 +117,7 @@ export function useAnalytics() {
         step_name: stepName,
       });
     },
-    [track]
+    [track],
   );
 
   return { track, trackFeatureUsed, trackOnboardingStep };

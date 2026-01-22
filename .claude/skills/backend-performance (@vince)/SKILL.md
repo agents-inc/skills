@@ -28,6 +28,7 @@ description: Query optimization, caching, indexing
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [caching.md](examples/caching.md) - Redis caching patterns and strategies
   - [database.md](examples/database.md) - Query optimization, indexing, connection pooling
@@ -127,12 +128,17 @@ pool.on("error", (err) => {
 
 // For simple queries - auto-manages connection lifecycle
 async function getUsers() {
-  const result = await pool.query("SELECT * FROM users WHERE active = $1", [true]);
+  const result = await pool.query("SELECT * FROM users WHERE active = $1", [
+    true,
+  ]);
   return result.rows;
 }
 
 // For transactions - manual checkout with guaranteed release
-async function createUserWithProfile(userData: UserData, profileData: ProfileData) {
+async function createUserWithProfile(
+  userData: UserData,
+  profileData: ProfileData,
+) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -277,7 +283,14 @@ Indexes speed up queries by avoiding full table scans. Index columns used in WHE
 
 ```typescript
 // Good Example - Strategic indexes (Drizzle schema)
-import { pgTable, uuid, varchar, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  timestamp,
+  boolean,
+  index,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const jobs = pgTable(
@@ -317,14 +330,14 @@ export const jobs = pgTable(
 
 **Index Decision Framework:**
 
-| Column Usage | Index Type | When to Use |
-|--------------|-----------|-------------|
-| WHERE equality | B-tree (default) | High-selectivity columns |
-| WHERE range (>, <, BETWEEN) | B-tree | Date ranges, numeric ranges |
-| WHERE multiple columns | Composite | Queries always filter by same columns together |
-| WHERE on subset | Partial | Most queries filter on active/non-deleted |
-| Full-text search | GIN/GiST | Text search with LIKE, tsvector |
-| JSON field access | GIN | JSONB column queries |
+| Column Usage                | Index Type       | When to Use                                    |
+| --------------------------- | ---------------- | ---------------------------------------------- |
+| WHERE equality              | B-tree (default) | High-selectivity columns                       |
+| WHERE range (>, <, BETWEEN) | B-tree           | Date ranges, numeric ranges                    |
+| WHERE multiple columns      | Composite        | Queries always filter by same columns together |
+| WHERE on subset             | Partial          | Most queries filter on active/non-deleted      |
+| Full-text search            | GIN/GiST         | Text search with LIKE, tsvector                |
+| JSON field access           | GIN              | JSONB column queries                           |
 
 </patterns>
 

@@ -76,6 +76,7 @@ export function Dialog({
 **Why good:** Traps focus in dialog. Closes on Escape. Restores focus on close. Screen reader announcements. ARIA attributes automatic.
 
 **Edge Cases:**
+
 - Handle long content with scrolling
 - Prevent body scroll when open
 - Support initial focus on specific element
@@ -125,6 +126,7 @@ export function Dialog({
 ```
 
 **Why good:**
+
 - `:focus-visible` shows focus ring only for keyboard navigation
 - Mouse users don't see annoying focus ring on click
 - Keyboard users always see clear focus state

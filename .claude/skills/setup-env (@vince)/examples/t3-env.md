@@ -3,6 +3,7 @@
 > T3 Env (`@t3-oss/env-nextjs`, `@t3-oss/env-core`) provides type-safe environment variables with client/server separation. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Related Examples:**
+
 - [core.md](core.md) - Basic Zod validation pattern
 - [naming-and-templates.md](naming-and-templates.md) - Framework prefixes, .env.example
 - [security-and-secrets.md](security-and-secrets.md) - Secret management
@@ -40,7 +41,8 @@ export const env = createEnv({
     API_SECRET_KEY: process.env.API_SECRET_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
   },
 
@@ -123,7 +125,7 @@ export const env = createEnv({
 });
 ```
 
-**Why good:** Uses Vite's VITE_ prefix convention, works with import.meta.env, type-safe access throughout app
+**Why good:** Uses Vite's VITE\_ prefix convention, works with import.meta.env, type-safe access throughout app
 
 ---
 
@@ -188,7 +190,7 @@ export const env = createEnv({
   // Custom handler for accessing server vars on client
   onInvalidAccess: (variable) => {
     throw new Error(
-      `Attempted to access server-side env var "${variable}" on the client`
+      `Attempted to access server-side env var "${variable}" on the client`,
     );
   },
 });

@@ -85,22 +85,23 @@ await seed(db, schema).refine((f) => ({
 
 ### Available Generators
 
-| Generator | Description |
-|-----------|-------------|
-| `f.fullName()` | Realistic full names |
-| `f.email()` | Valid email addresses |
-| `f.companyName()` | Company names |
-| `f.city()` | City names |
-| `f.date({ minDate, maxDate })` | Date range |
-| `f.int({ minValue, maxValue })` | Integer range |
-| `f.number({ minValue, maxValue, precision })` | Decimal numbers |
-| `f.loremIpsum({ sentencesCount })` | Lorem ipsum text |
-| `f.valuesFromArray({ values })` | Pick from array |
-| `f.weightedRandom([{ weight, value }])` | Weighted distribution |
+| Generator                                     | Description           |
+| --------------------------------------------- | --------------------- |
+| `f.fullName()`                                | Realistic full names  |
+| `f.email()`                                   | Valid email addresses |
+| `f.companyName()`                             | Company names         |
+| `f.city()`                                    | City names            |
+| `f.date({ minDate, maxDate })`                | Date range            |
+| `f.int({ minValue, maxValue })`               | Integer range         |
+| `f.number({ minValue, maxValue, precision })` | Decimal numbers       |
+| `f.loremIpsum({ sentencesCount })`            | Lorem ipsum text      |
+| `f.valuesFromArray({ values })`               | Pick from array       |
+| `f.weightedRandom([{ weight, value }])`       | Weighted distribution |
 
 ### Reset Behavior
 
 The `reset()` function uses database-specific strategies:
+
 - **PostgreSQL/CockroachDB:** `TRUNCATE ... CASCADE`
 - **MySQL:** `DELETE` with foreign key check disable
 - **SQLite:** `DELETE` with pragma foreign_keys off

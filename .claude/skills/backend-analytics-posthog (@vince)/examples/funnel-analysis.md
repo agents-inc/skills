@@ -59,6 +59,7 @@ posthogServer.capture({
 
 ```markdown
 In PostHog Funnels:
+
 1. Create new funnel
 2. Add steps in order:
    - signup_flow:page_view
@@ -70,6 +71,7 @@ In PostHog Funnels:
 4. Break down by: method, source, plan
 
 Key metrics:
+
 - Overall conversion rate
 - Drop-off at each step
 - Time to convert
@@ -88,12 +90,12 @@ Key metrics:
 
 **Common funnel breakdowns:**
 
-| Property | Purpose |
-|----------|---------|
-| `source` | Attribution analysis |
-| `method` | Compare auth methods |
-| `plan` | Compare conversion by tier |
-| `has_referral_code` | Measure referral impact |
+| Property            | Purpose                    |
+| ------------------- | -------------------------- |
+| `source`            | Attribution analysis       |
+| `method`            | Compare auth methods       |
+| `plan`              | Compare conversion by tier |
+| `has_referral_code` | Measure referral impact    |
 
 **Funnel tips:**
 

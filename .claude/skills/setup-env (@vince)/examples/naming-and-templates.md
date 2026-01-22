@@ -3,6 +3,7 @@
 > Framework-specific naming and .env.example documentation patterns. See [SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for essential patterns.
 
 **Related Examples:**
+
 - [core.md](core.md) - Per-app .env, Zod validation
 - [security-and-secrets.md](security-and-secrets.md) - Secret management
 - [feature-flags-and-config.md](feature-flags-and-config.md) - Feature flags, centralized config
@@ -29,7 +30,7 @@ STRIPE_SECRET_KEY=sk_test_...
 JWT_SECRET=jwt-secret-key
 ```
 
-**Why good:** NEXT_PUBLIC_* prefix makes client-side variables explicit preventing accidental secret exposure, server-side variables never embedded in bundle, clear separation improves security
+**Why good:** NEXT*PUBLIC*\* prefix makes client-side variables explicit preventing accidental secret exposure, server-side variables never embedded in bundle, clear separation improves security
 
 ### Bad Example - Missing prefixes and poor naming
 

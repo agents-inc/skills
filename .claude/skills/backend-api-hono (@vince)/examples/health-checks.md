@@ -80,13 +80,12 @@ const healthDeepRoute = createRoute({
 });
 
 app.openapi(healthDeepRoute, async (c) => {
-  const checks = await Promise.allSettled([
-    checkDatabase(),
-    checkRedis(),
-  ]);
+  const checks = await Promise.allSettled([checkDatabase(), checkRedis()]);
 
-  const dbStatus = checks[0].status === "fulfilled" ? checks[0].value.status : "disconnected";
-  const redisStatus = checks[1].status === "fulfilled" ? checks[1].value.status : "disconnected";
+  const dbStatus =
+    checks[0].status === "fulfilled" ? checks[0].value.status : "disconnected";
+  const redisStatus =
+    checks[1].status === "fulfilled" ? checks[1].value.status : "disconnected";
 
   const isHealthy = dbStatus === "connected" && redisStatus === "connected";
 
@@ -105,7 +104,9 @@ app.openapi(healthDeepRoute, async (c) => {
 });
 
 // Dependency check helper (with timeout)
-const checkDatabase = async (): Promise<{ status: "connected" | "disconnected" | "degraded" }> => {
+const checkDatabase = async (): Promise<{
+  status: "connected" | "disconnected" | "degraded";
+}> => {
   try {
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error("Timeout")), HEALTH_CHECK_TIMEOUT_MS),

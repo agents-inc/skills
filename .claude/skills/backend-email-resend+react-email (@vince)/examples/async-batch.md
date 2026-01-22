@@ -90,7 +90,11 @@ Send to multiple recipients efficiently using Resend's batch API.
 // lib/email/batch-email.ts
 import { render } from "@react-email/components";
 
-import { getResendClient, DEFAULT_FROM_ADDRESS, DEFAULT_FROM_NAME } from "@repo/emails";
+import {
+  getResendClient,
+  DEFAULT_FROM_ADDRESS,
+  DEFAULT_FROM_NAME,
+} from "@repo/emails";
 
 const MAX_BATCH_SIZE = 100; // Resend limit per batch request
 
@@ -107,7 +111,7 @@ interface BatchSendResult {
 }
 
 export async function sendBatchEmails(
-  emails: BatchEmailItem[]
+  emails: BatchEmailItem[],
 ): Promise<BatchSendResult> {
   const resend = getResendClient();
   const results: { id: string }[] = [];
@@ -124,14 +128,16 @@ export async function sendBatchEmails(
         to: email.to,
         subject: email.subject,
         html: await render(email.react),
-      }))
+      })),
     );
 
     try {
       const { data, error } = await resend.batch.send(renderedEmails);
 
       if (error) {
-        errors.push(`Batch ${Math.floor(i / MAX_BATCH_SIZE) + 1}: ${error.message}`);
+        errors.push(
+          `Batch ${Math.floor(i / MAX_BATCH_SIZE) + 1}: ${error.message}`,
+        );
       } else if (data) {
         results.push(...data);
       }
@@ -166,7 +172,7 @@ import { NotificationEmail } from "@repo/emails";
 
 async function notifyTeamMembers(
   members: { email: string; name: string }[],
-  notification: { title: string; body: string; actionUrl: string }
+  notification: { title: string; body: string; actionUrl: string },
 ) {
   const emails = members.map((member) => ({
     to: member.email,
@@ -214,11 +220,13 @@ Need attachments or scheduling?
 ## Batch API Limitations
 
 **Not Supported in Batch:**
+
 - `attachments` field - use single send for emails with attachments
 - `scheduledAt` field - use single send for scheduled emails
 - Maximum 40MB per email after Base64 encoding (single send limit)
 
 **Supported in Batch:**
+
 - `tags` - for analytics and tracking
 - `headers` (including Idempotency-Key)
 - `cc` and `bcc` recipients

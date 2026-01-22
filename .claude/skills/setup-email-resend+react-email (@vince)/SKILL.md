@@ -58,6 +58,7 @@ description: Resend email setup, domain verification
 - Vercel deployment setup
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/):
   - [core.md](examples/core.md) - Client setup, constants, package exports
   - [templates.md](examples/templates.md) - Base layout, components, email templates
@@ -157,25 +158,28 @@ Add these records in your domain's DNS settings (Cloudflare, Route 53, etc.):
 ## Required DNS Records
 
 ### SPF Record (TXT)
+
 Host: @
 Type: TXT
 Value: v=spf1 include:amazonses.com ~all
 
 ### DKIM Records (CNAME) - Resend provides 3 records
-Host: resend._domainkey
+
+Host: resend.\_domainkey
 Type: CNAME
 Value: (provided by Resend dashboard)
 
-Host: resend2._domainkey
+Host: resend2.\_domainkey
 Type: CNAME
 Value: (provided by Resend dashboard)
 
-Host: resend3._domainkey
+Host: resend3.\_domainkey
 Type: CNAME
 Value: (provided by Resend dashboard)
 
 ### DMARC Record (TXT) - Recommended
-Host: _dmarc
+
+Host: \_dmarc
 Type: TXT
 Value: v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com
 ```

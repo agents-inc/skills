@@ -96,9 +96,12 @@ export function useTypedAnalytics() {
   // Overloaded track function for type safety
   function track<E extends keyof EventPropertyMap>(
     event: E,
-    properties: EventPropertyMap[E]
+    properties: EventPropertyMap[E],
   ): void;
-  function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void;
+  function track(
+    event: AnalyticsEvent,
+    properties?: Record<string, unknown>,
+  ): void;
   function track(event: string, properties?: Record<string, unknown>): void {
     posthog?.capture(event, properties);
   }
@@ -132,13 +135,13 @@ track("user_signed_up", {
 
 ## Benefits of Type-Safe Events
 
-| Benefit | Description |
-|---------|-------------|
+| Benefit                 | Description                                       |
+| ----------------------- | ------------------------------------------------- |
 | Compile-time validation | Catch typos and missing properties before runtime |
-| IDE autocomplete | Get suggestions for event names and properties |
-| Self-documenting | Type definitions serve as living documentation |
-| Refactor-safe | Rename events/properties with confidence |
-| Team alignment | Shared types ensure consistent tracking |
+| IDE autocomplete        | Get suggestions for event names and properties    |
+| Self-documenting        | Type definitions serve as living documentation    |
+| Refactor-safe           | Rename events/properties with confidence          |
+| Team alignment          | Shared types ensure consistent tracking           |
 
 **When to use:**
 

@@ -93,9 +93,11 @@ Research must be grounded in actual file contents, not assumptions.
 
 ```markdown
 # WRONG - Speculation
+
 "Based on typical React Query patterns, this codebase likely uses..."
 
 # CORRECT - Investigation
+
 Read("/packages/api/src/queries/posts.ts")
 "Based on /packages/api/src/queries/posts.ts:12-30, this codebase uses..."
 ```
@@ -110,10 +112,12 @@ Every path in findings must be confirmed to exist.
 
 ```markdown
 # WRONG - Assumed path
+
 "Reference: /packages/ui/components/Button.tsx"
 [Never actually read this file]
 
 # CORRECT - Verified path
+
 Read("/packages/ui/src/button/button.tsx") -> Success
 "Reference: /packages/ui/src/button/button.tsx"
 ```
@@ -128,10 +132,12 @@ Stay focused on what was asked.
 
 ```markdown
 # WRONG - Scope creep
+
 Question: "How does authentication work?"
 Answer: [10 pages about auth, database schema, deployment, testing, ...]
 
 # CORRECT - Focused response
+
 Question: "How does authentication work?"
 Answer: [Auth flow, session handling, key files - nothing more]
 ```
@@ -144,10 +150,12 @@ Answer: [Auth flow, session handling, key files - nothing more]
 
 Research produces findings. Implementation is for developer agents.
 
-```markdown
+`````markdown
 # WRONG - Implementation in research
+
 "Here's how to implement the feature:
-```typescript
+
+````typescript
 export const NewComponent = () => { ... }
 ```"
 
@@ -155,7 +163,10 @@ export const NewComponent = () => { ... }
 "Similar implementations exist at:
 1. /path/to/similar.tsx:12-45 - Best reference
 2. /path/to/variant.tsx:8-30 - Alternative approach"
-```
+````
+`````
+
+`````
 
 **Why this matters:** Research informs implementation; it doesn't replace it.
 
@@ -236,7 +247,7 @@ test -f /path/to/file.tsx && echo "exists"
 
 ### Pattern Discovery
 
-```markdown
+````markdown
 ## Pattern: [Name]
 
 **Location:** `/path/to/file.tsx:12-45`
@@ -244,15 +255,19 @@ test -f /path/to/file.tsx && echo "exists"
 **Description:** [What the pattern does]
 
 **Implementation:**
+
 ```typescript
 // From /path/to/file.tsx:15-25
 [Actual code]
 ```
+`````
 
 **Variations:**
+
 - Variation A: `/path/to/alt1.tsx:8-20`
 - Variation B: `/path/to/alt2.tsx:30-45`
-```
+
+````
 
 ### Inventory Report
 
@@ -266,7 +281,7 @@ test -f /path/to/file.tsx && echo "exists"
 
 **Total:** X items in Y files
 **Verified:** Yes
-```
+````
 
 ### Implementation Research
 
@@ -274,18 +289,22 @@ test -f /path/to/file.tsx && echo "exists"
 ## How [Feature] Works
 
 ### Entry Point
+
 **File:** `/path/to/entry.tsx:12-30`
 **Description:** [What happens first]
 
 ### Core Logic
+
 **File:** `/path/to/logic.ts:45-89`
 **Description:** [Main processing]
 
 ### Output
+
 **File:** `/path/to/output.tsx:100-120`
 **Description:** [Final result]
 
 ### Files to Reference
+
 1. `/path/to/entry.tsx` - Start here
 2. `/path/to/logic.ts` - Core implementation
 3. `/path/to/output.tsx` - Output handling

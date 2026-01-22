@@ -62,6 +62,7 @@ function Layout({ children }: { children: ReactNode }) {
 **Why good:** Keyboard users can skip navigation. WCAG requirement. Better UX for screen reader users.
 
 **Edge Cases:**
+
 - Add multiple skip links for complex layouts
 - Focus main content programmatically
 - Ensure visible focus indicator
@@ -184,6 +185,6 @@ export function Feature({ id, title, description, status, className }: FeaturePr
 
 ```html
 <nav aria-label="Main navigation">
-<nav aria-label="Footer navigation"></nav>
+  <nav aria-label="Footer navigation"></nav>
 </nav>
 ```

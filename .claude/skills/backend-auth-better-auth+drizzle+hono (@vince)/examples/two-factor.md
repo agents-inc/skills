@@ -3,6 +3,7 @@
 > TOTP-based two-factor authentication patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Sign up, sign in, client setup
 - [oauth.md](oauth.md) - GitHub, Google OAuth providers
 - [organizations.md](organizations.md) - Multi-tenancy and invitations
@@ -36,6 +37,7 @@ export { auth };
 ```
 
 After adding the plugin, run:
+
 ```bash
 # Step 1: Generate Better Auth schema
 npx @better-auth/cli generate

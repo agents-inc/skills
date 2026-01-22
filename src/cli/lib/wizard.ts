@@ -63,10 +63,19 @@ export interface WizardResult {
 // State Machine
 // =============================================================================
 
-function createInitialState(): WizardState {
+interface WizardOptions {
+  /** Pre-selected skill IDs (for update mode) */
+  initialSkills?: string[];
+}
+
+function createInitialState(options: WizardOptions = {}): WizardState {
+  const hasInitialSkills =
+    options.initialSkills && options.initialSkills.length > 0;
+
   return {
-    currentStep: "approach",
-    selectedSkills: [],
+    // Start at category if we have initial skills (update mode)
+    currentStep: hasInitialSkills ? "category" : "approach",
+    selectedSkills: options.initialSkills ? [...options.initialSkills] : [],
     history: [],
     currentTopCategory: null,
     currentSubcategory: null,
@@ -474,8 +483,9 @@ async function stepConfirm(
 
 export async function runWizard(
   matrix: MergedSkillsMatrix,
+  options: WizardOptions = {},
 ): Promise<WizardResult | null> {
-  const state = createInitialState();
+  const state = createInitialState(options);
 
   while (true) {
     switch (state.currentStep) {

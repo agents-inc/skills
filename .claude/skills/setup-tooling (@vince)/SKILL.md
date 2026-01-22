@@ -60,6 +60,7 @@ description: ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Hus
 - Commitlint for conventional commit messages
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md) (essential patterns)
   - [examples/vite.md](examples/vite.md) - Vite path aliases, vendor chunks, environment builds
   - [examples/eslint.md](examples/eslint.md) - ESLint 9 flat config, shared configs, custom rules
@@ -109,11 +110,13 @@ Build tooling should be **fast, consistent, and non-blocking**. Developers shoul
 Vite is the build tool for frontend apps. Key features: path aliases, vendor chunk splitting, environment-specific builds.
 
 **Path Aliases:**
+
 - Configure in both `vite.config.ts` and `tsconfig.json`
 - Common aliases: `@/`, `@components/`, `@features/`, `@lib/`, `@hooks/`, `@types/`
 - Vendor chunk splitting reduces main bundle size
 
 **Environment-Specific Builds:**
+
 - Use `loadEnv(mode, ...)` for environment-aware config
 - Conditional sourcemaps (dev only) and minification (prod only)
 - Build-time constants with `define` option
@@ -127,6 +130,7 @@ See [examples/vite.md](examples/vite.md) for complete Vite configuration example
 ESLint 9 uses flat config format (replaces legacy `.eslintrc`). Shared configs live in `packages/eslint-config/`.
 
 **Key Requirements (ESLint 9.15+):**
+
 - Use `defineConfig()` from `eslint/config` for type-safe configuration
 - Use `globalIgnores()` for explicit global ignore patterns
 - Support for `eslint.config.ts` TypeScript config files
@@ -135,16 +139,19 @@ ESLint 9 uses flat config format (replaces legacy `.eslintrc`). Shared configs l
 - Use `eslint-config-prettier` to disable conflicting rules
 
 **typescript-eslint v8+ Features:**
+
 - Use `projectService: true` for automatic tsconfig discovery (replaces manual `project` option)
 - Use `allowDefaultProject` for config files not in tsconfig
 - `tseslint.config()` is deprecated - use ESLint's `defineConfig()` instead
 
 **Custom Rules for Monorepo:**
+
 - `import/no-default-export`: Enforce named exports
 - `no-restricted-imports`: Prevent importing from internal package paths
 - `@typescript-eslint/consistent-type-imports`: Use `import type` for types
 
 **ESLint 10 Migration (January 2026):**
+
 - .eslintrc files completely removed
 - .eslintignore files no longer supported
 - CLI flags like `--no-eslintrc`, `--env`, `--rulesdir` removed
@@ -159,6 +166,7 @@ See [examples/eslint.md](examples/eslint.md) for complete ESLint configuration e
 Prettier configuration lives in `packages/prettier-config/` and is shared across all packages.
 
 **Standard Config:**
+
 - `printWidth: 100` - Balance readability with screen space
 - `trailingComma: "all"` - Now the default in Prettier 3.0+ (cleaner git diffs)
 - `singleQuote: false` - Match JSON format, reduce JSX escaping
@@ -166,12 +174,14 @@ Prettier configuration lives in `packages/prettier-config/` and is shared across
 - `bracketSameLine: false` - Replaces deprecated `jsxBracketSameLine`
 
 **New in v3.5+:**
+
 - TypeScript config file support (`.prettierrc.ts`) - requires Node.js 22.6.0+
 - `objectWrap` option - controls multi-line object formatting (`"preserve"` or `"collapse"`)
 - `experimentalOperatorPosition` option - controls binary operator placement (`"start"` or `"end"`)
 - `experimentalTernaries` option (v3.1+) - alternative ternary formatting
 
 **Usage:**
+
 - Reference in package.json: `"prettier": "@repo/prettier-config"`
 - Single source of truth prevents formatting inconsistencies
 
@@ -184,6 +194,7 @@ See [examples/core.md](examples/core.md) for complete Prettier configuration exa
 TypeScript configurations live in `packages/typescript-config/` with base settings extended by apps and packages.
 
 **Strict Mode (Required):**
+
 - `strict: true` - Enables all strict checks
 - `noUncheckedIndexedAccess: true` - Prevents undefined access bugs
 - `exactOptionalPropertyTypes: true` - Strict optional handling
@@ -191,6 +202,7 @@ TypeScript configurations live in `packages/typescript-config/` with base settin
 - `noUnusedLocals: true` / `noUnusedParameters: true` - Catch dead code
 
 **Modern Module Settings (TS 5.x):**
+
 - `target: "ES2022"` - Stable ES target (not esnext)
 - `module: "preserve"` - For bundler-based projects
 - `moduleResolution: "bundler"` - Modern bundler compatibility
@@ -198,6 +210,7 @@ TypeScript configurations live in `packages/typescript-config/` with base settin
 - `moduleDetection: "force"` - Treats all files as modules
 
 **Path Aliases:**
+
 - Configure in tsconfig.json to match Vite aliases
 - Use `${configDir}` template (TS 5.5+) for portable shared configs
 
@@ -212,11 +225,13 @@ See [examples/typescript.md](examples/typescript.md) for complete TypeScript con
 Pre-commit hooks run linting on staged files only for fast feedback.
 
 **Setup:**
+
 - Husky hook calls `bunx lint-staged`
 - lint-staged config specifies file patterns and commands
 - Only lint staged files - NOT entire codebase
 
 **VS Code Integration:**
+
 - Format on save with Prettier
 - Auto-fix ESLint on save
 - Recommended extensions for team consistency

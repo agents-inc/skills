@@ -10,10 +10,12 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 **Topic-Specific Examples:**
+
 - [examples/payloads.md](examples/payloads.md) - Remote configuration with JSON payloads
 - [examples/server-side.md](examples/server-side.md) - Server-side evaluation with posthog-node
 - [examples/rollouts.md](examples/rollouts.md) - Gradual rollouts and user targeting
@@ -31,7 +33,7 @@ description: PostHog feature flags, rollouts, A/B testing. Use when implementing
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
-**(You MUST use the feature flags secure API key (phs_*) for server-side local evaluation - personal API keys are deprecated for this use)**
+**(You MUST use the feature flags secure API key (phs\_\*) for server-side local evaluation - personal API keys are deprecated for this use)**
 
 **(You MUST handle the `undefined` state when flags are loading - never assume a flag is immediately available)**
 
@@ -300,7 +302,7 @@ For more examples including bad patterns, local-only evaluation, and distributed
 
 **(You MUST always pair `useFeatureFlagPayload` with `useFeatureFlagEnabled` or `useFeatureFlagVariantKey` for experiments - payload hooks don't send exposure events)**
 
-**(You MUST use the feature flags secure API key (phs_*) for server-side local evaluation - personal API keys are deprecated for this use)**
+**(You MUST use the feature flags secure API key (phs\_\*) for server-side local evaluation - personal API keys are deprecated for this use)**
 
 **(You MUST handle the `undefined` state when flags are loading - never assume a flag is immediately available)**
 

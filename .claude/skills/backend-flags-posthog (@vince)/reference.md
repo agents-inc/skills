@@ -53,16 +53,16 @@ Is the flag security-sensitive?
 
 ### Quick Reference
 
-| Use Case | Flag Type | Evaluation |
-|----------|-----------|------------|
-| Gradual rollout | Boolean | Client |
-| A/B test | Multivariate | Client |
-| Kill switch | Boolean | Both |
-| Beta access | Boolean + cohort | Client |
-| API behavior | Boolean | Server |
-| Remote config | Boolean + payload | Client |
-| Pricing experiment | Multivariate | Client |
-| Security feature | Boolean | Server only |
+| Use Case           | Flag Type         | Evaluation  |
+| ------------------ | ----------------- | ----------- |
+| Gradual rollout    | Boolean           | Client      |
+| A/B test           | Multivariate      | Client      |
+| Kill switch        | Boolean           | Both        |
+| Beta access        | Boolean + cohort  | Client      |
+| API behavior       | Boolean           | Server      |
+| Remote config      | Boolean + payload | Client      |
+| Pricing experiment | Multivariate      | Client      |
+| Security feature   | Boolean           | Server only |
 
 ---
 
@@ -91,7 +91,7 @@ export function useDashboardData() {
     queryKey: ["dashboard", isBetaDashboard ? "beta" : "stable"],
     queryFn: () =>
       fetch(isBetaDashboard ? "/api/dashboard/beta" : "/api/dashboard").then(
-        (r) => r.json()
+        (r) => r.json(),
       ),
     enabled: isBetaDashboard !== undefined, // Wait for flag to load
   });

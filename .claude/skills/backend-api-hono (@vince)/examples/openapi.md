@@ -49,8 +49,11 @@ console.log(`OpenAPI spec written to ${outputPath}`);
 **Why good:** Build-time = spec generated once (fast), env-specific servers = proper URLs in docs, exit(1) fails CI if spec broken
 
 **Package.json:**
+
 ```json
-{ "scripts": { "prebuild": "bun run scripts/generate-openapi.ts && openapi-ts" } }
+{
+  "scripts": { "prebuild": "bun run scripts/generate-openapi.ts && openapi-ts" }
+}
 ```
 
 ### Bad Example - Runtime spec generation

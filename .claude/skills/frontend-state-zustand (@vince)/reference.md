@@ -14,10 +14,10 @@ Using React Context with useState/useReducer for state management causes every c
 
 ```typescript
 // WRONG - Context causes full re-renders
-const AppContext = createContext({ user: null, theme: 'light', cart: [] });
+const AppContext = createContext({ user: null, theme: "light", cart: [] });
 
 // CORRECT - Zustand with selectors
-const useStore = create((set) => ({ user: null, theme: 'light', cart: [] }));
+const useStore = create((set) => ({ user: null, theme: "light", cart: [] }));
 const theme = useStore((s) => s.theme); // Only re-renders when theme changes
 ```
 
@@ -28,7 +28,9 @@ Storing API/server data in useState, Zustand, or Context causes stale data, no c
 ```typescript
 // WRONG - Server data in useState
 const [users, setUsers] = useState([]);
-useEffect(() => { fetchUsers().then(setUsers); }, []);
+useEffect(() => {
+  fetchUsers().then(setUsers);
+}, []);
 
 // CORRECT - Use a data fetching solution with caching, refetch, sync
 // Your data fetching layer handles loading states and caching

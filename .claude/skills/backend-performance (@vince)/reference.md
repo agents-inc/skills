@@ -22,13 +22,13 @@ Is response time > 100ms?
 
 ### Which Caching Strategy?
 
-| Scenario | Strategy | TTL |
-|----------|----------|-----|
-| User profiles | Cache-aside | 300s |
-| Product catalog | Cache-aside | 3600s |
-| Session data | Write-through | 86400s |
+| Scenario         | Strategy               | TTL    |
+| ---------------- | ---------------------- | ------ |
+| User profiles    | Cache-aside            | 300s   |
+| Product catalog  | Cache-aside            | 3600s  |
+| Session data     | Write-through          | 86400s |
 | Real-time prices | No cache or very short | 10-60s |
-| Static config | Cache-aside | 3600s+ |
+| Static config    | Cache-aside            | 3600s+ |
 
 ### When to Add an Index?
 
@@ -44,6 +44,7 @@ Is the query slow (> 100ms)?
 ### Composite Index Column Order
 
 Order columns by:
+
 1. **Equality conditions first** (exact matches)
 2. **Range conditions last** (>, <, BETWEEN)
 3. **High selectivity first** (more unique values)
@@ -65,6 +66,7 @@ Are you hitting connection limits?
 ```
 
 **Pool size formula:** `connections = (core_count * 2) + disk_spindles`
+
 - For SSDs, approximate spindles as 1-2
 - PostgreSQL default max is 100 connections
 - Leave headroom for admin connections
@@ -79,13 +81,13 @@ Are you hitting connection limits?
 
 ### Key Metrics to Track
 
-| Metric | Warning Threshold | Critical Threshold |
-|--------|-------------------|-------------------|
-| Query p95 latency | > 100ms | > 500ms |
-| Connection pool usage | > 70% | > 90% |
-| Cache hit rate | < 80% | < 50% |
-| Event loop lag | > 50ms | > 200ms |
-| Database CPU | > 60% | > 85% |
+| Metric                | Warning Threshold | Critical Threshold |
+| --------------------- | ----------------- | ------------------ |
+| Query p95 latency     | > 100ms           | > 500ms            |
+| Connection pool usage | > 70%             | > 90%              |
+| Cache hit rate        | < 80%             | < 50%              |
+| Event loop lag        | > 50ms            | > 200ms            |
+| Database CPU          | > 60%             | > 85%              |
 
 ### EXPLAIN ANALYZE
 
@@ -107,6 +109,7 @@ WHERE country = 'germany' AND employment_type = 'full_time';
 ### Identifying N+1 Queries
 
 Signs of N+1:
+
 - Many small identical queries in logs
 - Response time scales linearly with result count
 - Database shows high query count but low total time
@@ -126,7 +129,11 @@ const pool = new Pool({
 const CACHE_HITS = new Map<string, number>();
 const CACHE_MISSES = new Map<string, number>();
 
-async function getCached<T>(key: string, fetchFn: () => Promise<T>, ttl: number): Promise<T> {
+async function getCached<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+  ttl: number,
+): Promise<T> {
   const cached = await redis.get(key);
   if (cached) {
     CACHE_HITS.set(key, (CACHE_HITS.get(key) || 0) + 1);
@@ -284,15 +291,15 @@ ORDER BY id LIMIT 20;
 
 ## When to Use Each Pattern
 
-| Problem | Solution | When |
-|---------|----------|------|
-| Slow repeated queries | Redis cache-aside | Read-heavy, staleness OK |
-| N+1 with ORM | Eager loading (`.with()`) | Known relationships |
-| N+1 with GraphQL | DataLoader | Dynamic field selection |
-| Slow JOINs | Index foreign keys | Any table with FKs |
-| Slow filters | Composite index | Common multi-column filters |
-| CPU blocking requests | Worker Threads | Heavy computation |
-| Memory growth | Add TTL to cache | Any caching |
-| Connection exhaustion | Pool limits + finally blocks | Database access |
+| Problem               | Solution                     | When                        |
+| --------------------- | ---------------------------- | --------------------------- |
+| Slow repeated queries | Redis cache-aside            | Read-heavy, staleness OK    |
+| N+1 with ORM          | Eager loading (`.with()`)    | Known relationships         |
+| N+1 with GraphQL      | DataLoader                   | Dynamic field selection     |
+| Slow JOINs            | Index foreign keys           | Any table with FKs          |
+| Slow filters          | Composite index              | Common multi-column filters |
+| CPU blocking requests | Worker Threads               | Heavy computation           |
+| Memory growth         | Add TTL to cache             | Any caching                 |
+| Connection exhaustion | Pool limits + finally blocks | Database access             |
 
 </anti_patterns>

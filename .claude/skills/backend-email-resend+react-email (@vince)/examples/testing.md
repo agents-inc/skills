@@ -37,7 +37,7 @@ describe("WelcomeEmail", () => {
       WelcomeEmail({
         userName: "John",
         loginUrl: "https://example.com/login",
-      })
+      }),
     );
 
     expect(html).toContain("Welcome to Your App!");
@@ -51,7 +51,7 @@ describe("WelcomeEmail", () => {
         userName: "John",
         loginUrl: "https://example.com/login",
         features: ["Feature 1", "Feature 2"],
-      })
+      }),
     );
 
     expect(html).toContain("Feature 1");
@@ -64,7 +64,7 @@ describe("WelcomeEmail", () => {
         userName: "John",
         loginUrl: "https://example.com/login",
         features: [],
-      })
+      }),
     );
 
     expect(html).not.toContain("Here's what you can do:");

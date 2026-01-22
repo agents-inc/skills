@@ -3,6 +3,7 @@
 > Core code examples for API client patterns. Reference from [SKILL.md](../SKILL.md).
 
 **Extended examples:**
+
 - [configuration.md](configuration.md) - Advanced headers, auth, environment-specific settings, timeouts, debounce
 - [error-handling.md](error-handling.md) - Component-level, global, retry logic, error boundaries, custom errors
 
@@ -35,10 +36,11 @@ import { getFeaturesQueryKey, getFeatures } from "./services.gen";
 import type { GetFeaturesResponse } from "./types.gen";
 
 // Auto-generated query options
-export const getFeaturesOptions = (): QueryObserverOptions<GetFeaturesResponse> => ({
-  queryKey: getFeaturesQueryKey(),
-  queryFn: () => getFeatures(),
-});
+export const getFeaturesOptions =
+  (): QueryObserverOptions<GetFeaturesResponse> => ({
+    queryKey: getFeaturesQueryKey(),
+    queryFn: () => getFeatures(),
+  });
 ```
 
 ### Usage in Apps

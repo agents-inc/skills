@@ -75,6 +75,7 @@ What Prettier config format to use?
 ```
 
 **File precedence (highest to lowest):**
+
 1. `"prettier"` key in `package.json`
 2. `.prettierrc` (JSON/YAML)
 3. `.prettierrc.json`, `.prettierrc.yaml`
@@ -225,7 +226,7 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   globalIgnores(["dist/**", ".next/**"]),
-  tseslint.configs.recommended
+  tseslint.configs.recommended,
 );
 ```
 
@@ -237,9 +238,7 @@ export default defineConfig(
 // ❌ ANTI-PATTERN: Using deprecated tseslint.config()
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
-  tseslint.configs.recommended
-);
+export default tseslint.config(tseslint.configs.recommended);
 ```
 
 **Why it's wrong:** `tseslint.config()` is deprecated in favor of ESLint's native `defineConfig()`.
@@ -262,7 +261,7 @@ export default defineConfig(tseslint.configs.recommended);
 // ❌ ANTI-PATTERN: Ambiguous ignores behavior
 export default [
   {
-    ignores: ["dist/**", ".next/**"]  // Is this global or local?
+    ignores: ["dist/**", ".next/**"], // Is this global or local?
   },
   // ...other config
 ];
@@ -272,7 +271,7 @@ export default [
 
 **What to do instead:** Use `globalIgnores()` for clarity:
 
-```typescript
+````typescript
 // ✅ Explicit global ignores
 import { defineConfig, globalIgnores } from "eslint/config";
 
@@ -296,7 +295,7 @@ export default [
   // Missing only-warn plugin
   // ESLint errors block development
 ];
-```
+````
 
 **Why it's wrong:** Error severity blocks developers during active development, reducing productivity.
 
@@ -339,6 +338,7 @@ export default [
 **Why it's wrong:** These options were deprecated in TypeScript 5.0 and no longer function in TS 5.5+.
 
 **What to do instead:**
+
 - Replace `importsNotUsedAsValues` + `preserveValueImports` with `verbatimModuleSyntax: true`
 - Replace `target: "ES3"` with `target: "ES2022"` (modern stable target)
 - Use `module: "preserve"` + `moduleResolution: "bundler"` for bundler projects
@@ -357,6 +357,7 @@ import { User, createUser } from "./api"; // User is only a type!
 **Why it's wrong:** Type-only imports may or may not be elided depending on transpiler, causing inconsistent behavior.
 
 **What to do instead:**
+
 ```typescript
 // ✅ With verbatimModuleSyntax: true
 import type { User } from "./api";
@@ -415,6 +416,7 @@ packages/ui/.eslintrc → different rules
 **Why it's wrong:** v4-style configuration in `package.json` or `.huskyrc` files is no longer supported in v9. Also, `HUSKY_GIT_PARAMS` is deprecated.
 
 **What to do instead:** Create individual hook files in `.husky/` directory:
+
 ```bash
 # .husky/pre-commit
 bunx lint-staged
@@ -439,6 +441,7 @@ export default defineConfig({
 **Why it's wrong:** `build.polyfillModulePreload` is deprecated; use the new structured API.
 
 **What to do instead:** Use `build.modulePreload.polyfill`:
+
 ```javascript
 // ✅ Vite 6+ module preload configuration
 export default defineConfig({
@@ -469,6 +472,7 @@ export default defineConfig({
 **Why it's wrong:** `splitVendorChunkPlugin` is deprecated and removed in Vite 7.
 
 **What to do instead:** Use `manualChunks` directly:
+
 ```javascript
 // ✅ Direct manualChunks configuration
 export default defineConfig({
@@ -501,6 +505,7 @@ export default defineConfig({
 **Why it's wrong:** The `'modules'` target value is deprecated and no longer available in Vite 7.
 
 **What to do instead:** Use the new default or explicit browser targets:
+
 ```javascript
 // ✅ Vite 7 compatible targets
 export default defineConfig({
@@ -535,6 +540,7 @@ export default defineConfig({
 **Why it's wrong:** Sass legacy API is deprecated in Vite 6 and completely removed in Vite 7.
 
 **What to do instead:** Migrate to modern Sass API (default in Vite 6):
+
 ```javascript
 // ✅ Modern Sass API (default, no need to specify)
 export default defineConfig({
@@ -550,6 +556,7 @@ export default defineConfig({
 ```
 
 **Migration notes:**
+
 - Replace `@import` with `@use` and `@forward`
 - Use namespaced access for variables/mixins: `variables.$color-primary`
 - Test thoroughly before removing `api: 'legacy'`

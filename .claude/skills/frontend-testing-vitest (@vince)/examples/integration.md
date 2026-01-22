@@ -24,7 +24,9 @@ describe("Features", () => {
     mockServer.use(featuresHandlers.empty());
     renderApp();
 
-    await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
+    await expect(
+      screen.findByText("No features found"),
+    ).resolves.toBeInTheDocument();
   });
 
   it("should render error state", async () => {
@@ -32,7 +34,9 @@ describe("Features", () => {
     mockServer.use(featuresHandlers.error());
     renderApp();
 
-    await expect(screen.findByText(/An error has occurred/i)).resolves.toBeInTheDocument();
+    await expect(
+      screen.findByText(/An error has occurred/i),
+    ).resolves.toBeInTheDocument();
   });
 
   it("should render features", async () => {
@@ -44,7 +48,9 @@ describe("Features", () => {
       expect(screen.getByTestId("feature")).toBeInTheDocument();
     });
 
-    expect(screen.getAllByTestId("feature")).toHaveLength(EXPECTED_FEATURE_COUNT);
+    expect(screen.getAllByTestId("feature")).toHaveLength(
+      EXPECTED_FEATURE_COUNT,
+    );
   });
 
   it("should toggle feature", async () => {
@@ -167,7 +173,9 @@ import { featuresHandlers, mockServer } from "./test-utils/mock-server";
 it("should handle empty state", async () => {
   mockServer.use(featuresHandlers.empty());
   renderApp();
-  await expect(screen.findByText("No features found")).resolves.toBeInTheDocument();
+  await expect(
+    screen.findByText("No features found"),
+  ).resolves.toBeInTheDocument();
 });
 ```
 
@@ -176,6 +184,7 @@ it("should handle empty state", async () => {
 ---
 
 _For more patterns, see:_
+
 - [core.md](core.md) - E2E and Unit testing essentials
 - [anti-patterns.md](anti-patterns.md) - What NOT to test
 - [ladle-stories.md](ladle-stories.md) - Component documentation stories

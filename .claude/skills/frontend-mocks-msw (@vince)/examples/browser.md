@@ -3,6 +3,7 @@
 > Browser worker setup and app integration for development. Reference from [SKILL.md](../SKILL.md).
 
 **Related examples:**
+
 - [core.md](core.md) - Package configuration, mock data, variant handlers
 - [node.md](node.md) - Server worker for tests
 - [testing.md](testing.md) - Per-test handler overrides

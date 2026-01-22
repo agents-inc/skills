@@ -83,7 +83,7 @@ export function App() {
 const DEBOUNCE_DELAY_MS = 500;
 
 async function loadLodash() {
-  const { default: _ } = await import('lodash');
+  const { default: _ } = await import("lodash");
   return _;
 }
 
@@ -99,7 +99,7 @@ const handleHeavyOperation = async () => {
 ### Bad Example - Import Large Library Upfront
 
 ```typescript
-import _ from 'lodash';
+import _ from "lodash";
 
 const DEBOUNCE_DELAY_MS = 500;
 

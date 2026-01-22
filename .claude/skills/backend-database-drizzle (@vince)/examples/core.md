@@ -235,6 +235,7 @@ export const categories = pgTable("categories", {
 **Why use identity columns:** PostgreSQL recommended over deprecated `serial` type, customizable sequence options (startWith, increment), allows multiple identity columns per table, standard SQL compliance
 
 **When to use UUID vs Identity:**
+
 - **UUID** (`uuid().defaultRandom()`): Distributed systems, client-generated IDs, prevent ID enumeration
 - **Identity** (`integer().generatedAlwaysAsIdentity()`): Simple auto-increment, smaller storage, faster joins
 
@@ -249,12 +250,15 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   locations: many(companyLocations),
 }));
 
-export const companyLocationsRelations = relations(companyLocations, ({ one }) => ({
-  company: one(companies, {
-    fields: [companyLocations.companyId],
-    references: [companies.id],
+export const companyLocationsRelations = relations(
+  companyLocations,
+  ({ one }) => ({
+    company: one(companies, {
+      fields: [companyLocations.companyId],
+      references: [companies.id],
+    }),
   }),
-}));
+);
 
 export const jobsRelations = relations(jobs, ({ one, many }) => ({
   company: one(companies, {

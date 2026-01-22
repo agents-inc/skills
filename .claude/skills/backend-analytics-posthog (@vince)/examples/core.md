@@ -5,6 +5,7 @@
 > **Return to:** [SKILL.md](../SKILL.md)
 
 **Extended Examples:**
+
 - [client-tracking.md](client-tracking.md) - React Hooks, Provider Setup
 - [server-tracking.md](server-tracking.md) - posthog-node, Hono Routes
 - [group-analytics.md](group-analytics.md) - B2B Organization Tracking
@@ -26,36 +27,36 @@
 // - action: Present-tense verb (click, submit, view)
 
 // Signup flow events
-"signup_flow:email_form_submit"
-"signup_flow:google_oauth_click"
-"signup_flow:verification_email_sent"
+"signup_flow:email_form_submit";
+"signup_flow:google_oauth_click";
+"signup_flow:verification_email_sent";
 
 // Dashboard events
-"dashboard:project_create"
-"dashboard:invite_member_click"
-"dashboard:export_data_download"
+"dashboard:project_create";
+"dashboard:invite_member_click";
+"dashboard:export_data_download";
 
 // Settings events
-"settings:password_change_submit"
-"settings:notification_toggle"
-"settings:billing_plan_upgrade"
+"settings:password_change_submit";
+"settings:notification_toggle";
+"settings:billing_plan_upgrade";
 
 // Alternative format: object_verb (simpler, still good)
-"project_created"
-"user_signed_up"
-"invite_sent"
+"project_created";
+"user_signed_up";
+"invite_sent";
 ```
 
 **Why good:** category prefix groups related events in PostHog UI, present-tense verbs are consistent, snake_case is lowercase and readable, structured names enable wildcard queries like `signup_flow:*`
 
 ```typescript
 // Bad Example - Inconsistent naming
-"UserSignedUp"           // BAD: PascalCase
-"user-signed-up"         // BAD: kebab-case (use snake_case)
-"clicked_button"         // BAD: Past tense
-"button click"           // BAD: Spaces
-"signup"                 // BAD: Too vague
-"signUpFormSubmittedByUserOnPage" // BAD: Too verbose
+"UserSignedUp"; // BAD: PascalCase
+"user-signed-up"; // BAD: kebab-case (use snake_case)
+"clicked_button"; // BAD: Past tense
+"button click"; // BAD: Spaces
+"signup"; // BAD: Too vague
+"signUpFormSubmittedByUserOnPage"; // BAD: Too verbose
 ```
 
 **Why bad:** Inconsistent casing makes queries impossible, past tense mixes with present, vague names don't tell you what happened, verbose names are hard to type
@@ -113,7 +114,7 @@ export const POSTHOG_EVENTS = {
   FEATURE_USED: "feature:used",
 } as const;
 
-export type PostHogEvent = typeof POSTHOG_EVENTS[keyof typeof POSTHOG_EVENTS];
+export type PostHogEvent = (typeof POSTHOG_EVENTS)[keyof typeof POSTHOG_EVENTS];
 ```
 
 ### Client-Side Identification
@@ -164,10 +165,11 @@ export function BadIdentify() {
   const posthog = usePostHog();
 
   // BAD: Runs on every render
-  posthog?.identify("user@example.com", { // BAD: Email as ID
-    email: "user@example.com",    // BAD: PII in properties
-    name: "John Doe",             // BAD: PII in properties
-    phone: "+1234567890",         // BAD: PII in properties
+  posthog?.identify("user@example.com", {
+    // BAD: Email as ID
+    email: "user@example.com", // BAD: PII in properties
+    name: "John Doe", // BAD: PII in properties
+    phone: "+1234567890", // BAD: PII in properties
   });
 }
 ```

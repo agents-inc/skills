@@ -12,7 +12,7 @@
 
 ```markdown
 **Step 1: Find candidate files**
-Glob("packages/ui/src/**/*.tsx") -> Found 47 component files
+Glob("packages/ui/src/\*_/_.tsx") -> Found 47 component files
 
 **Step 2: Search for pattern**
 Grep("forwardRef", "packages/ui/src/") -> 23 matches
@@ -38,20 +38,23 @@ Read("/packages/ui/src/button/button.tsx") -> Lines 12-45 show pattern
 
 ### Good Evidence Structure
 
-```markdown
+````markdown
 ## Pattern: [Pattern Name]
 
 **File:** `/path/to/file.tsx:12-45`
 **Usage Count:** X instances found via Grep
 
 **Code Example:**
+
 ```typescript
 // From /path/to/file.tsx:15-25
 [Actual code from the file]
 ```
+````
 
 **Verification:** Read file confirmed pattern exists at stated location
-```
+
+````
 
 ### Bad Evidence Structure
 
@@ -60,7 +63,7 @@ Read("/packages/ui/src/button/button.tsx") -> Lines 12-45 show pattern
 
 The codebase uses this pattern for handling X.
 [NO FILE PATH, NO LINE NUMBERS, NO EVIDENCE]
-```
+````
 
 **Why the good example works:** Every claim has a specific file path, line numbers, and actual code. Developer agents can verify and reference the exact location.
 
@@ -74,6 +77,7 @@ The codebase uses this pattern for handling X.
 
 ```markdown
 ## Research Summary
+
 - Topic: [What was researched]
 - Type: [Pattern Discovery | Inventory | Implementation Research]
 - Files Examined: [count]
@@ -82,31 +86,36 @@ The codebase uses this pattern for handling X.
 ## Patterns Found
 
 ### Pattern 1: [Name]
+
 - File: [path:lines]
 - Description: [Brief explanation]
 - Usage Count: [X instances]
 - Code Example: [Actual code block]
 
 ### Pattern 2: [Name]
+
 - File: [path:lines]
 - Description: [Brief explanation]
 - Usage Count: [X instances]
 - Code Example: [Actual code block]
 
 ## Files to Reference
-| Priority | File | Lines | Why Reference |
-|----------|------|-------|---------------|
-| 1 | [/path/to/best.tsx] | [12-45] | Best example |
-| 2 | [/path/to/alt.tsx] | [8-30] | Alternative approach |
+
+| Priority | File                | Lines   | Why Reference        |
+| -------- | ------------------- | ------- | -------------------- |
+| 1        | [/path/to/best.tsx] | [12-45] | Best example         |
+| 2        | [/path/to/alt.tsx]  | [8-30]  | Alternative approach |
 
 ## Recommended Approach
+
 1. [Step 1 with file reference]
 2. [Step 2 with file reference]
 3. [Step 3 with file reference]
 
 ## Verification Checklist
-| Finding | Verification | Status |
-|---------|--------------|--------|
+
+| Finding | Verification   | Status          |
+| ------- | -------------- | --------------- |
 | [Claim] | [How verified] | Verified/Failed |
 ```
 
@@ -118,14 +127,17 @@ The codebase uses this pattern for handling X.
 
 ```markdown
 # Step 1: Read the file
+
 Read("/path/to/file.tsx")
 
 # Step 2: If file exists, include path
+
 Yes File exists -> Include in findings with line numbers
 
 # Step 3: If file doesn't exist, note the error
+
 No File not found -> Do NOT include in findings
-  Report: "Could not locate [expected file]"
+Report: "Could not locate [expected file]"
 ```
 
 ### Common Verification Failures

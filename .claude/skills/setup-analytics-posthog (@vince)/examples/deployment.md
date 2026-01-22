@@ -43,12 +43,12 @@ Configure PostHog environment variables for production deployment.
 
 ### Vercel Environment Variables
 
-| Variable | Environment | Value |
-|----------|-------------|-------|
-| `NEXT_PUBLIC_POSTHOG_KEY` | Production, Preview, Development | `phc_xxx` |
+| Variable                   | Environment                      | Value                      |
+| -------------------------- | -------------------------------- | -------------------------- |
+| `NEXT_PUBLIC_POSTHOG_KEY`  | Production, Preview, Development | `phc_xxx`                  |
 | `NEXT_PUBLIC_POSTHOG_HOST` | Production, Preview, Development | `https://us.i.posthog.com` |
-| `POSTHOG_API_KEY` | Production, Preview, Development | `phc_xxx` |
-| `POSTHOG_HOST` | Production, Preview, Development | `https://us.i.posthog.com` |
+| `POSTHOG_API_KEY`          | Production, Preview, Development | `phc_xxx`                  |
+| `POSTHOG_HOST`             | Production, Preview, Development | `https://us.i.posthog.com` |
 
 **Why good:** Same project for dev/prod simplifies setup, Vercel handles env var injection at build time
 
@@ -99,25 +99,30 @@ Use this checklist to verify complete PostHog setup.
 ## PostHog Setup Checklist
 
 ### Account Setup
+
 - [ ] Created PostHog account and organization
 - [ ] Created project for app
 - [ ] Copied API key to .env.local
 
 ### Client-Side Setup
+
 - [ ] Installed posthog-js (client)
 - [ ] Created PostHogProvider component
 - [ ] Wrapped app in provider (layout.tsx)
 
 ### Server-Side Setup
+
 - [ ] Installed posthog-node (server)
 - [ ] Created server client singleton
 - [ ] Added flush() to API routes
 
 ### Verification
+
 - [ ] Verified events appearing in PostHog dashboard
 - [ ] Tested in development mode (debug enabled)
 
 ### Deployment
+
 - [ ] Set up Vercel environment variables
 - [ ] Created .env.example for team
 - [ ] Verified events in production

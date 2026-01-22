@@ -3,6 +3,7 @@
 > Workspace protocol, syncpack, and dependency boundary patterns. See [../SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for essential task pipeline patterns.
 
 **Related Examples:**
+
 - [core.md](core.md) - Essential task pipeline patterns (prerequisite)
 - [caching.md](caching.md) - Remote caching, CI/CD integration
 - [packages.md](packages.md) - Internal package conventions

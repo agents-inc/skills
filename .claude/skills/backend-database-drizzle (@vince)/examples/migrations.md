@@ -45,12 +45,12 @@ bun run drizzle-kit up
 
 ## When to Use `generate` vs `push`
 
-| Command | Use Case | Notes |
-|---------|----------|-------|
-| `generate` + `migrate` | Development | Trackable migration files |
-| `push` | Serverless/CI | Direct schema sync |
-| `pull` | Existing DB | Introspect schema from database |
-| `up` | Migration upgrade | Upgrade to v1.0.0-beta.2 folder structure |
+| Command                | Use Case          | Notes                                     |
+| ---------------------- | ----------------- | ----------------------------------------- |
+| `generate` + `migrate` | Development       | Trackable migration files                 |
+| `push`                 | Serverless/CI     | Direct schema sync                        |
+| `pull`                 | Existing DB       | Introspect schema from database           |
+| `up`                   | Migration upgrade | Upgrade to v1.0.0-beta.2 folder structure |
 
 **Critical:** Never use `push` in production with existing data without backup
 

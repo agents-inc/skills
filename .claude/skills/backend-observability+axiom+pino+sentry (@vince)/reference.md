@@ -274,7 +274,7 @@ const logger = pino(
       dataset: process.env.AXIOM_DATASET,
       token: process.env.AXIOM_TOKEN,
     },
-  })
+  }),
 );
 ```
 
@@ -309,7 +309,7 @@ const logger = pino(
         options: { destination: "/var/log/app-errors.log" },
       },
     ],
-  })
+  }),
 );
 ```
 
@@ -326,7 +326,7 @@ const logger = pino(
       { target: "pino/file", level: "error", options: { destination: 1 } },
       { target: "pino/file", level: "info", options: { destination: 1 } },
     ],
-  })
+  }),
 );
 ```
 
@@ -336,13 +336,13 @@ const logger = pino(
 
 ## Performance Impact Guidelines
 
-| Action | Impact | Recommendation |
-|--------|--------|----------------|
-| `logger.debug()` in hot path | Low (filtered in prod) | OK if useful for dev |
-| `logger.info()` per request | Low | Standard practice |
-| `logger.info()` per item in loop | High | Move outside loop or use debug |
-| Logging large objects | Medium-High | Log only needed fields |
-| Creating spans per item | Medium | Batch or sample |
+| Action                           | Impact                 | Recommendation                 |
+| -------------------------------- | ---------------------- | ------------------------------ |
+| `logger.debug()` in hot path     | Low (filtered in prod) | OK if useful for dev           |
+| `logger.info()` per request      | Low                    | Standard practice              |
+| `logger.info()` per item in loop | High                   | Move outside loop or use debug |
+| Logging large objects            | Medium-High            | Log only needed fields         |
+| Creating spans per item          | Medium                 | Batch or sample                |
 
 ---
 

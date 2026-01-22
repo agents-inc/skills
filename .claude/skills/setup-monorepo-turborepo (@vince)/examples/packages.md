@@ -3,6 +3,7 @@
 > Internal package conventions, exports, and creation patterns. See [../SKILL.md](../SKILL.md) for core concepts and [../reference.md](../reference.md) for decision frameworks.
 
 **Related Examples:**
+
 - [workspaces.md](workspaces.md) - Workspace protocol (prerequisite)
 - [core.md](core.md) - Essential task pipeline patterns
 - [caching.md](caching.md) - Remote caching, CI/CD integration
@@ -96,8 +97,8 @@ export default Button;          // BAD: Default export
   // BAD: No exports field - allows importing internal paths
   "main": "./src/index.ts",
   "dependencies": {
-    "react": "^19.0.0",              // BAD: Should be peerDependencies
-    "@repo/eslint-config": "^1.0.0"  // BAD: Should use workspace:*
+    "react": "^19.0.0", // BAD: Should be peerDependencies
+    "@repo/eslint-config": "^1.0.0" // BAD: Should use workspace:*
   }
 }
 ```

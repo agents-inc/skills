@@ -3,6 +3,7 @@
 > Essential email patterns - template structure and basic sending. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Extended Examples:**
+
 - [templates.md](templates.md) - Password Reset, Notification Templates
 - [retry.md](retry.md) - Retry Logic with Exponential Backoff
 - [async-batch.md](async-batch.md) - Async Sending, Batch API
@@ -126,7 +127,9 @@ interface SendEmailResult {
   error?: string;
 }
 
-export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
+export async function sendEmail(
+  options: SendEmailOptions,
+): Promise<SendEmailResult> {
   const resend = getResendClient();
 
   try {
@@ -179,7 +182,11 @@ export type { SendEmailOptions, SendEmailResult };
 
 ```typescript
 // BAD Example - Common mistakes
-async function sendEmailBad(to: string, subject: string, react: React.ReactElement) {
+async function sendEmailBad(
+  to: string,
+  subject: string,
+  react: React.ReactElement,
+) {
   const resend = getResendClient();
 
   // BAD: Not awaiting render - sends "[object Promise]"

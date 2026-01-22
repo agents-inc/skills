@@ -44,20 +44,32 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 <picture>
   <!-- AVIF: Best compression (30-50% smaller) -->
   <source
-    srcset="/images/hero-400.avif 400w, /images/hero-800.avif 800w, /images/hero-1200.avif 1200w"
+    srcset="
+      /images/hero-400.avif   400w,
+      /images/hero-800.avif   800w,
+      /images/hero-1200.avif 1200w
+    "
     type="image/avif"
   />
 
   <!-- WebP: Good compression (25-35% smaller) -->
   <source
-    srcset="/images/hero-400.webp 400w, /images/hero-800.webp 800w, /images/hero-1200.webp 1200w"
+    srcset="
+      /images/hero-400.webp   400w,
+      /images/hero-800.webp   800w,
+      /images/hero-1200.webp 1200w
+    "
     type="image/webp"
   />
 
   <!-- JPEG: Universal fallback -->
   <img
     src="/images/hero-800.jpg"
-    srcset="/images/hero-400.jpg 400w, /images/hero-800.jpg 800w, /images/hero-1200.jpg 1200w"
+    srcset="
+      /images/hero-400.jpg   400w,
+      /images/hero-800.jpg   800w,
+      /images/hero-1200.jpg 1200w
+    "
     sizes="(max-width: 600px) 400px,
            (max-width: 1200px) 800px,
            1200px"
@@ -102,13 +114,7 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 ### Bad Example - Lazy Loading Above-Fold Image
 
 ```html
-<img
-  src="/hero.jpg"
-  alt="Hero"
-  loading="lazy"
-  width="1200"
-  height="600"
-/>
+<img src="/hero.jpg" alt="Hero" loading="lazy" width="1200" height="600" />
 ```
 
 **Why bad:** Delays LCP element, poor perceived performance, lazy loading adds overhead for critical images

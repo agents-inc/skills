@@ -19,7 +19,13 @@ import { emailEvents } from "@/lib/db/schema";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface ResendWebhookPayload {
-  type: "email.sent" | "email.delivered" | "email.opened" | "email.clicked" | "email.bounced" | "email.complained";
+  type:
+    | "email.sent"
+    | "email.delivered"
+    | "email.opened"
+    | "email.clicked"
+    | "email.bounced"
+    | "email.complained";
   data: {
     email_id: string;
     to: string[];
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
     console.error("[Webhook] Verification failed:", err);
     return NextResponse.json(
       { error: "Invalid webhook signature" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
@@ -92,7 +98,13 @@ import { emailEvents } from "@/lib/db/schema";
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET!;
 
 interface ResendWebhookPayload {
-  type: "email.sent" | "email.delivered" | "email.opened" | "email.clicked" | "email.bounced" | "email.complained";
+  type:
+    | "email.sent"
+    | "email.delivered"
+    | "email.opened"
+    | "email.clicked"
+    | "email.bounced"
+    | "email.complained";
   data: {
     email_id: string;
     to: string[];
@@ -133,7 +145,7 @@ export async function POST(request: NextRequest) {
     console.error("[Webhook] Verification failed:", err);
     return NextResponse.json(
       { error: "Invalid webhook signature" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
@@ -156,14 +168,14 @@ Steps to configure webhooks in Resend Dashboard:
 
 ## Event Types Reference
 
-| Event | Description |
-|-------|-------------|
-| `email.sent` | Email accepted by Resend |
-| `email.delivered` | Email delivered to recipient |
-| `email.opened` | Recipient opened the email |
-| `email.clicked` | Recipient clicked a link |
-| `email.bounced` | Email bounced (invalid address) |
-| `email.complained` | Recipient marked as spam |
+| Event              | Description                     |
+| ------------------ | ------------------------------- |
+| `email.sent`       | Email accepted by Resend        |
+| `email.delivered`  | Email delivered to recipient    |
+| `email.opened`     | Recipient opened the email      |
+| `email.clicked`    | Recipient clicked a link        |
+| `email.bounced`    | Email bounced (invalid address) |
+| `email.complained` | Recipient marked as spam        |
 
 ---
 

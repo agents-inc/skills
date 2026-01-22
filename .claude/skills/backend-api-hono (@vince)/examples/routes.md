@@ -53,7 +53,8 @@ import { and, eq, ne, inArray, sql } from "drizzle-orm";
 const SINGLE_VALUE_COUNT = 1;
 
 app.openapi(getJobsRoute, async (c) => {
-  const { country, employment_type, seniority_level, visa_sponsorship } = c.req.valid("query");
+  const { country, employment_type, seniority_level, visa_sponsorship } =
+    c.req.valid("query");
 
   const conditions = [eq(jobs.isActive, true), isNull(jobs.deletedAt)];
 

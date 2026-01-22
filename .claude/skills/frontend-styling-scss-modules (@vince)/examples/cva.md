@@ -13,6 +13,7 @@
 cva provides type-safe variant management for components with multiple variants. It works seamlessly with SCSS Modules.
 
 **Key features:**
+
 - Type-safe variant props with autocomplete
 - `VariantProps` utility for extracting TypeScript types
 - Built-in `cx` utility (alias of clsx)
@@ -78,14 +79,11 @@ const cardClasses = cx(
   styles.card,
   styles.cardElevated,
   isActive && styles.cardActive,
-  { [styles.cardHighlighted]: isHighlighted }
+  { [styles.cardHighlighted]: isHighlighted },
 );
 
 // cx also works with arrays
-const dynamicClasses = cx([
-  styles.base,
-  condition && styles.conditional,
-]);
+const dynamicClasses = cx([styles.base, condition && styles.conditional]);
 ```
 
 **Why use cx:** Built-in with cva (no extra import), same API as clsx, handles conditional classes

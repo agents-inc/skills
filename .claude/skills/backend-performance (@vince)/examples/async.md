@@ -307,9 +307,7 @@ const MAX_CONCURRENT = 10;
 const limit = pLimit(MAX_CONCURRENT);
 
 async function processAllUsers(userIds: string[]) {
-  await Promise.all(
-    userIds.map((id) => limit(() => processUser(id))),
-  );
+  await Promise.all(userIds.map((id) => limit(() => processUser(id))));
 }
 ```
 
@@ -364,15 +362,15 @@ setInterval(() => {
 
 ## When to Use Each Pattern
 
-| Scenario | Solution | Notes |
-|----------|----------|-------|
-| File I/O | `fs/promises` | Always use async versions |
-| CPU < 50ms | Keep on main thread | Worker overhead not worth it |
-| CPU 50-500ms | setImmediate chunking | Simple, no worker complexity |
-| CPU > 500ms | Worker Threads | Offload completely |
-| Many small async ops | p-limit | Bound concurrency |
-| Independent I/O | Promise.all | Parallel execution |
-| Partial failure OK | Promise.allSettled | Graceful degradation |
+| Scenario             | Solution              | Notes                        |
+| -------------------- | --------------------- | ---------------------------- |
+| File I/O             | `fs/promises`         | Always use async versions    |
+| CPU < 50ms           | Keep on main thread   | Worker overhead not worth it |
+| CPU 50-500ms         | setImmediate chunking | Simple, no worker complexity |
+| CPU > 500ms          | Worker Threads        | Offload completely           |
+| Many small async ops | p-limit               | Bound concurrency            |
+| Independent I/O      | Promise.all           | Parallel execution           |
+| Partial failure OK   | Promise.allSettled    | Graceful degradation         |
 
 ---
 

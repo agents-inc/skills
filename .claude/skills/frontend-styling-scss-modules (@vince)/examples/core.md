@@ -3,6 +3,7 @@
 > Complete code examples for SCSS Modules core patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **For additional patterns**: See topic-specific files in this folder:
+
 - [tokens.md](tokens.md) - Spacing and typography systems
 - [theming.md](theming.md) - Dark mode implementation
 - [cva.md](cva.md) - cva integration with SCSS Modules
@@ -60,11 +61,19 @@
   // Interactive colors (with foreground pairs)
   --color-primary: var(--color-gray-900);
   --color-primary-foreground: var(--color-white);
-  --color-primary-hover: color-mix(in srgb, hsl(var(--color-primary)), black 5%);
+  --color-primary-hover: color-mix(
+    in srgb,
+    hsl(var(--color-primary)),
+    black 5%
+  );
 
   --color-destructive: var(--color-red-500);
   --color-destructive-foreground: var(--color-white);
-  --color-destructive-hover: color-mix(in srgb, hsl(var(--color-destructive)), black 5%);
+  --color-destructive-hover: color-mix(
+    in srgb,
+    hsl(var(--color-destructive)),
+    black 5%
+  );
 
   // Input colors
   --color-input: var(--color-gray-200);

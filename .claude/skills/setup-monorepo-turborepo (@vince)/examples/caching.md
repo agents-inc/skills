@@ -3,6 +3,7 @@
 > Remote caching, CI/CD integration, and cache behavior patterns. See [../SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for essential task pipeline patterns.
 
 **Related Examples:**
+
 - [core.md](core.md) - Essential task pipeline patterns (prerequisite)
 - [workspaces.md](workspaces.md) - Workspace protocol, syncpack
 - [packages.md](packages.md) - Internal package conventions
@@ -38,11 +39,7 @@
 // turbo.json - Advanced caching configuration (Turborepo 2.x)
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    ".env",
-    "tsconfig.json",
-    "eslint.config.js"
-  ],
+  "globalDependencies": [".env", "tsconfig.json", "eslint.config.js"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

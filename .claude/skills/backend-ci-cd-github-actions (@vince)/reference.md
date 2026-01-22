@@ -136,7 +136,7 @@ Testing multiple configurations?
 jobs:
   test:
     steps:
-      - run: bunx turbo run test  # Runs ALL tests
+      - run: bunx turbo run test # Runs ALL tests
 ```
 
 **Why it's wrong:** PRs should get fast feedback (< 5 min), full test suite takes 10+ minutes, wastes CI resources on unchanged code.
@@ -153,7 +153,7 @@ jobs:
   test:
     steps:
       - uses: oven-sh/setup-bun@v1
-      - run: bun install  # Reinstalls every time
+      - run: bun install # Reinstalls every time
       - run: bun run test
 ```
 
@@ -188,7 +188,7 @@ jobs:
 # ❌ ANTI-PATTERN: Magic numbers everywhere
 jobs:
   test:
-    timeout-minutes: 15  # Why 15?
+    timeout-minutes: 15 # Why 15?
     steps:
       - run: bun run test -- --coverage --coverageThreshold='{"global":{"statements":80}}'
 ```
@@ -336,6 +336,7 @@ export const DATADOG_CONFIG = {
 // turbo-cache-config.ts
 export const CACHE_CONFIG = {
   FORCE_REBUILD: process.env.TURBO_FORCE === "true",
-  SKIP_CACHE: process.env.CI === "true" && process.env.SKIP_TURBO_CACHE === "true",
+  SKIP_CACHE:
+    process.env.CI === "true" && process.env.SKIP_TURBO_CACHE === "true",
 } as const;
 ```

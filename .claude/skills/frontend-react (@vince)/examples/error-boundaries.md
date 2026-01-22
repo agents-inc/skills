@@ -3,6 +3,7 @@
 > Error boundary implementation, custom fallbacks, and recovery patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Component architecture, variants, event handlers
 - [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage

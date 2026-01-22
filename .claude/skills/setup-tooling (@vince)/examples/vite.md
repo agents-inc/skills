@@ -41,7 +41,10 @@ export default defineConfig({
           // Vendor chunks
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           "query-vendor": ["@tanstack/react-query"],
-          "ui-vendor": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
+          "ui-vendor": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+          ],
         },
       },
     },
@@ -109,8 +112,14 @@ export default defineConfig({
         // advancedChunks replaces manualChunks in Rolldown
         advancedChunks: {
           groups: [
-            { name: "react-vendor", test: /[\\/]node_modules[\\/]react(-dom)?[\\/]/ },
-            { name: "query-vendor", test: /[\\/]node_modules[\\/]@tanstack[\\/]/ },
+            {
+              name: "react-vendor",
+              test: /[\\/]node_modules[\\/]react(-dom)?[\\/]/,
+            },
+            {
+              name: "query-vendor",
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+            },
             { name: "ui-vendor", test: /[\\/]node_modules[\\/]@radix-ui[\\/]/ },
           ],
         },
@@ -307,24 +316,24 @@ export default defineConfig({
 
 ## Key Configuration Points
 
-| Setting | Development | Production | Notes |
-|---------|-------------|------------|-------|
-| `sourcemap` | `true` | `false` | Use `'hidden'` for production with error tracking |
-| `minify` | `false` | `true` (esbuild) | esbuild is 20-40x faster than Terser |
-| `manualChunks` | `undefined` | Vendor splitting | Deprecated in Rolldown; use `advancedChunks` |
-| `modulePreload.polyfill` | `true` | `true` | Disable for modern-only targets |
-| `target` | N/A | `'baseline-widely-available'` | Vite 7 default; Chrome 107+, Safari 16+ |
+| Setting                  | Development | Production                    | Notes                                             |
+| ------------------------ | ----------- | ----------------------------- | ------------------------------------------------- |
+| `sourcemap`              | `true`      | `false`                       | Use `'hidden'` for production with error tracking |
+| `minify`                 | `false`     | `true` (esbuild)              | esbuild is 20-40x faster than Terser              |
+| `manualChunks`           | `undefined` | Vendor splitting              | Deprecated in Rolldown; use `advancedChunks`      |
+| `modulePreload.polyfill` | `true`      | `true`                        | Disable for modern-only targets                   |
+| `target`                 | N/A         | `'baseline-widely-available'` | Vite 7 default; Chrome 107+, Safari 16+           |
 
 ---
 
 ## Build Target Defaults (Vite 7+)
 
-| Target | Browser Support | Notes |
-|--------|-----------------|-------|
-| `'baseline-widely-available'` | Chrome 107+, Edge 107+, Firefox 104+, Safari 16+ | New Vite 7 default |
-| `'modules'` | **DEPRECATED** | Was Vite 5 default; no longer available |
-| `'esnext'` | Latest browsers only | Minimal transpilation |
-| `['chrome87', 'safari14']` | Custom browser list | Explicit control |
+| Target                        | Browser Support                                  | Notes                                   |
+| ----------------------------- | ------------------------------------------------ | --------------------------------------- |
+| `'baseline-widely-available'` | Chrome 107+, Edge 107+, Firefox 104+, Safari 16+ | New Vite 7 default                      |
+| `'modules'`                   | **DEPRECATED**                                   | Was Vite 5 default; no longer available |
+| `'esnext'`                    | Latest browsers only                             | Minimal transpilation                   |
+| `['chrome87', 'safari14']`    | Custom browser list                              | Explicit control                        |
 
 ---
 

@@ -45,7 +45,7 @@ Need a feature flag?
 
 - Committing secrets to version control (.env files with real credentials)
 - Using environment variables directly without Zod validation (causes runtime errors)
-- Using NEXT_PUBLIC_* or VITE_* prefix for secrets (embeds in client bundle)
+- Using NEXT*PUBLIC*\_ or VITE\_\_ prefix for secrets (embeds in client bundle)
 - Sharing .env files via Slack/email (insecure secret distribution)
 
 ### Medium Priority Issues
@@ -64,8 +64,8 @@ Need a feature flag?
 
 ### Gotchas & Edge Cases
 
-- Next.js embeds NEXT_PUBLIC_* variables at build time (not runtime) - requires rebuild to change
-- Vite embeds VITE_* variables at build time - same limitation as Next.js
+- Next.js embeds NEXT*PUBLIC*\* variables at build time (not runtime) - requires rebuild to change
+- Vite embeds VITE\_\* variables at build time - same limitation as Next.js
 - Environment variables are strings - use `z.coerce.number()` for numbers
 - **CRITICAL: `z.coerce.boolean()` converts "false" to `true`** - JavaScript's `Boolean("false")` is `true` (non-empty string is truthy). Use `z.stringbool()` (Zod 4+) instead which correctly handles "true"/"false"/"1"/"0"/"yes"/"no"
 - Empty string env vars (`PORT=`) are NOT `undefined` - use T3 Env's `emptyStringAsUndefined: true` or handle explicitly
@@ -126,7 +126,7 @@ const envSchema = z.object({
 
 ---
 
-### Using NEXT_PUBLIC_* for Secrets
+### Using NEXT*PUBLIC*\* for Secrets
 
 ```bash
 # ANTI-PATTERN: Secret with client-side prefix
@@ -134,7 +134,7 @@ NEXT_PUBLIC_DATABASE_URL=postgresql://user:pass@host/db
 NEXT_PUBLIC_API_SECRET_KEY=sk_secret_12345
 ```
 
-**Why it's wrong:** NEXT_PUBLIC_* variables are embedded in client bundle, visible to anyone.
+**Why it's wrong:** NEXT*PUBLIC*\* variables are embedded in client bundle, visible to anyone.
 
 **What to do instead:** Use non-prefixed variables for server-side secrets only.
 
@@ -208,10 +208,10 @@ const enabled = process.env.VITE_ENABLE_ANALYTICS === "true";
 
 ### Secret Management Checklist
 
-- [ ] .gitignore includes .env.local and .env.*.local
+- [ ] .gitignore includes .env.local and .env.\*.local
 - [ ] No secrets in committed .env files
 - [ ] CI/CD secrets used for production
-- [ ] Sensitive file extensions (*.key, *.pem) gitignored
+- [ ] Sensitive file extensions (_.key, _.pem) gitignored
 - [ ] Secrets rotated regularly
 
 ### Feature Flag Checklist

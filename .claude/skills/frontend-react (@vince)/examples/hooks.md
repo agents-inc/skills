@@ -3,6 +3,7 @@
 > Reusable hook patterns: usePagination, useDebounce, useLocalStorage. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Component architecture, variants, event handlers
 - [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
@@ -27,23 +28,23 @@ interface UsePaginationProps {
 export function usePagination({
   totalItems,
   itemsPerPage,
-  initialPage = DEFAULT_INITIAL_PAGE
+  initialPage = DEFAULT_INITIAL_PAGE,
 }: UsePaginationProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
   const totalPages = useMemo(
     () => Math.ceil(totalItems / itemsPerPage),
-    [totalItems, itemsPerPage]
+    [totalItems, itemsPerPage],
   );
 
   const startIndex = useMemo(
     () => (currentPage - 1) * itemsPerPage,
-    [currentPage, itemsPerPage]
+    [currentPage, itemsPerPage],
   );
 
   const endIndex = useMemo(
     () => Math.min(startIndex + itemsPerPage, totalItems),
-    [startIndex, itemsPerPage, totalItems]
+    [startIndex, itemsPerPage, totalItems],
   );
 
   const goToPage = (page: number) => {
@@ -219,7 +220,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   const setValue = (value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
 
       if (typeof window !== "undefined") {

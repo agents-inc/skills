@@ -3,6 +3,7 @@
 > lucide-react usage, accessibility patterns, and color inheritance. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Component architecture, variants, event handlers
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
 - [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
@@ -19,7 +20,7 @@ import { Button } from "@repo/ui/button";
 
 <Button size="icon" title="Expand details" aria-label="Expand details">
   <ChevronDown />
-</Button>
+</Button>;
 ```
 
 **Why good:** lucide-react provides tree-shakeable imports reducing bundle size, title attribute shows tooltip on hover, aria-label provides accessible name for screen readers, icon inherits color from button reducing CSS duplication
@@ -32,7 +33,7 @@ import { Button } from "@repo/ui/button";
 
 <Button size="icon">
   <ChevronDown />
-</Button>
+</Button>;
 ```
 
 **Why bad:** missing title means no tooltip for sighted users, missing aria-label means screen readers announce "button" with no context, unusable for keyboard-only and screen reader users
@@ -123,7 +124,7 @@ Icons from lucide-react inherit `currentColor` by default, keeping them in sync 
 ```tsx
 // Don't override icon colors with explicit classes
 <Button data-variant="success">
-  <CheckCircle color="green" />  {/* Manual color override */}
+  <CheckCircle color="green" /> {/* Manual color override */}
   Save
 </Button>
 ```

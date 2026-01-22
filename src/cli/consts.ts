@@ -33,7 +33,6 @@ export const DIRS = {
   skills: "src/skills",
   stacks: "src/stacks",
   corePrompts: "src/core-prompts",
-  agentOutputs: "src/agent-outputs",
   templates: "src/templates",
   commands: "src/commands",
 } as const;

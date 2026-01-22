@@ -13,12 +13,19 @@ Patterns for relational queries with `.with()` and the Drizzle query builder for
 import { and, eq, desc, asc, isNull } from "drizzle-orm";
 
 const job = await db.query.jobs.findFirst({
-  where: and(eq(jobs.id, jobId), eq(jobs.isActive, true), isNull(jobs.deletedAt)),
+  where: and(
+    eq(jobs.id, jobId),
+    eq(jobs.isActive, true),
+    isNull(jobs.deletedAt),
+  ),
   with: {
     company: {
       with: {
         locations: {
-          orderBy: [desc(companyLocations.isHeadquarters), asc(companyLocations.name)],
+          orderBy: [
+            desc(companyLocations.isHeadquarters),
+            asc(companyLocations.name),
+          ],
         },
       },
     },

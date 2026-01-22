@@ -6,12 +6,14 @@ import {
   loadGlobalConfig,
   saveGlobalConfig,
   loadProjectConfig,
+  saveProjectConfig,
   getGlobalConfigPath,
   getProjectConfigPath,
   formatSourceOrigin,
   DEFAULT_SOURCE,
   SOURCE_ENV_VAR,
   type GlobalConfig,
+  type ProjectConfig,
 } from "../lib/config";
 
 export const configCommand = new Command("config")
@@ -172,6 +174,69 @@ configCommand
     await saveGlobalConfig(newConfig);
 
     p.log.success(`Removed ${key} from global configuration`);
+  });
+
+/**
+ * cc config set-project <key> <value> - Set a project configuration value
+ */
+configCommand
+  .command("set-project")
+  .description("Set a project-level configuration value")
+  .argument("<key>", "Configuration key (source)")
+  .argument("<value>", "Configuration value")
+  .action(async (key: string, value: string) => {
+    const projectDir = process.cwd();
+    const validKeys = ["source"];
+
+    if (!validKeys.includes(key)) {
+      p.log.error(`Unknown configuration key: ${key}`);
+      p.log.info(`Valid keys: ${validKeys.join(", ")}`);
+      process.exit(1);
+    }
+
+    const existingConfig = (await loadProjectConfig(projectDir)) || {};
+
+    const newConfig: ProjectConfig = {
+      ...existingConfig,
+      [key]: value,
+    };
+
+    await saveProjectConfig(projectDir, newConfig);
+
+    p.log.success(`Set ${key} = ${value} (project-level)`);
+    p.log.info(`Saved to ${getProjectConfigPath(projectDir)}`);
+  });
+
+/**
+ * cc config unset-project <key> - Remove a project configuration value
+ */
+configCommand
+  .command("unset-project")
+  .description("Remove a project-level configuration value")
+  .argument("<key>", "Configuration key to remove")
+  .action(async (key: string) => {
+    const projectDir = process.cwd();
+    const validKeys = ["source"];
+
+    if (!validKeys.includes(key)) {
+      p.log.error(`Unknown configuration key: ${key}`);
+      p.log.info(`Valid keys: ${validKeys.join(", ")}`);
+      process.exit(1);
+    }
+
+    const existingConfig = await loadProjectConfig(projectDir);
+
+    if (!existingConfig) {
+      p.log.info("No project configuration exists.");
+      return;
+    }
+
+    const newConfig: ProjectConfig = { ...existingConfig };
+    delete newConfig[key as keyof ProjectConfig];
+
+    await saveProjectConfig(projectDir, newConfig);
+
+    p.log.success(`Removed ${key} from project configuration`);
   });
 
 /**

@@ -5,6 +5,7 @@
 **Related**: See [error-boundaries.md](error-boundaries.md) for React error boundary components.
 
 **SDK Version Notes:**
+
 - v9.x: `captureUserFeedback()` renamed to `captureFeedback()`, `comments` field renamed to `message`
 - v9.x: `enableTracing` option removed, use `tracesSampleRate` directly (no longer needs boolean flag)
 - v9.x: `getCurrentHub()` removed, use `Sentry.getClient()`, `Sentry.getCurrentScope()`, or top-level functions
@@ -120,7 +121,7 @@ Sentry.init({
     // Skip expected errors by message pattern
     if (error instanceof Error) {
       const isIgnored = IGNORED_ERROR_PATTERNS.some((pattern) =>
-        error.message.toLowerCase().includes(pattern.toLowerCase())
+        error.message.toLowerCase().includes(pattern.toLowerCase()),
       );
 
       if (isIgnored) {

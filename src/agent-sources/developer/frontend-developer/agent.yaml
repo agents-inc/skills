@@ -1,0 +1,11 @@
+id: frontend-developer
+title: Frontend Developer Agent
+description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
+model: opus
+tools:
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - Bash

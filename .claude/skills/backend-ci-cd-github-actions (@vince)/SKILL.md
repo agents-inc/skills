@@ -30,6 +30,7 @@ description: GitHub Actions, pipelines, deployment
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) directory:
   - [core.md](examples/core.md) - Pipeline config, jobs, caching, reusable workflows, composite actions, matrix builds
   - [testing.md](examples/testing.md) - Affected detection, quality gates
@@ -194,6 +195,7 @@ export const QUALITY_GATES = {
 ```
 
 **Quality gate order:**
+
 1. Linting (code style and static analysis)
 2. Type checking (TypeScript errors)
 3. Tests with coverage (functionality validation)

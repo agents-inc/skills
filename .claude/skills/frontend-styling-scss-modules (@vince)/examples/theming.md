@@ -38,7 +38,11 @@
   --color-text-inverted: var(--color-gray-950);
   --color-primary: var(--color-gray-50);
   --color-primary-foreground: var(--color-gray-950);
-  --color-primary-hover: color-mix(in srgb, hsl(var(--color-primary)), white 5%);
+  --color-primary-hover: color-mix(
+    in srgb,
+    hsl(var(--color-primary)),
+    white 5%
+  );
 }
 ```
 

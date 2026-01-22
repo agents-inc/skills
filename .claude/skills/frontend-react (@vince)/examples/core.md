@@ -3,6 +3,7 @@
 > Component architecture, variant props, and event handlers. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
 - [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery

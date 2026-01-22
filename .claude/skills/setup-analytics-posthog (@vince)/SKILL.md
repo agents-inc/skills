@@ -54,6 +54,7 @@ description: PostHog analytics and feature flags setup
 - Initial dashboard recommendations
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/):
   - [core.md](examples/core.md) - Provider setup, layout integration, user identification
   - [server.md](examples/server.md) - Server client singleton, API routes, Hono middleware

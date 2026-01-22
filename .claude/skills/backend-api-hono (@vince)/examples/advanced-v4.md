@@ -31,7 +31,11 @@ const routes = app
       },
       responses: {
         200: {
-          content: { "application/json": { schema: z.object({ id: z.string(), name: z.string() }) } },
+          content: {
+            "application/json": {
+              schema: z.object({ id: z.string(), name: z.string() }),
+            },
+          },
           description: "User details",
         },
       },
@@ -47,11 +51,19 @@ const routes = app
       path: "/users",
       operationId: "createUser",
       request: {
-        body: { content: { "application/json": { schema: z.object({ name: z.string() }) } } },
+        body: {
+          content: {
+            "application/json": { schema: z.object({ name: z.string() }) },
+          },
+        },
       },
       responses: {
         201: {
-          content: { "application/json": { schema: z.object({ id: z.string(), name: z.string() }) } },
+          content: {
+            "application/json": {
+              schema: z.object({ id: z.string(), name: z.string() }),
+            },
+          },
           description: "Created user",
         },
       },
@@ -89,8 +101,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 export const apiClient = hc<AppType>(API_BASE_URL);
 
 // Type-safe request/response types (for use with React Query, etc.)
-type GetUserRequest = InferRequestType<typeof apiClient.api.users[":id"]["$get"]>;
-type GetUserResponse = InferResponseType<typeof apiClient.api.users[":id"]["$get"]>;
+type GetUserRequest = InferRequestType<
+  (typeof apiClient.api.users)[":id"]["$get"]
+>;
+type GetUserResponse = InferResponseType<
+  (typeof apiClient.api.users)[":id"]["$get"]
+>;
 
 // Usage in component
 async function fetchUser(id: string) {
@@ -429,6 +445,7 @@ app.openapi(getJobsRoute, async (c) => {
 ```
 
 Response headers will include:
+
 ```
 Server-Timing: db;dur=45.2;desc="Database query"
 ```

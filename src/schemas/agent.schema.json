@@ -4,7 +4,7 @@
   "title": "Agent Definition",
   "description": "Schema for agent.yaml files in agent-sources/{id}/agent.yaml",
   "type": "object",
-  "required": ["id", "title", "description", "tools", "output_format"],
+  "required": ["id", "title", "description", "tools"],
   "additionalProperties": false,
   "properties": {
     "id": {

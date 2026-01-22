@@ -56,7 +56,7 @@ import posthog from "posthog-js";
 // Good Example - Bootstrap flags for immediate availability
 export function initPostHogWithBootstrap(
   bootstrapFlags: Record<string, boolean | string>,
-  distinctId: string
+  distinctId: string,
 ) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
@@ -88,20 +88,18 @@ export function initPostHogWithCallback() {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     loaded: (posthog) => {
       // Called when PostHog SDK is loaded
-      posthog.onFeatureFlags(
-        (flagVariants, { errorsLoading }) => {
-          // flagVariants: Record<string, string | boolean>
-          // errorsLoading: boolean | undefined - true if request failed/timed out
+      posthog.onFeatureFlags((flagVariants, { errorsLoading }) => {
+        // flagVariants: Record<string, string | boolean>
+        // errorsLoading: boolean | undefined - true if request failed/timed out
 
-          if (errorsLoading) {
-            console.warn("Feature flags failed to load, using defaults");
-            return;
-          }
-
-          // Flags are now available
-          console.log("Feature flags loaded:", flagVariants);
+        if (errorsLoading) {
+          console.warn("Feature flags failed to load, using defaults");
+          return;
         }
-      );
+
+        // Flags are now available
+        console.log("Feature flags loaded:", flagVariants);
+      });
     },
   });
 }

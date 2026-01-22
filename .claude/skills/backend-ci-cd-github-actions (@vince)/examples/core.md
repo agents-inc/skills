@@ -3,6 +3,7 @@
 > Pipeline configuration, job dependencies, caching strategies, and resource management. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [testing.md](testing.md) - Affected detection, quality gates
 - [caching.md](caching.md) - Remote caching, Turborepo
 - [security.md](security.md) - OIDC auth, secrets rotation
@@ -329,6 +330,7 @@ jobs:
 **Why good:** Single line per reusable workflow keeps caller minimal, version tag (@v1) ensures stability while allowing updates, secrets inherit option simplifies secret passing
 
 **Limits (as of Nov 2025):**
+
 - Up to 10 nested reusable workflows (increased from 4)
 - Up to 50 total workflows per run (increased from 20)
 
@@ -415,6 +417,7 @@ jobs:
 ```
 
 **Composite Actions vs Reusable Workflows:**
+
 - **Composite Actions**: Bundle steps within a job, cannot have multiple jobs, no secrets context directly
 - **Reusable Workflows**: Define entire jobs, can have multiple jobs, support secrets natively
 - **Use Composite Actions for**: Shared setup/teardown logic, step-level reuse
@@ -435,7 +438,7 @@ jobs:
       matrix:
         node-version: [18, 20, 22]
         os: [ubuntu-latest, macos-latest]
-      fail-fast: false  # Continue other jobs if one fails
+      fail-fast: false # Continue other jobs if one fails
 
     steps:
       - uses: actions/checkout@v4

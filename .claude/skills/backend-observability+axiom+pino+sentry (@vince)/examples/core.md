@@ -3,6 +3,7 @@
 > Essential logging patterns for everyday use. Reference from [SKILL.md](../SKILL.md).
 
 **Extended examples:**
+
 - [correlation-ids.md](correlation-ids.md) - Middleware for request tracing
 - [tracing.md](tracing.md) - OpenTelemetry spans and custom instrumentation
 - [error-boundaries.md](error-boundaries.md) - React error boundaries with Sentry
@@ -82,7 +83,7 @@ log.info(
     jobId: job.id,
     duration,
   },
-  "Job listing created successfully"
+  "Job listing created successfully",
 );
 ```
 

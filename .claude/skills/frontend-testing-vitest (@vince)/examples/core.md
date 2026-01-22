@@ -165,7 +165,10 @@ const DEFAULT_LOCALE = "en-US";
 
 export { formatCurrency, formatDate, slugify };
 
-function formatCurrency(amount: number, currency: string = DEFAULT_CURRENCY): string {
+function formatCurrency(
+  amount: number,
+  currency: string = DEFAULT_CURRENCY,
+): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
     currency,
@@ -293,7 +296,11 @@ function calculateTax(subtotal: number, taxRate: number): number {
   return subtotal * taxRate;
 }
 
-function calculateTotal(subtotal: number, tax: number, shipping: number): number {
+function calculateTotal(
+  subtotal: number,
+  tax: number,
+  shipping: number,
+): number {
   return subtotal + tax + shipping;
 }
 ```
@@ -323,7 +330,11 @@ describe("calculateSubtotal", () => {
 
   it("applies discount", () => {
     const items = [
-      { price: ITEM_PRICE_100, quantity: QUANTITY_1, discountPercent: DISCOUNT_10_PERCENT },
+      {
+        price: ITEM_PRICE_100,
+        quantity: QUANTITY_1,
+        discountPercent: DISCOUNT_10_PERCENT,
+      },
     ];
     expect(calculateSubtotal(items)).toBe(90);
   });
@@ -355,6 +366,7 @@ describe("calculateTotal", () => {
 ---
 
 _For more patterns, see:_
+
 - [integration.md](integration.md) - Integration tests with network mocking
 - [anti-patterns.md](anti-patterns.md) - What NOT to test
 - [ladle-stories.md](ladle-stories.md) - Component documentation stories

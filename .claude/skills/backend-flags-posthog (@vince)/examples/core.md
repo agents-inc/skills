@@ -3,6 +3,7 @@
 > Essential patterns for PostHog feature flags. Reference from [SKILL.md](../SKILL.md).
 
 **Extended examples:**
+
 - [payloads.md](payloads.md) - Remote configuration with JSON payloads
 - [server-side.md](server-side.md) - Server-side evaluation with posthog-node
 - [rollouts.md](rollouts.md) - Gradual rollouts and user targeting

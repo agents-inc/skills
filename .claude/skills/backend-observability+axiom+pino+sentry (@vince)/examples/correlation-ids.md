@@ -17,18 +17,20 @@ import { randomUUID } from "crypto";
 
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
-export const correlationIdMiddleware = createMiddleware(async (c: Context, next: Next) => {
-  // Use existing correlation ID from upstream or generate new one
-  const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
+export const correlationIdMiddleware = createMiddleware(
+  async (c: Context, next: Next) => {
+    // Use existing correlation ID from upstream or generate new one
+    const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
 
-  // Store in context for handlers to access
-  c.set("correlationId", correlationId);
+    // Store in context for handlers to access
+    c.set("correlationId", correlationId);
 
-  // Add to response headers for client tracing
-  c.header(CORRELATION_ID_HEADER, correlationId);
+    // Add to response headers for client tracing
+    c.header(CORRELATION_ID_HEADER, correlationId);
 
-  await next();
-});
+    await next();
+  },
+);
 
 // Helper to get correlation ID in route handlers
 export const getCorrelationId = (c: Context): string => {
@@ -52,36 +54,38 @@ import { getCorrelationId } from "./correlation-id";
 const HTTP_STATUS_BAD_REQUEST = 400;
 const HTTP_STATUS_INTERNAL_ERROR = 500;
 
-export const requestLoggerMiddleware = createMiddleware(async (c: Context, next: Next) => {
-  const startTime = performance.now();
-  const correlationId = getCorrelationId(c);
+export const requestLoggerMiddleware = createMiddleware(
+  async (c: Context, next: Next) => {
+    const startTime = performance.now();
+    const correlationId = getCorrelationId(c);
 
-  // Create request-scoped logger
-  const log = logger.child({
-    correlationId,
-    method: c.req.method,
-    path: c.req.path,
-    userAgent: c.req.header("user-agent"),
-  });
+    // Create request-scoped logger
+    const log = logger.child({
+      correlationId,
+      method: c.req.method,
+      path: c.req.path,
+      userAgent: c.req.header("user-agent"),
+    });
 
-  log.info("Request started");
+    log.info("Request started");
 
-  await next();
+    await next();
 
-  const duration = Math.round(performance.now() - startTime);
-  const status = c.res.status;
+    const duration = Math.round(performance.now() - startTime);
+    const status = c.res.status;
 
-  // Log completion with appropriate level
-  const logData = { duration, status };
+    // Log completion with appropriate level
+    const logData = { duration, status };
 
-  if (status >= HTTP_STATUS_INTERNAL_ERROR) {
-    log.error(logData, "Request failed with server error");
-  } else if (status >= HTTP_STATUS_BAD_REQUEST) {
-    log.warn(logData, "Request completed with client error");
-  } else {
-    log.info(logData, "Request completed successfully");
-  }
-});
+    if (status >= HTTP_STATUS_INTERNAL_ERROR) {
+      log.error(logData, "Request failed with server error");
+    } else if (status >= HTTP_STATUS_BAD_REQUEST) {
+      log.warn(logData, "Request completed with client error");
+    } else {
+      log.info(logData, "Request completed successfully");
+    }
+  },
+);
 ```
 
 **Why good:** Correlation ID propagated through entire request lifecycle, child logger prevents repeating context, appropriate log level based on response status, duration tracking built-in
@@ -169,19 +173,21 @@ import { asyncContext } from "@/lib/async-context";
 
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
-export const contextMiddleware = createMiddleware(async (c: Context, next: Next) => {
-  const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
-  c.header(CORRELATION_ID_HEADER, correlationId);
+export const contextMiddleware = createMiddleware(
+  async (c: Context, next: Next) => {
+    const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
+    c.header(CORRELATION_ID_HEADER, correlationId);
 
-  // Run the rest of the request in the async context
-  return asyncContext.run(
-    {
-      correlationId,
-      service: "api",
-    },
-    () => next()
-  );
-});
+    // Run the rest of the request in the async context
+    return asyncContext.run(
+      {
+        correlationId,
+        service: "api",
+      },
+      () => next(),
+    );
+  },
+);
 ```
 
 **Usage (no child logger needed):**

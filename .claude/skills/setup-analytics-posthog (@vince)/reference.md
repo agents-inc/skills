@@ -265,7 +265,7 @@ NEXT_PUBLIC_POSTHOG_KEY=phc_xxx  # Client-side, with prefix
 POSTHOG_API_KEY=phc_xxx          # Server-side, no prefix needed
 ```
 
-**Why good:** NEXT_PUBLIC_ exposes to client bundle, server vars stay server-only
+**Why good:** NEXT*PUBLIC* exposes to client bundle, server vars stay server-only
 
 ```bash
 # ❌ Bad Example - Wrong prefixes

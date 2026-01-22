@@ -96,13 +96,11 @@ type EmailCategory = "marketing" | "product_updates" | "team_notifications";
 
 export function generateUnsubscribeUrl(
   userId: string,
-  category: EmailCategory
+  category: EmailCategory,
 ): string {
-  const token = jwt.sign(
-    { userId, category },
-    UNSUBSCRIBE_SECRET,
-    { expiresIn: UNSUBSCRIBE_TOKEN_EXPIRY }
-  );
+  const token = jwt.sign({ userId, category }, UNSUBSCRIBE_SECRET, {
+    expiresIn: UNSUBSCRIBE_TOKEN_EXPIRY,
+  });
 
   return `${process.env.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${token}`;
 }
@@ -142,7 +140,7 @@ interface NotificationOptions {
 }
 
 export async function sendNotificationEmail(
-  options: NotificationOptions
+  options: NotificationOptions,
 ): Promise<{ sent: boolean; reason?: string }> {
   // Check user preferences
   const prefs = await db
@@ -165,7 +163,10 @@ export async function sendNotificationEmail(
   }
 
   // Generate unsubscribe URL
-  const unsubscribeUrl = generateUnsubscribeUrl(options.userId, options.category);
+  const unsubscribeUrl = generateUnsubscribeUrl(
+    options.userId,
+    options.category,
+  );
 
   // Send email
   const result = await sendEmail({

@@ -3,6 +3,7 @@
 > Core setup and handler patterns for MSW. Reference from [SKILL.md](../SKILL.md).
 
 **Extended examples:**
+
 - [browser.md](browser.md) - Browser worker setup, SPA/SSR integration
 - [node.md](node.md) - Server worker setup, test configuration
 - [testing.md](testing.md) - Per-test handler overrides
@@ -83,7 +84,12 @@ import { http, HttpResponse } from "msw";
 export const getFeaturesHandler = http.get("api/v1/features", () => {
   return HttpResponse.json({
     features: [
-      { id: "1", name: "Dark mode", description: "Toggle dark mode", status: "done" },
+      {
+        id: "1",
+        name: "Dark mode",
+        description: "Toggle dark mode",
+        status: "done",
+      },
     ],
   });
 });
@@ -110,9 +116,14 @@ const HTTP_STATUS_OK = 200;
 const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
 
 // Response factories
-const defaultResponse = () => HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
-const emptyResponse = () => HttpResponse.json(emptyFeatures, { status: HTTP_STATUS_OK });
-const errorResponse = () => new HttpResponse("General error", { status: HTTP_STATUS_INTERNAL_SERVER_ERROR });
+const defaultResponse = () =>
+  HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
+const emptyResponse = () =>
+  HttpResponse.json(emptyFeatures, { status: HTTP_STATUS_OK });
+const errorResponse = () =>
+  new HttpResponse("General error", {
+    status: HTTP_STATUS_INTERNAL_SERVER_ERROR,
+  });
 
 // Default handler with variant switching (for development)
 const defaultHandler = () =>

@@ -41,7 +41,13 @@ export const logger = pino({
   },
 
   // Redact sensitive fields
-  redact: ["req.headers.authorization", "req.headers.cookie", "password", "token", "apiKey"],
+  redact: [
+    "req.headers.authorization",
+    "req.headers.cookie",
+    "password",
+    "token",
+    "apiKey",
+  ],
 });
 
 // Create child logger for specific context

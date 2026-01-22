@@ -3,6 +3,7 @@
 > Automated vulnerability scanning with Dependabot and CI security checks. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Related Examples:**
+
 - [core.md](core.md) - Essential patterns (secrets, CSRF, cookies)
 - [xss-prevention.md](xss-prevention.md) - XSS protection, DOMPurify, CSP headers
 - [access-control.md](access-control.md) - CODEOWNERS, rate limiting, branch protection
@@ -118,8 +119,13 @@ async function runSecurityAudit() {
     console.log(`  Total: ${total}\n`);
 
     // Fail CI if critical or high vulnerabilities
-    if (vulnerabilities.critical > CRITICAL_THRESHOLD || vulnerabilities.high > HIGH_THRESHOLD) {
-      console.error("Security audit failed: Critical or high vulnerabilities found!");
+    if (
+      vulnerabilities.critical > CRITICAL_THRESHOLD ||
+      vulnerabilities.high > HIGH_THRESHOLD
+    ) {
+      console.error(
+        "Security audit failed: Critical or high vulnerabilities found!",
+      );
       process.exit(1);
     }
 
@@ -142,7 +148,8 @@ runSecurityAudit();
 // No automated vulnerability scanning in CI
 // PRs merge without security validation
 // Magic numbers instead of named constants
-if (vulns.critical > 0) { // What's the threshold policy?
+if (vulns.critical > 0) {
+  // What's the threshold policy?
   process.exit(1);
 }
 ```

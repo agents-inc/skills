@@ -10,6 +10,7 @@ description: Code review patterns, feedback principles. Use when reviewing PRs, 
 ---
 
 **Detailed Resources:**
+
 - For core examples (progress tracking, retrieval), see [examples/core.md](examples/core.md)
 - For feedback pattern examples, see [examples/feedback-patterns.md](examples/feedback-patterns.md)
 - For anti-pattern examples, see [examples/anti-patterns.md](examples/anti-patterns.md)

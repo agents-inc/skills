@@ -15,6 +15,7 @@ Invoke the agent-summoner agent to create the "architecture" agent using the spe
 ```
 
 The agent-summoner knows:
+
 - All agent file structure conventions
 - Required XML tags and formatting
 - How to update agents.yaml and config.yaml
@@ -25,6 +26,7 @@ The agent-summoner knows:
 ## Research Phase (Complete Before Invoking agent-summoner)
 
 ### Required Reading
+
 - [x] PROMPT_BIBLE.md - Prompting techniques
 - [x] CLAUDE_ARCHITECTURE_BIBLE.md - Agent structure
 - [x] agents.yaml - Configuration patterns
@@ -35,6 +37,7 @@ The agent-summoner knows:
 - [x] Security skill
 
 ### Tech Stack Summary
+
 See ARCHITECTURE_AGENT_PROMPT.md for the complete tech stack that the architecture agent will scaffold.
 
 ---
@@ -42,7 +45,7 @@ See ARCHITECTURE_AGENT_PROMPT.md for the complete tech stack that the architectu
 ## Files to Create
 
 1. **ARCHITECTURE_AGENT_PROMPT.md** - Detailed spec for agent-summoner
-2. Agent source files (created by agent-summoner):
+2. Agent source files (created by agent-summoner in `src/agent-sources/developer/architecture/`):
    - intro.md
    - workflow.md
    - critical-requirements.md
@@ -56,7 +59,7 @@ See ARCHITECTURE_AGENT_PROMPT.md for the complete tech stack that the architectu
 If partial files were created manually, remove them:
 
 ```bash
-rm -rf src/agent-sources/architecture/
+rm -rf src/agent-sources/developer/architecture/
 ```
 
 Then invoke agent-summoner with the prompt document.

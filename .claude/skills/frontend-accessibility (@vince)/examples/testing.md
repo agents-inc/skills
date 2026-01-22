@@ -12,12 +12,12 @@
 // Role-based queries encourage accessible markup
 // These examples use Testing Library patterns - adapt to your testing framework
 
-it('should toggle the feature', async () => {
+it("should toggle the feature", async () => {
   // Render your component
 
   // Query by role (encourages accessible markup)
-  const feature = await screen.findByTestId('feature');
-  const switchElement = within(feature).getByRole('switch');
+  const feature = await screen.findByTestId("feature");
+  const switchElement = within(feature).getByRole("switch");
 
   expect(switchElement).toBeChecked();
 
@@ -26,11 +26,11 @@ it('should toggle the feature', async () => {
   await waitFor(() => expect(switchElement).not.toBeChecked());
 });
 
-it('should render button with accessible name', () => {
+it("should render button with accessible name", () => {
   // Render your button component
 
   // Query by role and accessible name
-  const button = screen.getByRole('button', { name: 'Click me' });
+  const button = screen.getByRole("button", { name: "Click me" });
   expect(button).toBeInTheDocument();
 });
 ```
@@ -38,6 +38,7 @@ it('should render button with accessible name', () => {
 **Why good:** Role-based queries fail if markup isn't accessible, catching issues early.
 
 **Key accessibility query patterns:**
+
 - `getByRole('button')` - Finds buttons by ARIA role
 - `getByRole('link', { name: 'Home' })` - Finds links by accessible name
 - `getByRole('textbox')` - Finds inputs by role
@@ -87,8 +88,8 @@ describe('LoginForm', () => {
 
 ```typescript
 // vitest.setup.ts - Setup file
-import * as matchers from 'vitest-axe/matchers';
-import { expect } from 'vitest';
+import * as matchers from "vitest-axe/matchers";
+import { expect } from "vitest";
 
 expect.extend(matchers);
 ```
@@ -133,56 +134,56 @@ describe('LoginForm', () => {
 
 ```typescript
 // cypress/support/e2e.ts
-import 'cypress-axe';
+import "cypress-axe";
 
 // Optional: Add terminal logging
-Cypress.Commands.add('logA11yViolations', (violations) => {
-  cy.task('log', `${violations.length} accessibility violations found`);
+Cypress.Commands.add("logA11yViolations", (violations) => {
+  cy.task("log", `${violations.length} accessibility violations found`);
   cy.task(
-    'table',
+    "table",
     violations.map((v) => ({
       id: v.id,
       impact: v.impact,
       description: v.description,
       nodes: v.nodes.length,
-    }))
+    })),
   );
 });
 ```
 
 ```typescript
 // cypress/e2e/accessibility.cy.ts
-describe('Accessibility', () => {
+describe("Accessibility", () => {
   beforeEach(() => {
-    cy.visit('/');
+    cy.visit("/");
     cy.injectAxe(); // Must be called after cy.visit()
   });
 
-  it('should have no critical violations on homepage', () => {
+  it("should have no critical violations on homepage", () => {
     cy.checkA11y(null, {
-      includedImpacts: ['critical', 'serious'],
+      includedImpacts: ["critical", "serious"],
     });
   });
 
-  it('should have no violations in main content', () => {
+  it("should have no violations in main content", () => {
     // Scope to specific element
-    cy.checkA11y('main');
+    cy.checkA11y("main");
   });
 
   // Gradual adoption: log violations without failing
-  it('should audit full page (non-blocking)', () => {
+  it("should audit full page (non-blocking)", () => {
     cy.checkA11y(
       null,
       {},
       (violations) => {
         cy.logA11yViolations(violations);
       },
-      true // skipFailures = true
+      true, // skipFailures = true
     );
   });
 
   // Test with dynamic content (retries)
-  it('should check modal after opening', () => {
+  it("should check modal after opening", () => {
     cy.get('[data-testid="open-modal"]').click();
     cy.checkA11y('[role="dialog"]', {
       retries: 3,

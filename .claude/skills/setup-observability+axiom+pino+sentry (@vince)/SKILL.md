@@ -10,6 +10,7 @@ description: Pino, Axiom, Sentry installation - one-time project setup for loggi
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [examples/core.md](examples/core.md) - Essential setup patterns (dependencies, env vars, next.config.js)
   - [examples/sentry-config.md](examples/sentry-config.md) - Sentry configuration files and instrumentation
@@ -113,6 +114,7 @@ For detailed code examples with good/bad comparisons, see [examples/core.md](exa
 Create `.env.example` with all required observability variables documented. Group by service for easy navigation, use comments to explain where to get each value, and maintain separate datasets per environment.
 
 Key variables needed:
+
 - `NEXT_PUBLIC_AXIOM_DATASET` - Dataset name (e.g., `myapp-dev`, `myapp-prod`)
 - `NEXT_PUBLIC_AXIOM_TOKEN` - API token with ingest permission
 - `NEXT_PUBLIC_SENTRY_DSN` - Sentry DSN from project settings
@@ -130,6 +132,7 @@ For complete template with all variables, see [examples/core.md](examples/core.m
 Wrap Next.js config with `withAxiom` for automatic logging integration, then wrap with `withSentryConfig` for source map handling.
 
 Key configuration points:
+
 - `withAxiom` wraps first for logging integration
 - Sentry wraps outer for source map handling
 - Source map upload disabled locally (`!process.env.CI`)
@@ -144,11 +147,13 @@ For complete configuration example, see [examples/core.md](examples/core.md#patt
 Create all three Sentry config files for client, server, and edge runtimes.
 
 **Required files:**
+
 - `sentry.client.config.ts` - Client-side with replay integration
 - `sentry.server.config.ts` - Server-side with local variables capture
 - `sentry.edge.config.ts` - Edge runtime with limited features
 
 Key considerations:
+
 - Use named constants for sample rates
 - Environment-specific configuration (debug mode, sample rates)
 - Filter expected errors with `beforeSend`
@@ -194,6 +199,7 @@ For implementation example, see [examples/axiom-integration.md](examples/axiom-i
 ### Pattern 7: GitHub Actions Source Maps Upload
 
 Configure CI/CD to upload source maps to Sentry on deployment. Key requirements:
+
 - Set `CI=true` to enable source map upload during build
 - Use GitHub secrets for credentials (never hardcode)
 - Create Sentry release with `getsentry/action-release@v1`
@@ -206,6 +212,7 @@ For complete workflow template, see [examples/ci-cd.md](examples/ci-cd.md#patter
 ### Pattern 8: Health Check Endpoint
 
 Add health check endpoints for monitoring and load balancer integration:
+
 - **Shallow check** (`/health`) - Fast, for frequent LB checks
 - **Deep check** (`/health/deep`) - With dependency checks (database, etc.)
 
@@ -216,6 +223,7 @@ For Hono and Next.js implementations, see [examples/health-check.md](examples/he
 ### Pattern 9: Pino Logger Setup
 
 Configure Pino with development/production modes:
+
 - Development: `pino-pretty` for human-readable output
 - Production: JSON for Axiom ingestion
 - Base fields for context in every log
@@ -228,6 +236,7 @@ For complete configuration, see [examples/pino-logger.md](examples/pino-logger.m
 ### Pattern 10: Axiom Dashboard Setup
 
 After setting up, create initial dashboards in Axiom:
+
 - Request volume per minute
 - Error rate percentage
 - Response time P95
@@ -260,12 +269,14 @@ See [reference.md](reference.md#decision-framework) for complete decision trees:
 See [reference.md](reference.md#red-flags) for complete list.
 
 **High Priority:**
+
 - Committing Axiom tokens or Sentry DSN to version control
 - Using pino-pretty in production
 - Missing source maps upload
 - Same Axiom dataset for all environments
 
 **Common Mistakes:**
+
 - Forgetting to wrap `next.config.js` with `withAxiom`
 - Missing `instrumentation.ts`
 - Hardcoding sample rates instead of named constants

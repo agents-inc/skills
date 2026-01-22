@@ -3,6 +3,7 @@
 > OIDC authentication and secrets rotation. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Pipeline config, jobs, caching basics
 - [testing.md](testing.md) - Affected detection, quality gates
 - [caching.md](caching.md) - Remote caching, Turborepo
@@ -168,6 +169,7 @@ jobs:
 **Why good:** Vercel token scoped to specific project limits blast radius, environment protection requires manual approval for production, prebuilt deployment separates build from deploy for consistency, url annotation links GitHub environment to live deployment
 
 **Security best practices for Vercel tokens:**
+
 - Generate project-scoped tokens (not account-level) at https://vercel.com/account/tokens
 - Set token expiration (90 days recommended) and rotate before expiry
 - Use GitHub environment secrets to isolate production tokens from preview deployments
@@ -334,9 +336,9 @@ on:
     branches: [main]
 
 permissions:
-  id-token: write      # REQUIRED for OIDC token
-  contents: read       # REQUIRED for checkout
-  attestations: write  # REQUIRED for attestation persistence
+  id-token: write # REQUIRED for OIDC token
+  contents: read # REQUIRED for checkout
+  attestations: write # REQUIRED for attestation persistence
 
 jobs:
   build:
@@ -358,7 +360,7 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v3
         with:
-          subject-path: 'apps/web/dist/**/*'
+          subject-path: "apps/web/dist/**/*"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -392,7 +394,7 @@ permissions:
   id-token: write
   contents: read
   attestations: write
-  packages: write  # REQUIRED for container registry
+  packages: write # REQUIRED for container registry
 
 env:
   REGISTRY: ghcr.io

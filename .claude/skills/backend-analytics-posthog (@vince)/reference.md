@@ -93,9 +93,9 @@ function App() {
 ```typescript
 // ANTI-PATTERN: Storing PII
 posthog.capture("user_action", {
-  email: user.email,      // BAD
-  name: user.name,        // BAD
-  phone: user.phone,      // BAD
+  email: user.email, // BAD
+  name: user.name, // BAD
+  phone: user.phone, // BAD
 });
 ```
 
@@ -188,31 +188,31 @@ posthog.capture("action");
 
 ### Naming Convention
 
-| Pattern | Example | Use Case |
-|---------|---------|----------|
-| `category:object_action` | `signup_flow:form_submit` | Grouped events for funnels |
-| `object_action` | `project_created` | Simple business events |
-| `$pageview` | `$pageview` | Page views (PostHog standard) |
+| Pattern                  | Example                   | Use Case                      |
+| ------------------------ | ------------------------- | ----------------------------- |
+| `category:object_action` | `signup_flow:form_submit` | Grouped events for funnels    |
+| `object_action`          | `project_created`         | Simple business events        |
+| `$pageview`              | `$pageview`               | Page views (PostHog standard) |
 
 ### Property Conventions
 
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| `object_adjective` | `project_id`, `plan_name` | Entity references |
-| `is_*` | `is_first_purchase` | Boolean flags |
-| `has_*` | `has_completed_onboarding` | Boolean state |
-| `*_date` | `trial_end_date` | Date strings |
-| `*_timestamp` | `last_login_timestamp` | Unix timestamps |
-| `*_count` | `item_count` | Numeric counts |
+| Pattern            | Example                    | Description       |
+| ------------------ | -------------------------- | ----------------- |
+| `object_adjective` | `project_id`, `plan_name`  | Entity references |
+| `is_*`             | `is_first_purchase`        | Boolean flags     |
+| `has_*`            | `has_completed_onboarding` | Boolean state     |
+| `*_date`           | `trial_end_date`           | Date strings      |
+| `*_timestamp`      | `last_login_timestamp`     | Unix timestamps   |
+| `*_count`          | `item_count`               | Numeric counts    |
 
 ### Standard PostHog Events
 
-| Event | Description |
-|-------|-------------|
-| `$pageview` | Page view (capture manually in Next.js) |
-| `$pageleave` | User leaves page |
-| `$autocapture` | Automatic click/form tracking |
-| `$feature_flag_called` | Feature flag evaluated |
+| Event                  | Description                             |
+| ---------------------- | --------------------------------------- |
+| `$pageview`            | Page view (capture manually in Next.js) |
+| `$pageleave`           | User leaves page                        |
+| `$autocapture`         | Automatic click/form tracking           |
+| `$feature_flag_called` | Feature flag evaluated                  |
 
 ---
 

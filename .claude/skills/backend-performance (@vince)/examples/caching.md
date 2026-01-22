@@ -192,11 +192,9 @@ function createCacheMiddleware(options: CacheOptions) {
       const body = await c.res.clone().json();
       const headers = Object.fromEntries(c.res.headers.entries());
 
-      await redisClient.set(
-        cacheKey,
-        JSON.stringify({ body, headers }),
-        { EX: options.ttlSeconds || DEFAULT_CACHE_TTL },
-      );
+      await redisClient.set(cacheKey, JSON.stringify({ body, headers }), {
+        EX: options.ttlSeconds || DEFAULT_CACHE_TTL,
+      });
       c.header("X-Cache", "MISS");
     }
   };
@@ -308,12 +306,10 @@ async function invalidateByTag(tag: string) {
 }
 
 // Usage
-await setWithTags(
-  productKey("123"),
-  JSON.stringify(product),
-  MEDIUM_TTL,
-  ["category:electronics", "brand:apple"],
-);
+await setWithTags(productKey("123"), JSON.stringify(product), MEDIUM_TTL, [
+  "category:electronics",
+  "brand:apple",
+]);
 
 // Invalidate all electronics products
 await invalidateByTag("category:electronics");
@@ -325,16 +321,17 @@ await invalidateByTag("category:electronics");
 
 ## TTL Best Practices
 
-| Data Type | Recommended TTL | Rationale |
-|-----------|-----------------|-----------|
-| User session | 86400s (24h) | Balance security vs convenience |
-| User profile | 300s (5m) | Changes infrequently |
-| Product catalog | 3600s (1h) | Infrequent updates |
-| Search results | 60s (1m) | Balance freshness vs performance |
-| Real-time data | 10-30s | Need fresh data |
-| Static config | 86400s+ | Rarely changes |
+| Data Type       | Recommended TTL | Rationale                        |
+| --------------- | --------------- | -------------------------------- |
+| User session    | 86400s (24h)    | Balance security vs convenience  |
+| User profile    | 300s (5m)       | Changes infrequently             |
+| Product catalog | 3600s (1h)      | Infrequent updates               |
+| Search results  | 60s (1m)        | Balance freshness vs performance |
+| Real-time data  | 10-30s          | Need fresh data                  |
+| Static config   | 86400s+         | Rarely changes                   |
 
 **TTL Anti-Patterns:**
+
 - ❌ No TTL (infinite cache) - Memory exhaustion, infinite staleness
 - ❌ Very short TTL everywhere (< 10s) - Defeats caching purpose
 - ❌ Same TTL for all data - Different data has different freshness needs

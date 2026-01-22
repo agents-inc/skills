@@ -1,22 +1,17 @@
-import path from 'path';
-import { fileExists } from '../utils/fs';
-import { DIRS } from '../consts';
-import { resolveClaudeMd } from './resolver';
-import type {
-  AgentConfig,
-  CompileConfig,
-  ValidationResult,
-} from '../types';
+import path from "path";
+import { fileExists } from "../utils/fs";
+import { DIRS } from "../consts";
+import { resolveClaudeMd } from "./resolver";
+import type { AgentConfig, ValidationResult } from "../types";
 
 /**
  * Validate configuration before compilation
  * Returns errors (fatal) and warnings (non-fatal)
  */
 export async function validate(
-  compileConfig: CompileConfig,
   resolvedAgents: Record<string, AgentConfig>,
   stackId: string,
-  projectRoot: string
+  projectRoot: string,
 ): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -30,7 +25,7 @@ export async function validate(
 
   // Check core prompts directory exists
   const corePromptsDir = path.join(projectRoot, DIRS.corePrompts);
-  const corePromptsCheck = path.join(corePromptsDir, 'core-principles.md');
+  const corePromptsCheck = path.join(corePromptsDir, "core-principles.md");
   if (!(await fileExists(corePromptsCheck))) {
     errors.push(`Core prompts directory missing or empty: ${corePromptsDir}`);
   }
@@ -40,10 +35,11 @@ export async function validate(
 
   // Check each resolved agent
   for (const [name, agent] of Object.entries(resolvedAgents)) {
-    const agentDir = path.join(projectRoot, DIRS.agents, name);
+    // Use stored path if available, otherwise fall back to name (for backwards compatibility)
+    const agentDir = path.join(projectRoot, DIRS.agents, agent.path || name);
 
     // Required agent files
-    const requiredFiles = ['intro.md', 'workflow.md'];
+    const requiredFiles = ["intro.md", "workflow.md"];
     for (const file of requiredFiles) {
       const filePath = path.join(agentDir, file);
       if (!(await fileExists(filePath))) {
@@ -53,9 +49,9 @@ export async function validate(
 
     // Optional agent files (warn if missing)
     const optionalFiles = [
-      'examples.md',
-      'critical-requirements.md',
-      'critical-reminders.md',
+      "examples.md",
+      "critical-requirements.md",
+      "critical-reminders.md",
     ];
     for (const file of optionalFiles) {
       const filePath = path.join(agentDir, file);
@@ -72,20 +68,20 @@ export async function validate(
     for (const skill of agent.skills) {
       if (!skill.path) {
         warnings.push(
-          `Skill missing path (won't be compiled): ${skill.id} (agent: ${name})`
+          `Skill missing path (won't be compiled): ${skill.id} (agent: ${name})`,
         );
         continue;
       }
 
-      const basePath = path.join(projectRoot, 'src', skill.path);
-      const isFolder = skill.path.endsWith('/');
+      const basePath = path.join(projectRoot, skill.path);
+      const isFolder = skill.path.endsWith("/");
 
       if (isFolder) {
         // Folder-based skill: check for SKILL.md inside
-        const skillFile = path.join(basePath, 'SKILL.md');
+        const skillFile = path.join(basePath, "SKILL.md");
         if (!(await fileExists(skillFile))) {
           errors.push(
-            `Skill folder missing SKILL.md: ${skill.path}SKILL.md (agent: ${name})`
+            `Skill folder missing SKILL.md: ${skill.path}SKILL.md (agent: ${name})`,
           );
         }
       } else {
@@ -117,14 +113,14 @@ export async function validate(
  */
 export function printValidationResult(result: ValidationResult): void {
   if (result.warnings.length > 0) {
-    console.log('\n  Warnings:');
+    console.log("\n  Warnings:");
     result.warnings.forEach((w) => console.log(`   - ${w}`));
   }
 
   if (!result.valid) {
-    console.error('\n  Validation failed:');
+    console.error("\n  Validation failed:");
     result.errors.forEach((e) => console.error(`   - ${e}`));
   } else {
-    console.log('  Validation passed\n');
+    console.log("  Validation passed\n");
   }
 }

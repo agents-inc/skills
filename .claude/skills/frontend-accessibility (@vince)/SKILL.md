@@ -55,6 +55,7 @@ description: WCAG, ARIA, keyboard navigation
 - Screen reader support (role-based queries, hidden content, live regions)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) directory:
   - [core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
   - [forms.md](examples/forms.md) - Form validation, error handling, Radix select
@@ -75,6 +76,7 @@ description: WCAG, ARIA, keyboard navigation
 Accessibility ensures digital products are usable by everyone, including users with disabilities. This skill applies the principle that **accessibility is a requirement, not a feature** - it should be built in from the start, not retrofitted.
 
 Key philosophy:
+
 - **Semantic HTML first** - Use native elements for built-in accessibility
 - **Radix UI for complex patterns** - Leverage tested, accessible component primitives
 - **Progressive enhancement** - Start with keyboard, add mouse interactions on top
@@ -143,28 +145,33 @@ Key philosophy:
 #### Component-Specific ARIA
 
 **Buttons:**
+
 - `aria-label` - For icon-only buttons
 - `aria-pressed` - For toggle buttons
 - `aria-expanded` - For expandable sections
 - `aria-disabled` - Use with `disabled` attribute
 
 **Forms:**
+
 - `aria-required` - Required fields (use with `required`)
 - `aria-invalid` - Invalid fields
 - `aria-describedby` - Link to error messages, helper text
 - `aria-errormessage` - Explicit error message reference
 
 **Navigation:**
+
 - `aria-current="page"` - Current page in navigation
 - `aria-label` - Describe navigation purpose ("Main navigation", "Footer navigation")
 
 **Modals/Dialogs:**
+
 - `role="dialog"` or `role="alertdialog"`
 - `aria-modal="true"`
 - `aria-labelledby` - Points to dialog title
 - `aria-describedby` - Points to dialog description
 
 **Tables:**
+
 - `scope="col"` and `scope="row"` for headers
 - `<caption>` for table description
 - `aria-sort` for sortable columns
@@ -180,6 +187,7 @@ Key philosophy:
 - `role="alert"` - For error messages (implies `aria-live="assertive"`)
 
 **Best practices:**
+
 - Keep messages concise and meaningful
 - Clear old messages before new ones
 - Don't spam with rapid updates (debounce)
@@ -189,16 +197,19 @@ Key philosophy:
 ### Color Contrast & Visual Design
 
 **Text contrast (AA):**
+
 - Normal text (< 18px): 4.5:1 minimum
 - Large text (>= 18px or >= 14px bold): 3:1 minimum
 - AAA (recommended): 7:1 for normal, 4.5:1 for large
 
 **Non-text contrast:**
+
 - UI components (buttons, form inputs): 3:1 minimum
 - Focus indicators: 3:1 against background
 - Icons (functional): 3:1 minimum
 
 **Color Independence:**
+
 - Add icons to color-coded states (check for success, X for error)
 - Use text labels with status colors
 - Provide patterns/textures in charts
@@ -220,6 +231,7 @@ Key philosophy:
 - `<form>` with proper `<label>` associations
 
 **Never:**
+
 - Use `<div>` or `<span>` for interactive elements
 - Use click handlers on non-interactive elements without proper role
 - Use tables for layout
@@ -230,10 +242,12 @@ Key philosophy:
 ### Form Accessibility
 
 **Label Associations:**
+
 - Always use proper `<label>` with `for` attribute
 - Or wrap input inside label element
 
 **Error Handling:**
+
 - `aria-invalid="true"` on invalid fields
 - `aria-describedby` linking to error message
 - `role="alert"` on error messages for screen reader announcement
@@ -241,12 +255,14 @@ Key philosophy:
 - Error summary at top of form for multiple errors
 
 **Required Fields:**
+
 - `required` attribute for browser validation
 - `aria-required="true"` for screen readers
 - Visual indicator (asterisk, "required" text)
 - Legend/description explaining required fields
 
 **Input Types:**
+
 - `type="email"` - Email keyboard
 - `type="tel"` - Phone keyboard
 - `type="number"` - Number keyboard
@@ -258,12 +274,14 @@ Key philosophy:
 ### Focus Indicators
 
 **Minimum requirements:**
+
 - 3:1 contrast ratio against background
 - 2px minimum thickness
 - Clear visual difference from unfocused state
 - Consistent across all interactive elements
 
 **Use `:focus-visible` for better UX:**
+
 - `:focus` - Shows on mouse click (annoying)
 - `:focus-visible` - Shows only for keyboard navigation (better)
 
@@ -274,20 +292,24 @@ Key philosophy:
 **WCAG 2.2 Target Size Requirements:**
 
 **Level AA (2.5.8 Target Size Minimum):**
+
 - Minimum: 24x24 CSS pixels
 - OR adequate spacing from adjacent targets (24px between closest points)
 - Exceptions: inline text links, user agent controls, essential designs
 
 **Level AAA (2.5.5 Target Size Enhanced):**
+
 - Minimum: 44x44 CSS pixels (recommended for best UX)
 
 **Interactive elements:**
+
 - Buttons: 24x24px minimum (44x44px recommended)
 - Links in text: Inline exemption applies, but increase padding where feasible
 - Form inputs: 24px height minimum (44px recommended)
 - Icons: 24x24px minimum touch target
 
 **Spacing:**
+
 - 8px minimum between adjacent touch targets
 - More spacing on mobile (12-16px recommended)
 - Alternative: 24px spacing allows smaller targets
@@ -297,11 +319,13 @@ Key philosophy:
 ### Screen Reader Support
 
 **Visually Hidden Content:**
+
 - Use `.sr-only` class for screen reader only text
 - Use `aria-label` for icon-only buttons
 - Use empty `alt=""` for decorative images
 
 **Hidden from Screen Readers:**
+
 - `aria-hidden="true"` for decorative content
 - Empty `alt=""` for decorative images
 
@@ -314,6 +338,7 @@ Key philosophy:
 Motion can cause nausea, dizziness, or vestibular disorders for some users. Provide motion alternatives:
 
 **Use `prefers-reduced-motion` media query:**
+
 ```css
 /* Approach 1: Disable animations when user prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {
@@ -335,6 +360,7 @@ Motion can cause nausea, dizziness, or vestibular disorders for some users. Prov
 ```
 
 **Key principles:**
+
 - `reduce` means minimize, not eliminate all motion - essential animations can remain
 - Replace motion effects (scale, rotate, slide) with non-motion effects (fade, dissolve, color change)
 - Provide pause/stop controls for auto-playing content longer than 5 seconds
@@ -347,21 +373,25 @@ Motion can cause nausea, dizziness, or vestibular disorders for some users. Prov
 **WCAG 2.2** (October 2023) added 9 new success criteria. Key ones for developers:
 
 **Level A:**
+
 - **3.2.6 Consistent Help** - Help mechanisms (contact, chat) must appear in same relative order across pages
 - **3.3.7 Redundant Entry** - Previously entered info must be auto-populated or available for selection
 
 **Level AA:**
+
 - **2.4.11 Focus Not Obscured (Minimum)** - Focused element must not be entirely hidden by other content (sticky headers, modals)
 - **2.5.7 Dragging Movements** - Provide single-pointer alternative to drag operations
 - **2.5.8 Target Size (Minimum)** - 24x24px minimum or adequate spacing
 - **3.3.8 Accessible Authentication** - No cognitive function tests (CAPTCHAs) unless alternatives exist
 
 **Level AAA:**
+
 - **2.4.12 Focus Not Obscured (Enhanced)** - No part of focus indicator hidden
 - **2.4.13 Focus Appearance** - Focus indicator 2px perimeter, 3:1 contrast
 - **3.3.9 Accessible Authentication (Enhanced)** - Stricter CAPTCHA requirements
 
 **Removed from WCAG 2.2:**
+
 - **4.1.1 Parsing** - Obsolete due to modern browser error correction
 
 </patterns>
@@ -377,12 +407,14 @@ Motion can cause nausea, dizziness, or vestibular disorders for some users. Prov
 ### Automated Testing
 
 **Use Testing Library's role-based queries:**
+
 ```typescript
-const button = screen.getByRole('button', { name: 'Submit' });
-const switchElement = within(feature).getByRole('switch');
+const button = screen.getByRole("button", { name: "Submit" });
+const switchElement = within(feature).getByRole("switch");
 ```
 
 **Additional tools:**
+
 - **jest-axe** - Automated accessibility testing in Jest unit tests
 - **vitest-axe** - Same API as jest-axe, but for Vitest projects
 - **cypress-axe** - E2E accessibility testing with Cypress
@@ -394,6 +426,7 @@ const switchElement = within(feature).getByRole('switch');
 ### Manual Testing Checklist
 
 **Keyboard navigation:**
+
 - [ ] Tab through all interactive elements in logical order
 - [ ] Activate buttons with Enter/Space
 - [ ] Close modals with Escape
@@ -402,6 +435,7 @@ const switchElement = within(feature).getByRole('switch');
 - [ ] Focus indicators visible on all elements
 
 **Screen reader:**
+
 - [ ] All images have alt text (or alt="" if decorative)
 - [ ] Form inputs have labels
 - [ ] Error messages are announced
@@ -412,6 +446,7 @@ const switchElement = within(feature).getByRole('switch');
 - [ ] Tables have proper headers
 
 **Visual:**
+
 - [ ] Color contrast meets WCAG AA (4.5:1 text, 3:1 UI)
 - [ ] Information not conveyed by color alone
 - [ ] Text resizable to 200% without horizontal scroll
@@ -422,6 +457,7 @@ const switchElement = within(feature).getByRole('switch');
 ### Screen Reader Testing
 
 **Test with multiple screen readers:**
+
 - **NVDA** (Windows) - Free, most popular
 - **JAWS** (Windows) - Industry standard
 - **VoiceOver** (macOS/iOS) - Built-in
@@ -434,6 +470,7 @@ const switchElement = within(feature).getByRole('switch');
 ## Resources
 
 **Official guidelines:**
+
 - WCAG 2.2 Guidelines: https://www.w3.org/WAI/WCAG22/quickref/
 - What's New in WCAG 2.2: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
 - WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
@@ -442,17 +479,20 @@ const switchElement = within(feature).getByRole('switch');
 **Note:** WAI-ARIA 1.3 is still in draft (as of January 2024). New roles like `suggestion`, `comment`, and `mark` are not yet widely supported by browsers and assistive technologies.
 
 **Tools:**
+
 - axe DevTools: https://www.deque.com/axe/devtools/
 - axe-core API: https://github.com/dequelabs/axe-core/blob/develop/doc/API.md
 - WAVE: https://wave.webaim.org/
 - WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
 
 **Testing libraries:**
+
 - jest-axe: https://github.com/nickcolley/jest-axe
 - vitest-axe: https://github.com/chaance/vitest-axe
 - cypress-axe: https://github.com/component-driven/cypress-axe
 
 **Screen readers:**
+
 - NVDA Screen Reader: https://www.nvaccess.org/
 - Keyboard Navigation Guide: https://webaim.org/articles/keyboard/
 

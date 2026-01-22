@@ -55,6 +55,7 @@ description: Component architecture, hooks, patterns
 - Static content without interactivity (consider static HTML)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -200,7 +201,7 @@ import { Button } from "@repo/ui/button";
 
 <Button size="icon" title="Expand details" aria-label="Expand details">
   <ChevronDown />
-</Button>
+</Button>;
 ```
 
 **Why good:** lucide-react provides tree-shakeable imports reducing bundle size, title attribute shows tooltip on hover, aria-label provides accessible name for screen readers, icon inherits color from button reducing CSS duplication
@@ -300,6 +301,7 @@ function ProductForm() {
 Extract reusable logic into custom hooks following the `use` prefix convention.
 
 Key hooks covered:
+
 - `usePagination` - Pagination state and navigation
 - `useDebounce` - Debounce values for search inputs
 - `useLocalStorage` - Type-safe localStorage persistence
@@ -446,7 +448,7 @@ export function ContactForm({ action }: { action: (formData: FormData) => Promis
 
 **Why good:** useFormStatus reads parent form state without prop drilling, component is reusable across any form, pending state updates automatically during submission
 
-**Gotcha:** `useFormStatus` must be called from a component rendered *inside* the `<form>`, not in the same component that renders the form.
+**Gotcha:** `useFormStatus` must be called from a component rendered _inside_ the `<form>`, not in the same component that renders the form.
 
 ---
 

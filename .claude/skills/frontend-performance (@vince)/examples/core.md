@@ -5,6 +5,7 @@
 **React Compiler (React 19+):** The React Compiler automatically memoizes components, values, and functions. With the compiler enabled, you typically don't need manual `useMemo`, `useCallback`, or `React.memo`. The patterns below are still useful for projects without the compiler or for edge cases (third-party library interop, React Native, non-pure computations).
 
 **For advanced patterns**: See topic-specific files in this folder:
+
 - [turborepo.md](turborepo.md) - Build system caching, TypeScript optimization
 - [code-splitting.md](code-splitting.md) - Lazy loading, tree shaking, bundle budgets
 - [web-vitals.md](web-vitals.md) - LCP, INP, CLS patterns and monitoring

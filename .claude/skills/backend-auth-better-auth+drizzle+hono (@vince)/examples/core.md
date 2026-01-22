@@ -3,6 +3,7 @@
 > Essential patterns for authentication. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [oauth.md](oauth.md) - GitHub, Google OAuth providers
 - [two-factor.md](two-factor.md) - TOTP setup and verification
 - [organizations.md](organizations.md) - Multi-tenancy and invitations

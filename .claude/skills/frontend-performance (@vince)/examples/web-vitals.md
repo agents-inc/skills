@@ -145,14 +145,14 @@ export function ProductImage({ src, alt }: Props) {
 ```css
 /* Font loading with size-adjust to prevent CLS */
 @font-face {
-  font-family: 'CustomFont';
-  src: url('/fonts/custom-font.woff2') format('woff2');
+  font-family: "CustomFont";
+  src: url("/fonts/custom-font.woff2") format("woff2");
   font-display: swap;
   size-adjust: 95%; /* Match fallback font metrics */
 }
 
 body {
-  font-family: 'CustomFont', Arial, sans-serif;
+  font-family: "CustomFont", Arial, sans-serif;
 }
 ```
 
@@ -163,8 +163,8 @@ body {
 ```css
 /* Font loading without size-adjust */
 @font-face {
-  font-family: 'CustomFont';
-  src: url('/fonts/custom-font.woff2') format('woff2');
+  font-family: "CustomFont";
+  src: url("/fonts/custom-font.woff2") format("woff2");
   /* No font-display - defaults to block */
   /* No size-adjust - causes layout shift */
 }
@@ -180,15 +180,15 @@ body {
 
 ```typescript
 // lib/analytics.ts
-import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals';
-import type { Metric } from 'web-vitals';
+import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
+import type { Metric } from "web-vitals";
 
 interface AnalyticsEvent {
   name: string;
   value: number;
   id: string;
   delta: number;
-  rating: 'good' | 'needs-improvement' | 'poor';
+  rating: "good" | "needs-improvement" | "poor";
 }
 
 function sendToAnalytics(metric: Metric) {
@@ -201,9 +201,11 @@ function sendToAnalytics(metric: Metric) {
   };
 
   // Send to Google Analytics
-  if (typeof gtag === 'function') {
-    gtag('event', metric.name, {
-      value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
+  if (typeof gtag === "function") {
+    gtag("event", metric.name, {
+      value: Math.round(
+        metric.name === "CLS" ? metric.value * 1000 : metric.value,
+      ),
       metric_id: metric.id,
       metric_value: metric.value,
       metric_delta: metric.delta,
@@ -212,10 +214,10 @@ function sendToAnalytics(metric: Metric) {
   }
 
   // Send to custom analytics endpoint
-  fetch('/api/analytics', {
-    method: 'POST',
+  fetch("/api/analytics", {
+    method: "POST",
     body: JSON.stringify(event),
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
     keepalive: true, // Ensures request completes even if page unloads
   }).catch(console.error);
 }
@@ -224,7 +226,7 @@ function sendToAnalytics(metric: Metric) {
 // Note: onINP replaced onFID - FID was deprecated March 2024
 export function initWebVitals() {
   onCLS(sendToAnalytics);
-  onINP(sendToAnalytics);  // INP replaced FID as Core Web Vital
+  onINP(sendToAnalytics); // INP replaced FID as Core Web Vital
   onFCP(sendToAnalytics);
   onLCP(sendToAnalytics);
   onTTFB(sendToAnalytics);

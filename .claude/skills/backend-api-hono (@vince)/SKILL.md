@@ -65,6 +65,7 @@ description: Hono routes, OpenAPI, Zod validation
 - Combine Middleware (some/every/except) for complex auth logic (v4.x)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core.md, validation.md, routes.md, middleware.md, etc.)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -181,7 +182,11 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { and, eq, desc, isNull } from "drizzle-orm";
 
 import { db, jobs, companies } from "@/lib/db";
-import { JobsQuerySchema, JobsResponseSchema, ErrorResponseSchema } from "../schemas";
+import {
+  JobsQuerySchema,
+  JobsResponseSchema,
+  ErrorResponseSchema,
+} from "../schemas";
 
 const DEFAULT_QUERY_LIMIT = 100;
 const app = new OpenAPIHono();

@@ -141,10 +141,10 @@ const activeUsers = await db.query.users.findMany({
 const filteredUsers = await db.query.users.findMany({
   where: {
     isActive: true,
-    age: { gt: 18 },                    // Greater than
-    email: { like: "%@company.com" },   // LIKE pattern
+    age: { gt: 18 }, // Greater than
+    email: { like: "%@company.com" }, // LIKE pattern
     status: { in: ["active", "pending"] }, // IN array
-    deletedAt: { isNull: true },        // NULL check
+    deletedAt: { isNull: true }, // NULL check
   },
   orderBy: { createdAt: "desc" },
 });
@@ -154,10 +154,7 @@ const filteredUsers = await db.query.users.findMany({
 // Complex conditions with logical operators
 const complexQuery = await db.query.users.findMany({
   where: {
-    OR: [
-      { role: "admin" },
-      { AND: [{ role: "user" }, { age: { gte: 21 } }] },
-    ],
+    OR: [{ role: "admin" }, { AND: [{ role: "user" }, { age: { gte: 21 } }] }],
     NOT: { status: "banned" },
   },
 });
@@ -375,15 +372,15 @@ Quick migration steps:
 5. Update field references: `fields` → `from`, `references` → `to`
 6. Update relation names: `relationName` → `alias`
 
-| v1 Syntax | v2 Syntax |
-|-----------|-----------|
-| `relations(table, ...)` per table | `defineRelations({ tables }, ...)` centralized |
-| `fields: [table.column]` | `from: r.table.column` |
-| `references: [other.id]` | `to: r.other.id` |
-| `relationName: "author"` | `alias: "author"` |
-| `where: (t, { eq }) => eq(t.col, val)` | `where: { col: val }` |
-| `orderBy: (t, { desc }) => [desc(t.col)]` | `orderBy: { col: "desc" }` |
-| Manual junction table mapping | `through()` for many-to-many |
+| v1 Syntax                                 | v2 Syntax                                      |
+| ----------------------------------------- | ---------------------------------------------- |
+| `relations(table, ...)` per table         | `defineRelations({ tables }, ...)` centralized |
+| `fields: [table.column]`                  | `from: r.table.column`                         |
+| `references: [other.id]`                  | `to: r.other.id`                               |
+| `relationName: "author"`                  | `alias: "author"`                              |
+| `where: (t, { eq }) => eq(t.col, val)`    | `where: { col: val }`                          |
+| `orderBy: (t, { desc }) => [desc(t.col)]` | `orderBy: { col: "desc" }`                     |
+| Manual junction table mapping             | `through()` for many-to-many                   |
 
 ---
 

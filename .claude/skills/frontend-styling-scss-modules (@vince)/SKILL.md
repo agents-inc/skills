@@ -58,6 +58,7 @@ description: SCSS Modules, cva, design tokens
 - Projects requiring comprehensive utility classes (use Tailwind CSS instead)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 

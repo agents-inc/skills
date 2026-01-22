@@ -45,7 +45,9 @@ const DEFAULT_LIMIT = 50;
 const getActiveJobsByCountry = db
   .select()
   .from(jobs)
-  .where(and(eq(jobs.country, sql.placeholder("country")), eq(jobs.isActive, true)))
+  .where(
+    and(eq(jobs.country, sql.placeholder("country")), eq(jobs.isActive, true)),
+  )
   .prepare("get_active_jobs_by_country");
 
 // Execute with parameters (faster than building query each time)
@@ -63,7 +65,10 @@ Execute multiple statements in a single network round-trip:
 ```typescript
 // Batch multiple operations - reduces latency significantly
 const batchResponse = await db.batch([
-  db.insert(companies).values({ name: "Acme Corp", slug: "acme-corp" }).returning(),
+  db
+    .insert(companies)
+    .values({ name: "Acme Corp", slug: "acme-corp" })
+    .returning(),
   db.insert(jobs).values({ companyId: companyId, title: "Engineer" }),
   db.query.jobs.findMany({ where: eq(jobs.isActive, true) }),
 ]);
@@ -240,8 +245,12 @@ await db.transaction(async (tx) => {
 ```typescript
 // ❌ ANTI-PATTERN: Separate queries for related data
 const job = await db.query.jobs.findFirst({ where: eq(jobs.id, jobId) });
-const company = await db.query.companies.findFirst({ where: eq(companies.id, job.companyId) });
-const locations = await db.query.companyLocations.findMany({ where: eq(companyLocations.companyId, company.id) });
+const company = await db.query.companies.findFirst({
+  where: eq(companies.id, job.companyId),
+});
+const locations = await db.query.companyLocations.findMany({
+  where: eq(companyLocations.companyId, company.id),
+});
 ```
 
 **Why it's wrong:** Multiple database round-trips degrade performance, each query adds latency, doesn't scale with data size.
@@ -283,16 +292,16 @@ const results = await db
 
 ## When to Use Each Pattern
 
-| Scenario | Pattern | Reason |
-|----------|---------|--------|
-| Fetch job with company | `db.query` with `.with()` | Single query, type-safe |
-| Custom column selection | Query builder | More control over output |
-| Create company + jobs | Transaction | Atomic operation |
-| List jobs with filters | Query builder | Dynamic conditions |
-| Paginated list | Query builder + offset/limit | Standard pagination |
-| Real-time updates | WebSocket connection | LISTEN/NOTIFY support |
-| Edge runtime | HTTP connection | WebSocket not available |
-| Repeated query | Prepared statement | Performance optimization |
-| Multiple Neon operations | Batch API | Single round-trip, atomic |
+| Scenario                 | Pattern                      | Reason                    |
+| ------------------------ | ---------------------------- | ------------------------- |
+| Fetch job with company   | `db.query` with `.with()`    | Single query, type-safe   |
+| Custom column selection  | Query builder                | More control over output  |
+| Create company + jobs    | Transaction                  | Atomic operation          |
+| List jobs with filters   | Query builder                | Dynamic conditions        |
+| Paginated list           | Query builder + offset/limit | Standard pagination       |
+| Real-time updates        | WebSocket connection         | LISTEN/NOTIFY support     |
+| Edge runtime             | HTTP connection              | WebSocket not available   |
+| Repeated query           | Prepared statement           | Performance optimization  |
+| Multiple Neon operations | Batch API                    | Single round-trip, atomic |
 
 </anti_patterns>

@@ -102,6 +102,7 @@ export function PasswordInput({
 **Why good:** Live validation feedback. Screen reader announcements. Keyboard accessible toggle. Clear error messages.
 
 **Edge Cases:**
+
 - Debounce validation to reduce announcements
 - Support paste events
 - Handle autofill gracefully
@@ -268,6 +269,7 @@ export function LoginForm() {
 ```
 
 **Why good:**
+
 - Error summary helps users understand all errors at once
 - `aria-invalid` announces invalid state
 - `aria-describedby` links to error message

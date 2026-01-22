@@ -198,6 +198,7 @@ Never force animations on users who have requested reduced motion.
 4. `title` attribute (last resort, not well supported)
 
 **Rules:**
+
 - Icon-only buttons MUST have `aria-label`
 - Form inputs MUST have associated `<label>` or `aria-label`
 - Images MUST have descriptive `alt` text (empty `alt=""` for decorative images)
@@ -207,6 +208,7 @@ Never force animations on users who have requested reduced motion.
 ## WCAG 2.2 Quick Reference
 
 ### Level A (Minimum)
+
 - All non-text content has text alternatives
 - Information not conveyed by color alone
 - All functionality keyboard accessible
@@ -215,6 +217,7 @@ Never force animations on users who have requested reduced motion.
 - **NEW 3.3.7** - Redundant Entry: Auto-populate previously entered info
 
 ### Level AA (Required for compliance)
+
 - 4.5:1 contrast for normal text
 - 3:1 contrast for large text and UI components
 - Focus visible on all interactive elements
@@ -226,6 +229,7 @@ Never force animations on users who have requested reduced motion.
 - **NEW 3.3.8** - Accessible Authentication: No cognitive tests without alternatives
 
 ### Level AAA (Ideal)
+
 - 7:1 contrast for normal text
 - 4.5:1 contrast for large text
 - Extended sign language for video
@@ -235,6 +239,7 @@ Never force animations on users who have requested reduced motion.
 - **NEW 3.3.9** - Accessible Authentication (Enhanced): Stricter requirements
 
 ### Removed in WCAG 2.2
+
 - **4.1.1 Parsing** - Obsolete (modern browsers auto-correct parsing errors)
 
 ---
@@ -242,14 +247,16 @@ Never force animations on users who have requested reduced motion.
 ## Browser & Assistive Technology Support
 
 ### Screen Readers
-| Screen Reader | Platform | Notes |
-|---------------|----------|-------|
-| NVDA | Windows | Free, most popular |
-| JAWS | Windows | Industry standard, paid |
-| VoiceOver | macOS/iOS | Built-in |
-| TalkBack | Android | Built-in |
+
+| Screen Reader | Platform  | Notes                   |
+| ------------- | --------- | ----------------------- |
+| NVDA          | Windows   | Free, most popular      |
+| JAWS          | Windows   | Industry standard, paid |
+| VoiceOver     | macOS/iOS | Built-in                |
+| TalkBack      | Android   | Built-in                |
 
 ### Browser Testing Priority
+
 1. **Chrome** - Most users
 2. **Safari** - macOS/iOS accessibility
 3. **Firefox** - Strong accessibility support
@@ -260,6 +267,7 @@ Never force animations on users who have requested reduced motion.
 ## Resources
 
 **Official guidelines:**
+
 - WCAG 2.2 Guidelines: https://www.w3.org/WAI/WCAG22/quickref/
 - What's New in WCAG 2.2: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
 - WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
@@ -267,16 +275,19 @@ Never force animations on users who have requested reduced motion.
 - prefers-reduced-motion Technique: https://www.w3.org/WAI/WCAG21/Techniques/css/C39
 
 **Tools:**
+
 - axe DevTools: https://www.deque.com/axe/devtools/
 - axe-core API: https://github.com/dequelabs/axe-core/blob/develop/doc/API.md
 - WAVE: https://wave.webaim.org/
 - WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
 
 **Testing libraries:**
+
 - jest-axe: https://github.com/nickcolley/jest-axe
 - vitest-axe: https://github.com/chaance/vitest-axe
 - cypress-axe: https://github.com/component-driven/cypress-axe
 
 **Screen readers:**
+
 - NVDA Screen Reader: https://www.nvaccess.org/
 - Keyboard Navigation Guide: https://webaim.org/articles/keyboard/

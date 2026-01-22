@@ -9,6 +9,7 @@
 ## Sentry v9 Migration Notes
 
 **Breaking changes from v8 to v9:**
+
 - `enableTracing` option removed - use `tracesSampleRate: 1` or `tracesSampleRate: 0` instead
 - `hideSourceMaps` option removed - SDK emits hidden source maps by default
 - `beforeSendSpan` can no longer return `null` to drop spans - use integrations instead
@@ -17,6 +18,7 @@
 - Minimum Node.js version is 18.0.0
 
 **Session Replay v8+ changes:**
+
 - `unblock` and `unmask` options no longer add default DOM selectors
 - To maintain v7 behavior, explicitly add: `unblock: [".sentry-unblock, [data-sentry-unblock]"]`
 
@@ -48,7 +50,10 @@ Sentry.init({
   release: APP_VERSION,
 
   // Sample rate for error events (1.0 = 100%)
-  sampleRate: ENVIRONMENT === "production" ? SAMPLE_RATE_PRODUCTION : SAMPLE_RATE_DEVELOPMENT,
+  sampleRate:
+    ENVIRONMENT === "production"
+      ? SAMPLE_RATE_PRODUCTION
+      : SAMPLE_RATE_DEVELOPMENT,
 
   // Sample rate for performance (v9: enableTracing removed, use this directly)
   tracesSampleRate: TRACES_SAMPLE_RATE,

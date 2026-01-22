@@ -174,11 +174,11 @@ Using full library imports bundles everything, even unused code.
 
 ```typescript
 // ❌ WRONG - Imports entire lodash (~70KB)
-import _ from 'lodash';
+import _ from "lodash";
 _.debounce(fn, 300);
 
 // ✅ CORRECT - Modular import (~2KB)
-import { debounce } from 'lodash-es';
+import { debounce } from "lodash-es";
 debounce(fn, 300);
 ```
 
@@ -204,8 +204,8 @@ Lab metrics (Lighthouse) differ from real-world performance. Always track produc
 // "Lighthouse says 95, ship it!"
 
 // ✅ CORRECT - Track real user metrics
-import { onLCP, onINP, onCLS } from 'web-vitals';
+import { onLCP, onINP, onCLS } from "web-vitals";
 onLCP(sendToAnalytics);
-onINP(sendToAnalytics);  // INP replaced FID (March 2024)
+onINP(sendToAnalytics); // INP replaced FID (March 2024)
 onCLS(sendToAnalytics);
 ```

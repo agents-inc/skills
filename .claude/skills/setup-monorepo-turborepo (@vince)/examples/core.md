@@ -3,6 +3,7 @@
 > Essential task pipeline patterns for Turborepo. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [caching.md](caching.md) - Remote caching, CI/CD integration
 - [workspaces.md](workspaces.md) - Workspace protocol, syncpack, dependency boundaries
 - [packages.md](packages.md) - Internal package conventions, exports, creating packages
@@ -23,7 +24,13 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "src/**/*.tsx", "src/**/*.ts", "test/**/*.ts", "test/**/*.tsx"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.tsx",
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "test/**/*.tsx"
+      ]
     },
     "dev": {
       "cache": false,

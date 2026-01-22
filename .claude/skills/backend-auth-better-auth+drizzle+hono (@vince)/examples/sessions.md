@@ -3,6 +3,7 @@
 > Session configuration and management patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Sign up, sign in, client setup
 - [oauth.md](oauth.md) - GitHub, Google OAuth providers
 - [two-factor.md](two-factor.md) - TOTP setup and verification
@@ -99,11 +100,11 @@ export const auth = betterAuth({
 export { auth };
 ```
 
-| Strategy | Size | Security | Use Case |
-|----------|------|----------|----------|
-| `compact` | Smallest | Signed | Internal apps, performance-critical |
-| `jwt` | Medium | Signed | API consumers, third-party verification |
-| `jwe` | Largest | Encrypted | Sensitive data, hide from client |
+| Strategy  | Size     | Security  | Use Case                                |
+| --------- | -------- | --------- | --------------------------------------- |
+| `compact` | Smallest | Signed    | Internal apps, performance-critical     |
+| `jwt`     | Medium   | Signed    | API consumers, third-party verification |
+| `jwe`     | Largest  | Encrypted | Sensitive data, hide from client        |
 
 **Gotcha:** Revoked sessions persist in cache until `maxAge` expires on other devices.
 

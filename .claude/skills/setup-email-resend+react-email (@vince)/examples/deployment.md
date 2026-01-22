@@ -44,11 +44,11 @@ Configure environment variables for production deployment.
 
 ### Vercel Environment Variables
 
-| Variable | Environment | Value |
-|----------|-------------|-------|
-| `RESEND_API_KEY` | Production, Preview | `re_xxx...` |
-| `EMAIL_FROM_ADDRESS` | Production | `noreply@yourdomain.com` |
-| `EMAIL_FROM_NAME` | Production | `Your App Name` |
+| Variable                | Environment         | Value                                          |
+| ----------------------- | ------------------- | ---------------------------------------------- |
+| `RESEND_API_KEY`        | Production, Preview | `re_xxx...`                                    |
+| `EMAIL_FROM_ADDRESS`    | Production          | `noreply@yourdomain.com`                       |
+| `EMAIL_FROM_NAME`       | Production          | `Your App Name`                                |
 | `RESEND_WEBHOOK_SECRET` | Production, Preview | `whsec_xxx...` (from Resend webhook dashboard) |
 
 ### .env.example Template
@@ -88,11 +88,13 @@ Complete checklist for first-time Resend setup.
 ## Resend Setup Checklist
 
 ### Account Setup
+
 - [ ] Created Resend account at resend.com
 - [ ] Generated API key with sending permissions
 - [ ] Added RESEND_API_KEY to .env.local
 
 ### Domain Verification (Production)
+
 - [ ] Added domain in Resend dashboard
 - [ ] Added SPF record to DNS
 - [ ] Added DKIM records (3 CNAME records) to DNS
@@ -101,6 +103,7 @@ Complete checklist for first-time Resend setup.
 - [ ] Updated EMAIL_FROM_ADDRESS to use verified domain
 
 ### React Email Package
+
 - [ ] Created packages/emails directory
 - [ ] Installed @react-email/components and resend
 - [ ] Created base layout component
@@ -110,18 +113,21 @@ Complete checklist for first-time Resend setup.
 - [ ] Added email:dev script to root package.json
 
 ### Integration
+
 - [ ] Created Resend client singleton
 - [ ] Integrated with Better Auth (verification, password reset)
 - [ ] Tested sending via preview server
 - [ ] Verified emails appear in Resend dashboard
 
 ### Deployment
+
 - [ ] Added environment variables to Vercel
 - [ ] Created .env.example for team
 - [ ] Tested email sending in preview deployment
 - [ ] Confirmed production emails not landing in spam
 
 ### Webhooks (Optional)
+
 - [ ] Created webhook in Resend Dashboard > Webhooks
 - [ ] Selected events to track (sent, delivered, bounced, etc.)
 - [ ] Copied webhook signing secret to RESEND_WEBHOOK_SECRET env var

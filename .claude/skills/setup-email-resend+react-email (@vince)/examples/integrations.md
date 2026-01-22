@@ -40,7 +40,7 @@ export const auth = betterAuth({
         PasswordResetEmail({
           userName: user.name ?? "there",
           resetUrl: url,
-        })
+        }),
       );
 
       await resend.emails.send({
@@ -58,7 +58,7 @@ export const auth = betterAuth({
         VerificationEmail({
           userName: user.name ?? "there",
           verificationUrl: url,
-        })
+        }),
       );
 
       await resend.emails.send({
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
   if (!session?.user) {
     return NextResponse.json(
       { error: "Unauthorized" },
-      { status: HTTP_STATUS_UNAUTHORIZED }
+      { status: HTTP_STATUS_UNAUTHORIZED },
     );
   }
 
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     const html = await render(
       WelcomeEmail({
         userName: session.user.name ?? "there",
-      })
+      }),
     );
 
     const { data, error } = await resend.emails.send({
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: HTTP_STATUS_INTERNAL_ERROR }
+        { status: HTTP_STATUS_INTERNAL_ERROR },
       );
     }
 
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to send email" },
-      { status: HTTP_STATUS_INTERNAL_ERROR }
+      { status: HTTP_STATUS_INTERNAL_ERROR },
     );
   }
 }

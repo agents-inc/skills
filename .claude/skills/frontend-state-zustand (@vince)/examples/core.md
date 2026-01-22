@@ -3,6 +3,7 @@
 All code examples for core client state management patterns with good/bad comparisons.
 
 **Extended Examples:**
+
 - [Form State Examples](forms.md) - Form state and validation patterns
 
 ---
@@ -145,7 +146,8 @@ export const useUIStore = create<UIState>()(
         modalOpen: DEFAULT_MODAL_STATE,
         theme: DEFAULT_THEME,
 
-        toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+        toggleSidebar: () =>
+          set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
         setSidebarOpen: (open) => set({ sidebarOpen: open }),
 

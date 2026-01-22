@@ -22,7 +22,7 @@ import {
 } from "../lib/compiler";
 import { versionAllSkills, printVersionResults } from "../lib/versioning";
 import { readActiveStack } from "../lib/active-stack";
-import type { CompileConfig, CompileContext } from "../types";
+import type { AgentConfig, CompileConfig, CompileContext } from "../types";
 
 export const compileCommand = new Command("compile")
   .description("Compile agents from a stack")
@@ -113,9 +113,15 @@ export const compileCommand = new Command("compile")
       s.start("Loading stack configuration...");
       const stack = await loadStack(stackId, projectRoot, mode);
       const compileConfig: CompileConfig = stackToCompileConfig(stackId, stack);
-      s.stop(
-        `Stack loaded: ${stack.agents.length} agents, ${stack.skills.length} skills`,
-      );
+      const agentCount =
+        "agents" in stack ? (stack as any).agents.length : "all";
+      const skillCount =
+        "skills" in stack
+          ? (stack as any).skills.length
+          : "skill_ids" in stack
+            ? (stack as any).skill_ids.length
+            : 0;
+      s.stop(`Stack loaded: ${agentCount} agents, ${skillCount} skills`);
 
       // Load skills from stack
       s.start("Loading skills...");
@@ -126,7 +132,7 @@ export const compileCommand = new Command("compile")
 
       // Resolve agents
       s.start("Resolving agents...");
-      let resolvedAgents;
+      let resolvedAgents: Record<string, AgentConfig>;
       try {
         resolvedAgents = await resolveAgents(
           agents,
@@ -151,12 +157,7 @@ export const compileCommand = new Command("compile")
         mode,
       };
 
-      const validation = await validate(
-        compileConfig,
-        resolvedAgents,
-        stackId,
-        projectRoot,
-      );
+      const validation = await validate(resolvedAgents, stackId, projectRoot);
       s.stop("Validation complete");
 
       printValidationResult(validation);

@@ -115,6 +115,7 @@ export function DataTable<T>({
 **Why good:** Semantic HTML. Proper scope attributes. Sortable columns announced. Screen reader navigation.
 
 **Edge Cases:**
+
 - Add row selection with checkboxes
 - Support keyboard navigation between cells
 - Provide row/column headers for complex tables

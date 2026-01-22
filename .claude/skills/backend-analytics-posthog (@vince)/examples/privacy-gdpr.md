@@ -55,7 +55,9 @@ export function useCookieConsent() {
   const [consent, setConsent] = useState<ConsentStatus>("pending");
 
   useEffect(() => {
-    const stored = localStorage.getItem(CONSENT_STORAGE_KEY) as ConsentStatus | null;
+    const stored = localStorage.getItem(
+      CONSENT_STORAGE_KEY,
+    ) as ConsentStatus | null;
     if (stored) {
       setConsent(stored);
       if (stored === "granted") {
@@ -133,24 +135,24 @@ posthog.init(POSTHOG_KEY, {
 ```typescript
 // ❌ NEVER include PII in event properties
 const badProperties = {
-  email: "user@example.com",      // PII
-  name: "John Doe",               // PII
-  phone: "+1234567890",           // PII
-  ip_address: "192.168.1.1",      // PII
-  address: "123 Main St",         // PII
-  credit_card: "4111...",         // PII + Payment data
-  password: "secret",             // Sensitive
-  ssn: "123-45-6789",             // PII
+  email: "user@example.com", // PII
+  name: "John Doe", // PII
+  phone: "+1234567890", // PII
+  ip_address: "192.168.1.1", // PII
+  address: "123 Main St", // PII
+  credit_card: "4111...", // PII + Payment data
+  password: "secret", // Sensitive
+  ssn: "123-45-6789", // PII
 };
 
 // ✅ Safe properties to include
 const goodProperties = {
-  user_id: "user_abc123",         // Pseudonymized ID
-  plan: "pro",                    // Account metadata
-  feature_name: "export",         // Product data
-  is_enterprise: true,            // Boolean flags
-  source: "google_ads",           // Attribution
-  page_path: "/dashboard",        // Navigation (no PII in URL)
+  user_id: "user_abc123", // Pseudonymized ID
+  plan: "pro", // Account metadata
+  feature_name: "export", // Product data
+  is_enterprise: true, // Boolean flags
+  source: "google_ads", // Attribution
+  page_path: "/dashboard", // Navigation (no PII in URL)
 };
 ```
 

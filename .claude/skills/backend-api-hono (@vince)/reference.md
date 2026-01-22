@@ -56,12 +56,14 @@
 ### RPC vs REST Client Decision (v4.x)
 
 **Use Hono RPC (`hc`):**
+
 - Full-stack TypeScript monorepo
 - Same Hono version on client and server
 - Want end-to-end type safety without code generation
 - Building internal APIs consumed by your own frontend
 
 **Use REST/OpenAPI Client:**
+
 - Multi-language clients (Python, Go, etc.)
 - External consumers need generated SDKs
 - Different teams own server and client
@@ -70,11 +72,13 @@
 ### Context Storage vs Props Drilling Decision (v4.6.0+)
 
 **Use Context Storage (`getContext`):**
+
 - Accessing Cloudflare Workers bindings in utility functions
 - Deep call stacks where passing context is cumbersome
 - Typed variables needed across module boundaries
 
 **Use Props Drilling:**
+
 - Simple handlers with shallow call stacks
 - Testing is easier with explicit dependencies
 - Functions need to work outside request context
@@ -160,10 +164,18 @@
 // ANTI-PATTERN: All routes in one file
 const app = new OpenAPIHono();
 
-app.get("/jobs", async (c) => { /* 100+ lines */ });
-app.get("/jobs/:id", async (c) => { /* 100+ lines */ });
-app.get("/companies", async (c) => { /* 100+ lines */ });
-app.get("/users", async (c) => { /* 100+ lines */ });
+app.get("/jobs", async (c) => {
+  /* 100+ lines */
+});
+app.get("/jobs/:id", async (c) => {
+  /* 100+ lines */
+});
+app.get("/companies", async (c) => {
+  /* 100+ lines */
+});
+app.get("/users", async (c) => {
+  /* 100+ lines */
+});
 // ... 1000+ line file
 ```
 
@@ -308,8 +320,12 @@ try {
 // ANTI-PATTERN: Separate route definitions break type inference
 const app = new OpenAPIHono();
 
-app.openapi(getUserRoute, async (c) => { /* ... */ });
-app.openapi(createUserRoute, async (c) => { /* ... */ });
+app.openapi(getUserRoute, async (c) => {
+  /* ... */
+});
+app.openapi(createUserRoute, async (c) => {
+  /* ... */
+});
 
 export type AppType = typeof app; // Types won't include route details!
 ```

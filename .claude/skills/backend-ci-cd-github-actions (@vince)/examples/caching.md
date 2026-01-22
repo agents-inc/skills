@@ -3,6 +3,7 @@
 > Remote caching with Turborepo and Vercel. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [core.md](core.md) - Pipeline config, jobs, caching basics
 - [testing.md](testing.md) - Affected detection, quality gates
 - [security.md](security.md) - OIDC auth, secrets rotation
@@ -94,7 +95,8 @@ jobs:
 // turbo-cache-config.ts
 export const CACHE_CONFIG = {
   FORCE_REBUILD: process.env.TURBO_FORCE === "true",
-  SKIP_CACHE: process.env.CI === "true" && process.env.SKIP_TURBO_CACHE === "true",
+  SKIP_CACHE:
+    process.env.CI === "true" && process.env.SKIP_TURBO_CACHE === "true",
 } as const;
 ```
 

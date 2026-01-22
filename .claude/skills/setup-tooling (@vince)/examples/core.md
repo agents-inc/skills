@@ -3,6 +3,7 @@
 > Essential patterns for build tooling. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
+
 - [vite.md](vite.md) - Vite path aliases, vendor chunks, environment builds
 - [eslint.md](eslint.md) - ESLint 9 flat config, shared configs, custom rules
 - [typescript.md](typescript.md) - Shared TypeScript strict config
@@ -93,10 +94,12 @@ export default config;
 ```
 
 **Requirements:**
+
 - Node.js 22.6.0 or later
 - Before Node.js v24.3.0, run with: `NODE_OPTIONS="--experimental-strip-types" prettier . --write`
 
 **Supported file names:**
+
 - `.prettierrc.ts`, `.prettierrc.mts`, `.prettierrc.cts`
 - `prettier.config.ts`, `prettier.config.mts`, `prettier.config.cts`
 
@@ -140,11 +143,11 @@ export default config;
 
 ### Shared Config Packages
 
-| Package | Purpose | Usage |
-|---------|---------|-------|
-| `@repo/prettier-config` | Formatting | `"prettier": "@repo/prettier-config"` |
-| `@repo/eslint-config` | Linting | `import { baseConfig } from "@repo/eslint-config"` |
-| `@repo/typescript-config` | TypeScript | `"extends": "@repo/typescript-config/base.json"` |
+| Package                   | Purpose    | Usage                                              |
+| ------------------------- | ---------- | -------------------------------------------------- |
+| `@repo/prettier-config`   | Formatting | `"prettier": "@repo/prettier-config"`              |
+| `@repo/eslint-config`     | Linting    | `import { baseConfig } from "@repo/eslint-config"` |
+| `@repo/typescript-config` | TypeScript | `"extends": "@repo/typescript-config/base.json"`   |
 
 ### Key Files to Create
 

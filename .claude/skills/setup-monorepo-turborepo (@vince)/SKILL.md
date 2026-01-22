@@ -33,7 +33,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 ---
 
-**Auto-detection:** Turborepo configuration, turbo.json, monorepo setup, workspaces, Bun workspaces, syncpack, task pipelines, @repo/* packages, package.json exports, workspace dependencies, shared configurations
+**Auto-detection:** Turborepo configuration, turbo.json, monorepo setup, workspaces, Bun workspaces, syncpack, task pipelines, @repo/\* packages, package.json exports, workspace dependencies, shared configurations
 
 **When to use:**
 
@@ -61,12 +61,13 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 - Bun workspaces for package linking
 - Syncpack for dependency version consistency
 - Environment variable handling in turbo.json
-- Package structure and @repo/* naming conventions
+- Package structure and @repo/\* naming conventions
 - package.json exports for tree-shaking
 - Named exports and barrel file patterns
 - Internal dependencies with workspace protocol
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md) (always start here)
   - [examples/caching.md](examples/caching.md) - Remote caching, CI/CD integration
   - [examples/workspaces.md](examples/workspaces.md) - Workspace protocol, syncpack, dependency boundaries
@@ -128,7 +129,13 @@ Define task dependencies and caching behavior in turbo.json to enable intelligen
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "src/**/*.tsx", "src/**/*.ts", "test/**/*.ts", "test/**/*.tsx"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.tsx",
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "test/**/*.tsx"
+      ]
     },
     "dev": {
       "cache": false,
@@ -289,6 +296,7 @@ For comprehensive decision trees and package creation criteria, see [reference.m
 ## RED FLAGS
 
 **High Priority Issues:**
+
 - Missing `dependsOn: ["^build"]` for build tasks (breaks topological ordering)
 - Missing `env` array in turbo.json (causes cache misses across environments)
 - Caching dev servers or code generation (incorrect outputs reused)
@@ -296,12 +304,14 @@ For comprehensive decision trees and package creation criteria, see [reference.m
 - Missing `exports` field in package.json (allows internal path imports)
 
 **Common Mistakes:**
+
 - Hardcoded versions instead of `workspace:*` for internal deps
 - React in `dependencies` instead of `peerDependencies`
 - Giant barrel files re-exporting everything (negates tree-shaking)
 - Running full test suite without `--filter=...[HEAD^]` affected detection
 
 **Gotchas:**
+
 - `dependsOn: ["^task"]` runs dependencies' tasks; `dependsOn: ["task"]` runs same package's task
 - `--filter=...[HEAD^]` requires `fetch-depth: 2` in GitHub Actions
 - Exclude cache directories in outputs: `!.next/cache/**`
