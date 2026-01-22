@@ -19,7 +19,13 @@ export const COLLECTIVE_STACKS_SUBDIR = "stacks";
 export const ACTIVE_STACK_FILE = "active-stack";
 
 // Use os.homedir() instead of process.env.HOME for cross-platform
-export const CACHE_DIR = path.join(os.homedir(), ".cache", "claude-cli");
+export const CACHE_DIR = path.join(os.homedir(), ".cache", "claude-collective");
+
+// Skills matrix path within a source repository
+export const SKILLS_MATRIX_PATH = "src/config/skills-matrix.yaml";
+
+// Skills directory within a source repository
+export const SKILLS_DIR_PATH = "src/skills";
 
 // Directory paths relative to project root
 export const DIRS = {

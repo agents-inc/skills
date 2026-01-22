@@ -8,6 +8,7 @@ import {
   COLLECTIVE_STACKS_SUBDIR,
 } from "../consts";
 import type { MergedSkillsMatrix, ResolvedSkill } from "../types-matrix";
+import type { SourceLoadResult } from "./source-loader";
 
 /**
  * Forked from metadata for provenance tracking
@@ -159,6 +160,8 @@ export async function copySkill(
 
 /**
  * Copy all selected skills to a stack directory
+ *
+ * @deprecated Use copySkillsToStackFromSource for new code
  */
 export async function copySkillsToStack(
   selectedSkillIds: string[],
@@ -176,6 +179,74 @@ export async function copySkillsToStack(
     }
 
     const copied = await copySkill(skill, stackDir, registryRoot);
+    copiedSkills.push(copied);
+  }
+
+  return copiedSkills;
+}
+
+/**
+ * Get the source path for a skill from a SourceLoadResult
+ */
+function getSkillSourcePathFromSource(
+  skill: ResolvedSkill,
+  sourceResult: SourceLoadResult,
+): string {
+  // skill.path is like "skills/frontend/client-state-management/zustand (@vince)/"
+  // sourcePath is the root of the fetched content (local or cached remote)
+  return path.join(sourceResult.sourcePath, "src", skill.path);
+}
+
+/**
+ * Copy a single skill from a source to local stack
+ */
+export async function copySkillFromSource(
+  skill: ResolvedSkill,
+  stackDir: string,
+  sourceResult: SourceLoadResult,
+): Promise<CopiedSkill> {
+  const sourcePath = getSkillSourcePathFromSource(skill, sourceResult);
+  const destPath = getSkillDestPath(skill, stackDir);
+
+  // Generate content hash before copying
+  const contentHash = await generateSkillHash(sourcePath);
+
+  // Ensure destination directory exists and copy
+  await ensureDir(path.dirname(destPath));
+  await copy(sourcePath, destPath);
+
+  // Inject forked_from provenance tracking into the copied skill's metadata
+  await injectForkedFromMetadata(destPath, skill.id, contentHash);
+
+  return {
+    skillId: skill.id,
+    version: skill.version,
+    contentHash,
+    sourcePath,
+    destPath,
+  };
+}
+
+/**
+ * Copy all selected skills to a stack directory from a source
+ * This is the preferred method that supports remote skill sources
+ */
+export async function copySkillsToStackFromSource(
+  selectedSkillIds: string[],
+  stackDir: string,
+  matrix: MergedSkillsMatrix,
+  sourceResult: SourceLoadResult,
+): Promise<CopiedSkill[]> {
+  const copiedSkills: CopiedSkill[] = [];
+
+  for (const skillId of selectedSkillIds) {
+    const skill = matrix.skills[skillId];
+    if (!skill) {
+      console.warn(`Warning: Skill not found in matrix: ${skillId}`);
+      continue;
+    }
+
+    const copied = await copySkillFromSource(skill, stackDir, sourceResult);
     copiedSkills.push(copied);
   }
 

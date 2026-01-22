@@ -2,25 +2,24 @@ import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "path";
-import {
-  PROJECT_ROOT,
-  DEFAULT_MATRIX_PATH,
-  COLLECTIVE_DIR,
-  COLLECTIVE_STACKS_SUBDIR,
-} from "../consts";
+import { COLLECTIVE_DIR, COLLECTIVE_STACKS_SUBDIR } from "../consts";
 import { directoryExists } from "../utils/fs";
 import {
   runWizard,
   clearTerminal,
   renderSelectionsHeader,
 } from "../lib/wizard";
-import { loadAndMergeSkillsMatrix } from "../lib/matrix-loader";
 import {
-  createStack,
+  loadSkillsMatrixFromSource,
+  type SourceLoadResult,
+} from "../lib/source-loader";
+import {
+  createStackFromSource,
   promptStackName,
   displayStackSummary,
 } from "../lib/stack-creator";
 import { getExistingStacks } from "../lib/active-stack";
+import { formatSourceOrigin } from "../lib/config";
 
 /**
  * Check if a project has been initialized (.claude-collective/stacks/ directory exists)
@@ -37,10 +36,10 @@ async function isInitialized(projectDir: string): Promise<boolean> {
 export const addCommand = new Command("add")
   .description("Add a new stack to your project")
   .option(
-    "--matrix <path>",
-    "Path to skills-matrix.yaml config",
-    DEFAULT_MATRIX_PATH,
+    "--source <url>",
+    "Skills source URL (e.g., github:org/repo or local path)",
   )
+  .option("--refresh", "Force refresh from remote source", false)
   .configureOutput({
     writeErr: (str) => console.error(pc.red(str)),
   })
@@ -68,32 +67,34 @@ export const addCommand = new Command("add")
       console.log("");
     }
 
-    // Load skills matrix config
-    const matrixPath = path.isAbsolute(options.matrix)
-      ? options.matrix
-      : path.join(PROJECT_ROOT, options.matrix);
-
     const s = p.spinner();
+
+    // Load skills matrix from source
     s.start("Loading skills matrix...");
 
-    let matrix;
+    let sourceResult: SourceLoadResult;
     try {
-      matrix = await loadAndMergeSkillsMatrix(matrixPath, PROJECT_ROOT);
-      s.stop(`Loaded ${Object.keys(matrix.skills).length} skills from matrix`);
+      sourceResult = await loadSkillsMatrixFromSource({
+        sourceFlag: options.source,
+        projectDir,
+        forceRefresh: options.refresh,
+      });
+
+      const sourceInfo = sourceResult.isLocal
+        ? "local"
+        : formatSourceOrigin(sourceResult.sourceConfig.sourceOrigin);
+      s.stop(
+        `Loaded ${Object.keys(sourceResult.matrix.skills).length} skills (${sourceInfo})`,
+      );
     } catch (error) {
       s.stop("Failed to load skills matrix");
-      p.log.error(`Could not load skills matrix from ${matrixPath}`);
-      p.log.info("Make sure the file exists and is valid YAML");
+      p.log.error(
+        error instanceof Error ? error.message : "Unknown error occurred",
+      );
       process.exit(1);
     }
 
-    // Prompt for stack name first
-    const stackName = await promptStackName(existingStacks, "new-stack");
-
-    if (p.isCancel(stackName)) {
-      p.cancel("Cancelled");
-      process.exit(0);
-    }
+    const matrix = sourceResult.matrix;
 
     // Run the wizard
     const result = await runWizard(matrix);
@@ -125,16 +126,24 @@ export const addCommand = new Command("add")
       console.log("");
     }
 
+    // Prompt for stack name (after seeing selections)
+    const stackName = await promptStackName(existingStacks, "new-stack");
+
+    if (p.isCancel(stackName)) {
+      p.cancel("Cancelled");
+      process.exit(0);
+    }
+
     // Create the stack
     s.start(`Creating stack "${stackName}"...`);
     try {
-      const createResult = await createStack(
+      const createResult = await createStackFromSource(
         stackName as string,
         result.selectedSkills,
         matrix,
         projectDir,
         result.selectedStack,
-        PROJECT_ROOT,
+        sourceResult,
       );
       s.stop(`Stack created with ${createResult.skillCount} skills`);
 

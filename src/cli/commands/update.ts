@@ -2,30 +2,29 @@ import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "path";
-import {
-  PROJECT_ROOT,
-  DEFAULT_MATRIX_PATH,
-  COLLECTIVE_DIR,
-  COLLECTIVE_STACKS_SUBDIR,
-} from "../consts";
+import { COLLECTIVE_DIR, COLLECTIVE_STACKS_SUBDIR } from "../consts";
 import { remove, directoryExists } from "../utils/fs";
 import {
   runWizard,
   clearTerminal,
   renderSelectionsHeader,
 } from "../lib/wizard";
-import { loadAndMergeSkillsMatrix } from "../lib/matrix-loader";
+import {
+  loadSkillsMatrixFromSource,
+  type SourceLoadResult,
+} from "../lib/source-loader";
 import {
   readStackConfig,
   updateStackConfig,
   writeStackConfig,
 } from "../lib/stack-config";
-import { copySkillsToStack, getStackDir } from "../lib/skill-copier";
+import { copySkillsToStackFromSource, getStackDir } from "../lib/skill-copier";
 import {
   displayStackSummary,
   type CreateStackResult,
 } from "../lib/stack-creator";
 import { getExistingStacks } from "../lib/active-stack";
+import { formatSourceOrigin } from "../lib/config";
 
 /**
  * Check if a project has been initialized (.claude-collective/stacks/ directory exists)
@@ -79,10 +78,10 @@ async function selectStack(
 export const updateCommand = new Command("update")
   .description("Update an existing stack's skill selection")
   .option(
-    "--matrix <path>",
-    "Path to skills-matrix.yaml config",
-    DEFAULT_MATRIX_PATH,
+    "--source <url>",
+    "Skills source URL (e.g., github:org/repo or local path)",
   )
+  .option("--refresh", "Force refresh from remote source", false)
   .option("-s, --stack <name>", "Stack name to update (skip selection)")
   .configureOutput({
     writeErr: (str) => console.error(pc.red(str)),
@@ -147,24 +146,34 @@ export const updateCommand = new Command("update")
     console.log(pc.dim(`Current skills: ${existingConfig.skill_ids.length}`));
     console.log("");
 
-    // Load skills matrix config
-    const matrixPath = path.isAbsolute(options.matrix)
-      ? options.matrix
-      : path.join(PROJECT_ROOT, options.matrix);
-
     const s = p.spinner();
+
+    // Load skills matrix from source
     s.start("Loading skills matrix...");
 
-    let matrix;
+    let sourceResult: SourceLoadResult;
     try {
-      matrix = await loadAndMergeSkillsMatrix(matrixPath, PROJECT_ROOT);
-      s.stop(`Loaded ${Object.keys(matrix.skills).length} skills from matrix`);
+      sourceResult = await loadSkillsMatrixFromSource({
+        sourceFlag: options.source,
+        projectDir,
+        forceRefresh: options.refresh,
+      });
+
+      const sourceInfo = sourceResult.isLocal
+        ? "local"
+        : formatSourceOrigin(sourceResult.sourceConfig.sourceOrigin);
+      s.stop(
+        `Loaded ${Object.keys(sourceResult.matrix.skills).length} skills (${sourceInfo})`,
+      );
     } catch (error) {
       s.stop("Failed to load skills matrix");
-      p.log.error(`Could not load skills matrix from ${matrixPath}`);
-      p.log.info("Make sure the file exists and is valid YAML");
+      p.log.error(
+        error instanceof Error ? error.message : "Unknown error occurred",
+      );
       process.exit(1);
     }
+
+    const matrix = sourceResult.matrix;
 
     // TODO: Pre-populate wizard with existing selections
     // For now, start fresh wizard
@@ -222,12 +231,12 @@ export const updateCommand = new Command("update")
       const skillsDir = path.join(stackDir, "skills");
       await remove(skillsDir);
 
-      // Copy new skills
-      const copiedSkills = await copySkillsToStack(
+      // Copy new skills from source
+      const copiedSkills = await copySkillsToStackFromSource(
         result.selectedSkills,
         stackDir,
         matrix,
-        PROJECT_ROOT,
+        sourceResult,
       );
 
       // Update stack config

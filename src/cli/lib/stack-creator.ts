@@ -1,31 +1,42 @@
-import path from 'path'
-import * as p from '@clack/prompts'
-import pc from 'picocolors'
-import { ensureDir } from '../utils/fs'
-import { PROJECT_ROOT } from '../consts'
-import { copySkillsToStack, getStackDir } from './skill-copier'
-import { createStackConfig, createStackConfigFromSuggested, writeStackConfig } from './stack-config'
-import type { MergedSkillsMatrix, ResolvedStack } from '../types-matrix'
-import type { CopiedSkill } from './skill-copier'
+import path from "path";
+import * as p from "@clack/prompts";
+import pc from "picocolors";
+import { ensureDir } from "../utils/fs";
+import { PROJECT_ROOT } from "../consts";
+import {
+  copySkillsToStack,
+  copySkillsToStackFromSource,
+  getStackDir,
+} from "./skill-copier";
+import {
+  createStackConfig,
+  createStackConfigFromSuggested,
+  writeStackConfig,
+} from "./stack-config";
+import type { MergedSkillsMatrix, ResolvedStack } from "../types-matrix";
+import type { CopiedSkill } from "./skill-copier";
+import type { SourceLoadResult } from "./source-loader";
 
 /**
  * Regex for valid stack names (kebab-case)
  */
-const STACK_NAME_REGEX = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
+const STACK_NAME_REGEX = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 /**
  * Result of creating a stack
  */
 export interface CreateStackResult {
-  stackName: string
-  stackDir: string
-  copiedSkills: CopiedSkill[]
-  skillCount: number
+  stackName: string;
+  stackDir: string;
+  copiedSkills: CopiedSkill[];
+  skillCount: number;
 }
 
 /**
  * Create a stack from wizard result
  * Handles copying skills and generating config
+ *
+ * @deprecated Use createStackFromSource for new code
  */
 export async function createStack(
   stackName: string,
@@ -35,33 +46,84 @@ export async function createStack(
   selectedStack: ResolvedStack | null,
   registryRoot: string = PROJECT_ROOT,
 ): Promise<CreateStackResult> {
-  const stackDir = getStackDir(projectDir, stackName)
+  const stackDir = getStackDir(projectDir, stackName);
 
   // Ensure stack directory exists
-  await ensureDir(stackDir)
+  await ensureDir(stackDir);
 
   // Copy skills to stack
-  const copiedSkills = await copySkillsToStack(selectedSkillIds, stackDir, matrix, registryRoot)
+  const copiedSkills = await copySkillsToStack(
+    selectedSkillIds,
+    stackDir,
+    matrix,
+    registryRoot,
+  );
 
   // Generate and write stack config
-  let stackConfig
+  let stackConfig;
   if (selectedStack) {
-    stackConfig = createStackConfigFromSuggested(stackName, selectedStack)
+    stackConfig = createStackConfigFromSuggested(stackName, selectedStack);
   } else {
     stackConfig = createStackConfig(
       stackName,
       `Custom stack with ${selectedSkillIds.length} skills`,
       selectedSkillIds,
-    )
+    );
   }
-  await writeStackConfig(stackDir, stackConfig)
+  await writeStackConfig(stackDir, stackConfig);
 
   return {
     stackName,
     stackDir,
     copiedSkills,
     skillCount: copiedSkills.length,
+  };
+}
+
+/**
+ * Create a stack from a source (local or remote)
+ * This is the preferred method that supports remote skill sources
+ */
+export async function createStackFromSource(
+  stackName: string,
+  selectedSkillIds: string[],
+  matrix: MergedSkillsMatrix,
+  projectDir: string,
+  selectedStack: ResolvedStack | null,
+  sourceResult: SourceLoadResult,
+): Promise<CreateStackResult> {
+  const stackDir = getStackDir(projectDir, stackName);
+
+  // Ensure stack directory exists
+  await ensureDir(stackDir);
+
+  // Copy skills to stack from source
+  const copiedSkills = await copySkillsToStackFromSource(
+    selectedSkillIds,
+    stackDir,
+    matrix,
+    sourceResult,
+  );
+
+  // Generate and write stack config
+  let stackConfig;
+  if (selectedStack) {
+    stackConfig = createStackConfigFromSuggested(stackName, selectedStack);
+  } else {
+    stackConfig = createStackConfig(
+      stackName,
+      `Custom stack with ${selectedSkillIds.length} skills`,
+      selectedSkillIds,
+    );
   }
+  await writeStackConfig(stackDir, stackConfig);
+
+  return {
+    stackName,
+    stackDir,
+    copiedSkills,
+    skillCount: copiedSkills.length,
+  };
 }
 
 /**
@@ -69,48 +131,48 @@ export async function createStack(
  */
 export async function promptStackName(
   existingNames: string[],
-  defaultName: string = 'my-stack',
+  defaultName: string = "my-stack",
 ): Promise<string | symbol> {
   const result = await p.text({
-    message: 'Stack name:',
+    message: "Stack name:",
     placeholder: defaultName,
     defaultValue: defaultName,
     validate: (value) => {
       if (!value || value.trim().length === 0) {
-        return 'Stack name is required'
+        return "Stack name is required";
       }
 
-      const name = value.trim().toLowerCase()
+      const name = value.trim().toLowerCase();
 
       if (!STACK_NAME_REGEX.test(name)) {
-        return 'Stack name must be kebab-case (e.g., my-stack, work-project)'
+        return "Stack name must be kebab-case (e.g., my-stack, work-project)";
       }
 
       if (existingNames.includes(name)) {
-        return `Stack "${name}" already exists. Choose a different name.`
+        return `Stack "${name}" already exists. Choose a different name.`;
       }
 
-      return undefined
+      return undefined;
     },
-  })
+  });
 
   if (p.isCancel(result)) {
-    return result
+    return result;
   }
 
-  return (result as string).trim().toLowerCase()
+  return (result as string).trim().toLowerCase();
 }
 
 /**
  * Display a summary of the created stack
  */
 export function displayStackSummary(result: CreateStackResult): void {
-  console.log('')
-  console.log(pc.green(`Stack "${result.stackName}" created successfully!`))
-  console.log('')
-  console.log(pc.dim('Files created:'))
-  console.log(`  ${pc.cyan(path.relative(process.cwd(), result.stackDir))}`)
-  console.log(`    ${pc.dim('config.yaml')}`)
-  console.log(`    ${pc.dim(`skills/ (${result.skillCount} skills)`)}`)
-  console.log('')
+  console.log("");
+  console.log(pc.green(`Stack "${result.stackName}" created successfully!`));
+  console.log("");
+  console.log(pc.dim("Files created:"));
+  console.log(`  ${pc.cyan(path.relative(process.cwd(), result.stackDir))}`);
+  console.log(`    ${pc.dim("config.yaml")}`);
+  console.log(`    ${pc.dim(`skills/ (${result.skillCount} skills)`)}`);
+  console.log("");
 }
