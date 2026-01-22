@@ -1,0 +1,25 @@
+category: framework
+category_exclusive: true
+author: "@vince"
+version: 1
+cli_name: Vue
+cli_description: Vue 3 Composition API
+usage_guidance: Use when building Vue 3 apps with Composition API, composables, or reactivity.
+tags:
+  - vue
+  - vue-35
+  - composition-api
+  - script-setup
+  - composables
+  - reactivity
+  - define-model
+  - use-template-ref
+  - use-id
+compatible_with:
+  - frontend/styling/*
+  - frontend/testing/*
+forked_from:
+  skill_id: frontend/framework/vue-composition-api (@vince)
+  version: 1
+  content_hash: 499d202
+  date: 2026-01-22
