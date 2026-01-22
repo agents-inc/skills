@@ -657,7 +657,7 @@ suggested_stacks:
         security: security
       setup:
         monorepo: turborepo
-        env: env-config
+        env: env
         tooling: tooling
     philosophy: "Production-ready from day one"
 
