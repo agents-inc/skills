@@ -3,7 +3,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
 import { setVerbose } from '../utils/logger';
-import { OUTPUT_DIR } from '../consts';
+import { OUTPUT_DIR, DIRS } from '../consts';
 import { loadAllAgents, loadStackSkills, loadStack } from '../lib/loader';
 import { resolveAgents, stackToCompileConfig } from '../lib/resolver';
 import { validate, printValidationResult } from '../lib/validator';
@@ -15,12 +15,14 @@ import {
   createLiquidEngine,
   cleanOutputDir,
 } from '../lib/compiler';
+import { versionAllSkills, printVersionResults } from '../lib/versioning';
 import type { CompileConfig, CompileContext } from '../types';
 
 export const compileCommand = new Command('compile')
   .description('Compile agents from a stack')
   .requiredOption('-s, --stack <name>', 'Stack to compile')
   .option('-v, --verbose', 'Enable verbose logging', false)
+  .option('--version-skills', 'Auto-increment version and update content_hash for changed source skills', false)
   .configureOutput({
     writeErr: (str) => console.error(pc.red(str)),
   })
@@ -40,6 +42,19 @@ export const compileCommand = new Command('compile')
     console.log(`\n📦 Compiling stack: ${stackId}\n`);
 
     try {
+      // Version source skills if requested
+      if (options.versionSkills) {
+        s.start('Versioning source skills...');
+        const skillsDir = path.join(projectRoot, DIRS.skills);
+        const versionResults = await versionAllSkills(skillsDir);
+        const changedCount = versionResults.filter((r) => r.changed).length;
+        s.stop(`Versioned skills: ${changedCount} updated, ${versionResults.length - changedCount} unchanged`);
+
+        if (changedCount > 0 && options.verbose) {
+          printVersionResults(versionResults);
+        }
+      }
+
       // Load agents first (shared across all stacks)
       s.start('Loading agents...');
       const agents = await loadAllAgents(projectRoot);
