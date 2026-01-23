@@ -469,3 +469,54 @@ export interface Marketplace {
   /** List of plugins in the marketplace */
   plugins: MarketplacePlugin[];
 }
+
+// =============================================================================
+// Fetcher Types (for unified cc init flow)
+// =============================================================================
+
+/**
+ * Result from fetching marketplace data from a remote source.
+ * Contains the parsed marketplace and caching metadata.
+ */
+export interface MarketplaceFetchResult {
+  /** Parsed marketplace data */
+  marketplace: Marketplace;
+  /** Path where source was fetched/cached */
+  sourcePath: string;
+  /** Whether result came from cache */
+  fromCache: boolean;
+  /** Cache key for invalidation (optional) */
+  cacheKey?: string;
+}
+
+/**
+ * Paths to fetched agent definition sources.
+ * Contains directory paths, not agent data itself.
+ */
+export interface AgentSourcePaths {
+  /** Path to agents directory (contains agent subdirs) */
+  agentsDir: string;
+  /** Path to _principles directory */
+  principlesDir: string;
+  /** Path to _templates directory */
+  templatesDir: string;
+  /** Original source path */
+  sourcePath: string;
+}
+
+/**
+ * Options for compiling a complete plugin.
+ * Used by unified compilation flow.
+ */
+export interface PluginCompileOptions {
+  /** Output plugin directory */
+  pluginDir: string;
+  /** Path to skills directory in plugin */
+  skillsDir: string;
+  /** Fetched agent definition paths */
+  agentDefs: AgentSourcePaths;
+  /** Agent configs (matches CompileConfig.agents pattern) */
+  agentConfigs: Record<string, CompileAgentConfig>;
+  /** Enable verbose logging */
+  verbose?: boolean;
+}

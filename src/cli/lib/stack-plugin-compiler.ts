@@ -7,6 +7,7 @@ import {
   ensureDir,
   copy,
   fileExists,
+  directoryExists,
 } from "../utils/fs";
 import { verbose } from "../utils/logger";
 import { DIRS } from "../consts";
@@ -91,7 +92,7 @@ async function readPrinciples(
  * Compile a single agent for stack plugin output
  * Returns the compiled markdown content
  */
-async function compileAgentForPlugin(
+export async function compileAgentForPlugin(
   name: string,
   agent: AgentConfig,
   projectRoot: string,
@@ -329,11 +330,19 @@ export async function compileStackPlugin(
   // 6. Create plugin directory structure
   const pluginDir = path.join(outputDir, stackId);
   const agentsDir = path.join(pluginDir, "agents");
-  const skillsDir = path.join(pluginDir, "skills");
 
   await ensureDir(pluginDir);
   await ensureDir(agentsDir);
-  await ensureDir(skillsDir);
+
+  // Create skills directory and copy skills from stack source
+  const pluginSkillsDir = path.join(pluginDir, "skills");
+  await ensureDir(pluginSkillsDir);
+
+  const stackSkillsDir = path.join(projectRoot, DIRS.stacks, stackId, "skills");
+  if (await directoryExists(stackSkillsDir)) {
+    await copy(stackSkillsDir, pluginSkillsDir);
+    verbose(`  Copied skills to ${pluginSkillsDir}`);
+  }
 
   // 7. Create Liquid engine
   const engine = new Liquid({
@@ -394,7 +403,7 @@ export async function compileStackPlugin(
     keywords: stack.tags,
     hasAgents: true,
     hasHooks,
-    skills: uniqueSkillPlugins,
+    hasSkills: true, // Always true - skills are embedded
   });
 
   await writePluginManifest(pluginDir, manifest);

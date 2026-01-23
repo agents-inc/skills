@@ -184,12 +184,30 @@ describe("plugin-manifest", () => {
       expect(manifest.hooks).toBeUndefined();
     });
 
-    it("should include skills path by default", () => {
+    it("should not include skills when hasSkills is undefined", () => {
       const manifest = generateStackPluginManifest({
         stackName: "modern-react",
       });
 
+      expect(manifest.skills).toBeUndefined();
+    });
+
+    it("should include skills path when hasSkills is true", () => {
+      const manifest = generateStackPluginManifest({
+        stackName: "modern-react",
+        hasSkills: true,
+      });
+
       expect(manifest.skills).toBe("./skills/");
+    });
+
+    it("should not include skills when hasSkills is false", () => {
+      const manifest = generateStackPluginManifest({
+        stackName: "modern-react",
+        hasSkills: false,
+      });
+
+      expect(manifest.skills).toBeUndefined();
     });
 
     it("should include author when provided", () => {

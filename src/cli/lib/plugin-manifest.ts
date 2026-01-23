@@ -61,8 +61,8 @@ export interface StackPluginOptions {
   version?: string;
   /** Keywords for discoverability */
   keywords?: string[];
-  /** Skill names included in this stack */
-  skills?: string[];
+  /** Whether skills directory should be embedded */
+  hasSkills?: boolean;
   /** Whether this stack has compiled agents */
   hasAgents?: boolean;
   /** Whether this stack has hooks configuration */
@@ -124,8 +124,12 @@ export function generateStackPluginManifest(
     name: options.stackName,
     version: options.version ?? DEFAULT_VERSION,
     license: DEFAULT_LICENSE,
-    skills: "./skills/",
   };
+
+  // Stack plugins embed skills as a directory
+  if (options.hasSkills) {
+    manifest.skills = "./skills/";
+  }
 
   if (options.description) {
     manifest.description = options.description;

@@ -1,3 +1,11 @@
+/**
+ * @deprecated This module is deprecated. Use plugin-finder.ts instead.
+ * The .claude-collective directory structure has been replaced by ~/.claude/plugins/
+ *
+ * These functions remain for backward compatibility during migration.
+ * TODO: Remove in next major version.
+ */
+
 import path from "path";
 import {
   readFile,
@@ -17,6 +25,7 @@ import { readStackConfig } from "./stack-config";
 /**
  * Read the active stack name from .claude-collective/active-stack
  * Returns null if file doesn't exist or is empty
+ * @deprecated Use plugin-finder.ts instead
  */
 export async function readActiveStack(
   projectDir: string,
@@ -29,6 +38,7 @@ export async function readActiveStack(
 
 /**
  * Write the active stack name to .claude-collective/active-stack
+ * @deprecated Use plugin-finder.ts instead
  */
 export async function writeActiveStack(
   projectDir: string,
@@ -42,6 +52,7 @@ export async function writeActiveStack(
 
 /**
  * Stack list item with metadata
+ * @deprecated Use plugin-finder.ts instead
  */
 export interface StackListItem {
   name: string;
@@ -51,6 +62,7 @@ export interface StackListItem {
 
 /**
  * Get the stacks directory path for a project
+ * @deprecated Use plugin-finder.ts instead
  */
 export function getCollectiveStacksDir(projectDir: string): string {
   return path.join(projectDir, COLLECTIVE_DIR, COLLECTIVE_STACKS_SUBDIR);
@@ -58,6 +70,7 @@ export function getCollectiveStacksDir(projectDir: string): string {
 
 /**
  * List all stacks in a project with their metadata
+ * @deprecated Use plugin-finder.ts instead
  */
 export async function listStacks(projectDir: string): Promise<StackListItem[]> {
   const stacksDir = getCollectiveStacksDir(projectDir);
@@ -88,6 +101,7 @@ export async function listStacks(projectDir: string): Promise<StackListItem[]> {
 
 /**
  * Get list of existing stack names in .claude-collective/stacks/
+ * @deprecated Use plugin-finder.ts instead
  */
 export async function getExistingStacks(projectDir: string): Promise<string[]> {
   const stacksDir = getCollectiveStacksDir(projectDir);

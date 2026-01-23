@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { Command } from "commander";
 import pc from "picocolors";
 import { compileCommand } from "./commands/compile";
@@ -9,7 +8,6 @@ import { initCommand } from "./commands/init";
 import { addCommand } from "./commands/add";
 import { updateCommand } from "./commands/update";
 import { validateCommand } from "./commands/validate";
-import { switchCommand } from "./commands/switch";
 import { listCommand } from "./commands/list";
 import { configCommand } from "./commands/config";
 import { versionCommand } from "./commands/version";
@@ -43,7 +41,6 @@ async function main() {
   program.addCommand(compileStackCommand);
   program.addCommand(generateMarketplaceCommand);
   program.addCommand(validateCommand);
-  program.addCommand(switchCommand);
   program.addCommand(listCommand);
   program.addCommand(configCommand);
   program.addCommand(versionCommand);

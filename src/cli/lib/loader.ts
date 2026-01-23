@@ -163,6 +163,52 @@ export async function loadStackSkills(
   return skills;
 }
 
+/**
+ * Load skills from a plugin's skills directory
+ * Scans pluginDir/skills/**\/SKILL.md for compiled plugin output
+ */
+export async function loadPluginSkills(
+  pluginDir: string,
+): Promise<Record<string, SkillDefinition>> {
+  const skills: Record<string, SkillDefinition> = {};
+  const pluginSkillsDir = path.join(pluginDir, "skills");
+
+  // Check if skills directory exists
+  if (!(await directoryExists(pluginSkillsDir))) {
+    return skills;
+  }
+
+  const files = await glob("**/SKILL.md", pluginSkillsDir);
+
+  for (const file of files) {
+    const fullPath = path.join(pluginSkillsDir, file);
+    const content = await readFile(fullPath);
+
+    const frontmatter = parseFrontmatter(content);
+    if (!frontmatter) {
+      console.warn(
+        `  Warning: Skipping ${file}: Missing or invalid frontmatter`,
+      );
+      continue;
+    }
+
+    const folderPath = file.replace("/SKILL.md", "");
+    // Path is relative to the plugin directory
+    const skillPath = `skills/${folderPath}/`;
+    const skillId = frontmatter.name;
+
+    skills[skillId] = {
+      path: skillPath,
+      name: extractDisplayName(frontmatter.name),
+      description: frontmatter.description,
+    };
+
+    verbose(`Loaded plugin skill: ${skillId} from ${file}`);
+  }
+
+  return skills;
+}
+
 // Cache for loaded stacks (keyed by mode:stackId)
 const stackCache = new Map<string, StackConfig>();
 
