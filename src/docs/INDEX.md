@@ -108,13 +108,14 @@ The CLI (`cc`) is the user-facing tool for managing skills, stacks, and agents.
 
 ### Core CLI Documents
 
-| Document                           | Path                            | Purpose                                                                |
-| ---------------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
-| `CLI-DATA-DRIVEN-ARCHITECTURE.md`  | `src/docs/`                     | **Start here** - Data-driven design, skills matrix schema, MVP dataset |
-| `CLI-AGENT-INVOCATION-RESEARCH.md` | `src/docs/`                     | **Key Discovery** - Inline agent invocation via `--agents` JSON flag   |
-| `CLI-FRAMEWORK-RESEARCH.md`        | `src/docs/`                     | Framework comparison (@clack vs Ink vs Inquirer)                       |
-| `CLI-IMPLEMENTATION-PLAN.md`       | `.claude/research/findings/v2/` | Phase 1-5 implementation details                                       |
-| `CLI-PHASE-2-PLAN.md`              | `.claude/research/findings/v2/` | Remaining features (list, create, update)                              |
+| Document                              | Path                            | Purpose                                                                |
+| ------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md`     | `src/docs/`                     | **Start here** - Data-driven design, skills matrix schema, MVP dataset |
+| `PLUGIN-DISTRIBUTION-ARCHITECTURE.md` | `src/docs/`                     | **New** - Plugin-based distribution + CLI compilation architecture     |
+| `CLI-AGENT-INVOCATION-RESEARCH.md`    | `src/docs/`                     | **Key Discovery** - Inline agent invocation via `--agents` JSON flag   |
+| `CLI-FRAMEWORK-RESEARCH.md`           | `src/docs/`                     | Framework comparison (@clack vs Ink vs Inquirer)                       |
+| `CLI-IMPLEMENTATION-PLAN.md`          | `.claude/research/findings/v2/` | Phase 1-5 implementation details                                       |
+| `CLI-PHASE-2-PLAN.md`                 | `.claude/research/findings/v2/` | Remaining features (list, create, update)                              |
 
 ### CLI Architecture Principles
 
