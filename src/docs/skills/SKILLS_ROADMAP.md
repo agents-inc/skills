@@ -62,6 +62,7 @@
 | Errors | **Sentry** | Best DX, source maps, generous free tier |
 
 **Decision rationale:**
+
 - **Axiom over Datadog**: 10-20x cheaper ($0.09-0.12/GB vs $0.21-0.36/GB), official Vercel partner
 - **Axiom over BetterStack**: Better pricing model (no tier cliffs), more mature tracing
 - **Axiom over self-hosted Grafana**: No maintenance overhead, "set and forget"
@@ -77,6 +78,7 @@
 **Effort:** Medium
 
 **Covers:**
+
 - Installing dependencies (Pino, `@sentry/nextjs`, `next-axiom`)
 - Environment variables (API keys, DSNs, dataset names)
 - Axiom dataset creation and Vercel integration
@@ -95,6 +97,7 @@
 **Effort:** Medium
 
 **Covers:**
+
 - Log levels and when to use each (debug, info, warn, error)
 - Structured logging patterns (what fields to include)
 - Correlation IDs for request tracing
@@ -124,6 +127,7 @@
 | Free Tier | **3,000 emails/mo** | Sufficient for development and early MVP |
 
 **Decision rationale:**
+
 - **Resend over SendGrid**: Modern API, React Email integration, no legacy cruft, better DX
 - **Resend over Postmark**: React Email native support, dynamic IP scaling, modern stack alignment
 - **Resend over AWS SES**: No infrastructure overhead, built-in analytics, 10x faster setup
@@ -138,6 +142,7 @@
 | 500k emails/mo | ~$450 |
 
 **Key advantages for monorepo:**
+
 - Single Resend account, pooled quota across all 10 apps
 - Scale plan includes 1,000 custom domains (enough for all apps)
 - No per-app fees, usage-based only
@@ -151,6 +156,7 @@
 **Effort:** Small-Medium
 
 **Covers:**
+
 - Installing `resend` and `@react-email/components`
 - Environment variables (API key)
 - Domain verification and DNS setup (SPF, DKIM, DMARC)
@@ -168,6 +174,7 @@
 **Effort:** Medium
 
 **Covers:**
+
 - React Email template patterns (components, layouts, styling)
 - Sending transactional emails (API patterns)
 - Email types (verification, password reset, welcome, notifications)
@@ -223,6 +230,7 @@
 | Free Tier | **1M events + 1M flag requests** | Sufficient for MVP phase |
 
 **Decision rationale:**
+
 - **PostHog over Mixpanel**: Open-source, usage-based (not per-project), includes feature flags
 - **PostHog over Amplitude**: Simpler pricing, developer-first DX, no steep learning curve
 - **PostHog over LaunchDarkly**: LaunchDarkly is $10/seat + per-MAU, PostHog is usage-based only
@@ -237,6 +245,7 @@
 | 10M events/mo | ~$450-1,500 |
 
 **Key advantages for monorepo:**
+
 - Single organization, pooled billing across all apps
 - 6 projects included (enough for prod + staging if needed)
 - No per-seat fees (add teammates freely)
@@ -250,6 +259,7 @@
 **Effort:** Small-Medium
 
 **Covers:**
+
 - Installing `posthog-js` and `posthog-node`
 - Environment variables (API key, host)
 - PostHog project creation (single org for monorepo)
@@ -267,6 +277,7 @@
 **Effort:** Medium
 
 **Covers:**
+
 - Event tracking patterns (what to track, naming conventions)
 - User identification (after auth with Better Auth)
 - Page view tracking (automatic vs manual)
@@ -285,6 +296,7 @@
 **Effort:** Medium
 
 **Covers:**
+
 - Flag evaluation patterns (client + server)
 - Boolean vs multivariate flags
 - Gradual rollouts (percentage-based)

@@ -2,6 +2,9 @@
 import { Command } from "commander";
 import pc from "picocolors";
 import { compileCommand } from "./commands/compile";
+import { compilePluginsCommand } from "./commands/compile-plugins";
+import { compileStackCommand } from "./commands/compile-stack";
+import { generateMarketplaceCommand } from "./commands/generate-marketplace";
 import { initCommand } from "./commands/init";
 import { addCommand } from "./commands/add";
 import { updateCommand } from "./commands/update";
@@ -9,6 +12,7 @@ import { validateCommand } from "./commands/validate";
 import { switchCommand } from "./commands/switch";
 import { listCommand } from "./commands/list";
 import { configCommand } from "./commands/config";
+import { versionCommand } from "./commands/version";
 import { EXIT_CODES } from "./lib/exit-codes";
 
 // Handle Ctrl+C gracefully
@@ -35,10 +39,14 @@ async function main() {
   program.addCommand(addCommand);
   program.addCommand(updateCommand);
   program.addCommand(compileCommand);
+  program.addCommand(compilePluginsCommand);
+  program.addCommand(compileStackCommand);
+  program.addCommand(generateMarketplaceCommand);
   program.addCommand(validateCommand);
   program.addCommand(switchCommand);
   program.addCommand(listCommand);
   program.addCommand(configCommand);
+  program.addCommand(versionCommand);
 
   // Parse arguments
   await program.parseAsync(process.argv);

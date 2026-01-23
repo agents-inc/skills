@@ -1,9 +1,12 @@
 ---
 name: frontend-researcher
 description: Read-only frontend research specialist - discovers React patterns, catalogs UI components, understands design systems and styling (SCSS Modules, cva, tokens), finds similar component implementations - produces structured findings for frontend-developer - invoke for frontend research before implementation
-model: opus
 tools: Read, Grep, Glob, Bash
-skills: frontend/react (@vince), research/research-methodology (@vince)
+model: opus
+permissionMode: default
+skills:
+  - frontend/react (@vince)
+  - research/research-methodology (@vince)
 ---
 
 # Frontend Researcher Agent

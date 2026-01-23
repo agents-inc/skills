@@ -161,22 +161,3 @@ async function loadFromRemote(
     isLocal: false,
   };
 }
-
-/**
- * Get the skills directory path for a loaded source
- */
-export function getSkillsDir(sourceResult: SourceLoadResult): string {
-  return path.join(sourceResult.sourcePath, SKILLS_DIR_PATH);
-}
-
-/**
- * Resolve a skill path relative to the source
- */
-export function resolveSkillPath(
-  sourceResult: SourceLoadResult,
-  skillRelativePath: string,
-): string {
-  // skillRelativePath is like "skills/frontend/react (@vince)/"
-  // We need to join with src/ because that's where skills live in the source
-  return path.join(sourceResult.sourcePath, "src", skillRelativePath);
-}

@@ -1,9 +1,11 @@
 ---
 name: orchestrator
 description: Manages background agent execution - stays responsive while agents work, tracks state via dashboard, injects boilerplate automatically - use for multi-task coordination
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash, Task, TaskOutput
-skills: research/research-methodology (@vince)
+model: opus
+permissionMode: default
+skills:
+  - research/research-methodology (@vince)
 ---
 
 # Orchestrator Agent

@@ -2,9 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import path from "path";
 import os from "os";
 import { mkdtemp, rm, mkdir, writeFile } from "fs/promises";
-import { fetchFromSource, getCacheInfo, clearCache } from "./source-fetcher";
+import { fetchFromSource } from "./source-fetcher";
 import { isLocalSource } from "./config";
-import { CACHE_DIR } from "../consts";
 
 describe("source-fetcher", () => {
   let tempDir: string;
@@ -60,35 +59,6 @@ describe("source-fetcher", () => {
       });
 
       expect(result.path).toBe(subdir);
-    });
-  });
-
-  describe("getCacheInfo", () => {
-    it("should return cache info for a source", async () => {
-      const info = await getCacheInfo("github:test/repo");
-
-      expect(info).toHaveProperty("exists");
-      expect(info).toHaveProperty("path");
-      expect(info.path).toContain("test-repo");
-    });
-
-    it("should sanitize source URL for cache path", async () => {
-      const info = await getCacheInfo("github:org/repo-name");
-
-      // Should not contain : or / in the sanitized path segment
-      const pathSegment = path.basename(info.path);
-      expect(pathSegment).not.toContain(":");
-      expect(pathSegment).not.toContain("/");
-    });
-  });
-
-  describe("clearCache", () => {
-    it("should not throw when clearing non-existent cache", async () => {
-      // Should not throw even if cache doesn't exist
-      // Just verify it completes without error
-      await clearCache("github:non-existent/repo");
-      // If we get here, the test passed
-      expect(true).toBe(true);
     });
   });
 

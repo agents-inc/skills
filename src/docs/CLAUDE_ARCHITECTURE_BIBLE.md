@@ -29,14 +29,14 @@ This system compiles modular source files into standalone agent/skill markdown f
 
 ## Stack Switching Workflow
 
-Switching stacks is a single command. The compiler **clears all output** and regenerates:
+Switching stacks is a two-step process. The compiler **clears all output** and regenerates:
 
 ```bash
 # Switch to work stack (Photoroom - MobX, Tailwind)
-bunx compile -s work-stack
+cc switch work-stack && cc compile
 
 # Switch to home stack (Personal - Zustand, SCSS)
-bunx compile -s home-stack
+cc switch home-stack && cc compile
 ```
 
 **What happens:**
@@ -953,9 +953,9 @@ Skills are single markdown files with this structure:
 ## Compilation Commands
 
 ```bash
-# Compile for specific stack
-bunx compile -s home-stack
-bunx compile -s work-stack
+# Switch to specific stack and compile
+cc switch home-stack && cc compile
+cc switch work-stack && cc compile
 ```
 
 ## Final Reminder Pattern
@@ -1053,7 +1053,7 @@ agents:
 ### Step 4: Compile and Verify
 
 ```bash
-bunx compile -s work-stack
+cc switch work-stack && cc compile
 # Output: .claude/agents/my-new-agent.md
 ```
 

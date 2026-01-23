@@ -13,6 +13,8 @@
 | Create AI-optimized documentation           | [DOCUMENTATION_BIBLE.md](#3-documentation-bible)             |
 | Design atomic, portable skills              | [SKILL-ATOMICITY-BIBLE.md](#4-skill-atomicity-bible)         |
 | **Build or extend the CLI**                 | [CLI Documentation](#cli-documentation)                      |
+| Create or distribute plugins                | [PLUGIN-DEVELOPMENT.md](#5-plugin-development)               |
+| See all CLI commands                        | [CLI-REFERENCE.md](#cli-reference)                           |
 | Find core instructions loaded in all agents | [Principles](#principles-loaded-in-all-agents)               |
 | See compiled agent prompts                  | [Agent Definitions](#agent-definitions)                      |
 | Review architecture research & decisions    | [Research & Findings](#research--findings)                   |
@@ -30,7 +32,7 @@ The source of truth for the modular agent & skill compilation system.
 **Covers:**
 
 - TypeScript + LiquidJS compilation pipeline
-- Stack-switching workflow (`bunx compile -s home` vs `bunx compile -s work`)
+- Stack-switching workflow (`cc switch <stack>` then `cc compile`)
 - Directory structure (`src/agents.yaml`, `src/agents/{category}/{agent}/`, `src/stacks/`)
 - Agent categories (developer, reviewer, researcher, planning, pattern, meta, tester)
 - How agents are generic (role + workflow) while skills are stack-specific (implementation patterns)
@@ -39,6 +41,8 @@ The source of truth for the modular agent & skill compilation system.
 - **Skill schema requirements** (metadata.yaml, SKILL.md frontmatter, validation rules)
 
 **Use when:** Creating or modifying agents, understanding the build system, switching stacks, authoring new skills.
+
+**Note:** CLI-DATA-DRIVEN-ARCHITECTURE.md (skills matrix, relationships, eject design) has been moved to `.claude/research/findings/v2/` as it contains architectural research and unimplemented features.
 
 ---
 
@@ -85,7 +89,7 @@ Standards for creating AI-optimized documentation (NOT human documentation).
 
 ### 4. SKILL-ATOMICITY-BIBLE
 
-**Path:** `src/docs/SKILL-ATOMICITY-BIBLE.md`
+**Path:** `src/docs/skills/SKILL-ATOMICITY-BIBLE.md`
 
 The core principle: A skill should ONLY discuss its own domain.
 
@@ -102,6 +106,45 @@ The core principle: A skill should ONLY discuss its own domain.
 
 ---
 
+## Plugin System
+
+### 5. PLUGIN-DEVELOPMENT
+
+**Path:** `src/docs/plugins/PLUGIN-DEVELOPMENT.md`
+
+Guide for creating and distributing Claude Code plugins.
+
+**Covers:**
+
+- Plugin directory structure
+- SKILL.md frontmatter (official format)
+- plugin.json manifest schema
+- Stack plugin compilation
+- Publishing to marketplace
+
+**Use when:** Creating skill plugins, stack plugins, or contributing to the marketplace.
+
+---
+
+### CLI-REFERENCE
+
+**Path:** `src/docs/plugins/CLI-REFERENCE.md`
+
+Complete reference for all CLI commands.
+
+**Covers:**
+
+- `cc init` - Initialize with plugin support
+- `cc compile-plugins` - Compile skills to plugins
+- `cc compile-stack` - Compile stacks to plugins
+- `cc generate-marketplace` - Generate marketplace.json
+- `cc validate` - Validate plugins
+- `cc version` - Manage plugin versions
+
+**Use when:** Running CLI commands or understanding available options.
+
+---
+
 ## CLI Documentation
 
 The CLI (`cc`) is the user-facing tool for managing skills, stacks, and agents.
@@ -110,12 +153,14 @@ The CLI (`cc`) is the user-facing tool for managing skills, stacks, and agents.
 
 | Document                              | Path                            | Purpose                                                                |
 | ------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
-| `CLI-DATA-DRIVEN-ARCHITECTURE.md`     | `src/docs/`                     | **Start here** - Data-driven design, skills matrix schema, MVP dataset |
-| `PLUGIN-DISTRIBUTION-ARCHITECTURE.md` | `src/docs/`                     | **New** - Plugin-based distribution + CLI compilation architecture     |
-| `CLI-AGENT-INVOCATION-RESEARCH.md`    | `src/docs/`                     | **Key Discovery** - Inline agent invocation via `--agents` JSON flag   |
-| `CLI-FRAMEWORK-RESEARCH.md`           | `src/docs/`                     | Framework comparison (@clack vs Ink vs Inquirer)                       |
+| `PLUGIN-DISTRIBUTION-ARCHITECTURE.md` | `src/docs/plugins/`             | **Current** - Plugin-based distribution + CLI compilation architecture |
+| `CLI-AGENT-INVOCATION-RESEARCH.md`    | `src/docs/cli/`                 | **Key Discovery** - Inline agent invocation via `--agents` JSON flag   |
+| `CLI-FRAMEWORK-RESEARCH.md`           | `src/docs/cli/`                 | Framework comparison (@clack vs Ink vs Inquirer)                       |
+| `CLI-REFERENCE.md`                    | `src/docs/plugins/`             | **Complete** - All CLI commands with options and examples              |
+| `PLUGIN-DEVELOPMENT.md`               | `src/docs/plugins/`             | **New** - How to create and publish plugins                            |
 | `CLI-IMPLEMENTATION-PLAN.md`          | `.claude/research/findings/v2/` | Phase 1-5 implementation details                                       |
 | `CLI-PHASE-2-PLAN.md`                 | `.claude/research/findings/v2/` | Remaining features (list, create, update)                              |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md`     | `.claude/research/findings/v2/` | **Moved** - Skills matrix, relationships, eject design (research)      |
 
 ### CLI Architecture Principles
 
@@ -142,12 +187,15 @@ The CLI (`cc`) is the user-facing tool for managing skills, stacks, and agents.
 
 ### Implementation Status
 
-| Phase   | Description         | Status                                                |
-| ------- | ------------------- | ----------------------------------------------------- |
-| Phase 1 | Configuration Files | **Complete** (skills-matrix.yaml, MVP, types, schema) |
-| Phase 2 | Matrix Loader       | Planned (matrix-loader.ts, matrix-resolver.ts)        |
-| Phase 3 | Wizard Integration  | Planned                                               |
-| Phase 4 | Test All Flows      | Planned                                               |
+| Phase   | Description          | Status                                                   |
+| ------- | -------------------- | -------------------------------------------------------- |
+| Phase 0 | Schema Alignment     | **Complete** (skill, agent, plugin, marketplace schemas) |
+| Phase 1 | Skill-as-Plugin      | **Complete** (83 plugins compiled)                       |
+| Phase 2 | Marketplace Setup    | **Complete** (marketplace.json generated)                |
+| Phase 3 | Stack Compilation    | **Complete** (compile-stack command)                     |
+| Phase 4 | CLI Updates          | **Complete** (init, version commands)                    |
+| Phase 5 | Testing & Validation | **Complete** (validator + 34 tests)                      |
+| Phase 6 | Documentation        | **Complete** (CLI-REFERENCE, PLUGIN-DEVELOPMENT)         |
 
 ---
 
@@ -229,21 +277,38 @@ Agents are organized into 7 categories in `src/agents/`:
 
 ## Research & Findings
 
+### Claude Code Improvements
+
+Located in `.claude/research/claude-improvements/`:
+
+| Document                    | Feature                              | Priority |
+| --------------------------- | ------------------------------------ | -------- |
+| `INDEX.md`                  | Overview and implementation priority | -        |
+| `rules-directory.md`        | Path-scoped `.claude/rules/`         | HIGH     |
+| `thinking-budget.md`        | Configurable thinking tokens         | MEDIUM   |
+| `context-forking.md`        | Isolated skill execution             | HIGH     |
+| `hooks-frontmatter.md`      | Agent-scoped hooks                   | HIGH     |
+| `permission-generation.md`  | Auto-generate from tools             | MEDIUM   |
+| `progressive-disclosure.md` | Tiered skill loading                 | MEDIUM   |
+| `hot-reload.md`             | Skills hot reload                    | LOW      |
+
 ### Architecture Research
 
 Located in `.claude/research/findings/v2/`:
 
-| Document                                   | Purpose                                   |
-| ------------------------------------------ | ----------------------------------------- |
-| `ARCHITECTURE-IMPROVEMENT-FINDINGS.md`     | System architecture improvement proposals |
-| `COMPILATION-PIPELINE-FINDINGS.md`         | Findings on the compilation system        |
-| `PROFILE-SYSTEM-FINDINGS.md`               | Stack switching research                  |
-| `TEMPLATE-ARCHITECTURE-FINDINGS.md`        | Template system design                    |
-| `DRY-PRINCIPLES-AGENT5-FINDINGS.md`        | DRY principles for agents                 |
-| `MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md` | Sonnet vs Opus optimizations              |
-| `SCALABILITY-ANALYSIS.md`                  | Scalability considerations                |
-| `TYPE-SAFETY-DETAILED.md`                  | TypeScript type safety research           |
-| `FINAL-DECISION.md`                        | Key architectural decisions               |
+| Document                                   | Purpose                                    |
+| ------------------------------------------ | ------------------------------------------ |
+| `ARCHITECTURE-IMPROVEMENT-FINDINGS.md`     | System architecture improvement proposals  |
+| `COMPILATION-PIPELINE-FINDINGS.md`         | Findings on the compilation system         |
+| `PROFILE-SYSTEM-FINDINGS.md`               | Stack switching research                   |
+| `TEMPLATE-ARCHITECTURE-FINDINGS.md`        | Template system design                     |
+| `DRY-PRINCIPLES-AGENT5-FINDINGS.md`        | DRY principles for agents                  |
+| `MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md` | Sonnet vs Opus optimizations               |
+| `SCALABILITY-ANALYSIS.md`                  | Scalability considerations                 |
+| `TYPE-SAFETY-DETAILED.md`                  | TypeScript type safety research            |
+| `FINAL-DECISION.md`                        | Key architectural decisions                |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md`          | Skills matrix, relationships, eject design |
+| `RULES-TASKS-INTEGRATION-PLAN.md`          | Claude Rules, Tasks, v2.1.x integration    |
 
 ### Skill Architecture Research
 
@@ -272,8 +337,8 @@ Located in `.claude/research/findings/v2/`:
 | --------------------------------- | ------------------------------- | ------------------------------------------------ |
 | `CLI-IMPLEMENTATION-PLAN.md`      | `.claude/research/findings/v2/` | Phase 1-5 implementation (core compile/init)     |
 | `CLI-PHASE-2-PLAN.md`             | `.claude/research/findings/v2/` | Phase 6+ features (list, create, update)         |
-| `CLI-FRAMEWORK-RESEARCH.md`       | `src/docs/`                     | Framework comparison (@clack vs Ink vs Inquirer) |
-| `CLI-DATA-DRIVEN-ARCHITECTURE.md` | `src/docs/`                     | Skills matrix, relationships, MVP dataset        |
+| `CLI-FRAMEWORK-RESEARCH.md`       | `src/docs/cli/`                 | Framework comparison (@clack vs Ink vs Inquirer) |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md` | `.claude/research/findings/v2/` | Skills matrix, relationships, MVP dataset        |
 
 ### Orchestration Research
 
@@ -337,8 +402,8 @@ Located in `.claude/research/`:
 
 | Document                        | Path                            | Purpose                       |
 | ------------------------------- | ------------------------------- | ----------------------------- |
-| `SKILLS_ROADMAP.md`             | `src/docs/`                     | Skill development roadmap     |
-| `SKILL_INTEGRATION_PROGRESS.md` | `src/docs/`                     | Integration progress tracking |
+| `SKILLS_ROADMAP.md`             | `src/docs/skills/`              | Skill development roadmap     |
+| `SKILL_INTEGRATION_PROGRESS.md` | `src/docs/skills/`              | Integration progress tracking |
 | `TODO.md`                       | `src/docs/`                     | Current TODO items            |
 | `ISSUES-INDEX.md`               | `.claude/research/findings/v2/` | Known issues index            |
 
@@ -346,12 +411,12 @@ Located in `.claude/research/`:
 
 ## Additional Reference
 
-| Document                         | Path        | Purpose                                                              |
-| -------------------------------- | ----------- | -------------------------------------------------------------------- |
-| `FRONTEND_BIBLE.md`              | `src/docs/` | Frontend patterns and conventions (decision trees, styling, testing) |
-| `ARCHITECTURE_AGENT_CREATION.md` | `src/docs/` | How to create architecture agents                                    |
-| `ARCHITECTURE_AGENT_PROMPT.md`   | `src/docs/` | Architecture agent prompt structure                                  |
-| `REFACTOR-AGENT-ARCHITECTURE.md` | `src/docs/` | Agent architecture refactoring proposals                             |
+| Document                         | Path               | Purpose                                                              |
+| -------------------------------- | ------------------ | -------------------------------------------------------------------- |
+| `FRONTEND_BIBLE.md`              | `src/docs/`        | Frontend patterns and conventions (decision trees, styling, testing) |
+| `ARCHITECTURE_AGENT_CREATION.md` | `src/docs/agents/` | How to create architecture agents                                    |
+| `ARCHITECTURE_AGENT_PROMPT.md`   | `src/docs/agents/` | Architecture agent prompt structure                                  |
+| `REFACTOR-AGENT-ARCHITECTURE.md` | `src/docs/agents/` | Agent architecture refactoring proposals                             |
 
 ---
 

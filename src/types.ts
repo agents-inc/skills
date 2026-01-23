@@ -79,6 +79,9 @@ export interface AgentDefinition {
   description: string;
   model?: string;
   tools: string[];
+  disallowed_tools?: string[]; // Tools this agent cannot use
+  permission_mode?: string; // Permission mode for agent operations
+  hooks?: Record<string, AgentHookDefinition[]>; // Lifecycle hooks
   output_format?: string; // Which output format file to use
   path?: string; // Relative path to agent directory (e.g., "developer/backend-developer")
 }
@@ -131,6 +134,9 @@ export interface AgentConfig {
   description: string;
   model?: string;
   tools: string[];
+  disallowed_tools?: string[]; // Tools this agent cannot use
+  permission_mode?: string; // Permission mode for agent operations
+  hooks?: Record<string, AgentHookDefinition[]>; // Lifecycle hooks
   core_prompts: string[]; // Direct array of prompt names
   ending_prompts: string[]; // Direct array of prompt names
   output_format?: string;
@@ -189,6 +195,8 @@ export interface StackConfig {
   agents: string[];
   /** Per-agent skill assignments - maps agent name to categories, each with array of skill assignments */
   agent_skills?: Record<string, Record<string, SkillAssignment[]>>;
+  /** Lifecycle hooks for the stack plugin */
+  hooks?: Record<string, AgentHookDefinition[]>;
   philosophy?: string;
   principles?: string[];
   tags?: string[];
@@ -212,6 +220,7 @@ export interface StackMetrics {
 
 /**
  * Agent configuration from agent.yaml (co-located in each agent folder)
+ * Supports official Claude Code plugin format fields
  */
 export interface AgentYamlConfig {
   id: string;
@@ -219,6 +228,9 @@ export interface AgentYamlConfig {
   description: string;
   model?: string;
   tools: string[];
+  disallowed_tools?: string[]; // Tools this agent cannot use
+  permission_mode?: string; // Permission mode for agent operations
+  hooks?: Record<string, AgentHookDefinition[]>; // Lifecycle hooks
   output_format?: string;
 }
 
@@ -238,20 +250,34 @@ export interface SkillYamlConfig {
 }
 
 // =============================================================================
-// Phase 0B: SKILL.md as Source of Truth
+// Phase 0B: SKILL.md as Source of Truth (Official Claude Code Plugin Format)
 // =============================================================================
 
 /**
- * SKILL.md frontmatter - the single source of truth for skill identity
- * Contains: name (IS the identifier), description, optional model
+ * SKILL.md frontmatter - matches official Claude Code plugin format
+ * Contains: name (kebab-case identifier), description, and optional runtime behavior
+ *
+ * Note: `author` and `version` are in metadata.yaml (for marketplace.json), NOT here
  */
 export interface SkillFrontmatter {
-  /** The skill identifier (e.g., "frontend/react (@vince)") - must be unique */
+  /** Skill identifier in kebab-case (e.g., "react", "api-hono"). Used as plugin name. */
   name: string;
-  /** Brief description of what this skill teaches */
+  /** Brief description of the skill's purpose for Claude agents */
   description: string;
-  /** Optional: which AI model to use for this skill */
-  model?: string;
+  /** If true, prevents the AI model from invoking this skill. Default: false */
+  "disable-model-invocation"?: boolean;
+  /** If true, users can invoke this skill directly. Default: true */
+  "user-invocable"?: boolean;
+  /** Comma-separated list of tools this skill can use (e.g., "Read, Grep, Glob") */
+  "allowed-tools"?: string;
+  /** AI model to use for this skill */
+  model?: "sonnet" | "opus" | "haiku" | "inherit";
+  /** Context mode for skill execution */
+  context?: "fork";
+  /** Agent name to use when skill is invoked */
+  agent?: string;
+  /** Hint for arguments when skill is invoked */
+  "argument-hint"?: string;
 }
 
 /**
@@ -267,4 +293,179 @@ export interface SkillMetadataConfig {
   requires?: string[];
   compatible_with?: string[];
   conflicts_with?: string[];
+}
+
+// =============================================================================
+// Phase 0C: Agent Frontmatter (Official Claude Code Plugin Format)
+// =============================================================================
+
+/**
+ * Hook action types for agent lifecycle hooks
+ */
+export interface AgentHookAction {
+  type: "command" | "script" | "prompt";
+  command?: string;
+  script?: string;
+  prompt?: string;
+}
+
+/**
+ * Hook definition with matcher and actions
+ */
+export interface AgentHookDefinition {
+  matcher?: string;
+  hooks?: AgentHookAction[];
+}
+
+/**
+ * Agent frontmatter - matches official Claude Code plugin format for agents
+ * Used in compiled agent.md files
+ */
+export interface AgentFrontmatter {
+  /** Agent identifier in kebab-case (e.g., "frontend-developer"). Used as plugin name. */
+  name: string;
+  /** Brief description of the agent's purpose. Shown in Task tool description. */
+  description: string;
+  /** Comma-separated list of tools available to this agent */
+  tools?: string;
+  /** Comma-separated list of tools this agent cannot use */
+  disallowedTools?: string;
+  /** AI model to use for this agent. Use "inherit" to use parent model. */
+  model?: "sonnet" | "opus" | "haiku" | "inherit";
+  /** Permission mode for agent operations */
+  permissionMode?:
+    | "default"
+    | "acceptEdits"
+    | "dontAsk"
+    | "bypassPermissions"
+    | "plan"
+    | "delegate";
+  /** Array of skill names that are preloaded for this agent */
+  skills?: string[];
+  /** Lifecycle hooks for agent execution */
+  hooks?: Record<string, AgentHookDefinition[]>;
+}
+
+// =============================================================================
+// Plugin Manifest Types (Claude Code Plugin System)
+// =============================================================================
+
+/**
+ * Author information for plugin manifest
+ */
+export interface PluginAuthor {
+  /** Author's display name */
+  name: string;
+  /** Author's email address (optional) */
+  email?: string;
+}
+
+/**
+ * Plugin manifest for Claude Code plugins (plugin.json)
+ * Defines the structure and content of a plugin package
+ */
+export interface PluginManifest {
+  /** Plugin name in kebab-case (e.g., "skill-react", "stack-modern-react") */
+  name: string;
+  /** Semantic version (major.minor.patch) */
+  version?: string;
+  /** Brief description of the plugin's purpose */
+  description?: string;
+  /** Plugin author information */
+  author?: PluginAuthor;
+  /** URL to plugin documentation or homepage */
+  homepage?: string;
+  /** URL to plugin source repository */
+  repository?: string;
+  /** SPDX license identifier */
+  license?: string;
+  /** Keywords for discoverability */
+  keywords?: string[];
+  /** Path(s) to commands directory or files */
+  commands?: string | string[];
+  /** Path(s) to agents directory or files */
+  agents?: string | string[];
+  /** Path(s) to skills directory or files */
+  skills?: string | string[];
+  /** Path to hooks config file or inline hooks object */
+  hooks?: string | Record<string, AgentHookDefinition[]>;
+  /** Path to MCP servers config file or inline object */
+  mcpServers?: string | object;
+}
+
+// =============================================================================
+// Marketplace Types (for marketplace.json)
+// =============================================================================
+
+/**
+ * Remote source configuration for marketplace plugins
+ */
+export interface MarketplaceRemoteSource {
+  /** Source type: github or url */
+  source: "github" | "url";
+  /** GitHub repository in owner/repo format */
+  repo?: string;
+  /** Direct URL to plugin archive */
+  url?: string;
+  /** Git ref (branch, tag, or commit) */
+  ref?: string;
+}
+
+/**
+ * Plugin entry in a marketplace.json file
+ */
+export interface MarketplacePlugin {
+  /** Plugin name in kebab-case (e.g., "skill-react") */
+  name: string;
+  /** Local path or remote source configuration */
+  source: string | MarketplaceRemoteSource;
+  /** Brief description of the plugin */
+  description?: string;
+  /** Plugin version */
+  version?: string;
+  /** Plugin author information */
+  author?: PluginAuthor;
+  /** Plugin category for organization (e.g., "frontend", "backend") */
+  category?: string;
+  /** Keywords for discoverability */
+  keywords?: string[];
+}
+
+/**
+ * Marketplace owner information
+ */
+export interface MarketplaceOwner {
+  /** Owner's display name */
+  name: string;
+  /** Owner's contact email */
+  email?: string;
+}
+
+/**
+ * Marketplace metadata
+ */
+export interface MarketplaceMetadata {
+  /** Root directory for plugin sources */
+  pluginRoot?: string;
+}
+
+/**
+ * Marketplace configuration (marketplace.json)
+ * Defines a collection of Claude Code plugins
+ */
+export interface Marketplace {
+  /** JSON schema reference URL */
+  $schema?: string;
+  /** Marketplace name in kebab-case */
+  name: string;
+  /** Marketplace version (semantic versioning) */
+  version: string;
+  /** Brief description of the marketplace */
+  description?: string;
+  /** Marketplace owner information */
+  owner: MarketplaceOwner;
+  /** Additional marketplace metadata */
+  metadata?: MarketplaceMetadata;
+  /** List of plugins in the marketplace */
+  plugins: MarketplacePlugin[];
 }

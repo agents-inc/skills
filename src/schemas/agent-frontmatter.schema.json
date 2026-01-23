@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/agent-frontmatter.schema.json",
+  "title": "Agent Frontmatter",
+  "description": "Schema for YAML frontmatter in compiled agent.md files. Matches official Claude Code plugin format for agents.",
+  "type": "object",
+  "required": ["name", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Agent identifier in kebab-case (e.g., 'frontend-developer'). Used as plugin/agent name.",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "examples": ["frontend-developer", "backend-reviewer", "pm"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the agent's purpose. Shown in Task tool description.",
+      "minLength": 1,
+      "examples": [
+        "Expert frontend developer. Use for React components and UI work.",
+        "Implements backend features from detailed specs."
+      ]
+    },
+    "tools": {
+      "type": "string",
+      "description": "Comma-separated list of tools available to this agent (e.g., 'Read, Grep, Glob, Bash, Write, Edit')",
+      "examples": [
+        "Read, Grep, Glob, Bash, Write, Edit",
+        "Read, Write, Edit, Grep, Glob, Bash, Task"
+      ]
+    },
+    "disallowedTools": {
+      "type": "string",
+      "description": "Comma-separated list of tools this agent cannot use. Leave empty or omit to allow all tools.",
+      "examples": ["WebSearch, WebFetch", "Bash"]
+    },
+    "model": {
+      "type": "string",
+      "description": "AI model to use for this agent. Use 'inherit' to use parent model.",
+      "enum": ["sonnet", "opus", "haiku", "inherit"],
+      "default": "inherit",
+      "examples": ["opus", "sonnet", "inherit"]
+    },
+    "permissionMode": {
+      "type": "string",
+      "description": "Permission mode for agent operations. Controls how the agent handles permission requests.",
+      "enum": [
+        "default",
+        "acceptEdits",
+        "dontAsk",
+        "bypassPermissions",
+        "plan",
+        "delegate"
+      ],
+      "default": "default",
+      "examples": ["default", "acceptEdits", "plan"]
+    },
+    "skills": {
+      "type": "array",
+      "description": "Array of skill names that are preloaded for this agent. Claude Code loads these automatically.",
+      "items": {
+        "type": "string",
+        "description": "Skill name (matches name field in SKILL.md frontmatter)",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "examples": [
+        ["react", "zustand"],
+        ["api-hono", "drizzle"]
+      ]
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Lifecycle hooks for agent execution. Keys are hook types (PreToolUse, PostToolUse, etc.).",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/HookDefinition"
+        }
+      },
+      "examples": [
+        {
+          "PreToolUse": [
+            {
+              "matcher": "Bash",
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "./validate.sh"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "HookDefinition": {
+      "type": "object",
+      "description": "Hook definition with matcher and hook actions",
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Tool name or pattern to match for this hook",
+          "examples": ["Bash", "Write", "*"]
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HookAction"
+          }
+        }
+      }
+    },
+    "HookAction": {
+      "type": "object",
+      "description": "Individual hook action to execute",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of hook action",
+          "enum": ["command", "script", "prompt"]
+        },
+        "command": {
+          "type": "string",
+          "description": "Command to execute (for type: command)"
+        },
+        "script": {
+          "type": "string",
+          "description": "Script path to execute (for type: script)"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt to display (for type: prompt)"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "frontend-developer",
+      "description": "Expert frontend developer. Use for React components and UI work.",
+      "tools": "Read, Grep, Glob, Bash, Write, Edit",
+      "model": "inherit",
+      "permissionMode": "default",
+      "skills": ["react", "zustand"]
+    },
+    {
+      "name": "backend-developer",
+      "description": "Implements backend features from detailed specs.",
+      "tools": "Read, Grep, Glob, Bash, Write, Edit, Task",
+      "model": "opus",
+      "permissionMode": "default",
+      "skills": ["api-hono", "drizzle"],
+      "hooks": {
+        "PreToolUse": [
+          {
+            "matcher": "Bash",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "./validate.sh"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

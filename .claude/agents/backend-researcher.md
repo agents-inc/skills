@@ -1,9 +1,12 @@
 ---
 name: backend-researcher
 description: Read-only backend research specialist - discovers API route patterns, understands database schemas and ORM patterns, catalogs middleware and authentication flows, finds similar service implementations - produces structured findings for backend-developer - invoke for backend research before implementation
-model: opus
 tools: Read, Grep, Glob, Bash
-skills: backend/api-hono (@vince), research/research-methodology (@vince)
+model: opus
+permissionMode: default
+skills:
+  - backend/api-hono (@vince)
+  - research/research-methodology (@vince)
 ---
 
 # Backend Researcher Agent

@@ -9,6 +9,7 @@
 ## Executive Summary
 
 The current CLI uses **@clack/prompts** + **Commander.js**. While excellent for simple wizards, it lacks:
+
 - Horizontal tab navigation
 - Dynamic option disabling based on selections
 - Back/previous navigation between wizard steps
@@ -35,40 +36,40 @@ The current CLI uses **@clack/prompts** + **Commander.js**. While excellent for 
 
 ### Tech Stack
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `commander` | ^12.1.0 | CLI argument parsing, command routing |
-| `@clack/prompts` | ^0.11.0 | Interactive prompts and wizards |
-| `picocolors` | ^1.1.0 | Terminal colors |
-| `liquidjs` | ^10.24.0 | Template rendering |
-| `yaml` | ^2.8.2 | Configuration parsing |
+| Package          | Version  | Purpose                               |
+| ---------------- | -------- | ------------------------------------- |
+| `commander`      | ^12.1.0  | CLI argument parsing, command routing |
+| `@clack/prompts` | ^0.11.0  | Interactive prompts and wizards       |
+| `picocolors`     | ^1.1.0   | Terminal colors                       |
+| `liquidjs`       | ^10.24.0 | Template rendering                    |
+| `yaml`           | ^2.8.2   | Configuration parsing                 |
 
 ### What Works
 
 ```typescript
 // Conditional prompts via group()
 await p.group({
-  approach: () => p.select({ message: 'How to set up?' }),
+  approach: () => p.select({ message: "How to set up?" }),
 
   // Only shown if approach === 'stack'
   stack: ({ results }) => {
-    if (results.approach !== 'stack') return Promise.resolve(undefined);
-    return p.select({ message: 'Select stack' });
+    if (results.approach !== "stack") return Promise.resolve(undefined);
+    return p.select({ message: "Select stack" });
   },
 });
 ```
 
 ### Current Limitations
 
-| Feature | Supported | Notes |
-|---------|-----------|-------|
-| Vertical list selection | ✅ Yes | Core feature |
-| Conditional prompts | ✅ Yes | Via `({ results }) =>` callback |
-| Multi-select with groups | ✅ Yes | `groupMultiselect()` |
-| Horizontal tab navigation | ❌ No | Only vertical lists |
-| Dynamic option disabling | ❌ No | Options are static once rendered |
-| Back/previous step | ❌ No | One-way flow only |
-| Sibling navigation | ❌ No | Cannot jump between sections |
+| Feature                   | Supported | Notes                            |
+| ------------------------- | --------- | -------------------------------- |
+| Vertical list selection   | ✅ Yes    | Core feature                     |
+| Conditional prompts       | ✅ Yes    | Via `({ results }) =>` callback  |
+| Multi-select with groups  | ✅ Yes    | `groupMultiselect()`             |
+| Horizontal tab navigation | ❌ No     | Only vertical lists              |
+| Dynamic option disabling  | ❌ No     | Options are static once rendered |
+| Back/previous step        | ❌ No     | One-way flow only                |
+| Sibling navigation        | ❌ No     | Cannot jump between sections     |
 
 ---
 
@@ -105,14 +106,14 @@ await p.group({
 
 ### Overview
 
-| Framework | Stars | Approach | Complexity | Best For |
-|-----------|-------|----------|------------|----------|
-| **@clack/prompts** | 5k+ | Prompt-based | Low | Simple wizards |
-| **Inquirer.js** | 20k+ | Prompt-based | Low-Medium | Standard CLI prompts |
-| **Enquirer** | 7.5k | Prompt-based | Medium | Styled prompts |
-| **Ink** | 26k+ | React components | Medium-High | Complex interactive UIs |
-| **blessed/neo-blessed** | 11k+ | Widget-based | High | Full TUI applications |
-| **terminal-kit** | 3k+ | Low-level + widgets | High | Custom terminal UIs |
+| Framework               | Stars | Approach            | Complexity  | Best For                |
+| ----------------------- | ----- | ------------------- | ----------- | ----------------------- |
+| **@clack/prompts**      | 5k+   | Prompt-based        | Low         | Simple wizards          |
+| **Inquirer.js**         | 20k+  | Prompt-based        | Low-Medium  | Standard CLI prompts    |
+| **Enquirer**            | 7.5k  | Prompt-based        | Medium      | Styled prompts          |
+| **Ink**                 | 26k+  | React components    | Medium-High | Complex interactive UIs |
+| **blessed/neo-blessed** | 11k+  | Widget-based        | High        | Full TUI applications   |
+| **terminal-kit**        | 3k+   | Low-level + widgets | High        | Custom terminal UIs     |
 
 ### Quick Decision Tree
 
@@ -133,12 +134,14 @@ Need complex navigation (tabs, back button)?
 ### 1. @clack/prompts (Current)
 
 **Strengths:**
+
 - Beautiful, minimal UI
 - Simple API
 - `group()` for conditional flows
 - Used by Astro, SvelteKit, create-t3-app
 
 **Limitations:**
+
 - No back navigation
 - No dynamic option updates
 - No horizontal/tab navigation
@@ -166,12 +169,14 @@ p.group({
 ### 2. Inquirer.js / @inquirer/prompts
 
 **Strengths:**
+
 - Industry standard (ESLint, Webpack, Yarn use it)
 - Dynamic `choices` as function
 - `disabled` property (static or function in legacy)
 - `when` for conditional questions
 
 **Limitations:**
+
 - No built-in back navigation
 - No horizontal tabs
 - Disabled function only in legacy package
@@ -204,7 +209,7 @@ const answers = {};
 while (step < totalSteps) {
   const result = await runStep(step, answers);
 
-  if (result === 'BACK' && step > 0) {
+  if (result === "BACK" && step > 0) {
     step--;
   } else {
     answers[step] = result;
@@ -218,6 +223,7 @@ while (step < totalSteps) {
 ### 3. Ink (React for CLI)
 
 **Strengths:**
+
 - Full React component model
 - `useFocus` for tab navigation
 - `useFocusManager` for programmatic focus
@@ -226,16 +232,17 @@ while (step < totalSteps) {
 - Complete control over rendering
 
 **Limitations:**
+
 - Requires React knowledge
 - More setup than prompt libraries
 - Bundle size larger
 
 ```tsx
-import { render, Box, Text, useFocus, useFocusManager, useInput } from 'ink';
-import { Tabs, Tab } from 'ink-tab';
+import { render, Box, Text, useFocus, useFocusManager, useInput } from "ink";
+import { Tabs, Tab } from "ink-tab";
 
 function Wizard() {
-  const [section, setSection] = useState('frontend');
+  const [section, setSection] = useState("frontend");
   const { focus } = useFocusManager();
 
   useInput((input, key) => {
@@ -251,8 +258,8 @@ function Wizard() {
         <Tab name="database">Database</Tab>
       </Tabs>
 
-      {section === 'frontend' && <FrontendOptions />}
-      {section === 'backend' && <BackendOptions />}
+      {section === "frontend" && <FrontendOptions />}
+      {section === "backend" && <BackendOptions />}
     </Box>
   );
 }
@@ -262,11 +269,11 @@ function Option({ label, disabled, onSelect }) {
 
   return (
     <Text
-      color={disabled ? 'gray' : isFocused ? 'cyan' : 'white'}
+      color={disabled ? "gray" : isFocused ? "cyan" : "white"}
       dimColor={disabled}
     >
-      {isFocused ? '>' : ' '} {label}
-      {disabled && ' (disabled)'}
+      {isFocused ? ">" : " "} {label}
+      {disabled && " (disabled)"}
     </Text>
   );
 }
@@ -274,19 +281,20 @@ function Option({ label, disabled, onSelect }) {
 
 **Key Ink Features for Your Requirements:**
 
-| Feature | Ink Solution |
-|---------|--------------|
-| Horizontal tabs | `ink-tab` package or custom `<Tabs>` |
-| Back navigation | React state + `useInput` for key handling |
-| Disable options | `useFocus({ isActive: !disabled })` |
-| Color/hints | `<Text color="..." dimColor={...}>` |
-| Focus management | `useFocusManager().focus(id)` |
+| Feature          | Ink Solution                              |
+| ---------------- | ----------------------------------------- |
+| Horizontal tabs  | `ink-tab` package or custom `<Tabs>`      |
+| Back navigation  | React state + `useInput` for key handling |
+| Disable options  | `useFocus({ isActive: !disabled })`       |
+| Color/hints      | `<Text color="..." dimColor={...}>`       |
+| Focus management | `useFocusManager().focus(id)`             |
 
 ---
 
 ### 4. blessed / neo-blessed
 
 **Strengths:**
+
 - Full TUI framework (like ncurses)
 - `blessed-tab-container` for tabs
 - `blessed-contrib` for advanced widgets
@@ -294,29 +302,30 @@ function Option({ label, disabled, onSelect }) {
 - Grid layout for complex arrangements
 
 **Limitations:**
+
 - Steep learning curve
 - Less maintained (neo-blessed is fork)
 - Verbose API
 
 ```javascript
-const blessed = require('neo-blessed');
-const contrib = require('blessed-contrib');
+const blessed = require("neo-blessed");
+const contrib = require("blessed-contrib");
 
 const screen = blessed.screen();
 
 // Tab container
-const tabs = require('blessed-tab-container')({
+const tabs = require("blessed-tab-container")({
   parent: screen,
   tabs: [
-    { name: 'Frontend', content: frontendWidget },
-    { name: 'Backend', content: backendWidget }
-  ]
+    { name: "Frontend", content: frontendWidget },
+    { name: "Backend", content: backendWidget },
+  ],
 });
 
 // Carousel for switching views
 const carousel = new contrib.carousel(
   [frontendPage, backendPage, databasePage],
-  { screen, interval: 0, controlKeys: true }
+  { screen, interval: 0, controlKeys: true },
 );
 ```
 
@@ -325,27 +334,29 @@ const carousel = new contrib.carousel(
 ### 5. terminal-kit
 
 **Strengths:**
+
 - Low-level terminal control
 - High-level widgets available
 - `terminal-kit-plugins` for actions list
 - Full color and styling control
 
 **Limitations:**
+
 - Less community adoption
 - Documentation gaps
 - More DIY required
 
 ```javascript
-const term = require('terminal-kit').terminal;
+const term = require("terminal-kit").terminal;
 
 // Scrollable action list
-const actions = require('terminal-kit-plugins').actions;
+const actions = require("terminal-kit-plugins").actions;
 
 await actions(term, {
   items: [
-    { label: 'Option 1', action: () => {} },
-    { label: 'Option 2', disabled: true },
-  ]
+    { label: "Option 1", action: () => {} },
+    { label: "Option 2", disabled: true },
+  ],
 });
 ```
 
@@ -353,19 +364,19 @@ await actions(term, {
 
 ## Capability Matrix
 
-| Capability | @clack | Inquirer | Ink | blessed | terminal-kit |
-|------------|--------|----------|-----|---------|--------------|
-| **Horizontal tabs** | ❌ | ❌ | ✅ `ink-tab` | ✅ | ⚠️ Custom |
-| **Back navigation** | ❌ | ⚠️ Manual | ✅ State | ✅ | ⚠️ Manual |
-| **Disable options** | ❌ | ✅ Static | ✅ Dynamic | ✅ | ✅ |
-| **Dynamic disable** | ❌ | ⚠️ Legacy | ✅ | ✅ | ✅ |
-| **Sibling navigation** | ❌ | ❌ | ✅ | ✅ | ⚠️ Custom |
-| **Hints/colors** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Multi-select groups** | ✅ | ✅ | ⚠️ Custom | ✅ | ⚠️ Custom |
-| **Conditional flow** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Learning curve** | Low | Low | Medium | High | Medium |
-| **Bundle size** | Small | Small | Medium | Large | Medium |
-| **TypeScript** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ |
+| Capability              | @clack | Inquirer  | Ink          | blessed | terminal-kit |
+| ----------------------- | ------ | --------- | ------------ | ------- | ------------ |
+| **Horizontal tabs**     | ❌     | ❌        | ✅ `ink-tab` | ✅      | ⚠️ Custom    |
+| **Back navigation**     | ❌     | ⚠️ Manual | ✅ State     | ✅      | ⚠️ Manual    |
+| **Disable options**     | ❌     | ✅ Static | ✅ Dynamic   | ✅      | ✅           |
+| **Dynamic disable**     | ❌     | ⚠️ Legacy | ✅           | ✅      | ✅           |
+| **Sibling navigation**  | ❌     | ❌        | ✅           | ✅      | ⚠️ Custom    |
+| **Hints/colors**        | ✅     | ✅        | ✅           | ✅      | ✅           |
+| **Multi-select groups** | ✅     | ✅        | ⚠️ Custom    | ✅      | ⚠️ Custom    |
+| **Conditional flow**    | ✅     | ✅        | ✅           | ✅      | ✅           |
+| **Learning curve**      | Low    | Low       | Medium       | High    | Medium       |
+| **Bundle size**         | Small  | Small     | Medium       | Large   | Medium       |
+| **TypeScript**          | ✅     | ✅        | ✅           | ⚠️      | ⚠️           |
 
 Legend: ✅ Native | ⚠️ Possible with effort | ❌ Not supported
 
@@ -432,10 +443,10 @@ src/cli/
 
 ```tsx
 // index.tsx
-import { render, Box, useInput } from 'ink';
-import { Tabs, Tab } from 'ink-tab';
+import { render, Box, useInput } from "ink";
+import { Tabs, Tab } from "ink-tab";
 
-const SECTIONS = ['frontend', 'backend', 'database'] as const;
+const SECTIONS = ["frontend", "backend", "database"] as const;
 
 function InitWizard() {
   const [sectionIndex, setSectionIndex] = useState(0);
@@ -443,10 +454,10 @@ function InitWizard() {
 
   useInput((input, key) => {
     if (key.rightArrow && sectionIndex < SECTIONS.length - 1) {
-      setSectionIndex(i => i + 1);
+      setSectionIndex((i) => i + 1);
     }
     if (key.leftArrow && sectionIndex > 0) {
-      setSectionIndex(i => i - 1);
+      setSectionIndex((i) => i - 1);
     }
   });
 
@@ -458,8 +469,10 @@ function InitWizard() {
   return (
     <Box flexDirection="column">
       <Tabs onChange={(name) => setSectionIndex(SECTIONS.indexOf(name))}>
-        {SECTIONS.map(s => (
-          <Tab key={s} name={s}>{s}</Tab>
+        {SECTIONS.map((s) => (
+          <Tab key={s} name={s}>
+            {s}
+          </Tab>
         ))}
       </Tabs>
 
@@ -467,10 +480,14 @@ function InitWizard() {
         section={currentSection}
         selections={selections}
         disabledOptions={disabledOptions}
-        onSelect={(key, value) => setSelections(s => ({ ...s, [key]: value }))}
+        onSelect={(key, value) =>
+          setSelections((s) => ({ ...s, [key]: value }))
+        }
       />
 
-      <Text dimColor>← → to navigate sections | ↑ ↓ to select | Enter to confirm</Text>
+      <Text dimColor>
+        ← → to navigate sections | ↑ ↓ to select | Enter to confirm
+      </Text>
     </Box>
   );
 }
@@ -556,24 +573,28 @@ Select section (1-3) or press Enter to continue: _
 ## Sources
 
 ### Official Documentation
+
 - [Ink GitHub](https://github.com/vadimdemedes/ink)
 - [Inquirer.js GitHub](https://github.com/SBoudrias/Inquirer.js)
 - [blessed GitHub](https://github.com/chjj/blessed)
 - [@clack/prompts npm](https://www.npmjs.com/package/@clack/prompts)
 
 ### Research Articles
+
 - [Ink 3 Release Notes](https://vadimdemedes.com/posts/ink-3)
 - [Using Ink UI - LogRocket](https://blog.logrocket.com/using-ink-ui-react-build-interactive-custom-clis/)
 - [Ink v3 Advanced Components](https://developerlife.com/2021/11/25/ink-v3-advanced-ui-components/)
 - [Building Terminal Interfaces with Node.js](https://blog.openreplay.com/building-terminal-interfaces-nodejs/)
 
 ### Packages
+
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component for Ink
 - [blessed-tab-container](https://www.npmjs.com/package/blessed-tab-container) - Tabs for blessed
 - [@inkjs/ui](https://www.npmjs.com/package/@inkjs/ui) - UI component library for Ink
 - [wizard-state-machine](https://www.npmjs.com/package/wizard-state-machine) - State machine for wizards
 
 ### Community Discussions
+
 - [Inquirer.js #118 - Checkbox disable other choices](https://github.com/SBoudrias/Inquirer.js/issues/118)
 - [prompt-wizard - Multi-step prompts](https://github.com/lennym/prompt-wizard)
 

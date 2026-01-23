@@ -48,7 +48,9 @@ export async function resolveClaudeMd(
   const stackClaude = path.join(projectRoot, dirs.stacks, stackId, "CLAUDE.md");
   if (await fileExists(stackClaude)) return stackClaude;
 
-  throw new Error(`No CLAUDE.md found for stack ${stackId}`);
+  throw new Error(
+    `Stack '${stackId}' is missing required CLAUDE.md file. Expected at: ${stackClaude}`,
+  );
 }
 
 /**
@@ -60,7 +62,14 @@ export function resolveSkillReference(
 ): Skill {
   const definition = skills[ref.id];
   if (!definition) {
-    throw new Error(`Skill "${ref.id}" not found in scanned skills`);
+    const availableSkills = Object.keys(skills);
+    const skillList =
+      availableSkills.length > 0
+        ? `Available skills: ${availableSkills.slice(0, 5).join(", ")}${availableSkills.length > 5 ? ` (and ${availableSkills.length - 5} more)` : ""}`
+        : "No skills found in scanned directories";
+    throw new Error(
+      `Skill '${ref.id}' not found in scanned skills. ${skillList}`,
+    );
   }
   return {
     id: ref.id,
@@ -194,8 +203,13 @@ export async function resolveAgents(
   for (const agentName of agentNames) {
     const definition = agents[agentName];
     if (!definition) {
+      const availableAgents = Object.keys(agents);
+      const agentList =
+        availableAgents.length > 0
+          ? `Available agents: ${availableAgents.slice(0, 5).join(", ")}${availableAgents.length > 5 ? ` (and ${availableAgents.length - 5} more)` : ""}`
+          : "No agents found in scanned directories";
       throw new Error(
-        `Agent "${agentName}" in compile config but not found in scanned agents`,
+        `Agent '${agentName}' referenced in compile config but not found in scanned agents. ${agentList}. Check that src/agents/${agentName}/agent.yaml exists.`,
       );
     }
 

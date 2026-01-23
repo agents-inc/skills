@@ -2,8 +2,16 @@ import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "path";
-import { COLLECTIVE_DIR, COLLECTIVE_STACKS_SUBDIR } from "../consts";
-import { ensureDir, directoryExists } from "../utils/fs";
+import os from "os";
+import {
+  COLLECTIVE_DIR,
+  COLLECTIVE_STACKS_SUBDIR,
+  CLAUDE_DIR,
+  PLUGINS_SUBDIR,
+  PLUGIN_MANIFEST_DIR,
+  PLUGIN_MANIFEST_FILE,
+} from "../consts";
+import { ensureDir, directoryExists, writeFile } from "../utils/fs";
 import {
   runWizard,
   clearTerminal,
@@ -20,6 +28,23 @@ import {
 } from "../lib/stack-creator";
 import { writeActiveStack } from "../lib/active-stack";
 import { formatSourceOrigin } from "../lib/config";
+import { copySkillsToStackFromSource } from "../lib/skill-copier";
+import {
+  createStackConfig,
+  createStackConfigFromSuggested,
+} from "../lib/stack-config";
+import { generateStackPluginManifest } from "../lib/plugin-manifest";
+import type { PluginManifest } from "../../types";
+
+/**
+ * Scope for plugin output location
+ */
+type PluginScope = "user" | "project" | "local";
+
+/**
+ * Default version for new plugins
+ */
+const DEFAULT_PLUGIN_VERSION = "1.0.0";
 
 /**
  * Check if a project has been initialized (.claude-collective/stacks/ directory exists)
@@ -33,6 +58,51 @@ async function isInitialized(projectDir: string): Promise<boolean> {
   return directoryExists(stacksDir);
 }
 
+/**
+ * Get the output path for a plugin based on scope
+ */
+function getPluginOutputPath(name: string, scope: PluginScope): string {
+  switch (scope) {
+    case "user":
+      return path.join(os.homedir(), CLAUDE_DIR, PLUGINS_SUBDIR, name);
+    case "project":
+    case "local":
+      return path.join(process.cwd(), CLAUDE_DIR, PLUGINS_SUBDIR, name);
+  }
+}
+
+/**
+ * Get the output path for classic collective mode
+ */
+function getCollectiveOutputPath(projectDir: string): string {
+  return path.join(projectDir, COLLECTIVE_DIR);
+}
+
+/**
+ * Display summary for plugin output
+ */
+function displayPluginSummary(
+  pluginName: string,
+  pluginDir: string,
+  skillCount: number,
+  scope: PluginScope,
+): void {
+  console.log("");
+  console.log(pc.green(`Plugin "${pluginName}" created successfully!`));
+  console.log("");
+  console.log(pc.dim("Files created:"));
+  console.log(
+    `  ${pc.cyan(path.relative(process.cwd(), pluginDir) || pluginDir)}`,
+  );
+  console.log(
+    `    ${pc.dim(`${PLUGIN_MANIFEST_DIR}/${PLUGIN_MANIFEST_FILE}`)}`,
+  );
+  console.log(`    ${pc.dim(`skills/ (${skillCount} skills)`)}`);
+  console.log("");
+  console.log(pc.dim(`Scope: ${scope}`));
+  console.log("");
+}
+
 export const initCommand = new Command("init")
   .description("Initialize Claude Collective in your project")
   .option(
@@ -40,6 +110,17 @@ export const initCommand = new Command("init")
     "Skills source URL (e.g., github:org/repo or local path)",
   )
   .option("--refresh", "Force refresh from remote source", false)
+  .option("--name <name>", "Plugin name (for plugin output mode)")
+  .option(
+    "--scope <scope>",
+    "Output scope: user (~/.claude/plugins), project (.claude/plugins), local (.claude/plugins, gitignored)",
+    "user",
+  )
+  .option(
+    "--plugin",
+    "Output as a plugin instead of classic .claude-collective format",
+    false,
+  )
   .configureOutput({
     writeErr: (str) => console.error(pc.red(str)),
   })
@@ -51,7 +132,25 @@ export const initCommand = new Command("init")
     // Determine target directory (current working directory)
     const projectDir = process.cwd();
 
-    p.intro(pc.cyan("Claude Collective Setup"));
+    // Validate scope option
+    const validScopes: PluginScope[] = ["user", "project", "local"];
+    if (!validScopes.includes(options.scope as PluginScope)) {
+      p.log.error(
+        `Invalid scope: "${options.scope}". Must be one of: ${validScopes.join(", ")}`,
+      );
+      process.exit(1);
+    }
+
+    const scope = options.scope as PluginScope;
+    const isPluginMode = options.plugin || options.name || scope !== "user";
+
+    p.intro(
+      pc.cyan(
+        isPluginMode
+          ? "Claude Collective Plugin Setup"
+          : "Claude Collective Setup",
+      ),
+    );
 
     if (dryRun) {
       p.log.info(
@@ -59,14 +158,16 @@ export const initCommand = new Command("init")
       );
     }
 
-    // Check if already initialized
-    const initialized = await isInitialized(projectDir);
-    if (initialized) {
-      p.log.warn("Project already initialized.");
-      p.log.info(
-        `Use ${pc.cyan("cc add")} to add another stack, or ${pc.cyan("cc update")} to modify existing stacks.`,
-      );
-      process.exit(0);
+    // For classic mode, check if already initialized
+    if (!isPluginMode) {
+      const initialized = await isInitialized(projectDir);
+      if (initialized) {
+        p.log.warn("Project already initialized.");
+        p.log.info(
+          `Use ${pc.cyan("cc add")} to add another stack, or ${pc.cyan("cc update")} to modify existing stacks.`,
+        );
+        process.exit(0);
+      }
     }
 
     const s = p.spinner();
@@ -128,71 +229,173 @@ export const initCommand = new Command("init")
       console.log("");
     }
 
-    // Prompt for stack name
-    const stackName = await promptStackName([], "my-stack");
+    // Prompt for stack/plugin name
+    const defaultName = isPluginMode ? "my-plugin" : "my-stack";
+    const stackName = options.name || (await promptStackName([], defaultName));
 
     if (p.isCancel(stackName)) {
       p.cancel("Setup cancelled");
       process.exit(0);
     }
 
-    // Create .claude-collective directory
-    const collectiveDir = path.join(projectDir, COLLECTIVE_DIR);
-    if (dryRun) {
-      p.log.info(
-        pc.yellow(`[dry-run] Would create directory: ${collectiveDir}`),
-      );
-    } else {
-      s.start("Creating .claude-collective directory...");
-      await ensureDir(collectiveDir);
-      s.stop("Created .claude-collective directory");
-    }
+    const pluginName = stackName as string;
 
-    // Create the stack
-    if (dryRun) {
-      const stackDir = path.join(
-        collectiveDir,
-        COLLECTIVE_STACKS_SUBDIR,
-        stackName as string,
-      );
-      p.log.info(
-        pc.yellow(`[dry-run] Would create stack directory: ${stackDir}`),
-      );
-      p.log.info(
-        pc.yellow(
-          `[dry-run] Would copy ${result.selectedSkills.length} skills`,
-        ),
-      );
-      p.log.info(pc.yellow(`[dry-run] Would create config.yaml`));
-      p.log.info(
-        pc.yellow(`[dry-run] Would set "${stackName}" as active stack`),
-      );
-      p.outro(pc.green("[dry-run] Preview complete - no files were created"));
-    } else {
-      s.start(`Creating stack "${stackName}"...`);
-      try {
-        const createResult = await createStackFromSource(
-          stackName as string,
-          result.selectedSkills,
-          matrix,
-          projectDir,
-          result.selectedStack,
-          sourceResult,
+    if (isPluginMode) {
+      // Plugin output mode
+      const pluginDir = getPluginOutputPath(pluginName, scope);
+      const skillsDir = path.join(pluginDir, "skills");
+      const manifestDir = path.join(pluginDir, PLUGIN_MANIFEST_DIR);
+      const manifestPath = path.join(manifestDir, PLUGIN_MANIFEST_FILE);
+
+      if (dryRun) {
+        p.log.info(
+          pc.yellow(`[dry-run] Would create plugin directory: ${pluginDir}`),
         );
-        s.stop(`Stack created with ${createResult.skillCount} skills`);
+        p.log.info(
+          pc.yellow(
+            `[dry-run] Would copy ${result.selectedSkills.length} skills`,
+          ),
+        );
+        p.log.info(pc.yellow(`[dry-run] Would create ${PLUGIN_MANIFEST_FILE}`));
+        if (scope === "local") {
+          p.log.info(
+            pc.yellow(`[dry-run] Would add .claude/plugins to .gitignore`),
+          );
+        }
+        p.outro(pc.green("[dry-run] Preview complete - no files were created"));
+      } else {
+        s.start(`Creating plugin "${pluginName}"...`);
+        try {
+          // Create plugin directory structure
+          await ensureDir(pluginDir);
+          await ensureDir(skillsDir);
+          await ensureDir(manifestDir);
 
-        // Set as active stack
-        await writeActiveStack(projectDir, stackName as string);
+          // Copy skills to plugin
+          const copiedSkills = await copySkillsToStackFromSource(
+            result.selectedSkills,
+            pluginDir,
+            matrix,
+            sourceResult,
+          );
 
-        // Display summary
-        displayStackSummary(createResult);
+          // Generate stack config for reference
+          const stackConfig = result.selectedStack
+            ? createStackConfigFromSuggested(pluginName, result.selectedStack)
+            : createStackConfig(
+                pluginName,
+                `Plugin with ${result.selectedSkills.length} skills`,
+                result.selectedSkills,
+              );
 
-        p.outro(pc.green(`Stack "${stackName}" created and set as active!`));
-        p.log.info(`Run ${pc.cyan("cc compile")} to compile your stack.`);
-      } catch (error) {
-        s.stop("Failed to create stack");
-        p.log.error(`Error: ${error}`);
-        process.exit(1);
+          // Generate plugin manifest
+          const manifest: PluginManifest = generateStackPluginManifest({
+            stackName: pluginName,
+            description: stackConfig.description,
+            version: DEFAULT_PLUGIN_VERSION,
+            keywords: stackConfig.tags,
+          });
+
+          // Write plugin manifest
+          await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+
+          // For local scope, add to .gitignore
+          if (scope === "local") {
+            const gitignorePath = path.join(projectDir, ".gitignore");
+            const gitignoreEntry = `${CLAUDE_DIR}/${PLUGINS_SUBDIR}/`;
+            try {
+              const { readFile: readFileFs } = await import("../utils/fs");
+              const existingContent = await readFileFs(gitignorePath).catch(
+                () => "",
+              );
+              if (!existingContent.includes(gitignoreEntry)) {
+                const newContent = existingContent.endsWith("\n")
+                  ? existingContent + gitignoreEntry + "\n"
+                  : existingContent + "\n" + gitignoreEntry + "\n";
+                await writeFile(gitignorePath, newContent);
+              }
+            } catch {
+              // .gitignore doesn't exist or can't be read, create new one
+              await writeFile(gitignorePath, gitignoreEntry + "\n");
+            }
+          }
+
+          s.stop(`Plugin created with ${copiedSkills.length} skills`);
+
+          // Display summary
+          displayPluginSummary(
+            pluginName,
+            pluginDir,
+            copiedSkills.length,
+            scope,
+          );
+
+          p.outro(pc.green(`Plugin "${pluginName}" created successfully!`));
+        } catch (error) {
+          s.stop("Failed to create plugin");
+          p.log.error(`Error: ${error}`);
+          process.exit(1);
+        }
+      }
+    } else {
+      // Classic .claude-collective output mode
+      const collectiveDir = getCollectiveOutputPath(projectDir);
+      if (dryRun) {
+        p.log.info(
+          pc.yellow(`[dry-run] Would create directory: ${collectiveDir}`),
+        );
+      } else {
+        s.start("Creating .claude-collective directory...");
+        await ensureDir(collectiveDir);
+        s.stop("Created .claude-collective directory");
+      }
+
+      // Create the stack
+      if (dryRun) {
+        const stackDir = path.join(
+          collectiveDir,
+          COLLECTIVE_STACKS_SUBDIR,
+          pluginName,
+        );
+        p.log.info(
+          pc.yellow(`[dry-run] Would create stack directory: ${stackDir}`),
+        );
+        p.log.info(
+          pc.yellow(
+            `[dry-run] Would copy ${result.selectedSkills.length} skills`,
+          ),
+        );
+        p.log.info(pc.yellow(`[dry-run] Would create config.yaml`));
+        p.log.info(
+          pc.yellow(`[dry-run] Would set "${pluginName}" as active stack`),
+        );
+        p.outro(pc.green("[dry-run] Preview complete - no files were created"));
+      } else {
+        s.start(`Creating stack "${pluginName}"...`);
+        try {
+          const createResult = await createStackFromSource(
+            pluginName,
+            result.selectedSkills,
+            matrix,
+            projectDir,
+            result.selectedStack,
+            sourceResult,
+          );
+          s.stop(`Stack created with ${createResult.skillCount} skills`);
+
+          // Set as active stack
+          await writeActiveStack(projectDir, pluginName);
+
+          // Display summary
+          displayStackSummary(createResult);
+
+          p.outro(pc.green(`Stack "${pluginName}" created and set as active!`));
+          p.log.info(`Run ${pc.cyan("cc compile")} to compile your stack.`);
+        } catch (error) {
+          s.stop("Failed to create stack");
+          p.log.error(`Error: ${error}`);
+          process.exit(1);
+        }
       }
     }
   });

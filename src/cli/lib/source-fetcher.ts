@@ -2,7 +2,7 @@ import path from "path";
 import { downloadTemplate } from "giget";
 import { verbose } from "../utils/logger";
 import { CACHE_DIR } from "../consts";
-import { ensureDir, directoryExists, copy, remove } from "../utils/fs";
+import { ensureDir, directoryExists } from "../utils/fs";
 import { isLocalSource } from "./config";
 
 /**
@@ -184,56 +184,4 @@ function wrapGigetError(error: unknown, source: string): Error {
 
   // Return original error with source context
   return new Error(`Failed to fetch ${source}: ${message}`);
-}
-
-/**
- * Copy fetched content to a destination directory
- */
-export async function copyFetchedContent(
-  fetchResult: FetchResult,
-  destDir: string,
-  subPath?: string,
-): Promise<void> {
-  const sourcePath = subPath
-    ? path.join(fetchResult.path, subPath)
-    : fetchResult.path;
-
-  if (!(await directoryExists(sourcePath))) {
-    throw new Error(`Source path not found: ${sourcePath}`);
-  }
-
-  await ensureDir(destDir);
-  await copy(sourcePath, destDir);
-
-  verbose(`Copied ${sourcePath} to ${destDir}`);
-}
-
-/**
- * Clear the cache for a specific source or all sources
- */
-export async function clearCache(source?: string): Promise<void> {
-  if (source) {
-    const cacheDir = getCacheDir(source);
-    if (await directoryExists(cacheDir)) {
-      verbose(`Clearing cache for ${source}: ${cacheDir}`);
-      await remove(cacheDir);
-    }
-  } else {
-    const sourcesCache = path.join(CACHE_DIR, "sources");
-    if (await directoryExists(sourcesCache)) {
-      verbose(`Clearing all source caches: ${sourcesCache}`);
-      await remove(sourcesCache);
-    }
-  }
-}
-
-/**
- * Get cache info for a source
- */
-export async function getCacheInfo(
-  source: string,
-): Promise<{ exists: boolean; path: string }> {
-  const cacheDir = getCacheDir(source);
-  const exists = await directoryExists(cacheDir);
-  return { exists, path: cacheDir };
 }

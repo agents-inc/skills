@@ -18,6 +18,12 @@ export const COLLECTIVE_DIR = ".claude-collective";
 export const COLLECTIVE_STACKS_SUBDIR = "stacks";
 export const ACTIVE_STACK_FILE = "active-stack";
 
+// Plugin directories
+export const CLAUDE_DIR = ".claude";
+export const PLUGINS_SUBDIR = "plugins";
+export const PLUGIN_MANIFEST_DIR = ".claude-plugin";
+export const PLUGIN_MANIFEST_FILE = "plugin.json";
+
 // Use os.homedir() instead of process.env.HOME for cross-platform
 export const CACHE_DIR = path.join(os.homedir(), ".cache", "claude-collective");
 

@@ -1,0 +1,321 @@
+# Documentation Audit Findings
+
+**Analyzed by:** Documentation Reviewer Agent
+**Date:** 2026-01-23
+
+---
+
+## Summary
+
+| Metric                       | Value       |
+| ---------------------------- | ----------- |
+| Total docs analyzed          | 60+         |
+| Stale/inaccurate             | 5           |
+| Documents with issues        | 8           |
+| Documented but unimplemented | 5 commands  |
+| Current and accurate         | 4 main docs |
+
+---
+
+## CRITICAL Issues
+
+### Documented Commands NOT Implemented
+
+These commands appear in documentation but do NOT exist in the codebase:
+
+| Command           | Documented In                                   | Status              |
+| ----------------- | ----------------------------------------------- | ------------------- |
+| `cc eject`        | CLI-DATA-DRIVEN-ARCHITECTURE.md:1088-1276       | "Not Started"       |
+| `cc create skill` | cli/CLI-AGENT-INVOCATION-RESEARCH.md:95,266-285 | "Not Started"       |
+| `cc create agent` | cli/CLI-AGENT-INVOCATION-RESEARCH.md:272-285    | "Not Started"       |
+| `cc doctor`       | TODO.md:46                                      | "Not Started"       |
+| `cc migrate`      | plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md:770 | "to be implemented" |
+
+**Verification:**
+
+```bash
+ls src/cli/commands/ | grep eject    # No results
+ls src/cli/commands/ | grep create   # No results
+ls src/cli/commands/ | grep doctor   # No results
+ls src/cli/commands/ | grep migrate  # No results
+grep "eject" src/cli/index.ts        # No results
+```
+
+**Action:** These docs describe future/research work. Should be:
+
+1. Moved to `.claude/research/` if architectural explorations
+2. Clearly marked as "Proposed" or "Future" in section headers
+3. Referenced from TODO.md with status flags
+
+---
+
+## HIGH Severity
+
+### CLI-DATA-DRIVEN-ARCHITECTURE.md - Misclassified
+
+**Location:** `src/docs/CLI-DATA-DRIVEN-ARCHITECTURE.md`
+**Issue:** Listed as current documentation but contains unimplemented features
+
+**Problematic Sections:**
+
+- Lines 1088-1276: Complete `cc eject` design (not implemented)
+- Multi-source composition proposals (not implemented)
+- Skill repository reorganization (not implemented)
+
+**Current Classification:** Part of "CLI Documentation" in INDEX.md
+
+**Recommended Action:**
+
+1. Move to `.claude/research/findings/v2/` with other architectural proposals
+2. Update INDEX.md to remove from main docs
+3. Link from TODO.md as "Research: Eject Feature Design"
+
+### INDEX.md:35 - Outdated Workflow Reference
+
+**Location:** `src/docs/INDEX.md` line 35
+**Issue:** References old `bunx compile -s` command
+
+**Current Text:**
+
+> "Stack-switching workflow (`bunx compile -s home` vs `bunx compile -s work`)"
+
+**Correct Behavior:**
+
+```bash
+cc switch home-stack
+cc compile
+```
+
+**Action:** Update to reference `cc switch` + `cc compile`
+
+---
+
+## MEDIUM Severity
+
+### CLAUDE_ARCHITECTURE_BIBLE.md - Multiple Old References
+
+**Location:** `src/docs/CLAUDE_ARCHITECTURE_BIBLE.md`
+**Lines:** 36, 39, 957-958, 1056
+
+**Issues:**
+
+- References to old `bunx compile -s <stack>` command
+- Should reference `cc switch` + `cc compile`
+
+### TODO.md:140 - Decision Log Contradiction
+
+**Location:** `src/docs/TODO.md` line 140
+**Issue:** Decision log implies feature is resolved, but task list shows "Not Started"
+
+**Text:**
+
+> "Eject for full independence | `cc eject` (local) or `cc eject --fork` (GitHub)"
+
+**But Line 47:**
+
+> "| High | `cc eject` | Local export or GitHub fork | Not Started |"
+
+**Action:** Clarify decision log entry is a decision TO implement, not that it's done
+
+### TODO.md:185-186 - Old Compile References
+
+**Location:** `src/docs/TODO.md` lines 185-186
+**Issue:** References to old workflow
+
+**Text:**
+
+> "bunx compile -s home-stack"
+> "bunx compile -s work-stack"
+
+**Action:** Update to `cc switch <stack> && cc compile`
+
+### plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md:770 - Unimplemented Command
+
+**Location:** `src/docs/plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md` line 770
+**Issue:** References `cc migrate` which doesn't exist
+
+**Text:**
+
+> "1. Run `cc migrate` command (to be implemented)"
+
+**Action:** Add "(Not yet implemented)" or link to TODO item
+
+---
+
+## LOW Severity
+
+### Missing Testing Status
+
+**Location:** `src/docs/plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md` lines 790-821
+**Issue:** Testing checklist has unchecked items with no status indication
+
+**Checklist Items:**
+
+- `[ ] Plugin loads when placed in ~/.claude/plugins/`
+- `[ ] Skills are namespaced correctly`
+- `[ ] Agents appear in Task tool`
+- etc.
+
+**Question:** Are these tested? Passing? Pending?
+
+**Action:** Add status notes: "As of 2026-01-23: Completed" or "Pending"
+
+### Agent Frontmatter Schema Clarity
+
+**Location:** `src/docs/plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md` lines 204-237
+**Issue:** Describes agent frontmatter with `skills` field but unclear if generated
+
+**Documented Schema:**
+
+```yaml
+skills:
+  - react
+  - zustand
+```
+
+**Questions:**
+
+1. Is this frontmatter actually generated by CLI?
+2. How are skills resolved when preloading?
+
+**Action:** Verify against `src/agents/_templates/agent.liquid` and add clarification
+
+---
+
+## Accurate Documentation (No Changes)
+
+These documents are current and accurate:
+
+### plugins/CLI-REFERENCE.md
+
+- All 12 commands match implementation
+- Options and flags verified
+- Examples work correctly
+
+### plugins/PLUGIN-DEVELOPMENT.md
+
+- Plugin structure documentation correct
+- Manifest schema accurate
+- Examples valid
+
+### plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md (Phases 0-6)
+
+- Completed phases documented correctly
+- Implementation matches documentation
+- Only issue: Phase 7 migration command
+
+### README.md
+
+- Overview accurate
+- Installation instructions work
+- Quick start valid
+
+---
+
+## Documentation Organization Issues
+
+### Research vs Current Docs Mixed
+
+**Current State:**
+
+- INDEX.md lists CLI-DATA-DRIVEN-ARCHITECTURE.md as current docs
+- But it contains extensive unimplemented design work
+
+**Recommended Structure:**
+
+```
+src/docs/
+  INDEX.md                              # Current docs only
+  plugins/CLI-REFERENCE.md                      # Command reference
+  plugins/PLUGIN-DEVELOPMENT.md                 # Plugin guide
+  plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md  # Architecture
+
+.claude/research/
+  CLI-DATA-DRIVEN-ARCHITECTURE.md      # Future eject design
+  cli/CLI-AGENT-INVOCATION-RESEARCH.md     # Future create commands
+```
+
+---
+
+## In-Code Documentation Issues
+
+### JSDoc Comments
+
+No significant JSDoc issues found. Functions are well-documented.
+
+### TODO Comments
+
+Found in code but appropriate:
+
+- `// TODO:` comments mark genuine future work
+- No stale TODOs for removed features
+
+---
+
+## Recommended Cleanup Actions
+
+### High Priority
+
+1. **Move CLI-DATA-DRIVEN-ARCHITECTURE.md**
+   - From: `src/docs/`
+   - To: `.claude/research/findings/v2/`
+   - Update INDEX.md
+
+2. **Update INDEX.md line 35**
+   - Remove `bunx compile -s` reference
+   - Add `cc switch` + `cc compile` workflow
+
+3. **Fix TODO.md decision log**
+   - Clarify line 140 is a decision, not completion
+
+### Medium Priority
+
+4. **Update CLAUDE_ARCHITECTURE_BIBLE.md**
+   - Lines 36, 39, 957-958, 1056
+   - Replace `bunx compile -s` with current commands
+
+5. **Add implementation status to plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md**
+   - Testing checklist (lines 790-821)
+   - Migration section (line 770)
+
+6. **Update TODO.md lines 185-186**
+   - Replace old compile syntax
+
+### Low Priority
+
+7. **Clarify agent frontmatter schema**
+   - Verify `skills` field implementation
+   - Add code reference
+
+8. **Add "Related Research" section**
+   - Link to research docs for future features
+
+---
+
+## Verification Commands
+
+```bash
+# Find all references to old compile syntax
+grep -rn "bunx compile" src/docs/
+
+# Find all references to unimplemented commands
+grep -rn "cc eject\|cc create\|cc doctor\|cc migrate" src/docs/
+
+# Verify command implementations
+ls src/cli/commands/
+
+# Check INDEX.md structure
+cat src/docs/INDEX.md
+```
+
+---
+
+## Conclusion
+
+Documentation is largely accurate for implemented features. The main issues are:
+
+1. **Mixing research docs with current docs** - CLI-DATA-DRIVEN-ARCHITECTURE.md should move
+2. **Old workflow references** - Multiple docs reference `bunx compile -s` instead of `cc switch`
+3. **Unimplemented commands documented** - 5 commands appear in docs but don't exist
+
+Addressing these issues will improve documentation clarity and prevent user confusion.

@@ -85,6 +85,12 @@ function extractFrontmatter(content: string): unknown | null {
 
 const VALIDATION_TARGETS: ValidationTarget[] = [
   {
+    name: "Skills Matrix",
+    schema: "skills-matrix.schema.json",
+    pattern: "skills-matrix.yaml",
+    baseDir: "src/config",
+  },
+  {
     name: "Skill Metadata",
     schema: "metadata.schema.json",
     pattern: "**/metadata.yaml",

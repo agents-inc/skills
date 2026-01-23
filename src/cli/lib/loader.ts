@@ -188,6 +188,9 @@ export async function loadStack(
     verbose(`Loaded stack: ${stack.name} (${stackId})`);
     return stack;
   } catch (error) {
-    throw new Error(`Failed to load stack "${stackId}": ${error}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to load stack '${stackId}': ${errorMessage}. Expected config at: ${stackPath}`,
+    );
   }
 }

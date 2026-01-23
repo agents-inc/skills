@@ -2,41 +2,80 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://claude-subagents.local/schemas/skill-frontmatter.schema.json",
   "title": "Skill Frontmatter",
-  "description": "Schema for YAML frontmatter at the top of SKILL.md files. Contains skill identity (name, description) and optional loading behavior.",
+  "description": "Schema for YAML frontmatter at the top of SKILL.md files. Matches official Claude Code plugin format. Contains skill identity and optional runtime behavior.",
   "type": "object",
   "required": ["name", "description"],
   "additionalProperties": false,
   "properties": {
     "name": {
       "type": "string",
-      "description": "Skill display name including category path and author (e.g., 'frontend/react (@vince)')",
+      "description": "Skill identifier. For Claude Code plugins, use kebab-case (e.g., 'react'). Legacy format 'category/name (@author)' is supported for backward compatibility.",
       "minLength": 1,
-      "examples": ["frontend/react (@vince)", "backend/api-hono (@vince)", "frontend/state-zustand (@vince)"]
+      "examples": ["react", "api-hono", "zustand", "frontend/react (@vince)"]
     },
     "description": {
       "type": "string",
-      "description": "Brief description of the skill's purpose and when to use it",
+      "description": "Brief description of the skill's purpose for Claude agents",
       "minLength": 1,
       "examples": [
-        "Component architecture, hooks, patterns",
-        "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state."
+        "React patterns and conventions for Claude agents",
+        "Hono API routes with OpenAPI/Zod validation"
       ]
     },
-    "preloaded": {
+    "disable-model-invocation": {
       "type": "boolean",
-      "description": "If true, skill content is embedded directly in compiled agent prompts. Default: false (loaded dynamically on demand)",
+      "description": "If true, prevents the AI model from invoking this skill. Default: false",
       "default": false
+    },
+    "user-invocable": {
+      "type": "boolean",
+      "description": "If true, users can invoke this skill directly. Default: true",
+      "default": true
+    },
+    "allowed-tools": {
+      "type": "string",
+      "description": "Comma-separated list of tools this skill can use (e.g., 'Read, Grep, Glob')",
+      "examples": ["Read, Grep, Glob", "Read, Write, Bash"]
+    },
+    "model": {
+      "type": "string",
+      "description": "AI model to use for this skill",
+      "enum": ["sonnet", "opus", "haiku", "inherit"],
+      "examples": ["sonnet", "opus"]
+    },
+    "context": {
+      "type": "string",
+      "description": "Context mode for skill execution",
+      "enum": ["fork"],
+      "examples": ["fork"]
+    },
+    "agent": {
+      "type": "string",
+      "description": "Agent name to use when skill is invoked",
+      "examples": ["Explore", "Code"]
+    },
+    "argument-hint": {
+      "type": "string",
+      "description": "Hint for arguments when skill is invoked",
+      "examples": ["<file_path>", "<query>"]
     }
   },
   "examples": [
     {
-      "name": "frontend/react (@vince)",
-      "description": "Component architecture, hooks, patterns"
+      "name": "react",
+      "description": "React patterns and conventions for Claude agents"
     },
     {
-      "name": "frontend/state-zustand (@vince)",
-      "description": "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.",
-      "preloaded": true
+      "name": "api-hono",
+      "description": "Hono API routes with OpenAPI/Zod validation",
+      "allowed-tools": "Read, Grep, Glob",
+      "model": "sonnet"
+    },
+    {
+      "name": "security",
+      "description": "Security best practices and vulnerability prevention",
+      "disable-model-invocation": false,
+      "user-invocable": true
     }
   ]
 }

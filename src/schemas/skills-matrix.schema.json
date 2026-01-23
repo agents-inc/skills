@@ -5,7 +5,13 @@
   "description": "Schema for skills-matrix.yaml - defines categories, relationships, stacks, and skill aliases for the CLI wizard",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "categories", "relationships", "suggested_stacks", "skill_aliases"],
+  "required": [
+    "version",
+    "categories",
+    "relationships",
+    "suggested_stacks",
+    "skill_aliases"
+  ],
   "properties": {
     "version": {
       "type": "string",
@@ -51,7 +57,14 @@
       "type": "object",
       "description": "Definition for a category (top-level or subcategory)",
       "additionalProperties": false,
-      "required": ["id", "name", "description", "exclusive", "required", "order"],
+      "required": [
+        "id",
+        "name",
+        "description",
+        "exclusive",
+        "required",
+        "order"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -130,6 +143,13 @@
           "description": "Groups of interchangeable skills for the same purpose",
           "items": {
             "$ref": "#/$defs/AlternativeGroup"
+          }
+        },
+        "discourages": {
+          "type": "array",
+          "description": "Soft warnings - selecting skill A shows a warning for skill B but doesn't disable it",
+          "items": {
+            "$ref": "#/$defs/DiscourageRule"
           }
         }
       }
@@ -247,11 +267,44 @@
         }
       }
     },
+    "DiscourageRule": {
+      "type": "object",
+      "description": "Soft warnings when selecting certain skill combinations",
+      "additionalProperties": false,
+      "required": ["skills", "reason"],
+      "properties": {
+        "skills": {
+          "type": "array",
+          "description": "List of skill aliases/IDs that trigger a warning when selected together",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "uniqueItems": true,
+          "examples": [["scss-modules", "tailwind"]]
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable warning message shown to users",
+          "minLength": 1,
+          "examples": [
+            "Mixing CSS paradigms is unusual - most projects pick one approach"
+          ]
+        }
+      }
+    },
     "SuggestedStack": {
       "type": "object",
       "description": "Pre-configured stack of skills for a specific use case",
       "additionalProperties": false,
-      "required": ["id", "name", "description", "audience", "skills", "philosophy"],
+      "required": [
+        "id",
+        "name",
+        "description",
+        "audience",
+        "skills",
+        "philosophy"
+      ],
       "properties": {
         "id": {
           "type": "string",

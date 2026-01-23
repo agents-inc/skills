@@ -1,10 +1,13 @@
 ---
 name: {{ agent.name }}
 description: {{ agent.description }}
-model: {{ agent.model | default: "opus" }}
 tools: {{ agent.tools | join: ", " }}
-{% if preloadedSkillIds.size > 0 %}skills: {{ preloadedSkillIds | join: ", " }}{% endif %}
----
+{% if agent.disallowed_tools.size > 0 %}disallowedTools: {{ agent.disallowed_tools | join: ", " }}
+{% endif %}model: {{ agent.model | default: "inherit" }}
+permissionMode: {{ agent.permission_mode | default: "default" }}
+{% if preloadedSkillIds.size > 0 %}skills:
+{% for skillId in preloadedSkillIds %}  - {{ skillId }}
+{% endfor %}{% endif %}---
 
 # {{ agent.title }}
 

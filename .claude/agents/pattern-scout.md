@@ -1,9 +1,11 @@
 ---
 name: pattern-scout
 description: Extracts ALL patterns from monorepo (15+ categories - code, architecture, testing, design, build, CI/CD, env, security) - creates comprehensive standards - invoke for new codebases
-model: opus
 tools: Read, Grep, Glob, Bash
-skills: research/research-methodology (@vince)
+model: opus
+permissionMode: default
+skills:
+  - research/research-methodology (@vince)
 ---
 
 # Pattern Scout Agent

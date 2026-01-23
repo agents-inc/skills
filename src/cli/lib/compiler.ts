@@ -175,8 +175,12 @@ export async function compileAllAgents(
         printOutputValidationResult(name, validationResult);
       }
     } catch (error) {
-      console.error(`  ✗ ${name}.md - ${error}`);
-      throw error;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`  ✗ ${name}.md - ${errorMessage}`);
+      throw new Error(
+        `Failed to compile agent '${name}': ${errorMessage}. Check that all required files exist in src/agents/${agent.path || name}/`,
+      );
     }
   }
 
@@ -244,8 +248,12 @@ export async function compileAllSkills(
         console.log(`  ✓ skills/${id}/SKILL.md`);
       }
     } catch (error) {
-      console.error(`  ✗ skills/${id}/SKILL.md - ${error}`);
-      throw error;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`  ✗ skills/${id}/SKILL.md - ${errorMessage}`);
+      throw new Error(
+        `Failed to compile skill '${skill.id}': ${errorMessage}. Expected skill at: ${sourcePath}`,
+      );
     }
   }
 }
@@ -295,8 +303,12 @@ export async function compileAllCommands(ctx: CompileContext): Promise<void> {
       await writeFile(path.join(outDir, file), content);
       console.log(`  ✓ ${file}`);
     } catch (error) {
-      console.error(`  ✗ ${file} - ${error}`);
-      throw error;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`  ✗ ${file} - ${errorMessage}`);
+      throw new Error(
+        `Failed to compile command '${file}': ${errorMessage}. Expected at: ${path.join(commandsDir, file)}`,
+      );
     }
   }
 }
