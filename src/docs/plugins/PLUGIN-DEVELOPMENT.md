@@ -1,93 +1,146 @@
 # Plugin Development Guide
 
-This guide explains how to create and distribute Claude Code plugins using the Claude Collective system.
+This guide explains how Claude Code plugins are created using the Claude Collective system.
 
 ## Overview
 
-The Claude Collective compiles skills into two types of plugins:
+The Claude Collective compiles skills from the marketplace into complete Claude Code plugins. Each plugin contains:
 
-1. **Skill Plugins** - Individual skills packaged for distribution
-2. **Stack Plugins** - Bundles of skills with pre-configured agents
+- **Skills** - Copied from the marketplace
+- **Agents** - Compiled with skill content embedded
+- **Hooks** - Optional automation triggers
+- **CLAUDE.md** - Project conventions
+
+**Key principle:** Skills are embedded in the plugin and their content is compiled into agents. This allows skills to evolve together as a cohesive unit.
 
 ---
 
-## Plugin Architecture
+## Plugin Structure
 
-### Official Claude Code Plugin Structure
+### Complete Plugin (Output of `cc init`)
 
 ```
-my-plugin/
-  .claude-plugin/
-    plugin.json           # REQUIRED - Plugin manifest
-  skills/                 # Skills directory
-    skill-name/
-      SKILL.md            # Skill content with frontmatter
-  agents/                 # Agent definitions (optional)
-    agent-name.md
-  hooks/                  # Hook configuration (optional)
-    hooks.json
-  .mcp.json               # MCP servers (optional)
-  CLAUDE.md               # Project context (optional)
-  README.md               # Documentation
+my-stack/
+├── .claude-plugin/
+│   └── plugin.json           # REQUIRED - Plugin manifest
+├── skills/                   # Skills copied from marketplace
+│   ├── react/
+│   │   ├── SKILL.md
+│   │   └── examples/
+│   ├── zustand/
+│   │   └── SKILL.md
+│   └── ...
+├── agents/                   # Compiled agents
+│   ├── frontend-developer.md
+│   ├── backend-developer.md
+│   └── ...
+├── hooks/
+│   └── hooks.json            # Optional - automation triggers
+├── CLAUDE.md                 # Project conventions
+└── README.md                 # Generated documentation
 ```
 
 **Important**: Only `plugin.json` belongs inside `.claude-plugin/`. All other directories must be at the plugin root.
 
 ---
 
-## Creating a Skill Plugin
+## Creating a Plugin
 
-Each skill can be distributed as its own Claude Code plugin.
+### Using the CLI (Recommended)
 
-### Skill Plugin Structure
+```bash
+# Create a new plugin with the wizard
+cc init --name my-stack
 
-```
-skill-react/
-  .claude-plugin/
-    plugin.json           # Plugin manifest
-  skills/
-    react/
-      SKILL.md            # Skill content
-  README.md
+# The wizard will:
+# 1. Show available skills from the marketplace
+# 2. Let you select a pre-built stack or custom skills
+# 3. Compile everything into a complete plugin
 ```
 
-### plugin.json for Skill Plugins
+### Plugin Output Location
+
+| Scope     | Location                   | Use Case                     |
+| --------- | -------------------------- | ---------------------------- |
+| `user`    | `~/.claude/plugins/<name>` | Personal, globally available |
+| `project` | `.claude/plugins/<name>`   | Team sharing via git         |
+
+```bash
+# User scope (default)
+cc init --name my-stack
+
+# Project scope
+cc init --name my-stack --scope project
+```
+
+---
+
+## Plugin Manifest (plugin.json)
 
 ```json
 {
-  "name": "skill-react",
-  "version": "2.0.0",
-  "license": "MIT",
-  "skills": "./skills/",
-  "description": "Component architecture, hooks, patterns",
+  "name": "my-stack",
+  "version": "1.0.0",
+  "description": "My custom stack with React and Zustand",
   "author": {
-    "name": "@vince"
+    "name": "username"
   },
-  "keywords": ["react", "react-19", "components", "hooks", "jsx", "tsx"]
+  "license": "MIT",
+  "keywords": ["react", "zustand", "typescript"],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json"
 }
 ```
 
 | Field         | Required | Description                          |
 | ------------- | -------- | ------------------------------------ |
 | `name`        | Yes      | Plugin identifier (kebab-case)       |
-| `version`     | Yes      | Semantic version (MAJOR.MINOR.PATCH) |
-| `description` | No       | Brief description for discovery      |
+| `version`     | No       | Semantic version (MAJOR.MINOR.PATCH) |
+| `description` | No       | Brief description                    |
 | `author`      | No       | Author information                   |
 | `keywords`    | No       | Tags for searchability               |
 | `skills`      | No       | Path to skills directory             |
+| `agents`      | No       | Path to agents directory             |
+| `hooks`       | No       | Path to hooks configuration          |
 | `license`     | No       | License identifier                   |
 
-### SKILL.md Frontmatter
-
-```yaml
 ---
-name: frontend/react (@vince)
-description: Component architecture, hooks, patterns
+
+## Skills
+
+Skills are markdown files that provide domain knowledge to agents. They are copied from the marketplace into your plugin.
+
+### SKILL.md Structure
+
+````yaml
+---
+name: react
+description: React patterns and conventions for Claude agents
 disable-model-invocation: false
 user-invocable: true
 ---
+
+# React Skill
+
 Your skill content in Markdown...
-```
+
+## Critical Requirements
+
+<critical_requirements>
+- Always use functional components
+- Prefer composition over inheritance
+</critical_requirements>
+
+## Examples
+
+```tsx
+// Code examples here
+````
+
+````
+
+### Frontmatter Fields
 
 | Field                      | Required | Description                             |
 | -------------------------- | -------- | --------------------------------------- |
@@ -99,200 +152,160 @@ Your skill content in Markdown...
 | `model`                    | No       | Model override for this skill           |
 | `context`                  | No       | `fork` to run in subagent               |
 
----
-
-## Creating a Stack Plugin
-
-Stack plugins bundle multiple skills with pre-configured agents.
-
-### Stack Plugin Structure
-
-```
-stack-fullstack-react/
-  .claude-plugin/
-    plugin.json           # Plugin manifest
-  agents/
-    frontend-developer.md
-    backend-developer.md
-    tester.md
-  skills/
-    react/
-      SKILL.md
-    zustand/
-      SKILL.md
-    hono/
-      SKILL.md
-    drizzle/
-      SKILL.md
-  CLAUDE.md               # Project conventions
-  README.md
-```
-
-### plugin.json for Stack Plugins
-
-```json
-{
-  "name": "stack-fullstack-react",
-  "version": "1.0.0",
-  "description": "Full-stack React + Hono + Drizzle development stack",
-  "author": {
-    "name": "claude-collective"
-  },
-  "keywords": ["fullstack", "react", "hono", "drizzle", "typescript"],
-  "skills": "./skills/",
-  "agents": "./agents/"
-}
-```
-
-### Agent Definition Frontmatter
-
-Agents in stack plugins have frontmatter that defines their capabilities:
-
-```yaml
----
-name: frontend-developer
-description: Expert frontend developer. Use for React components and UI work.
-tools: Read, Grep, Glob, Bash, Write, Edit
-model: inherit
-permissionMode: default
-skills:
-  - react
-  - zustand
-  - scss-modules
----
-You are a senior frontend developer specializing in React and TypeScript...
-```
-
-| Field             | Required | Description                             |
-| ----------------- | -------- | --------------------------------------- |
-| `name`            | Yes      | Agent identifier (kebab-case)           |
-| `description`     | Yes      | When to delegate to this agent          |
-| `tools`           | No       | Comma-separated tool allowlist          |
-| `disallowedTools` | No       | Comma-separated tool denylist           |
-| `model`           | No       | `sonnet`, `opus`, `haiku`, or `inherit` |
-| `permissionMode`  | No       | Permission handling mode                |
-| `skills`          | No       | Skills to preload into agent context    |
-
----
-
-## Compiling Plugins
-
-### Compile All Skill Plugins
-
-```bash
-cc compile-plugins
-```
-
-This compiles all skills in `src/skills/` to individual plugins in `dist/plugins/`.
-
-### Compile Single Skill
-
-```bash
-cc compile-plugins --skill frontend/react
-```
-
-### Compile a Stack
-
-```bash
-cc compile-stack -s fullstack-react
-```
-
-### Validate Plugins
-
-```bash
-# Validate single plugin
-cc validate ./dist/plugins/skill-react
-
-# Validate all plugins
-cc validate ./dist/plugins --all
-```
-
----
-
-## Publishing to Marketplace
-
-### Generate Marketplace Manifest
-
-```bash
-cc generate-marketplace
-```
-
-This creates `.claude-plugin/marketplace.json` with all plugins:
-
-```json
-{
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "claude-collective",
-  "version": "1.0.0",
-  "owner": {
-    "name": "Claude Collective",
-    "email": "hello@claude-collective.com"
-  },
-  "metadata": {
-    "pluginRoot": "./dist/plugins"
-  },
-  "plugins": [
-    {
-      "name": "skill-react",
-      "source": "./dist/plugins/skill-react",
-      "description": "Component architecture, hooks, patterns",
-      "version": "2.0.0",
-      "author": { "name": "@vince" },
-      "keywords": ["react", "react-19", "components"],
-      "category": "frontend"
-    }
-  ]
-}
-```
-
-### Version Management
-
-Before publishing, bump the version:
-
-```bash
-# Inside plugin directory
-cc version patch   # 1.0.0 -> 1.0.1
-cc version minor   # 1.0.0 -> 1.1.0
-cc version major   # 1.0.0 -> 2.0.0
-cc version set 2.5.0
-```
-
----
-
-## Installing Plugins
-
-### From Marketplace
-
-```bash
-# Add marketplace (one time)
-/plugin marketplace add claude-collective/skills
-
-# Install skill
-/plugin install skill-react@claude-collective
-
-# Install stack
-/plugin install stack-fullstack-react@claude-collective
-```
-
-### Manual Installation
-
-Copy plugin to:
-
-- User scope: `~/.claude/plugins/`
-- Project scope: `.claude/plugins/`
-
----
-
-## Best Practices
-
 ### Skill Content Guidelines
 
 1. **Clear description** - Explain when Claude should use this skill
 2. **Critical requirements** - Use `<critical_requirements>` tags for must-follow rules
 3. **Code examples** - Include practical, copy-paste ready examples
 4. **Anti-patterns** - Document what NOT to do
+5. **Keep focused** - One skill per technology/concept
 
-### Version Bumping Guidelines
+---
+
+## Agents
+
+Agents are compiled from templates, with skill content embedded. You don't write agents directly - the CLI compiles them.
+
+### Agent Frontmatter (Compiled Output)
+
+```yaml
+---
+name: frontend-developer
+description: Expert frontend developer. Use for React components and UI work.
+tools: Read, Grep, Glob, Bash, Write, Edit
+model: opus
+permissionMode: default
+---
+You are a senior frontend developer specializing in React and TypeScript...
+
+<skill_content>
+... skill content embedded here during compilation ...
+</skill_content>
+````
+
+| Field             | Description                             |
+| ----------------- | --------------------------------------- |
+| `name`            | Agent identifier (kebab-case)           |
+| `description`     | When to delegate to this agent          |
+| `tools`           | Comma-separated tool allowlist          |
+| `disallowedTools` | Comma-separated tool denylist           |
+| `model`           | `sonnet`, `opus`, `haiku`, or `inherit` |
+| `permissionMode`  | Permission handling mode                |
+
+---
+
+## Hooks
+
+Hooks allow automation triggers at specific events.
+
+### hooks.json Structure
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/format.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Hook Events
+
+| Event               | When it fires           |
+| ------------------- | ----------------------- |
+| `SessionStart`      | Session begins          |
+| `UserPromptSubmit`  | User submits prompt     |
+| `PreToolUse`        | Before tool execution   |
+| `PostToolUse`       | After tool succeeds     |
+| `PermissionRequest` | Permission dialog shown |
+| `Stop`              | Agent finishes          |
+| `SubagentStop`      | Subagent finishes       |
+
+### Environment Variables in Hooks
+
+- `${CLAUDE_PLUGIN_ROOT}` - Absolute path to plugin directory
+- `${CLAUDE_PROJECT_DIR}` - Project root directory
+
+---
+
+## Managing Your Plugin
+
+### Adding Skills
+
+```bash
+# Add a skill from the marketplace
+cc add skill-jotai
+
+# This will:
+# 1. Fetch the skill from marketplace
+# 2. Copy to your plugin's skills/ folder
+# 3. Recompile all agents
+```
+
+### Updating Skills
+
+```bash
+# Update a single skill
+cc update skill-react
+
+# Update all skills
+cc update --all
+
+# This fetches latest from marketplace and recompiles agents
+```
+
+### Manual Recompilation
+
+After manually editing skills, recompile agents:
+
+```bash
+cc compile
+```
+
+### Validation
+
+```bash
+# Validate your plugin
+cc validate
+
+# Common issues:
+# - Missing plugin.json
+# - Invalid JSON syntax
+# - Non-kebab-case name
+# - Invalid semver version
+```
+
+### Version Management
+
+```bash
+# Bump version
+cc version patch   # 1.0.0 -> 1.0.1
+cc version minor   # 1.0.0 -> 1.1.0
+cc version major   # 1.0.0 -> 2.0.0
+```
+
+---
+
+## Best Practices
+
+### Skill Content
+
+- Use `<critical_requirements>` for must-follow rules
+- Include practical code examples
+- Document anti-patterns
+- Keep skills focused on one technology
+
+### Version Bumping
 
 | Change Type                      | Version Bump           |
 | -------------------------------- | ---------------------- |
@@ -300,12 +313,11 @@ Copy plugin to:
 | New content, examples            | Minor (1.0.0 -> 1.1.0) |
 | Breaking changes, major rewrites | Major (1.0.0 -> 2.0.0) |
 
-### Plugin Naming Conventions
+### Plugin Naming
 
-- Skill plugins: `skill-<name>` (e.g., `skill-react`, `skill-zustand`)
-- Stack plugins: `stack-<name>` (e.g., `stack-fullstack-react`)
-- Names must be kebab-case
-- Names should be descriptive but concise
+- Use kebab-case: `my-stack`, `team-frontend`
+- Be descriptive but concise
+- Avoid generic names like `plugin` or `stack`
 
 ---
 
@@ -324,12 +336,17 @@ Copy plugin to:
 2. Check each skill has `SKILL.md` file
 3. Validate frontmatter syntax
 
+### Agents Not Loading
+
+1. Verify `agents` path in `plugin.json`
+2. Check agent files have valid frontmatter
+3. Run `cc compile` to regenerate
+
 ### Validation Errors
 
-Run validation with verbose output:
-
 ```bash
-cc validate ./path/to/plugin -v
+# Run verbose validation
+cc validate -v
 ```
 
 Common issues:
@@ -337,7 +354,6 @@ Common issues:
 - Missing required fields
 - Invalid version format
 - Non-kebab-case name
-- Missing skills directory
 
 ---
 
@@ -345,4 +361,4 @@ Common issues:
 
 - [CLI Reference](./CLI-REFERENCE.md)
 - [Plugin Distribution Architecture](./PLUGIN-DISTRIBUTION-ARCHITECTURE.md)
-- [SKILL.md Frontmatter Schema](../schemas/skill-frontmatter.schema.json)
+- [Manual Testing Guide](./MANUAL-TESTING-GUIDE.md)
