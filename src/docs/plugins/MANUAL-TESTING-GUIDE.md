@@ -330,18 +330,23 @@ cp -r dist/plugins/skill-react ~/.claude/plugins/
 
 Test that hooks are properly configured.
 
-### Check hooks.json Structure
+**Note:** `hooks/hooks.json` is only generated if the stack has hooks defined in its config. If no hooks are defined, the hooks directory will not exist.
+
+### Check hooks.json Structure (if hooks are defined)
 
 ```bash
 cat dist/stacks/fullstack-react/hooks/hooks.json
 ```
 
-**Expected structure:**
+**Expected structure (when hooks are defined):**
 
 ```json
 {
   "$schema": "https://claude-subagents.local/schemas/hooks.schema.json",
-  "hooks": []
+  "hooks": {
+    "PreToolUse": [...],
+    "PostToolUse": [...]
+  }
 }
 ```
 
@@ -352,9 +357,10 @@ cat dist/stacks/fullstack-react/hooks/hooks.json
 
 ### Pass Criteria
 
-- [ ] hooks.json exists and is valid JSON
-- [ ] Has `$schema` reference
-- [ ] Has `hooks` array (may be empty)
+- [ ] If stack has hooks defined: `hooks/hooks.json` exists and is valid JSON
+- [ ] If stack has NO hooks defined: `hooks/` directory does not exist (this is correct)
+- [ ] Has `$schema` reference (when file exists)
+- [ ] Has `hooks` object with defined hooks (when file exists)
 
 ---
 
@@ -493,6 +499,6 @@ Before considering the plugin system production-ready:
 - [ ] **Test 7**: Hooks file is valid
 - [ ] **Test 8**: All automated tests pass
 
-**Tested by**: ******\_\_\_******
-**Date**: ******\_\_\_******
-**Notes**: ******\_\_\_******
+**Tested by**: **\*\***\_\_\_**\*\***
+**Date**: **\*\***\_\_\_**\*\***
+**Notes**: **\*\***\_\_\_**\*\***
