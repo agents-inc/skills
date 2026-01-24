@@ -1,0 +1,23 @@
+category: auth
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Better Auth
+cli_description: Authentication and sessions
+usage_guidance: Use when implementing authentication, sessions, OAuth, or user management.
+requires:
+  - drizzle
+compatible_with:
+  - backend/api
+  - security/security
+tags:
+  - better-auth
+  - sessions
+  - oauth
+  - authentication
+  - authorization
+forked_from:
+  skill_id: backend/auth/better-auth+drizzle+hono (@vince)
+  version: 1
+  content_hash: 1f7abec
+  date: 2026-01-24

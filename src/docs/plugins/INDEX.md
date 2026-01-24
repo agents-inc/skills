@@ -12,40 +12,46 @@ The Claude Collective CLI uses a stack-based architecture with a single shared p
 
 ### Key Principles
 
-1. **Stacks are source of truth** - Skills live in `~/.claude-collective/stacks/{name}/skills/`
-2. **Single shared plugin** - One plugin at `~/.claude/plugins/claude-collective/`
-3. **Agents fetch from marketplace** - Agent definitions, principles, templates fetched at compile time
-4. **Skills switch instantly** - `cc switch` copies skills from stack to plugin
+1. **Stacks are source of truth** - Skills live in `.claude-collective/stacks/{name}/skills/`
+2. **Single shared plugin** - One plugin at `.claude/plugins/claude-collective/`
+3. **Project-local** - Both directories are project-local (siblings), not global
+4. **Agents fetch from marketplace** - Agent definitions, principles, templates fetched at compile time
+5. **Skills switch instantly** - `cc switch` copies skills from stack to plugin
 
 ### Storage Model
 
 ```
-~/.claude-collective/                    # SOURCE (our domain)
-├── config.yaml                          # source, active_stack
-└── stacks/
-    ├── work-stack/
-    │   └── skills/
-    │       ├── react/SKILL.md
-    │       └── hono/SKILL.md
-    └── home-stack/
-        └── skills/
-            ├── react/SKILL.md
-            └── zustand/SKILL.md
-
-~/.claude/plugins/claude-collective/     # OUTPUT (Claude's domain)
-├── .claude-plugin/plugin.json
-├── agents/                              # Shared agents (fetched from source)
-│   ├── frontend-developer.md
-│   └── backend-developer.md
-└── skills/                              # Active stack's skills (copied on switch)
-    ├── react/SKILL.md
-    └── zustand/SKILL.md
+my-project/
+├── .claude-collective/                  # SOURCE (our domain, project-local)
+│   ├── config.yaml                      # source, active_stack
+│   └── stacks/
+│       ├── work-stack/
+│       │   └── skills/
+│       │       ├── react/SKILL.md
+│       │       └── hono/SKILL.md
+│       └── home-stack/
+│           └── skills/
+│               ├── react/SKILL.md
+│               └── zustand/SKILL.md
+│
+├── .claude/
+│   └── plugins/
+│       └── claude-collective/           # OUTPUT (Claude's domain, project-local)
+│           ├── .claude-plugin/plugin.json
+│           ├── agents/                  # Shared agents (fetched from source)
+│           │   ├── frontend-developer.md
+│           │   └── backend-developer.md
+│           └── skills/                  # Active stack's skills (copied on switch)
+│               ├── react/SKILL.md
+│               └── zustand/SKILL.md
+│
+└── src/                                 # Your project code
 ```
 
 ### Config File
 
 ```yaml
-# ~/.claude-collective/config.yaml
+# .claude-collective/config.yaml (project-local)
 source: github:claude-collective/skills
 active_stack: work-stack
 ```
@@ -91,7 +97,7 @@ active_stack: work-stack
 ## Plugin Structure
 
 ```
-~/.claude/plugins/claude-collective/
+.claude/plugins/claude-collective/       # Project-local
 ├── .claude-plugin/
 │   └── plugin.json           # Plugin manifest
 ├── skills/                   # Active stack's skills (copied on switch)
@@ -112,11 +118,11 @@ active_stack: work-stack
 ### `cc init --name X`
 
 ```
-1. Create ~/.claude-collective/stacks/X/skills/
+1. Create .claude-collective/stacks/X/skills/
 2. Run wizard (select skills or pre-built stack)
 3. Fetch selected skills from marketplace
 4. Copy skills to stack directory
-5. If first stack: create plugin at ~/.claude/plugins/claude-collective/
+5. If first stack: create plugin at .claude/plugins/claude-collective/
 6. If first stack: fetch agent definitions and compile
 7. Run switch logic to activate new stack
 ```
@@ -124,9 +130,9 @@ active_stack: work-stack
 ### `cc switch X`
 
 ```
-1. Validate stack exists in ~/.claude-collective/stacks/X/
-2. Remove ~/.claude/plugins/claude-collective/skills/
-3. Copy from ~/.claude-collective/stacks/X/skills/ to plugin
+1. Validate stack exists in .claude-collective/stacks/X/
+2. Remove .claude/plugins/claude-collective/skills/
+3. Copy from .claude-collective/stacks/X/skills/ to plugin
 4. Update active_stack in config
 ```
 
@@ -135,7 +141,7 @@ active_stack: work-stack
 ```
 1. Get active stack from config
 2. Fetch skill Y from marketplace
-3. Copy to ~/.claude-collective/stacks/{active}/skills/
+3. Copy to .claude-collective/stacks/{active}/skills/
 4. Run switch logic to update plugin
 ```
 
@@ -179,13 +185,14 @@ active_stack: work-stack
 
 ## Key Concepts
 
-| Concept      | Description                                                     |
-| ------------ | --------------------------------------------------------------- |
-| Stack        | Collection of skills stored in `~/.claude-collective/stacks/X/` |
-| Active Stack | Currently active stack, tracked in config.yaml                  |
-| Plugin       | Single plugin at `~/.claude/plugins/claude-collective/`         |
-| Switch       | Copies skills from stack to plugin, updates active_stack        |
-| Source       | Marketplace URL (default: `github:claude-collective/skills`)    |
+| Concept       | Description                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| Stack         | Collection of skills stored in `.claude-collective/stacks/X/`     |
+| Active Stack  | Currently active stack, tracked in config.yaml                    |
+| Plugin        | Single plugin at `.claude/plugins/claude-collective/`             |
+| Switch        | Copies skills from stack to plugin, updates active_stack          |
+| Source        | Marketplace URL (default: `github:claude-collective/skills`)      |
+| Project-local | All paths are relative to project root, not home directory (`~/`) |
 
 ---
 

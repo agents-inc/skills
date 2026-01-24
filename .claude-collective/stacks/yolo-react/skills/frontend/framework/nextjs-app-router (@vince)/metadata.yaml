@@ -1,0 +1,27 @@
+category: meta-framework
+category_exclusive: true
+author: "@vince"
+version: 1
+cli_name: Next.js App Router
+cli_description: Next.js App Router
+usage_guidance: Use when building Next.js apps with App Router, Server/Client Components, or streaming.
+requires:
+  - frontend/react (@vince)
+compatible_with:
+  - frontend/styling-scss-modules (@vince)
+  - frontend/server-state-react-query (@vince)
+  - frontend/state-zustand (@vince)
+tags:
+  - nextjs
+  - app-router
+  - server-components
+  - streaming
+  - suspense
+  - ssr
+  - ssg
+  - routing
+forked_from:
+  skill_id: frontend/framework/nextjs-app-router (@vince)
+  version: 1
+  content_hash: 907cf46
+  date: 2026-01-24

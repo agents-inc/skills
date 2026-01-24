@@ -48,6 +48,8 @@ export interface GlobalConfig {
 export interface ProjectConfig {
   /** Skills source URL override for this project */
   source?: string;
+  /** Currently active stack name for this project */
+  active_stack?: string;
 }
 
 /**
@@ -85,6 +87,11 @@ function isValidProjectConfig(obj: unknown): obj is ProjectConfig {
   if (typeof obj !== "object" || obj === null) return false;
   const config = obj as Record<string, unknown>;
   if (config.source !== undefined && typeof config.source !== "string")
+    return false;
+  if (
+    config.active_stack !== undefined &&
+    typeof config.active_stack !== "string"
+  )
     return false;
   return true;
 }
@@ -171,27 +178,42 @@ export async function saveGlobalConfig(config: GlobalConfig): Promise<void> {
 }
 
 /**
- * Get the currently active stack name from global config
- * Returns null if config doesn't exist or active_stack is not set
+ * Get the currently active stack name from project config
+ * Falls back to global config if project config doesn't have it
+ * Returns null if neither config has active_stack set
  */
-export async function getActiveStack(): Promise<string | null> {
-  const config = await loadGlobalConfig();
-  if (!config?.active_stack) {
-    verbose("No active stack configured");
-    return null;
+export async function getActiveStack(
+  projectDir: string = process.cwd(),
+): Promise<string | null> {
+  // First check project config (takes precedence)
+  const projectConfig = await loadProjectConfig(projectDir);
+  if (projectConfig?.active_stack) {
+    verbose(`Active stack (project): ${projectConfig.active_stack}`);
+    return projectConfig.active_stack;
   }
-  verbose(`Active stack: ${config.active_stack}`);
-  return config.active_stack;
+
+  // Fall back to global config for backwards compatibility
+  const globalConfig = await loadGlobalConfig();
+  if (globalConfig?.active_stack) {
+    verbose(`Active stack (global): ${globalConfig.active_stack}`);
+    return globalConfig.active_stack;
+  }
+
+  verbose("No active stack configured");
+  return null;
 }
 
 /**
- * Set the active stack name in global config
+ * Set the active stack name in project config
  * Creates the config file if it doesn't exist
  */
-export async function setActiveStack(stackName: string): Promise<void> {
-  const config = (await loadGlobalConfig()) ?? {};
+export async function setActiveStack(
+  stackName: string,
+  projectDir: string = process.cwd(),
+): Promise<void> {
+  const config = (await loadProjectConfig(projectDir)) ?? {};
   config.active_stack = stackName;
-  await saveGlobalConfig(config);
+  await saveProjectConfig(projectDir, config);
   verbose(`Set active stack to: ${stackName}`);
 }
 

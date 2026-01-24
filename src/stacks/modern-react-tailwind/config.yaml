@@ -31,15 +31,28 @@ skills:
   - id: research/research-methodology/research-methodology (@vince)
 
 agents:
+  # Developer agents
   - frontend-developer
   - backend-developer
+  - architecture
+  # Reviewer agents
   - frontend-reviewer
   - backend-reviewer
-  - tester
-  - pm
-  - orchestrator
+  # Researcher agents
   - frontend-researcher
   - backend-researcher
+  # Planning agents
+  - pm
+  - orchestrator
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
+  - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
 
 agent_skills:
   frontend-developer:

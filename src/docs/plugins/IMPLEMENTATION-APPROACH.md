@@ -190,7 +190,7 @@ dist/stacks/fullstack-react/
 4. fetchSkills() - NEW: Download selected skills
 5. fetchAgentDefinitions() - NEW: Download agents, principles, templates
 6. compilePlugin() - Compile skills + agents into complete plugin
-7. writePlugin() - Output to ~/.claude/plugins/<name>/
+7. writePlugin() - Output to .claude/plugins/<name>/
 ```
 
 #### New Functions Required
@@ -597,7 +597,7 @@ export interface PluginCompileOptions {
 ### Backward Compatibility
 
 - Existing compiled `.claude/` output continues to work
-- Existing plugins in `~/.claude/plugins/` continue to work
+- Existing plugins in `.claude/plugins/` continue to work
 - Only the CLI workflow changes
 
 ---

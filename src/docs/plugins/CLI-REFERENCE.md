@@ -4,7 +4,7 @@ Complete reference for the Claude Collective CLI (`cc`).
 
 ## Overview
 
-The CLI uses a stack-based architecture with a single shared plugin. Skills are organized into switchable stacks stored in `~/.claude-collective/stacks/`, and one plugin at `~/.claude/plugins/claude-collective/` serves all stacks.
+The CLI uses a stack-based architecture with a single shared plugin. Skills are organized into switchable stacks stored in `.claude-collective/stacks/`, and one plugin at `.claude/plugins/claude-collective/` serves all stacks. All paths are project-local (not global).
 
 **Network Required**: Most commands require network access to fetch from the marketplace.
 
@@ -73,32 +73,35 @@ Options:
 
 **What it does:**
 
-1. Creates `~/.claude-collective/stacks/<name>/skills/`
+1. Creates `.claude-collective/stacks/<name>/skills/`
 2. Runs interactive wizard (select pre-built stack or custom skills)
 3. Fetches selected skills from marketplace
 4. Copies skills to stack directory
-5. If first stack: creates plugin at `~/.claude/plugins/claude-collective/`
+5. If first stack: creates plugin at `.claude/plugins/claude-collective/`
 6. If first stack: fetches agent definitions and compiles
 7. Runs switch logic to activate new stack
 
 **Output structure:**
 
 ```
-~/.claude-collective/                    # SOURCE
-├── config.yaml                          # active_stack: <name>
-└── stacks/
-    └── <name>/
-        └── skills/
-            ├── react/SKILL.md
-            └── zustand/SKILL.md
-
-~/.claude/plugins/claude-collective/     # OUTPUT (on first init)
-├── .claude-plugin/plugin.json
-├── agents/
-├── skills/                              # Copied from active stack
-├── hooks/hooks.json
-├── CLAUDE.md
-└── README.md
+my-project/
+├── .claude-collective/                  # SOURCE (project-local)
+│   ├── config.yaml                      # active_stack: <name>
+│   └── stacks/
+│       └── <name>/
+│           └── skills/
+│               ├── react/SKILL.md
+│               └── zustand/SKILL.md
+│
+├── .claude/
+│   └── plugins/
+│       └── claude-collective/           # OUTPUT (project-local, on first init)
+│           ├── .claude-plugin/plugin.json
+│           ├── agents/
+│           ├── skills/                  # Copied from active stack
+│           ├── hooks/hooks.json
+│           ├── CLAUDE.md
+│           └── README.md
 ```
 
 **Examples:**
@@ -126,9 +129,9 @@ cc switch <stack-name>
 
 **What it does:**
 
-1. Validates stack exists in `~/.claude-collective/stacks/<name>/`
-2. Removes `~/.claude/plugins/claude-collective/skills/`
-3. Copies from `~/.claude-collective/stacks/<name>/skills/` to plugin
+1. Validates stack exists in `.claude-collective/stacks/<name>/`
+2. Removes `.claude/plugins/claude-collective/skills/`
+3. Copies from `.claude-collective/stacks/<name>/skills/` to plugin
 4. Updates `active_stack` in config
 
 **Examples:**
@@ -160,7 +163,7 @@ Options:
 1. Gets active stack from config
 2. Errors if no active stack
 3. Fetches skill from marketplace
-4. Copies to `~/.claude-collective/stacks/<active>/skills/`
+4. Copies to `.claude-collective/stacks/<active>/skills/`
 5. Runs switch logic to update plugin
 
 **Examples:**
@@ -319,10 +322,10 @@ Options:
 cc validate
 
 # Validate specific plugin
-cc validate ~/.claude/plugins/my-stack
+cc validate .claude/plugins/claude-collective
 
 # Validate all plugins
-cc validate ~/.claude/plugins --all
+cc validate .claude/plugins --all
 ```
 
 ---

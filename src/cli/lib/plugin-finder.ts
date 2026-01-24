@@ -18,15 +18,12 @@ export function getUserPluginsDir(): string {
 }
 
 /**
- * Get the collective plugin directory path (~/.claude/plugins/claude-collective/)
+ * Get the collective plugin directory path (.claude/plugins/claude-collective/)
+ * This is project-local, sibling to .claude-collective/
  */
-export function getCollectivePluginDir(): string {
-  return path.join(
-    os.homedir(),
-    CLAUDE_DIR,
-    PLUGINS_SUBDIR,
-    "claude-collective",
-  );
+export function getCollectivePluginDir(projectDir?: string): string {
+  const dir = projectDir ?? process.cwd();
+  return path.join(dir, CLAUDE_DIR, PLUGINS_SUBDIR, "claude-collective");
 }
 
 /**

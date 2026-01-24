@@ -124,16 +124,17 @@ Test 4: Roundtrip (Manual)
 
 #### Lower Priority (Any Phase)
 
-| Priority | Task                       | Description                                                                       | Status                                     |
-| -------- | -------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------ |
-| High     | Investigate Claude tasks   | Research Claude Code's task system                                                | **DONE** (RULES-TASKS-INTEGRATION-PLAN.md) |
-| High     | Claude simplifier hook     | Add hook that simplifies/improves Claude's responses or workflow                  | Not Started                                |
-| High     | Context forking for skills | Add `context: fork` + `agent:` frontmatter for isolated skill execution           | Not Started                                |
-| High     | Path-scoped rules          | Compile skills with `paths:` to `.claude/rules/` for intelligent context loading  | Not Started                                |
-| Medium   | Permission generation      | Generate permission rules from agent `tools:` definitions with wildcard support   | Not Started                                |
-| Medium   | Progressive disclosure     | Restructure skills into Tier 1/2/3 for token-efficient loading                    | Not Started                                |
-| Medium   | CLI branding               | ASCII art logo + animated mascot on startup                                       | Not Started                                |
-| Low      | Thinking budget per agent  | Add `recommended_thinking:` to agent.yaml, CLI sets MAX_THINKING_TOKENS on invoke | Not Started                                |
+| Priority | Task                       | Description                                                                                                                  | Status                                     |
+| -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| High     | Investigate Claude tasks   | Research Claude Code's task system                                                                                           | **DONE** (RULES-TASKS-INTEGRATION-PLAN.md) |
+| High     | Claude simplifier hook     | Add hook that simplifies/improves Claude's responses or workflow                                                             | Not Started                                |
+| High     | Context forking for skills | Add `context: fork` + `agent:` frontmatter for isolated skill execution                                                      | Not Started                                |
+| High     | Path-scoped rules          | Compile skills with `paths:` to `.claude/rules/` for intelligent context loading                                             | Not Started                                |
+| Medium   | Stack-specific CLAUDE.md   | Handle per-stack CLAUDE.md files. Options: embed in config.yaml, use rules instead, or copy from stack folder during compile | Not Started                                |
+| Medium   | Permission generation      | Generate permission rules from agent `tools:` definitions with wildcard support                                              | Not Started                                |
+| Medium   | Progressive disclosure     | Restructure skills into Tier 1/2/3 for token-efficient loading                                                               | Not Started                                |
+| Medium   | CLI branding               | ASCII art logo + animated mascot on startup                                                                                  | Not Started                                |
+| Low      | Thinking budget per agent  | Add `recommended_thinking:` to agent.yaml, CLI sets MAX_THINKING_TOKENS on invoke                                            | Not Started                                |
 
 ### 2. Testing & CI/CD
 
@@ -145,25 +146,35 @@ Test 4: Roundtrip (Manual)
 
 ### 3. Skills & Content
 
-| Priority | Task                           | Description                                                                                       | Status      |
-| -------- | ------------------------------ | ------------------------------------------------------------------------------------------------- | ----------- |
-| HIGH     | Rename skills remove brackets  | Remove author suffix from skill folders: `react (@vince)` → `react`. Keep author in metadata.yaml | Not Started |
-| HIGH     | Move reviewing skill category  | Move `shared/reviewing` to `meta/reviewing` or standalone `reviewing` category                    | Not Started |
-| Medium   | `backend/ci-cd/github-actions` | Remove React Query, Zustand references (frontend libs in backend skill)                           | Not Started |
-| Medium   | `backend/analytics/posthog`    | Review Better Auth, Email references (non-`+` skill with cross-tech refs)                         | Not Started |
-| Low      | New skills (Critical)          | nx, docker, kubernetes, vite, svelte, supabase, AI SDKs                                           | Backlog     |
-| Low      | New skills (High)              | astro, firebase, clerk, cloudflare, terraform, etc.                                               | Backlog     |
-| Low      | Roadmap Phase 3-5              | background-jobs, caching, i18n, payments, etc.                                                    | Backlog     |
+| Priority | Task                           | Description                                                                                                                                                                   | Status      |
+| -------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| HIGH     | Rename skills remove brackets  | Remove parentheses from skill folder names: `react (@vince)` → `react @vince`. Update all stack configs and skills-matrix.yaml accordingly                                    | Not Started |
+| HIGH     | Move reviewing skill category  | Move `shared/reviewing` to `meta/reviewing` or standalone `reviewing` category                                                                                                | Not Started |
+| LOW      | Remove shared category         | Remove `shared` category from skills-matrix.yaml once reviewing is moved. Added as workaround.                                                                                | Not Started |
+| Medium   | Skill ID: use frontmatter name | Currently using directory path as skill ID (workaround). Refactor to use `frontmatter.name` as canonical ID, update stack configs and skill_aliases to match. See note below. | Not Started |
+| Medium   | `backend/ci-cd/github-actions` | Remove React Query, Zustand references (frontend libs in backend skill)                                                                                                       | Not Started |
+| Medium   | `backend/analytics/posthog`    | Review Better Auth, Email references (non-`+` skill with cross-tech refs)                                                                                                     | Not Started |
+| Low      | New skills (Critical)          | nx, docker, kubernetes, vite, svelte, supabase, AI SDKs                                                                                                                       | Backlog     |
+| Low      | New skills (High)              | astro, firebase, clerk, cloudflare, terraform, etc.                                                                                                                           | Backlog     |
+| Low      | Roadmap Phase 3-5              | background-jobs, caching, i18n, payments, etc.                                                                                                                                | Backlog     |
 
 **Note on `+` skills:** Skills with `+` in the name (e.g., `backend/observability+axiom+pino+sentry`) are intentionally integrated "bridge" skills. Cross-tech references between the named technologies are expected and correct. Only **frontend** library references (React, React Query, Zustand) in backend skills are problematic.
 
+**Note on skill ID workaround (2026-01-24):** Currently, skill IDs use the directory path (e.g., `frontend/framework/react (@vince)`) instead of `frontmatter.name` (e.g., `frontend/react (@vince)`). A `frontmatterToPath` mapping is built during matrix loading to resolve references in metadata.yaml files that use frontmatter names. The proper fix would be to use `frontmatter.name` as the canonical ID everywhere and update stack configs and skill_aliases to match. Files affected: `loader.ts` (`loadStackSkills`, `loadPluginSkills`) and `matrix-loader.ts` (`extractAllSkills`, `buildFrontmatterToPathMap`).
+
 ### 4. Versioning
 
-| Priority | Task                     | Description                              | Status      |
-| -------- | ------------------------ | ---------------------------------------- | ----------- |
-| High     | Display version          | Show in CLI listings                     | Not Started |
-| High     | Pre-flight checks        | Token validation before download         | Not Started |
-| Low      | Archive outdated schemas | skills.schema.json, registry.schema.json | Not Started |
+> **IMPORTANT**: Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml`.
+> The existing `versioning.ts` was built before the plugin-based architecture and needs refactoring.
+
+| Priority | Task                         | Description                                                           | Status      |
+| -------- | ---------------------------- | --------------------------------------------------------------------- | ----------- |
+| High     | Refactor versioning.ts       | Output version to `plugin.json` instead of `metadata.yaml`            | Not Started |
+| High     | Display version              | Show plugin version in CLI listings (`cc list`, marketplace)          | Not Started |
+| High     | Pre-flight checks            | Token validation before download                                      | Not Started |
+| Medium   | Unified plugin versioning    | Same versioning logic for skills, agents, and stacks                  | Not Started |
+| Low      | Archive outdated schemas     | skills.schema.json, registry.schema.json                              | Not Started |
+| Low      | Remove metadata.yaml version | Once plugin.json versioning is complete, remove version from metadata | Not Started |
 
 ### 5. Agent Output Formats
 
@@ -215,7 +226,7 @@ Test 4: Roundtrip (Manual)
 
 | Status          | Count |
 | --------------- | ----- |
-| **Outstanding** | 32    |
+| **Outstanding** | 36    |
 | **Deferred**    | 13    |
 | **Completed**   | 36    |
 
@@ -223,31 +234,32 @@ Test 4: Roundtrip (Manual)
 
 ## Decision Log
 
-| Date       | Decision                         | Rationale                                                                                                                                    |
-| ---------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-01-24 | Stack-based architecture         | Skills stored in `~/.claude-collective/stacks/`, single plugin at `~/.claude/plugins/claude-collective/`. `cc switch` for instant switching. |
-| 2026-01-24 | Dual marketplace model           | Public marketplace (community, latest) + private/company marketplaces (pinned versions). Enables reproducibility and guardrails.             |
-| 2026-01-24 | Agents as standalone plugins     | Agents don't embed skills; they reference them. One documentor for all stacks. `cc switch` recompiles with active stack's skills.            |
-| 2026-01-24 | Version pinning via marketplace  | No `plugin@version` install syntax. Marketplace controls versions via `ref`/`sha` in marketplace.json. Maintainer is gatekeeper.             |
-| 2026-01-24 | Skills/Agents/Stacks independent | Each versioned independently. No cascading bumps. Binding happens at switch/compile time, not publish time.                                  |
-| 2026-01-23 | Remote fetching after repo split | Compile scripts use local paths now; refactor to giget/source-fetcher AFTER repos split. Avoids premature abstraction.                       |
-| 2026-01-23 | Phased task ordering             | Phase A (before split), B (split milestone), C (after split). Clear sequencing prevents blocked work.                                        |
-| 2026-01-23 | Architecture finalized           | Marketplace is single source of truth; CLI is thin (no bundled content); `cc init` produces complete plugin with skills + agents             |
-| 2026-01-23 | `.claude-collective/` deprecated | Removed - plugins output directly to `~/.claude/plugins/`; no intermediate source directory needed                                           |
-| 2026-01-23 | Lowest priority commands         | `cc remove`, `cc swap`, `cc outdated`, `cc customize` marked as lowest priority; focus on `cc init` and `cc add` first                       |
-| 2026-01-23 | Network-based compilation        | All compilation fetches agents/principles/templates from marketplace; no bundled content in CLI                                              |
-| 2026-01-23 | Plugin implementation complete   | 6 phases: Schema, Skill-as-Plugin, Marketplace, Stack, CLI, Testing, Docs                                                                    |
-| 2026-01-23 | Plugin as output format          | CLI compiles to plugin (not .claude/); same flow, output is distributable, versioned, installable                                            |
-| 2026-01-23 | Eject for full independence      | `cc eject` (local) or `cc eject --fork` (GitHub) - (decided to implement, not yet built); no lock-in, fork preserves upstream connection     |
-| 2026-01-22 | Pre-populate wizard for update   | `cc update` now starts with existing skills pre-selected, skips approach step                                                                |
-| 2026-01-22 | Project-level config commands    | Added `cc config set-project` and `unset-project` for per-project source config                                                              |
-| 2026-01-22 | Agent category organization      | Improved discoverability; 7 categories: developer, reviewer, researcher, planning, pattern, meta, tester                                     |
-| 2026-01-22 | No `cc cache` command            | giget handles caching internally; `--refresh` flag for edge cases                                                                            |
-| 2026-01-22 | Inline agent invocation via CLI  | `--agents` JSON flag verified working; no file writes needed                                                                                 |
-| 2026-01-21 | Keep relationship-centric matrix | Authoring is easier; skill-centric view computed at runtime                                                                                  |
-| 2026-01-21 | While-loop wizard                | Simpler than action/reducer; better for MVP                                                                                                  |
-| 2026-01-21 | Integer versioning               | Zero friction; semver overkill for markdown skills                                                                                           |
-| 2026-01-21 | Document giget limitations       | Bitbucket private, Azure DevOps unsupported                                                                                                  |
+| Date       | Decision                         | Rationale                                                                                                                                                                |
+| ---------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-01-24 | Plugin-based versioning          | Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml`. Single versioning model for all artifacts.                               |
+| 2026-01-24 | Stack-based architecture         | Skills stored in `.claude-collective/stacks/` (project-local), single plugin at `.claude/plugins/claude-collective/` (project-local). `cc switch` for instant switching. |
+| 2026-01-24 | Dual marketplace model           | Public marketplace (community, latest) + private/company marketplaces (pinned versions). Enables reproducibility and guardrails.                                         |
+| 2026-01-24 | Agents as standalone plugins     | Agents don't embed skills; they reference them. One documentor for all stacks. `cc switch` recompiles with active stack's skills.                                        |
+| 2026-01-24 | Version pinning via marketplace  | No `plugin@version` install syntax. Marketplace controls versions via `ref`/`sha` in marketplace.json. Maintainer is gatekeeper.                                         |
+| 2026-01-24 | Skills/Agents/Stacks independent | Each versioned independently. No cascading bumps. Binding happens at switch/compile time, not publish time.                                                              |
+| 2026-01-23 | Remote fetching after repo split | Compile scripts use local paths now; refactor to giget/source-fetcher AFTER repos split. Avoids premature abstraction.                                                   |
+| 2026-01-23 | Phased task ordering             | Phase A (before split), B (split milestone), C (after split). Clear sequencing prevents blocked work.                                                                    |
+| 2026-01-23 | Architecture finalized           | Marketplace is single source of truth; CLI is thin (no bundled content); `cc init` produces complete plugin with skills + agents                                         |
+| 2026-01-23 | `.claude-collective/` deprecated | Removed - plugins output directly to `.claude/plugins/` (project-local); no intermediate source directory needed                                                         |
+| 2026-01-23 | Lowest priority commands         | `cc remove`, `cc swap`, `cc outdated`, `cc customize` marked as lowest priority; focus on `cc init` and `cc add` first                                                   |
+| 2026-01-23 | Network-based compilation        | All compilation fetches agents/principles/templates from marketplace; no bundled content in CLI                                                                          |
+| 2026-01-23 | Plugin implementation complete   | 6 phases: Schema, Skill-as-Plugin, Marketplace, Stack, CLI, Testing, Docs                                                                                                |
+| 2026-01-23 | Plugin as output format          | CLI compiles to plugin (not .claude/); same flow, output is distributable, versioned, installable                                                                        |
+| 2026-01-23 | Eject for full independence      | `cc eject` (local) or `cc eject --fork` (GitHub) - (decided to implement, not yet built); no lock-in, fork preserves upstream connection                                 |
+| 2026-01-22 | Pre-populate wizard for update   | `cc update` now starts with existing skills pre-selected, skips approach step                                                                                            |
+| 2026-01-22 | Project-level config commands    | Added `cc config set-project` and `unset-project` for per-project source config                                                                                          |
+| 2026-01-22 | Agent category organization      | Improved discoverability; 7 categories: developer, reviewer, researcher, planning, pattern, meta, tester                                                                 |
+| 2026-01-22 | No `cc cache` command            | giget handles caching internally; `--refresh` flag for edge cases                                                                                                        |
+| 2026-01-22 | Inline agent invocation via CLI  | `--agents` JSON flag verified working; no file writes needed                                                                                                             |
+| 2026-01-21 | Keep relationship-centric matrix | Authoring is easier; skill-centric view computed at runtime                                                                                                              |
+| 2026-01-21 | While-loop wizard                | Simpler than action/reducer; better for MVP                                                                                                                              |
+| 2026-01-21 | Integer versioning               | Zero friction; semver overkill for markdown skills                                                                                                                       |
+| 2026-01-21 | Document giget limitations       | Bitbucket private, Azure DevOps unsupported                                                                                                                              |
 
 ---
 
@@ -361,14 +373,19 @@ claude --agents '{"test": {"description": "Test", "prompt": "List files in curre
 | Compiled output validation    | Validates XML tags, frontmatter, template artifacts | Done             |
 | Schema validation             | IDE-only, no runtime Zod                            | Done (AJV added) |
 
-## Versioning (Completed)
+## Versioning (Partially Complete - Needs Refactor)
 
-| Task                            | Description                         | Completed                                 |
-| ------------------------------- | ----------------------------------- | ----------------------------------------- |
-| `skill-frontmatter.schema.json` | Validate SKILL.md frontmatter       | Done                                      |
-| `agent.schema.json`             | Validate compiled agent frontmatter | Done (EXISTS at `src/schemas/`)           |
-| Update schema                   | `metadata.yaml` integer version     | Done (`src/schemas/metadata.schema.json`) |
-| Compiler auto-increment         | Version bump on hash change         | Done (`src/cli/lib/versioning.ts`)        |
+> **Note (2026-01-24)**: The versioning implementation below predates the plugin-based architecture.
+> Skills, agents, and stacks are ALL plugins now. Version should be in `plugin.json`, NOT `metadata.yaml`.
+> The `versioning.ts` file needs refactoring to output to `plugin.json` instead.
+
+| Task                            | Description                              | Status                                                      |
+| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| `skill-frontmatter.schema.json` | Validate SKILL.md frontmatter            | Done                                                        |
+| `agent.schema.json`             | Validate compiled agent frontmatter      | Done (EXISTS at `src/schemas/`)                             |
+| Update schema                   | `metadata.yaml` integer version          | Done but **OUTDATED** - version should be in plugin.json    |
+| Compiler auto-increment         | Version bump on hash change              | Done but **NEEDS REFACTOR** (`versioning.ts` → plugin.json) |
+| Plugin-based versioning         | Version in `plugin.json` for all plugins | **NOT STARTED**                                             |
 
 ## CLI Implementation (Phase 1-3) - Complete
 
@@ -386,7 +403,7 @@ claude --agents '{"test": {"description": "Test", "prompt": "List files in curre
 Full configuration system for CLI-skills communication:
 
 - `cc config show` - Show effective configuration with precedence chain
-- `cc config set <key> <value>` - Set global config (`~/.claude-collective/config.yaml`)
+- `cc config set <key> <value>` - Set project config (`.claude-collective/config.yaml`)
 - `cc config set-project <key> <value>` - Set project config (`.claude-collective/config.yaml`)
 - `cc config get <key>` - Get resolved config value
 - `cc config unset <key>` - Remove global config value
@@ -479,61 +496,84 @@ src/agents/
 
 ## Versioning System Specification
 
-### Target Format
+> **Architecture Update (2026-01-24)**: Skills, agents, and stacks are ALL plugins.
+> Version lives in `plugin.json`, NOT in `metadata.yaml` or SKILL.md frontmatter.
+> The existing `versioning.ts` predates this architecture and needs refactoring.
 
-```yaml
-# In metadata.yaml (auto-generated fields)
-version: 4 # Integer, auto-incremented on content change
-content_hash: a1b2c3d # 7-char SHA-256 of skill folder
-updated: 2026-01-21 # File modification date
+### Target Format (Plugin-Based)
 
-# In SKILL.md frontmatter (optional author-maintained)
-history:
-  - v: 4
-    why: Add React 19 useActionState patterns
+```json
+// In plugin.json (all plugins: skills, agents, stacks)
+{
+  "name": "skill-react",
+  "version": "1.0.4",
+  "description": "Component architecture, hooks, patterns",
+  "content_hash": "a1b2c3d"
+}
 ```
 
-### Implementation
+### Key Principles
 
-- Hash utility: 15 lines using Node.js `crypto` (built-in) - **DONE** (`src/cli/lib/hash.ts`)
-- Hash entire skill folder (SKILL.md + reference.md + examples/)
-- Compiler auto-populates `version`, `content_hash`, `updated`
-- Author optionally adds `history` entries for changelog
+1. **Skills are plugins** - Each skill compiles to a plugin with its own `plugin.json`
+2. **Agents are plugins** - Each compiled agent is a plugin with its own `plugin.json`
+3. **Stacks are plugins** - Each stack is a plugin that references skill/agent plugins
+4. **Version in one place** - `plugin.json` is the single source of truth for version
+5. **Content hash for change detection** - Hash detects actual content changes
+
+### Implementation Status
+
+- Hash utility: **DONE** (`src/cli/lib/hash.ts`)
+- Versioning logic: **NEEDS REFACTOR** (`src/cli/lib/versioning.ts` outputs to `metadata.yaml`)
+- Target: Versioning should update `plugin.json` during `cc compile-plugins`, `cc compile-stack`
+
+### Migration Path
+
+1. During `compile-plugins`: Generate `plugin.json` with version, bump on content change
+2. During `compile-stack`: Generate `plugin.json` for the stack plugin
+3. Remove version field from `metadata.yaml` (keep for backward compatibility initially)
+4. Update CLI display to read version from `plugin.json`
 
 ---
 
 ## Directory Structure (User's Project)
 
-After running `cc init` + `cc add work-stack`:
+After running `cc init --name home-stack` + `cc init --name work-stack`:
 
 ```
 my-project/
-├── .claude-collective/              # SOURCE (our domain)
-│   ├── active-stack                 # Plain text: "home-stack"
+├── .claude-collective/              # SOURCE (our domain, project-local)
+│   ├── config.yaml                  # active_stack, source
 │   └── stacks/
 │       ├── home-stack/
-│       │   ├── config.yaml          # Stack config
-│       │   └── skills/              # Forked skills (versioned)
-│       │       ├── frontend/
-│       │       │   └── react (@vince)/
-│       │       │       ├── SKILL.md
-│       │       │       ├── metadata.yaml
-│       │       │       └── examples/
-│       │       └── backend/
+│       │   └── skills/
+│       │       ├── react/SKILL.md
+│       │       └── zustand/SKILL.md
 │       └── work-stack/
-│           └── ... (same structure)
+│           └── skills/
+│               ├── react/SKILL.md
+│               └── hono/SKILL.md
 │
-├── .claude/                         # OUTPUT (Claude Code's domain)
-│   ├── agents/                      # Compiled from active stack
-│   ├── skills/                      # Compiled from active stack
-│   ├── commands/
-│   └── CLAUDE.md                    # Copied from active stack
+├── .claude/
+│   └── plugins/
+│       └── claude-collective/       # OUTPUT (Claude Code's domain, project-local)
+│           ├── .claude-plugin/plugin.json
+│           ├── agents/              # Compiled agents
+│           │   ├── frontend-developer.md
+│           │   └── backend-developer.md
+│           └── skills/              # Active stack's skills (copied on switch)
+│               ├── react/SKILL.md
+│               └── zustand/SKILL.md
 │
 ├── src/
 └── package.json
 ```
 
-**Key principle:** `.claude/` is sacred output that Claude Code reads. `.claude-collective/` is our source configuration.
+**Key principles:**
+
+- `.claude-collective/` and `.claude/plugins/claude-collective/` are both project-local (siblings)
+- Skills are namespaced by stack: `.claude-collective/stacks/{name}/skills/`
+- `cc switch` copies skills from stack to plugin
+- No global paths (`~/`) - everything is in the project directory
 
 See `.claude/research/findings/v2/CLAUDE-COLLECTIVE-DIRECTORY-IMPLEMENTATION.md` for full implementation plan.
 
@@ -544,7 +584,7 @@ See `.claude/research/findings/v2/CLAUDE-COLLECTIVE-DIRECTORY-IMPLEMENTATION.md`
 ### 7.1 Configuration
 
 ```yaml
-# ~/.claude-collective/config.yaml (global)
+# .claude-collective/config.yaml (project-local)
 source: github.com/mycompany/private-skills
 
 # .claude/cc-config.yaml (project - overrides global)
@@ -584,7 +624,7 @@ source: github.com/team/team-skills
 ### 8.1 Configuration
 
 ```yaml
-# ~/.claude-collective/config.yaml
+# .claude-collective/config.yaml (project-local)
 sources:
   - url: github.com/claude-collective/skills
     name: Community
@@ -659,18 +699,16 @@ sources:
 When user runs `cc init` and selects skills/stack:
 
 ```
-~/.claude/plugins/my-fullstack-stack/
+.claude/plugins/claude-collective/    # Project-local
 ├── .claude-plugin/
 │   └── plugin.json               # Stack manifest
 ├── agents/                       # Compiled agents
 │   ├── frontend-developer.md
 │   ├── backend-developer.md
 │   └── ...
-└── skills/                       # Skills embedded in stack
+└── skills/                       # Skills from active stack (copied on switch)
     ├── react/
-    │   ├── SKILL.md
-    │   ├── metadata.yaml         # Contains version
-    │   └── examples/
+    │   └── SKILL.md
     ├── zustand/
     └── ...
 ```
@@ -685,10 +723,12 @@ When user runs `cc init` and selects skills/stack:
 ### `cc init` Flow
 
 1. User selects skills or pre-built stack
-2. Create stack plugin folder at `~/.claude/plugins/{stack-name}/`
-3. Copy selected skills to `skills/` folder
-4. Compile agents to `agents/` folder
-5. Generate `.claude-plugin/plugin.json` manifest
+2. Create stack folder at `.claude-collective/stacks/{stack-name}/`
+3. Copy selected skills to stack's `skills/` folder
+4. Create plugin folder at `.claude/plugins/claude-collective/`
+5. Copy skills to plugin's `skills/` folder
+6. Compile agents to plugin's `agents/` folder
+7. Generate `.claude-plugin/plugin.json` manifest
 
 ### New Commands
 
@@ -737,10 +777,10 @@ Full eject would expose LiquidJS templates and agent configs, making users respo
 ### Structure
 
 ```
-~/.claude/plugins/my-stack/
+.claude/plugins/claude-collective/    # Project-local
 ├── .claude-plugin/plugin.json
 ├── agents/                       # Compiled agents (output)
-├── skills/                       # Skills (editable)
+├── skills/                       # Skills from active stack
 ├── _principles/                  # CUSTOM: User's principles
 │   └── custom/                   # Only this folder is user-editable
 │       ├── company-guidelines.md

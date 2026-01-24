@@ -8,51 +8,57 @@
 
 ## Architecture Overview
 
-The Claude Collective CLI uses a stack-based architecture with a single shared plugin. Skills are organized into switchable stacks stored in `~/.claude-collective/stacks/`, and one plugin at `~/.claude/plugins/claude-collective/` serves all stacks.
+The Claude Collective CLI uses a stack-based architecture with a single shared plugin. Skills are organized into switchable stacks stored in `.claude-collective/stacks/`, and one plugin at `.claude/plugins/claude-collective/` serves all stacks. All paths are project-local (not global).
 
 ### Key Principles
 
-1. **Stacks are source of truth** - Skills live in `~/.claude-collective/stacks/{name}/skills/`
-2. **Single shared plugin** - One plugin at `~/.claude/plugins/claude-collective/`
-3. **Agents fetch from marketplace** - Agent definitions, principles, templates fetched at compile time
-4. **Skills switch instantly** - `cc switch` copies skills from stack to plugin
+1. **Stacks are source of truth** - Skills live in `.claude-collective/stacks/{name}/skills/`
+2. **Single shared plugin** - One plugin at `.claude/plugins/claude-collective/`
+3. **Project-local** - Both directories are project-local (siblings), not global
+4. **Agents fetch from marketplace** - Agent definitions, principles, templates fetched at compile time
+5. **Skills switch instantly** - `cc switch` copies skills from stack to plugin
 
 ---
 
 ## Storage Model
 
-### User's Machine
+### User's Project
 
 ```
-~/.claude-collective/                    # SOURCE (our domain)
-├── config.yaml                          # source, active_stack
-└── stacks/
-    ├── work-stack/
-    │   └── skills/
-    │       ├── react/SKILL.md
-    │       └── hono/SKILL.md
-    └── home-stack/
-        └── skills/
-            ├── react/SKILL.md
-            └── zustand/SKILL.md
-
-~/.claude/plugins/claude-collective/     # OUTPUT (Claude's domain)
-├── .claude-plugin/plugin.json
-├── agents/                              # Shared agents (fetched from source)
-│   ├── frontend-developer.md
-│   └── backend-developer.md
-├── skills/                              # Active stack's skills (copied on switch)
-│   ├── react/SKILL.md
-│   └── zustand/SKILL.md
-├── hooks/hooks.json
-├── CLAUDE.md
-└── README.md
+my-project/
+├── .claude-collective/                  # SOURCE (our domain, project-local)
+│   ├── config.yaml                      # source, active_stack
+│   └── stacks/
+│       ├── work-stack/
+│       │   └── skills/
+│       │       ├── react/SKILL.md
+│       │       └── hono/SKILL.md
+│       └── home-stack/
+│           └── skills/
+│               ├── react/SKILL.md
+│               └── zustand/SKILL.md
+│
+├── .claude/
+│   └── plugins/
+│       └── claude-collective/           # OUTPUT (Claude's domain, project-local)
+│           ├── .claude-plugin/plugin.json
+│           ├── agents/                  # Shared agents (fetched from source)
+│           │   ├── frontend-developer.md
+│           │   └── backend-developer.md
+│           ├── skills/                  # Active stack's skills (copied on switch)
+│           │   ├── react/SKILL.md
+│           │   └── zustand/SKILL.md
+│           ├── hooks/hooks.json
+│           ├── CLAUDE.md
+│           └── README.md
+│
+└── src/                                 # Your project code
 ```
 
 ### Config File
 
 ```yaml
-# ~/.claude-collective/config.yaml
+# .claude-collective/config.yaml (project-local)
 source: github:claude-collective/skills
 active_stack: work-stack
 ```
@@ -125,15 +131,15 @@ All content is fetched from the marketplace at runtime.
 Creates a new stack. First stack also creates the shared plugin:
 
 ```
-1. Create ~/.claude-collective/stacks/X/skills/
+1. Create .claude-collective/stacks/X/skills/
 2. Fetch skills-matrix.yaml from marketplace
 3. Run wizard:
    - User selects approach (pre-built stack or custom)
    - User selects skills (or uses stack defaults)
 4. Fetch selected skills from marketplace
-5. Copy skills to ~/.claude-collective/stacks/X/skills/
+5. Copy skills to .claude-collective/stacks/X/skills/
 6. If first stack:
-   a. Create ~/.claude/plugins/claude-collective/
+   a. Create .claude/plugins/claude-collective/
    b. Fetch agent definitions, principles, templates
    c. Compile agents
    d. Generate plugin.json, CLAUDE.md, README.md, hooks.json
@@ -145,10 +151,10 @@ Creates a new stack. First stack also creates the shared plugin:
 Switches to a different stack:
 
 ```
-1. Validate stack exists in ~/.claude-collective/stacks/X/
-2. Remove ~/.claude/plugins/claude-collective/skills/
-3. Copy from ~/.claude-collective/stacks/X/skills/ to plugin
-4. Update active_stack in ~/.claude-collective/config.yaml
+1. Validate stack exists in .claude-collective/stacks/X/
+2. Remove .claude/plugins/claude-collective/skills/
+3. Copy from .claude-collective/stacks/X/skills/ to plugin
+4. Update active_stack in .claude-collective/config.yaml
 5. Switched to X
 ```
 
@@ -160,7 +166,7 @@ Adds a skill to the active stack:
 1. Get active stack from config
 2. Error if no active stack
 3. Fetch skill Y from marketplace
-4. Copy to ~/.claude-collective/stacks/{active}/skills/
+4. Copy to .claude-collective/stacks/{active}/skills/
 5. Run switch logic to update plugin
 ```
 
@@ -169,12 +175,12 @@ Adds a skill to the active stack:
 Recompiles agents without fetching new skills (useful after manual skill edits):
 
 ```
-1. Read skills from ~/.claude/plugins/claude-collective/skills/
+1. Read skills from .claude/plugins/claude-collective/skills/
 2. Fetch agent definitions from marketplace
 3. Fetch principles from marketplace
 4. Fetch templates from marketplace
 5. Compile agents (embed skill references)
-6. Write to ~/.claude/plugins/claude-collective/agents/
+6. Write to .claude/plugins/claude-collective/agents/
 ```
 
 ### `cc list`
@@ -182,7 +188,7 @@ Recompiles agents without fetching new skills (useful after manual skill edits):
 Lists all stacks with active marker:
 
 ```
-1. Read stacks from ~/.claude-collective/stacks/
+1. Read stacks from .claude-collective/stacks/
 2. Read active_stack from config
 3. Display stacks with * for active
 4. Show skill count per stack
@@ -355,13 +361,13 @@ You are a senior frontend developer specializing in React and TypeScript...
 
 ## Key Concepts
 
-| Concept      | Description                                                     |
-| ------------ | --------------------------------------------------------------- |
-| Stack        | Collection of skills stored in `~/.claude-collective/stacks/X/` |
-| Active Stack | Currently active stack, tracked in config.yaml                  |
-| Plugin       | Single plugin at `~/.claude/plugins/claude-collective/`         |
-| Switch       | Copies skills from stack to plugin, updates active_stack        |
-| Source       | Marketplace URL (default: `github:claude-collective/skills`)    |
+| Concept      | Description                                                   |
+| ------------ | ------------------------------------------------------------- |
+| Stack        | Collection of skills stored in `.claude-collective/stacks/X/` |
+| Active Stack | Currently active stack, tracked in config.yaml                |
+| Plugin       | Single plugin at `.claude/plugins/claude-collective/`         |
+| Switch       | Copies skills from stack to plugin, updates active_stack      |
+| Source       | Marketplace URL (default: `github:claude-collective/skills`)  |
 
 ---
 

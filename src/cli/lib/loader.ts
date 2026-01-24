@@ -156,7 +156,8 @@ export async function loadStackSkills(
       mode === "dev"
         ? `src/stacks/${stackId}/skills/${folderPath}/`
         : `${dirs.stacks}/${stackId}/skills/${folderPath}/`;
-    const skillId = frontmatter.name;
+    // Use directory path as skill ID (matches stack config references)
+    const skillId = folderPath;
 
     skills[skillId] = {
       path: skillPath,
@@ -243,7 +244,8 @@ export async function loadPluginSkills(
     const folderPath = file.replace("/SKILL.md", "");
     // Path is relative to the plugin directory
     const skillPath = `skills/${folderPath}/`;
-    const skillId = frontmatter.name;
+    // Use directory path as skill ID (matches stack config references)
+    const skillId = folderPath;
 
     skills[skillId] = {
       path: skillPath,
