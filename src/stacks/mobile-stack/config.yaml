@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# React Native Mobile Stack - Cross-platform mobile with React Native and Expo
+
+name: "React Native Mobile Stack"
+description: >
+  Cross-platform mobile with React Native and Expo.
+  Mobile: React Native with Zustand, React Query, React Hook Form.
+  One codebase for iOS and Android.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Mobile
+  - id: mobile/react-native (@vince)
+  # Frontend (shared with mobile)
+  - id: frontend/state-zustand (@vince)
+  - id: frontend/server-state-react-query (@vince)
+  - id: frontend/forms/react-hook-form (@vince)
+  - id: frontend/forms/zod-validation (@vince)
+  # Shared
+  - id: shared/reviewing (@vince)
+  # Research
+  - id: research/research-methodology (@vince)
+
+agents:
+  - frontend-developer
+  - frontend-reviewer
+  - tester
+  - pm
+  - orchestrator
+  - frontend-researcher
+
+agent_skills:
+  frontend-developer:
+    mobile:
+      - id: mobile/react-native (@vince)
+        preloaded: true
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+
+  frontend-reviewer:
+    mobile:
+      - id: mobile/react-native (@vince)
+        preloaded: true
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  tester:
+    mobile:
+      - id: mobile/react-native (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    mobile:
+      - id: mobile/react-native (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+
+  orchestrator:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  frontend-researcher:
+    mobile:
+      - id: mobile/react-native (@vince)
+        preloaded: true
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+philosophy: "One codebase, iOS and Android"
+
+principles:
+  - Share code between platforms
+  - Use React Native best practices
+  - Zustand for client state
+  - React Query for server state
+  - React Hook Form with Zod for forms
+  - Test on both iOS and Android
+
+tags:
+  - react-native
+  - mobile
+  - ios
+  - android
+  - typescript
+  - zustand
+  - react-query

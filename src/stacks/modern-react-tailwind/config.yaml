@@ -1,0 +1,217 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Modern React + Tailwind Stack - React with Tailwind CSS and shadcn/ui for beautiful UIs
+
+name: "Modern React + Tailwind Stack"
+description: >
+  React with Tailwind CSS and shadcn/ui for beautiful UIs.
+  Frontend: React + Next.js App Router + Tailwind + shadcn/ui, Zustand, React Query, Vitest, MSW.
+  Backend: Hono, Drizzle, Better Auth.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: frontend/react (@vince)
+  - id: frontend/nextjs-app-router (@vince)
+  - id: frontend/styling-tailwind (@vince)
+  - id: frontend/ui-shadcn-ui (@vince)
+  - id: frontend/state-zustand (@vince)
+  - id: frontend/server-state-react-query (@vince)
+  - id: frontend/forms/react-hook-form (@vince)
+  - id: frontend/forms/zod-validation (@vince)
+  - id: frontend/testing-vitest (@vince)
+  - id: frontend/mocks-msw (@vince)
+  # Backend
+  - id: backend/api-hono (@vince)
+  - id: backend/database-drizzle (@vince)
+  - id: backend/auth-better-auth+drizzle+hono (@vince)
+  # Shared
+  - id: shared/reviewing (@vince)
+  # Research
+  - id: research/research-methodology (@vince)
+
+agents:
+  - frontend-developer
+  - backend-developer
+  - frontend-reviewer
+  - backend-reviewer
+  - tester
+  - pm
+  - orchestrator
+  - frontend-researcher
+  - backend-researcher
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+      - id: frontend/nextjs-app-router (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+        preloaded: true
+    ui-components:
+      - id: frontend/ui-shadcn-ui (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+
+  backend-developer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+
+  frontend-reviewer:
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+      - id: frontend/nextjs-app-router (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+        preloaded: true
+    ui-components:
+      - id: frontend/ui-shadcn-ui (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+
+  backend-reviewer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  tester:
+    testing:
+      - id: frontend/testing-vitest (@vince)
+        preloaded: true
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/react (@vince)
+      - id: frontend/nextjs-app-router (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+    ui-components:
+      - id: frontend/ui-shadcn-ui (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+
+  orchestrator:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  frontend-researcher:
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+      - id: frontend/nextjs-app-router (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+    ui-components:
+      - id: frontend/ui-shadcn-ui (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    server-state:
+      - id: frontend/server-state-react-query (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    mocks:
+      - id: frontend/mocks-msw (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+    auth:
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Beautiful UIs with utility-first CSS"
+
+principles:
+  - Prefer composition over inheritance
+  - Use hooks for everything, avoid class components
+  - Tailwind for utility-first styling
+  - shadcn/ui for consistent, accessible components
+  - Zustand for client state, React Query for server state
+  - Test user behavior, not implementation details
+  - Type everything - zero tolerance for any
+
+tags:
+  - react
+  - nextjs
+  - typescript
+  - tailwind
+  - shadcn-ui
+  - zustand
+  - react-query
+  - modern
+  - design-systems

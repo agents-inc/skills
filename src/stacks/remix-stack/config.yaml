@@ -1,0 +1,178 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Remix Full-Stack - Remix for form-heavy applications with excellent DX
+
+name: "Remix Full-Stack"
+description: >
+  Remix for form-heavy applications with excellent DX.
+  Frontend: React + Remix + Tailwind, Zustand, React Hook Form, Vitest, Playwright.
+  Backend: Hono, Drizzle.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: frontend/react (@vince)
+  - id: frontend/framework/remix (@vince)
+  - id: frontend/styling-tailwind (@vince)
+  - id: frontend/state-zustand (@vince)
+  - id: frontend/forms/react-hook-form (@vince)
+  - id: frontend/forms/zod-validation (@vince)
+  - id: frontend/testing-vitest (@vince)
+  - id: frontend/testing/playwright-e2e (@vince)
+  # Backend
+  - id: backend/api-hono (@vince)
+  - id: backend/database-drizzle (@vince)
+  # Shared
+  - id: shared/reviewing (@vince)
+  # Research
+  - id: research/research-methodology (@vince)
+
+agents:
+  - frontend-developer
+  - backend-developer
+  - frontend-reviewer
+  - backend-reviewer
+  - tester
+  - pm
+  - orchestrator
+  - frontend-researcher
+  - backend-researcher
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+      - id: frontend/framework/remix (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+        preloaded: true
+    state:
+      - id: frontend/state-zustand (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: frontend/testing/playwright-e2e (@vince)
+
+  backend-developer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+
+  frontend-reviewer:
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+      - id: frontend/framework/remix (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+        preloaded: true
+    state:
+      - id: frontend/state-zustand (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: frontend/testing/playwright-e2e (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  tester:
+    testing:
+      - id: frontend/testing-vitest (@vince)
+        preloaded: true
+      - id: frontend/testing/playwright-e2e (@vince)
+
+  pm:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/react (@vince)
+      - id: frontend/framework/remix (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: frontend/testing/playwright-e2e (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+
+  orchestrator:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  frontend-researcher:
+    framework:
+      - id: frontend/react (@vince)
+        preloaded: true
+      - id: frontend/framework/remix (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+    state:
+      - id: frontend/state-zustand (@vince)
+    forms:
+      - id: frontend/forms/react-hook-form (@vince)
+      - id: frontend/forms/zod-validation (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+      - id: frontend/testing/playwright-e2e (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Web standards and excellent forms handling"
+
+principles:
+  - Leverage web standards (forms, fetch, etc.)
+  - Progressive enhancement
+  - Server-first data loading
+  - Tailwind for utility-first styling
+  - React Hook Form with Zod for validation
+  - E2E testing with Playwright
+
+tags:
+  - react
+  - remix
+  - typescript
+  - tailwind
+  - forms
+  - web-standards

@@ -1,0 +1,140 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# SolidJS Stack - High-performance SolidJS with Tailwind and Hono backend
+
+name: "SolidJS Stack"
+description: >
+  High-performance SolidJS with Tailwind and Hono backend.
+  Frontend: SolidJS + Tailwind, Vitest testing.
+  Backend: Hono, Drizzle.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: frontend/framework/solidjs (@vince)
+  - id: frontend/styling-tailwind (@vince)
+  - id: frontend/testing-vitest (@vince)
+  # Backend
+  - id: backend/api-hono (@vince)
+  - id: backend/database-drizzle (@vince)
+  # Shared
+  - id: shared/reviewing (@vince)
+  # Research
+  - id: research/research-methodology (@vince)
+
+agents:
+  - frontend-developer
+  - backend-developer
+  - frontend-reviewer
+  - backend-reviewer
+  - tester
+  - pm
+  - orchestrator
+  - frontend-researcher
+  - backend-researcher
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: frontend/framework/solidjs (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+        preloaded: true
+    testing:
+      - id: frontend/testing-vitest (@vince)
+
+  backend-developer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+
+  frontend-reviewer:
+    framework:
+      - id: frontend/framework/solidjs (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+        preloaded: true
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  tester:
+    testing:
+      - id: frontend/testing-vitest (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: frontend/framework/solidjs (@vince)
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+
+  orchestrator:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  frontend-researcher:
+    framework:
+      - id: frontend/framework/solidjs (@vince)
+        preloaded: true
+    styling:
+      - id: frontend/styling-tailwind (@vince)
+    testing:
+      - id: frontend/testing-vitest (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Maximum performance with minimal overhead"
+
+principles:
+  - Fine-grained reactivity over virtual DOM
+  - No unnecessary re-renders
+  - Tailwind for utility-first styling
+  - Keep bundle size small
+  - Test with Vitest
+
+tags:
+  - solidjs
+  - typescript
+  - tailwind
+  - performance
+  - reactive

@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Minimal Backend - Lightweight API without frontend - just Hono and Drizzle
+
+name: "Minimal Backend"
+description: >
+  Lightweight API without frontend - just Hono and Drizzle.
+  Backend: Hono API framework, Drizzle ORM.
+  Perfect for microservices and API-only projects.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Backend
+  - id: backend/api-hono (@vince)
+  - id: backend/database-drizzle (@vince)
+  # Shared
+  - id: shared/reviewing (@vince)
+  # Research
+  - id: research/research-methodology (@vince)
+
+agents:
+  - backend-developer
+  - backend-reviewer
+  - tester
+  - pm
+  - orchestrator
+  - backend-researcher
+
+agent_skills:
+  backend-developer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: shared/reviewing (@vince)
+        preloaded: true
+
+  tester:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+
+  pm:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+    api:
+      - id: backend/api-hono (@vince)
+    database:
+      - id: backend/database-drizzle (@vince)
+
+  orchestrator:
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: backend/api-hono (@vince)
+        preloaded: true
+    database:
+      - id: backend/database-drizzle (@vince)
+    research:
+      - id: research/research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Just the essentials"
+
+principles:
+  - Keep it simple
+  - Hono for fast, edge-ready APIs
+  - Drizzle for type-safe database access
+  - No unnecessary abstractions
+  - Test API endpoints thoroughly
+
+tags:
+  - api
+  - hono
+  - drizzle
+  - typescript
+  - microservices
+  - minimal
