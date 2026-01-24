@@ -15,7 +15,7 @@ import {
   generateStackPluginManifest,
   writePluginManifest,
 } from "./plugin-manifest";
-import { loadStack, loadStackSkills, loadAllAgents } from "./loader";
+import { loadStack, loadSkillsByIds, loadAllAgents } from "./loader";
 import { resolveAgents, stackToCompileConfig } from "./resolver";
 import type {
   PluginManifest,
@@ -313,8 +313,8 @@ export async function compileStackPlugin(
   // 2. Load all agents
   const agents = await loadAllAgents(projectRoot);
 
-  // 3. Load skills from stack
-  const skills = await loadStackSkills(stackId, projectRoot, "dev");
+  // 3. Load skills from src/skills/ based on stack config
+  const skills = await loadSkillsByIds(stack.skills || [], projectRoot);
 
   // 4. Convert stack to compile config
   const compileConfig: CompileConfig = stackToCompileConfig(stackId, stack);
@@ -334,14 +334,29 @@ export async function compileStackPlugin(
   await ensureDir(pluginDir);
   await ensureDir(agentsDir);
 
-  // Create skills directory and copy skills from stack source
+  // Create skills directory and copy skills from src/skills/ based on stack config
   const pluginSkillsDir = path.join(pluginDir, "skills");
   await ensureDir(pluginSkillsDir);
 
-  const stackSkillsDir = path.join(projectRoot, DIRS.stacks, stackId, "skills");
-  if (await directoryExists(stackSkillsDir)) {
-    await copy(stackSkillsDir, pluginSkillsDir);
-    verbose(`  Copied skills to ${pluginSkillsDir}`);
+  // Copy each skill from src/skills/ to plugin
+  for (const skillRef of stack.skills || []) {
+    const skillId = skillRef.id;
+    const sourceSkillDir = path.join(projectRoot, DIRS.skills, skillId);
+    // Flatten skill path for output: "frontend/framework/react (@vince)" -> "react"
+    const skillName =
+      skillId
+        .split("/")
+        .pop()
+        ?.replace(/\s*\(@\w+\)$/, "")
+        .trim() || skillId;
+    const destSkillDir = path.join(pluginSkillsDir, skillName);
+
+    if (await directoryExists(sourceSkillDir)) {
+      await copy(sourceSkillDir, destSkillDir);
+      verbose(`  Copied skill: ${skillId} -> ${skillName}`);
+    } else {
+      console.warn(`  Warning: Skill not found: ${skillId}`);
+    }
   }
 
   // 7. Create Liquid engine

@@ -244,6 +244,29 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
     );
   }
 
+  /**
+   * Create a skill in src/skills/ (new architecture)
+   * skillPath should be the full path like "frontend/framework/react (@vince)"
+   */
+  async function createSkillInSource(
+    skillPath: string,
+    config: { name: string; description: string; content?: string },
+  ) {
+    const skillDir = path.join(projectRoot, "src", "skills", skillPath);
+    await mkdir(skillDir, { recursive: true });
+
+    await writeFile(
+      path.join(skillDir, "SKILL.md"),
+      `---
+name: ${config.name}
+description: ${config.description}
+---
+
+${config.content || `# ${config.name}\n\nSkill content here.`}
+`,
+    );
+  }
+
   // =============================================================================
   // compileStackPlugin - Main Function Tests
   // =============================================================================
@@ -258,19 +281,21 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         tools: ["Read", "Write", "Glob"],
       });
 
+      // Create skill in src/skills/ (new architecture)
+      const skillPath = "frontend/framework/react (@vince)";
+      await createSkillInSource(skillPath, {
+        name: "react",
+        description: "React development skills",
+      });
+
       const stackId = uniqueStackId();
-      const stackDir = await createStack(stacksDir, stackId, {
+      await createStack(stacksDir, stackId, {
         name: "Test Stack",
         version: "1.0.0",
         author: "@test",
         description: "A test stack",
         agents: ["frontend-developer"],
-        skills: [{ id: "react", preloaded: true }],
-      });
-
-      await createSkillInStack(stackDir, "react", {
-        name: "react",
-        description: "React development skills",
+        skills: [{ id: skillPath, preloaded: true }],
       });
 
       const result = await compileStackPlugin({
@@ -619,26 +644,30 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         tools: ["Read"],
       });
 
+      // Create skills in src/skills/ (new architecture)
+      const reactPath = "frontend/framework/react (@vince)";
+      const tsPath = "frontend/language/typescript (@vince)";
+
+      await createSkillInSource(reactPath, {
+        name: "react",
+        description: "React development",
+      });
+
+      await createSkillInSource(tsPath, {
+        name: "typescript",
+        description: "TypeScript development",
+      });
+
       const stackId = uniqueStackId();
-      const stackDir = await createStack(stacksDir, stackId, {
+      await createStack(stacksDir, stackId, {
         name: "Test Stack",
         version: "1.0.0",
         author: "@test",
         agents: ["frontend-developer"],
         skills: [
-          { id: "react", preloaded: true },
-          { id: "typescript", preloaded: false },
+          { id: reactPath, preloaded: true },
+          { id: tsPath, preloaded: false },
         ],
-      });
-
-      await createSkillInStack(stackDir, "react", {
-        name: "react",
-        description: "React development",
-      });
-
-      await createSkillInStack(stackDir, "typescript", {
-        name: "typescript",
-        description: "TypeScript development",
       });
 
       const result = await compileStackPlugin({
@@ -1034,26 +1063,30 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         tools: ["Read"],
       });
 
+      // Create skills in src/skills/ (new architecture)
+      const reactPath = "frontend/framework/react (@vince)";
+      const zustandPath = "frontend/client-state-management/zustand (@vince)";
+
+      await createSkillInSource(reactPath, {
+        name: "react",
+        description: "React development",
+      });
+
+      await createSkillInSource(zustandPath, {
+        name: "zustand",
+        description: "State management",
+      });
+
       const stackId = uniqueStackId();
-      const stackDir = await createStack(stacksDir, stackId, {
+      await createStack(stacksDir, stackId, {
         name: "Test Stack",
         version: "1.0.0",
         author: "@test",
         agents: ["frontend-developer"],
         skills: [
-          { id: "react", preloaded: true },
-          { id: "zustand", preloaded: false },
+          { id: reactPath, preloaded: true },
+          { id: zustandPath, preloaded: false },
         ],
-      });
-
-      await createSkillInStack(stackDir, "react", {
-        name: "react",
-        description: "React development",
-      });
-
-      await createSkillInStack(stackDir, "zustand", {
-        name: "zustand",
-        description: "State management",
       });
 
       const result = await compileStackPlugin({

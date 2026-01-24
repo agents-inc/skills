@@ -839,13 +839,13 @@ skill_aliases:
   # ─────────────────────────────────────────────────────────────────
   # Frameworks (actual skill IDs from the skills directory)
   # ─────────────────────────────────────────────────────────────────
-  react: "frontend/react (@vince)"
+  react: "frontend/framework/react (@vince)"
   vue: "frontend/framework/vue-composition-api (@vince)"
-  angular: "frontend/angular-standalone (@vince)"
+  angular: "frontend/framework/angular-standalone (@vince)"
   solidjs: "frontend/framework/solidjs (@vince)"
 
   # Meta-frameworks
-  nextjs-app-router: "frontend/nextjs-app-router (@vince)"
+  nextjs-app-router: "frontend/framework/nextjs-app-router (@vince)"
   nextjs-server-actions: "frontend/framework/nextjs-server-actions (@vince)"
   remix: "frontend/framework/remix (@vince)"
   nuxt: "frontend/framework/nuxt (@vince)"
@@ -853,28 +853,28 @@ skill_aliases:
   # ─────────────────────────────────────────────────────────────────
   # Styling
   # ─────────────────────────────────────────────────────────────────
-  scss-modules: "frontend/styling-scss-modules (@vince)"
-  tailwind: "frontend/styling-tailwind (@vince)"
+  scss-modules: "frontend/styling/scss-modules (@vince)"
+  tailwind: "frontend/styling/tailwind (@vince)"
   cva: "frontend/styling/cva (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Client State
   # ─────────────────────────────────────────────────────────────────
-  zustand: "frontend/state-zustand (@vince)"
+  zustand: "frontend/client-state-management/zustand (@vince)"
   redux-toolkit: "frontend/client-state-management/redux-toolkit (@vince)"
-  mobx: "frontend/state-mobx (@vince)"
-  pinia: "frontend/state-pinia (@vince)"
+  mobx: "frontend/client-state-management/mobx (@vince)"
+  pinia: "frontend/client-state-management/pinia (@vince)"
   ngrx-signalstore: "frontend/client-state-management/ngrx-signalstore (@vince)"
-  # Note: jotai skill does not exist yet
+  jotai: "frontend/client-state-management/jotai (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Server State / Data Fetching
   # ─────────────────────────────────────────────────────────────────
-  react-query: "frontend/server-state-react-query (@vince)"
-  swr: "frontend/swr (@vince)"
-  graphql-apollo: "frontend/graphql-apollo (@vince)"
-  graphql-urql: "frontend/graphql-urql (@vince)"
-  trpc: "frontend/trpc (@vince)"
+  react-query: "frontend/server-state-management/react-query (@vince)"
+  swr: "frontend/data-fetching/swr (@vince)"
+  graphql-apollo: "frontend/data-fetching/graphql-apollo (@vince)"
+  graphql-urql: "frontend/data-fetching/graphql-urql (@vince)"
+  trpc: "frontend/data-fetching/trpc (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Forms & Validation
@@ -886,55 +886,55 @@ skill_aliases:
   # ─────────────────────────────────────────────────────────────────
   # Testing
   # ─────────────────────────────────────────────────────────────────
-  vitest: "frontend/testing-vitest (@vince)"
+  vitest: "frontend/testing/vitest (@vince)"
   playwright-e2e: "frontend/testing/playwright-e2e (@vince)"
   cypress-e2e: "frontend/testing/cypress-e2e (@vince)"
   react-testing-library: "frontend/testing/react-testing-library (@vince)"
   vue-test-utils: "frontend/testing/vue-test-utils (@vince)"
 
   # Mocking
-  msw: "frontend/mocks-msw (@vince)"
+  msw: "frontend/mocks/msw (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # UI Components
   # ─────────────────────────────────────────────────────────────────
-  shadcn-ui: "frontend/ui-shadcn-ui (@vince)"
-  tanstack-table: "frontend/ui-tanstack-table (@vince)"
-  # Note: radix-ui skill does not exist yet
+  shadcn-ui: "frontend/ui/shadcn-ui (@vince)"
+  tanstack-table: "frontend/ui/tanstack-table (@vince)"
+  radix-ui: "frontend/ui/radix-ui (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Backend
   # ─────────────────────────────────────────────────────────────────
-  hono: "backend/api-hono (@vince)"
-  express: "backend/api-express (@vince)"
-  fastify: "backend/api-fastify (@vince)"
+  hono: "backend/api/hono (@vince)"
+  express: "backend/api/express (@vince)"
+  fastify: "backend/api/fastify (@vince)"
 
-  drizzle: "backend/database-drizzle (@vince)"
-  prisma: "backend/database-prisma (@vince)"
+  drizzle: "backend/database/drizzle (@vince)"
+  prisma: "backend/database/prisma (@vince)"
 
-  better-auth: "backend/auth-better-auth+drizzle+hono (@vince)"
+  better-auth: "backend/auth/better-auth+drizzle+hono (@vince)"
 
-  axiom-pino-sentry: "backend/observability+axiom+pino+sentry (@vince)"
-  posthog: "backend/analytics-posthog (@vince)"
-  posthog-flags: "backend/flags-posthog (@vince)"
+  axiom-pino-sentry: "backend/observability/axiom+pino+sentry (@vince)"
+  posthog: "backend/analytics/posthog-analytics (@vince)"
+  posthog-flags: "backend/flags/posthog-flags (@vince)"
 
-  resend: "backend/email-resend+react-email (@vince)"
+  resend: "backend/email/resend+react-email (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Mobile
   # ─────────────────────────────────────────────────────────────────
   react-native: "mobile/react-native (@vince)"
-  # Note: expo skill does not exist yet
+  expo: "mobile/expo (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Setup
   # ─────────────────────────────────────────────────────────────────
-  turborepo: "setup/monorepo-turborepo (@vince)"
-  tooling: "setup/tooling (@vince)"
-  posthog-setup: "setup/analytics-posthog (@vince)"
+  turborepo: "setup/monorepo/turborepo (@vince)"
+  tooling: "setup/tooling/tooling (@vince)"
+  posthog-setup: "setup/analytics/posthog (@vince)"
   env: "setup/env (@vince)"
-  observability-setup: "setup/observability+axiom+pino+sentry (@vince)"
-  email-setup: "setup/email-resend+react-email (@vince)"
+  observability-setup: "setup/observability/axiom+pino+sentry (@vince)"
+  email-setup: "setup/email/resend (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Additional Skills (Animation, PWA, Realtime, etc.)
@@ -943,8 +943,8 @@ skill_aliases:
   css-animations: "frontend/animation/css-animations (@vince)"
   view-transitions: "frontend/animation/view-transitions (@vince)"
   storybook: "frontend/tooling/storybook (@vince)"
-  error-boundaries: "frontend/error-boundaries (@vince)"
-  accessibility: "frontend/accessibility (@vince)"
+  error-boundaries: "frontend/error-handling/error-boundaries (@vince)"
+  accessibility: "frontend/accessibility/accessibility (@vince)"
   websockets: "frontend/realtime/websockets (@vince)"
   sse: "frontend/realtime/sse (@vince)"
   socket-io: "frontend/realtime/socket-io (@vince)"
@@ -952,8 +952,8 @@ skill_aliases:
   file-upload: "frontend/file-upload/file-upload-patterns (@vince)"
   image-handling: "frontend/files/image-handling (@vince)"
   date-fns: "frontend/utilities/date-fns (@vince)"
-  github-actions: "backend/ci-cd-github-actions (@vince)"
-  backend-testing: "backend/testing (@vince)"
-  backend-performance: "backend/performance (@vince)"
-  frontend-performance: "frontend/performance (@vince)"
+  github-actions: "backend/ci-cd/github-actions (@vince)"
+  backend-testing: "backend/testing/testing (@vince)"
+  backend-performance: "backend/performance/performance (@vince)"
+  frontend-performance: "frontend/performance/performance (@vince)"
   security: "security/security (@vince)"

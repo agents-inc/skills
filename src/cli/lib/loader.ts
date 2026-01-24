@@ -117,6 +117,7 @@ export async function loadAllAgents(
 /**
  * Load skills from a stack's embedded skills directory
  * Scans stacks/{stackId}/skills/**\/SKILL.md for Phase 1 architecture
+ * @deprecated Use loadSkillsByIds instead - stacks no longer embed skills
  */
 export async function loadStackSkills(
   stackId: string,
@@ -126,6 +127,12 @@ export async function loadStackSkills(
   const skills: Record<string, SkillDefinition> = {};
   const dirs = getDirs(mode);
   const stackSkillsDir = path.join(projectRoot, dirs.stacks, stackId, "skills");
+
+  // Check if skills directory exists (backward compatibility)
+  if (!(await directoryExists(stackSkillsDir))) {
+    verbose(`No embedded skills directory for stack ${stackId}`);
+    return skills;
+  }
 
   const files = await glob("**/SKILL.md", stackSkillsDir);
 
@@ -158,6 +165,47 @@ export async function loadStackSkills(
     };
 
     verbose(`Loaded stack skill: ${skillId} from ${file}`);
+  }
+
+  return skills;
+}
+
+/**
+ * Load skills from src/skills/ based on skill IDs from stack config
+ * Skill IDs should match directory paths exactly (e.g., "frontend/framework/react (@vince)")
+ */
+export async function loadSkillsByIds(
+  skillIds: Array<{ id: string }>,
+  projectRoot: string,
+): Promise<Record<string, SkillDefinition>> {
+  const skills: Record<string, SkillDefinition> = {};
+  const skillsDir = path.join(projectRoot, DIRS.skills);
+
+  for (const { id: skillId } of skillIds) {
+    const skillPath = path.join(skillsDir, skillId);
+    const skillMdPath = path.join(skillPath, "SKILL.md");
+
+    try {
+      const content = await readFile(skillMdPath);
+      const frontmatter = parseFrontmatter(content);
+
+      if (!frontmatter) {
+        console.warn(
+          `  Warning: Skipping ${skillId}: Missing or invalid frontmatter`,
+        );
+        continue;
+      }
+
+      skills[skillId] = {
+        path: `${DIRS.skills}/${skillId}/`,
+        name: extractDisplayName(frontmatter.name),
+        description: frontmatter.description,
+      };
+
+      verbose(`Loaded skill: ${skillId}`);
+    } catch (error) {
+      console.warn(`  Warning: Could not load skill ${skillId}: ${error}`);
+    }
   }
 
   return skills;

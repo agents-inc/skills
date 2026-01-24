@@ -13,14 +13,14 @@ skills:
   # Mobile
   - id: mobile/react-native (@vince)
   # Frontend (shared with mobile)
-  - id: frontend/state-zustand (@vince)
-  - id: frontend/server-state-react-query (@vince)
+  - id: frontend/client-state-management/zustand (@vince)
+  - id: frontend/server-state-management/react-query (@vince)
   - id: frontend/forms/react-hook-form (@vince)
   - id: frontend/forms/zod-validation (@vince)
   # Shared
   - id: shared/reviewing (@vince)
   # Research
-  - id: research/research-methodology (@vince)
+  - id: research/research-methodology/research-methodology (@vince)
 
 agents:
   - frontend-developer
@@ -36,9 +36,9 @@ agent_skills:
       - id: mobile/react-native (@vince)
         preloaded: true
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: frontend/client-state-management/zustand (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: frontend/server-state-management/react-query (@vince)
     forms:
       - id: frontend/forms/react-hook-form (@vince)
       - id: frontend/forms/zod-validation (@vince)
@@ -48,9 +48,9 @@ agent_skills:
       - id: mobile/react-native (@vince)
         preloaded: true
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: frontend/client-state-management/zustand (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: frontend/server-state-management/react-query (@vince)
     forms:
       - id: frontend/forms/react-hook-form (@vince)
       - id: frontend/forms/zod-validation (@vince)
@@ -65,21 +65,21 @@ agent_skills:
 
   pm:
     research:
-      - id: research/research-methodology (@vince)
+      - id: research/research-methodology/research-methodology (@vince)
         preloaded: true
     mobile:
       - id: mobile/react-native (@vince)
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: frontend/client-state-management/zustand (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: frontend/server-state-management/react-query (@vince)
     forms:
       - id: frontend/forms/react-hook-form (@vince)
       - id: frontend/forms/zod-validation (@vince)
 
   orchestrator:
     research:
-      - id: research/research-methodology (@vince)
+      - id: research/research-methodology/research-methodology (@vince)
         preloaded: true
 
   frontend-researcher:
@@ -87,14 +87,14 @@ agent_skills:
       - id: mobile/react-native (@vince)
         preloaded: true
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: frontend/client-state-management/zustand (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: frontend/server-state-management/react-query (@vince)
     forms:
       - id: frontend/forms/react-hook-form (@vince)
       - id: frontend/forms/zod-validation (@vince)
     research:
-      - id: research/research-methodology (@vince)
+      - id: research/research-methodology/research-methodology (@vince)
         preloaded: true
 
 philosophy: "One codebase, iOS and Android"
