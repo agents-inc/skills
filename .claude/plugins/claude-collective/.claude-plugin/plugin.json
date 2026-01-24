@@ -1,8 +1,0 @@
-{
-  "name": "claude-collective",
-  "version": "1.0.0",
-  "license": "MIT",
-  "skills": "./skills/",
-  "description": "Claude Collective plugin with switchable skill stacks",
-  "agents": "./agents/"
-}

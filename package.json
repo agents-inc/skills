@@ -17,7 +17,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "cc:init": "bun src/cli/index.ts init",
-    "cc:add": "bun src/cli/index.ts add",
+    "cc:edit": "bun src/cli/index.ts edit",
     "cc:update": "bun src/cli/index.ts update",
     "cc:compile": "bun src/cli/index.ts compile",
     "cc:compile:fullstack": "bun src/cli/index.ts compile -s fullstack-react",
