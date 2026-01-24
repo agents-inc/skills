@@ -29,7 +29,7 @@ Global Options:
 | ---------- | ------------------------------------------------ | -------- |
 | `init`     | Create new stack (first one also creates plugin) | Core     |
 | `switch`   | Switch active stack (copies skills to plugin)    | Core     |
-| `add`      | Add skill to active stack                        | Core     |
+| `edit`     | Edit skills in active stack (add/remove)         | Core     |
 | `list`     | List all stacks with active marker               | Core     |
 | `compile`  | Recompile agents after manual skill edits        | Core     |
 | `update`   | Update skills from source                        | Core     |
@@ -48,8 +48,6 @@ Global Options:
 
 | Command     | Description                           |
 | ----------- | ------------------------------------- |
-| `remove`    | Remove a skill from a stack           |
-| `swap`      | Swap one skill for another            |
 | `outdated`  | Check for available skill updates     |
 | `customize` | Add custom principles to a plugin     |
 | `publish`   | Contribute a skill to the marketplace |
@@ -124,34 +122,39 @@ cc init --name my-stack --source github:myorg/my-skills
 Switch to a different stack. Copies skills from stack to plugin.
 
 ```bash
-cc switch <stack-name>
+cc switch [stack-name]
 ```
+
+**Arguments:**
+
+- `stack-name` - Stack name to switch to (optional - shows interactive selector if omitted)
 
 **What it does:**
 
-1. Validates stack exists in `.claude-collective/stacks/<name>/`
-2. Removes `.claude/plugins/claude-collective/skills/`
-3. Copies from `.claude-collective/stacks/<name>/skills/` to plugin
-4. Updates `active_stack` in config
+1. If no stack name provided, shows interactive selector with all stacks
+2. Validates stack exists in `.claude-collective/stacks/<name>/`
+3. Removes `.claude/plugins/claude-collective/skills/`
+4. Copies from `.claude-collective/stacks/<name>/skills/` to plugin
+5. Updates `active_stack` in config
 
 **Examples:**
 
 ```bash
-# Switch to work stack
-cc switch work-stack
+# Show interactive stack selector
+cc switch
 
-# Switch to home stack
-cc switch home-stack
+# Switch directly to work stack
+cc switch work-stack
 ```
 
 ---
 
-### `add`
+### `edit`
 
-Add a skill to the active stack. Updates both stack and plugin.
+Edit skills in the active stack. Opens the full skill selection wizard with current skills pre-selected. Allows adding and removing skills in a single operation.
 
 ```bash
-cc add <skill-name> [options]
+cc edit [options]
 
 Options:
   --source <url>     Marketplace source URL
@@ -161,19 +164,20 @@ Options:
 **What it does:**
 
 1. Gets active stack from config
-2. Errors if no active stack
-3. Fetches skill from marketplace
-4. Copies to `.claude-collective/stacks/<active>/skills/`
-5. Runs switch logic to update plugin
+2. Loads current skills from stack
+3. Opens skill wizard with current skills pre-selected
+4. Shows changes (added/removed skills) before confirming
+5. Updates stack and plugin with new selection
+6. Recompiles agents with updated skills
 
 **Examples:**
 
 ```bash
-# Add a skill to active stack
-cc add zustand
+# Edit skills in active stack
+cc edit
 
-# Add skill from specific source
-cc add custom-skill --source github:myorg/my-skills
+# Edit with specific source
+cc edit --source github:myorg/my-skills
 ```
 
 ---
@@ -403,22 +407,6 @@ cc generate-marketplace
 ## Lowest Priority Commands
 
 These commands are planned but not yet implemented:
-
-### `remove`
-
-Remove a skill from a stack.
-
-```bash
-cc remove <skill-name>
-```
-
-### `swap`
-
-Replace one skill with another.
-
-```bash
-cc swap <old-skill> <new-skill>
-```
 
 ### `outdated`
 

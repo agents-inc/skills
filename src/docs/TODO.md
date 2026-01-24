@@ -1,7 +1,7 @@
 # Outstanding Tasks
 
 > **Generated**: 2026-01-21
-> **Updated**: 2026-01-24
+> **Updated**: 2026-01-24 (added Agent Plugins to Phase C)
 > **Purpose**: Single source of truth for all outstanding work
 >
 > **Architecture Status**: Implementation complete. See [plugins/INDEX.md](./plugins/INDEX.md) for complete documentation.
@@ -112,29 +112,41 @@ Test 4: Roundtrip (Manual)
 
 > These require the CLI to fetch from remote marketplace.
 
-| Order | Task                      | Description                                                             | Status                |
-| ----- | ------------------------- | ----------------------------------------------------------------------- | --------------------- |
-| C1    | Phase 6: Schema Dist      | GitHub raw URLs, SchemaStore PR                                         | Not Started           |
-| C2    | Phase 7: Private Repos    | Configurable source, auth, pre-flight checks                            | Partial (config done) |
-| C3    | Phase 8: Multi-Source     | Community + private skills composition                                  | Not Started           |
-| C4    | Phase 9: Skill Reorg      | Separate PhotoRoom from community skills                                | Not Started           |
-| C5    | Custom principles support | `cc customize --principles` for user-added principles merged on compile | Not Started           |
-| C6    | `cc doctor`               | Diagnose connectivity/auth issues                                       | Not Started           |
-| C7    | `cc eject`                | Local export or GitHub fork for full independence                       | Not Started           |
+| Order | Task                      | Description                                                                 | Status                |
+| ----- | ------------------------- | --------------------------------------------------------------------------- | --------------------- |
+| C1    | Phase 6: Schema Dist      | GitHub raw URLs, SchemaStore PR                                             | Not Started           |
+| C2    | Phase 7: Private Repos    | Configurable source, auth, pre-flight checks                                | Partial (config done) |
+| C3    | Phase 8: Multi-Source     | Community + private skills composition                                      | Not Started           |
+| C4    | Phase 9: Skill Reorg      | Separate PhotoRoom from community skills                                    | Not Started           |
+| C5    | Custom principles support | `cc customize --principles` for user-added principles merged on compile     | Not Started           |
+| C6    | `cc doctor`               | Diagnose connectivity/auth issues                                           | Not Started           |
+| C7    | `cc eject`                | Local export or GitHub fork for full independence                           | Not Started           |
+| C8    | Agent plugins             | Agents become individually installable plugins in marketplace               | Not Started           |
+| C9    | `cc add <agent>`          | Install individual agents (e.g., `cc add pattern-scout`)                    | Not Started           |
+| C10   | Essential vs optional     | Stacks install ~9-10 essential agents; optional agents installed separately | Not Started           |
+
+**Agent Plugins Architecture (C8-C10):**
+
+- **Essential agents** (~9-10): frontend-developer, backend-developer, frontend-reviewer, backend-reviewer, frontend-researcher, backend-researcher, pm, orchestrator, tester
+- **Optional agents** (~6): architecture, pattern-scout, pattern-critique, agent-summoner, skill-summoner, documentor
+- Stacks install essential agents by default; users add optional agents via `cc add <agent-name>`
 
 #### Lower Priority (Any Phase)
 
-| Priority | Task                       | Description                                                                                                                  | Status                                     |
-| -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| High     | Investigate Claude tasks   | Research Claude Code's task system                                                                                           | **DONE** (RULES-TASKS-INTEGRATION-PLAN.md) |
-| High     | Claude simplifier hook     | Add hook that simplifies/improves Claude's responses or workflow                                                             | Not Started                                |
-| High     | Context forking for skills | Add `context: fork` + `agent:` frontmatter for isolated skill execution                                                      | Not Started                                |
-| High     | Path-scoped rules          | Compile skills with `paths:` to `.claude/rules/` for intelligent context loading                                             | Not Started                                |
-| Medium   | Stack-specific CLAUDE.md   | Handle per-stack CLAUDE.md files. Options: embed in config.yaml, use rules instead, or copy from stack folder during compile | Not Started                                |
-| Medium   | Permission generation      | Generate permission rules from agent `tools:` definitions with wildcard support                                              | Not Started                                |
-| Medium   | Progressive disclosure     | Restructure skills into Tier 1/2/3 for token-efficient loading                                                               | Not Started                                |
-| Medium   | CLI branding               | ASCII art logo + animated mascot on startup                                                                                  | Not Started                                |
-| Low      | Thinking budget per agent  | Add `recommended_thinking:` to agent.yaml, CLI sets MAX_THINKING_TOKENS on invoke                                            | Not Started                                |
+| Priority | Task                        | Description                                                                                                                                     | Status                                     |
+| -------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| High     | Investigate Claude tasks    | Research Claude Code's task system                                                                                                              | **DONE** (RULES-TASKS-INTEGRATION-PLAN.md) |
+| High     | Claude simplifier hook      | Add hook that simplifies/improves Claude's responses or workflow                                                                                | Not Started                                |
+| High     | Context forking for skills  | Add `context: fork` + `agent:` frontmatter for isolated skill execution                                                                         | Not Started                                |
+| High     | Path-scoped rules           | Compile skills with `paths:` to `.claude/rules/` for intelligent context loading                                                                | Not Started                                |
+| Medium   | Stack-specific CLAUDE.md    | Handle per-stack CLAUDE.md files. Options: embed in config.yaml, use rules instead, or copy from stack folder during compile                    | Not Started                                |
+| Medium   | Permission generation       | Generate permission rules from agent `tools:` definitions with wildcard support                                                                 | Not Started                                |
+| Medium   | Progressive disclosure      | Restructure skills into Tier 1/2/3 for token-efficient loading                                                                                  | Not Started                                |
+| Medium   | CLI branding                | ASCII art logo + animated mascot on startup                                                                                                     | Not Started                                |
+| Low      | Thinking budget per agent   | Add `recommended_thinking:` to agent.yaml, CLI sets MAX_THINKING_TOKENS on invoke                                                               | Not Started                                |
+| Medium   | Agent partials refactor     | Review agent partials (workflow.md, intro.md, examples.md) - improve naming, modularity, and structure                                          | Not Started                                |
+| High     | Agent frontmatter skills    | Compiled agents have `skills:` in frontmatter that don't match actual skill names - fix skill ID resolution                                     | Not Started                                |
+| Medium   | Edit wizard deselection bug | `cc edit` with pre-selected skills: cannot deselect skills that have dependents (e.g., framework). Need to cascade deselection or show warning. | Not Started                                |
 
 ### 2. Testing & CI/CD
 
@@ -226,7 +238,7 @@ Test 4: Roundtrip (Manual)
 
 | Status          | Count |
 | --------------- | ----- |
-| **Outstanding** | 36    |
+| **Outstanding** | 42    |
 | **Deferred**    | 13    |
 | **Completed**   | 36    |
 
@@ -236,6 +248,7 @@ Test 4: Roundtrip (Manual)
 
 | Date       | Decision                         | Rationale                                                                                                                                                                |
 | ---------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-01-24 | Agents as individual plugins     | **Future**: Agents will be standalone installable plugins. Stacks install ~9-10 essential agents; users can add others via `cc add agent-name`.                          |
 | 2026-01-24 | Plugin-based versioning          | Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml`. Single versioning model for all artifacts.                               |
 | 2026-01-24 | Stack-based architecture         | Skills stored in `.claude-collective/stacks/` (project-local), single plugin at `.claude/plugins/claude-collective/` (project-local). `cc switch` for instant switching. |
 | 2026-01-24 | Dual marketplace model           | Public marketplace (community, latest) + private/company marketplaces (pinned versions). Enables reproducibility and guardrails.                                         |
