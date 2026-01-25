@@ -318,9 +318,10 @@ describe("Integration: Full Stack Pipeline", () => {
     // Should reference skill plugins
     expect(result.skillPlugins.length).toBeGreaterThan(0);
 
-    // All skill plugin references should be in correct format
+    // Skill references now use canonical frontmatter names (e.g., "frontend/react (@vince)")
     for (const skillPlugin of result.skillPlugins) {
-      expect(skillPlugin).toMatch(/^skill-/);
+      // Should be in format: category/name (@author)
+      expect(skillPlugin).toMatch(/^[a-z]+\/[a-z0-9+\-]+ \(@\w+\)$/i);
     }
   });
 
@@ -584,17 +585,14 @@ describe("Integration: End-to-End Pipeline", () => {
       projectRoot: PROJECT_ROOT,
     });
 
-    // All skill plugin references should be in correct format (skill-xxx)
-    // Note: Stack skill IDs are transformed to plugin names, which may not
-    // match the actual compiled plugins since stack configs use different
-    // naming conventions than the filesystem structure
+    // Skill references now use canonical frontmatter names (e.g., "frontend/react (@vince)")
+    // This preserves category prefixes for disambiguation and author attribution
     expect(stackResult.skillPlugins.length).toBeGreaterThan(0);
 
     for (const skillPlugin of stackResult.skillPlugins) {
-      // All references should start with "skill-"
-      expect(skillPlugin).toMatch(/^skill-/);
-      // Should be kebab-case (lowercase with hyphens and + for composite skills)
-      expect(skillPlugin).toMatch(/^skill-[a-z0-9+]+(-[a-z0-9+]+)*$/);
+      // Should be in format: category/name (@author)
+      // Examples: "frontend/react (@vince)", "backend/api-hono (@vince)"
+      expect(skillPlugin).toMatch(/^[a-z]+\/[a-z0-9+\-]+ \(@\w+\)$/i);
     }
 
     consoleSpy.mockRestore();
@@ -616,18 +614,32 @@ describe("Integration: End-to-End Pipeline", () => {
       projectRoot: PROJECT_ROOT,
     });
 
-    // Get skill plugin names from compiled plugins
+    // Get skill plugin names from compiled plugins (format: "skill-xxx")
     const compiledPluginNames = new Set(
       skillResults.map((r) => r.manifest.name),
     );
 
-    // Find skills that match between stack references and compiled plugins
-    // by comparing base skill names (without "skill-" prefix)
+    // Stack skill references now use canonical frontmatter names (e.g., "frontend/react (@vince)")
+    // Compiled plugins use "skill-xxx" format (e.g., "skill-react")
+    // To compare, extract the base name from both:
+    // - Stack: "frontend/react (@vince)" -> "react"
+    // - Plugin: "skill-react" -> "react"
+    const extractBaseName = (id: string) => {
+      // For canonical IDs like "frontend/react (@vince)"
+      // Split by "/" and take last part, then remove " (@author)"
+      if (id.includes("/")) {
+        const lastPart = id.split("/").pop() || id;
+        return lastPart.replace(/\s*\(@\w+\)$/, "").trim();
+      }
+      // For plugin names like "skill-react"
+      return id.replace(/^skill-/, "");
+    };
+
     const stackBaseNames = new Set(
-      stackResult.skillPlugins.map((s) => s.replace(/^skill-/, "")),
+      stackResult.skillPlugins.map(extractBaseName),
     );
     const compiledBaseNames = new Set(
-      skillResults.map((r) => r.manifest.name.replace(/^skill-/, "")),
+      skillResults.map((r) => extractBaseName(r.manifest.name)),
     );
 
     // There should be SOME overlap between stack skill references and compiled skills

@@ -203,6 +203,7 @@ async function buildIdToDirectoryPathMap(
  * Skill IDs can be either:
  * - Canonical IDs (frontmatter names like "frontend/react (@vince)")
  * - Directory paths (like "frontend/framework/react (@vince)") - for backward compatibility
+ * - Directory prefixes (like "methodology/universal") - loads ALL skills under that directory
  */
 export async function loadSkillsByIds(
   skillIds: Array<{ id: string }>,
@@ -213,8 +214,39 @@ export async function loadSkillsByIds(
 
   // Build mapping from skill IDs (including frontmatter names) to directory paths
   const idToDirectoryPath = await buildIdToDirectoryPathMap(skillsDir);
+  const allSkillIds = Object.keys(idToDirectoryPath);
+
+  // Expand directory references to individual skills
+  const expandedSkillIds: string[] = [];
 
   for (const { id: skillId } of skillIds) {
+    // Try as specific skill first
+    if (idToDirectoryPath[skillId]) {
+      expandedSkillIds.push(skillId);
+    } else {
+      // Try as directory prefix - find all skills that start with this path
+      // Check if any skill path (not canonical ID) starts with the given prefix
+      const childSkills = allSkillIds.filter((id) => {
+        const dirPath = idToDirectoryPath[id];
+        // Match directory paths that start with the prefix
+        return dirPath.startsWith(skillId + "/");
+      });
+
+      if (childSkills.length > 0) {
+        expandedSkillIds.push(...childSkills);
+        verbose(
+          `Expanded directory '${skillId}' to ${childSkills.length} skills`,
+        );
+      } else {
+        console.warn(`  Warning: Unknown skill reference '${skillId}'`);
+      }
+    }
+  }
+
+  // Deduplicate (in case of overlapping references)
+  const uniqueSkillIds = [...new Set(expandedSkillIds)];
+
+  for (const skillId of uniqueSkillIds) {
     // Resolve the skill ID to a directory path
     const directoryPath = idToDirectoryPath[skillId];
     if (!directoryPath) {
@@ -244,6 +276,7 @@ export async function loadSkillsByIds(
         path: `${DIRS.skills}/${directoryPath}/`,
         name: extractDisplayName(frontmatter.name),
         description: frontmatter.description,
+        canonicalId,
       };
 
       // Add under canonical ID (frontmatter name)

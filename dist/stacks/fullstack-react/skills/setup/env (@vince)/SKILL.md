@@ -17,7 +17,7 @@ description: Environment configuration, Zod validation
 
 **(You MUST validate ALL environment variables with Zod at application startup)**
 
-**(You MUST use framework-specific prefixes for client-side variables - NEXT*PUBLIC*\* for Next.js, VITE\_\* for Vite)**
+**(You MUST use framework-specific prefixes for client-side variables - NEXT_PUBLIC_\* for Next.js, VITE_\* for Vite)**
 
 **(You MUST maintain .env.example templates with ALL required variables documented)**
 
@@ -54,7 +54,6 @@ description: Environment configuration, Zod validation
 - .env.example templates for documentation and onboarding
 
 **Detailed Resources:**
-
 - For code examples, see [examples/](examples/) folder:
   - [examples/core.md](examples/core.md) - Essential patterns (per-app .env, Zod validation)
   - [examples/t3-env.md](examples/t3-env.md) - T3 Env pattern for Next.js/Vite (recommended)
@@ -228,17 +227,14 @@ Use framework-specific prefixes for client-side variables and SCREAMING_SNAKE_CA
 #### Framework Prefixes
 
 **Next.js:**
-
 - `NEXT_PUBLIC_*` - Client-side accessible (embedded in bundle) - use for API URLs, public keys, feature flags
 - No prefix - Server-side only (database URLs, secret keys, API tokens)
 
 **Vite:**
-
 - `VITE_*` - Client-side accessible (embedded in bundle) - use for API URLs, public configuration
 - No prefix - Build-time only (not exposed to client)
 
 **Node.js/Server:**
-
 - `NODE_ENV` - Standard environment (`development`, `production`, `test`)
 - `PORT` - Server port number
 - No prefix - All variables available server-side
@@ -259,8 +255,8 @@ See [examples/naming-and-templates.md](examples/naming-and-templates.md) for com
 - **T3 Env**: Recommended wrapper for Zod validation with client/server separation (`@t3-oss/env-nextjs`, `@t3-oss/env-core`)
 - **Turborepo**: Declare shared env vars in turbo.json for cache invalidation (see setup/monorepo/basic.md)
 - **CI/CD**: GitHub Secrets, Vercel Environment Variables for production secrets (see backend/ci-cd/basic.md)
-- **Next.js**: Automatic .env file loading with NEXT*PUBLIC*\* prefix for client-side
-- **Vite**: Automatic .env file loading with VITE\_\* prefix for client-side
+- **Next.js**: Automatic .env file loading with NEXT_PUBLIC_* prefix for client-side
+- **Vite**: Automatic .env file loading with VITE_* prefix for client-side
 
 **Replaces / Conflicts with:**
 
@@ -301,19 +297,16 @@ See [reference.md](reference.md) for complete decision frameworks including feat
 ## RED FLAGS
 
 **High Priority Issues:**
-
 - Committing secrets to version control (.env files with real credentials)
 - Using environment variables directly without Zod validation (causes runtime errors)
-- Using NEXT*PUBLIC*_ or VITE\__ prefix for secrets (embeds in client bundle)
+- Using NEXT_PUBLIC_* or VITE_* prefix for secrets (embeds in client bundle)
 
 **Medium Priority Issues:**
-
 - Missing .env.example documentation (poor onboarding experience)
 - Using production secrets in development (security risk)
 - Root-level .env in monorepo (causes conflicts)
 
 **Gotchas:**
-
 - Next.js/Vite embed prefixed variables at **build time**, not runtime - requires rebuild to change
 - Environment variables are strings - use `z.coerce.number()` for numbers, use `z.stringbool()` for booleans (Zod 4+)
 - **CRITICAL:** `z.coerce.boolean()` converts "false" to `true` (string is truthy) - use `z.stringbool()` instead
@@ -334,7 +327,7 @@ See [reference.md](reference.md) for complete RED FLAGS, anti-patterns, and chec
 
 **(You MUST validate ALL environment variables with Zod at application startup)**
 
-**(You MUST use framework-specific prefixes for client-side variables - NEXT*PUBLIC*\* for Next.js, VITE\_\* for Vite)**
+**(You MUST use framework-specific prefixes for client-side variables - NEXT_PUBLIC_\* for Next.js, VITE_\* for Vite)**
 
 **(You MUST maintain .env.example templates with ALL required variables documented)**
 

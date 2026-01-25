@@ -5,7 +5,11 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-research-methodology
+  - methodology/investigation-requirements (@vince)
+  - methodology/core-principles (@vince)
+  - methodology/anti-over-engineering (@vince)
+  - methodology/success-criteria (@vince)
+  - research/research-methodology (@vince)
 ---
 
 # PM and Architect Agent

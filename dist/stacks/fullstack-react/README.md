@@ -37,33 +37,44 @@ This stack includes the following agents:
 - `frontend-researcher`
 - `backend-researcher`
 
-## Required Skill Plugins
+## Included Skills
 
-Agents in this stack reference the following skill plugins (install separately):
+This stack includes the following skills:
 
-- `skill-accessibility`
-- `skill-analytics-posthog`
-- `skill-api-hono`
-- `skill-auth-better-auth+drizzle+hono`
-- `skill-ci-cd-github-actions`
-- `skill-database-drizzle`
-- `skill-email-resend+react-email`
-- `skill-env`
-- `skill-flags-posthog`
-- `skill-mocks-msw`
-- `skill-monorepo-turborepo`
-- `skill-observability+axiom+pino+sentry`
-- `skill-performance`
-- `skill-react`
-- `skill-research-methodology`
-- `skill-reviewing`
-- `skill-security`
-- `skill-server-state-react-query`
-- `skill-state-zustand`
-- `skill-styling-scss-modules`
-- `skill-testing`
-- `skill-testing-vitest`
-- `skill-tooling`
+- `backend/analytics-posthog (@vince)`
+- `backend/api-hono (@vince)`
+- `backend/auth-better-auth+drizzle+hono (@vince)`
+- `backend/ci-cd-github-actions (@vince)`
+- `backend/database-drizzle (@vince)`
+- `backend/email-resend+react-email (@vince)`
+- `backend/flags-posthog (@vince)`
+- `backend/observability+axiom+pino+sentry (@vince)`
+- `backend/performance (@vince)`
+- `backend/testing (@vince)`
+- `frontend/accessibility (@vince)`
+- `frontend/mocks-msw (@vince)`
+- `frontend/performance (@vince)`
+- `frontend/react (@vince)`
+- `frontend/server-state-react-query (@vince)`
+- `frontend/state-zustand (@vince)`
+- `frontend/styling-scss-modules (@vince)`
+- `frontend/testing-vitest (@vince)`
+- `methodology/anti-over-engineering (@vince)`
+- `methodology/context-management (@vince)`
+- `methodology/core-principles (@vince)`
+- `methodology/improvement-protocol (@vince)`
+- `methodology/investigation-requirements (@vince)`
+- `methodology/success-criteria (@vince)`
+- `methodology/write-verification (@vince)`
+- `research/research-methodology (@vince)`
+- `reviewing/reviewing (@vince)`
+- `security/security (@vince)`
+- `setup/analytics-posthog (@vince)`
+- `setup/email-resend+react-email (@vince)`
+- `setup/env (@vince)`
+- `setup/monorepo-turborepo (@vince)`
+- `setup/observability+axiom+pino+sentry (@vince)`
+- `setup/tooling (@vince)`
 
 ## Philosophy
 

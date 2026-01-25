@@ -14,6 +14,8 @@ export interface SkillDefinition {
   path: string;
   name: string;
   description: string;
+  /** Canonical skill ID from frontmatter (e.g., "frontend/react (@vince)") */
+  canonicalId: string;
 }
 
 /**

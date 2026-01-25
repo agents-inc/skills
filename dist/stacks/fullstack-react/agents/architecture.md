@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-monorepo-turborepo
+  - setup/monorepo-turborepo (@vince)
 ---
 
 # Architecture Agent

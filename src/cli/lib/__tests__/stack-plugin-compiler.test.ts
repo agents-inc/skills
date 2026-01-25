@@ -687,8 +687,9 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         projectRoot,
       });
 
-      expect(result.skillPlugins).toContain("skill-react");
-      expect(result.skillPlugins).toContain("skill-typescript");
+      // Skill plugins now use canonical frontmatter names (preserves category and author)
+      expect(result.skillPlugins).toContain("frontend/react (@vince)");
+      expect(result.skillPlugins).toContain("frontend/typescript (@vince)");
     });
 
     it("should return correct manifest structure", async () => {
@@ -1114,9 +1115,10 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       const readmePath = path.join(result.pluginPath, "README.md");
       const readmeContent = await readFile(readmePath, "utf-8");
 
-      expect(readmeContent).toContain("## Required Skill Plugins");
-      expect(readmeContent).toContain("`skill-react`");
-      expect(readmeContent).toContain("`skill-state-zustand`");
+      // README now uses "Included Skills" with canonical IDs
+      expect(readmeContent).toContain("## Included Skills");
+      expect(readmeContent).toContain("`frontend/react (@vince)`");
+      expect(readmeContent).toContain("`frontend/state-zustand (@vince)`");
     });
   });
 
@@ -1133,7 +1135,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         manifest: { name: "test-stack", version: "1.0.0" },
         stackName: "Test Stack",
         agents: ["frontend-developer"],
-        skillPlugins: ["skill-react"],
+        skillPlugins: ["frontend/react (@vince)"],
         hasHooks: false,
       };
 
@@ -1187,23 +1189,27 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         manifest: { name: "test-stack" },
         stackName: "Test Stack",
         agents: ["frontend-developer"],
-        skillPlugins: ["skill-react", "skill-zustand", "skill-typescript"],
+        skillPlugins: [
+          "frontend/react (@vince)",
+          "frontend/state-zustand (@vince)",
+          "frontend/typescript (@vince)",
+        ],
         hasHooks: false,
       };
 
       printStackCompilationSummary(result);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Skill plugins referenced: 3"),
+        expect.stringContaining("Skills included: 3"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("skill-react"),
+        expect.stringContaining("frontend/react (@vince)"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("skill-zustand"),
+        expect.stringContaining("frontend/state-zustand (@vince)"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("skill-typescript"),
+        expect.stringContaining("frontend/typescript (@vince)"),
       );
 
       consoleSpy.mockRestore();
@@ -1223,9 +1229,9 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       printStackCompilationSummary(result);
 
-      // Check that "Skill plugins referenced" was never called
+      // Check that "Skills included" was never called
       const calls = consoleSpy.mock.calls.flat().join("\n");
-      expect(calls).not.toContain("Skill plugins referenced");
+      expect(calls).not.toContain("Skills included");
 
       consoleSpy.mockRestore();
     });

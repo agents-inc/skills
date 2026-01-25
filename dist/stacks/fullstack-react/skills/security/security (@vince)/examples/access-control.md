@@ -3,7 +3,6 @@
 > CODEOWNERS, branch protection, and rate limiting patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Related Examples:**
-
 - [core.md](core.md) - Essential patterns (secrets, CSRF, cookies)
 - [xss-prevention.md](xss-prevention.md) - XSS protection, DOMPurify, CSP headers
 - [dependency-security.md](dependency-security.md) - Dependabot, CI security checks
@@ -74,17 +73,15 @@ packages/auth/* @jane-engineer
 ```yaml
 # Branch protection configuration (via GitHub API or UI)
 {
-  "required_pull_request_reviews":
-    {
-      "required_approving_review_count": 2,
-      "require_code_owner_reviews": true,
-      "dismiss_stale_reviews": true,
-    },
-  "required_status_checks":
-    {
-      "strict": true,
-      "contexts": ["ci/test", "ci/lint", "ci/type-check", "ci/security-audit"],
-    },
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 2,
+    "require_code_owner_reviews": true,
+    "dismiss_stale_reviews": true,
+  },
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["ci/test", "ci/lint", "ci/type-check", "ci/security-audit"]
+  },
   "enforce_admins": true,
   "restrictions": null,
 }
@@ -161,10 +158,7 @@ class RateLimitedClient {
 }
 
 // Usage
-const api = new RateLimitedClient(
-  MAX_REQUESTS_PER_WINDOW,
-  RATE_LIMIT_WINDOW_MS,
-);
+const api = new RateLimitedClient(MAX_REQUESTS_PER_WINDOW, RATE_LIMIT_WINDOW_MS);
 ```
 
 **Why good:** Prevents hitting server rate limits and getting 429 errors, queuing provides better UX than failing requests, named constants make rate limit policy auditable, sliding window prevents burst requests
@@ -181,9 +175,8 @@ async function sendMessage(message: string) {
 }
 
 // BAD: Magic numbers
-if (this.requestsInWindow >= 100) {
-  // What's the policy?
-  await new Promise((resolve) => setTimeout(resolve, 60000)); // Why 60 seconds?
+if (this.requestsInWindow >= 100) { // What's the policy?
+  await new Promise(resolve => setTimeout(resolve, 60000)); // Why 60 seconds?
 }
 ```
 

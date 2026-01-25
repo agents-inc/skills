@@ -5,7 +5,7 @@ tools: Read, Write, Glob, Grep, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-research-methodology
+  - research/research-methodology (@vince)
 ---
 
 # Documentor Agent

@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-research-methodology
+  - research/research-methodology (@vince)
 ---
 
 # Pattern Scout Agent

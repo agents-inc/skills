@@ -5,8 +5,8 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-research-methodology
-  - skill-reviewing
+  - research/research-methodology (@vince)
+  - reviewing/reviewing (@vince)
 ---
 
 # Pattern Critique Agent

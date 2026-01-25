@@ -5,9 +5,15 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-testing-vitest
-  - skill-testing
-  - skill-mocks-msw
+  - methodology/investigation-requirements (@vince)
+  - methodology/core-principles (@vince)
+  - methodology/anti-over-engineering (@vince)
+  - methodology/success-criteria (@vince)
+  - methodology/write-verification (@vince)
+  - methodology/improvement-protocol (@vince)
+  - frontend/testing-vitest (@vince)
+  - backend/testing (@vince)
+  - frontend/mocks-msw (@vince)
 ---
 
 # Tester Agent

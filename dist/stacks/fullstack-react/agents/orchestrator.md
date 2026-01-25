@@ -5,7 +5,12 @@ tools: Read, Write, Edit, Grep, Glob, Bash, Task, TaskOutput
 model: opus
 permissionMode: default
 skills:
-  - skill-research-methodology
+  - methodology/investigation-requirements (@vince)
+  - methodology/core-principles (@vince)
+  - methodology/anti-over-engineering (@vince)
+  - methodology/success-criteria (@vince)
+  - methodology/context-management (@vince)
+  - research/research-methodology (@vince)
 ---
 
 # Orchestrator Agent

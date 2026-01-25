@@ -172,18 +172,8 @@ export interface CompiledStackPlugin {
   hasHooks: boolean;
 }
 
-/**
- * Extract skill plugin name from skill ID
- * "frontend/react (@vince)" -> "skill-react"
- * "backend/api-hono (@vince)" -> "skill-api-hono"
- */
-function extractSkillPluginName(skillId: string): string {
-  // Get the last part after the last "/"
-  const lastPart = skillId.split("/").pop() || skillId;
-  // Remove the (@author) suffix
-  const withoutAuthor = lastPart.replace(/\s*\(@\w+\)$/, "").trim();
-  return `skill-${withoutAuthor}`;
-}
+// Skill IDs are now used directly from frontmatter names (e.g., "frontend/react (@vince)")
+// This preserves category prefixes for disambiguation and author attribution
 
 /**
  * Read and concatenate principle files
@@ -274,10 +264,9 @@ export async function compileAgentForPlugin(
   const preloadedSkills = agent.skills.filter((s) => s.preloaded);
   const dynamicSkills = agent.skills.filter((s) => !s.preloaded);
 
-  // IDs for frontmatter - convert to kebab-case plugin references
-  const preloadedSkillIds = preloadedSkills.map((s) =>
-    extractSkillPluginName(s.id),
-  );
+  // IDs for frontmatter - use canonical frontmatter names directly
+  // This preserves category prefixes (frontend/, backend/) and author attribution (@vince)
+  const preloadedSkillIds = preloadedSkills.map((s) => s.id);
 
   verbose(
     `Skills for ${name}: ${preloadedSkills.length} preloaded, ${dynamicSkills.length} dynamic`,
@@ -350,15 +339,13 @@ function generateStackReadme(
   lines.push("");
 
   if (skillPlugins.length > 0) {
-    lines.push("## Required Skill Plugins");
+    lines.push("## Included Skills");
     lines.push("");
-    lines.push(
-      "Agents in this stack reference the following skill plugins (install separately):",
-    );
+    lines.push("This stack includes the following skills:");
     lines.push("");
-    const uniquePlugins = [...new Set(skillPlugins)].sort();
-    for (const plugin of uniquePlugins) {
-      lines.push(`- \`${plugin}\``);
+    const uniqueSkills = [...new Set(skillPlugins)].sort();
+    for (const skill of uniqueSkills) {
+      lines.push(`- \`${skill}\``);
     }
     lines.push("");
   }
@@ -453,33 +440,31 @@ export async function compileStackPlugin(
   const pluginSkillsDir = path.join(pluginDir, "skills");
   await ensureDir(pluginSkillsDir);
 
-  // Copy each skill from src/skills/ to plugin
-  // Uses resolved skills map to get the actual filesystem path
-  for (const skillRef of stack.skills || []) {
-    const skillId = skillRef.id;
-    const resolvedSkill = skills[skillId];
+  // Copy each skill from resolved skills map (which includes expanded directory references)
+  // Track copied skills by source path to avoid duplicates
+  // (loader adds skills under both canonical ID and directory path for backward compatibility)
+  const copiedSourcePaths = new Set<string>();
 
-    if (!resolvedSkill) {
-      console.warn(`  Warning: Skill not found: ${skillId}`);
+  for (const [, resolvedSkill] of Object.entries(skills)) {
+    // Use the resolved skill's path (which is the actual filesystem path)
+    const sourceSkillDir = path.join(projectRoot, resolvedSkill.path);
+
+    // Skip if this source path was already copied (handles dual-key duplicates)
+    if (copiedSourcePaths.has(resolvedSkill.path)) {
       continue;
     }
 
-    // Use the resolved skill's path (which is the actual filesystem path)
-    const sourceSkillDir = path.join(projectRoot, resolvedSkill.path);
-    // Flatten skill path for output: "frontend/react (@vince)" -> "react"
-    const skillName =
-      skillId
-        .split("/")
-        .pop()
-        ?.replace(/\s*\(@\w+\)$/, "")
-        .trim() || skillId;
-    const destSkillDir = path.join(pluginSkillsDir, skillName);
+    // Use the canonical skill ID (from frontmatter) as the directory path
+    // This ensures consistent output regardless of which key (canonical vs directory) we iterate over
+    // Format: "frontend/react (@vince)" -> "skills/frontend/react (@vince)/"
+    const destSkillDir = path.join(pluginSkillsDir, resolvedSkill.canonicalId);
 
     if (await directoryExists(sourceSkillDir)) {
       await copy(sourceSkillDir, destSkillDir);
-      verbose(`  Copied skill: ${skillId} -> ${skillName}`);
+      copiedSourcePaths.add(resolvedSkill.path);
+      verbose(`  Copied skill: ${resolvedSkill.canonicalId}`);
     } else {
-      console.warn(`  Warning: Skill directory not found: ${sourceSkillDir}`);
+      verbose(`  Warning: Skill directory not found: ${sourceSkillDir}`);
     }
   }
 
@@ -505,9 +490,9 @@ export async function compileStackPlugin(
     await writeFile(path.join(agentsDir, `${name}.md`), output);
     compiledAgentNames.push(name);
 
-    // Collect skill plugin references
+    // Collect skill references (using canonical frontmatter names)
     for (const skill of agent.skills) {
-      allSkillPlugins.push(extractSkillPluginName(skill.id));
+      allSkillPlugins.push(skill.id);
     }
 
     verbose(`  Compiled agent: ${name}`);
@@ -595,9 +580,9 @@ export function printStackCompilationSummary(
     console.log(`    - ${agent}`);
   }
   if (result.skillPlugins.length > 0) {
-    console.log(`  Skill plugins referenced: ${result.skillPlugins.length}`);
-    for (const plugin of result.skillPlugins) {
-      console.log(`    - ${plugin}`);
+    console.log(`  Skills included: ${result.skillPlugins.length}`);
+    for (const skill of result.skillPlugins) {
+      console.log(`    - ${skill}`);
     }
   }
   if (result.hasHooks) {

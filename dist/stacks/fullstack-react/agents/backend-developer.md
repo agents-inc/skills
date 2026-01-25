@@ -5,8 +5,14 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-api-hono
-  - skill-database-drizzle
+  - methodology/investigation-requirements (@vince)
+  - methodology/core-principles (@vince)
+  - methodology/anti-over-engineering (@vince)
+  - methodology/success-criteria (@vince)
+  - methodology/write-verification (@vince)
+  - methodology/improvement-protocol (@vince)
+  - backend/api-hono (@vince)
+  - backend/database-drizzle (@vince)
 ---
 
 # Backend Developer Agent

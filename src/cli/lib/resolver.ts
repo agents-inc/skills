@@ -113,8 +113,49 @@ function flattenAgentSkills(
 }
 
 /**
+ * Expand directory references to individual skill IDs
+ * If skillId is a directory prefix (like "methodology/universal"), find all skills under it
+ * If skillId is a specific skill, return it unchanged
+ */
+function expandSkillIdIfDirectory(
+  skillId: string,
+  skills: Record<string, SkillDefinition>,
+): string[] {
+  // If exact match exists, use it
+  if (skills[skillId]) {
+    return [skillId];
+  }
+
+  // Try as directory prefix - find all skills whose paths start with this prefix
+  // Use path as unique key to deduplicate (both frontmatter name and directory path map to same skill)
+  const allSkillIds = Object.keys(skills);
+  const seenPaths = new Set<string>();
+  const matchingSkills: string[] = [];
+
+  for (const id of allSkillIds) {
+    const skillDef = skills[id];
+    // Check if the skill's path starts with the directory prefix
+    if (skillDef.path.startsWith(`src/skills/${skillId}/`)) {
+      // Only add if we haven't seen this path before (deduplication)
+      if (!seenPaths.has(skillDef.path)) {
+        seenPaths.add(skillDef.path);
+        matchingSkills.push(id);
+      }
+    }
+  }
+
+  if (matchingSkills.length > 0) {
+    return matchingSkills;
+  }
+
+  // Return original skillId if no expansion found (will error later)
+  return [skillId];
+}
+
+/**
  * Resolve a stack's skills to skill references for a specific agent
  * Handles hierarchical SkillAssignment objects with preloaded flag
+ * Supports directory references (e.g., "methodology/universal") that expand to all skills under that directory
  */
 export function resolveStackSkills(
   stack: StackConfig,
@@ -129,32 +170,53 @@ export function resolveStackSkills(
     ? flattenAgentSkills(agentSkillCategories)
     : stack.skills;
 
-  // Get list of all valid skill IDs in this stack
-  const validSkillIds = getStackSkillIds(stack.skills);
+  // Get list of all valid skill IDs in this stack (expanded to include directory contents)
+  const validSkillIds = new Set<string>();
+  for (const s of stack.skills) {
+    const expandedIds = expandSkillIdIfDirectory(s.id, skills);
+    for (const id of expandedIds) {
+      validSkillIds.add(id);
+    }
+  }
+
+  // Track already added skills to deduplicate
+  const addedSkills = new Set<string>();
 
   for (const assignment of assignments) {
     const skillId = assignment.id;
 
-    // Validate skill exists in scanned skills
-    if (!skills[skillId]) {
-      throw new Error(
-        `Stack "${stack.name}" references skill "${skillId}" for agent "${agentName}" not found in scanned skills`,
-      );
-    }
+    // Expand directory references to individual skills
+    const expandedSkillIds = expandSkillIdIfDirectory(skillId, skills);
 
-    // Validate skill is in stack's skill list (if using per-agent skills)
-    if (agentSkillCategories && !validSkillIds.includes(skillId)) {
-      throw new Error(
-        `Stack "${stack.name}" agent_skills for "${agentName}" includes skill "${skillId}" not in stack's skills array`,
-      );
-    }
+    for (const expandedId of expandedSkillIds) {
+      // Skip duplicates
+      if (addedSkills.has(expandedId)) {
+        continue;
+      }
 
-    const skillDef = skills[skillId];
-    skillRefs.push({
-      id: skillId,
-      usage: `when working with ${skillDef.name.toLowerCase()}`,
-      preloaded: assignment.preloaded ?? false,
-    });
+      // Validate skill exists in scanned skills
+      if (!skills[expandedId]) {
+        throw new Error(
+          `Stack "${stack.name}" references skill "${expandedId}" for agent "${agentName}" not found in scanned skills`,
+        );
+      }
+
+      // Validate skill is in stack's skill list (if using per-agent skills)
+      if (agentSkillCategories && !validSkillIds.has(expandedId)) {
+        throw new Error(
+          `Stack "${stack.name}" agent_skills for "${agentName}" includes skill "${expandedId}" not in stack's skills array`,
+        );
+      }
+
+      const skillDef = skills[expandedId];
+      skillRefs.push({
+        id: expandedId,
+        usage: `when working with ${skillDef.name.toLowerCase()}`,
+        preloaded: assignment.preloaded ?? false,
+      });
+
+      addedSkills.add(expandedId);
+    }
   }
 
   return skillRefs;

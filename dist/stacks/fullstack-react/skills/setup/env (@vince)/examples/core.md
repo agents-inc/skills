@@ -3,7 +3,6 @@
 > Essential environment configuration patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
-
 - [naming-and-templates.md](naming-and-templates.md) - Framework prefixes, .env.example
 - [security-and-secrets.md](security-and-secrets.md) - Secret management
 - [feature-flags-and-config.md](feature-flags-and-config.md) - Feature flags, centralized config
