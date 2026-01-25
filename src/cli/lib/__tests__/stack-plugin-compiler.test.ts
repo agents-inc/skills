@@ -246,13 +246,14 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
   /**
    * Create a skill in src/skills/ (new architecture)
-   * skillPath should be the full path like "frontend/framework/react (@vince)"
+   * @param directoryPath - filesystem path like "frontend/framework/react (@vince)"
+   * @param config.name - frontmatter name (canonical ID) like "frontend/react (@vince)"
    */
   async function createSkillInSource(
-    skillPath: string,
+    directoryPath: string,
     config: { name: string; description: string; content?: string },
   ) {
-    const skillDir = path.join(projectRoot, "src", "skills", skillPath);
+    const skillDir = path.join(projectRoot, "src", "skills", directoryPath);
     await mkdir(skillDir, { recursive: true });
 
     await writeFile(
@@ -282,9 +283,11 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       });
 
       // Create skill in src/skills/ (new architecture)
-      const skillPath = "frontend/framework/react (@vince)";
-      await createSkillInSource(skillPath, {
-        name: "react",
+      // Directory path is where the files live, frontmatter name is the canonical ID
+      const directoryPath = "frontend/framework/react (@vince)";
+      const frontmatterName = "frontend/react (@vince)";
+      await createSkillInSource(directoryPath, {
+        name: frontmatterName,
         description: "React development skills",
       });
 
@@ -295,7 +298,8 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         author: "@test",
         description: "A test stack",
         agents: ["frontend-developer"],
-        skills: [{ id: skillPath, preloaded: true }],
+        // Reference by canonical ID (frontmatter name)
+        skills: [{ id: frontmatterName, preloaded: true }],
       });
 
       const result = await compileStackPlugin({
@@ -349,9 +353,10 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       expect(manifest.name).toBe(stackId);
       expect(manifest.description).toBe("My custom stack");
-      expect(manifest.version).toBe(1); // Integer versioning (first compile = 1)
-      expect(manifest.content_hash).toMatch(/^[a-f0-9]{7}$/); // 7-char hex hash
-      expect(manifest.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/); // YYYY-MM-DD
+      expect(manifest.version).toBe("1.0.0"); // Semver versioning
+      // content_hash and updated are no longer in manifest - stored internally
+      expect(manifest.content_hash).toBeUndefined();
+      expect(manifest.updated).toBeUndefined();
       expect(manifest.agents).toBe("./agents/");
     });
 
@@ -647,16 +652,19 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       });
 
       // Create skills in src/skills/ (new architecture)
-      const reactPath = "frontend/framework/react (@vince)";
-      const tsPath = "frontend/language/typescript (@vince)";
+      // Directory paths are where files live, frontmatter names are canonical IDs
+      const reactDirPath = "frontend/framework/react (@vince)";
+      const reactCanonicalId = "frontend/react (@vince)";
+      const tsDirPath = "frontend/language/typescript (@vince)";
+      const tsCanonicalId = "frontend/typescript (@vince)";
 
-      await createSkillInSource(reactPath, {
-        name: "react",
+      await createSkillInSource(reactDirPath, {
+        name: reactCanonicalId,
         description: "React development",
       });
 
-      await createSkillInSource(tsPath, {
-        name: "typescript",
+      await createSkillInSource(tsDirPath, {
+        name: tsCanonicalId,
         description: "TypeScript development",
       });
 
@@ -666,9 +674,10 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         version: "1.0.0",
         author: "@test",
         agents: ["frontend-developer"],
+        // Reference by canonical IDs (frontmatter names)
         skills: [
-          { id: reactPath, preloaded: true },
-          { id: tsPath, preloaded: false },
+          { id: reactCanonicalId, preloaded: true },
+          { id: tsCanonicalId, preloaded: false },
         ],
       });
 
@@ -709,8 +718,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       expect(result.manifest.name).toBe(stackId);
       expect(result.manifest.description).toBe("A versioned stack");
-      expect(result.manifest.version).toBe(1); // Integer versioning (first compile = 1)
-      expect(result.manifest.content_hash).toMatch(/^[a-f0-9]{7}$/); // 7-char hex hash
+      expect(result.manifest.version).toBe("1.0.0"); // Semver versioning
       expect(result.manifest.author?.name).toBe("@vince");
     });
 
@@ -1067,16 +1075,20 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       });
 
       // Create skills in src/skills/ (new architecture)
-      const reactPath = "frontend/framework/react (@vince)";
-      const zustandPath = "frontend/client-state-management/zustand (@vince)";
+      // Directory paths are where files live, frontmatter names are canonical IDs
+      const reactDirPath = "frontend/framework/react (@vince)";
+      const reactCanonicalId = "frontend/react (@vince)";
+      const zustandDirPath =
+        "frontend/client-state-management/zustand (@vince)";
+      const zustandCanonicalId = "frontend/state-zustand (@vince)";
 
-      await createSkillInSource(reactPath, {
-        name: "react",
+      await createSkillInSource(reactDirPath, {
+        name: reactCanonicalId,
         description: "React development",
       });
 
-      await createSkillInSource(zustandPath, {
-        name: "zustand",
+      await createSkillInSource(zustandDirPath, {
+        name: zustandCanonicalId,
         description: "State management",
       });
 
@@ -1086,9 +1098,10 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         version: "1.0.0",
         author: "@test",
         agents: ["frontend-developer"],
+        // Reference by canonical IDs (frontmatter names)
         skills: [
-          { id: reactPath, preloaded: true },
-          { id: zustandPath, preloaded: false },
+          { id: reactCanonicalId, preloaded: true },
+          { id: zustandCanonicalId, preloaded: false },
         ],
       });
 
@@ -1103,7 +1116,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       expect(readmeContent).toContain("## Required Skill Plugins");
       expect(readmeContent).toContain("`skill-react`");
-      expect(readmeContent).toContain("`skill-zustand`");
+      expect(readmeContent).toContain("`skill-state-zustand`");
     });
   });
 
@@ -1117,7 +1130,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       const result: CompiledStackPlugin = {
         pluginPath: "/output/test-stack",
-        manifest: { name: "test-stack", version: 1 },
+        manifest: { name: "test-stack", version: "1.0.0" },
         stackName: "Test Stack",
         agents: ["frontend-developer"],
         skillPlugins: ["skill-react"],

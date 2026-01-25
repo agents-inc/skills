@@ -156,8 +156,8 @@ export async function loadStackSkills(
       mode === "dev"
         ? `src/stacks/${stackId}/skills/${folderPath}/`
         : `${dirs.stacks}/${stackId}/skills/${folderPath}/`;
-    // Use directory path as skill ID (matches stack config references)
-    const skillId = folderPath;
+    // Use frontmatter name as canonical skill ID
+    const skillId = frontmatter.name;
 
     skills[skillId] = {
       path: skillPath,
@@ -172,8 +172,37 @@ export async function loadStackSkills(
 }
 
 /**
+ * Build a mapping from frontmatter names (canonical IDs) to directory paths
+ * Scans all SKILL.md files and extracts their frontmatter name
+ */
+async function buildIdToDirectoryPathMap(
+  skillsDir: string,
+): Promise<Record<string, string>> {
+  const map: Record<string, string> = {};
+  const files = await glob("**/SKILL.md", skillsDir);
+
+  for (const file of files) {
+    const fullPath = path.join(skillsDir, file);
+    const content = await readFile(fullPath);
+    const frontmatter = parseFrontmatter(content);
+
+    if (frontmatter?.name) {
+      const directoryPath = file.replace("/SKILL.md", "");
+      // Map frontmatter name (canonical ID) to directory path
+      map[frontmatter.name] = directoryPath;
+      // Also map directory path to itself for backward compatibility
+      map[directoryPath] = directoryPath;
+    }
+  }
+
+  return map;
+}
+
+/**
  * Load skills from src/skills/ based on skill IDs from stack config
- * Skill IDs should match directory paths exactly (e.g., "frontend/framework/react (@vince)")
+ * Skill IDs can be either:
+ * - Canonical IDs (frontmatter names like "frontend/react (@vince)")
+ * - Directory paths (like "frontend/framework/react (@vince)") - for backward compatibility
  */
 export async function loadSkillsByIds(
   skillIds: Array<{ id: string }>,
@@ -182,8 +211,20 @@ export async function loadSkillsByIds(
   const skills: Record<string, SkillDefinition> = {};
   const skillsDir = path.join(projectRoot, DIRS.skills);
 
+  // Build mapping from skill IDs (including frontmatter names) to directory paths
+  const idToDirectoryPath = await buildIdToDirectoryPathMap(skillsDir);
+
   for (const { id: skillId } of skillIds) {
-    const skillPath = path.join(skillsDir, skillId);
+    // Resolve the skill ID to a directory path
+    const directoryPath = idToDirectoryPath[skillId];
+    if (!directoryPath) {
+      console.warn(
+        `  Warning: Could not find skill ${skillId}: No matching skill found`,
+      );
+      continue;
+    }
+
+    const skillPath = path.join(skillsDir, directoryPath);
     const skillMdPath = path.join(skillPath, "SKILL.md");
 
     try {
@@ -197,13 +238,24 @@ export async function loadSkillsByIds(
         continue;
       }
 
-      skills[skillId] = {
-        path: `${DIRS.skills}/${skillId}/`,
+      // Use the canonical ID (frontmatter name) as the primary key
+      const canonicalId = frontmatter.name;
+      const skillDef: SkillDefinition = {
+        path: `${DIRS.skills}/${directoryPath}/`,
         name: extractDisplayName(frontmatter.name),
         description: frontmatter.description,
       };
 
-      verbose(`Loaded skill: ${skillId}`);
+      // Add under canonical ID (frontmatter name)
+      skills[canonicalId] = skillDef;
+
+      // Also add under directory path for backward compatibility
+      // This allows stack configs using either format to work
+      if (directoryPath !== canonicalId) {
+        skills[directoryPath] = skillDef;
+      }
+
+      verbose(`Loaded skill: ${canonicalId} (from ${directoryPath})`);
     } catch (error) {
       console.warn(`  Warning: Could not load skill ${skillId}: ${error}`);
     }
@@ -244,8 +296,8 @@ export async function loadPluginSkills(
     const folderPath = file.replace("/SKILL.md", "");
     // Path is relative to the plugin directory
     const skillPath = `skills/${folderPath}/`;
-    // Use directory path as skill ID (matches stack config references)
-    const skillId = folderPath;
+    // Use frontmatter name as canonical skill ID
+    const skillId = frontmatter.name;
 
     skills[skillId] = {
       path: skillPath,

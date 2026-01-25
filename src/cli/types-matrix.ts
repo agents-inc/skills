@@ -214,18 +214,18 @@ export interface ExtractedSkillMetadata {
   // --- Identity (from SKILL.md frontmatter) ---
 
   /**
-   * Unique skill identifier (directory path)
-   * Format: "category/subcategory/skill-name (@author)"
-   * @example "frontend/framework/react (@vince)"
+   * Unique skill identifier (from frontmatter name)
+   * Format: "category/skill-name (@author)"
+   * @example "frontend/react (@vince)"
    */
   id: string;
 
   /**
-   * Original name from SKILL.md frontmatter
-   * Used for resolving references in metadata.yaml files
-   * @example "frontend/react (@vince)"
+   * Directory path for filesystem access
+   * Used for loading skill files from the filesystem
+   * @example "frontend/framework/react (@vince)"
    */
-  frontmatterName: string;
+  directoryPath: string;
 
   /**
    * Display name derived from id

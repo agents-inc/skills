@@ -99,10 +99,12 @@ try {
 
 ```markdown
 # ANTI-PATTERN: Feedback based on partial reading
-"The validation logic seems incomplete"  <- Didn't read the whole file
+
+"The validation logic seems incomplete" <- Didn't read the whole file
 
 # Later in file (line 145):
-const { validateEmail, validatePhone } = useValidation();  <- Missed this
+
+const { validateEmail, validatePhone } = useValidation(); <- Missed this
 ```
 
 **Why it's wrong:** Incomplete context leads to incorrect feedback, wastes author time addressing non-issues.
@@ -115,6 +117,7 @@ const { validateEmail, validatePhone } = useValidation();  <- Missed this
 
 ```markdown
 # ANTI-PATTERN: No specific location
+
 "This code needs improvement"
 "There are some issues with the types"
 "The error handling could be better"
@@ -130,10 +133,11 @@ const { validateEmail, validatePhone } = useValidation();  <- Missed this
 
 ```markdown
 # ANTI-PATTERN: Everything treated as blocker
+
 - Fix the typo in comment
-- Add security validation  <- Critical!
+- Add security validation <- Critical!
 - Use more descriptive variable name
-- Fix XSS vulnerability  <- Critical!
+- Fix XSS vulnerability <- Critical!
 ```
 
 **Why it's wrong:** Critical issues get lost among trivial ones, PR blocked by minor issues.
@@ -146,6 +150,7 @@ const { validateEmail, validatePhone } = useValidation();  <- Missed this
 
 ```markdown
 # ANTI-PATTERN: No acknowledgment of good work
+
 - Fix line 23
 - Fix line 45
 - Fix line 67

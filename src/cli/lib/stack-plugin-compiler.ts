@@ -30,16 +30,38 @@ import type {
 } from "../../types";
 
 /**
- * Default version for new stack plugins
+ * Default version for new stack plugins (semver format)
  */
-const DEFAULT_VERSION = 1;
+const DEFAULT_VERSION = "1.0.0";
 
 /**
- * Read existing plugin manifest to get previous version and hash
+ * Internal state for tracking content hash between compiles
+ * Hash is stored in a separate .content-hash file alongside plugin.json
+ */
+const CONTENT_HASH_FILE = ".content-hash";
+
+/**
+ * Parse semver string to extract major version number
+ */
+function parseMajorVersion(version: string): number {
+  const match = version.match(/^(\d+)\./);
+  return match ? parseInt(match[1], 10) : 1;
+}
+
+/**
+ * Create a semver string with bumped major version
+ */
+function bumpMajorVersion(version: string): string {
+  const major = parseMajorVersion(version);
+  return `${major + 1}.0.0`;
+}
+
+/**
+ * Read existing plugin manifest to get previous version
  */
 async function readExistingManifest(
   pluginDir: string,
-): Promise<{ version: number; contentHash: string | undefined } | null> {
+): Promise<{ version: string; contentHash: string | undefined } | null> {
   const manifestPath = getPluginManifestPath(pluginDir);
 
   if (!(await fileExists(manifestPath))) {
@@ -49,9 +71,17 @@ async function readExistingManifest(
   try {
     const content = await readFile(manifestPath);
     const manifest = JSON.parse(content) as PluginManifest;
+
+    // Try to read content hash from separate file
+    const hashFilePath = manifestPath.replace("plugin.json", CONTENT_HASH_FILE);
+    let contentHash: string | undefined;
+    if (await fileExists(hashFilePath)) {
+      contentHash = (await readFile(hashFilePath)).trim();
+    }
+
     return {
       version: manifest.version ?? DEFAULT_VERSION,
-      contentHash: manifest.content_hash,
+      contentHash,
     };
   } catch {
     return null;
@@ -82,7 +112,7 @@ function hashStackConfig(stack: StackConfig): string {
 async function determineStackVersion(
   stack: StackConfig,
   pluginDir: string,
-): Promise<{ version: number; contentHash: string; updated: string }> {
+): Promise<{ version: string; contentHash: string }> {
   // Calculate current content hash
   const newHash = hashStackConfig(stack);
 
@@ -94,16 +124,14 @@ async function determineStackVersion(
     return {
       version: DEFAULT_VERSION,
       contentHash: newHash,
-      updated: getCurrentDate(),
     };
   }
 
   if (existing.contentHash !== newHash) {
-    // Content changed - bump version
+    // Content changed - bump major version (1.0.0 -> 2.0.0)
     return {
-      version: existing.version + 1,
+      version: bumpMajorVersion(existing.version),
       contentHash: newHash,
-      updated: getCurrentDate(),
     };
   }
 
@@ -111,7 +139,6 @@ async function determineStackVersion(
   return {
     version: existing.version,
     contentHash: newHash,
-    updated: getCurrentDate(),
   };
 }
 
@@ -427,10 +454,19 @@ export async function compileStackPlugin(
   await ensureDir(pluginSkillsDir);
 
   // Copy each skill from src/skills/ to plugin
+  // Uses resolved skills map to get the actual filesystem path
   for (const skillRef of stack.skills || []) {
     const skillId = skillRef.id;
-    const sourceSkillDir = path.join(projectRoot, DIRS.skills, skillId);
-    // Flatten skill path for output: "frontend/framework/react (@vince)" -> "react"
+    const resolvedSkill = skills[skillId];
+
+    if (!resolvedSkill) {
+      console.warn(`  Warning: Skill not found: ${skillId}`);
+      continue;
+    }
+
+    // Use the resolved skill's path (which is the actual filesystem path)
+    const sourceSkillDir = path.join(projectRoot, resolvedSkill.path);
+    // Flatten skill path for output: "frontend/react (@vince)" -> "react"
     const skillName =
       skillId
         .split("/")
@@ -443,7 +479,7 @@ export async function compileStackPlugin(
       await copy(sourceSkillDir, destSkillDir);
       verbose(`  Copied skill: ${skillId} -> ${skillName}`);
     } else {
-      console.warn(`  Warning: Skill not found: ${skillId}`);
+      console.warn(`  Warning: Skill directory not found: ${sourceSkillDir}`);
     }
   }
 
@@ -497,7 +533,7 @@ export async function compileStackPlugin(
   }
 
   // 11. Determine version based on content hash
-  const { version, contentHash, updated } = await determineStackVersion(
+  const { version, contentHash } = await determineStackVersion(
     stack,
     pluginDir,
   );
@@ -509,8 +545,6 @@ export async function compileStackPlugin(
     description: stack.description,
     author: stack.author,
     version,
-    contentHash,
-    updated,
     keywords: stack.tags,
     hasAgents: true,
     hasHooks,
@@ -518,6 +552,14 @@ export async function compileStackPlugin(
   });
 
   await writePluginManifest(pluginDir, manifest);
+
+  // Write content hash to separate file for internal tracking
+  const hashFilePath = getPluginManifestPath(pluginDir).replace(
+    "plugin.json",
+    CONTENT_HASH_FILE,
+  );
+  await writeFile(hashFilePath, contentHash);
+
   verbose(`  Wrote plugin.json (v${version})`);
 
   // 13. Generate and write README.md

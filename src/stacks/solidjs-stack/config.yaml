@@ -12,15 +12,15 @@ version: "1.0.0"
 skills:
   # Frontend
   - id: frontend/framework/solidjs (@vince)
-  - id: frontend/styling/tailwind (@vince)
-  - id: frontend/testing/vitest (@vince)
+  - id: frontend/styling-tailwind (@vince)
+  - id: frontend/testing-vitest (@vince)
   # Backend
-  - id: backend/api/hono (@vince)
-  - id: backend/database/drizzle (@vince)
+  - id: backend/api-hono (@vince)
+  - id: backend/database-drizzle (@vince)
   # Shared
-  - id: shared/reviewing (@vince)
+  - id: reviewing/reviewing (@vince)
   # Research
-  - id: research/research-methodology/research-methodology (@vince)
+  - id: research/research-methodology (@vince)
 
 agents:
   # Developer agents
@@ -52,17 +52,17 @@ agent_skills:
       - id: frontend/framework/solidjs (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
         preloaded: true
     testing:
-      - id: frontend/testing/vitest (@vince)
+      - id: frontend/testing-vitest (@vince)
 
   backend-developer:
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
         preloaded: true
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
         preloaded: true
 
   frontend-reviewer:
@@ -70,48 +70,48 @@ agent_skills:
       - id: frontend/framework/solidjs (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
         preloaded: true
     testing:
-      - id: frontend/testing/vitest (@vince)
+      - id: frontend/testing-vitest (@vince)
     reviewing:
-      - id: shared/reviewing (@vince)
+      - id: reviewing/reviewing (@vince)
         preloaded: true
 
   backend-reviewer:
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
         preloaded: true
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
         preloaded: true
     reviewing:
-      - id: shared/reviewing (@vince)
+      - id: reviewing/reviewing (@vince)
         preloaded: true
 
   tester:
     testing:
-      - id: frontend/testing/vitest (@vince)
+      - id: frontend/testing-vitest (@vince)
         preloaded: true
 
   pm:
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
     framework:
       - id: frontend/framework/solidjs (@vince)
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
     testing:
-      - id: frontend/testing/vitest (@vince)
+      - id: frontend/testing-vitest (@vince)
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
 
   orchestrator:
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
 
   frontend-researcher:
@@ -119,21 +119,21 @@ agent_skills:
       - id: frontend/framework/solidjs (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
     testing:
-      - id: frontend/testing/vitest (@vince)
+      - id: frontend/testing-vitest (@vince)
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
 
   backend-researcher:
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
         preloaded: true
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
 
 philosophy: "Maximum performance with minimal overhead"

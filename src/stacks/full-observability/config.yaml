@@ -11,21 +11,21 @@ version: "1.0.0"
 
 skills:
   # Frontend
-  - id: frontend/framework/react (@vince)
-  - id: frontend/framework/nextjs-app-router (@vince)
-  - id: frontend/styling/scss-modules (@vince)
-  - id: frontend/client-state-management/zustand (@vince)
-  - id: frontend/server-state-management/react-query (@vince)
+  - id: frontend/react (@vince)
+  - id: frontend/nextjs-app-router (@vince)
+  - id: frontend/styling-scss-modules (@vince)
+  - id: frontend/state-zustand (@vince)
+  - id: frontend/server-state-react-query (@vince)
   # Backend
-  - id: backend/api/hono (@vince)
-  - id: backend/database/drizzle (@vince)
-  - id: backend/auth/better-auth+drizzle+hono (@vince)
-  - id: backend/observability/axiom+pino+sentry (@vince)
-  - id: backend/analytics/posthog-analytics (@vince)
+  - id: backend/api-hono (@vince)
+  - id: backend/database-drizzle (@vince)
+  - id: backend/auth-better-auth+drizzle+hono (@vince)
+  - id: backend/observability+axiom+pino+sentry (@vince)
+  - id: backend/analytics-posthog (@vince)
   # Shared
-  - id: shared/reviewing (@vince)
+  - id: reviewing/reviewing (@vince)
   # Research
-  - id: research/research-methodology/research-methodology (@vince)
+  - id: research/research-methodology (@vince)
 
 agents:
   # Developer agents
@@ -54,135 +54,135 @@ agents:
 agent_skills:
   frontend-developer:
     framework:
-      - id: frontend/framework/react (@vince)
+      - id: frontend/react (@vince)
         preloaded: true
-      - id: frontend/framework/nextjs-app-router (@vince)
+      - id: frontend/nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling/scss-modules (@vince)
+      - id: frontend/styling-scss-modules (@vince)
         preloaded: true
     state:
-      - id: frontend/client-state-management/zustand (@vince)
+      - id: frontend/state-zustand (@vince)
     server-state:
-      - id: frontend/server-state-management/react-query (@vince)
+      - id: frontend/server-state-react-query (@vince)
     auth:
-      - id: backend/auth/better-auth+drizzle+hono (@vince)
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
     analytics:
-      - id: backend/analytics/posthog-analytics (@vince)
+      - id: backend/analytics-posthog (@vince)
 
   backend-developer:
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
         preloaded: true
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
         preloaded: true
     auth:
-      - id: backend/auth/better-auth+drizzle+hono (@vince)
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
     observability:
-      - id: backend/observability/axiom+pino+sentry (@vince)
+      - id: backend/observability+axiom+pino+sentry (@vince)
     analytics:
-      - id: backend/analytics/posthog-analytics (@vince)
+      - id: backend/analytics-posthog (@vince)
 
   frontend-reviewer:
     framework:
-      - id: frontend/framework/react (@vince)
+      - id: frontend/react (@vince)
         preloaded: true
-      - id: frontend/framework/nextjs-app-router (@vince)
+      - id: frontend/nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling/scss-modules (@vince)
+      - id: frontend/styling-scss-modules (@vince)
         preloaded: true
     state:
-      - id: frontend/client-state-management/zustand (@vince)
+      - id: frontend/state-zustand (@vince)
     server-state:
-      - id: frontend/server-state-management/react-query (@vince)
+      - id: frontend/server-state-react-query (@vince)
     reviewing:
-      - id: shared/reviewing (@vince)
+      - id: reviewing/reviewing (@vince)
         preloaded: true
     auth:
-      - id: backend/auth/better-auth+drizzle+hono (@vince)
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
     analytics:
-      - id: backend/analytics/posthog-analytics (@vince)
+      - id: backend/analytics-posthog (@vince)
 
   backend-reviewer:
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
         preloaded: true
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
         preloaded: true
     auth:
-      - id: backend/auth/better-auth+drizzle+hono (@vince)
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
     observability:
-      - id: backend/observability/axiom+pino+sentry (@vince)
+      - id: backend/observability+axiom+pino+sentry (@vince)
     analytics:
-      - id: backend/analytics/posthog-analytics (@vince)
+      - id: backend/analytics-posthog (@vince)
     reviewing:
-      - id: shared/reviewing (@vince)
+      - id: reviewing/reviewing (@vince)
         preloaded: true
 
   tester:
     framework:
-      - id: frontend/framework/react (@vince)
+      - id: frontend/react (@vince)
         preloaded: true
 
   pm:
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
     framework:
-      - id: frontend/framework/react (@vince)
-      - id: frontend/framework/nextjs-app-router (@vince)
+      - id: frontend/react (@vince)
+      - id: frontend/nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling/scss-modules (@vince)
+      - id: frontend/styling-scss-modules (@vince)
     state:
-      - id: frontend/client-state-management/zustand (@vince)
+      - id: frontend/state-zustand (@vince)
     server-state:
-      - id: frontend/server-state-management/react-query (@vince)
+      - id: frontend/server-state-react-query (@vince)
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
     auth:
-      - id: backend/auth/better-auth+drizzle+hono (@vince)
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
     observability:
-      - id: backend/observability/axiom+pino+sentry (@vince)
+      - id: backend/observability+axiom+pino+sentry (@vince)
     analytics:
-      - id: backend/analytics/posthog-analytics (@vince)
+      - id: backend/analytics-posthog (@vince)
 
   orchestrator:
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
 
   frontend-researcher:
     framework:
-      - id: frontend/framework/react (@vince)
+      - id: frontend/react (@vince)
         preloaded: true
-      - id: frontend/framework/nextjs-app-router (@vince)
+      - id: frontend/nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling/scss-modules (@vince)
+      - id: frontend/styling-scss-modules (@vince)
     state:
-      - id: frontend/client-state-management/zustand (@vince)
+      - id: frontend/state-zustand (@vince)
     server-state:
-      - id: frontend/server-state-management/react-query (@vince)
+      - id: frontend/server-state-react-query (@vince)
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
 
   backend-researcher:
     api:
-      - id: backend/api/hono (@vince)
+      - id: backend/api-hono (@vince)
         preloaded: true
     database:
-      - id: backend/database/drizzle (@vince)
+      - id: backend/database-drizzle (@vince)
     auth:
-      - id: backend/auth/better-auth+drizzle+hono (@vince)
+      - id: backend/auth-better-auth+drizzle+hono (@vince)
     observability:
-      - id: backend/observability/axiom+pino+sentry (@vince)
+      - id: backend/observability+axiom+pino+sentry (@vince)
     analytics:
-      - id: backend/analytics/posthog-analytics (@vince)
+      - id: backend/analytics-posthog (@vince)
     research:
-      - id: research/research-methodology/research-methodology (@vince)
+      - id: research/research-methodology (@vince)
         preloaded: true
 
 philosophy: "Know what's happening in production"

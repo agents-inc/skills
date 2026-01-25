@@ -218,9 +218,10 @@ describe("skill-plugin-compiler", () => {
       const manifest = JSON.parse(content);
 
       expect(manifest.name).toBe("skill-zustand");
-      expect(manifest.version).toBe(1);
-      expect(manifest.content_hash).toMatch(/^[a-f0-9]{7}$/);
-      expect(manifest.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(manifest.version).toBe("1.0.0");
+      // content_hash and updated are no longer in manifest - stored internally
+      expect(manifest.content_hash).toBeUndefined();
+      expect(manifest.updated).toBeUndefined();
       expect(manifest.skills).toBe("./skills/");
     });
 
@@ -404,8 +405,7 @@ describe("skill-plugin-compiler", () => {
         outputDir,
       });
 
-      expect(result1.manifest.version).toBe(1);
-      const originalHash = result1.manifest.content_hash;
+      expect(result1.manifest.version).toBe("1.0.0");
 
       // Recompile without changes - version should stay the same
       const result2 = await compileSkillPlugin({
@@ -413,8 +413,7 @@ describe("skill-plugin-compiler", () => {
         outputDir,
       });
 
-      expect(result2.manifest.version).toBe(1);
-      expect(result2.manifest.content_hash).toBe(originalHash);
+      expect(result2.manifest.version).toBe("1.0.0");
 
       // Modify the skill content
       await writeFile(
@@ -427,14 +426,13 @@ description: Simple skill
 # Simple version 2 - updated content`,
       );
 
-      // Recompile with changes - version should bump
+      // Recompile with changes - version should bump major (1.0.0 -> 2.0.0)
       const result3 = await compileSkillPlugin({
         skillPath,
         outputDir,
       });
 
-      expect(result3.manifest.version).toBe(2);
-      expect(result3.manifest.content_hash).not.toBe(originalHash);
+      expect(result3.manifest.version).toBe("2.0.0");
     });
   });
 
@@ -619,8 +617,7 @@ description: Simple skill
 
       for (const result of results) {
         expect(result.manifest.name).toMatch(/^skill-/);
-        expect(result.manifest.version).toBe(1);
-        expect(result.manifest.content_hash).toMatch(/^[a-f0-9]{7}$/);
+        expect(result.manifest.version).toBe("1.0.0");
       }
     });
   });
@@ -636,17 +633,17 @@ description: Simple skill
       const results = [
         {
           pluginPath: "/out/skill-react",
-          manifest: { name: "skill-react", version: 1 },
+          manifest: { name: "skill-react", version: "1.0.0" },
           skillName: "react",
         },
         {
           pluginPath: "/out/skill-zustand",
-          manifest: { name: "skill-zustand", version: 2 },
+          manifest: { name: "skill-zustand", version: "2.0.0" },
           skillName: "zustand",
         },
         {
           pluginPath: "/out/skill-hono",
-          manifest: { name: "skill-hono", version: 3 },
+          manifest: { name: "skill-hono", version: "3.0.0" },
           skillName: "hono",
         },
       ];
@@ -666,12 +663,12 @@ description: Simple skill
       const results = [
         {
           pluginPath: "/out/skill-react",
-          manifest: { name: "skill-react", version: 1 },
+          manifest: { name: "skill-react", version: "1.0.0" },
           skillName: "react",
         },
         {
           pluginPath: "/out/skill-zustand",
-          manifest: { name: "skill-zustand", version: 5 },
+          manifest: { name: "skill-zustand", version: "5.0.0" },
           skillName: "zustand",
         },
       ];
@@ -681,11 +678,15 @@ description: Simple skill
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("skill-react"),
       );
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("v1"));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("v1.0.0"),
+      );
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("skill-zustand"),
       );
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("v5"));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("v5.0.0"),
+      );
 
       consoleSpy.mockRestore();
     });
@@ -708,7 +709,7 @@ description: Simple skill
       const results = [
         {
           pluginPath: "/out/skill-react",
-          manifest: { name: "skill-react", version: 1 },
+          manifest: { name: "skill-react", version: "1.0.0" },
           skillName: "react",
         },
       ];

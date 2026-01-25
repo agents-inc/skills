@@ -1,7 +1,7 @@
 # Outstanding Tasks
 
 > **Generated**: 2026-01-21
-> **Updated**: 2026-01-24 (added Agent Plugins to Phase C)
+> **Updated**: 2026-01-25 (moved hooks to Phase C, added research reference)
 > **Purpose**: Single source of truth for all outstanding work
 >
 > **Architecture Status**: Implementation complete. See [plugins/INDEX.md](./plugins/INDEX.md) for complete documentation.
@@ -27,6 +27,7 @@ These files contain detailed research referenced by this document:
 | `CLI-SIMPLIFIED-ARCHITECTURE.md`                | While-loop wizard design                                  | `.claude/research/findings/v2/` |
 | `SKILLS-MATRIX-STRUCTURE-RESEARCH.md`           | Why relationship-centric beats skill-centric              | `.claude/research/findings/v2/` |
 | `RULES-TASKS-INTEGRATION-PLAN.md`               | **New** - Claude Rules, Tasks, v2.1.x feature integration | `.claude/research/findings/v2/` |
+| `AGENT-HOOKS-RESEARCH.md`                       | **Complete** - Hooks implementation research (Task C11)   | `.claude/research/findings/v2/` |
 
 ---
 
@@ -85,13 +86,12 @@ Test 4: Roundtrip (Manual)
 
 > Complete these while skills and CLI live in same repo. Focus on making CLI work end-to-end.
 
-| Order | Task                       | Description                                                                           | Status      |
-| ----- | -------------------------- | ------------------------------------------------------------------------------------- | ----------- |
-| A4    | Phase 4: Versioning        | Integer version + content hash on compile                                             | Not Started |
-| A5    | Hooks in agent frontmatter | Support PreToolUse/PostToolUse/Stop hooks in agent.yaml, generate hooks.json          | Not Started |
-| A6    | `cc create skill`          | Scaffold new skill + `--generate` flag for inline agent invocation                    | Not Started |
-| A7    | `cc create agent`          | Scaffold new agent + `--generate` flag for inline agent invocation                    | Not Started |
-| A8    | Inline agent invocation    | Test `--agents` JSON flag with model/tools (see cli/CLI-AGENT-INVOCATION-RESEARCH.md) | Partial     |
+| Order | Task                    | Description                                                                           | Status      |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------- | ----------- |
+| A4    | Phase 4: Versioning     | Integer version + content hash on compile                                             | **DONE**    |
+| A5    | `cc create skill`       | Scaffold new skill + `--generate` flag for inline agent invocation                    | Not Started |
+| A6    | `cc create agent`       | Scaffold new agent + `--generate` flag for inline agent invocation                    | Not Started |
+| A7    | Inline agent invocation | Test `--agents` JSON flag with model/tools (see cli/CLI-AGENT-INVOCATION-RESEARCH.md) | Partial     |
 
 #### Phase B: Repo Split (Milestone)
 
@@ -109,18 +109,19 @@ Test 4: Roundtrip (Manual)
 
 > These require the CLI to fetch from remote marketplace.
 
-| Order | Task                      | Description                                                                 | Status                |
-| ----- | ------------------------- | --------------------------------------------------------------------------- | --------------------- |
-| C1    | Phase 6: Schema Dist      | GitHub raw URLs, SchemaStore PR                                             | Not Started           |
-| C2    | Phase 7: Private Repos    | Configurable source, auth, pre-flight checks                                | Partial (config done) |
-| C3    | Phase 8: Multi-Source     | Community + private skills composition                                      | Not Started           |
-| C4    | Phase 9: Skill Reorg      | Separate PhotoRoom from community skills                                    | Not Started           |
-| C5    | Custom principles support | `cc customize --principles` for user-added principles merged on compile     | Not Started           |
-| C6    | `cc doctor`               | Diagnose connectivity/auth issues                                           | Not Started           |
-| C7    | `cc eject`                | Local export or GitHub fork for full independence                           | Not Started           |
-| C8    | Agent plugins             | Agents become individually installable plugins in marketplace               | Not Started           |
-| C9    | `cc add <agent>`          | Install individual agents (e.g., `cc add pattern-scout`)                    | Not Started           |
-| C10   | Essential vs optional     | Stacks install ~9-10 essential agents; optional agents installed separately | Not Started           |
+| Order | Task                       | Description                                                                                                                                   | Status                |
+| ----- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| C1    | Phase 6: Schema Dist       | GitHub raw URLs, SchemaStore PR                                                                                                               | Not Started           |
+| C2    | Phase 7: Private Repos     | Configurable source, auth, pre-flight checks                                                                                                  | Partial (config done) |
+| C3    | Phase 8: Multi-Source      | Community + private skills composition                                                                                                        | Not Started           |
+| C4    | Phase 9: Skill Reorg       | Separate PhotoRoom from community skills                                                                                                      | Not Started           |
+| C5    | Custom principles support  | `cc customize --principles` for user-added principles merged on compile                                                                       | Not Started           |
+| C6    | `cc doctor`                | Diagnose connectivity/auth issues                                                                                                             | Not Started           |
+| C7    | `cc eject`                 | Local export or GitHub fork for full independence                                                                                             | Not Started           |
+| C11   | Hooks in agent frontmatter | Support PreToolUse/PostToolUse/Stop hooks in agent.yaml. See [AGENT-HOOKS-RESEARCH.md](/.claude/research/findings/v2/AGENT-HOOKS-RESEARCH.md) | Not Started           |
+| C8    | Agent plugins              | Agents become individually installable plugins in marketplace                                                                                 | Not Started           |
+| C9    | `cc add <agent>`           | Install individual agents (e.g., `cc add pattern-scout`)                                                                                      | Not Started           |
+| C10   | Essential vs optional      | Stacks install ~9-10 essential agents; optional agents installed separately                                                                   | Not Started           |
 
 **Agent Plugins Architecture (C8-C10):**
 
@@ -134,7 +135,6 @@ Test 4: Roundtrip (Manual)
 | -------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | High     | Investigate Claude tasks    | Research Claude Code's task system                                                                                                              | **DONE** (RULES-TASKS-INTEGRATION-PLAN.md) |
 | High     | Claude simplifier hook      | Add hook that simplifies/improves Claude's responses or workflow                                                                                | Not Started                                |
-| High     | Context forking for skills  | Add `context: fork` + `agent:` frontmatter for isolated skill execution                                                                         | Not Started                                |
 | High     | Path-scoped rules           | Compile skills with `paths:` to `.claude/rules/` for intelligent context loading                                                                | Not Started                                |
 | Medium   | Stack-specific CLAUDE.md    | Handle per-stack CLAUDE.md files. Options: embed in config.yaml, use rules instead, or copy from stack folder during compile                    | Not Started                                |
 | Medium   | Permission generation       | Generate permission rules from agent `tools:` definitions with wildcard support                                                                 | Not Started                                |
@@ -158,8 +158,8 @@ Test 4: Roundtrip (Manual)
 | Priority | Task                           | Description                                                                                                                                                                   | Status      |
 | -------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | HIGH     | Rename skills remove brackets  | Remove parentheses from skill folder names: `react (@vince)` → `react @vince`. Update all stack configs and skills-matrix.yaml accordingly                                    | Not Started |
-| HIGH     | Move reviewing skill category  | Move `shared/reviewing` to `meta/reviewing` or standalone `reviewing` category                                                                                                | Not Started |
-| LOW      | Remove shared category         | Remove `shared` category from skills-matrix.yaml once reviewing is moved. Added as workaround.                                                                                | Not Started |
+| HIGH     | Move reviewing skill category  | Move `shared/reviewing` to `meta/reviewing` or standalone `reviewing` category                                                                                                | **DONE**    |
+| LOW      | Remove shared category         | Remove `shared` category from skills-matrix.yaml once reviewing is moved. Added as workaround.                                                                                | **DONE**    |
 | Medium   | Skill ID: use frontmatter name | Currently using directory path as skill ID (workaround). Refactor to use `frontmatter.name` as canonical ID, update stack configs and skill_aliases to match. See note below. | Not Started |
 | Medium   | `backend/ci-cd/github-actions` | Remove React Query, Zustand references (frontend libs in backend skill)                                                                                                       | Not Started |
 | Medium   | `backend/analytics/posthog`    | Review Better Auth, Email references (non-`+` skill with cross-tech refs)                                                                                                     | Not Started |
@@ -173,15 +173,15 @@ Test 4: Roundtrip (Manual)
 
 ### 4. Versioning
 
-> **IMPORTANT**: Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml`.
-> The existing `versioning.ts` was built before the plugin-based architecture and needs refactoring.
+> **COMPLETED (2026-01-25)**: Integer versioning with content hash in `plugin.json`.
+> See `VERSIONING-IMPROVEMENT-TRACKER.md` for implementation details.
 
 | Priority | Task                         | Description                                                           | Status      |
 | -------- | ---------------------------- | --------------------------------------------------------------------- | ----------- |
-| High     | Refactor versioning.ts       | Output version to `plugin.json` instead of `metadata.yaml`            | Not Started |
+| High     | Refactor versioning.ts       | Output version to `plugin.json` instead of `metadata.yaml`            | **DONE**    |
 | High     | Display version              | Show plugin version in CLI listings (`cc list`, marketplace)          | Not Started |
 | High     | Pre-flight checks            | Token validation before download                                      | Not Started |
-| Medium   | Unified plugin versioning    | Same versioning logic for skills, agents, and stacks                  | Not Started |
+| Medium   | Unified plugin versioning    | Same versioning logic for skills, agents, and stacks                  | **DONE**    |
 | Low      | Archive outdated schemas     | skills.schema.json, registry.schema.json                              | Not Started |
 | Low      | Remove metadata.yaml version | Once plugin.json versioning is complete, remove version from metadata | Not Started |
 
@@ -235,9 +235,9 @@ Test 4: Roundtrip (Manual)
 
 | Status          | Count |
 | --------------- | ----- |
-| **Outstanding** | 39    |
+| **Outstanding** | 35    |
 | **Deferred**    | 13    |
-| **Completed**   | 39    |
+| **Completed**   | 42    |
 
 ---
 
@@ -384,19 +384,18 @@ claude --agents '{"test": {"description": "Test", "prompt": "List files in curre
 | Compiled output validation    | Validates XML tags, frontmatter, template artifacts | Done             |
 | Schema validation             | IDE-only, no runtime Zod                            | Done (AJV added) |
 
-## Versioning (Partially Complete - Needs Refactor)
+## Versioning (COMPLETE)
 
-> **Note (2026-01-24)**: The versioning implementation below predates the plugin-based architecture.
-> Skills, agents, and stacks are ALL plugins now. Version should be in `plugin.json`, NOT `metadata.yaml`.
-> The `versioning.ts` file needs refactoring to output to `plugin.json` instead.
+> **Completed (2026-01-25)**: Integer versioning with content hash in `plugin.json`.
+> See `VERSIONING-IMPROVEMENT-TRACKER.md` for implementation details.
 
-| Task                            | Description                              | Status                                                      |
-| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------- |
-| `skill-frontmatter.schema.json` | Validate SKILL.md frontmatter            | Done                                                        |
-| `agent.schema.json`             | Validate compiled agent frontmatter      | Done (EXISTS at `src/schemas/`)                             |
-| Update schema                   | `metadata.yaml` integer version          | Done but **OUTDATED** - version should be in plugin.json    |
-| Compiler auto-increment         | Version bump on hash change              | Done but **NEEDS REFACTOR** (`versioning.ts` → plugin.json) |
-| Plugin-based versioning         | Version in `plugin.json` for all plugins | **NOT STARTED**                                             |
+| Task                            | Description                                    | Status   |
+| ------------------------------- | ---------------------------------------------- | -------- |
+| `skill-frontmatter.schema.json` | Validate SKILL.md frontmatter                  | Done     |
+| `agent.schema.json`             | Validate compiled agent frontmatter            | Done     |
+| Update plugin.schema.json       | Integer version, content_hash, updated fields  | **DONE** |
+| Compiler auto-increment         | Version bump on hash change in plugin.json     | **DONE** |
+| Plugin-based versioning         | Version in `plugin.json` for skills AND stacks | **DONE** |
 
 ## CLI Implementation (Phase 1-3) - Complete
 

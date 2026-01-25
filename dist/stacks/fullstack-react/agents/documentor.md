@@ -232,9 +232,9 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 - Use when: when working with security
 
 
-### shared/reviewing (@vince)
+### reviewing/reviewing (@vince)
 - Description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
-- Invoke: `skill: "shared/reviewing (@vince)"`
+- Invoke: `skill: "reviewing/reviewing (@vince)"`
 - Use when: when working with reviewing
 
 
