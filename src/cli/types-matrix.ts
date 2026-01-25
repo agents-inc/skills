@@ -256,9 +256,6 @@ export interface ExtractedSkillMetadata {
   /** Author handle for attribution */
   author: string;
 
-  /** Semantic version of the skill content */
-  version: string;
-
   /** Tags for search and filtering */
   tags: string[];
 
@@ -393,8 +390,8 @@ export interface ResolvedSkill {
   /** Author handle */
   author: string;
 
-  /** Semantic version */
-  version: string;
+  /** DEPRECATED: Version now lives in plugin.json. Optional for backward compatibility. */
+  version?: string;
 
   // --- Computed Relationships (populated by resolver) ---
 

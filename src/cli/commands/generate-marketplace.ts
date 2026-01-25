@@ -82,8 +82,9 @@ export const generateMarketplaceCommand = new Command("generate-marketplace")
       console.log(`\nSample plugins:`);
       const sampleSize = 5;
       for (const plugin of marketplace.plugins.slice(0, sampleSize)) {
+        const version = plugin.version ? pc.cyan(`v${plugin.version}`) : "";
         const category = plugin.category ? pc.dim(`[${plugin.category}]`) : "";
-        console.log(`  ${pc.green(plugin.name)} ${category}`);
+        console.log(`  ${pc.green(plugin.name)} ${version} ${category}`);
         if (plugin.description) {
           console.log(`    ${pc.dim(plugin.description)}`);
         }

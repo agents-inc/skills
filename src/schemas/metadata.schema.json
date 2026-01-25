@@ -5,7 +5,13 @@
   "description": "Metadata schema for individual metadata.yaml files (Phase 0B). Identity (name, description) comes from SKILL.md frontmatter. This file contains relationship, catalog, and CLI display data.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["category", "author", "version", "cli_name", "cli_description", "usage_guidance"],
+  "required": [
+    "category",
+    "author",
+    "cli_name",
+    "cli_description",
+    "usage_guidance"
+  ],
   "properties": {
     "category": {
       "$ref": "#/$defs/SkillCategory",
@@ -24,7 +30,7 @@
     },
     "version": {
       "type": "integer",
-      "description": "Integer version of the skill (1, 2, 3, etc.). NOT semantic versioning.",
+      "description": "DEPRECATED: Version now lives in plugin.json. This field is optional for backward compatibility.",
       "minimum": 1,
       "examples": [1, 2, 3]
     },
@@ -40,13 +46,20 @@
       "description": "Brief description (5-6 words max) for CLI display",
       "minLength": 1,
       "maxLength": 60,
-      "examples": ["React component patterns", "Lightweight client state", "Server state with caching"]
+      "examples": [
+        "React component patterns",
+        "Lightweight client state",
+        "Server state with caching"
+      ]
     },
     "usage_guidance": {
       "type": "string",
       "description": "When an AI agent should invoke this skill (decision criteria)",
       "minLength": 10,
-      "examples": ["Use when building React components, hooks, or following React 19 patterns.", "Use when managing global UI state, replacing Context misuse, or handling cross-component state."]
+      "examples": [
+        "Use when building React components, hooks, or following React 19 patterns.",
+        "Use when managing global UI state, replacing Context misuse, or handling cross-component state."
+      ]
     },
     "requires": {
       "type": "array",
@@ -102,7 +115,10 @@
         "$ref": "#/$defs/SkillReference"
       },
       "uniqueItems": true,
-      "examples": [["backend/posthog-analytics", "backend/posthog-flags"], ["backend/resend"]]
+      "examples": [
+        ["backend/posthog-analytics", "backend/posthog-flags"],
+        ["backend/resend"]
+      ]
     },
     "content_hash": {
       "type": "string",
@@ -127,7 +143,7 @@
         },
         "version": {
           "type": "integer",
-          "description": "Upstream version at fork time",
+          "description": "DEPRECATED: Upstream version at fork time. Optional - content_hash is primary identifier.",
           "minimum": 1
         },
         "content_hash": {
@@ -144,7 +160,7 @@
           "description": "Date when forked"
         }
       },
-      "required": ["skill_id", "version", "content_hash", "date"]
+      "required": ["skill_id", "content_hash", "date"]
     }
   },
   "$defs": {
@@ -193,7 +209,11 @@
       "type": "string",
       "description": "Reference to a skill ID (e.g., 'frontend/react (@vince)') or pattern (e.g., 'framework/*')",
       "minLength": 1,
-      "examples": ["frontend/react (@vince)", "backend/api-hono (@vince)", "framework/*"]
+      "examples": [
+        "frontend/react (@vince)",
+        "backend/api-hono (@vince)",
+        "framework/*"
+      ]
     }
   }
 }
