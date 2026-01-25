@@ -65,7 +65,6 @@ agents:
   - pattern-critique
   - documentor
   - architecture
-  - orchestrator
   - frontend-researcher
   - backend-researcher
 
@@ -520,16 +519,6 @@ agent_skills:
       - id: backend/testing (@vince)
     security:
       - id: security/security (@vince)
-
-  orchestrator:
-    methodology:
-      - id: methodology/universal
-        preloaded: true
-      - id: methodology/extended-session
-        preloaded: true
-    research:
-      - id: research/research-methodology (@vince)
-        preloaded: true
 
   frontend-researcher:
     # All frontend + research

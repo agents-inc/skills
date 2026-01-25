@@ -256,7 +256,6 @@ Agents are organized into 7 categories in `src/agents/`:
 | ---------------- | -------------------------------- | --------------------------------------------------------- |
 | **architecture** | `.claude/agents/architecture.md` | Scaffolds new applications with all foundational patterns |
 | **pm**           | `.claude/agents/pm.md`           | Creates detailed implementation specs                     |
-| **orchestrator** | `.claude/agents/orchestrator.md` | Manages background agent execution                        |
 
 ### Meta Agents (Create Other Agents/Skills)
 
@@ -339,18 +338,6 @@ Located in `.claude/research/findings/v2/`:
 | `CLI-PHASE-2-PLAN.md`             | `.claude/research/findings/v2/` | Phase 6+ features (list, create, update)         |
 | `CLI-FRAMEWORK-RESEARCH.md`       | `src/docs/cli/`                 | Framework comparison (@clack vs Ink vs Inquirer) |
 | `CLI-DATA-DRIVEN-ARCHITECTURE.md` | `.claude/research/findings/v2/` | Skills matrix, relationships, MVP dataset        |
-
-### Orchestration Research
-
-Located in `.claude/research/orchestrating/`:
-
-| Document                              | Purpose                            |
-| ------------------------------------- | ---------------------------------- |
-| `landscape-orchestration-patterns.md` | Survey of orchestration approaches |
-| `multi-orchestrator-architecture.md`  | Multi-orchestrator design          |
-| `async-orchestrator-analysis.md`      | Async execution patterns           |
-
----
 
 ## Competitive & Landscape Research
 

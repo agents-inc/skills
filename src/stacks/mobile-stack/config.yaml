@@ -32,7 +32,6 @@ agents:
   - frontend-researcher
   # Planning agents
   - pm
-  - orchestrator
   # Pattern agents
   - pattern-scout
   - pattern-critique
@@ -89,11 +88,6 @@ agent_skills:
     forms:
       - id: frontend/forms/react-hook-form (@vince)
       - id: frontend/forms/zod-validation (@vince)
-
-  orchestrator:
-    research:
-      - id: research/research-methodology (@vince)
-        preloaded: true
 
   frontend-researcher:
     mobile:

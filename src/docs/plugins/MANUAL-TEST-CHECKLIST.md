@@ -20,7 +20,7 @@
 **Tests**:
 
 - [ ] Run `/agents` - verify fullstack-react agents appear
-- [ ] Verify agent count: should see 15 agents (frontend-developer, backend-developer, pm, orchestrator, tester, skill-summoner, agent-summoner, pattern-scout, pattern-critique, documentor, architecture, frontend-researcher, backend-researcher, frontend-reviewer, backend-reviewer)
+- [ ] Verify agent count: should see 14 agents (frontend-developer, backend-developer, pm, tester, skill-summoner, agent-summoner, pattern-scout, pattern-critique, documentor, architecture, frontend-researcher, backend-researcher, frontend-reviewer, backend-reviewer)
 - [ ] Spawn `frontend-developer` agent - verify it loads
 - [ ] Check agent frontmatter has `skills:` array
 - [ ] Run `/skill-react` - verify skill activates
@@ -49,7 +49,7 @@
 - [ ] Plugin created at `~/.claude/plugins/test-fullstack/`
 - [ ] `plugin.json` exists with correct structure
 - [ ] `skills/` directory contains all 28 skills from fullstack-react
-- [ ] `agents/` directory contains 15 compiled agents
+- [ ] `agents/` directory contains 14 compiled agents
 - [ ] Each agent has `skills:` frontmatter
 
 **Cleanup**: `rm -rf ~/.claude/plugins/test-fullstack`
@@ -71,7 +71,7 @@
 
 - [ ] Plugin created at `~/.claude/plugins/test-custom/`
 - [ ] `skills/` directory contains only selected skills
-- [ ] `agents/` directory contains 5 default agents (frontend-developer, backend-developer, pm, orchestrator, tester)
+- [ ] `agents/` directory contains 4 default agents (frontend-developer, backend-developer, pm, tester)
 - [ ] Agents compile without errors
 
 **Cleanup**: `rm -rf ~/.claude/plugins/test-custom`

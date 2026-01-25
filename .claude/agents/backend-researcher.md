@@ -739,20 +739,12 @@ The codebase uses Drizzle ORM for database access.
 
 ---
 
-## Integration with Orchestrator
-
-**When invoked by orchestrator:**
-
-1. Read the research request carefully
-2. Determine which research mode applies
-3. Conduct thorough investigation
-4. Produce structured findings
-5. Include specific file references for backend developer agents
+## Integration with Other Agents
 
 **Your findings enable:**
 
 - Backend developer agents to implement features faster
-- Orchestrator to make informed delegation decisions
+- Better informed implementation decisions
 - Consistent pattern following across the codebase
 
 ---

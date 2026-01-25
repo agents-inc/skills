@@ -28,6 +28,7 @@ import {
 import { promptStackName } from "../lib/stack-creator";
 import { formatSourceOrigin, setActiveStack } from "../lib/config";
 import { copySkillsToStackFromSource } from "../lib/skill-copier";
+import { checkPermissions } from "../lib/permission-checker";
 import {
   createStackConfig,
   createStackConfigFromSuggested,
@@ -65,7 +66,6 @@ const DEFAULT_AGENTS = [
   "backend-researcher",
   // Planning agents
   "pm",
-  "orchestrator",
   // Pattern agents
   "pattern-scout",
   "pattern-critique",
@@ -375,6 +375,9 @@ export const initCommand = new Command("init")
           );
 
           p.outro(pc.green(`Stack "${stackName}" created and activated!`));
+
+          // Check for permission configuration
+          await checkPermissions(projectDir);
         } else {
           // Plugin already exists: just create stack, prompt to switch
           console.log("");
@@ -413,11 +416,17 @@ export const initCommand = new Command("init")
             s.stop("Stack activated");
 
             p.outro(pc.green(`Switched to "${stackName}"!`));
+
+            // Check for permission configuration
+            await checkPermissions(projectDir);
           } else {
             p.log.info(
               `Run ${pc.cyan(`cc switch ${stackName}`)} later to activate this stack.`,
             );
             p.outro(pc.green(`Stack "${stackName}" created successfully!`));
+
+            // Check for permission configuration
+            await checkPermissions(projectDir);
           }
         }
       } catch (error) {
