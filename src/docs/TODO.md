@@ -40,7 +40,7 @@ These files contain detailed research referenced by this document:
 | -------- | ---------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | CRITICAL | Compile ALL stacks           | Test `cc compile-stack` for all stacks (fullstack-react, work-stack)                                 | **DONE** (orphaned mobx-tailwind removed)                                    |
 | CRITICAL | Implement hooks generation   | stack-plugin-compiler.ts needs to generate hooks/hooks.json                                          | **DONE**                                                                     |
-| CRITICAL | Validate stack plugins load  | Manual test: load compiled stack plugin in Claude Code, verify agents work                           | Not Started                                                                  |
+| CRITICAL | Validate stack plugins load  | Manual test: load compiled stack plugin in Claude Code, verify agents work                           | **DONE**                                                                     |
 | HIGH     | Improve error messages       | Better errors for: missing skill references, agent compilation failures, invalid config              | **DONE**                                                                     |
 | HIGH     | Integration test suite       | Full pipeline test: compile-plugins -> validate -> compile-stack -> validate -> generate-marketplace | **DONE** (18 tests)                                                          |
 | MEDIUM   | Verify skill refs in agents  | Compiled agents should have correct `skills:` array in frontmatter                                   | **DONE** (verified 4 agents in fullstack-react/work-stack)                   |
@@ -235,9 +235,9 @@ Test 4: Roundtrip (Manual)
 
 | Status          | Count |
 | --------------- | ----- |
-| **Outstanding** | 42    |
+| **Outstanding** | 39    |
 | **Deferred**    | 13    |
-| **Completed**   | 36    |
+| **Completed**   | 39    |
 
 ---
 
@@ -256,7 +256,7 @@ Test 4: Roundtrip (Manual)
 | 2026-01-23 | Phased task ordering             | Phase A (before split), B (split milestone), C (after split). Clear sequencing prevents blocked work.                                                                    |
 | 2026-01-23 | Architecture finalized           | Marketplace is single source of truth; CLI is thin (no bundled content); `cc init` produces complete plugin with skills + agents                                         |
 | 2026-01-23 | `.claude-collective/` deprecated | Removed - plugins output directly to `.claude/plugins/` (project-local); no intermediate source directory needed                                                         |
-| 2026-01-23 | Lowest priority commands         | `cc remove`, `cc swap`, `cc outdated`, `cc customize` marked as lowest priority; focus on `cc init` and `cc add` first                                                   |
+| 2026-01-23 | Lowest priority commands         | `cc outdated`, `cc customize` marked as lowest priority; `cc edit` replaces `cc add`, `cc remove`, `cc swap`                                                             |
 | 2026-01-23 | Network-based compilation        | All compilation fetches agents/principles/templates from marketplace; no bundled content in CLI                                                                          |
 | 2026-01-23 | Plugin implementation complete   | 6 phases: Schema, Skill-as-Plugin, Marketplace, Stack, CLI, Testing, Docs                                                                                                |
 | 2026-01-23 | Plugin as output format          | CLI compiles to plugin (not .claude/); same flow, output is distributable, versioned, installable                                                                        |
@@ -279,8 +279,9 @@ Test 4: Roundtrip (Manual)
 
 ```bash
 bun src/cli/index.ts init
-bun src/cli/index.ts add
-bun src/cli/index.ts update
+bun src/cli/index.ts edit
+bun src/cli/index.ts switch
+bun src/cli/index.ts list
 ```
 
 ### Compile Plugins
@@ -617,7 +618,7 @@ source: github.com/team/team-skills
 
 ### 7.2 CLI Changes
 
-- `--source <url>` flag on `cc init`, `cc add`, `cc update`
+- `--source <url>` flag on `cc init`, `cc edit`, `cc update`
 - `cc config set source <url>` - set source URL
 - `cc config get source` - show current source
 - `cc config show` - show all effective configuration
@@ -752,25 +753,23 @@ When user runs `cc init` and selects skills/stack:
 6. Compile agents to plugin's `agents/` folder
 7. Generate `.claude-plugin/plugin.json` manifest
 
-### New Commands
+### Commands
 
-| Command                   | Description                                           |
-| ------------------------- | ----------------------------------------------------- |
-| `cc init`                 | Creates complete stack plugin (skills + agents)       |
-| `cc add skill-react`      | Adds skill to stack, recompiles agents                |
-| `cc remove skill-zustand` | Removes skill from stack, recompiles agents           |
-| `cc swap skill-A skill-B` | Swaps skills, recompiles agents                       |
-| `cc update skill-react`   | Updates single skill from upstream, recompiles agents |
-| `cc update --all`         | Updates all skills, recompiles agents                 |
-| `cc outdated`             | Shows which skills have newer versions available      |
+| Command           | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| `cc init`         | Creates complete stack plugin (skills + agents)      |
+| `cc edit`         | Edit skills in stack (add/remove), recompiles agents |
+| `cc switch`       | Switch between stacks                                |
+| `cc list`         | List all stacks with skill counts                    |
+| `cc update --all` | Updates all skills, recompiles agents                |
+| `cc compile`      | Recompile agents manually                            |
+| `cc outdated`     | Shows which skills have newer versions available     |
 
 ### Skill Changes Require Recompilation
 
 Because skills are embedded in compiled agents, **any skill change triggers recompilation**:
 
-- `cc add` → updates config, copies skill, **recompiles agents**
-- `cc remove` → updates config, removes skill, **recompiles agents**
-- `cc swap` → updates config, swaps skills, **recompiles agents**
+- `cc edit` → updates config, adds/removes skills, **recompiles agents**
 - `cc update` → fetches latest, replaces skill, **recompiles agents**
 
 ### Benefits
@@ -895,21 +894,21 @@ Creates:
   .claude/stacks/{name}/skills/...
 ```
 
-**Detection:** If `.claude/stacks/` exists - "Already initialized. Use `cc add` or `cc update`"
+**Detection:** If `.claude/stacks/` exists - "Already initialized. Use `cc init --name <name>` for new stack or `cc edit`"
 
-### `cc add`
+### `cc edit`
 
 ```
-cc add
+cc edit
     |
     v
 ------------------------------
-|  Stack name: my-new-stack   |
-|  (validates kebab-case)     |
+|  Current skills shown       |
+|  as pre-selected            |
 ------------------------------
     | (same wizard as init)
     v
-Creates new stack in .claude/stacks/
+Updates skills in active stack
 ```
 
 ### `cc update`

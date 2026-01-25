@@ -367,8 +367,12 @@ export interface PluginAuthor {
 export interface PluginManifest {
   /** Plugin name in kebab-case (e.g., "skill-react", "stack-modern-react") */
   name: string;
-  /** Semantic version (major.minor.patch) */
-  version?: string;
+  /** Plugin version (auto-incremented when content changes) */
+  version?: number;
+  /** Content hash for change detection (first 7 characters of SHA-256) */
+  content_hash?: string;
+  /** Date when the plugin was last updated (YYYY-MM-DD) */
+  updated?: string;
   /** Brief description of the plugin's purpose */
   description?: string;
   /** Plugin author information */

@@ -100,7 +100,7 @@ describe("plugin-validator", () => {
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: "1.0.0",
+          version: 1,
           description: "A test plugin",
         }),
       );
@@ -160,30 +160,30 @@ describe("plugin-validator", () => {
       expect(result.errors.some((e) => e.includes("kebab-case"))).toBe(true);
     });
 
-    it("should fail if version not semver", async () => {
+    it("should fail if version is not an integer", async () => {
       const manifestPath = path.join(tempDir, "plugin.json");
       await writeFile(
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: "2", // Not valid semver - schema pattern requires x.y.z
+          version: "1.0.0", // String version - should be integer
         }),
       );
 
       const result = await validatePluginManifest(manifestPath);
 
-      // Schema enforces semver pattern, so invalid version is an error
+      // Schema enforces integer type, so string version is an error
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.includes("version"))).toBe(true);
     });
 
-    it("should pass with valid semver version", async () => {
+    it("should pass with valid integer version", async () => {
       const manifestPath = path.join(tempDir, "plugin.json");
       await writeFile(
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: "1.0.0",
+          version: 3,
           description: "Test plugin",
         }),
       );
@@ -191,6 +191,22 @@ describe("plugin-validator", () => {
       const result = await validatePluginManifest(manifestPath);
 
       expect(result.valid).toBe(true);
+    });
+
+    it("should fail if version is less than 1", async () => {
+      const manifestPath = path.join(tempDir, "plugin.json");
+      await writeFile(
+        manifestPath,
+        JSON.stringify({
+          name: "test-plugin",
+          version: 0, // Minimum is 1
+        }),
+      );
+
+      const result = await validatePluginManifest(manifestPath);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("version"))).toBe(true);
     });
 
     it("should warn if description missing", async () => {
@@ -489,7 +505,7 @@ permissionMode: acceptEdits
         path.join(tempDir, ".claude-plugin", "plugin.json"),
         JSON.stringify({
           name: "test-plugin",
-          version: "1.0.0",
+          version: 1,
           description: "A test plugin",
           skills: "./skills/",
           agents: "./agents/",
