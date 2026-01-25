@@ -19,6 +19,8 @@ import {
   getAvailableSkills,
   validateSelection,
   isCategoryAllDisabled,
+  getDependentSkills,
+  resolveAlias,
 } from "./matrix-resolver";
 
 // =============================================================================
@@ -93,6 +95,42 @@ function pushHistory(state: WizardState): void {
 
 function popHistory(state: WizardState): WizardStep | null {
   return state.history.pop() || null;
+}
+
+/**
+ * Recursively collect all skills that depend on the given skill
+ * If deselecting A removes B, and B has dependents C, also includes C
+ */
+function collectAllDependents(
+  skillId: string,
+  currentSelections: string[],
+  matrix: MergedSkillsMatrix,
+): string[] {
+  const allDependents: string[] = [];
+  const visited = new Set<string>();
+  const queue = [skillId];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    // Get direct dependents of current skill
+    const directDependents = getDependentSkills(
+      current,
+      currentSelections,
+      matrix,
+    );
+
+    for (const dependent of directDependents) {
+      if (!visited.has(dependent) && !allDependents.includes(dependent)) {
+        allDependents.push(dependent);
+        queue.push(dependent);
+      }
+    }
+  }
+
+  return allDependents;
 }
 
 // =============================================================================
@@ -664,10 +702,43 @@ export async function runWizard(
             state.selectedSkills.includes(selectedSkillId);
 
           if (alreadySelected) {
-            // Deselect - remove from list
-            const index = state.selectedSkills.indexOf(selectedSkillId);
-            if (index > -1) {
-              state.selectedSkills.splice(index, 1);
+            // Check for dependent skills before deselecting
+            const allDependents = collectAllDependents(
+              selectedSkillId,
+              state.selectedSkills,
+              matrix,
+            );
+
+            if (allDependents.length > 0) {
+              // Show confirmation dialog with dependent skill names
+              const dependentNames = allDependents
+                .map((id) => matrix.skills[id]?.name || id)
+                .join(", ");
+              const skillName =
+                matrix.skills[resolveAlias(selectedSkillId, matrix)]?.name ||
+                selectedSkillId;
+
+              const shouldDeselect = await p.confirm({
+                message: `Deselecting ${skillName} will also remove: ${dependentNames}. Continue?`,
+                initialValue: false,
+              });
+
+              if (p.isCancel(shouldDeselect) || !shouldDeselect) {
+                // User cancelled or said no - keep skill selected
+                continue;
+              }
+
+              // Cascade deselect all dependents
+              const toRemove = new Set([selectedSkillId, ...allDependents]);
+              state.selectedSkills = state.selectedSkills.filter(
+                (id) => !toRemove.has(id),
+              );
+            } else {
+              // No dependents - simple deselect
+              const index = state.selectedSkills.indexOf(selectedSkillId);
+              if (index > -1) {
+                state.selectedSkills.splice(index, 1);
+              }
             }
           } else {
             // Select - if exclusive, remove others from same category first
