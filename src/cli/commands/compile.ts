@@ -146,9 +146,7 @@ async function runPluginModeCompile(
   if (!(await directoryExists(pluginDir))) {
     s.stop("No plugin found");
     p.log.error("No plugin found.");
-    p.log.info(
-      `Run ${pc.cyan("cc init --name <name>")} first to create a plugin.`,
-    );
+    p.log.info(`Run ${pc.cyan("cc init")} first to create a plugin.`);
     process.exit(1);
   }
 

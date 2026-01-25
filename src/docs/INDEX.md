@@ -6,18 +6,19 @@
 
 ## Quick Navigation
 
-| Need to...                               | Read This                                                    |
-| ---------------------------------------- | ------------------------------------------------------------ |
-| Understand how agents/skills compile     | [CLAUDE_ARCHITECTURE_BIBLE.md](#1-claude-architecture-bible) |
-| Write effective prompts                  | [PROMPT_BIBLE.md](#2-prompt-bible)                           |
-| Create AI-optimized documentation        | [DOCUMENTATION_BIBLE.md](#3-documentation-bible)             |
-| Design atomic, portable skills           | [SKILL-ATOMICITY-BIBLE.md](#4-skill-atomicity-bible)         |
-| **Build or extend the CLI**              | [CLI Documentation](#cli-documentation)                      |
-| Create or distribute plugins             | [PLUGIN-DEVELOPMENT.md](#5-plugin-development)               |
-| See all CLI commands                     | [CLI-REFERENCE.md](#cli-reference)                           |
-| Find core principles used by all agents  | [Core Principles](#core-principles-embedded-in-all-agents)   |
-| See compiled agent prompts               | [Agent Definitions](#agent-definitions)                      |
-| Review architecture research & decisions | [Research & Findings](#research--findings)                   |
+| Need to...                                 | Read This                                                    |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| **Understand new simplified architecture** | [SIMPLIFIED-PLUGIN-ARCHITECTURE.md](#architecture-research)  |
+| Understand how agents/skills compile       | [CLAUDE_ARCHITECTURE_BIBLE.md](#1-claude-architecture-bible) |
+| Write effective prompts                    | [PROMPT_BIBLE.md](#2-prompt-bible)                           |
+| Create AI-optimized documentation          | [DOCUMENTATION_BIBLE.md](#3-documentation-bible)             |
+| Design atomic, portable skills             | [SKILL-ATOMICITY-BIBLE.md](#4-skill-atomicity-bible)         |
+| **Build or extend the CLI**                | [CLI Documentation](#cli-documentation)                      |
+| Create or distribute plugins               | [PLUGIN-DEVELOPMENT.md](#5-plugin-development)               |
+| See all CLI commands                       | [CLI-REFERENCE.md](#cli-reference)                           |
+| Find core principles used by all agents    | [Core Principles](#core-principles-embedded-in-all-agents)   |
+| See compiled agent prompts                 | [Agent Definitions](#agent-definitions)                      |
+| Review architecture research & decisions   | [Research & Findings](#research--findings)                   |
 
 ---
 
@@ -295,19 +296,20 @@ Located in `.claude/research/claude-improvements/`:
 
 Located in `.claude/research/findings/v2/`:
 
-| Document                                   | Purpose                                    |
-| ------------------------------------------ | ------------------------------------------ |
-| `ARCHITECTURE-IMPROVEMENT-FINDINGS.md`     | System architecture improvement proposals  |
-| `COMPILATION-PIPELINE-FINDINGS.md`         | Findings on the compilation system         |
-| `PROFILE-SYSTEM-FINDINGS.md`               | Stack switching research                   |
-| `TEMPLATE-ARCHITECTURE-FINDINGS.md`        | Template system design                     |
-| `DRY-PRINCIPLES-AGENT5-FINDINGS.md`        | DRY principles for agents                  |
-| `MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md` | Sonnet vs Opus optimizations               |
-| `SCALABILITY-ANALYSIS.md`                  | Scalability considerations                 |
-| `TYPE-SAFETY-DETAILED.md`                  | TypeScript type safety research            |
-| `FINAL-DECISION.md`                        | Key architectural decisions                |
-| `CLI-DATA-DRIVEN-ARCHITECTURE.md`          | Skills matrix, relationships, eject design |
-| `RULES-TASKS-INTEGRATION-PLAN.md`          | Claude Rules, Tasks, v2.1.x integration    |
+| Document                                   | Purpose                                                         |
+| ------------------------------------------ | --------------------------------------------------------------- |
+| **`SIMPLIFIED-PLUGIN-ARCHITECTURE.md`**    | **CRITICAL: One plugin per project, eliminate stacks**          |
+| `ARCHITECTURE-IMPROVEMENT-FINDINGS.md`     | System architecture improvement proposals                       |
+| `COMPILATION-PIPELINE-FINDINGS.md`         | Findings on the compilation system                              |
+| `PROFILE-SYSTEM-FINDINGS.md`               | Stack switching research (partially obsolete)                   |
+| `TEMPLATE-ARCHITECTURE-FINDINGS.md`        | Template system design                                          |
+| `DRY-PRINCIPLES-AGENT5-FINDINGS.md`        | DRY principles for agents                                       |
+| `MODEL-SPECIFIC-OPTIMIZATIONS-FINDINGS.md` | Sonnet vs Opus optimizations                                    |
+| `SCALABILITY-ANALYSIS.md`                  | Scalability considerations                                      |
+| `TYPE-SAFETY-DETAILED.md`                  | TypeScript type safety research                                 |
+| `FINAL-DECISION.md`                        | Key architectural decisions                                     |
+| `CLI-DATA-DRIVEN-ARCHITECTURE.md`          | Skills matrix, relationships, eject design (partially obsolete) |
+| `RULES-TASKS-INTEGRATION-PLAN.md`          | Claude Rules, Tasks, v2.1.x integration                         |
 
 ### Skill Architecture Research
 

@@ -14,21 +14,6 @@ export const GITHUB_REPO = "claude-collective/claude-collective";
 export const DEFAULT_MATRIX_PATH = "src/config/skills-matrix.yaml";
 
 export const PLUGIN_NAME = "claude-collective";
-export const COLLECTIVE_DIR = ".claude-collective";
-export const COLLECTIVE_STACKS_SUBDIR = "stacks";
-
-// Project directory helpers (everything is project-local)
-export const getProjectCollectiveDir = (): string => {
-  return path.join(process.cwd(), COLLECTIVE_DIR);
-};
-
-export const getProjectStacksDir = (): string => {
-  return path.join(getProjectCollectiveDir(), COLLECTIVE_STACKS_SUBDIR);
-};
-
-// Legacy aliases for backwards compatibility
-export const getUserCollectiveDir = getProjectCollectiveDir;
-export const getUserStacksDir = getProjectStacksDir;
 
 // Plugin directories
 export const CLAUDE_DIR = ".claude";

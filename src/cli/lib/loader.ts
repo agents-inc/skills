@@ -2,7 +2,7 @@ import { parse as parseYaml } from "yaml";
 import path from "path";
 import { glob, readFile, directoryExists } from "../utils/fs";
 import { verbose } from "../utils/logger";
-import { DIRS, COLLECTIVE_DIR, COLLECTIVE_STACKS_SUBDIR } from "../consts";
+import { DIRS } from "../consts";
 import type {
   AgentDefinition,
   AgentYamlConfig,
@@ -12,42 +12,17 @@ import type {
 } from "../types";
 
 /**
- * Compile mode: 'dev' for this repo (src/stacks), 'user' for user projects (.claude-collective/stacks)
+ * Compile mode: 'dev' for this repo (src/stacks)
+ * Note: 'user' mode is deprecated - plugins are now created directly
  */
-export type CompileMode = "dev" | "user";
-
-/**
- * Detect compile mode based on whether .claude-collective/stacks exists
- */
-export async function detectCompileMode(
-  projectRoot: string,
-): Promise<CompileMode> {
-  const collectiveStacksDir = path.join(
-    projectRoot,
-    COLLECTIVE_DIR,
-    COLLECTIVE_STACKS_SUBDIR,
-  );
-  if (await directoryExists(collectiveStacksDir)) {
-    return "user";
-  }
-  return "dev";
-}
+export type CompileMode = "dev";
 
 /**
  * Get directories based on compile mode
+ * Note: Only 'dev' mode is supported in simplified architecture
  */
-export function getDirs(mode: CompileMode) {
-  if (mode === "user") {
-    return {
-      agents: "src/agents", // Always from CLI repo for now
-      skills: `${COLLECTIVE_DIR}/skills`, // Future: user-defined skills
-      stacks: `${COLLECTIVE_DIR}/${COLLECTIVE_STACKS_SUBDIR}`,
-      templates: "src/agents/_templates",
-      commands: "src/commands",
-    } as const;
-  }
-
-  // Dev mode (current behavior)
+export function getDirs(_mode: CompileMode) {
+  // Only dev mode is supported now
   return DIRS;
 }
 
@@ -114,18 +89,17 @@ export async function loadAllAgents(
 }
 
 /**
- * Load skills from a stack's embedded skills directory
+ * Load skills from a stack template's embedded skills directory
  * Scans stacks/{stackId}/skills/**\/SKILL.md for Phase 1 architecture
  * @deprecated Use loadSkillsByIds instead - stacks no longer embed skills
  */
 export async function loadStackSkills(
   stackId: string,
   projectRoot: string,
-  mode: CompileMode = "dev",
+  _mode: CompileMode = "dev",
 ): Promise<Record<string, SkillDefinition>> {
   const skills: Record<string, SkillDefinition> = {};
-  const dirs = getDirs(mode);
-  const stackSkillsDir = path.join(projectRoot, dirs.stacks, stackId, "skills");
+  const stackSkillsDir = path.join(projectRoot, DIRS.stacks, stackId, "skills");
 
   // Check if skills directory exists (backward compatibility)
   if (!(await directoryExists(stackSkillsDir))) {
@@ -148,13 +122,8 @@ export async function loadStackSkills(
     }
 
     const folderPath = file.replace("/SKILL.md", "");
-    // Path points to stack's embedded skill location (full relative path from project root)
-    // For dev mode: src/stacks/{stackId}/skills/{folderPath}/
-    // For user mode: .claude-collective/stacks/{stackId}/skills/{folderPath}/
-    const skillPath =
-      mode === "dev"
-        ? `src/stacks/${stackId}/skills/${folderPath}/`
-        : `${dirs.stacks}/${stackId}/skills/${folderPath}/`;
+    // Path points to stack's embedded skill location
+    const skillPath = `src/stacks/${stackId}/skills/${folderPath}/`;
     // Use frontmatter name as canonical skill ID
     const skillId = frontmatter.name;
 
@@ -162,6 +131,7 @@ export async function loadStackSkills(
       path: skillPath,
       name: extractDisplayName(frontmatter.name),
       description: frontmatter.description,
+      canonicalId: skillId,
     };
 
     verbose(`Loaded stack skill: ${skillId} from ${file}`);
@@ -335,6 +305,7 @@ export async function loadPluginSkills(
       path: skillPath,
       name: extractDisplayName(frontmatter.name),
       description: frontmatter.description,
+      canonicalId: skillId,
     };
 
     verbose(`Loaded plugin skill: ${skillId} from ${file}`);

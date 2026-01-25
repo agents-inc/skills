@@ -467,7 +467,7 @@ function buildResolvedSkill(
 
     // Authorship
     author: skill.author,
-    version: skill.version,
+    // version is deprecated and now lives in plugin.json
 
     // Relationships (forward)
     conflictsWith,

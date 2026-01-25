@@ -4,29 +4,28 @@ A plugin distribution system for Claude Code. Compile skills into distributable 
 
 ## Quick Start
 
-### Build Custom Stack
+### Initialize Plugin
 
 ```bash
-# Create your first stack (also creates the shared plugin)
-cc init --name my-stack
+# Create your plugin (runs interactive wizard)
+cc init
 
 # Select skills through the wizard
 # Outputs to:
-#   ~/.claude-collective/stacks/my-stack/skills/  (source)
 #   ~/.claude/plugins/claude-collective/          (plugin)
 ```
 
-### Managing Stacks
+### Managing Your Plugin
 
 ```bash
-# List all stacks
+# Show plugin information
 cc list
 
-# Switch to a different stack
-cc switch work-stack
+# Edit skills in your plugin
+cc edit
 
-# Add a skill to the active stack
-cc add zustand
+# Recompile agents after changes
+cc compile
 ```
 
 ### Install from Marketplace
@@ -69,25 +68,13 @@ See [marketplace README](./.claude-plugin/README.md) for the full list.
 
 ### Architecture
 
-The CLI uses a stack-based architecture with a single shared plugin:
+The CLI creates a single plugin in your Claude plugins directory:
 
 ```
-~/.claude-collective/                    # SOURCE
-├── config.yaml                          # source, active_stack
-└── stacks/
-    ├── work-stack/
-    │   └── skills/
-    │       ├── react/SKILL.md
-    │       └── hono/SKILL.md
-    └── home-stack/
-        └── skills/
-            ├── react/SKILL.md
-            └── zustand/SKILL.md
-
-~/.claude/plugins/claude-collective/     # OUTPUT
+~/.claude/plugins/claude-collective/     # PLUGIN
 ├── .claude-plugin/plugin.json
 ├── agents/                              # Compiled agents
-├── skills/                              # Active stack's skills
+├── skills/                              # Your selected skills
 ├── CLAUDE.md
 └── README.md
 ```
@@ -95,16 +82,13 @@ The CLI uses a stack-based architecture with a single shared plugin:
 ### CLI Commands
 
 ```bash
-# Create a new stack
-cc init --name my-stack
+# Initialize plugin (interactive wizard)
+cc init
 
-# Switch active stack
-cc switch work-stack
+# Edit skills in your plugin
+cc edit
 
-# Add skill to active stack
-cc add zustand
-
-# List all stacks
+# Show plugin information
 cc list
 
 # Recompile agents after manual edits
@@ -159,9 +143,9 @@ claude-collective/
 bun install
 
 # Run CLI commands
-bun src/cli/index.ts init --name my-stack
-bun src/cli/index.ts switch work-stack
-bun src/cli/index.ts add zustand
+bun src/cli/index.ts init
+bun src/cli/index.ts edit
+bun src/cli/index.ts list
 
 # Compile all plugins (for marketplace)
 bun src/cli/index.ts compile-plugins

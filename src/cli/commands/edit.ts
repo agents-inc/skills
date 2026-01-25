@@ -1,32 +1,26 @@
-import path from "path";
 import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { Liquid } from "liquidjs";
+import { directoryExists, ensureDir, remove } from "../utils/fs";
 import {
-  directoryExists,
-  ensureDir,
-  remove,
-  copy,
-  writeFile,
-} from "../utils/fs";
-import { getUserStacksDir, DIRS } from "../consts";
-import { getCollectivePluginDir } from "../lib/plugin-finder";
-import { getActiveStack, resolveSource } from "../lib/config";
+  getCollectivePluginDir,
+  getPluginSkillsDir,
+  getPluginSkillIds,
+} from "../lib/plugin-finder";
+import { resolveSource } from "../lib/config";
 import { loadSkillsMatrixFromSource } from "../lib/source-loader";
 import {
   runWizard,
   clearTerminal,
   renderSelectionsHeader,
 } from "../lib/wizard";
-import { copySkillsToStackFromSource } from "../lib/skill-copier";
+import { copySkillsToPluginFromSource } from "../lib/skill-copier";
 import { recompileAgents } from "../lib/agent-recompiler";
 import { bumpPluginVersion } from "../lib/plugin-version";
 import { fetchAgentDefinitions } from "../lib/agent-fetcher";
-import { getStackSkillIds } from "../lib/stack-skills";
 
 export const editCommand = new Command("edit")
-  .description("Edit skills in the active stack")
+  .description("Edit skills in the plugin")
   .option(
     "--source <url>",
     "Marketplace source URL (e.g., github:org/repo or local path)",
@@ -37,24 +31,17 @@ export const editCommand = new Command("edit")
   })
   .showHelpAfterError(true)
   .action(async (options) => {
-    // 1. Get active stack
-    const activeStack = await getActiveStack();
+    // 1. Get plugin directory
+    const pluginDir = getCollectivePluginDir();
+    const pluginSkillsDir = getPluginSkillsDir(pluginDir);
 
-    if (!activeStack) {
-      p.log.error("No active stack. Run 'cc init --name <name>' first.");
+    // Check if plugin exists
+    if (!(await directoryExists(pluginDir))) {
+      p.log.error("No plugin found. Run 'cc init' first to set up the plugin.");
       process.exit(1);
     }
 
-    const stackDir = path.join(getUserStacksDir(), activeStack);
-    const stackSkillsDir = path.join(stackDir, "skills");
-
-    if (!(await directoryExists(stackSkillsDir))) {
-      p.log.error(`Stack "${activeStack}" not found.`);
-      p.log.info(`Run ${pc.cyan("cc list")} to see available stacks.`);
-      process.exit(1);
-    }
-
-    p.intro(pc.cyan(`Edit Stack: ${activeStack}`));
+    p.intro(pc.cyan("Edit Plugin Skills"));
 
     const s = p.spinner();
 
@@ -86,15 +73,15 @@ export const editCommand = new Command("edit")
       process.exit(1);
     }
 
-    // 4. Get current stack's skill IDs
+    // 4. Get current plugin's skill IDs
     s.start("Reading current skills...");
     let currentSkillIds: string[];
     try {
-      currentSkillIds = await getStackSkillIds(
-        stackSkillsDir,
+      currentSkillIds = await getPluginSkillIds(
+        pluginSkillsDir,
         sourceResult.matrix,
       );
-      s.stop(`Current stack has ${currentSkillIds.length} skills`);
+      s.stop(`Current plugin has ${currentSkillIds.length} skills`);
     } catch (error) {
       s.stop("Failed to read current skills");
       p.log.error(error instanceof Error ? error.message : String(error));
@@ -143,7 +130,7 @@ export const editCommand = new Command("edit")
 
     if (addedSkills.length === 0 && removedSkills.length === 0) {
       p.log.info("No changes made.");
-      p.outro(pc.dim("Stack unchanged"));
+      p.outro(pc.dim("Plugin unchanged"));
       return;
     }
 
@@ -159,46 +146,30 @@ export const editCommand = new Command("edit")
     }
     console.log("");
 
-    // 6. Apply changes to stack
-    s.start("Updating stack skills...");
+    // 6. Apply changes directly to plugin
+    s.start("Updating plugin skills...");
     try {
-      // Remove existing skills from stack
-      if (await directoryExists(stackSkillsDir)) {
-        await remove(stackSkillsDir);
-      }
-      await ensureDir(stackSkillsDir);
-
-      // Copy new selection to stack
-      await copySkillsToStackFromSource(
-        result.selectedSkills,
-        stackDir,
-        sourceResult.matrix,
-        sourceResult,
-      );
-      s.stop(`Stack updated with ${result.selectedSkills.length} skills`);
-    } catch (error) {
-      s.stop("Failed to update stack");
-      p.log.error(error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    }
-
-    // 7. Sync skills to plugin
-    s.start("Syncing skills to plugin...");
-    const pluginDir = getCollectivePluginDir();
-    const pluginSkillsDir = path.join(pluginDir, "skills");
-    try {
+      // Remove existing skills from plugin
       if (await directoryExists(pluginSkillsDir)) {
         await remove(pluginSkillsDir);
       }
-      await copy(stackSkillsDir, pluginSkillsDir);
-      s.stop("Skills synced to plugin");
+      await ensureDir(pluginSkillsDir);
+
+      // Copy new selection directly to plugin
+      await copySkillsToPluginFromSource(
+        result.selectedSkills,
+        pluginDir,
+        sourceResult.matrix,
+        sourceResult,
+      );
+      s.stop(`Plugin updated with ${result.selectedSkills.length} skills`);
     } catch (error) {
-      s.stop("Failed to sync skills");
+      s.stop("Failed to update plugin");
       p.log.error(error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
 
-    // 8. Get source path for agent definitions
+    // 7. Get source path for agent definitions
     let sourcePath: string;
 
     if (sourceResult.isLocal) {
@@ -220,7 +191,7 @@ export const editCommand = new Command("edit")
       }
     }
 
-    // 9. Recompile agents with updated skills
+    // 8. Recompile agents with updated skills
     s.start("Recompiling agents...");
     try {
       const recompileResult = await recompileAgents({
@@ -248,7 +219,7 @@ export const editCommand = new Command("edit")
       p.log.info(pc.dim("You can manually recompile with 'cc compile'."));
     }
 
-    // 10. Bump patch version
+    // 9. Bump patch version
     s.start("Updating plugin version...");
     try {
       const newVersion = await bumpPluginVersion(pluginDir, "patch");
@@ -263,7 +234,7 @@ export const editCommand = new Command("edit")
     console.log("");
     p.outro(
       pc.green(
-        `Stack "${activeStack}" updated! (${addedSkills.length} added, ${removedSkills.length} removed)`,
+        `Plugin updated! (${addedSkills.length} added, ${removedSkills.length} removed)`,
       ),
     );
   });

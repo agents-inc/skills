@@ -10,7 +10,7 @@ import {
   readdir,
   stat,
 } from "fs/promises";
-import { copy, remove } from "../utils/fs";
+import { copy } from "../utils/fs";
 
 // =============================================================================
 // Constants
@@ -18,6 +18,7 @@ import { copy, remove } from "../utils/fs";
 
 const SKILL_CONTENT = `---
 name: test-skill
+description: A test skill
 category: frontend
 ---
 
@@ -44,31 +45,29 @@ const PLUGIN_MANIFEST = {
 
 interface TestDirs {
   tempDir: string;
-  collectiveDir: string;
-  stacksDir: string;
+  projectDir: string;
   pluginDir: string;
-  configPath: string;
 }
 
 /**
  * Create test directory structure for init command tests.
- * Mirrors the actual directory structure used by cc init:
- * - ~/.claude-collective/stacks/{stack-name}/skills/
- * - ~/.claude/plugins/claude-collective/
+ * Simplified architecture:
+ * - {project}/.claude/plugins/claude-collective/
  */
 async function createTestDirs(): Promise<TestDirs> {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "cc-init-test-"));
-  const collectiveDir = path.join(tempDir, ".claude-collective");
-  const stacksDir = path.join(collectiveDir, "stacks");
+  const projectDir = path.join(tempDir, "project");
   const pluginDir = path.join(
-    tempDir,
+    projectDir,
     ".claude",
     "plugins",
     "claude-collective",
   );
-  const configPath = path.join(collectiveDir, "config.yaml");
 
-  return { tempDir, collectiveDir, stacksDir, pluginDir, configPath };
+  // Create project directory
+  await mkdir(projectDir, { recursive: true });
+
+  return { tempDir, projectDir, pluginDir };
 }
 
 /**
@@ -140,102 +139,44 @@ async function createMockSource(
 }
 
 /**
- * Simulate init command core logic for FIRST init:
- * 1. Create stack in ~/.claude-collective/stacks/{name}/
- * 2. Copy skills to stack
- * 3. Create plugin at ~/.claude/plugins/claude-collective/
- * 4. Copy skills and agents to plugin
- * 5. Set active stack
- *
- * This tests the same logic init.ts will have after Phase 4 updates
+ * Simulate init command for new simplified architecture:
+ * 1. Check if plugin exists - if yes, return early
+ * 2. Create plugin at .claude/plugins/claude-collective/
+ * 3. Copy skills directly to plugin
+ * 4. Create plugin manifest
  */
-async function simulateFirstInit(
+async function simulateInit(
   sourceDir: string,
-  stackName: string,
   skillNames: string[],
   dirs: TestDirs,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; alreadyExists?: boolean }> {
   try {
-    // 1. Create stack directory
-    const stackDir = path.join(dirs.stacksDir, stackName);
-    const stackSkillsDir = path.join(stackDir, "skills");
-    await mkdir(stackSkillsDir, { recursive: true });
-
-    // 2. Copy skills to stack from source
-    for (const skillName of skillNames) {
-      const srcSkillDir = path.join(sourceDir, "src", "skills", skillName);
-      const destSkillDir = path.join(stackSkillsDir, skillName);
-      await copy(srcSkillDir, destSkillDir);
+    // Check if plugin already exists
+    if (await directoryExists(dirs.pluginDir)) {
+      return { success: false, alreadyExists: true };
     }
 
-    // 3. Create plugin directory structure
+    // Create plugin directory structure
     await mkdir(path.join(dirs.pluginDir, ".claude-plugin"), {
       recursive: true,
     });
     await mkdir(path.join(dirs.pluginDir, "skills"), { recursive: true });
     await mkdir(path.join(dirs.pluginDir, "agents"), { recursive: true });
 
-    // 4. Copy skills from stack to plugin
-    await copy(stackSkillsDir, path.join(dirs.pluginDir, "skills"));
+    // Copy skills directly to plugin
+    for (const skillName of skillNames) {
+      const srcSkillDir = path.join(sourceDir, "src", "skills", skillName);
+      const destSkillDir = path.join(dirs.pluginDir, "skills", skillName);
+      await copy(srcSkillDir, destSkillDir);
+    }
 
-    // 5. Write plugin manifest
+    // Write plugin manifest
     await writeFile(
       path.join(dirs.pluginDir, ".claude-plugin", "plugin.json"),
       JSON.stringify(PLUGIN_MANIFEST, null, 2),
     );
 
-    // 6. Write active stack config
-    await mkdir(dirs.collectiveDir, { recursive: true });
-    await writeFile(
-      dirs.configPath,
-      `source: local\nactive_stack: ${stackName}\n`,
-    );
-
     return { success: true };
-  } catch (error) {
-    return { success: false, error: String(error) };
-  }
-}
-
-/**
- * Simulate init command core logic for SUBSEQUENT inits:
- * 1. Create stack in ~/.claude-collective/stacks/{name}/
- * 2. Copy skills to stack
- * 3. Do NOT modify plugin (user must switch manually)
- *
- * This tests the same logic init.ts will have after Phase 4 updates
- */
-async function simulateSubsequentInit(
-  sourceDir: string,
-  stackName: string,
-  skillNames: string[],
-  dirs: TestDirs,
-): Promise<{ success: boolean; error?: string; shouldPromptSwitch?: boolean }> {
-  try {
-    // Check if stack already exists
-    const stackDir = path.join(dirs.stacksDir, stackName);
-    if (await directoryExists(stackDir)) {
-      return { success: false, error: `Stack "${stackName}" already exists` };
-    }
-
-    // Create stack directory
-    const stackSkillsDir = path.join(stackDir, "skills");
-    await mkdir(stackSkillsDir, { recursive: true });
-
-    // Copy skills to stack from source
-    for (const skillName of skillNames) {
-      const srcSkillDir = path.join(sourceDir, "src", "skills", skillName);
-      const destSkillDir = path.join(stackSkillsDir, skillName);
-      await copy(srcSkillDir, destSkillDir);
-    }
-
-    // Check if plugin already exists - if so, don't modify it
-    const pluginExists = await directoryExists(dirs.pluginDir);
-
-    return {
-      success: true,
-      shouldPromptSwitch: pluginExists,
-    };
   } catch (error) {
     return { success: false, error: String(error) };
   }
@@ -245,7 +186,7 @@ async function simulateSubsequentInit(
 // Tests
 // =============================================================================
 
-describe("init command", () => {
+describe("init command (simplified architecture)", () => {
   let dirs: TestDirs;
   let sourceDir: string;
 
@@ -262,60 +203,31 @@ describe("init command", () => {
     await rm(dirs.tempDir, { recursive: true, force: true });
   });
 
-  describe("first init (creates stack AND plugin)", () => {
-    it("should create stack directory at ~/.claude-collective/stacks/{name}/", async () => {
+  describe("first init (creates plugin directly)", () => {
+    it("should create plugin at .claude/plugins/claude-collective/", async () => {
       // Act
-      const result = await simulateFirstInit(
-        sourceDir,
-        "my-first-stack",
-        ["react", "zustand"],
-        dirs,
-      );
+      const result = await simulateInit(sourceDir, ["react", "zustand"], dirs);
 
       // Assert
       expect(result.success).toBe(true);
-      const stackDir = path.join(dirs.stacksDir, "my-first-stack");
-      expect(await directoryExists(stackDir)).toBe(true);
+      expect(await directoryExists(dirs.pluginDir)).toBe(true);
     });
 
-    it("should copy skills to stack skills directory", async () => {
+    it("should copy skills directly to plugin skills directory", async () => {
       // Act
-      await simulateFirstInit(
-        sourceDir,
-        "my-stack",
-        ["react", "zustand"],
-        dirs,
-      );
+      await simulateInit(sourceDir, ["react", "zustand"], dirs);
 
       // Assert
-      const stackSkillsDir = path.join(dirs.stacksDir, "my-stack", "skills");
-      const skills = await listDirectories(stackSkillsDir);
+      const pluginSkillsDir = path.join(dirs.pluginDir, "skills");
+      const skills = await listDirectories(pluginSkillsDir);
       expect(skills).toContain("react");
       expect(skills).toContain("zustand");
       expect(skills).toHaveLength(2);
     });
 
-    it("should create plugin at ~/.claude/plugins/claude-collective/", async () => {
-      // Act
-      const result = await simulateFirstInit(
-        sourceDir,
-        "test-stack",
-        ["react"],
-        dirs,
-      );
-
-      // Assert
-      expect(result.success).toBe(true);
-      expect(await directoryExists(dirs.pluginDir)).toBe(true);
-
-      // Verify it's specifically at claude-collective, not the stack name
-      expect(dirs.pluginDir).toContain("claude-collective");
-      expect(dirs.pluginDir).not.toContain("test-stack");
-    });
-
     it("should create plugin manifest at .claude-plugin/plugin.json", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "test-stack", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert
       const manifestPath = path.join(
@@ -332,92 +244,53 @@ describe("init command", () => {
       expect(manifest.agents).toBe("./agents/");
     });
 
-    it("should copy skills to plugin skills directory", async () => {
-      // Act
-      await simulateFirstInit(
-        sourceDir,
-        "test-stack",
-        ["react", "nextjs"],
-        dirs,
-      );
-
-      // Assert
-      const pluginSkillsDir = path.join(dirs.pluginDir, "skills");
-      const skills = await listDirectories(pluginSkillsDir);
-      expect(skills).toContain("react");
-      expect(skills).toContain("nextjs");
-      expect(skills).toHaveLength(2);
-    });
-
     it("should create agents directory in plugin", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "test-stack", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert
       const agentsDir = path.join(dirs.pluginDir, "agents");
       expect(await directoryExists(agentsDir)).toBe(true);
     });
 
-    it("should set active stack in config", async () => {
+    it("should preserve skill content after copy to plugin", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "active-stack", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
-      // Assert
-      const configContent = await readFile(dirs.configPath, "utf-8");
-      expect(configContent).toContain("active_stack: active-stack");
-    });
-
-    it("should preserve skill content after copy to both stack and plugin", async () => {
-      // Act
-      await simulateFirstInit(sourceDir, "content-stack", ["react"], dirs);
-
-      // Assert: Stack skill content
-      const stackSkillContent = await readFile(
-        path.join(
-          dirs.stacksDir,
-          "content-stack",
-          "skills",
-          "react",
-          "SKILL.md",
-        ),
-        "utf-8",
-      );
-      expect(stackSkillContent).toContain("# Test Skill");
-
-      // Assert: Plugin skill content (should match)
+      // Assert: Plugin skill content
       const pluginSkillContent = await readFile(
         path.join(dirs.pluginDir, "skills", "react", "SKILL.md"),
         "utf-8",
       );
       expect(pluginSkillContent).toContain("# Test Skill");
+      expect(pluginSkillContent).toContain("name: test-skill");
     });
   });
 
-  describe("subsequent init (creates stack only)", () => {
-    it("should create new stack without modifying existing plugin", async () => {
+  describe("subsequent init (plugin already exists)", () => {
+    it("should detect plugin already exists and return early", async () => {
       // Arrange: First init
-      await simulateFirstInit(sourceDir, "first-stack", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
+
+      // Act: Second init
+      const result = await simulateInit(sourceDir, ["zustand"], dirs);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.alreadyExists).toBe(true);
+    });
+
+    it("should not modify existing plugin when already exists", async () => {
+      // Arrange: First init
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Record plugin state
       const pluginSkillsBefore = await listDirectories(
         path.join(dirs.pluginDir, "skills"),
       );
 
-      // Act: Second init
-      const result = await simulateSubsequentInit(
-        sourceDir,
-        "second-stack",
-        ["zustand", "nextjs"],
-        dirs,
-      );
-
-      // Assert: New stack exists
-      expect(result.success).toBe(true);
-      const secondStackSkills = await listDirectories(
-        path.join(dirs.stacksDir, "second-stack", "skills"),
-      );
-      expect(secondStackSkills).toContain("zustand");
-      expect(secondStackSkills).toContain("nextjs");
+      // Act: Second init (should fail gracefully)
+      await simulateInit(sourceDir, ["zustand", "nextjs"], dirs);
 
       // Assert: Plugin skills unchanged
       const pluginSkillsAfter = await listDirectories(
@@ -425,80 +298,16 @@ describe("init command", () => {
       );
       expect(pluginSkillsAfter).toEqual(pluginSkillsBefore);
     });
-
-    it("should indicate user should switch to new stack", async () => {
-      // Arrange: First init
-      await simulateFirstInit(sourceDir, "first-stack", ["react"], dirs);
-
-      // Act: Second init
-      const result = await simulateSubsequentInit(
-        sourceDir,
-        "second-stack",
-        ["zustand"],
-        dirs,
-      );
-
-      // Assert: Should prompt for switch
-      expect(result.success).toBe(true);
-      expect(result.shouldPromptSwitch).toBe(true);
-    });
-
-    it("should error when stack name already exists", async () => {
-      // Arrange: First init
-      await simulateFirstInit(sourceDir, "duplicate-stack", ["react"], dirs);
-
-      // Act: Try to create same stack again
-      const result = await simulateSubsequentInit(
-        sourceDir,
-        "duplicate-stack",
-        ["zustand"],
-        dirs,
-      );
-
-      // Assert
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("already exists");
-    });
-
-    it("should allow multiple stacks with different names", async () => {
-      // Arrange: First init
-      await simulateFirstInit(sourceDir, "stack-a", ["react"], dirs);
-
-      // Act: Create multiple additional stacks
-      await simulateSubsequentInit(sourceDir, "stack-b", ["zustand"], dirs);
-      await simulateSubsequentInit(sourceDir, "stack-c", ["nextjs"], dirs);
-
-      // Assert: All stacks exist
-      const stacks = await listDirectories(dirs.stacksDir);
-      expect(stacks).toContain("stack-a");
-      expect(stacks).toContain("stack-b");
-      expect(stacks).toContain("stack-c");
-      expect(stacks).toHaveLength(3);
-    });
   });
 
   describe("directory structure correctness", () => {
-    it("should use correct path for stacks: ~/.claude-collective/stacks/{name}/skills/", async () => {
+    it("should use correct path for plugin: .claude/plugins/claude-collective/", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "path-test-stack", ["react"], dirs);
-
-      // Assert: Full path structure
-      const expectedPath = path.join(
-        dirs.collectiveDir,
-        "stacks",
-        "path-test-stack",
-        "skills",
-      );
-      expect(await directoryExists(expectedPath)).toBe(true);
-    });
-
-    it("should use correct path for plugin: ~/.claude/plugins/claude-collective/", async () => {
-      // Act
-      await simulateFirstInit(sourceDir, "plugin-path-test", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert: Full path structure
       const expectedPluginPath = path.join(
-        dirs.tempDir,
+        dirs.projectDir,
         ".claude",
         "plugins",
         "claude-collective",
@@ -507,9 +316,18 @@ describe("init command", () => {
       expect(await directoryExists(dirs.pluginDir)).toBe(true);
     });
 
+    it("should NOT create any .claude-collective/ directory", async () => {
+      // Act
+      await simulateInit(sourceDir, ["react"], dirs);
+
+      // Assert: No .claude-collective directory
+      const collectiveDir = path.join(dirs.projectDir, ".claude-collective");
+      expect(await directoryExists(collectiveDir)).toBe(false);
+    });
+
     it("should create plugin manifest at correct path", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "manifest-test", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert
       const manifestPath = path.join(
@@ -522,140 +340,72 @@ describe("init command", () => {
 
     it("should have agents directory at plugin root", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "agents-test", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert
       const agentsPath = path.join(dirs.pluginDir, "agents");
       expect(await directoryExists(agentsPath)).toBe(true);
     });
 
-    it("should NOT create plugin at ~/.claude/plugins/{stack-name}/", async () => {
+    it("should have skills directory at plugin root", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "wrong-path-test", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
-      // Assert: Plugin should NOT be at stack-named path
-      const wrongPath = path.join(
-        dirs.tempDir,
-        ".claude",
-        "plugins",
-        "wrong-path-test",
-      );
-      expect(await directoryExists(wrongPath)).toBe(false);
+      // Assert
+      const skillsPath = path.join(dirs.pluginDir, "skills");
+      expect(await directoryExists(skillsPath)).toBe(true);
     });
   });
 
   describe("edge cases", () => {
     it("should handle empty skill selection", async () => {
       // Act
-      const result = await simulateFirstInit(
-        sourceDir,
-        "empty-skills-stack",
-        [],
-        dirs,
-      );
+      const result = await simulateInit(sourceDir, [], dirs);
 
       // Assert: Should still create directories, just empty
       expect(result.success).toBe(true);
-      const stackSkillsDir = path.join(
-        dirs.stacksDir,
-        "empty-skills-stack",
-        "skills",
-      );
-      expect(await directoryExists(stackSkillsDir)).toBe(true);
-      const skills = await listDirectories(stackSkillsDir);
+      const pluginSkillsDir = path.join(dirs.pluginDir, "skills");
+      expect(await directoryExists(pluginSkillsDir)).toBe(true);
+      const skills = await listDirectories(pluginSkillsDir);
       expect(skills).toHaveLength(0);
-    });
-
-    it("should handle stack names with hyphens", async () => {
-      // Act
-      const result = await simulateFirstInit(
-        sourceDir,
-        "my-hyphenated-stack-name",
-        ["react"],
-        dirs,
-      );
-
-      // Assert
-      expect(result.success).toBe(true);
-      const stackDir = path.join(dirs.stacksDir, "my-hyphenated-stack-name");
-      expect(await directoryExists(stackDir)).toBe(true);
-    });
-
-    it("should handle stack names with numbers", async () => {
-      // Act
-      const result = await simulateFirstInit(
-        sourceDir,
-        "my-stack-v2",
-        ["react"],
-        dirs,
-      );
-
-      // Assert
-      expect(result.success).toBe(true);
-      const stackDir = path.join(dirs.stacksDir, "my-stack-v2");
-      expect(await directoryExists(stackDir)).toBe(true);
     });
 
     it("should handle many skills", async () => {
       // Act
-      await simulateFirstInit(
-        sourceDir,
-        "many-skills-stack",
-        ["react", "zustand", "nextjs"],
-        dirs,
-      );
+      await simulateInit(sourceDir, ["react", "zustand", "nextjs"], dirs);
 
       // Assert
-      const stackSkillsDir = path.join(
-        dirs.stacksDir,
-        "many-skills-stack",
-        "skills",
-      );
-      const skills = await listDirectories(stackSkillsDir);
+      const pluginSkillsDir = path.join(dirs.pluginDir, "skills");
+      const skills = await listDirectories(pluginSkillsDir);
       expect(skills).toHaveLength(3);
     });
-  });
 
-  describe("config file handling", () => {
-    it("should create config.yaml in ~/.claude-collective/", async () => {
+    it("should create proper directory structure even with no skills", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "config-test-stack", ["react"], dirs);
+      await simulateInit(sourceDir, [], dirs);
 
-      // Assert
-      expect(await fileExists(dirs.configPath)).toBe(true);
-    });
-
-    it("should set source in config", async () => {
-      // Act
-      await simulateFirstInit(sourceDir, "source-test-stack", ["react"], dirs);
-
-      // Assert
-      const configContent = await readFile(dirs.configPath, "utf-8");
-      expect(configContent).toContain("source:");
-    });
-
-    it("should persist config across multiple inits", async () => {
-      // Arrange: First init
-      await simulateFirstInit(sourceDir, "first-stack", ["react"], dirs);
-
-      // Read config after first init
-      const configAfterFirst = await readFile(dirs.configPath, "utf-8");
-      expect(configAfterFirst).toContain("active_stack: first-stack");
-
-      // Note: Subsequent init doesn't update active_stack
-      // User must switch manually
+      // Assert: All required directories exist
+      expect(await directoryExists(dirs.pluginDir)).toBe(true);
+      expect(await directoryExists(path.join(dirs.pluginDir, "skills"))).toBe(
+        true,
+      );
+      expect(await directoryExists(path.join(dirs.pluginDir, "agents"))).toBe(
+        true,
+      );
+      expect(
+        await directoryExists(path.join(dirs.pluginDir, ".claude-plugin")),
+      ).toBe(true);
     });
   });
 
   describe("skills content integrity", () => {
     it("should copy SKILL.md file correctly", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "skill-md-test", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert
       const skillMdPath = path.join(
-        dirs.stacksDir,
-        "skill-md-test",
+        dirs.pluginDir,
         "skills",
         "react",
         "SKILL.md",
@@ -667,12 +417,11 @@ describe("init command", () => {
 
     it("should copy metadata.yaml file correctly", async () => {
       // Act
-      await simulateFirstInit(sourceDir, "metadata-test", ["react"], dirs);
+      await simulateInit(sourceDir, ["react"], dirs);
 
       // Assert
       const metadataPath = path.join(
-        dirs.stacksDir,
-        "metadata-test",
+        dirs.pluginDir,
         "skills",
         "react",
         "metadata.yaml",
@@ -680,6 +429,27 @@ describe("init command", () => {
       const content = await readFile(metadataPath, "utf-8");
       expect(content).toContain("version: 1");
       expect(content).toContain("author: test");
+    });
+  });
+
+  describe("plugin manifest", () => {
+    it("should have correct manifest structure", async () => {
+      // Act
+      await simulateInit(sourceDir, ["react"], dirs);
+
+      // Assert
+      const manifestPath = path.join(
+        dirs.pluginDir,
+        ".claude-plugin",
+        "plugin.json",
+      );
+      const content = await readFile(manifestPath, "utf-8");
+      const manifest = JSON.parse(content);
+
+      expect(manifest.name).toBe("claude-collective");
+      expect(manifest.version).toBe("1.0.0");
+      expect(manifest.skills).toBe("./skills/");
+      expect(manifest.agents).toBe("./agents/");
     });
   });
 });

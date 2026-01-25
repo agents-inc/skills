@@ -194,18 +194,6 @@ export interface StackConfig {
   philosophy?: string;
   principles?: string[];
   tags?: string[];
-  overrides?: Record<string, StackOverrideRule>;
-  metrics?: StackMetrics;
-}
-
-export interface StackOverrideRule {
-  alternatives?: string[];
-  locked?: boolean;
-}
-
-export interface StackMetrics {
-  upvotes?: number;
-  downloads?: number;
 }
 
 // =============================================================================

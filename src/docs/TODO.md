@@ -94,6 +94,28 @@ Test 4: Roundtrip (Manual)
 
 **A5/A6 (`cc create skill/agent`) - Won't Do:** Instead of CLI commands that fetch summoner agents via network, users install summoners as optional agents via `cc add skill-summoner` / `cc add agent-summoner` and run them locally like any other agent. See Decision Log entry 2026-01-25.
 
+#### Phase A.5: Simplified Plugin Architecture (CRITICAL)
+
+> **MAJOR REFACTOR:** Eliminate `.claude-collective/` directory entirely. One plugin per project.
+> See [SIMPLIFIED-PLUGIN-ARCHITECTURE.md](/.claude/research/findings/v2/SIMPLIFIED-PLUGIN-ARCHITECTURE.md) for full details.
+
+| Order | Task                      | Description                                                      | Status      |
+| ----- | ------------------------- | ---------------------------------------------------------------- | ----------- |
+| A5.1  | Research migration        | Identify all files referencing stacks/`.claude-collective/`      | Not Started |
+| A5.2  | Remove `cc switch`        | Eliminate stack switching entirely                               | Not Started |
+| A5.3  | Simplify `cc init`        | Create plugin directly, use "templates" instead of "stacks"      | Not Started |
+| A5.4  | Update `cc edit`/`cc add` | Modify plugin directly, not stack                                | Not Started |
+| A5.5  | Remove stack files        | Delete stack-list.ts, stack-config.ts, stack-creator.ts          | Not Started |
+| A5.6  | Update `cc list`          | Show plugin info (version, skills, agents) instead of stack list | Not Started |
+| A5.7  | User migration            | Detect `.claude-collective/` and offer migration prompt          | Not Started |
+
+**Key changes:**
+
+- One project = one plugin (no stacks)
+- Everything in `.claude/plugins/claude-collective/`
+- Grow plugin with `cc add <skill>` / `cc add <agent>` instead of switching stacks
+- "Stacks" become "templates" (starter configurations from marketplace)
+
 #### Phase B: Repo Split (Milestone)
 
 > Split into two repos: `claude-collective-cli` and `claude-collective-skills`
@@ -184,14 +206,14 @@ This preserves category prefixes (frontend/, backend/) for disambiguation and au
 > **COMPLETED (2026-01-25)**: Integer versioning with content hash in `plugin.json`.
 > See `VERSIONING-IMPROVEMENT-TRACKER.md` for implementation details.
 
-| Priority | Task                             | Description                                                               | Status                       |
-| -------- | -------------------------------- | ------------------------------------------------------------------------- | ---------------------------- |
-| High     | Refactor versioning.ts           | Output version to `plugin.json` instead of `metadata.yaml`                | **DONE**                     |
-| High     | Display version                  | Show plugin version in CLI listings (`cc list`, marketplace)              | **DONE**                     |
-| Medium   | Sync version on switch/compile   | When stack is activated, sync stack config version to plugin.json         | Not Started                  |
-| Medium   | Unified plugin versioning        | Same versioning logic for skills, agents, and stacks                      | **DONE**                     |
-| ~~Low~~  | ~~Archive outdated schemas~~     | ~~skills.schema.json, registry.schema.json~~                              | **DONE** (files don't exist) |
-| ~~Low~~  | ~~Remove metadata.yaml version~~ | ~~Once plugin.json versioning is complete, remove version from metadata~~ | **DONE** (made optional)     |
+| Priority   | Task                               | Description                                                               | Status                                          |
+| ---------- | ---------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------- |
+| High       | Refactor versioning.ts             | Output version to `plugin.json` instead of `metadata.yaml`                | **DONE**                                        |
+| High       | Display version                    | Show plugin version in CLI listings (`cc list`, marketplace)              | **DONE**                                        |
+| ~~Medium~~ | ~~Sync version on switch/compile~~ | ~~When stack is activated, sync stack config version to plugin.json~~     | N/A (stacks removed in simplified architecture) |
+| Medium     | Unified plugin versioning          | Same versioning logic for skills, agents, and stacks                      | **DONE**                                        |
+| ~~Low~~    | ~~Archive outdated schemas~~       | ~~skills.schema.json, registry.schema.json~~                              | **DONE** (files don't exist)                    |
+| ~~Low~~    | ~~Remove metadata.yaml version~~   | ~~Once plugin.json versioning is complete, remove version from metadata~~ | **DONE** (removed deprecated version field)     |
 
 ### 5. Agent Output Formats
 
@@ -253,37 +275,38 @@ This preserves category prefixes (frontend/, backend/) for disambiguation and au
 
 ## Decision Log
 
-| Date       | Decision                         | Rationale                                                                                                                                                                                                                                     |
-| ---------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-01-25 | Version deprecated in metadata   | `version` field in metadata.yaml now optional. Version lives in `plugin.json`. `content_hash` is primary identifier for change detection. Existing skills keep version for backward compatibility.                                            |
-| 2026-01-25 | Summoners as local agents        | `cc create skill/agent` commands won't do. Users install skill-summoner/agent-summoner as optional agents (`cc add`), run locally. Avoids network dependency, works offline, consistent with other agents. Staleness caught by `cc validate`. |
-| 2026-01-25 | Thinking budget: use defaults    | Claude Code defaults to max thinking (31,999 tokens) since Jan 2026. Ultrathink keywords deprecated. No need to configure per-agent - defer CLI configurability to later.                                                                     |
-| 2026-01-25 | Core principles in template      | Embedded directly in agent.liquid (not a skill). Methodology content available via skills. External skill sources deferred - would need `cc add --source` to fetch to local.                                                                  |
-| 2026-01-24 | Agents as individual plugins     | **Future**: Agents will be standalone installable plugins. Stacks install ~9-10 essential agents; users can add others via `cc add agent-name`.                                                                                               |
-| 2026-01-24 | Plugin-based versioning          | Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml`. Single versioning model for all artifacts.                                                                                                    |
-| 2026-01-24 | Stack-based architecture         | Skills stored in `.claude-collective/stacks/` (project-local), single plugin at `.claude/plugins/claude-collective/` (project-local). `cc switch` for instant switching.                                                                      |
-| 2026-01-24 | Dual marketplace model           | Public marketplace (community, latest) + private/company marketplaces (pinned versions). Enables reproducibility and guardrails.                                                                                                              |
-| 2026-01-24 | Agents as standalone plugins     | Agents don't embed skills; they reference them. One documentor for all stacks. `cc switch` recompiles with active stack's skills.                                                                                                             |
-| 2026-01-24 | Version pinning via marketplace  | No `plugin@version` install syntax. Marketplace controls versions via `ref`/`sha` in marketplace.json. Maintainer is gatekeeper.                                                                                                              |
-| 2026-01-24 | Skills/Agents/Stacks independent | Each versioned independently. No cascading bumps. Binding happens at switch/compile time, not publish time.                                                                                                                                   |
-| 2026-01-23 | Remote fetching after repo split | Compile scripts use local paths now; refactor to giget/source-fetcher AFTER repos split. Avoids premature abstraction.                                                                                                                        |
-| 2026-01-23 | Phased task ordering             | Phase A (before split), B (split milestone), C (after split). Clear sequencing prevents blocked work.                                                                                                                                         |
-| 2026-01-23 | Architecture finalized           | Marketplace is single source of truth; CLI is thin (no bundled content); `cc init` produces complete plugin with skills + agents                                                                                                              |
-| 2026-01-23 | `.claude-collective/` deprecated | Removed - plugins output directly to `.claude/plugins/` (project-local); no intermediate source directory needed                                                                                                                              |
-| 2026-01-23 | Lowest priority commands         | `cc outdated`, `cc customize` marked as lowest priority; `cc edit` replaces `cc add`, `cc remove`, `cc swap`                                                                                                                                  |
-| 2026-01-23 | Network-based compilation        | All compilation fetches agents/principles/templates from marketplace; no bundled content in CLI                                                                                                                                               |
-| 2026-01-23 | Plugin implementation complete   | 6 phases: Schema, Skill-as-Plugin, Marketplace, Stack, CLI, Testing, Docs                                                                                                                                                                     |
-| 2026-01-23 | Plugin as output format          | CLI compiles to plugin (not .claude/); same flow, output is distributable, versioned, installable                                                                                                                                             |
-| 2026-01-23 | Eject for full independence      | `cc eject` (local) or `cc eject --fork` (GitHub) - (decided to implement, not yet built); no lock-in, fork preserves upstream connection                                                                                                      |
-| 2026-01-22 | Pre-populate wizard for update   | `cc update` now starts with existing skills pre-selected, skips approach step                                                                                                                                                                 |
-| 2026-01-22 | Project-level config commands    | Added `cc config set-project` and `unset-project` for per-project source config                                                                                                                                                               |
-| 2026-01-22 | Agent category organization      | Improved discoverability; 7 categories: developer, reviewer, researcher, planning, pattern, meta, tester                                                                                                                                      |
-| 2026-01-22 | No `cc cache` command            | giget handles caching internally; `--refresh` flag for edge cases                                                                                                                                                                             |
-| 2026-01-22 | Inline agent invocation via CLI  | `--agents` JSON flag verified working; no file writes needed                                                                                                                                                                                  |
-| 2026-01-21 | Keep relationship-centric matrix | Authoring is easier; skill-centric view computed at runtime                                                                                                                                                                                   |
-| 2026-01-21 | While-loop wizard                | Simpler than action/reducer; better for MVP                                                                                                                                                                                                   |
-| 2026-01-21 | Integer versioning               | Zero friction; semver overkill for markdown skills                                                                                                                                                                                            |
-| 2026-01-21 | Document giget limitations       | Bitbucket private, Azure DevOps unsupported                                                                                                                                                                                                   |
+| Date       | Decision                           | Rationale                                                                                                                                                                                                                                     |
+| ---------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-01-25 | **Simplified plugin architecture** | One plugin per project, eliminate `.claude-collective/` entirely. Grow plugin with `cc add` instead of switching stacks. "Stacks" become "templates". See `SIMPLIFIED-PLUGIN-ARCHITECTURE.md`.                                                |
+| 2026-01-25 | Version deprecated in metadata     | `version` field removed from metadata.yaml and types. Version lives only in `plugin.json`. `content_hash` is primary identifier for change detection.                                                                                         |
+| 2026-01-25 | Summoners as local agents          | `cc create skill/agent` commands won't do. Users install skill-summoner/agent-summoner as optional agents (`cc add`), run locally. Avoids network dependency, works offline, consistent with other agents. Staleness caught by `cc validate`. |
+| 2026-01-25 | Thinking budget: use defaults      | Claude Code defaults to max thinking (31,999 tokens) since Jan 2026. Ultrathink keywords deprecated. No need to configure per-agent - defer CLI configurability to later.                                                                     |
+| 2026-01-25 | Core principles in template        | Embedded directly in agent.liquid (not a skill). Methodology content available via skills. External skill sources deferred - would need `cc add --source` to fetch to local.                                                                  |
+| 2026-01-24 | Agents as individual plugins       | **Future**: Agents will be standalone installable plugins. Stacks install ~9-10 essential agents; users can add others via `cc add agent-name`.                                                                                               |
+| 2026-01-24 | Plugin-based versioning            | Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml`. Single versioning model for all artifacts.                                                                                                    |
+| 2026-01-24 | Stack-based architecture           | Skills stored in `.claude-collective/stacks/` (project-local), single plugin at `.claude/plugins/claude-collective/` (project-local). `cc switch` for instant switching.                                                                      |
+| 2026-01-24 | Dual marketplace model             | Public marketplace (community, latest) + private/company marketplaces (pinned versions). Enables reproducibility and guardrails.                                                                                                              |
+| 2026-01-24 | Agents as standalone plugins       | Agents don't embed skills; they reference them. One documentor for all stacks. `cc switch` recompiles with active stack's skills.                                                                                                             |
+| 2026-01-24 | Version pinning via marketplace    | No `plugin@version` install syntax. Marketplace controls versions via `ref`/`sha` in marketplace.json. Maintainer is gatekeeper.                                                                                                              |
+| 2026-01-24 | Skills/Agents/Stacks independent   | Each versioned independently. No cascading bumps. Binding happens at switch/compile time, not publish time.                                                                                                                                   |
+| 2026-01-23 | Remote fetching after repo split   | Compile scripts use local paths now; refactor to giget/source-fetcher AFTER repos split. Avoids premature abstraction.                                                                                                                        |
+| 2026-01-23 | Phased task ordering               | Phase A (before split), B (split milestone), C (after split). Clear sequencing prevents blocked work.                                                                                                                                         |
+| 2026-01-23 | Architecture finalized             | Marketplace is single source of truth; CLI is thin (no bundled content); `cc init` produces complete plugin with skills + agents                                                                                                              |
+| 2026-01-23 | `.claude-collective/` deprecated   | Removed - plugins output directly to `.claude/plugins/` (project-local); no intermediate source directory needed                                                                                                                              |
+| 2026-01-23 | Lowest priority commands           | `cc outdated`, `cc customize` marked as lowest priority; `cc edit` replaces `cc add`, `cc remove`, `cc swap`                                                                                                                                  |
+| 2026-01-23 | Network-based compilation          | All compilation fetches agents/principles/templates from marketplace; no bundled content in CLI                                                                                                                                               |
+| 2026-01-23 | Plugin implementation complete     | 6 phases: Schema, Skill-as-Plugin, Marketplace, Stack, CLI, Testing, Docs                                                                                                                                                                     |
+| 2026-01-23 | Plugin as output format            | CLI compiles to plugin (not .claude/); same flow, output is distributable, versioned, installable                                                                                                                                             |
+| 2026-01-23 | Eject for full independence        | `cc eject` (local) or `cc eject --fork` (GitHub) - (decided to implement, not yet built); no lock-in, fork preserves upstream connection                                                                                                      |
+| 2026-01-22 | Pre-populate wizard for update     | `cc update` now starts with existing skills pre-selected, skips approach step                                                                                                                                                                 |
+| 2026-01-22 | Project-level config commands      | Added `cc config set-project` and `unset-project` for per-project source config                                                                                                                                                               |
+| 2026-01-22 | Agent category organization        | Improved discoverability; 7 categories: developer, reviewer, researcher, planning, pattern, meta, tester                                                                                                                                      |
+| 2026-01-22 | No `cc cache` command              | giget handles caching internally; `--refresh` flag for edge cases                                                                                                                                                                             |
+| 2026-01-22 | Inline agent invocation via CLI    | `--agents` JSON flag verified working; no file writes needed                                                                                                                                                                                  |
+| 2026-01-21 | Keep relationship-centric matrix   | Authoring is easier; skill-centric view computed at runtime                                                                                                                                                                                   |
+| 2026-01-21 | While-loop wizard                  | Simpler than action/reducer; better for MVP                                                                                                                                                                                                   |
+| 2026-01-21 | Integer versioning                 | Zero friction; semver overkill for markdown skills                                                                                                                                                                                            |
+| 2026-01-21 | Document giget limitations         | Bitbucket private, Azure DevOps unsupported                                                                                                                                                                                                   |
 
 ---
 

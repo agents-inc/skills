@@ -9,7 +9,6 @@ import { editCommand } from "./commands/edit";
 import { updateCommand } from "./commands/update";
 import { validateCommand } from "./commands/validate";
 import { listCommand } from "./commands/list";
-import { switchCommand } from "./commands/switch";
 import { configCommand } from "./commands/config";
 import { versionCommand } from "./commands/version";
 import { EXIT_CODES } from "./lib/exit-codes";
@@ -25,7 +24,7 @@ async function main() {
 
   program
     .name("cc")
-    .description("Claude Collective CLI - Manage skills, stacks, and agents")
+    .description("Claude Collective CLI - Manage skills, plugins, and agents")
     .version("0.1.0")
     .option("--dry-run", "Preview operations without executing")
     .configureOutput({
@@ -43,7 +42,6 @@ async function main() {
   program.addCommand(generateMarketplaceCommand);
   program.addCommand(validateCommand);
   program.addCommand(listCommand);
-  program.addCommand(switchCommand);
   program.addCommand(configCommand);
   program.addCommand(versionCommand);
 

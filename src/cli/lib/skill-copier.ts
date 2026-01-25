@@ -2,11 +2,6 @@ import path from "path";
 import { stringify as stringifyYaml, parse as parseYaml } from "yaml";
 import { copy, ensureDir, readFile, writeFile } from "../utils/fs";
 import { hashFile } from "./hash";
-import {
-  PROJECT_ROOT,
-  COLLECTIVE_DIR,
-  COLLECTIVE_STACKS_SUBDIR,
-} from "../consts";
 import type { MergedSkillsMatrix, ResolvedSkill } from "../types-matrix";
 import type { SourceLoadResult } from "./source-loader";
 
@@ -188,12 +183,12 @@ export async function copySkillFromSource(
 }
 
 /**
- * Copy all selected skills to a stack directory from a source
- * This is the preferred method that supports remote skill sources
+ * Copy all selected skills to a plugin directory from a source
+ * This is the primary method for single-plugin-per-project architecture
  */
-export async function copySkillsToStackFromSource(
+export async function copySkillsToPluginFromSource(
   selectedSkillIds: string[],
-  stackDir: string,
+  pluginDir: string,
   matrix: MergedSkillsMatrix,
   sourceResult: SourceLoadResult,
 ): Promise<CopiedSkill[]> {
@@ -206,21 +201,9 @@ export async function copySkillsToStackFromSource(
       continue;
     }
 
-    const copied = await copySkillFromSource(skill, stackDir, sourceResult);
+    const copied = await copySkillFromSource(skill, pluginDir, sourceResult);
     copiedSkills.push(copied);
   }
 
   return copiedSkills;
-}
-
-/**
- * Get the stack directory path in .claude-collective/stacks/
- */
-export function getStackDir(projectDir: string, stackName: string): string {
-  return path.join(
-    projectDir,
-    COLLECTIVE_DIR,
-    COLLECTIVE_STACKS_SUBDIR,
-    stackName,
-  );
 }

@@ -3,7 +3,11 @@ import os from "os";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { readFile, writeFile, fileExists, ensureDir } from "../utils/fs";
 import { verbose } from "../utils/logger";
-import { COLLECTIVE_DIR } from "../consts";
+
+/**
+ * Legacy project config directory (still used for backwards compatibility)
+ */
+const PROJECT_CONFIG_DIR = ".claude-collective";
 
 /**
  * Default skills source repository
@@ -38,8 +42,6 @@ export interface GlobalConfig {
   source?: string;
   /** Default author name for created skills */
   author?: string;
-  /** Currently active stack name */
-  active_stack?: string;
 }
 
 /**
@@ -48,8 +50,6 @@ export interface GlobalConfig {
 export interface ProjectConfig {
   /** Skills source URL override for this project */
   source?: string;
-  /** Currently active stack name for this project */
-  active_stack?: string;
 }
 
 /**
@@ -72,11 +72,6 @@ function isValidGlobalConfig(obj: unknown): obj is GlobalConfig {
     return false;
   if (config.author !== undefined && typeof config.author !== "string")
     return false;
-  if (
-    config.active_stack !== undefined &&
-    typeof config.active_stack !== "string"
-  )
-    return false;
   return true;
 }
 
@@ -87,11 +82,6 @@ function isValidProjectConfig(obj: unknown): obj is ProjectConfig {
   if (typeof obj !== "object" || obj === null) return false;
   const config = obj as Record<string, unknown>;
   if (config.source !== undefined && typeof config.source !== "string")
-    return false;
-  if (
-    config.active_stack !== undefined &&
-    typeof config.active_stack !== "string"
-  )
     return false;
   return true;
 }
@@ -107,7 +97,7 @@ export function getGlobalConfigPath(): string {
  * Get the project config file path
  */
 export function getProjectConfigPath(projectDir: string): string {
-  return path.join(projectDir, COLLECTIVE_DIR, PROJECT_CONFIG_FILE);
+  return path.join(projectDir, PROJECT_CONFIG_DIR, PROJECT_CONFIG_FILE);
 }
 
 /**
@@ -178,46 +168,6 @@ export async function saveGlobalConfig(config: GlobalConfig): Promise<void> {
 }
 
 /**
- * Get the currently active stack name from project config
- * Falls back to global config if project config doesn't have it
- * Returns null if neither config has active_stack set
- */
-export async function getActiveStack(
-  projectDir: string = process.cwd(),
-): Promise<string | null> {
-  // First check project config (takes precedence)
-  const projectConfig = await loadProjectConfig(projectDir);
-  if (projectConfig?.active_stack) {
-    verbose(`Active stack (project): ${projectConfig.active_stack}`);
-    return projectConfig.active_stack;
-  }
-
-  // Fall back to global config for backwards compatibility
-  const globalConfig = await loadGlobalConfig();
-  if (globalConfig?.active_stack) {
-    verbose(`Active stack (global): ${globalConfig.active_stack}`);
-    return globalConfig.active_stack;
-  }
-
-  verbose("No active stack configured");
-  return null;
-}
-
-/**
- * Set the active stack name in project config
- * Creates the config file if it doesn't exist
- */
-export async function setActiveStack(
-  stackName: string,
-  projectDir: string = process.cwd(),
-): Promise<void> {
-  const config = (await loadProjectConfig(projectDir)) ?? {};
-  config.active_stack = stackName;
-  await saveProjectConfig(projectDir, config);
-  verbose(`Set active stack to: ${stackName}`);
-}
-
-/**
  * Save project configuration
  */
 export async function saveProjectConfig(
@@ -225,7 +175,7 @@ export async function saveProjectConfig(
   config: ProjectConfig,
 ): Promise<void> {
   const configPath = getProjectConfigPath(projectDir);
-  await ensureDir(path.join(projectDir, COLLECTIVE_DIR));
+  await ensureDir(path.join(projectDir, PROJECT_CONFIG_DIR));
   const content = stringifyYaml(config, { lineWidth: 0 });
   await writeFile(configPath, content);
   verbose(`Saved project config to ${configPath}`);

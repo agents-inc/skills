@@ -104,6 +104,8 @@ describe("stackToCompileConfig", () => {
   it("should convert a stack config to a compile config", () => {
     const stack: StackConfig = {
       name: "Test Stack",
+      version: "1.0.0",
+      author: "test",
       description: "A test stack",
       agents: ["frontend-developer", "backend-developer"],
       skills: [],
@@ -126,6 +128,8 @@ describe("stackToCompileConfig", () => {
   it("should handle empty agents array", () => {
     const stack: StackConfig = {
       name: "Empty Stack",
+      version: "1.0.0",
+      author: "test",
       agents: [],
       skills: [],
     };
@@ -138,6 +142,8 @@ describe("stackToCompileConfig", () => {
   it("should use empty string for missing description", () => {
     const stack: StackConfig = {
       name: "No Description",
+      version: "1.0.0",
+      author: "test",
       agents: ["test-agent"],
       skills: [],
     };
