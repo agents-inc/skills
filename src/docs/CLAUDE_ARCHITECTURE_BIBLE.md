@@ -74,8 +74,7 @@ src/
 │   │   └── backend-researcher/
 │   ├── planning/              # Planning category
 │   │   ├── pm/
-│   │   ├── architecture/
-│   │   └── orchestrator/
+│   │   └── architecture/
 │   ├── pattern/               # Pattern category
 │   │   ├── pattern-scout/
 │   │   └── pattern-critique/
@@ -1020,7 +1019,7 @@ src/agents/{category}/my-new-agent/
 - `developer/` - Implementation agents (frontend-developer, backend-developer, architecture)
 - `reviewer/` - Code review agents (frontend-reviewer, backend-reviewer)
 - `researcher/` - Read-only research agents (frontend-researcher, backend-researcher)
-- `planning/` - Planning agents (pm, orchestrator)
+- `planning/` - Planning agents (pm, architecture)
 - `pattern/` - Pattern discovery agents (pattern-scout, pattern-critique)
 - `meta/` - Meta-level agents (agent-summoner, skill-summoner, documentor)
 - `tester/` - Testing agents (tester-agent)

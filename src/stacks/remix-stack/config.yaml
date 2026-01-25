@@ -40,7 +40,6 @@ agents:
   - backend-researcher
   # Planning agents
   - pm
-  - orchestrator
   # Pattern agents
   - pattern-scout
   - pattern-critique
@@ -137,11 +136,6 @@ agent_skills:
       - id: backend/api-hono (@vince)
     database:
       - id: backend/database-drizzle (@vince)
-
-  orchestrator:
-    research:
-      - id: research/research-methodology (@vince)
-        preloaded: true
 
   frontend-researcher:
     framework:
