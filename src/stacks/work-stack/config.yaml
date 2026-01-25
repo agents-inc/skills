@@ -12,14 +12,14 @@ version: "1.0.0"
 
 skills:
   # Frontend - Photoroom specific
-  - id: frontend/framework/react+mobx (@vince)
-  - id: frontend/styling/tailwind (@vince)
-  - id: frontend/client-state-management/mobx (@vince)
-  - id: frontend/server-state-management/react-query+axios+zod (@vince)
-  - id: frontend/accessibility/accessibility (@vince)
-  - id: frontend/performance/performance+mobx (@vince)
-  - id: frontend/mocks/mocks (@vince)
-  - id: frontend/testing/karma+playwright (@vince)
+  - id: frontend/react+mobx (@vince)
+  - id: frontend/styling-tailwind (@vince)
+  - id: frontend/state-mobx (@vince)
+  - id: frontend/server-state-react-query+axios+zod (@vince)
+  - id: frontend/accessibility (@vince)
+  - id: frontend/performance+mobx (@vince)
+  - id: frontend/mocks (@vince)
+  - id: frontend/testing+karma+playwright (@vince)
 
 agents:
   # Developer agents
@@ -46,92 +46,92 @@ agents:
 agent_skills:
   frontend-developer:
     framework:
-      - id: frontend/framework/react+mobx (@vince)
+      - id: frontend/react+mobx (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
         preloaded: true
     state:
-      - id: frontend/client-state-management/mobx (@vince)
+      - id: frontend/state-mobx (@vince)
         preloaded: true
     server-state:
-      - id: frontend/server-state-management/react-query+axios+zod (@vince)
+      - id: frontend/server-state-react-query+axios+zod (@vince)
     accessibility:
-      - id: frontend/accessibility/accessibility (@vince)
+      - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance/performance+mobx (@vince)
+      - id: frontend/performance+mobx (@vince)
     mocks:
-      - id: frontend/mocks/mocks (@vince)
+      - id: frontend/mocks (@vince)
     testing:
-      - id: frontend/testing/karma+playwright (@vince)
+      - id: frontend/testing+karma+playwright (@vince)
 
   frontend-reviewer:
     framework:
-      - id: frontend/framework/react+mobx (@vince)
+      - id: frontend/react+mobx (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
         preloaded: true
     state:
-      - id: frontend/client-state-management/mobx (@vince)
+      - id: frontend/state-mobx (@vince)
         preloaded: true
     server-state:
-      - id: frontend/server-state-management/react-query+axios+zod (@vince)
+      - id: frontend/server-state-react-query+axios+zod (@vince)
     accessibility:
-      - id: frontend/accessibility/accessibility (@vince)
+      - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance/performance+mobx (@vince)
+      - id: frontend/performance+mobx (@vince)
     mocks:
-      - id: frontend/mocks/mocks (@vince)
+      - id: frontend/mocks (@vince)
     testing:
-      - id: frontend/testing/karma+playwright (@vince)
+      - id: frontend/testing+karma+playwright (@vince)
 
   tester:
     framework:
-      - id: frontend/framework/react+mobx (@vince)
+      - id: frontend/react+mobx (@vince)
     state:
-      - id: frontend/client-state-management/mobx (@vince)
+      - id: frontend/state-mobx (@vince)
     mocks:
-      - id: frontend/mocks/mocks (@vince)
+      - id: frontend/mocks (@vince)
     testing:
-      - id: frontend/testing/karma+playwright (@vince)
+      - id: frontend/testing+karma+playwright (@vince)
         preloaded: true
 
   pm:
     framework:
-      - id: frontend/framework/react+mobx (@vince)
+      - id: frontend/react+mobx (@vince)
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
     state:
-      - id: frontend/client-state-management/mobx (@vince)
+      - id: frontend/state-mobx (@vince)
     server-state:
-      - id: frontend/server-state-management/react-query+axios+zod (@vince)
+      - id: frontend/server-state-react-query+axios+zod (@vince)
     accessibility:
-      - id: frontend/accessibility/accessibility (@vince)
+      - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance/performance+mobx (@vince)
+      - id: frontend/performance+mobx (@vince)
     mocks:
-      - id: frontend/mocks/mocks (@vince)
+      - id: frontend/mocks (@vince)
     testing:
-      - id: frontend/testing/karma+playwright (@vince)
+      - id: frontend/testing+karma+playwright (@vince)
 
   skill-summoner:
     framework:
-      - id: frontend/framework/react+mobx (@vince)
+      - id: frontend/react+mobx (@vince)
     styling:
-      - id: frontend/styling/tailwind (@vince)
+      - id: frontend/styling-tailwind (@vince)
     state:
-      - id: frontend/client-state-management/mobx (@vince)
+      - id: frontend/state-mobx (@vince)
     server-state:
-      - id: frontend/server-state-management/react-query+axios+zod (@vince)
+      - id: frontend/server-state-react-query+axios+zod (@vince)
     accessibility:
-      - id: frontend/accessibility/accessibility (@vince)
+      - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance/performance+mobx (@vince)
+      - id: frontend/performance+mobx (@vince)
     mocks:
-      - id: frontend/mocks/mocks (@vince)
+      - id: frontend/mocks (@vince)
     testing:
-      - id: frontend/testing/karma+playwright (@vince)
+      - id: frontend/testing+karma+playwright (@vince)
 
 philosophy: "Design system first, move fast"
 

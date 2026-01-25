@@ -84,16 +84,38 @@ function sanitizeSkillName(name: string): string {
 }
 
 /**
- * Default version for new plugins
+ * Default version for new plugins (semver format)
  */
-const DEFAULT_VERSION = 1;
+const DEFAULT_VERSION = "1.0.0";
 
 /**
- * Read existing plugin manifest to get previous version and hash
+ * Parse semver string to extract major version number
+ */
+function parseMajorVersion(version: string): number {
+  const match = version.match(/^(\d+)\./);
+  return match ? parseInt(match[1], 10) : 1;
+}
+
+/**
+ * Create a semver string with bumped major version
+ */
+function bumpMajorVersion(version: string): string {
+  const major = parseMajorVersion(version);
+  return `${major + 1}.0.0`;
+}
+
+/**
+ * Internal state for tracking content hash between compiles
+ * Hash is stored in a separate .content-hash file alongside plugin.json
+ */
+const CONTENT_HASH_FILE = ".content-hash";
+
+/**
+ * Read existing plugin manifest to get previous version
  */
 async function readExistingManifest(
   pluginDir: string,
-): Promise<{ version: number; contentHash: string | undefined } | null> {
+): Promise<{ version: string; contentHash: string | undefined } | null> {
   const manifestPath = getPluginManifestPath(pluginDir);
 
   if (!(await fileExists(manifestPath))) {
@@ -103,9 +125,17 @@ async function readExistingManifest(
   try {
     const content = await readFile(manifestPath);
     const manifest = JSON.parse(content) as PluginManifest;
+
+    // Try to read content hash from separate file
+    const hashFilePath = manifestPath.replace("plugin.json", CONTENT_HASH_FILE);
+    let contentHash: string | undefined;
+    if (await fileExists(hashFilePath)) {
+      contentHash = (await readFile(hashFilePath)).trim();
+    }
+
     return {
       version: manifest.version ?? DEFAULT_VERSION,
-      contentHash: manifest.content_hash,
+      contentHash,
     };
   } catch {
     return null;
@@ -119,7 +149,7 @@ async function readExistingManifest(
 async function determineVersion(
   skillPath: string,
   pluginDir: string,
-): Promise<{ version: number; contentHash: string; updated: string }> {
+): Promise<{ version: string; contentHash: string }> {
   // Calculate current content hash
   const newHash = await hashSkillFolder(skillPath);
 
@@ -131,16 +161,14 @@ async function determineVersion(
     return {
       version: DEFAULT_VERSION,
       contentHash: newHash,
-      updated: getCurrentDate(),
     };
   }
 
   if (existing.contentHash !== newHash) {
-    // Content changed - bump version
+    // Content changed - bump major version (1.0.0 -> 2.0.0)
     return {
-      version: existing.version + 1,
+      version: bumpMajorVersion(existing.version),
       contentHash: newHash,
-      updated: getCurrentDate(),
     };
   }
 
@@ -148,7 +176,6 @@ async function determineVersion(
   return {
     version: existing.version,
     contentHash: newHash,
-    updated: getCurrentDate(),
   };
 }
 
@@ -310,10 +337,7 @@ export async function compileSkillPlugin(
   await ensureDir(skillsDir);
 
   // 5. Determine version based on content hash
-  const { version, contentHash, updated } = await determineVersion(
-    skillPath,
-    pluginDir,
-  );
+  const { version, contentHash } = await determineVersion(skillPath, pluginDir);
 
   // 6. Generate and write plugin manifest
   const manifest = generateSkillPluginManifest({
@@ -321,19 +345,25 @@ export async function compileSkillPlugin(
     description: frontmatter.description,
     author: author ? `@${author}` : metadata?.author,
     version,
-    contentHash,
-    updated,
     keywords: metadata?.tags,
   });
 
   await writePluginManifest(pluginDir, manifest);
+
+  // 7. Write content hash to separate file for internal tracking
+  const hashFilePath = getPluginManifestPath(pluginDir).replace(
+    "plugin.json",
+    CONTENT_HASH_FILE,
+  );
+  await writeFile(hashFilePath, contentHash);
+
   verbose(`  Wrote plugin.json for ${skillName} (v${version})`);
 
-  // 7. Copy SKILL.md (and transform frontmatter if needed)
+  // 8. Copy SKILL.md (and transform frontmatter if needed)
   await writeFile(path.join(skillsDir, "SKILL.md"), skillMdContent);
   verbose(`  Copied SKILL.md`);
 
-  // 8. Copy optional files (reference.md)
+  // 9. Copy optional files (reference.md)
   for (const fileName of SKILL_FILES) {
     if (fileName === "SKILL.md") continue; // Already handled
 
@@ -345,7 +375,7 @@ export async function compileSkillPlugin(
     }
   }
 
-  // 9. Copy optional directories (examples, scripts)
+  // 10. Copy optional directories (examples, scripts)
   for (const dirName of SKILL_DIRS) {
     const sourceDir = path.join(skillPath, dirName);
     if (await fileExists(sourceDir)) {
@@ -354,7 +384,7 @@ export async function compileSkillPlugin(
     }
   }
 
-  // 10. Generate and write README.md
+  // 11. Generate and write README.md
   const readme = generateReadme(skillName, frontmatter, metadata);
   await writeFile(path.join(pluginDir, "README.md"), readme);
   verbose(`  Generated README.md`);

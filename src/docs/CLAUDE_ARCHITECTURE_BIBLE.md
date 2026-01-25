@@ -857,7 +857,7 @@ agents:
       - context-management
       - improvement-protocol
     skills:
-      - id: shared/reviewing
+      - id: reviewing/reviewing
         usage: when reviewing code
       - id: frontend/react
         usage: when reviewing React components

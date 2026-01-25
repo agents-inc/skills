@@ -52,14 +52,14 @@ categories:
     order: 4
     icon: "🛠️"
 
-  shared:
-    id: shared
-    name: Shared / Meta
-    description: Cross-cutting skills like reviewing and research methodology
+  reviewing:
+    id: reviewing
+    name: Reviewing & Code Quality
+    description: Code review patterns, feedback principles, quality assurance
     exclusive: false
     required: false
     order: 5
-    icon: "🔗"
+    icon: "👀"
 
   # ─────────────────────────────────────────────────────────────────
   # Frontend subcategories
@@ -630,8 +630,9 @@ suggested_stacks:
         api: hono
         database: drizzle
         auth: better-auth
-      shared:
+      reviewing:
         reviewing: reviewing
+      research:
         research: research-methodology
     philosophy: "Ship fast, iterate faster"
 
@@ -671,8 +672,9 @@ suggested_stacks:
         monorepo: turborepo
         env: env
         tooling: tooling
-      shared:
+      reviewing:
         reviewing: reviewing
+      research:
         research: research-methodology
     philosophy: "Production-ready from day one"
 
@@ -852,88 +854,88 @@ suggested_stacks:
 
 skill_aliases:
   # ─────────────────────────────────────────────────────────────────
-  # Frameworks (actual skill IDs from the skills directory)
+  # Frameworks (using frontmatter names - two-level format)
   # ─────────────────────────────────────────────────────────────────
-  react: "frontend/framework/react (@vince)"
-  vue: "frontend/framework/vue-composition-api (@vince)"
-  angular: "frontend/framework/angular-standalone (@vince)"
-  solidjs: "frontend/framework/solidjs (@vince)"
+  react: "frontend/react (@vince)"
+  vue: "frontend/vue-composition-api (@vince)"
+  angular: "frontend/angular-standalone (@vince)"
+  solidjs: "frontend/solidjs (@vince)"
 
   # Meta-frameworks
-  nextjs-app-router: "frontend/framework/nextjs-app-router (@vince)"
-  nextjs-server-actions: "frontend/framework/nextjs-server-actions (@vince)"
-  remix: "frontend/framework/remix (@vince)"
-  nuxt: "frontend/framework/nuxt (@vince)"
+  nextjs-app-router: "frontend/nextjs-app-router (@vince)"
+  nextjs-server-actions: "frontend/nextjs-server-actions (@vince)"
+  remix: "frontend/remix (@vince)"
+  nuxt: "frontend/nuxt (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Styling
   # ─────────────────────────────────────────────────────────────────
-  scss-modules: "frontend/styling/scss-modules (@vince)"
-  tailwind: "frontend/styling/tailwind (@vince)"
-  cva: "frontend/styling/cva (@vince)"
+  scss-modules: "frontend/scss-modules (@vince)"
+  tailwind: "frontend/tailwind (@vince)"
+  cva: "frontend/cva (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Client State
   # ─────────────────────────────────────────────────────────────────
-  zustand: "frontend/client-state-management/zustand (@vince)"
-  redux-toolkit: "frontend/client-state-management/redux-toolkit (@vince)"
-  mobx: "frontend/client-state-management/mobx (@vince)"
-  pinia: "frontend/client-state-management/pinia (@vince)"
-  ngrx-signalstore: "frontend/client-state-management/ngrx-signalstore (@vince)"
-  jotai: "frontend/client-state-management/jotai (@vince)"
+  zustand: "frontend/state-zustand (@vince)"
+  redux-toolkit: "frontend/state-redux-toolkit (@vince)"
+  mobx: "frontend/state-mobx (@vince)"
+  pinia: "frontend/state-pinia (@vince)"
+  ngrx-signalstore: "frontend/state-ngrx-signalstore (@vince)"
+  jotai: "frontend/state-jotai (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Server State / Data Fetching
   # ─────────────────────────────────────────────────────────────────
-  react-query: "frontend/server-state-management/react-query (@vince)"
-  swr: "frontend/data-fetching/swr (@vince)"
-  graphql-apollo: "frontend/data-fetching/graphql-apollo (@vince)"
-  graphql-urql: "frontend/data-fetching/graphql-urql (@vince)"
-  trpc: "frontend/data-fetching/trpc (@vince)"
+  react-query: "frontend/react-query (@vince)"
+  swr: "frontend/swr (@vince)"
+  graphql-apollo: "frontend/graphql-apollo (@vince)"
+  graphql-urql: "frontend/graphql-urql (@vince)"
+  trpc: "frontend/trpc (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Forms & Validation
   # ─────────────────────────────────────────────────────────────────
-  react-hook-form: "frontend/forms/react-hook-form (@vince)"
-  vee-validate: "frontend/forms/vee-validate (@vince)"
-  zod-validation: "frontend/forms/zod-validation (@vince)"
+  react-hook-form: "frontend/react-hook-form (@vince)"
+  vee-validate: "frontend/vee-validate (@vince)"
+  zod-validation: "frontend/zod-validation (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Testing
   # ─────────────────────────────────────────────────────────────────
-  vitest: "frontend/testing/vitest (@vince)"
-  playwright-e2e: "frontend/testing/playwright-e2e (@vince)"
-  cypress-e2e: "frontend/testing/cypress-e2e (@vince)"
-  react-testing-library: "frontend/testing/react-testing-library (@vince)"
-  vue-test-utils: "frontend/testing/vue-test-utils (@vince)"
+  vitest: "frontend/vitest (@vince)"
+  playwright-e2e: "frontend/playwright-e2e (@vince)"
+  cypress-e2e: "frontend/cypress-e2e (@vince)"
+  react-testing-library: "frontend/react-testing-library (@vince)"
+  vue-test-utils: "frontend/vue-test-utils (@vince)"
 
   # Mocking
-  msw: "frontend/mocks/msw (@vince)"
+  msw: "frontend/msw (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # UI Components
   # ─────────────────────────────────────────────────────────────────
-  shadcn-ui: "frontend/ui/shadcn-ui (@vince)"
-  tanstack-table: "frontend/ui/tanstack-table (@vince)"
-  radix-ui: "frontend/ui/radix-ui (@vince)"
+  shadcn-ui: "frontend/shadcn-ui (@vince)"
+  tanstack-table: "frontend/tanstack-table (@vince)"
+  radix-ui: "frontend/radix-ui (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Backend
   # ─────────────────────────────────────────────────────────────────
-  hono: "backend/api/hono (@vince)"
-  express: "backend/api/express (@vince)"
-  fastify: "backend/api/fastify (@vince)"
+  hono: "backend/hono (@vince)"
+  express: "backend/express (@vince)"
+  fastify: "backend/fastify (@vince)"
 
-  drizzle: "backend/database/drizzle (@vince)"
-  prisma: "backend/database/prisma (@vince)"
+  drizzle: "backend/drizzle (@vince)"
+  prisma: "backend/prisma (@vince)"
 
-  better-auth: "backend/auth/better-auth+drizzle+hono (@vince)"
+  better-auth: "backend/auth-better-auth+drizzle+hono (@vince)"
 
-  axiom-pino-sentry: "backend/observability/axiom+pino+sentry (@vince)"
-  posthog: "backend/analytics/posthog-analytics (@vince)"
-  posthog-flags: "backend/flags/posthog-flags (@vince)"
+  axiom-pino-sentry: "backend/observability+axiom+pino+sentry (@vince)"
+  posthog: "backend/analytics-posthog (@vince)"
+  posthog-flags: "backend/flags-posthog (@vince)"
 
-  resend: "backend/email/resend+react-email (@vince)"
+  resend: "backend/email-resend+react-email (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Mobile
@@ -944,37 +946,37 @@ skill_aliases:
   # ─────────────────────────────────────────────────────────────────
   # Setup
   # ─────────────────────────────────────────────────────────────────
-  turborepo: "setup/monorepo/turborepo (@vince)"
-  tooling: "setup/tooling/tooling (@vince)"
-  posthog-setup: "setup/analytics/posthog (@vince)"
+  turborepo: "setup/turborepo (@vince)"
+  tooling: "setup/tooling (@vince)"
+  posthog-setup: "setup/analytics-posthog (@vince)"
   env: "setup/env (@vince)"
-  observability-setup: "setup/observability/axiom+pino+sentry (@vince)"
-  email-setup: "setup/email/resend (@vince)"
+  observability-setup: "setup/observability+axiom+pino+sentry (@vince)"
+  email-setup: "setup/email-resend (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Additional Skills (Animation, PWA, Realtime, etc.)
   # ─────────────────────────────────────────────────────────────────
-  framer-motion: "frontend/animation/framer-motion (@vince)"
-  css-animations: "frontend/animation/css-animations (@vince)"
-  view-transitions: "frontend/animation/view-transitions (@vince)"
-  storybook: "frontend/tooling/storybook (@vince)"
-  error-boundaries: "frontend/error-handling/error-boundaries (@vince)"
-  accessibility: "frontend/accessibility/accessibility (@vince)"
-  websockets: "frontend/realtime/websockets (@vince)"
-  sse: "frontend/realtime/sse (@vince)"
-  socket-io: "frontend/realtime/socket-io (@vince)"
-  service-workers: "frontend/pwa/service-workers (@vince)"
-  file-upload: "frontend/file-upload/file-upload-patterns (@vince)"
-  image-handling: "frontend/files/image-handling (@vince)"
-  date-fns: "frontend/utilities/date-fns (@vince)"
-  github-actions: "backend/ci-cd/github-actions (@vince)"
-  backend-testing: "backend/testing/testing (@vince)"
-  backend-performance: "backend/performance/performance (@vince)"
-  frontend-performance: "frontend/performance/performance (@vince)"
+  framer-motion: "frontend/framer-motion (@vince)"
+  css-animations: "frontend/css-animations (@vince)"
+  view-transitions: "frontend/view-transitions (@vince)"
+  storybook: "frontend/storybook (@vince)"
+  error-boundaries: "frontend/error-boundaries (@vince)"
+  accessibility: "frontend/accessibility (@vince)"
+  websockets: "frontend/websockets (@vince)"
+  sse: "frontend/sse (@vince)"
+  socket-io: "frontend/socket-io (@vince)"
+  service-workers: "frontend/service-workers (@vince)"
+  file-upload: "frontend/file-upload-patterns (@vince)"
+  image-handling: "frontend/image-handling (@vince)"
+  date-fns: "frontend/date-fns (@vince)"
+  github-actions: "backend/ci-cd-github-actions (@vince)"
+  backend-testing: "backend/testing (@vince)"
+  backend-performance: "backend/performance (@vince)"
+  frontend-performance: "frontend/performance (@vince)"
   security: "security/security (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
-  # Shared / Meta
+  # Reviewing / Meta
   # ─────────────────────────────────────────────────────────────────
-  reviewing: "shared/reviewing (@vince)"
-  research-methodology: "research/research-methodology/research-methodology (@vince)"
+  reviewing: "reviewing/reviewing (@vince)"
+  research-methodology: "research/research-methodology (@vince)"

@@ -100,7 +100,7 @@ describe("plugin-validator", () => {
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: 1,
+          version: "1.0.0",
           description: "A test plugin",
         }),
       );
@@ -160,30 +160,30 @@ describe("plugin-validator", () => {
       expect(result.errors.some((e) => e.includes("kebab-case"))).toBe(true);
     });
 
-    it("should fail if version is not an integer", async () => {
+    it("should fail if version is not valid semver", async () => {
       const manifestPath = path.join(tempDir, "plugin.json");
       await writeFile(
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: "1.0.0", // String version - should be integer
+          version: 1, // Integer - should be semver string
         }),
       );
 
       const result = await validatePluginManifest(manifestPath);
 
-      // Schema enforces integer type, so string version is an error
+      // Schema enforces semver string type, so integer version is an error
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.includes("version"))).toBe(true);
     });
 
-    it("should pass with valid integer version", async () => {
+    it("should pass with valid semver version", async () => {
       const manifestPath = path.join(tempDir, "plugin.json");
       await writeFile(
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: 3,
+          version: "3.2.1",
           description: "Test plugin",
         }),
       );
@@ -193,13 +193,13 @@ describe("plugin-validator", () => {
       expect(result.valid).toBe(true);
     });
 
-    it("should fail if version is less than 1", async () => {
+    it("should fail if version is invalid semver", async () => {
       const manifestPath = path.join(tempDir, "plugin.json");
       await writeFile(
         manifestPath,
         JSON.stringify({
           name: "test-plugin",
-          version: 0, // Minimum is 1
+          version: "v1.0", // Invalid semver format
         }),
       );
 
@@ -505,7 +505,7 @@ permissionMode: acceptEdits
         path.join(tempDir, ".claude-plugin", "plugin.json"),
         JSON.stringify({
           name: "test-plugin",
-          version: 1,
+          version: "1.0.0",
           description: "A test plugin",
           skills: "./skills/",
           agents: "./agents/",

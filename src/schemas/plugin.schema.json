@@ -15,22 +15,10 @@
       "examples": ["skill-react", "stack-modern-react"]
     },
     "version": {
-      "type": "integer",
-      "description": "Plugin version (auto-incremented when content changes)",
-      "minimum": 1,
-      "examples": [1, 2, 3]
-    },
-    "content_hash": {
       "type": "string",
-      "description": "Content hash for change detection (first 7 characters of SHA-256)",
-      "pattern": "^[a-f0-9]{7}$",
-      "examples": ["a1b2c3d"]
-    },
-    "updated": {
-      "type": "string",
-      "description": "Date when the plugin was last updated",
-      "format": "date",
-      "examples": ["2026-01-25"]
+      "description": "Semantic version of the plugin (major.minor.patch)",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": ["1.0.0", "2.1.0", "0.1.0-beta"]
     },
     "description": {
       "type": "string",
