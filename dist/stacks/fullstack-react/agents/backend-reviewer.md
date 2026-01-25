@@ -5,9 +5,9 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-api-hono
-  - skill-database-drizzle
-  - skill-reviewing
+  - backend/api-hono (@vince)
+  - backend/database-drizzle (@vince)
+  - reviewing/reviewing (@vince)
 ---
 
 # Backend Reviewer Agent

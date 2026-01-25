@@ -5,8 +5,14 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-react
-  - skill-styling-scss-modules
+  - methodology/investigation-requirements (@vince)
+  - methodology/core-principles (@vince)
+  - methodology/anti-over-engineering (@vince)
+  - methodology/success-criteria (@vince)
+  - methodology/write-verification (@vince)
+  - methodology/improvement-protocol (@vince)
+  - frontend/react (@vince)
+  - frontend/styling-scss-modules (@vince)
 ---
 
 # Frontend Developer Agent

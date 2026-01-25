@@ -3,7 +3,6 @@
 This file contains decision frameworks, red flags, and anti-patterns for security. Referenced from [SKILL.md](SKILL.md).
 
 **Examples:**
-
 - [examples/core.md](examples/core.md) - Essential patterns (secrets, CSRF, cookies)
 - [examples/xss-prevention.md](examples/xss-prevention.md) - XSS protection, DOMPurify, CSP headers
 - [examples/dependency-security.md](examples/dependency-security.md) - Dependabot, CI security checks

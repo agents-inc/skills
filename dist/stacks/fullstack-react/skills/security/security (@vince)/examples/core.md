@@ -3,7 +3,6 @@
 > Essential security patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
-
 - [xss-prevention.md](xss-prevention.md) - XSS protection, DOMPurify, CSP headers
 - [dependency-security.md](dependency-security.md) - Dependabot, CI security checks
 - [access-control.md](access-control.md) - CODEOWNERS, rate limiting, branch protection
@@ -94,9 +93,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = document.querySelector<HTMLMetaElement>(
-    `meta[name="${CSRF_TOKEN_META_NAME}"]`,
-  )?.content;
+  const token = document.querySelector<HTMLMetaElement>(`meta[name="${CSRF_TOKEN_META_NAME}"]`)?.content;
 
   if (token) {
     config.headers[CSRF_HEADER_NAME] = token;
@@ -140,12 +137,12 @@ async function badUpdate(data: ProfileData) {
 // Backend cookie configuration
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-res.cookie("authToken", token, {
+res.cookie('authToken', token, {
   httpOnly: true, // Prevents JavaScript access
   secure: true, // HTTPS only
-  sameSite: "lax", // Modern default - balances security and UX (use 'strict' for sensitive operations only)
+  sameSite: 'lax', // Modern default - balances security and UX (use 'strict' for sensitive operations only)
   maxAge: COOKIE_MAX_AGE_SECONDS * 1000,
-  path: "/",
+  path: '/',
 });
 ```
 

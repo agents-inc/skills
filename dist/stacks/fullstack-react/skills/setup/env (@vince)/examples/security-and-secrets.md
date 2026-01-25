@@ -3,7 +3,6 @@
 > Patterns for secure secret handling. See [SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for essential patterns.
 
 **Related Examples:**
-
 - [core.md](core.md) - Per-app .env, Zod validation
 - [naming-and-templates.md](naming-and-templates.md) - Framework prefixes, .env.example
 - [feature-flags-and-config.md](feature-flags-and-config.md) - Feature flags, centralized config
@@ -32,7 +31,7 @@
 *.pfx
 ```
 
-**Why good:** .env.local and .env._.local patterns prevent committing local secrets, sensitive file extensions (_.key, \*.pem) prevent accidental key commits, optional .env ignore with !.env.example allows flexibility
+**Why good:** .env.local and .env.*.local patterns prevent committing local secrets, sensitive file extensions (*.key, *.pem) prevent accidental key commits, optional .env ignore with !.env.example allows flexibility
 
 ### Bad Example - Secrets committed to repository
 

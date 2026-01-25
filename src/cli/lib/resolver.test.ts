@@ -12,11 +12,13 @@ describe("resolveSkillReference", () => {
       path: "skills/frontend/framework/react (@vince)/",
       name: "React",
       description: "React component patterns",
+      canonicalId: "frontend/react (@vince)",
     },
     "backend/hono (@vince)": {
       path: "skills/backend/api/hono (@vince)/",
       name: "Hono",
       description: "Hono API framework",
+      canonicalId: "backend/hono (@vince)",
     },
   };
 
@@ -68,11 +70,13 @@ describe("resolveSkillReferences", () => {
       path: "skills/frontend/framework/react (@vince)/",
       name: "React",
       description: "React component patterns",
+      canonicalId: "frontend/react (@vince)",
     },
     "frontend/zustand (@vince)": {
       path: "skills/frontend/client-state-management/zustand (@vince)/",
       name: "Zustand",
       description: "Lightweight state management",
+      canonicalId: "frontend/zustand (@vince)",
     },
   };
 

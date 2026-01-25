@@ -5,8 +5,8 @@ tools: Read, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-api-hono
-  - skill-research-methodology
+  - backend/api-hono (@vince)
+  - research/research-methodology (@vince)
 ---
 
 # Backend Researcher Agent

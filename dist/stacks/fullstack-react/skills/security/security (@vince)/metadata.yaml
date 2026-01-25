@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../../../../schemas/metadata.schema.json
+# yaml-language-server: $schema=../../../schemas/metadata.schema.json
 category: security
 category_exclusive: false
 author: "@vince"
@@ -18,8 +18,3 @@ tags:
   - xss
   - csrf
   - input-validation
-forked_from:
-  skill_id: security/security (@vince)
-  version: 1
-  content_hash: ef294ff
-  date: 2026-01-22

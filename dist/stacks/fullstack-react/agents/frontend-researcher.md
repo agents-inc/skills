@@ -5,8 +5,8 @@ tools: Read, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - skill-react
-  - skill-research-methodology
+  - frontend/react (@vince)
+  - research/research-methodology (@vince)
 ---
 
 # Frontend Researcher Agent
