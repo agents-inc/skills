@@ -15,7 +15,6 @@ import type { SourceLoadResult } from "./source-loader";
  */
 interface ForkedFromMetadata {
   skill_id: string;
-  version: number;
   content_hash: string;
   date: string;
 }
@@ -24,7 +23,6 @@ interface ForkedFromMetadata {
  * Metadata structure (subset needed for forked_from injection)
  */
 interface SkillMetadata {
-  version: number;
   content_hash?: string;
   forked_from?: ForkedFromMetadata;
   // Allow other properties
@@ -41,7 +39,6 @@ const METADATA_FILE_NAME = "metadata.yaml";
  */
 export interface CopiedSkill {
   skillId: string;
-  version: string;
   contentHash: string;
   sourcePath: string;
   destPath: string;
@@ -87,8 +84,7 @@ function getCurrentDate(): string {
 /**
  * Inject forked_from metadata into a copied skill's metadata.yaml
  * - Removes the yaml-language-server schema comment (path is invalid in destination)
- * - Records the original skill_id, version, and content_hash
- * - Resets local version to 1 (fresh fork)
+ * - Records the original skill_id and content_hash for provenance tracking
  */
 async function injectForkedFromMetadata(
   destPath: string,
@@ -109,19 +105,12 @@ async function injectForkedFromMetadata(
   // Parse the metadata
   const metadata = parseYaml(yamlContent) as SkillMetadata;
 
-  // Store the original version before resetting
-  const originalVersion = metadata.version;
-
-  // Add forked_from provenance
+  // Add forked_from provenance (content_hash is the primary identifier)
   metadata.forked_from = {
     skill_id: skillId,
-    version: originalVersion,
     content_hash: contentHash,
     date: getCurrentDate(),
   };
-
-  // Reset local version to 1 (fresh fork)
-  metadata.version = 1;
 
   // Write back without schema comment
   const newYamlContent = stringifyYaml(metadata, { lineWidth: 0 });
@@ -151,7 +140,6 @@ export async function copySkill(
 
   return {
     skillId: skill.id,
-    version: skill.version,
     contentHash,
     sourcePath,
     destPath,
@@ -193,7 +181,6 @@ export async function copySkillFromSource(
 
   return {
     skillId: skill.id,
-    version: skill.version,
     contentHash,
     sourcePath,
     destPath,

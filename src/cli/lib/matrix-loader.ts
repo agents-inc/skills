@@ -178,7 +178,6 @@ export async function extractAllSkills(
       category: metadata.category,
       categoryExclusive: metadata.category_exclusive ?? true,
       author: metadata.author,
-      version: metadata.version,
       tags: metadata.tags ?? [],
 
       // Relationships (from metadata.yaml)
