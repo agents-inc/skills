@@ -980,3 +980,14 @@ skill_aliases:
   # ─────────────────────────────────────────────────────────────────
   reviewing: "reviewing/reviewing (@vince)"
   research-methodology: "research/research-methodology (@vince)"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Methodology (Universal principles + Implementation + Extended session)
+  # Note: core-principles is embedded in agent template, not a skill
+  # ─────────────────────────────────────────────────────────────────
+  investigation-requirements: "methodology/investigation-requirements (@vince)"
+  anti-over-engineering: "methodology/anti-over-engineering (@vince)"
+  success-criteria: "methodology/success-criteria (@vince)"
+  write-verification: "methodology/write-verification (@vince)"
+  improvement-protocol: "methodology/improvement-protocol (@vince)"
+  context-management: "methodology/context-management (@vince)"

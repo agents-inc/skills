@@ -193,7 +193,6 @@ async function runPluginModeCompile(
     });
     s.stop("Agent definitions fetched");
     verbose(`  Agents: ${agentDefs.agentsDir}`);
-    verbose(`  Principles: ${agentDefs.principlesDir}`);
     verbose(`  Templates: ${agentDefs.templatesDir}`);
   } catch (error) {
     s.stop("Failed to fetch agent definitions");

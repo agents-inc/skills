@@ -1,3 +1,32 @@
+---
+name: methodology/context-management (@vince)
+description: Long-term context management protocol - maintain project continuity across sessions through systematic documentation. Progress tracking, decision logging, insight preservation.
+---
+
+# Context Management Protocol
+
+> **Quick Guide:** Maintain project continuity across sessions through systematic documentation. Read context files at session start, update during work, leave project ready for next session.
+
+---
+
+<critical_requirements>
+
+## CRITICAL: Maintain Context Across Sessions
+
+**(Read all .claude/ context files at session start)**
+
+**(Update progress.md after each significant change)**
+
+**(Log decisions with rationale in decisions.md)**
+
+**(Document discoveries and gotchas in insights.md)**
+
+**(Leave project in state where next session can start immediately)**
+
+</critical_requirements>
+
+---
+
 <context_management>
 
 ## Long-Term Context Management Protocol
@@ -34,7 +63,7 @@ Maintain project continuity across sessions through systematic documentation.
 
 ### During Work
 
-````xml
+```xml
 <during_work>
 After each significant change or decision:
 
@@ -57,7 +86,6 @@ After each significant change or decision:
    - Non-obvious behaviors
 
 Format:
-```markdown
 ## [Date] - [Brief Title]
 
 **Decision/Insight:**
@@ -68,13 +96,11 @@ Format:
 
 **Impact:**
 [What this means going forward]
-````
-
 </during_work>
-
-````
+```
 
 ### At Session End
+
 ```xml
 <session_end>
 Before finishing, ensure:
@@ -87,7 +113,13 @@ Before finishing, ensure:
 
 Leave the project in a state where the next session can start immediately without context loss.
 </session_end>
-````
+```
+
+</context_management>
+
+---
+
+<test_tracking>
 
 ### Test Tracking
 
@@ -109,10 +141,16 @@ tests.json format:
   ]
 }
 
-NEVER delete entries from tests.json—only add or update status.
+NEVER delete entries from tests.json - only add or update status.
 This preserves test history and prevents regression.
 </test_tracking>
 ```
+
+</test_tracking>
+
+---
+
+<context_overload_prevention>
 
 ### Context Overload Prevention
 
@@ -132,19 +170,19 @@ This preserves test history and prevents regression.
 
 ## Completed
 
-- ✅ User profile editing UI (see ProfileEditor.tsx)
-- ✅ Form validation (see validation.ts)
-- ✅ Tests for happy path (see profile-editor.test.ts)
+- User profile editing UI (see ProfileEditor.tsx)
+- Form validation (see validation.ts)
+- Tests for happy path (see profile-editor.test.ts)
 
 ## In Progress
 
-- 🔄 Error handling for network failures
+- Error handling for network failures
   - Next: Add retry logic following pattern in api-client.ts
   - Tests: Need to add network error scenarios
 
 ## Blocked
 
-- ⏸️ Avatar upload feature
+- Avatar upload feature
   - Reason: Waiting for S3 configuration from DevOps
   - Tracking: Issue #456
 
@@ -156,21 +194,22 @@ Reference: api-client.ts lines 89-112 for the retry pattern
 
 This approach lets you maintain continuity without context bloat.
 
-## Special Instructions for Claude 4.5
+</context_overload_prevention>
 
-Claude 4.5 excels at **discovering state from the filesystem** rather than relying on compacted chat history.
+---
 
-**Fresh Start Approach:**
+<fresh_start_approach>
 
-1. Start each session as if it's the first
-2. Read .claude/ context files to understand state
-3. Use git log to see recent changes
-4. Examine filesystem to discover what exists
-5. Run integration tests to verify current behavior
+## Fresh Start Approach
+
+Start each session as if it's the first:
+
+1. Read .claude/ context files to understand state
+2. Use git log to see recent changes
+3. Examine filesystem to discover what exists
+4. Run integration tests to verify current behavior
 
 This "fresh start" approach works better than trying to maintain long chat history.
-
-## Context Scoping
 
 **Give the RIGHT context, not MORE context.**
 
@@ -178,7 +217,13 @@ This "fresh start" approach works better than trying to maintain long chat histo
 - For a store update: Provide the store + related stores
 - For API work: Provide the endpoint + client utilities
 
-Don't dump the entire codebase—focus context on what's relevant for the specific task.
+Don't dump the entire codebase - focus context on what's relevant for the specific task.
+
+</fresh_start_approach>
+
+---
+
+<why_this_matters>
 
 ## Why This Matters
 
@@ -195,4 +240,25 @@ With context files:
 - Build on past decisions
 - Remember what works/doesn't
 - Clear progress tracking
-  </context_management>
+
+</why_this_matters>
+
+---
+
+<critical_reminders>
+
+## CRITICAL REMINDERS
+
+**(Read all .claude/ context files at session start)**
+
+**(Update progress.md after each significant change)**
+
+**(Log decisions with rationale - not just what, but why)**
+
+**(Document discoveries and gotchas in insights.md)**
+
+**(NEVER remove entries from tests.json - only add or update)**
+
+**(Leave project ready for next session to start immediately)**
+
+</critical_reminders>

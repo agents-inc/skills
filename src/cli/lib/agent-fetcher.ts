@@ -7,7 +7,7 @@ import type { AgentSourcePaths } from "../../types";
 /**
  * Fetch agent definitions from marketplace source
  *
- * Returns paths to agent components (agents, principles, templates)
+ * Returns paths to agent components (agents, templates)
  * without loading them into memory.
  *
  * @param source - Source URL (e.g., "github:claude-collective/skills")
@@ -26,16 +26,11 @@ export async function fetchAgentDefinitions(
 
   // Build paths to agent components
   const agentsDir = path.join(result.path, "src", "agents");
-  const principlesDir = path.join(agentsDir, "_principles");
   const templatesDir = path.join(agentsDir, "_templates");
 
   // Validate directories exist
   if (!(await directoryExists(agentsDir))) {
     throw new Error(`Agent definitions not found at: ${agentsDir}`);
-  }
-
-  if (!(await directoryExists(principlesDir))) {
-    verbose(`Principles directory not found: ${principlesDir}`);
   }
 
   if (!(await directoryExists(templatesDir))) {
@@ -46,7 +41,6 @@ export async function fetchAgentDefinitions(
 
   return {
     agentsDir,
-    principlesDir,
     templatesDir,
     sourcePath: result.path,
   };

@@ -1,6 +1,32 @@
-## Success Criteria Template
+---
+name: methodology/success-criteria (@vince)
+description: Success criteria template - every task needs explicit, measurable criteria defining "done". Specific, measurable, achievable, verifiable requirements with verification checklist.
+---
+
+# Success Criteria
+
+> **Quick Guide:** Every task needs explicit, measurable criteria defining "done". Specific, measurable, achievable, verifiable. Verify each criterion and provide evidence.
+
+---
+
+<critical_requirements>
+
+## CRITICAL: Define Success Before Starting
+
+**(Every task needs explicit, measurable success criteria)**
+
+**(Criteria must be specific, measurable, achievable, verifiable)**
+
+**(Verify each criterion after implementation)**
+
+**(Provide evidence of completion)**
+
+</critical_requirements>
+
+---
 
 <success_criteria_template>
+
 Every task needs explicit, measurable criteria that define "done." This prevents agents from stopping too early or continuing unnecessarily.
 
 Success criteria must be:
@@ -39,9 +65,15 @@ Your implementation must meet these criteria:
 </success_criteria>
 ```
 
+</success_criteria_template>
+
+---
+
+<examples>
+
 ### Good vs. Bad Success Criteria
 
-**❌ Bad (vague, unmeasurable):**
+**Bad (vague, unmeasurable):**
 
 ```
 - Feature works well
@@ -52,7 +84,7 @@ Your implementation must meet these criteria:
 
 **Problem:** No specific, measurable targets. What does "works" mean? Which tests? How do you know it's "clean"?
 
-**✅ Good (specific, measurable):**
+**Good (specific, measurable):**
 
 ```
 1. User can click "Edit Profile" button and modal appears
@@ -68,6 +100,12 @@ Your implementation must meet these criteria:
 
 **Why better:** Each criterion can be verified with a simple yes/no check.
 
+</examples>
+
+---
+
+<verification_process>
+
 ### Verification Process
 
 After completing work, systematically verify:
@@ -78,9 +116,9 @@ For each success criterion:
 1. State the criterion
 2. Describe how you verified it
 3. Provide evidence (test output, behavior observed, file comparison)
-4. Mark as ✅ (met) or ❌ (not met)
+4. Mark as PASS (met) or FAIL (not met)
 
-If any criterion is ❌:
+If any criterion is FAIL:
 - Explain why it's not met
 - Indicate if it's a blocker or acceptable deviation
 - Suggest what's needed to meet it
@@ -91,17 +129,23 @@ If any criterion is ❌:
 
 ```
 Criterion 1: User can click "Edit Profile" and see modal with current values
-✅ Verified: Tested in browser, modal opens with user's current name, email, bio
+PASS Verified: Tested in browser, modal opens with user's current name, email, bio
 Evidence: Screenshot attached, manual test passed
 
 Criterion 5: All tests in profile-editor.test.ts pass
-✅ Verified: Ran `npm test profile-editor.test.ts`
+PASS Verified: Ran `npm test profile-editor.test.ts`
 Evidence: All 12 tests passing, 0 failures
 
 Criterion 7: No modifications to authentication system
-✅ Verified: git diff shows no changes to auth.py or related files
+PASS Verified: git diff shows no changes to auth.py or related files
 Evidence: `git diff main...feature-branch -- auth.py` returns empty
 ```
+
+</verification_process>
+
+---
+
+<agent_types>
 
 ### For Different Agent Types
 
@@ -121,7 +165,7 @@ Focus on test coverage and quality:
 - Tests fail before implementation (red)
 - Tests pass after implementation (green)
 
-**Backend Reviewer and Frontend Reviewer Agent**
+**Reviewer Agent**
 Focus on quality gates:
 
 - Code follows conventions
@@ -137,7 +181,11 @@ Focus on completeness and clarity:
 - Constraints are explicit
 - Success criteria are measurable
 
-</success_criteria_template>
+</agent_types>
+
+---
+
+<workflow_integration>
 
 ## Integration with Workflow
 
@@ -148,3 +196,23 @@ Success criteria should be:
 3. **Verified by Developer** after implementation
 4. **Confirmed by Reviewer** during code review
 5. **Tracked in progress.md** as tasks complete
+
+</workflow_integration>
+
+---
+
+<critical_reminders>
+
+## CRITICAL REMINDERS
+
+**(Every task needs explicit, measurable success criteria)**
+
+**(Criteria must be: Specific, Measurable, Achievable, Verifiable)**
+
+**(Verify each criterion after implementation)**
+
+**(Provide evidence of completion for each criterion)**
+
+**(Mark criteria as PASS/FAIL with explanation)**
+
+</critical_reminders>

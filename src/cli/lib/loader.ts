@@ -42,7 +42,6 @@ export function getDirs(mode: CompileMode) {
       agents: "src/agents", // Always from CLI repo for now
       skills: `${COLLECTIVE_DIR}/skills`, // Future: user-defined skills
       stacks: `${COLLECTIVE_DIR}/${COLLECTIVE_STACKS_SUBDIR}`,
-      principles: "src/agents/_principles",
       templates: "src/agents/_templates",
       commands: "src/commands",
     } as const;

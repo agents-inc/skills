@@ -1,4 +1,29 @@
-## Write Verification Protocol
+---
+name: methodology/write-verification (@vince)
+description: Write verification protocol - never report success without verifying work was actually saved. Re-read files after edits, verify changes exist, only report success after verification passes.
+---
+
+# Write Verification Protocol
+
+> **Quick Guide:** Never report success without verifying work was actually saved. Re-read files after edits, verify changes exist, only report success after verification passes.
+
+---
+
+<critical_requirements>
+
+## CRITICAL: Verify All File Operations
+
+**(Never report success without verifying your work was actually saved)**
+
+**(Re-read files after completing edits)**
+
+**(Verify changes exist in the file before reporting success)**
+
+**(If verification fails, re-attempt the edit - do NOT report success)**
+
+</critical_requirements>
+
+---
 
 <write_verification_protocol>
 
@@ -8,11 +33,11 @@
 
 Agents can:
 
-1. ✅ Analyze what needs to change
-2. ✅ Generate correct content
-3. ✅ Plan the edits
-4. ❌ **Fail to actually execute the Write/Edit operations**
-5. ❌ **Report success based on the plan, not reality**
+1. Analyze what needs to change
+2. Generate correct content
+3. Plan the edits
+4. **Fail to actually execute the Write/Edit operations**
+5. **Report success based on the plan, not reality**
 
 This causes downstream failures that are hard to debug because the agent reported success.
 
@@ -26,7 +51,7 @@ This causes downstream failures that are hard to debug because the agent reporte
    - For edits: Confirm the old content was replaced
    - For structural changes: Confirm the structure is correct
 3. **If verification fails:**
-   - Report: "❌ VERIFICATION FAILED: [what was expected] not found in [file]"
+   - Report: "VERIFICATION FAILED: [what was expected] not found in [file]"
    - Do NOT report success
    - Re-attempt the edit operation
 4. **Only report success AFTER verification passes**
@@ -41,6 +66,12 @@ Include this in your final validation:
 - [ ] Verified expected changes exist in file
 - [ ] Only reporting success after verification passed
 ```
+
+</write_verification_protocol>
+
+---
+
+<agent_types>
 
 ### What To Verify By Agent Type
 
@@ -67,10 +98,22 @@ Include this in your final validation:
 - Keys/values are correct
 - File is valid (JSON/YAML parseable)
 
-### Emphatic Reminder
+</agent_types>
 
-**NEVER report task completion based on what you planned to do.**
-**ALWAYS verify files were actually modified before reporting success.**
-**A task is not complete until verification confirms the changes exist.**
+---
 
-</write_verification_protocol>
+<critical_reminders>
+
+## CRITICAL REMINDERS
+
+**(NEVER report task completion based on what you planned to do)**
+
+**(ALWAYS verify files were actually modified before reporting success)**
+
+**(A task is not complete until verification confirms the changes exist)**
+
+**(Re-read files after edits to confirm changes were saved)**
+
+**(If verification fails, re-attempt the operation)**
+
+</critical_reminders>

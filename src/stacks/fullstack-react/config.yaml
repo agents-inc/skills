@@ -12,6 +12,12 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
+  # Methodology - Universal (ALL agents need these)
+  - id: methodology/universal
+  # Methodology - Implementation (developers, testers - agents that write code)
+  - id: methodology/implementation
+  # Methodology - Extended Session (long-running agents)
+  - id: methodology/extended-session
   # Frontend
   - id: frontend/react (@vince)
   - id: frontend/styling-scss-modules (@vince)
@@ -66,6 +72,11 @@ agents:
 # Per-agent skill assignments (hierarchical by category)
 agent_skills:
   frontend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
     framework:
       - id: frontend/react (@vince)
         preloaded: true
@@ -94,6 +105,11 @@ agent_skills:
       - id: security/security (@vince)
 
   backend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
     api:
       - id: backend/api-hono (@vince)
         preloaded: true
@@ -180,6 +196,11 @@ agent_skills:
         preloaded: true
 
   tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
     testing:
       - id: frontend/testing-vitest (@vince)
         preloaded: true
@@ -190,6 +211,9 @@ agent_skills:
         preloaded: true
 
   pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
     research:
       - id: research/research-methodology (@vince)
         preloaded: true
@@ -498,6 +522,11 @@ agent_skills:
       - id: security/security (@vince)
 
   orchestrator:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     research:
       - id: research/research-methodology (@vince)
         preloaded: true

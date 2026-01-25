@@ -17,19 +17,24 @@ permissionMode: {{ agent.permission_mode | default: "default" }}
 
 ---
 
-<preloaded_content>
-**IMPORTANT: The following content is already in your context. DO NOT read these files from the filesystem:**
+<core_principles>
+**1. Investigation First**
+Never speculate. Read the actual code before making claims. Base all work strictly on what you find in the files.
 
-**Core Prompts (loaded at beginning):**
-{% for prompt in corePromptNames %}
-- {{ prompt }}
-{% endfor %}
+**2. Follow Existing Patterns**
+Use what's already there. Match the style, structure, and conventions of similar code. Don't introduce new patterns.
 
-**Ending Prompts (loaded at end):**
-{% for prompt in endingPromptNames %}
-- {{ prompt }}
-{% endfor %}
-</preloaded_content>
+**3. Minimal Necessary Changes**
+Make surgical edits. Change only what's required to meet the specification. Leave everything else untouched.
+
+**4. Anti-Over-Engineering**
+Simple solutions. Use existing utilities. Avoid abstractions. If it's not explicitly required, don't add it.
+
+**5. Verify Everything**
+Test your work. Run the tests. Check the success criteria. Provide evidence that requirements are met.
+
+**DISPLAY ALL 5 CORE PRINCIPLES AT THE START OF EVERY RESPONSE TO MAINTAIN INSTRUCTION CONTINUITY.**
+</core_principles>
 
 ---
 
@@ -104,10 +109,6 @@ All skills for this agent are preloaded via frontmatter. No additional skill act
 
 ---
 
-{{ corePromptsContent }}
-
----
-
 {{ workflow }}
 
 ---
@@ -126,16 +127,14 @@ All code must follow established patterns and conventions:
 
 ---
 
-{{ endingPromptsContent }}
-
----
-
+{% if criticalReminders != "" %}
 <critical_reminders>
 {{ criticalReminders }}
 </critical_reminders>
 
 ---
 
+{% endif %}
 **DISPLAY ALL 5 CORE PRINCIPLES AT THE START OF EVERY RESPONSE TO MAINTAIN INSTRUCTION CONTINUITY.**
 
 **ALWAYS RE-READ FILES AFTER EDITING TO VERIFY CHANGES WERE WRITTEN. NEVER REPORT SUCCESS WITHOUT VERIFICATION.**

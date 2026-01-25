@@ -50,7 +50,6 @@ export const DIRS = {
   agents: "src/agents",
   skills: "src/skills",
   stacks: "src/stacks",
-  principles: "src/agents/_principles",
   templates: "src/agents/_templates",
   commands: "src/commands",
 } as const;

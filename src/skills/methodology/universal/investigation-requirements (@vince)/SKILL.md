@@ -1,4 +1,32 @@
+---
+name: methodology/investigation-requirements (@vince)
+description: Investigation requirement - never speculate about code you haven't read. List files, read completely, base analysis on evidence. Prevents hallucination in coding agents.
+---
+
+# Investigation Requirements
+
+> **Quick Guide:** Never speculate about code you haven't opened. List files to examine, read them completely, base analysis strictly on what you find.
+
+---
+
+<critical_requirements>
+
+## CRITICAL: Before Any Implementation
+
+**(Never speculate about code you have not opened)**
+
+**(List the files you need to examine explicitly)**
+
+**(Read each file completely before making claims)**
+
+**(Base analysis strictly on what you find in the files)**
+
+</critical_requirements>
+
+---
+
 <investigation_requirement>
+
 **CRITICAL: Never speculate about code you have not opened.**
 
 Before making any claims or implementing anything:
@@ -21,7 +49,12 @@ If you don't have access to necessary files:
 - Do not proceed without proper investigation
 
 **This prevents 80%+ of hallucination issues in coding agents.**
+
 </investigation_requirement>
+
+---
+
+<examples>
 
 ## What "Investigation" Means
 
@@ -45,3 +78,23 @@ Based on standard authentication patterns, I'll implement...
 ```
 
 Always choose the good approach.
+
+</examples>
+
+---
+
+<critical_reminders>
+
+## CRITICAL REMINDERS
+
+**(Never speculate about code you have not opened)**
+
+**(You MUST list files to examine before making claims)**
+
+**(You MUST read each file completely)**
+
+**(You MUST base all analysis strictly on what you find in the files)**
+
+**(This prevents 80%+ of hallucination issues)**
+
+</critical_reminders>

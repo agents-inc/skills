@@ -297,18 +297,7 @@ export const initCommand = new Command("init")
             const compileAgents: Record<string, CompileAgentConfig> = {};
             for (const agentId of DEFAULT_AGENTS) {
               if (agents[agentId]) {
-                compileAgents[agentId] = {
-                  core_prompts: [
-                    "core-principles",
-                    "investigation-requirement",
-                    "write-verification",
-                    "anti-over-engineering",
-                  ],
-                  ending_prompts: [
-                    "context-management",
-                    "improvement-protocol",
-                  ],
-                };
+                compileAgents[agentId] = {};
               }
             }
             compileConfig = {
