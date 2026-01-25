@@ -3,9 +3,9 @@ import { ensureDir, writeFile } from "../utils/fs";
 import type { PluginManifest, PluginAuthor } from "../../types";
 
 /**
- * Default version for new plugins
+ * Default version for new plugins (integer versioning)
  */
-const DEFAULT_VERSION = "1.0.0";
+const DEFAULT_VERSION = 1;
 
 /**
  * Default license for new plugins
@@ -39,8 +39,12 @@ export interface SkillPluginOptions {
   author?: string;
   /** Author email */
   authorEmail?: string;
-  /** Plugin version (defaults to 1.0.0) */
-  version?: string;
+  /** Plugin version (integer, defaults to 1) */
+  version?: number;
+  /** Content hash for change detection (7-char hex) */
+  contentHash?: string;
+  /** Date when last updated (YYYY-MM-DD) */
+  updated?: string;
   /** Keywords for discoverability */
   keywords?: string[];
 }
@@ -57,8 +61,12 @@ export interface StackPluginOptions {
   author?: string;
   /** Author email */
   authorEmail?: string;
-  /** Plugin version (defaults to 1.0.0) */
-  version?: string;
+  /** Plugin version (integer, defaults to 1) */
+  version?: number;
+  /** Content hash for change detection (7-char hex) */
+  contentHash?: string;
+  /** Date when last updated (YYYY-MM-DD) */
+  updated?: string;
   /** Keywords for discoverability */
   keywords?: string[];
   /** Whether skills directory should be embedded */
@@ -97,6 +105,14 @@ export function generateSkillPluginManifest(
     skills: "./skills/",
   };
 
+  if (options.contentHash) {
+    manifest.content_hash = options.contentHash;
+  }
+
+  if (options.updated) {
+    manifest.updated = options.updated;
+  }
+
   if (options.description) {
     manifest.description = options.description;
   }
@@ -125,6 +141,14 @@ export function generateStackPluginManifest(
     version: options.version ?? DEFAULT_VERSION,
     license: DEFAULT_LICENSE,
   };
+
+  if (options.contentHash) {
+    manifest.content_hash = options.contentHash;
+  }
+
+  if (options.updated) {
+    manifest.updated = options.updated;
+  }
 
   // Stack plugins embed skills as a directory
   if (options.hasSkills) {

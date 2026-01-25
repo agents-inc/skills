@@ -14,9 +14,11 @@ import { DIRS } from "../consts";
 import {
   generateStackPluginManifest,
   writePluginManifest,
+  getPluginManifestPath,
 } from "./plugin-manifest";
 import { loadStack, loadSkillsByIds, loadAllAgents } from "./loader";
 import { resolveAgents, stackToCompileConfig } from "./resolver";
+import { hashString, getCurrentDate } from "./versioning";
 import type {
   PluginManifest,
   StackConfig,
@@ -26,6 +28,92 @@ import type {
   CompiledAgentData,
   AgentHookDefinition,
 } from "../../types";
+
+/**
+ * Default version for new stack plugins
+ */
+const DEFAULT_VERSION = 1;
+
+/**
+ * Read existing plugin manifest to get previous version and hash
+ */
+async function readExistingManifest(
+  pluginDir: string,
+): Promise<{ version: number; contentHash: string | undefined } | null> {
+  const manifestPath = getPluginManifestPath(pluginDir);
+
+  if (!(await fileExists(manifestPath))) {
+    return null;
+  }
+
+  try {
+    const content = await readFile(manifestPath);
+    const manifest = JSON.parse(content) as PluginManifest;
+    return {
+      version: manifest.version ?? DEFAULT_VERSION,
+      contentHash: manifest.content_hash,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Hash stack config for content change detection
+ * Uses stack config YAML and skill IDs as the content fingerprint
+ */
+function hashStackConfig(stack: StackConfig): string {
+  // Create a deterministic string from stack config
+  const parts: string[] = [
+    `name:${stack.name}`,
+    `description:${stack.description ?? ""}`,
+    `skills:${(stack.skills || [])
+      .map((s) => s.id)
+      .sort()
+      .join(",")}`,
+    `agents:${(stack.agents || []).sort().join(",")}`,
+  ];
+  return hashString(parts.join("\n"));
+}
+
+/**
+ * Determine version based on content hash comparison
+ */
+async function determineStackVersion(
+  stack: StackConfig,
+  pluginDir: string,
+): Promise<{ version: number; contentHash: string; updated: string }> {
+  // Calculate current content hash
+  const newHash = hashStackConfig(stack);
+
+  // Read existing manifest
+  const existing = await readExistingManifest(pluginDir);
+
+  if (!existing) {
+    // New plugin - use default version
+    return {
+      version: DEFAULT_VERSION,
+      contentHash: newHash,
+      updated: getCurrentDate(),
+    };
+  }
+
+  if (existing.contentHash !== newHash) {
+    // Content changed - bump version
+    return {
+      version: existing.version + 1,
+      contentHash: newHash,
+      updated: getCurrentDate(),
+    };
+  }
+
+  // No change - keep existing version
+  return {
+    version: existing.version,
+    contentHash: newHash,
+    updated: getCurrentDate(),
+  };
+}
 
 /**
  * Options for compiling a stack into a plugin
@@ -408,13 +496,21 @@ export async function compileStackPlugin(
     verbose(`  Generated hooks/hooks.json`);
   }
 
-  // 11. Generate and write plugin manifest
+  // 11. Determine version based on content hash
+  const { version, contentHash, updated } = await determineStackVersion(
+    stack,
+    pluginDir,
+  );
+
+  // 12. Generate and write plugin manifest
   const uniqueSkillPlugins = [...new Set(allSkillPlugins)];
   const manifest = generateStackPluginManifest({
     stackName: stackId,
     description: stack.description,
     author: stack.author,
-    version: stack.version,
+    version,
+    contentHash,
+    updated,
     keywords: stack.tags,
     hasAgents: true,
     hasHooks,
@@ -422,9 +518,9 @@ export async function compileStackPlugin(
   });
 
   await writePluginManifest(pluginDir, manifest);
-  verbose(`  Wrote plugin.json`);
+  verbose(`  Wrote plugin.json (v${version})`);
 
-  // 12. Generate and write README.md
+  // 13. Generate and write README.md
   const readme = generateStackReadme(
     stackId,
     stack,

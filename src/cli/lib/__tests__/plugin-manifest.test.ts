@@ -104,18 +104,36 @@ describe("plugin-manifest", () => {
     it("should use custom version when provided", () => {
       const manifest = generateSkillPluginManifest({
         skillName: "react",
-        version: "2.0.0",
+        version: 5,
       });
 
-      expect(manifest.version).toBe("2.0.0");
+      expect(manifest.version).toBe(5);
     });
 
-    it("should default to version 1.0.0", () => {
+    it("should default to version 1", () => {
       const manifest = generateSkillPluginManifest({
         skillName: "react",
       });
 
-      expect(manifest.version).toBe("1.0.0");
+      expect(manifest.version).toBe(1);
+    });
+
+    it("should include content_hash when provided", () => {
+      const manifest = generateSkillPluginManifest({
+        skillName: "react",
+        contentHash: "a1b2c3d",
+      });
+
+      expect(manifest.content_hash).toBe("a1b2c3d");
+    });
+
+    it("should include updated when provided", () => {
+      const manifest = generateSkillPluginManifest({
+        skillName: "react",
+        updated: "2026-01-25",
+      });
+
+      expect(manifest.updated).toBe("2026-01-25");
     });
 
     it("should include MIT license by default", () => {
@@ -232,12 +250,30 @@ describe("plugin-manifest", () => {
       expect(manifest.keywords).toEqual(["frontend", "react", "stack"]);
     });
 
-    it("should default to version 1.0.0", () => {
+    it("should default to version 1", () => {
       const manifest = generateStackPluginManifest({
         stackName: "modern-react",
       });
 
-      expect(manifest.version).toBe("1.0.0");
+      expect(manifest.version).toBe(1);
+    });
+
+    it("should include content_hash when provided", () => {
+      const manifest = generateStackPluginManifest({
+        stackName: "modern-react",
+        contentHash: "b2c3d4e",
+      });
+
+      expect(manifest.content_hash).toBe("b2c3d4e");
+    });
+
+    it("should include updated when provided", () => {
+      const manifest = generateStackPluginManifest({
+        stackName: "modern-react",
+        updated: "2026-01-25",
+      });
+
+      expect(manifest.updated).toBe("2026-01-25");
     });
   });
 

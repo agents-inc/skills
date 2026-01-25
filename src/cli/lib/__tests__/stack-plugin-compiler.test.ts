@@ -349,7 +349,9 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       expect(manifest.name).toBe(stackId);
       expect(manifest.description).toBe("My custom stack");
-      expect(manifest.version).toBe("2.0.0");
+      expect(manifest.version).toBe(1); // Integer versioning (first compile = 1)
+      expect(manifest.content_hash).toMatch(/^[a-f0-9]{7}$/); // 7-char hex hash
+      expect(manifest.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/); // YYYY-MM-DD
       expect(manifest.agents).toBe("./agents/");
     });
 
@@ -707,7 +709,8 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       expect(result.manifest.name).toBe(stackId);
       expect(result.manifest.description).toBe("A versioned stack");
-      expect(result.manifest.version).toBe("2.5.0");
+      expect(result.manifest.version).toBe(1); // Integer versioning (first compile = 1)
+      expect(result.manifest.content_hash).toMatch(/^[a-f0-9]{7}$/); // 7-char hex hash
       expect(result.manifest.author?.name).toBe("@vince");
     });
 
@@ -1114,7 +1117,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       const result: CompiledStackPlugin = {
         pluginPath: "/output/test-stack",
-        manifest: { name: "test-stack", version: "1.0.0" },
+        manifest: { name: "test-stack", version: 1 },
         stackName: "Test Stack",
         agents: ["frontend-developer"],
         skillPlugins: ["skill-react"],
