@@ -101,11 +101,9 @@ export interface AgentsConfig {
 
 /**
  * Agent configuration for compilation
- * Contains prompts and skills for a specific agent
+ * Contains skills for a specific agent
  */
 export interface CompileAgentConfig {
-  core_prompts: string[]; // Prompt names for beginning of agent
-  ending_prompts: string[]; // Prompt names for end of agent
   skills?: SkillReference[]; // Optional - can come from stack
 }
 
@@ -139,8 +137,6 @@ export interface AgentConfig {
   disallowed_tools?: string[]; // Tools this agent cannot use
   permission_mode?: string; // Permission mode for agent operations
   hooks?: Record<string, AgentHookDefinition[]>; // Lifecycle hooks
-  core_prompts: string[]; // Direct array of prompt names
-  ending_prompts: string[]; // Direct array of prompt names
   output_format?: string;
   skills: Skill[]; // Unified skills list (loaded dynamically via Skill tool)
   path?: string; // Relative path to agent directory (e.g., "developer/backend-developer")
@@ -153,11 +149,7 @@ export interface CompiledAgentData {
   examples: string;
   criticalRequirementsTop: string; // <critical_requirements> at TOP
   criticalReminders: string; // <critical_reminders> at BOTTOM
-  corePromptNames: string[];
-  corePromptsContent: string;
   outputFormat: string;
-  endingPromptNames: string[];
-  endingPromptsContent: string;
   skills: Skill[]; // Flat array of all skills
   preloadedSkills: Skill[]; // Skills with content embedded
   dynamicSkills: Skill[]; // Skills loaded via Skill tool (metadata only)
@@ -513,8 +505,6 @@ export interface MarketplaceFetchResult {
 export interface AgentSourcePaths {
   /** Path to agents directory (contains agent subdirs) */
   agentsDir: string;
-  /** Path to _principles directory */
-  principlesDir: string;
   /** Path to _templates directory */
   templatesDir: string;
   /** Original source path */

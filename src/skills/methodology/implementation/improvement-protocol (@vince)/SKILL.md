@@ -1,6 +1,32 @@
-## Self-Improvement Protocol
+---
+name: methodology/improvement-protocol (@vince)
+description: Self-improvement protocol for agents modifying their own prompts/configurations. Evidence-based improvements, structured changes, proven patterns from research.
+---
+
+# Self-Improvement Protocol
+
+> **Quick Guide:** When improving your own prompt/configuration, use evidence-based improvements with proven patterns. Suggest changes with clear rationale, let user approve before applying.
+
+---
+
+<critical_requirements>
+
+## CRITICAL: Evidence-Based Improvements Only
+
+**(All improvements must use established prompt engineering patterns)**
+
+**(Base changes on empirical results, not speculation)**
+
+**(Provide clear rationale and source for each improvement)**
+
+**(Suggest changes with before/after - let user approve before applying)**
+
+</critical_requirements>
+
+---
 
 <improvement_protocol>
+
 When a task involves improving your own prompt/configuration:
 
 ### Recognition
@@ -15,7 +41,7 @@ When a task involves improving your own prompt/configuration:
 
 ### Process
 
-````xml
+```xml
 <self_improvement_workflow>
 1. **Read Current Configuration**
    - Load `.claude/agents/[your-name].md`
@@ -55,7 +81,6 @@ When a task involves improving your own prompt/configuration:
    - Make verification checklists explicit
 
 4. **Document Changes**
-   ```markdown
    ## Improvement Applied: [Brief Title]
 
    **Date:** [YYYY-MM-DD]
@@ -71,20 +96,22 @@ When a task involves improving your own prompt/configuration:
 
    **Expected Impact:**
    [How this should improve performance]
-````
 
 5. **Suggest, Don't Apply**
    - Propose changes with clear rationale
    - Show before/after sections
    - Explain expected benefits
    - Let the user approve before applying
-     </self_improvement_workflow>
+</self_improvement_workflow>
+```
 
-## When Analyzing and Improving Agent Prompts
+</improvement_protocol>
 
-Follow this structured approach:
+---
 
-### 1. Identify the Improvement Category
+<improvement_categories>
+
+## Improvement Categories
 
 Every improvement must fit into one of these categories:
 
@@ -96,63 +123,48 @@ Every improvement must fit into one of these categories:
 - **Tool Usage**: Clarify how to use a specific tool
 - **Success Criteria**: Add verification step
 
-### 2. Determine the Correct Section
+</improvement_categories>
 
-Place improvements in the appropriate section:
+---
 
-- `core-principles.md` - Fundamental rules (rarely changed)
-- `investigation-requirement.md` - What to examine before work
-- `anti-over-engineering.md` - What to avoid
-- Agent-specific workflow - Process steps
-- Agent-specific constraints - Boundaries and limits
+<proven_patterns>
 
-### 3. Use Proven Patterns
+## Proven Patterns
 
 All improvements must use established prompt engineering patterns:
 
 **Pattern 1: Specific File References**
 
-❌ Bad: "Check the auth patterns"
-✅ Good: "Examine UserStore.ts lines 45-89 for the async flow pattern"
+- Bad: "Check the auth patterns"
+- Good: "Examine UserStore.ts lines 45-89 for the async flow pattern"
 
 **Pattern 2: Concrete Examples**
 
-❌ Bad: "Use MobX properly"
-✅ Good: "Use `flow` from MobX for async actions (see UserStore.fetchUser())"
+- Bad: "Use MobX properly"
+- Good: "Use `flow` from MobX for async actions (see UserStore.fetchUser())"
 
 **Pattern 3: Explicit Constraints**
 
-❌ Bad: "Don't over-engineer"
-✅ Good: "Do not create new HTTP clients - use apiClient from lib/api-client.ts"
+- Bad: "Don't over-engineer"
+- Good: "Do not create new HTTP clients - use apiClient from lib/api-client.ts"
 
 **Pattern 4: Verification Steps**
 
-❌ Bad: "Make sure it works"
-✅ Good: "Run `npm test` and verify UserStore.test.ts passes"
+- Bad: "Make sure it works"
+- Good: "Run `npm test` and verify UserStore.test.ts passes"
 
 **Pattern 5: Emphatic for Critical Rules**
 
 Use **bold** or CAPITALS for rules that are frequently violated:
 "**NEVER modify files in /auth directory without explicit approval**"
 
-### 4. Format Requirements
+</proven_patterns>
 
-- Use XML tags for structured sections (`<investigation>`, `<constraints>`)
-- Use numbered lists for sequential steps
-- Use bullet points for non-sequential items
-- Use code blocks for examples
-- Keep sentences concise (under 20 words)
+---
 
-### 5. Integration Requirements
+<output_format>
 
-New content must:
-
-- Not duplicate existing instructions
-- Not contradict existing rules
-- Fit naturally into the existing structure
-- Reference the source of the insight (e.g., "Based on OAuth implementation in PR #123")
-
-### 6. Output Format
+## Output Format
 
 When suggesting improvements, provide:
 
@@ -177,33 +189,13 @@ Source: [What triggered this - specific implementation, bug, etc.]
 </integration_notes>
 ```
 
-### Improvement Sources
+</output_format>
 
-**Proven patterns to learn from:**
+---
 
-1. **Anthropic Documentation**
-   - Prompt engineering best practices
-   - XML tag usage guidelines
-   - Chain-of-thought prompting
-   - Document-first query-last ordering
+<red_flags>
 
-2. **Production Systems**
-   - Aider: Clear role definition, investigation requirements
-   - SWE-agent: Anti-over-engineering principles, minimal changes
-   - Cursor: Pattern following, existing code reuse
-
-3. **Academic Research**
-   - Few-shot examples improve accuracy 30%+
-   - Self-consistency through repetition
-   - Structured output via XML tags
-   - Emphatic language for critical rules
-
-4. **Community Patterns**
-   - GitHub issues with "this fixed my agent" themes
-   - Reddit discussions on prompt improvements
-   - Discord conversations about what works
-
-### Red Flags
+## Red Flags
 
 **Don't add improvements that:**
 
@@ -213,60 +205,22 @@ Source: [What triggered this - specific implementation, bug, etc.]
 - Conflict with proven best practices
 - Remove important existing content
 
-### Testing Improvements
+</red_flags>
 
-After proposing changes:
+---
 
-```xml
-<improvement_testing>
-1. **Before/After Comparison**
-   - Show the specific section changing
-   - Explain what improves and why
-   - Reference the source of the improvement
+<critical_reminders>
 
-2. **Expected Outcomes**
-   - What behavior should improve
-   - How to measure success
-   - What to watch for in testing
+## CRITICAL REMINDERS
 
-3. **Rollback Plan**
-   - How to revert if it doesn't work
-   - What signals indicate it's not working
-   - When to reconsider the change
-</improvement_testing>
-```
+**(All improvements must use established prompt engineering patterns)**
 
-### Example Self-Improvement
+**(Base changes on empirical results, not speculation)**
 
-**Scenario:** Developer agent frequently over-engineers solutions
+**(Suggest changes - let user approve before applying)**
 
-**Analysis:** Missing explicit anti-patterns and complexity checks
+**(Show before/after with clear rationale)**
 
-**Proposed Improvement:**
+**(Every improvement must fit into a defined category)**
 
-```markdown
-Add this section after core principles:
-
-## Anti-Over-Engineering Principles
-
-❌ Don't create new abstractions
-❌ Don't add unrequested features
-❌ Don't refactor existing code
-❌ Don't optimize prematurely
-
-✅ Use existing utilities
-✅ Make minimal changes
-✅ Follow established conventions
-
-**Decision Framework:**
-Before writing code:
-
-1. Does an existing utility do this? → Use it
-2. Is this explicitly in the spec? → If no, don't add it
-3. Could this be simpler? → Make it simpler
-```
-
-**Source:** SWE-agent repository (proven to reduce scope creep by 40%)
-
-**Expected Impact:** Reduces unnecessary code additions, maintains focus on requirements
-</improvement_protocol>
+</critical_reminders>

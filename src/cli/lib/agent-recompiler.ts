@@ -44,18 +44,6 @@ async function getExistingAgentNames(pluginDir: string): Promise<string[]> {
 }
 
 /**
- * Default core and ending prompts for agents
- */
-const DEFAULT_CORE_PROMPTS = [
-  "core-principles",
-  "investigation-requirement",
-  "write-verification",
-  "anti-over-engineering",
-];
-
-const DEFAULT_ENDING_PROMPTS = ["context-management", "improvement-protocol"];
-
-/**
  * Recompile agents in a plugin
  *
  * This is used after adding/removing skills to update agents with new skill references.
@@ -94,10 +82,7 @@ export async function recompileAgents(
   const compileAgents: Record<string, CompileAgentConfig> = {};
   for (const agentName of agentNames) {
     if (allAgents[agentName]) {
-      compileAgents[agentName] = {
-        core_prompts: DEFAULT_CORE_PROMPTS,
-        ending_prompts: DEFAULT_ENDING_PROMPTS,
-      };
+      compileAgents[agentName] = {};
     } else {
       result.warnings.push(
         `Agent "${agentName}" not found in source definitions`,

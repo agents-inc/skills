@@ -41,40 +41,12 @@ describe("stack-plugin-compiler", () => {
   async function createProjectStructure() {
     // Create directories
     const agentsDir = path.join(projectRoot, "src/agents");
-    const principlesDir = path.join(projectRoot, "src/agents/_principles");
     const templatesDir = path.join(projectRoot, "src/agents/_templates");
     const stacksDir = path.join(projectRoot, "src/stacks");
 
     await mkdir(agentsDir, { recursive: true });
-    await mkdir(principlesDir, { recursive: true });
     await mkdir(templatesDir, { recursive: true });
     await mkdir(stacksDir, { recursive: true });
-
-    // Create principle files (all required by the compile config)
-    await writeFile(
-      path.join(principlesDir, "core-principles.md"),
-      "## Core Principles\n\n1. Test first\n2. Ship fast",
-    );
-    await writeFile(
-      path.join(principlesDir, "investigation-requirement.md"),
-      "## Investigation Requirement\n\nInvestigate before implementing.",
-    );
-    await writeFile(
-      path.join(principlesDir, "write-verification.md"),
-      "## Write Verification\n\nVerify writes completed.",
-    );
-    await writeFile(
-      path.join(principlesDir, "anti-over-engineering.md"),
-      "## Anti Over Engineering\n\nKeep it simple.",
-    );
-    await writeFile(
-      path.join(principlesDir, "context-management.md"),
-      "## Context Management\n\nManage context carefully.",
-    );
-    await writeFile(
-      path.join(principlesDir, "improvement-protocol.md"),
-      "## Improvement Protocol\n\nAlways improve.",
-    );
 
     // Create agent template
     await writeFile(
@@ -90,15 +62,15 @@ skills: {{ preloadedSkillIds | join: ", " }}
 
 {{ intro }}
 
+<core_principles>
+Core principles are embedded directly in the template.
+</core_principles>
+
 {{ workflow }}
-
-{{ corePromptsContent }}
-
-{{ endingPromptsContent }}
 `,
     );
 
-    return { agentsDir, principlesDir, templatesDir, stacksDir };
+    return { agentsDir, templatesDir, stacksDir };
   }
 
   async function createAgent(

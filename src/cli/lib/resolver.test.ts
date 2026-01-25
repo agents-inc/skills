@@ -117,24 +117,8 @@ describe("stackToCompileConfig", () => {
       claude_md: "",
       stack: "test-stack",
       agents: {
-        "frontend-developer": {
-          core_prompts: [
-            "core-principles",
-            "investigation-requirement",
-            "write-verification",
-            "anti-over-engineering",
-          ],
-          ending_prompts: ["context-management", "improvement-protocol"],
-        },
-        "backend-developer": {
-          core_prompts: [
-            "core-principles",
-            "investigation-requirement",
-            "write-verification",
-            "anti-over-engineering",
-          ],
-          ending_prompts: ["context-management", "improvement-protocol"],
-        },
+        "frontend-developer": {},
+        "backend-developer": {},
       },
     });
   });

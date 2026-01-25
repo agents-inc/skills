@@ -61,7 +61,6 @@ This stack includes the following skills:
 - `frontend/testing-vitest (@vince)`
 - `methodology/anti-over-engineering (@vince)`
 - `methodology/context-management (@vince)`
-- `methodology/core-principles (@vince)`
 - `methodology/improvement-protocol (@vince)`
 - `methodology/investigation-requirements (@vince)`
 - `methodology/success-criteria (@vince)`

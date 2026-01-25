@@ -23,16 +23,6 @@ export async function validate(
     errors.push(`CLAUDE.md not found in stack "${stackId}"`);
   }
 
-  // Check principles directory exists
-  const principlesDir = path.join(projectRoot, DIRS.principles);
-  const principlesCheck = path.join(principlesDir, "core-principles.md");
-  if (!(await fileExists(principlesCheck))) {
-    errors.push(`Principles directory missing or empty: ${principlesDir}`);
-  }
-
-  // Collect all prompt names for validation
-  const allPromptNames = new Set<string>();
-
   // Check each resolved agent
   for (const [name, agent] of Object.entries(resolvedAgents)) {
     // Use stored path if available, otherwise fall back to name (for backwards compatibility)
@@ -60,10 +50,6 @@ export async function validate(
       }
     }
 
-    // Collect prompt names from this agent
-    agent.core_prompts.forEach((p) => allPromptNames.add(p));
-    agent.ending_prompts.forEach((p) => allPromptNames.add(p));
-
     // Check skill paths
     for (const skill of agent.skills) {
       if (!skill.path) {
@@ -90,14 +76,6 @@ export async function validate(
           errors.push(`Skill file not found: ${skill.path} (agent: ${name})`);
         }
       }
-    }
-  }
-
-  // Check all principle files exist
-  for (const prompt of allPromptNames) {
-    const promptPath = path.join(principlesDir, `${prompt}.md`);
-    if (!(await fileExists(promptPath))) {
-      errors.push(`Principle not found: ${prompt}.md`);
     }
   }
 

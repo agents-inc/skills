@@ -295,8 +295,6 @@ export async function resolveAgents(
       description: definition.description,
       model: definition.model,
       tools: definition.tools,
-      core_prompts: agentConfig.core_prompts,
-      ending_prompts: agentConfig.ending_prompts,
       skills: resolvedSkills,
       path: definition.path,
     };
@@ -315,15 +313,7 @@ export function stackToCompileConfig(
   const agents: Record<string, CompileAgentConfig> = {};
 
   for (const agentId of stack.agents) {
-    agents[agentId] = {
-      core_prompts: [
-        "core-principles",
-        "investigation-requirement",
-        "write-verification",
-        "anti-over-engineering",
-      ],
-      ending_prompts: ["context-management", "improvement-protocol"],
-    };
+    agents[agentId] = {};
   }
 
   return {
