@@ -31,7 +31,7 @@ export interface SkillsMatrixConfig {
 
   /**
    * Maps short alias names to full skill IDs
-   * @example { "react": "frontend/react (@vince)", "zustand": "frontend/state-zustand (@vince)" }
+   * @example { "react": "react (@vince)", "zustand": "zustand (@vince)" }
    */
   skill_aliases: Record<string, string>;
 }
@@ -215,8 +215,8 @@ export interface ExtractedSkillMetadata {
 
   /**
    * Unique skill identifier (from frontmatter name)
-   * Format: "category/skill-name (@author)"
-   * @example "frontend/react (@vince)"
+   * Format: "skill-name (@author)"
+   * @example "react (@vince)"
    */
   id: string;
 
@@ -229,7 +229,7 @@ export interface ExtractedSkillMetadata {
 
   /**
    * Display name derived from id
-   * @example "State Zustand" from "frontend/state-zustand (@vince)"
+   * @example "Zustand" from "zustand (@vince)"
    */
   name: string;
 
@@ -263,19 +263,19 @@ export interface ExtractedSkillMetadata {
 
   /**
    * Skills this works well with (soft recommendation)
-   * @example ["frontend/react", "frontend/api"]
+   * @example ["react (@vince)", "hono (@vince)"]
    */
   compatibleWith: string[];
 
   /**
    * Skills that cannot coexist with this one
-   * @example ["state/mobx", "state/redux"]
+   * @example ["mobx (@vince)", "redux (@vince)"]
    */
   conflictsWith: string[];
 
   /**
    * Skills that must be present for this to work
-   * @example ["framework/react"] for zustand
+   * @example ["react (@vince)"] for zustand
    */
   requires: string[];
 
@@ -284,14 +284,14 @@ export interface ExtractedSkillMetadata {
   /**
    * Setup skills that must be completed first
    * Links usage skills to their prerequisites
-   * @example ["setup/posthog"] for backend/posthog-analytics
+   * @example ["posthog-setup (@vince)"] for posthog-analytics
    */
   requiresSetup: string[];
 
   /**
    * Usage skills this setup skill configures
    * Links setup skills to what they enable
-   * @example ["backend/posthog-analytics", "backend/posthog-flags"]
+   * @example ["posthog-analytics (@vince)", "posthog-flags (@vince)"]
    */
   providesSetupFor: string[];
 
@@ -335,13 +335,13 @@ export interface MergedSkillsMatrix {
 
   /**
    * Alias lookup map (alias -> full skill ID)
-   * @example { "react": "frontend/react (@vince)" }
+   * @example { "react": "react (@vince)" }
    */
   aliases: Record<string, string>;
 
   /**
    * Reverse alias lookup (full skill ID -> alias)
-   * @example { "frontend/react (@vince)": "react" }
+   * @example { "react (@vince)": "react" }
    */
   aliasesReverse: Record<string, string>;
 
@@ -356,12 +356,12 @@ export interface MergedSkillsMatrix {
 export interface ResolvedSkill {
   // --- Identity ---
 
-  /** Full unique identifier: "frontend/state-zustand (@vince)" */
+  /** Full unique identifier: "zustand (@vince)" */
   id: string;
 
   /**
    * Short alias if defined in skill_aliases
-   * @example "zustand" for "frontend/state-zustand (@vince)"
+   * @example "zustand" for "zustand (@vince)"
    */
   alias?: string;
 
@@ -448,13 +448,13 @@ export interface ResolvedSkill {
 
   /**
    * Setup skills that must be completed before using this
-   * @example ["setup/posthog (@vince)"] for posthog-analytics
+   * @example ["posthog-setup (@vince)"] for posthog-analytics
    */
   requiresSetup: string[];
 
   /**
    * Usage skills that this setup skill configures
-   * @example ["backend/posthog-analytics (@vince)"] for setup/posthog
+   * @example ["posthog-analytics (@vince)"] for posthog-setup
    */
   providesSetupFor: string[];
 
@@ -523,14 +523,14 @@ export interface ResolvedStack {
   /**
    * Skill selections with FULL skill IDs (aliases resolved)
    * Structure: { category: { subcategory: fullSkillId } }
-   * @example { frontend: { styling: "frontend/styling-scss-modules (@vince)" } }
+   * @example { frontend: { styling: "scss-modules (@vince)" } }
    */
   skills: Record<string, Record<string, string>>;
 
   /**
    * Flat list of all skill IDs in this stack
    * Computed for easy iteration
-   * @example ["frontend/react (@vince)", "frontend/styling-scss-modules (@vince)", ...]
+   * @example ["react (@vince)", "scss-modules (@vince)", ...]
    */
   allSkillIds: string[];
 

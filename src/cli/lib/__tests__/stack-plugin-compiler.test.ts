@@ -257,7 +257,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       // Create skill in src/skills/ (new architecture)
       // Directory path is where the files live, frontmatter name is the canonical ID
       const directoryPath = "frontend/framework/react (@vince)";
-      const frontmatterName = "frontend/react (@vince)";
+      const frontmatterName = "react (@vince)";
       await createSkillInSource(directoryPath, {
         name: frontmatterName,
         description: "React development skills",
@@ -626,9 +626,9 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       // Create skills in src/skills/ (new architecture)
       // Directory paths are where files live, frontmatter names are canonical IDs
       const reactDirPath = "frontend/framework/react (@vince)";
-      const reactCanonicalId = "frontend/react (@vince)";
+      const reactCanonicalId = "react (@vince)";
       const tsDirPath = "frontend/language/typescript (@vince)";
-      const tsCanonicalId = "frontend/typescript (@vince)";
+      const tsCanonicalId = "typescript (@vince)";
 
       await createSkillInSource(reactDirPath, {
         name: reactCanonicalId,
@@ -659,9 +659,9 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         projectRoot,
       });
 
-      // Skill plugins now use canonical frontmatter names (preserves category and author)
-      expect(result.skillPlugins).toContain("frontend/react (@vince)");
-      expect(result.skillPlugins).toContain("frontend/typescript (@vince)");
+      // Skill plugins now use canonical frontmatter names (simplified ID format)
+      expect(result.skillPlugins).toContain("react (@vince)");
+      expect(result.skillPlugins).toContain("typescript (@vince)");
     });
 
     it("should return correct manifest structure", async () => {
@@ -1050,10 +1050,10 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
       // Create skills in src/skills/ (new architecture)
       // Directory paths are where files live, frontmatter names are canonical IDs
       const reactDirPath = "frontend/framework/react (@vince)";
-      const reactCanonicalId = "frontend/react (@vince)";
+      const reactCanonicalId = "react (@vince)";
       const zustandDirPath =
         "frontend/client-state-management/zustand (@vince)";
-      const zustandCanonicalId = "frontend/state-zustand (@vince)";
+      const zustandCanonicalId = "zustand (@vince)";
 
       await createSkillInSource(reactDirPath, {
         name: reactCanonicalId,
@@ -1089,8 +1089,8 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
 
       // README now uses "Included Skills" with canonical IDs
       expect(readmeContent).toContain("## Included Skills");
-      expect(readmeContent).toContain("`frontend/react (@vince)`");
-      expect(readmeContent).toContain("`frontend/state-zustand (@vince)`");
+      expect(readmeContent).toContain("`react (@vince)`");
+      expect(readmeContent).toContain("`zustand (@vince)`");
     });
   });
 
@@ -1107,7 +1107,7 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         manifest: { name: "test-stack", version: "1.0.0" },
         stackName: "Test Stack",
         agents: ["frontend-developer"],
-        skillPlugins: ["frontend/react (@vince)"],
+        skillPlugins: ["react (@vince)"],
         hasHooks: false,
       };
 
@@ -1162,9 +1162,9 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         stackName: "Test Stack",
         agents: ["frontend-developer"],
         skillPlugins: [
-          "frontend/react (@vince)",
-          "frontend/state-zustand (@vince)",
-          "frontend/typescript (@vince)",
+          "react (@vince)",
+          "zustand (@vince)",
+          "typescript (@vince)",
         ],
         hasHooks: false,
       };
@@ -1175,13 +1175,13 @@ ${config.content || `# ${config.name}\n\nSkill content here.`}
         expect.stringContaining("Skills included: 3"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("frontend/react (@vince)"),
+        expect.stringContaining("react (@vince)"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("frontend/state-zustand (@vince)"),
+        expect.stringContaining("zustand (@vince)"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("frontend/typescript (@vince)"),
+        expect.stringContaining("typescript (@vince)"),
       );
 
       consoleSpy.mockRestore();
