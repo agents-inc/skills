@@ -850,7 +850,7 @@ skill_aliases:
   vue: "vue-composition-api (@vince)"
   angular: "angular-standalone (@vince)"
   solidjs: "solidjs (@vince)"
-  svelte: "svelte (@vince)"
+  # svelte: "svelte (@vince)"  # TODO: Skill not yet created
 
   # Meta-frameworks (no prefix)
   nextjs-app-router: "nextjs-app-router (@vince)"
@@ -889,7 +889,7 @@ skill_aliases:
   # ─────────────────────────────────────────────────────────────────
   react-hook-form: "react-hook-form (@vince)"
   vee-validate: "vee-validate (@vince)"
-  zod-validation: "zod (@vince)"
+  zod-validation: "zod-validation (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Testing (no prefix)
@@ -965,7 +965,7 @@ skill_aliases:
   sse: "sse (@vince)"
   socket-io: "socket-io (@vince)"
   service-workers: "service-workers (@vince)"
-  file-upload: "file-upload (@vince)"
+  file-upload: "file-upload-patterns (@vince)"
   image-handling: "image-handling (@vince)"
   date-fns: "date-fns (@vince)"
 
