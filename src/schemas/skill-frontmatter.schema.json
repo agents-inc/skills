@@ -9,9 +9,14 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Skill identifier. For Claude Code plugins, use kebab-case (e.g., 'react'). Legacy format 'category/name (@author)' is supported for backward compatibility.",
+      "description": "Skill identifier. Use format 'name (@author)' (e.g., 'react (@vince)'). Simple kebab-case names like 'react' are also supported for plugins.",
       "minLength": 1,
-      "examples": ["react", "api-hono", "zustand", "frontend/react (@vince)"]
+      "examples": [
+        "react (@vince)",
+        "hono (@vince)",
+        "zustand (@vince)",
+        "react"
+      ]
     },
     "description": {
       "type": "string",

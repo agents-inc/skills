@@ -42,12 +42,12 @@
       "description": "Maps short alias names to full skill IDs",
       "additionalProperties": {
         "type": "string",
-        "description": "Full skill ID (e.g., 'frontend/react (@vince)')"
+        "description": "Full skill ID (e.g., 'react (@vince)')"
       },
       "examples": [
         {
-          "react": "frontend/framework/react (@vince)",
-          "zustand": "frontend/client-state-management/zustand (@vince)"
+          "react": "react (@vince)",
+          "zustand": "zustand (@vince)"
         }
       ]
     }

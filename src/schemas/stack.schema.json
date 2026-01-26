@@ -71,10 +71,10 @@
       },
       "examples": [
         [
-          { "id": "frontend/react (@vince)", "preloaded": true },
-          { "id": "frontend/styling-scss-modules (@vince)", "preloaded": true },
-          { "id": "frontend/state-zustand (@vince)" },
-          { "id": "backend/api-hono (@vince)" }
+          { "id": "react (@vince)", "preloaded": true },
+          { "id": "scss-modules (@vince)", "preloaded": true },
+          { "id": "zustand (@vince)" },
+          { "id": "hono (@vince)" }
         ]
       ]
     },
@@ -110,22 +110,18 @@
       "examples": [
         {
           "frontend-developer": {
-            "framework": [
-              { "id": "frontend/react (@vince)", "preloaded": true }
-            ],
+            "framework": [{ "id": "react (@vince)", "preloaded": true }],
             "styling": [
               {
-                "id": "frontend/styling-scss-modules (@vince)",
+                "id": "scss-modules (@vince)",
                 "preloaded": true
               }
             ],
-            "state-management": [{ "id": "frontend/state-zustand (@vince)" }]
+            "state-management": [{ "id": "zustand (@vince)" }]
           },
           "backend-developer": {
-            "api": [{ "id": "backend/api-hono (@vince)", "preloaded": true }],
-            "database": [
-              { "id": "backend/database-drizzle (@vince)", "preloaded": true }
-            ]
+            "api": [{ "id": "hono (@vince)", "preloaded": true }],
+            "database": [{ "id": "drizzle (@vince)", "preloaded": true }]
           }
         }
       ]
@@ -233,7 +229,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Skill ID from SKILL.md frontmatter (e.g., 'frontend/react (@vince)')",
+          "description": "Skill ID from SKILL.md frontmatter (e.g., 'react (@vince)')",
           "minLength": 1
         },
         "preloaded": {
