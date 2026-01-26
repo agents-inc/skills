@@ -3,6 +3,7 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "path";
 import { Liquid } from "liquidjs";
+import { stringify as stringifyYaml } from "yaml";
 import { PLUGIN_MANIFEST_DIR, PLUGIN_MANIFEST_FILE, DIRS } from "../consts";
 import { ensureDir, writeFile, directoryExists } from "../utils/fs";
 import {
@@ -19,13 +20,22 @@ import { copySkillsToPluginFromSource } from "../lib/skill-copier";
 import { checkPermissions } from "../lib/permission-checker";
 import { generateStackPluginManifest } from "../lib/plugin-manifest";
 import { loadAllAgents, loadPluginSkills, loadStack } from "../lib/loader";
-import { resolveAgents, stackToCompileConfig } from "../lib/resolver";
+import {
+  resolveAgents,
+  stackToCompileConfig,
+  resolveStackSkills,
+} from "../lib/resolver";
 import { compileAgentForPlugin } from "../lib/stack-plugin-compiler";
 import { getCollectivePluginDir } from "../lib/plugin-finder";
+import {
+  generateConfigFromSkills,
+  generateConfigFromStack,
+} from "../lib/config-generator";
 import type {
   PluginManifest,
   CompileConfig,
   CompileAgentConfig,
+  StackConfig,
 } from "../../types";
 
 /**
@@ -82,8 +92,17 @@ function displayPluginSummary(
   console.log(
     `    ${pc.dim(`${PLUGIN_MANIFEST_DIR}/${PLUGIN_MANIFEST_FILE}`)}`,
   );
+  console.log(`    ${pc.dim("config.yaml")}`);
   console.log(`    ${pc.dim(`skills/ (${skillCount} skills)`)}`);
   console.log(`    ${pc.dim(`agents/ (${agentCount} agents)`)}`);
+  console.log("");
+  console.log(pc.dim("To customize agent-skill assignments:"));
+  console.log(
+    `  ${pc.cyan("1.")} Edit ${pc.cyan("config.yaml")} in the plugin folder`,
+  );
+  console.log(
+    `  ${pc.cyan("2.")} Run ${pc.cyan("cc compile")} to regenerate agents`,
+  );
   console.log("");
 }
 
@@ -222,15 +241,13 @@ export const initCommand = new Command("init")
 
       s.stop(`Copied ${copiedSkills.length} skills to plugin`);
 
-      // Compile agents
-      s.start("Compiling agents...");
+      // Generate config FIRST (before compilation)
+      s.start("Generating configuration...");
 
       const agents = await loadAllAgents(sourceResult.sourcePath);
       const loadedPluginSkills = await loadPluginSkills(pluginDir);
 
-      // Build compile config
-      let compileConfig: CompileConfig;
-
+      let pluginConfig: StackConfig;
       if (result.selectedStack) {
         // Using a pre-configured stack template
         const loadedStackConfig = await loadStack(
@@ -238,26 +255,54 @@ export const initCommand = new Command("init")
           sourceResult.sourcePath,
           "dev",
         );
-        compileConfig = stackToCompileConfig(
-          result.selectedStack.id,
-          loadedStackConfig,
-        );
-        compileConfig.name = PLUGIN_NAME;
+        pluginConfig = generateConfigFromStack(loadedStackConfig);
       } else {
-        // Custom skill selection - use all default agents
-        const compileAgents: Record<string, CompileAgentConfig> = {};
-        for (const agentId of DEFAULT_AGENTS) {
-          if (agents[agentId]) {
+        // Custom skill selection - generate config from mappings
+        pluginConfig = generateConfigFromSkills(
+          result.selectedSkills,
+          sourceResult.matrix,
+        );
+      }
+
+      // Save config.yaml BEFORE compilation so it can be used
+      const configYamlPath = path.join(pluginDir, "config.yaml");
+      const configYaml = stringifyYaml(pluginConfig, {
+        indent: 2,
+        lineWidth: 120,
+      });
+      await writeFile(configYamlPath, configYaml);
+
+      s.stop(`Configuration saved (${pluginConfig.agents.length} agents)`);
+
+      // Compile agents using the generated config
+      s.start("Compiling agents...");
+
+      // Build compile config from the generated plugin config
+      const compileAgents: Record<string, CompileAgentConfig> = {};
+      for (const agentId of pluginConfig.agents) {
+        if (agents[agentId]) {
+          // If we have agent_skills, use them for compilation
+          if (pluginConfig.agent_skills?.[agentId]) {
+            const skillRefs = resolveStackSkills(
+              pluginConfig,
+              agentId,
+              loadedPluginSkills,
+            );
+            compileAgents[agentId] = { skills: skillRefs };
+          } else {
             compileAgents[agentId] = {};
           }
         }
-        compileConfig = {
-          name: PLUGIN_NAME,
-          description: `Plugin with ${result.selectedSkills.length} skills`,
-          claude_md: "",
-          agents: compileAgents,
-        };
       }
+
+      const compileConfig: CompileConfig = {
+        name: PLUGIN_NAME,
+        description:
+          pluginConfig.description ||
+          `Plugin with ${result.selectedSkills.length} skills`,
+        claude_md: "",
+        agents: compileAgents,
+      };
 
       // Create Liquid engine
       const engine = new Liquid({

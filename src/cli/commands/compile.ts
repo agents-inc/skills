@@ -2,6 +2,7 @@ import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "path";
+import { parse as parseYaml } from "yaml";
 import { setVerbose, verbose } from "../utils/logger";
 import {
   getCollectivePluginDir,
@@ -13,7 +14,12 @@ import { fetchAgentDefinitions } from "../lib/agent-fetcher";
 import { resolveSource } from "../lib/config";
 import { directoryExists, glob, readFile, fileExists } from "../utils/fs";
 import { recompileAgents } from "../lib/agent-recompiler";
-import type { Skill, AgentSourcePaths, PluginManifest } from "../types";
+import type {
+  Skill,
+  AgentSourcePaths,
+  PluginManifest,
+  StackConfig,
+} from "../types";
 
 /**
  * Load skills from a plugin's local skills directory
@@ -156,6 +162,26 @@ async function runPluginModeCompile(
 
   s.stop(`Found plugin: ${pluginName}`);
   verbose(`  Path: ${pluginDir}`);
+
+  // 1.5 Check for config.yaml
+  const configPath = path.join(pluginDir, "config.yaml");
+  const hasConfig = await fileExists(configPath);
+  if (hasConfig) {
+    try {
+      const configContent = await readFile(configPath);
+      const config = parseYaml(configContent) as StackConfig;
+      const agentCount = config.agents?.length ?? 0;
+      const skillCount = config.skills?.length ?? 0;
+      p.log.info(
+        `Using ${pc.cyan("config.yaml")} (${agentCount} agents, ${skillCount} skills)`,
+      );
+      verbose(`  Config: ${configPath}`);
+    } catch {
+      p.log.warn(`config.yaml found but could not be parsed - using defaults`);
+    }
+  } else {
+    verbose(`  No config.yaml found - using defaults`);
+  }
 
   // 2. Read local skills from the plugin's skills/ directory (do NOT fetch)
   const skillsDir = getPluginSkillsDir(pluginDir);
