@@ -11,25 +11,25 @@ version: "1.0.0"
 
 skills:
   # Frontend
-  - id: frontend/react (@vince)
-  - id: frontend/nextjs-app-router (@vince)
-  - id: frontend/styling-scss-modules (@vince)
-  - id: frontend/client-state-management/redux-toolkit (@vince)
-  - id: frontend/server-state-react-query (@vince)
-  - id: frontend/forms/react-hook-form (@vince)
-  - id: frontend/forms/zod-validation (@vince)
-  - id: frontend/testing-vitest (@vince)
-  - id: frontend/testing/react-testing-library (@vince)
-  - id: frontend/testing/playwright-e2e (@vince)
-  - id: frontend/mocks-msw (@vince)
+  - id: react (@vince)
+  - id: nextjs-app-router (@vince)
+  - id: scss-modules (@vince)
+  - id: redux-toolkit (@vince)
+  - id: react-query (@vince)
+  - id: react-hook-form (@vince)
+  - id: zod-validation (@vince)
+  - id: vitest (@vince)
+  - id: react-testing-library (@vince)
+  - id: playwright-e2e (@vince)
+  - id: msw (@vince)
   # Backend
-  - id: backend/api-hono (@vince)
-  - id: backend/database-drizzle (@vince)
-  - id: backend/auth-better-auth+drizzle+hono (@vince)
+  - id: hono (@vince)
+  - id: drizzle (@vince)
+  - id: better-auth+drizzle+hono (@vince)
   # Shared
-  - id: reviewing/reviewing (@vince)
+  - id: reviewing (@vince)
   # Research
-  - id: research/research-methodology (@vince)
+  - id: research-methodology (@vince)
 
 agents:
   # Developer agents
@@ -57,151 +57,151 @@ agents:
 agent_skills:
   frontend-developer:
     framework:
-      - id: frontend/react (@vince)
+      - id: react (@vince)
         preloaded: true
-      - id: frontend/nextjs-app-router (@vince)
+      - id: nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling-scss-modules (@vince)
+      - id: scss-modules (@vince)
         preloaded: true
     state:
-      - id: frontend/client-state-management/redux-toolkit (@vince)
+      - id: redux-toolkit (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: react-query (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/react-testing-library (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
     mocks:
-      - id: frontend/mocks-msw (@vince)
+      - id: msw (@vince)
     auth:
-      - id: backend/auth-better-auth+drizzle+hono (@vince)
+      - id: better-auth+drizzle+hono (@vince)
 
   backend-developer:
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
         preloaded: true
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
         preloaded: true
     auth:
-      - id: backend/auth-better-auth+drizzle+hono (@vince)
+      - id: better-auth+drizzle+hono (@vince)
 
   frontend-reviewer:
     framework:
-      - id: frontend/react (@vince)
+      - id: react (@vince)
         preloaded: true
-      - id: frontend/nextjs-app-router (@vince)
+      - id: nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling-scss-modules (@vince)
+      - id: scss-modules (@vince)
         preloaded: true
     state:
-      - id: frontend/client-state-management/redux-toolkit (@vince)
+      - id: redux-toolkit (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: react-query (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/react-testing-library (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
     mocks:
-      - id: frontend/mocks-msw (@vince)
+      - id: msw (@vince)
     reviewing:
-      - id: reviewing/reviewing (@vince)
+      - id: reviewing (@vince)
         preloaded: true
     auth:
-      - id: backend/auth-better-auth+drizzle+hono (@vince)
+      - id: better-auth+drizzle+hono (@vince)
 
   backend-reviewer:
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
         preloaded: true
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
         preloaded: true
     auth:
-      - id: backend/auth-better-auth+drizzle+hono (@vince)
+      - id: better-auth+drizzle+hono (@vince)
     reviewing:
-      - id: reviewing/reviewing (@vince)
+      - id: reviewing (@vince)
         preloaded: true
 
   tester:
     testing:
-      - id: frontend/testing-vitest (@vince)
+      - id: vitest (@vince)
         preloaded: true
-      - id: frontend/testing/react-testing-library (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
     mocks:
-      - id: frontend/mocks-msw (@vince)
+      - id: msw (@vince)
         preloaded: true
 
   pm:
     research:
-      - id: research/research-methodology (@vince)
+      - id: research-methodology (@vince)
         preloaded: true
     framework:
-      - id: frontend/react (@vince)
-      - id: frontend/nextjs-app-router (@vince)
+      - id: react (@vince)
+      - id: nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling-scss-modules (@vince)
+      - id: scss-modules (@vince)
     state:
-      - id: frontend/client-state-management/redux-toolkit (@vince)
+      - id: redux-toolkit (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: react-query (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/react-testing-library (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
     mocks:
-      - id: frontend/mocks-msw (@vince)
+      - id: msw (@vince)
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
     auth:
-      - id: backend/auth-better-auth+drizzle+hono (@vince)
+      - id: better-auth+drizzle+hono (@vince)
 
   frontend-researcher:
     framework:
-      - id: frontend/react (@vince)
+      - id: react (@vince)
         preloaded: true
-      - id: frontend/nextjs-app-router (@vince)
+      - id: nextjs-app-router (@vince)
     styling:
-      - id: frontend/styling-scss-modules (@vince)
+      - id: scss-modules (@vince)
     state:
-      - id: frontend/client-state-management/redux-toolkit (@vince)
+      - id: redux-toolkit (@vince)
     server-state:
-      - id: frontend/server-state-react-query (@vince)
+      - id: react-query (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/react-testing-library (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
     mocks:
-      - id: frontend/mocks-msw (@vince)
+      - id: msw (@vince)
     research:
-      - id: research/research-methodology (@vince)
+      - id: research-methodology (@vince)
         preloaded: true
 
   backend-researcher:
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
         preloaded: true
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
     auth:
-      - id: backend/auth-better-auth+drizzle+hono (@vince)
+      - id: better-auth+drizzle+hono (@vince)
     research:
-      - id: research/research-methodology (@vince)
+      - id: research-methodology (@vince)
         preloaded: true
 
 philosophy: "Strict patterns for large teams"
