@@ -11,21 +11,21 @@ version: "1.0.0"
 
 skills:
   # Frontend
-  - id: frontend/react (@vince)
-  - id: frontend/framework/remix (@vince)
-  - id: frontend/styling-tailwind (@vince)
-  - id: frontend/state-zustand (@vince)
-  - id: frontend/forms/react-hook-form (@vince)
-  - id: frontend/forms/zod-validation (@vince)
-  - id: frontend/testing-vitest (@vince)
-  - id: frontend/testing/playwright-e2e (@vince)
+  - id: react (@vince)
+  - id: remix (@vince)
+  - id: tailwind (@vince)
+  - id: zustand (@vince)
+  - id: react-hook-form (@vince)
+  - id: zod-validation (@vince)
+  - id: vitest (@vince)
+  - id: playwright-e2e (@vince)
   # Backend
-  - id: backend/api-hono (@vince)
-  - id: backend/database-drizzle (@vince)
+  - id: hono (@vince)
+  - id: drizzle (@vince)
   # Shared
-  - id: reviewing/reviewing (@vince)
+  - id: reviewing (@vince)
   # Research
-  - id: research/research-methodology (@vince)
+  - id: research-methodology (@vince)
 
 agents:
   # Developer agents
@@ -53,117 +53,117 @@ agents:
 agent_skills:
   frontend-developer:
     framework:
-      - id: frontend/react (@vince)
+      - id: react (@vince)
         preloaded: true
-      - id: frontend/framework/remix (@vince)
+      - id: remix (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
         preloaded: true
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: zustand (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: playwright-e2e (@vince)
 
   backend-developer:
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
         preloaded: true
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
         preloaded: true
 
   frontend-reviewer:
     framework:
-      - id: frontend/react (@vince)
+      - id: react (@vince)
         preloaded: true
-      - id: frontend/framework/remix (@vince)
+      - id: remix (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
         preloaded: true
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: zustand (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: playwright-e2e (@vince)
     reviewing:
-      - id: reviewing/reviewing (@vince)
+      - id: reviewing (@vince)
         preloaded: true
 
   backend-reviewer:
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
         preloaded: true
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
         preloaded: true
     reviewing:
-      - id: reviewing/reviewing (@vince)
+      - id: reviewing (@vince)
         preloaded: true
 
   tester:
     testing:
-      - id: frontend/testing-vitest (@vince)
+      - id: vitest (@vince)
         preloaded: true
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: playwright-e2e (@vince)
 
   pm:
     research:
-      - id: research/research-methodology (@vince)
+      - id: research-methodology (@vince)
         preloaded: true
     framework:
-      - id: frontend/react (@vince)
-      - id: frontend/framework/remix (@vince)
+      - id: react (@vince)
+      - id: remix (@vince)
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: zustand (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: playwright-e2e (@vince)
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
 
   frontend-researcher:
     framework:
-      - id: frontend/react (@vince)
+      - id: react (@vince)
         preloaded: true
-      - id: frontend/framework/remix (@vince)
+      - id: remix (@vince)
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
     state:
-      - id: frontend/state-zustand (@vince)
+      - id: zustand (@vince)
     forms:
-      - id: frontend/forms/react-hook-form (@vince)
-      - id: frontend/forms/zod-validation (@vince)
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
     testing:
-      - id: frontend/testing-vitest (@vince)
-      - id: frontend/testing/playwright-e2e (@vince)
+      - id: vitest (@vince)
+      - id: playwright-e2e (@vince)
     research:
-      - id: research/research-methodology (@vince)
+      - id: research-methodology (@vince)
         preloaded: true
 
   backend-researcher:
     api:
-      - id: backend/api-hono (@vince)
+      - id: hono (@vince)
         preloaded: true
     database:
-      - id: backend/database-drizzle (@vince)
+      - id: drizzle (@vince)
     research:
-      - id: research/research-methodology (@vince)
+      - id: research-methodology (@vince)
         preloaded: true
 
 philosophy: "Web standards and excellent forms handling"
