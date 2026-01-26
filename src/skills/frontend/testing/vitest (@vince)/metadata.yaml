@@ -7,8 +7,11 @@ cli_name: Vitest
 cli_description: Unit and integration testing
 usage_guidance: Use when writing unit tests, integration tests, or configuring Vitest.
 compatible_with:
-  - frontend/react
-  - frontend/mocking
+  - react (@vince)
+  - vue-composition-api (@vince)
+  - angular-standalone (@vince)
+  - solidjs (@vince)
+  - msw (@vince)
 tags:
   - playwright
   - vitest

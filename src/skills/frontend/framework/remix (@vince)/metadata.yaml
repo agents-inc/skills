@@ -20,6 +20,8 @@ tags:
   - single-fetch
   - progressive-enhancement
 compatible_with:
-  - frontend/styling/*
-  - frontend/testing/*
-
+  - scss-modules (@vince)
+  - tailwind (@vince)
+  - vitest (@vince)
+  - playwright-e2e (@vince)
+  - cypress-e2e (@vince)

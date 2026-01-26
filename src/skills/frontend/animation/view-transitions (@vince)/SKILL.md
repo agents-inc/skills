@@ -1,5 +1,5 @@
 ---
-name: frontend/animation/view-transitions (@vince)
+name: view-transitions (@vince)
 description: View Transitions API patterns - same-document transitions, cross-document MPA transitions, shared element animations, pseudo-element styling, accessibility
 ---
 
@@ -57,6 +57,7 @@ description: View Transitions API patterns - same-document transitions, cross-do
 - Simple hover/focus effects (use CSS transitions)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -91,8 +92,8 @@ Always check for API support before using View Transitions.
 #### Basic Feature Detection
 
 ```typescript
-const SUPPORTS_VIEW_TRANSITIONS = typeof document !== "undefined" &&
-  "startViewTransition" in document;
+const SUPPORTS_VIEW_TRANSITIONS =
+  typeof document !== "undefined" && "startViewTransition" in document;
 
 function updateWithTransition(updateFn: () => void | Promise<void>): void {
   if (!SUPPORTS_VIEW_TRANSITIONS) {
@@ -153,12 +154,14 @@ function handleNavigation(page: string): void {
 
 ```typescript
 interface ViewTransitionPromises {
-  ready: Promise<void>;           // Pseudo-element tree created
+  ready: Promise<void>; // Pseudo-element tree created
   updateCallbackDone: Promise<void>; // DOM update complete
-  finished: Promise<void>;        // Animation finished
+  finished: Promise<void>; // Animation finished
 }
 
-async function transitionWithCustomAnimation(updateFn: () => void): Promise<void> {
+async function transitionWithCustomAnimation(
+  updateFn: () => void,
+): Promise<void> {
   if (!document.startViewTransition) {
     updateFn();
     return;
@@ -254,7 +257,7 @@ function clearTransitionNames(elements: HTMLElement[]): void {
 async function transitionWithSharedElement(
   element: HTMLElement,
   name: string,
-  updateFn: () => void
+  updateFn: () => void,
 ): Promise<void> {
   if (!document.startViewTransition) {
     updateFn();
@@ -391,7 +394,7 @@ html:active-view-transition-type(backwards) {
 ```typescript
 function setNavigationType(
   transition: ViewTransition,
-  type: "forwards" | "backwards"
+  type: "forwards" | "backwards",
 ): void {
   if ("types" in transition) {
     (transition.types as Set<string>).add(type);
@@ -412,7 +415,7 @@ window.addEventListener("pagereveal", (e) => {
         const isForward = toUrl.includes("/detail");
         setNavigationType(
           event.viewTransition,
-          isForward ? "forwards" : "backwards"
+          isForward ? "forwards" : "backwards",
         );
       }
     }
@@ -457,11 +460,15 @@ Always respect user preferences for reduced motion.
 }
 
 @keyframes fade-out {
-  to { opacity: 0; }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
 }
 ```
 
@@ -536,7 +543,7 @@ async function circularRevealTransition(updateFn: () => void): Promise<void> {
   const { x, y } = lastClickPosition;
   const endRadius = Math.hypot(
     Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
+    Math.max(y, window.innerHeight - y),
   );
 
   const transition = document.startViewTransition(updateFn);
@@ -554,7 +561,7 @@ async function circularRevealTransition(updateFn: () => void): Promise<void> {
       duration: REVEAL_DURATION_MS,
       easing: REVEAL_EASING,
       pseudoElement: "::view-transition-new(root)",
-    }
+    },
   );
 }
 ```

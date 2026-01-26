@@ -1,5 +1,5 @@
 ---
-name: frontend/file-upload/file-upload-patterns (@vince)
+name: file-upload-patterns (@vince)
 description: File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)
 ---
 
@@ -81,12 +81,12 @@ File uploads are deceptively complex. A simple file input works for basic cases,
 
 **File Size Strategy:**
 
-| File Size | Upload Method | Progress UI | Storage Pattern |
-|-----------|---------------|-------------|-----------------|
-| < 5MB | Single request | Spinner or bar | Direct presigned PUT |
-| 5-50MB | Single request | Progress bar | Presigned PUT |
-| 50MB-5GB | Chunked | Progress + ETA | Multipart presigned |
-| > 5GB | Chunked + resumable | Progress + ETA + pause | Multipart required |
+| File Size | Upload Method       | Progress UI            | Storage Pattern      |
+| --------- | ------------------- | ---------------------- | -------------------- |
+| < 5MB     | Single request      | Spinner or bar         | Direct presigned PUT |
+| 5-50MB    | Single request      | Progress bar           | Presigned PUT        |
+| 50MB-5GB  | Chunked             | Progress + ETA         | Multipart presigned  |
+| > 5GB     | Chunked + resumable | Progress + ETA + pause | Multipart required   |
 
 </philosophy>
 
@@ -104,10 +104,10 @@ Build a dropzone with drag-and-drop support and fallback file input for accessib
 
 ```typescript
 // file-dropzone.tsx
-import { useState, useRef, useCallback } from 'react';
-import type { DragEvent, ChangeEvent, ReactNode } from 'react';
+import { useState, useRef, useCallback } from "react";
+import type { DragEvent, ChangeEvent, ReactNode } from "react";
 
-type DropzoneState = 'idle' | 'drag-over' | 'drag-reject';
+type DropzoneState = "idle" | "drag-over" | "drag-reject";
 
 interface FileDropzoneProps {
   onFilesSelected: (files: File[]) => void;
@@ -253,13 +253,13 @@ Track multiple files with status, progress, and preview URLs.
 
 ```typescript
 // use-file-list.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface FileWithId {
   id: string;
   file: File;
   preview?: string;
-  status: 'pending' | 'uploading' | 'success' | 'error';
+  status: "pending" | "uploading" | "success" | "error";
   progress: number;
   error?: string;
 }
@@ -286,7 +286,9 @@ export function useFileList(options: UseFileListOptions = {}) {
   };
 
   const addFiles = useCallback(
-    (newFiles: File[]): {
+    (
+      newFiles: File[],
+    ): {
       added: FileWithId[];
       rejected: Array<{ file: File; reason: string }>;
     } => {
@@ -299,7 +301,7 @@ export function useFileList(options: UseFileListOptions = {}) {
 
         for (const file of newFiles) {
           if (slotsUsed >= availableSlots) {
-            rejected.push({ file, reason: 'Maximum files limit reached' });
+            rejected.push({ file, reason: "Maximum files limit reached" });
             continue;
           }
 
@@ -313,10 +315,10 @@ export function useFileList(options: UseFileListOptions = {}) {
             const isDuplicate = current.some(
               (existing) =>
                 existing.file.name === file.name &&
-                existing.file.size === file.size
+                existing.file.size === file.size,
             );
             if (isDuplicate) {
-              rejected.push({ file, reason: 'Duplicate file' });
+              rejected.push({ file, reason: "Duplicate file" });
               continue;
             }
           }
@@ -324,7 +326,7 @@ export function useFileList(options: UseFileListOptions = {}) {
           const fileWithId: FileWithId = {
             id: generateId(),
             file,
-            status: 'pending',
+            status: "pending",
             progress: 0,
           };
 
@@ -337,7 +339,7 @@ export function useFileList(options: UseFileListOptions = {}) {
 
       return { added, rejected };
     },
-    [maxFiles, maxSizeBytes, allowDuplicates]
+    [maxFiles, maxSizeBytes, allowDuplicates],
   );
 
   const removeFile = useCallback((id: string) => {
@@ -350,14 +352,11 @@ export function useFileList(options: UseFileListOptions = {}) {
     });
   }, []);
 
-  const updateFile = useCallback(
-    (id: string, updates: Partial<FileWithId>) => {
-      setFiles((current) =>
-        current.map((f) => (f.id === id ? { ...f, ...updates } : f))
-      );
-    },
-    []
-  );
+  const updateFile = useCallback((id: string, updates: Partial<FileWithId>) => {
+    setFiles((current) =>
+      current.map((f) => (f.id === id ? { ...f, ...updates } : f)),
+    );
+  }, []);
 
   const clearFiles = useCallback(() => {
     setFiles((current) => {
@@ -392,7 +391,7 @@ Track upload progress, speed, and estimated time remaining.
 
 ```typescript
 // use-upload-progress.ts
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from "react";
 
 interface UploadProgress {
   loaded: number;
@@ -414,28 +413,25 @@ export function useUploadProgress() {
   const lastLoadedRef = useRef(0);
   const lastTimeRef = useRef(0);
 
-  const calculateSpeed = useCallback(
-    (loaded: number, time: number): number => {
-      const timeDelta = time - lastTimeRef.current;
-      const loadedDelta = loaded - lastLoadedRef.current;
+  const calculateSpeed = useCallback((loaded: number, time: number): number => {
+    const timeDelta = time - lastTimeRef.current;
+    const loadedDelta = loaded - lastLoadedRef.current;
 
-      if (timeDelta > 0) {
-        const currentSpeed = (loadedDelta / timeDelta) * 1000;
-        speedSamplesRef.current.push(currentSpeed);
+    if (timeDelta > 0) {
+      const currentSpeed = (loadedDelta / timeDelta) * 1000;
+      speedSamplesRef.current.push(currentSpeed);
 
-        if (speedSamplesRef.current.length > SPEED_SAMPLE_SIZE) {
-          speedSamplesRef.current.shift();
-        }
+      if (speedSamplesRef.current.length > SPEED_SAMPLE_SIZE) {
+        speedSamplesRef.current.shift();
       }
+    }
 
-      lastLoadedRef.current = loaded;
-      lastTimeRef.current = time;
+    lastLoadedRef.current = loaded;
+    lastTimeRef.current = time;
 
-      const sum = speedSamplesRef.current.reduce((a, b) => a + b, 0);
-      return sum / speedSamplesRef.current.length || 0;
-    },
-    []
-  );
+    const sum = speedSamplesRef.current.reduce((a, b) => a + b, 0);
+    return sum / speedSamplesRef.current.length || 0;
+  }, []);
 
   const upload = useCallback(
     (file: File, url: string): Promise<Response> => {
@@ -449,7 +445,7 @@ export function useUploadProgress() {
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
 
-        xhr.upload.addEventListener('progress', (event) => {
+        xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             const speed = calculateSpeed(event.loaded, performance.now());
             const remaining = event.total - event.loaded;
@@ -465,7 +461,7 @@ export function useUploadProgress() {
           }
         });
 
-        xhr.addEventListener('load', () => {
+        xhr.addEventListener("load", () => {
           setUploading(false);
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve(new Response(xhr.response, { status: xhr.status }));
@@ -476,23 +472,23 @@ export function useUploadProgress() {
           }
         });
 
-        xhr.addEventListener('error', () => {
+        xhr.addEventListener("error", () => {
           setUploading(false);
-          const err = new Error('Upload failed');
+          const err = new Error("Upload failed");
           setError(err.message);
           reject(err);
         });
 
-        xhr.addEventListener('abort', () => {
+        xhr.addEventListener("abort", () => {
           setUploading(false);
-          reject(new Error('Upload aborted'));
+          reject(new Error("Upload aborted"));
         });
 
-        xhr.open('POST', url);
+        xhr.open("POST", url);
         xhr.send(file);
       });
     },
-    [calculateSpeed]
+    [calculateSpeed],
   );
 
   const abort = useCallback(() => {
@@ -524,24 +520,28 @@ interface FileSignature {
 
 const FILE_SIGNATURES: FileSignature[] = [
   // Images
-  { mime: 'image/jpeg', extension: 'jpg', signature: [0xff, 0xd8, 0xff] },
+  { mime: "image/jpeg", extension: "jpg", signature: [0xff, 0xd8, 0xff] },
   {
-    mime: 'image/png',
-    extension: 'png',
+    mime: "image/png",
+    extension: "png",
     signature: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
   },
-  { mime: 'image/gif', extension: 'gif', signature: [0x47, 0x49, 0x46, 0x38] },
-  { mime: 'image/webp', extension: 'webp', signature: [0x52, 0x49, 0x46, 0x46] },
+  { mime: "image/gif", extension: "gif", signature: [0x47, 0x49, 0x46, 0x38] },
+  {
+    mime: "image/webp",
+    extension: "webp",
+    signature: [0x52, 0x49, 0x46, 0x46],
+  },
   // Documents
   {
-    mime: 'application/pdf',
-    extension: 'pdf',
+    mime: "application/pdf",
+    extension: "pdf",
     signature: [0x25, 0x50, 0x44, 0x46],
   }, // %PDF
   // Archives
   {
-    mime: 'application/zip',
-    extension: 'zip',
+    mime: "application/zip",
+    extension: "zip",
     signature: [0x50, 0x4b, 0x03, 0x04],
   },
 ];
@@ -549,37 +549,35 @@ const FILE_SIGNATURES: FileSignature[] = [
 interface DetectionResult {
   mime: string;
   extension: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 export async function detectFileType(
-  file: File
+  file: File,
 ): Promise<DetectionResult | null> {
   const HEADER_SIZE = 12;
   const buffer = await file.slice(0, HEADER_SIZE).arrayBuffer();
   const bytes = new Uint8Array(buffer);
 
   for (const sig of FILE_SIGNATURES) {
-    const matches = sig.signature.every(
-      (byte, index) => bytes[index] === byte
-    );
+    const matches = sig.signature.every((byte, index) => bytes[index] === byte);
 
     if (matches) {
       return {
         mime: sig.mime,
         extension: sig.extension,
-        confidence: sig.signature.length >= 4 ? 'high' : 'medium',
+        confidence: sig.signature.length >= 4 ? "high" : "medium",
       };
     }
   }
 
   // Fallback to extension-based detection
-  const ext = file.name.split('.').pop()?.toLowerCase();
+  const ext = file.name.split(".").pop()?.toLowerCase();
   if (ext) {
     return {
-      mime: file.type || 'application/octet-stream',
+      mime: file.type || "application/octet-stream",
       extension: ext,
-      confidence: 'low',
+      confidence: "low",
     };
   }
 
@@ -588,17 +586,17 @@ export async function detectFileType(
 
 export async function validateFileType(
   file: File,
-  allowedTypes: string[]
+  allowedTypes: string[],
 ): Promise<{ valid: boolean; error?: string }> {
   const detected = await detectFileType(file);
 
   if (!detected) {
-    return { valid: false, error: 'Unable to detect file type' };
+    return { valid: false, error: "Unable to detect file type" };
   }
 
   const isAllowed = allowedTypes.some((type) => {
-    if (type.endsWith('/*')) {
-      return detected.mime.startsWith(type.replace('/*', '/'));
+    if (type.endsWith("/*")) {
+      return detected.mime.startsWith(type.replace("/*", "/"));
     }
     return detected.mime === type;
   });
@@ -639,7 +637,7 @@ interface S3UploadOptions {
 export async function uploadToS3(
   file: File,
   credentials: S3UploadCredentials,
-  options: S3UploadOptions = {}
+  options: S3UploadOptions = {},
 ): Promise<string> {
   const { url, fields } = credentials;
 
@@ -651,24 +649,22 @@ export async function uploadToS3(
   });
 
   // File must be last
-  formData.append('file', file);
+  formData.append("file", file);
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
     if (options.abortSignal) {
-      options.abortSignal.addEventListener('abort', () => xhr.abort());
+      options.abortSignal.addEventListener("abort", () => xhr.abort());
     }
 
-    xhr.upload.addEventListener('progress', (event) => {
+    xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable) {
-        options.onProgress?.(
-          Math.round((event.loaded / event.total) * 100)
-        );
+        options.onProgress?.(Math.round((event.loaded / event.total) * 100));
       }
     });
 
-    xhr.addEventListener('load', () => {
+    xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         const fileUrl = `${url}${fields.key}`;
         resolve(fileUrl);
@@ -677,10 +673,10 @@ export async function uploadToS3(
       }
     });
 
-    xhr.addEventListener('error', () => reject(new Error('Upload failed')));
-    xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+    xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
 
-    xhr.open('POST', url);
+    xhr.open("POST", url);
     xhr.send(formData);
   });
 }
@@ -690,11 +686,11 @@ export async function uploadToS3(
 
 ```typescript
 // routes/upload.ts
-import { Hono } from 'hono';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator';
+import { Hono } from "hono";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
 
 const PRESIGNED_URL_EXPIRY_SECONDS = 3600;
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
@@ -708,14 +704,14 @@ const presignRequestSchema = z.object({
 const app = new Hono();
 
 app.post(
-  '/api/upload/presign',
-  zValidator('json', presignRequestSchema),
+  "/api/upload/presign",
+  zValidator("json", presignRequestSchema),
   async (c) => {
-    const { fileName, fileType, fileSize } = c.req.valid('json');
-    const userId = c.get('userId');
+    const { fileName, fileType, fileSize } = c.req.valid("json");
+    const userId = c.get("userId");
 
     const timestamp = Date.now();
-    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const key = `uploads/${userId}/${timestamp}-${sanitizedName}`;
 
     const command = new PutObjectCommand({
@@ -733,10 +729,10 @@ app.post(
       uploadUrl: presignedUrl,
       key,
       expiresAt: new Date(
-        Date.now() + PRESIGNED_URL_EXPIRY_SECONDS * 1000
+        Date.now() + PRESIGNED_URL_EXPIRY_SECONDS * 1000,
       ).toISOString(),
     });
-  }
+  },
 );
 
 export { app as uploadRoutes };

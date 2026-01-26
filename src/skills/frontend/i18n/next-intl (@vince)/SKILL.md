@@ -1,5 +1,5 @@
 ---
-name: frontend/next-intl (@vince)
+name: next-intl (@vince)
 description: Type-safe i18n for Next.js App Router
 ---
 
@@ -52,6 +52,7 @@ description: Type-safe i18n for Next.js App Router
 - Non-Next.js React applications (use react-intl instead)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core.md, formatting.md, pluralization.md, markup.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -291,6 +292,7 @@ t("itemCount", { count: items.length });
 ```
 
 **Plural categories by language:**
+
 - English: `one`, `other`
 - Russian: `one`, `few`, `many`, `other`
 - Arabic: `zero`, `one`, `two`, `few`, `many`, `other`
@@ -416,7 +418,7 @@ export function generateStaticParams() {
   const slugs = ["getting-started", "advanced-features", "faq"];
 
   return routing.locales.flatMap((locale) =>
-    slugs.map((slug) => ({ locale, slug }))
+    slugs.map((slug) => ({ locale, slug })),
   );
 }
 

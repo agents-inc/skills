@@ -1,5 +1,5 @@
 ---
-name: frontend/tooling/storybook (@vince)
+name: storybook (@vince)
 description: Storybook 8 patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration
 ---
 
@@ -59,6 +59,7 @@ description: Storybook 8 patterns - CSF 3.0, args, controls, autodocs, play func
 - Visual testing integration
 
 **Detailed Resources:**
+
 - For code examples, see `examples/` folder:
   - [examples/core.md](examples/core.md) - CSF 3.0 format, args, controls
   - [examples/docs.md](examples/docs.md) - Autodocs, MDX documentation
@@ -513,7 +514,7 @@ Organize stories with a clear hierarchy that reflects your component structure.
 ```typescript
 // Organized by category
 const meta = {
-  title: "Components/Forms/Input",  // Creates nested navigation
+  title: "Components/Forms/Input", // Creates nested navigation
   component: Input,
 } satisfies Meta<typeof Input>;
 
@@ -573,25 +574,30 @@ const meta = {
 ## Integration Guide
 
 **Works with your component framework:**
+
 - Stories import and render your actual components
 - TypeScript types flow from component props to story args
 - Same styling solution (CSS modules, Tailwind) works in Storybook
 
 **Works with your testing tools:**
+
 - Play functions use Testing Library queries (same as RTL)
 - Stories can be imported as test fixtures in Vitest/Jest
 - Visual testing tools (Chromatic) use stories as test cases
 
 **Works with your CI/CD:**
+
 - `build-storybook` creates static site for deployment
 - Storybook Test runner integrates with CI for interaction tests
 - Visual regression tools integrate via CI
 
 **Styling boundary:**
+
 - Storybook handles: component isolation, documentation, controls
 - Your styling skill handles: actual CSS implementation
 
 **Testing boundary:**
+
 - Storybook handles: component interaction testing, visual states
 - Your E2E skill handles: full user journeys, navigation flows
 

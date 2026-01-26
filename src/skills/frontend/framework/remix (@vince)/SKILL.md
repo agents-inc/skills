@@ -1,5 +1,5 @@
 ---
-name: frontend/framework/remix (@vince)
+name: remix (@vince)
 description: File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement
 ---
 
@@ -16,10 +16,12 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 **Remix has merged into React Router v7.** What was planned as Remix v3 is now React Router v7 "framework mode". Key changes:
 
 **Deprecated utilities (will be removed in React Router v7):**
+
 - `json()` - Return raw objects instead, or use `data()` for custom headers/status
 - `defer()` - Return Promises directly in objects with Single Fetch
 
 **New patterns in React Router v7:**
+
 - `data()` utility for setting headers/status: `return data(item, { status: 201 })`
 - Single Fetch enables returning raw objects and streaming Promises directly
 - Automatic type generation: Use `Route.LoaderArgs`, `Route.ActionArgs`, `Route.ComponentProps` from `./+types/route-name`
@@ -29,6 +31,7 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 - Scripts: `remix vite:dev` → `react-router dev`, `remix vite:build` → `react-router build`
 
 **Migration resources:**
+
 - [Upgrading from Remix](https://reactrouter.com/upgrading/remix)
 - [Single Fetch Guide](https://v2.remix.run/docs/guides/single-fetch)
 - [React Router v7 Actions](https://reactrouter.com/start/framework/actions)
@@ -71,7 +74,7 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 
 **Key patterns covered:**
 
-- File-based routing (routes/, _index, $params, _layout)
+- File-based routing (routes/, \_index, $params, \_layout)
 - Loaders for data fetching
 - Actions for mutations
 - defer() for streaming
@@ -89,6 +92,7 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 - Projects already committed to Next.js patterns
 
 **Detailed Resources:**
+
 - For code examples, see [examples.md](examples.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -130,15 +134,15 @@ Remix uses file-system conventions to define routes. Files in `app/routes/` beco
 
 #### Routing Conventions
 
-| File Name | URL | Description |
-|-----------|-----|-------------|
-| `_index.tsx` | `/` | Index route (root) |
-| `about.tsx` | `/about` | Static route |
-| `blog.$slug.tsx` | `/blog/:slug` | Dynamic parameter |
-| `blog_.tsx` | `/blog` | Pathless layout escape |
-| `_auth.tsx` | (none) | Layout route (no URL segment) |
-| `_auth.login.tsx` | `/login` | Route nested in layout |
-| `$.tsx` | `/*` | Splat/catch-all route |
+| File Name         | URL           | Description                   |
+| ----------------- | ------------- | ----------------------------- |
+| `_index.tsx`      | `/`           | Index route (root)            |
+| `about.tsx`       | `/about`      | Static route                  |
+| `blog.$slug.tsx`  | `/blog/:slug` | Dynamic parameter             |
+| `blog_.tsx`       | `/blog`       | Pathless layout escape        |
+| `_auth.tsx`       | (none)        | Layout route (no URL segment) |
+| `_auth.login.tsx` | `/login`      | Route nested in layout        |
+| `$.tsx`           | `/*`          | Splat/catch-all route         |
 
 ```typescript
 // app/routes/blog.$slug.tsx
@@ -218,17 +222,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const user = await db.user.findUnique({ where: { id: params.userId } });
 
   if (!user) {
-    throw json(
-      { message: "User not found" },
-      { status: HTTP_NOT_FOUND }
-    );
+    throw json({ message: "User not found" }, { status: HTTP_NOT_FOUND });
   }
 
   const session = await getSession(request);
   if (!session.userId) {
     throw json(
       { message: "Authentication required" },
-      { status: HTTP_FORBIDDEN }
+      { status: HTTP_FORBIDDEN },
     );
   }
 
@@ -417,12 +418,14 @@ export default function Dashboard() {
 **Why good:** Critical user data loads immediately, non-critical data streams in parallel, Suspense provides loading states, page is interactive before all data loads
 
 **When to use defer:**
+
 - Analytics and reporting data
 - Recommendation systems
 - Comments and social features
 - Any data not needed for initial render
 
 **When NOT to defer:**
+
 - Authentication data (user must be known)
 - SEO-critical content
 - Data needed for page structure
@@ -596,7 +599,11 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: "og:title", content: data.post.title },
     { property: "og:description", content: data.post.excerpt },
     { property: "og:type", content: "article" },
-    { tagName: "link", rel: "canonical", href: `https://example.com/blog/${data.post.slug}` },
+    {
+      tagName: "link",
+      rel: "canonical",
+      href: `https://example.com/blog/${data.post.slug}`,
+    },
   ];
 };
 
@@ -625,7 +632,13 @@ import chartStyles from "~/styles/charts.css?url";
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: dashboardStyles },
   { rel: "stylesheet", href: chartStyles },
-  { rel: "preload", href: "/fonts/inter.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+  {
+    rel: "preload",
+    href: "/fonts/inter.woff2",
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  },
 ];
 ```
 
@@ -658,8 +671,17 @@ export async function action({ params, request }: ActionFunctionArgs) {
   const liked = formData.get("liked") === "true";
 
   await db.like.upsert({
-    where: { postId_userId: { postId: params.postId!, userId: getCurrentUserId(request) } },
-    create: { postId: params.postId!, userId: getCurrentUserId(request), liked },
+    where: {
+      postId_userId: {
+        postId: params.postId!,
+        userId: getCurrentUserId(request),
+      },
+    },
+    create: {
+      postId: params.postId!,
+      userId: getCurrentUserId(request),
+      liked,
+    },
     update: { liked },
   });
 

@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: setup
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Environment
+cli_description: Environment variable management
+usage_guidance: Use when setting up environment variables, .env files, or Zod validation for config.
+compatible_with:
+  - security (@vince)
+  - turborepo (@vince)
+tags:
+  - environment
+  - env
+  - configuration
+  - zod
+  - validation
+  - dotenv

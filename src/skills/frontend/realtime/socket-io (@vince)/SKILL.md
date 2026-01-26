@@ -1,5 +1,5 @@
 ---
-name: frontend/realtime/socket-io (@vince)
+name: socket-io (@vince)
 description: Socket.IO v4.x client patterns, connection lifecycle, reconnection, authentication, rooms, namespaces, acknowledgments, binary data, TypeScript integration
 ---
 
@@ -56,6 +56,7 @@ description: Socket.IO v4.x client patterns, connection lifecycle, reconnection,
 - Minimal bundle size is critical (Socket.IO adds overhead)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -78,6 +79,7 @@ Socket.IO provides a layer on top of WebSocket with additional features: automat
 4. **Connection State Recovery (v4.6.0+):** Missed events can be automatically delivered after brief disconnections, reducing manual state sync.
 
 **Connection Lifecycle:**
+
 ```
 CONNECTING → CONNECTED ↔ (events) → DISCONNECTING → DISCONNECTED
                 ↓                        ↓
@@ -86,15 +88,15 @@ CONNECTING → CONNECTED ↔ (events) → DISCONNECTING → DISCONNECTED
 
 **Socket.IO vs Native WebSocket:**
 
-| Feature | Socket.IO | Native WebSocket |
-|---------|-----------|------------------|
-| Transport fallback | Automatic | Manual |
-| Reconnection | Built-in | Manual |
-| Rooms | Built-in | Manual (server-side) |
-| Namespaces | Built-in | Not available |
-| Acknowledgments | Built-in | Manual |
-| Protocol | Custom (incompatible) | Standard WebSocket |
-| Bundle size | ~14.5KB gzipped | Native (0KB) |
+| Feature            | Socket.IO             | Native WebSocket     |
+| ------------------ | --------------------- | -------------------- |
+| Transport fallback | Automatic             | Manual               |
+| Reconnection       | Built-in              | Manual               |
+| Rooms              | Built-in              | Manual (server-side) |
+| Namespaces         | Built-in              | Not available        |
+| Acknowledgments    | Built-in              | Manual               |
+| Protocol           | Custom (incompatible) | Standard WebSocket   |
+| Bundle size        | ~14.5KB gzipped       | Native (0KB)         |
 
 </philosophy>
 
@@ -121,24 +123,21 @@ interface ServerToClientEvents {
   "room:updated": (room: Room) => void;
   "typing:start": (data: { userId: string; username: string }) => void;
   "typing:stop": (data: { userId: string }) => void;
-  "error": (error: SocketError) => void;
-  "pong": () => void;
+  error: (error: SocketError) => void;
+  pong: () => void;
 }
 
 // Events sent from client to server
 interface ClientToServerEvents {
   "message:send": (
     content: string,
-    callback: (response: MessageResponse) => void
+    callback: (response: MessageResponse) => void,
   ) => void;
-  "room:join": (
-    roomId: string,
-    callback: (result: JoinResult) => void
-  ) => void;
+  "room:join": (roomId: string, callback: (result: JoinResult) => void) => void;
   "room:leave": (roomId: string) => void;
   "typing:start": (roomId: string) => void;
   "typing:stop": (roomId: string) => void;
-  "ping": () => void;
+  ping: () => void;
 }
 
 // Supporting types
@@ -330,7 +329,7 @@ type StateChangeCallback = (state: ConnectionState) => void;
 
 export function setupConnectionLifecycle(
   socket: Socket,
-  onStateChange: StateChangeCallback
+  onStateChange: StateChangeCallback,
 ): () => void {
   const state: ConnectionState = {
     isConnected: socket.connected,
@@ -445,8 +444,8 @@ const MAX_RETRIES = 3;
 ```typescript
 // Configure socket with automatic retries
 const socket = io(url, {
-  ackTimeout: ACK_TIMEOUT_MS,  // Timeout per attempt
-  retries: MAX_RETRIES,        // Max retry attempts
+  ackTimeout: ACK_TIMEOUT_MS, // Timeout per attempt
+  retries: MAX_RETRIES, // Max retry attempts
 });
 
 // Events are automatically retried on timeout
@@ -469,7 +468,7 @@ export function emitWithCallback<T>(
   socket: Socket,
   event: string,
   data: unknown,
-  callback: (response: T) => void
+  callback: (response: T) => void,
 ): void {
   socket.emit(event, data, callback);
 }
@@ -479,7 +478,7 @@ export async function emitWithTimeout<T>(
   socket: Socket,
   event: string,
   data: unknown,
-  timeoutMs: number = DEFAULT_TIMEOUT_MS
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
   try {
     const response = await socket.timeout(timeoutMs).emitWithAck(event, data);
@@ -495,13 +494,13 @@ export async function emitWithTimeout<T>(
 // Usage example
 async function sendMessage(
   socket: Socket,
-  content: string
+  content: string,
 ): Promise<MessageResponse> {
   return emitWithTimeout<MessageResponse>(
     socket,
     "message:send",
     content,
-    ACK_TIMEOUT_MS
+    ACK_TIMEOUT_MS,
   );
 }
 ```
@@ -525,7 +524,7 @@ interface RecoveryHandler {
 
 export function setupRecoveryHandler(
   socket: Socket,
-  handlers: RecoveryHandler
+  handlers: RecoveryHandler,
 ): () => void {
   const handleConnect = (): void => {
     if (socket.recovered) {
@@ -549,7 +548,10 @@ export function setupRecoveryHandler(
 }
 
 // Usage with initial data fetch
-function setupWithRecovery(socket: Socket, fetchInitialState: () => void): void {
+function setupWithRecovery(
+  socket: Socket,
+  fetchInitialState: () => void,
+): void {
   setupRecoveryHandler(socket, {
     onRecovered: () => {
       // Missed events delivered automatically - just update UI
@@ -598,7 +600,7 @@ interface UploadResponse {
 export function sendFile(
   socket: Socket,
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
 ): Promise<UploadResponse> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -622,7 +624,7 @@ export function sendFile(
           } else {
             reject(new Error(response.error ?? "Upload failed"));
           }
-        }
+        },
       );
     };
 
@@ -634,7 +636,7 @@ export function sendFile(
 // Receiving binary data
 export function setupBinaryReceiver(
   socket: Socket,
-  onFileReceived: (data: ArrayBuffer, metadata: FileMetadata) => void
+  onFileReceived: (data: ArrayBuffer, metadata: FileMetadata) => void,
 ): () => void {
   const handler = (data: ArrayBuffer, metadata: FileMetadata): void => {
     onFileReceived(data, metadata);

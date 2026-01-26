@@ -1,5 +1,5 @@
 ---
-name: frontend/graphql-urql (@vince)
+name: graphql-urql (@vince)
 description: URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions
 ---
 
@@ -55,6 +55,7 @@ description: URQL GraphQL client patterns - useQuery, useMutation, exchange arch
 - Authentication with authExchange
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For exchange patterns, see [examples/exchanges.md](examples/exchanges.md)
 - For real-time subscriptions, see [examples/subscriptions.md](examples/subscriptions.md)
@@ -77,6 +78,7 @@ URQL follows the principle of **progressive enhancement**. The core package prov
 4. **Document Caching Default**: Simple query+variables hash caching, opt-in normalized cache
 
 **URQL's Data Flow:**
+
 1. Component requests data via useQuery/useMutation
 2. Operation flows through exchange pipeline (cache → auth → retry → fetch)
 3. Each exchange can inspect, modify, or short-circuit the operation
@@ -84,6 +86,7 @@ URQL follows the principle of **progressive enhancement**. The core package prov
 5. Multiple results can emit over time (cache update triggers new emission)
 
 **Three Architectural Layers:**
+
 1. **Bindings** - Framework integrations (React, Vue, Svelte, Solid)
 2. **Client** - Core engine managing operations and coordinating exchanges
 3. **Exchanges** - Plugins providing functionality (caching, fetching, auth)
@@ -103,7 +106,8 @@ Configure URQL Client with appropriate exchanges in the correct order.
 #### Constants
 
 ```typescript
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:4000/graphql";
+const GRAPHQL_ENDPOINT =
+  process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:4000/graphql";
 ```
 
 #### Implementation
@@ -367,11 +371,11 @@ Control caching behavior with request policies.
 
 #### Request Policy Options
 
-| Policy | Behavior | Use Case |
-|--------|----------|----------|
-| `cache-first` | Return cached if available, else fetch (default) | Most queries |
-| `cache-only` | Only return cached, never fetch | Offline-first |
-| `network-only` | Always fetch, skip cache read | Critical fresh data |
+| Policy              | Behavior                                         | Use Case               |
+| ------------------- | ------------------------------------------------ | ---------------------- |
+| `cache-first`       | Return cached if available, else fetch (default) | Most queries           |
+| `cache-only`        | Only return cached, never fetch                  | Offline-first          |
+| `network-only`      | Always fetch, skip cache read                    | Critical fresh data    |
 | `cache-and-network` | Return cached immediately, then fetch and update | Stale-while-revalidate |
 
 #### Implementation

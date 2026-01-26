@@ -1,5 +1,5 @@
 ---
-name: frontend/testing/react-testing-library (@vince)
+name: react-testing-library (@vince)
 description: React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing
 ---
 
@@ -60,6 +60,7 @@ description: React Testing Library patterns - query hierarchy, userEvent, async 
 - Global configuration options
 
 **Detailed Resources:**
+
 - For code examples, see `examples/` folder:
   - [examples/core.md](examples/core.md) - Query hierarchy examples
   - [examples/user-events.md](examples/user-events.md) - userEvent patterns
@@ -118,18 +119,18 @@ Select queries based on accessibility hierarchy. This ensures tests align with h
 
 ```typescript
 // Priority 1: Accessible to Everyone
-getByRole()       // BEST - queries accessibility tree
-getByLabelText()  // Form fields - how users navigate forms
-getByPlaceholderText() // When no label (not ideal, but sometimes necessary)
-getByText()       // Non-interactive content (divs, spans, paragraphs)
-getByDisplayValue() // Form elements by current value
+getByRole(); // BEST - queries accessibility tree
+getByLabelText(); // Form fields - how users navigate forms
+getByPlaceholderText(); // When no label (not ideal, but sometimes necessary)
+getByText(); // Non-interactive content (divs, spans, paragraphs)
+getByDisplayValue(); // Form elements by current value
 
 // Priority 2: Semantic Queries
-getByAltText()    // Images, areas, inputs with alt
-getByTitle()      // Least reliable - not consistently read by screen readers
+getByAltText(); // Images, areas, inputs with alt
+getByTitle(); // Least reliable - not consistently read by screen readers
 
 // Priority 3: Test IDs (Last Resort)
-getByTestId()     // Only when other methods fail
+getByTestId(); // Only when other methods fail
 ```
 
 See [examples/core.md](examples/core.md) for complete query examples.
@@ -144,11 +145,11 @@ Use `userEvent` for realistic user interaction simulation. It triggers the full 
 
 #### Key Differences
 
-| Action | `fireEvent` | `userEvent` |
-|--------|-------------|-------------|
-| Typing | Single `change` event | `keyDown`, `keyPress`, `keyUp` per character |
-| Clicking | Single `click` event | `pointerDown`, `mouseDown`, `pointerUp`, `mouseUp`, `click` |
-| Focus | Manual management | Automatic focus management |
+| Action   | `fireEvent`           | `userEvent`                                                 |
+| -------- | --------------------- | ----------------------------------------------------------- |
+| Typing   | Single `change` event | `keyDown`, `keyPress`, `keyUp` per character                |
+| Clicking | Single `click` event  | `pointerDown`, `mouseDown`, `pointerUp`, `mouseUp`, `click` |
+| Focus    | Manual management     | Automatic focus management                                  |
 
 #### Setup Pattern (userEvent v14+)
 
@@ -247,11 +248,13 @@ const { result } = renderHook(() => useTheme(), { wrapper });
 See [examples/hooks.md](examples/hooks.md) for complete renderHook examples.
 
 **When to use renderHook:**
+
 - Testing library hooks you're publishing
 - Testing complex hook logic in isolation
 - Testing hooks with many edge cases
 
 **When to prefer component testing:**
+
 - The hook is tightly coupled to UI
 - You want to test the hook in realistic context
 - The component test is simpler to write
@@ -387,6 +390,7 @@ logTestingPlaygroundURL();
 See [examples/debugging.md](examples/debugging.md) for complete debug examples.
 
 **When to use debug:**
+
 - Test is failing and you don't understand why
 - Element can't be found with expected query
 - Need to understand current DOM state
@@ -435,6 +439,7 @@ test("each row has edit button", () => {
 See [examples/scoped-queries.md](examples/scoped-queries.md) for complete within() examples.
 
 **When to use within:**
+
 - Components with repeated structures (tables, lists, cards)
 - Multiple sections with similar elements
 - Testing specific regions of a page
@@ -487,6 +492,7 @@ const user = userEvent.setup({
 See [examples/configuration.md](examples/configuration.md) for complete configuration examples.
 
 **When to configure:**
+
 - Project uses custom test ID attribute
 - Tests need longer async timeouts
 - Using fake timers with userEvent
@@ -500,14 +506,17 @@ See [examples/configuration.md](examples/configuration.md) for complete configur
 ## Integration Guide
 
 **Works with your test runner:**
+
 - Configure test setup file to import `@testing-library/jest-dom` for semantic matchers
 - Use your test runner's lifecycle hooks for cleanup if not automatic
 
 **Works with your mocking solution:**
+
 - Use network-level mocking to test loading/error/success states
 - Mock responses before rendering, not after
 
 **Works with your React framework:**
+
 - Custom render wraps with framework-specific providers
 - SSR frameworks may need additional configuration
 

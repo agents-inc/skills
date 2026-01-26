@@ -7,8 +7,8 @@ cli_name: React + MobX
 cli_description: React with MobX (Photoroom)
 usage_guidance: Use when working with MobX stores in React (Photoroom-specific patterns).
 compatible_with:
-  - frontend/mobx (@vince)
-  - frontend/tailwind (@vince)
+  - mobx (@vince)
+  - tailwind (@vince)
 tags:
   - react
   - mobx

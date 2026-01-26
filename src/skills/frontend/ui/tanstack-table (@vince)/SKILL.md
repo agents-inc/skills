@@ -1,5 +1,5 @@
 ---
-name: frontend/ui-tanstack-table (@vince)
+name: tanstack-table (@vince)
 description: TanStack Table v8 patterns - useReactTable, column definitions, sorting, filtering, pagination, row selection, virtual scrolling, server-side data
 ---
 
@@ -59,6 +59,7 @@ description: TanStack Table v8 patterns - useReactTable, column definitions, sor
 - Read-only data display without user interaction
 
 **Detailed Resources:**
+
 - For core code examples, see [examples/core.md](examples/core.md)
 - For sorting patterns, see [examples/sorting.md](examples/sorting.md)
 - For filtering patterns, see [examples/filtering.md](examples/filtering.md)
@@ -91,6 +92,7 @@ TanStack Table is a **headless UI library** - it provides the logic for tables w
 **Why Headless?**
 
 The headless approach means TanStack Table handles the hard parts (state management, sorting algorithms, pagination logic) while you control presentation. This is ideal when:
+
 - You need custom table designs that don't fit pre-built components
 - You're integrating with an existing design system
 - You need maximum performance control

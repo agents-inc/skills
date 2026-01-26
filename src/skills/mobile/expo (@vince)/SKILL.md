@@ -1,5 +1,5 @@
 ---
-name: mobile/expo (@vince)
+name: expo (@vince)
 description: Expo managed workflow
 ---
 
@@ -21,7 +21,7 @@ description: Expo managed workflow
 
 **(You MUST use config plugins for native customization - NEVER manually edit android/ios directories in managed workflow)**
 
-**(You MUST use EXPO_PUBLIC_ prefix for client-side environment variables - NEVER store secrets in these variables)**
+**(You MUST use EXPO*PUBLIC* prefix for client-side environment variables - NEVER store secrets in these variables)**
 
 </critical_requirements>
 
@@ -149,9 +149,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     buildNumber: String(BUILD_NUMBER),
   },
   android: {
-    package: IS_PRODUCTION
-      ? "com.example.myapp"
-      : "com.example.myapp.dev",
+    package: IS_PRODUCTION ? "com.example.myapp" : "com.example.myapp.dev",
     versionCode: BUILD_NUMBER,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
@@ -191,8 +189,10 @@ export default (): ExpoConfig => ({
     [
       "expo-camera",
       {
-        cameraPermission: "Allow $(PRODUCT_NAME) to access your camera for photos.",
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone for video.",
+        cameraPermission:
+          "Allow $(PRODUCT_NAME) to access your camera for photos.",
+        microphonePermission:
+          "Allow $(PRODUCT_NAME) to access your microphone for video.",
       },
     ],
     // Build properties for SDK versions
@@ -434,7 +434,7 @@ export function OptimizedImage({ uri, width, height }: OptimizedImageProps) {
 
 **(You MUST use config plugins for native customization - NEVER manually edit android/ios directories in managed workflow)**
 
-**(You MUST use EXPO_PUBLIC_ prefix for client-side environment variables - NEVER store secrets in these variables)**
+**(You MUST use EXPO*PUBLIC* prefix for client-side environment variables - NEVER store secrets in these variables)**
 
 **Failure to follow these rules will cause OTA update crashes, broken builds, and security vulnerabilities.**
 

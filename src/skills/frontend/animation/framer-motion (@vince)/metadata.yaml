@@ -7,9 +7,10 @@ cli_name: Motion
 cli_description: Motion animation library
 usage_guidance: Use when animating React components with Motion (Framer Motion).
 requires:
-  - frontend/react (@vince)
+  - react (@vince)
 compatible_with:
-  - frontend/styling-scss-modules (@vince)
+  - scss-modules (@vince)
+  - tailwind (@vince)
   - frontend/accessibility (@vince)
 tags:
   - animation

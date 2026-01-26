@@ -7,8 +7,8 @@ cli_name: GitHub Actions
 cli_description: CI/CD pipelines
 usage_guidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
 compatible_with:
-  - setup/monorepo
-  - setup/tooling
+  - turborepo (@vince)
+  - setup/tooling (@vince)
 tags:
   - github-actions
   - pipelines

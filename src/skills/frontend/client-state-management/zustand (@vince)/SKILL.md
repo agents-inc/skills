@@ -1,5 +1,5 @@
 ---
-name: frontend/state-zustand (@vince)
+name: zustand (@vince)
 description: Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 ---
 
@@ -8,6 +8,7 @@ description: Zustand stores, client state patterns. Use when deciding between Zu
 > **Quick Guide:** Local UI state? useState. Shared UI (2+ components)? Zustand. Server data? Use your data fetching solution. URL-appropriate filters? searchParams. NEVER use Context for state management.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md) and [examples/forms.md](examples/forms.md)
 - For anti-pattern code examples, see [reference.md](reference.md)
 
@@ -228,15 +229,15 @@ Simple form (1-3 fields, minimal validation)?
 
 ### Quick Reference Table
 
-| Use Case | Solution | Why |
-|----------|----------|-----|
-| Server/API data | Data fetching solution | Caching, synchronization, loading states |
-| Shareable filters | URL params | Bookmarkable, browser navigation |
-| Shared UI state (2+ components) | Zustand | Fast, selective re-renders, no prop drilling |
-| Local UI state (1 component) | useState | Simple, component-local |
-| Framework providers | Context | Singletons that never change |
-| Dependency injection | Context | Services, DB connections |
-| **ANY state management** | **NEVER Context** | **Use Zustand instead** |
+| Use Case                        | Solution               | Why                                          |
+| ------------------------------- | ---------------------- | -------------------------------------------- |
+| Server/API data                 | Data fetching solution | Caching, synchronization, loading states     |
+| Shareable filters               | URL params             | Bookmarkable, browser navigation             |
+| Shared UI state (2+ components) | Zustand                | Fast, selective re-renders, no prop drilling |
+| Local UI state (1 component)    | useState               | Simple, component-local                      |
+| Framework providers             | Context                | Singletons that never change                 |
+| Dependency injection            | Context                | Services, DB connections                     |
+| **ANY state management**        | **NEVER Context**      | **Use Zustand instead**                      |
 
 </decision_framework>
 

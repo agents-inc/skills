@@ -15,5 +15,5 @@ tags:
   - forms
   - accessibility
 compatible_with:
-  - frontend/react (@vince)
-  - frontend/styling-tailwind (@vince)
+  - react (@vince)
+  - tailwind (@vince)

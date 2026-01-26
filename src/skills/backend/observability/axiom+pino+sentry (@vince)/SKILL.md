@@ -1,5 +1,5 @@
 ---
-name: backend/observability+axiom+pino+sentry (@vince)
+name: axiom+pino+sentry (@vince)
 description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 ---
 
@@ -60,10 +60,12 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 - Debugging guide: tracing a request through the system
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md) (essential patterns always loaded)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 **Extended Examples:**
+
 - [examples/correlation-ids.md](examples/correlation-ids.md) - Middleware for request tracing
 - [examples/tracing.md](examples/tracing.md) - OpenTelemetry spans and custom instrumentation
 - [examples/error-boundaries.md](examples/error-boundaries.md) - React error boundaries with Sentry
@@ -119,12 +121,12 @@ What are you logging?
 
 **Level Guidelines:**
 
-| Level | Production | When to Use |
-|-------|------------|-------------|
-| `debug` | Filtered | Development debugging, verbose tracing |
-| `info` | Visible | Normal operations, request lifecycle, user actions |
-| `warn` | Visible | Recoverable issues, retries, fallbacks |
-| `error` | Visible + Alert | Unrecoverable issues, failures, exceptions |
+| Level   | Production      | When to Use                                        |
+| ------- | --------------- | -------------------------------------------------- |
+| `debug` | Filtered        | Development debugging, verbose tracing             |
+| `info`  | Visible         | Normal operations, request lifecycle, user actions |
+| `warn`  | Visible         | Recoverable issues, retries, fallbacks             |
+| `error` | Visible + Alert | Unrecoverable issues, failures, exceptions         |
 
 For code examples, see [examples/core.md](examples/core.md#pattern-1-log-levels).
 
@@ -136,13 +138,13 @@ Every log statement should include structured context for searchability.
 
 **Required Fields:**
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `correlationId` | string | Links all logs from same request |
-| `service` | string | Identifies the service (api, web, worker) |
-| `operation` | string | What action is being performed |
-| `userId` | string? | User performing the action (if authenticated) |
-| `duration` | number? | Time taken in milliseconds (for completed operations) |
+| Field           | Type    | Purpose                                               |
+| --------------- | ------- | ----------------------------------------------------- |
+| `correlationId` | string  | Links all logs from same request                      |
+| `service`       | string  | Identifies the service (api, web, worker)             |
+| `operation`     | string  | What action is being performed                        |
+| `userId`        | string? | User performing the action (if authenticated)         |
+| `duration`      | number? | Time taken in milliseconds (for completed operations) |
 
 For code examples, see [examples/core.md](examples/core.md#pattern-2-structured-logging).
 

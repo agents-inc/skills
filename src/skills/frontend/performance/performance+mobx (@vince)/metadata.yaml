@@ -7,8 +7,9 @@ cli_name: MobX Performance
 cli_description: MobX performance (Photoroom)
 usage_guidance: Use when optimizing MobX observers in Photoroom codebase.
 compatible_with:
-  - frontend/react
-  - frontend/client-state-management
+  - react (@vince)
+  - react+mobx (@vince)
+  - mobx (@vince)
 tags:
   - performance
   - optimization

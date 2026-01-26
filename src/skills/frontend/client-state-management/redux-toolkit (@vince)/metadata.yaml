@@ -7,8 +7,9 @@ cli_name: Redux Toolkit
 cli_description: Enterprise client state
 usage_guidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
 compatible_with:
-  - frontend/react
-  - frontend/api
+  - react (@vince)
+  - react-query (@vince)
+  - swr (@vince)
 tags:
   - redux
   - redux-toolkit

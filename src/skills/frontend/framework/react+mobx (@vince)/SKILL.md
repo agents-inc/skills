@@ -1,5 +1,5 @@
 ---
-name: frontend/react+mobx (@vince)
+name: react+mobx (@vince)
 description: MobX observer, stores, i18n for Photoroom webapp
 ---
 
@@ -8,6 +8,7 @@ description: MobX observer, stores, i18n for Photoroom webapp
 > **Quick Guide:** Functional components with explicit TypeScript types. Use `observer()` for MobX reactivity. Use `type` for props (not interface). Use `useTranslation()` for i18n. Access stores via `stores` singleton. Named exports only (except App.tsx). Add `displayName` for React DevTools.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Basic structure, observer, props, displayName, file naming
   - [mobx-reactivity.md](examples/mobx-reactivity.md) - Avoiding useEffect/useMemo with MobX

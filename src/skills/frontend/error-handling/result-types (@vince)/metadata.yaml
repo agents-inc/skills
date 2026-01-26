@@ -7,8 +7,10 @@ cli_name: Result Types
 cli_description: Type-safe error handling
 usage_guidance: Use when implementing Result/Either types for type-safe error handling.
 compatible_with:
-  - frontend/react
-  - backend/typescript
+  - react (@vince)
+  - hono (@vince)
+  - express (@vince)
+  - fastify (@vince)
 tags:
   - result-type
   - either-type

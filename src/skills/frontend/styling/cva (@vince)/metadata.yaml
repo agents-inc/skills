@@ -16,5 +16,5 @@ tags:
   - css-classes
   - design-system
 compatible_with:
-  - frontend/styling/scss-modules
-  - frontend/styling/tailwind
+  - scss-modules (@vince)
+  - tailwind (@vince)

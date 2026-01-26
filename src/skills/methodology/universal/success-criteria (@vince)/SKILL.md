@@ -1,5 +1,5 @@
 ---
-name: methodology/success-criteria (@vince)
+name: success-criteria (@vince)
 description: Success criteria template - every task needs explicit, measurable criteria defining "done". Specific, measurable, achievable, verifiable requirements with verification checklist.
 ---
 

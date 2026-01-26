@@ -1,5 +1,5 @@
 ---
-name: frontend/framework/nuxt (@vince)
+name: nuxt (@vince)
 description: Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO
 ---
 
@@ -59,6 +59,7 @@ description: Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAs
 - Projects already committed to Next.js patterns (React ecosystem)
 
 **Detailed Resources:**
+
 - For code examples:
   - [data-fetching.md](examples/data-fetching.md) - useFetch, useAsyncData, $fetch patterns
   - [server-routes.md](examples/server-routes.md) - API routes with defineEventHandler
@@ -96,13 +97,13 @@ Nuxt uses the `pages/` directory for file-based routing. File names become URL p
 
 #### Routing Conventions
 
-| File | URL | Description |
-|------|-----|-------------|
-| `pages/index.vue` | `/` | Home page |
-| `pages/about.vue` | `/about` | Static route |
-| `pages/blog/[slug].vue` | `/blog/:slug` | Dynamic parameter |
-| `pages/users/[...slug].vue` | `/users/*` | Catch-all route |
-| `pages/posts/[[id]].vue` | `/posts` or `/posts/:id` | Optional parameter |
+| File                        | URL                      | Description        |
+| --------------------------- | ------------------------ | ------------------ |
+| `pages/index.vue`           | `/`                      | Home page          |
+| `pages/about.vue`           | `/about`                 | Static route       |
+| `pages/blog/[slug].vue`     | `/blog/:slug`            | Dynamic parameter  |
+| `pages/users/[...slug].vue` | `/users/*`               | Catch-all route    |
+| `pages/posts/[[id]].vue`    | `/posts` or `/posts/:id` | Optional parameter |
 
 #### Basic Page Structure
 
@@ -112,10 +113,10 @@ Nuxt uses the `pages/` directory for file-based routing. File names become URL p
 // Auto-imported: no explicit imports needed for Nuxt composables
 
 definePageMeta({
-  title: 'Home Page'
-})
+  title: "Home Page",
+});
 
-const { data: posts } = await useFetch('/api/posts')
+const { data: posts } = await useFetch("/api/posts");
 </script>
 
 <template>
@@ -138,16 +139,16 @@ const { data: posts } = await useFetch('/api/posts')
 ```vue
 <!-- pages/blog/[slug].vue -->
 <script setup lang="ts">
-const route = useRoute()
-const slug = route.params.slug as string
+const route = useRoute();
+const slug = route.params.slug as string;
 
-const { data: post, error } = await useFetch(`/api/posts/${slug}`)
+const { data: post, error } = await useFetch(`/api/posts/${slug}`);
 
 if (error.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: 'Post not found'
-  })
+    statusMessage: "Post not found",
+  });
 }
 </script>
 
@@ -166,12 +167,12 @@ if (error.value) {
 ```vue
 <!-- pages/docs/[...slug].vue -->
 <script setup lang="ts">
-const route = useRoute()
+const route = useRoute();
 // slug is an array: ['guide', 'getting-started'] for /docs/guide/getting-started
-const slugArray = route.params.slug as string[]
-const path = slugArray.join('/')
+const slugArray = route.params.slug as string[];
+const path = slugArray.join("/");
 
-const { data: doc } = await useFetch(`/api/docs/${path}`)
+const { data: doc } = await useFetch(`/api/docs/${path}`);
 </script>
 
 <template>
@@ -194,22 +195,22 @@ const { data: doc } = await useFetch(`/api/docs/${path}`)
 
 ```typescript
 // In <script setup>
-const API_ENDPOINT = '/api/users'
+const API_ENDPOINT = "/api/users";
 
 // Simple fetch - URL as cache key
-const { data, error, status, refresh } = await useFetch(API_ENDPOINT)
+const { data, error, status, refresh } = await useFetch(API_ENDPOINT);
 
 // With query parameters
-const page = ref(1)
+const page = ref(1);
 const { data: users } = await useFetch(API_ENDPOINT, {
-  query: { page, limit: 20 }
-})
+  query: { page, limit: 20 },
+});
 
 // Watch option - refetch when reactive values change
-const { data: searchResults } = await useFetch('/api/search', {
+const { data: searchResults } = await useFetch("/api/search", {
   query: { q: searchQuery },
-  watch: [searchQuery]
-})
+  watch: [searchQuery],
+});
 ```
 
 **Why good:** Automatic SSR hydration prevents double-fetch, reactive query params, watch option for auto-refetch
@@ -219,29 +220,34 @@ const { data: searchResults } = await useFetch('/api/search', {
 ```vue
 <script setup lang="ts">
 interface User {
-  id: number
-  name: string
-  email: string
+  id: number;
+  name: string;
+  email: string;
 }
 
-const USERS_ENDPOINT = '/api/users'
+const USERS_ENDPOINT = "/api/users";
 
-const { data: users, pending, error, refresh } = await useFetch<User[]>(USERS_ENDPOINT, {
+const {
+  data: users,
+  pending,
+  error,
+  refresh,
+} = await useFetch<User[]>(USERS_ENDPOINT, {
   // Pick specific fields to reduce payload
-  pick: ['id', 'name'],
+  pick: ["id", "name"],
 
   // Transform response before returning
-  transform: (response) => response.filter(user => user.active),
+  transform: (response) => response.filter((user) => user.active),
 
   // Lazy loading - don't block navigation
   lazy: true,
 
   // Custom cache key
-  key: 'active-users',
+  key: "active-users",
 
   // Default value while loading
-  default: () => []
-})
+  default: () => [],
+});
 </script>
 
 <template>
@@ -263,25 +269,25 @@ const { data: users, pending, error, refresh } = await useFetch<User[]>(USERS_EN
 ```vue
 <script setup lang="ts">
 interface CreateUserPayload {
-  name: string
-  email: string
+  name: string;
+  email: string;
 }
 
 const form = reactive<CreateUserPayload>({
-  name: '',
-  email: ''
-})
+  name: "",
+  email: "",
+});
 
-const { execute, status, error } = useFetch('/api/users', {
-  method: 'POST',
+const { execute, status, error } = useFetch("/api/users", {
+  method: "POST",
   body: form,
-  immediate: false // Don't execute on mount
-})
+  immediate: false, // Don't execute on mount
+});
 
 async function handleSubmit() {
-  await execute()
+  await execute();
   if (!error.value) {
-    navigateTo('/users')
+    navigateTo("/users");
   }
 }
 </script>
@@ -291,7 +297,7 @@ async function handleSubmit() {
     <input v-model="form.name" placeholder="Name" />
     <input v-model="form.email" type="email" placeholder="Email" />
     <button type="submit" :disabled="status === 'pending'">
-      {{ status === 'pending' ? 'Creating...' : 'Create User' }}
+      {{ status === "pending" ? "Creating..." : "Create User" }}
     </button>
     <p v-if="error" class="error">{{ error.message }}</p>
   </form>
@@ -311,21 +317,21 @@ async function handleSubmit() {
 ```vue
 <script setup lang="ts">
 // For custom data sources or complex logic
-const { data: user, pending } = await useAsyncData('user', async () => {
+const { data: user, pending } = await useAsyncData("user", async () => {
   // Can use any async operation
-  const response = await $fetch('/api/user')
-  return response
-})
+  const response = await $fetch("/api/user");
+  return response;
+});
 
 // Multiple parallel requests
-const { data } = await useAsyncData('dashboard', async () => {
+const { data } = await useAsyncData("dashboard", async () => {
   const [users, posts, stats] = await Promise.all([
-    $fetch('/api/users'),
-    $fetch('/api/posts'),
-    $fetch('/api/stats')
-  ])
-  return { users, posts, stats }
-})
+    $fetch("/api/users"),
+    $fetch("/api/posts"),
+    $fetch("/api/stats"),
+  ]);
+  return { users, posts, stats };
+});
 </script>
 
 <template>
@@ -343,14 +349,14 @@ const { data } = await useAsyncData('dashboard', async () => {
 
 ```vue
 <script setup lang="ts">
-const userId = ref('1')
+const userId = ref("1");
 
 // Re-fetches when userId changes
 const { data: user } = await useAsyncData(
   () => `user-${userId.value}`, // Dynamic key
   () => $fetch(`/api/users/${userId.value}`),
-  { watch: [userId] }
-)
+  { watch: [userId] },
+);
 </script>
 ```
 
@@ -366,22 +372,22 @@ Nuxt server routes live in `server/api/` (prefixed with `/api`) or `server/route
 
 ```typescript
 // server/api/users.get.ts
-import type { User } from '~/types'
+import type { User } from "~/types";
 
 export default defineEventHandler(async (event): Promise<User[]> => {
   // Access query parameters
-  const query = getQuery(event)
-  const page = Number(query.page) || 1
-  const limit = Number(query.limit) || 20
+  const query = getQuery(event);
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 20;
 
   // Fetch from database or external API
   const users = await db.users.findMany({
     skip: (page - 1) * limit,
-    take: limit
-  })
+    take: limit,
+  });
 
-  return users
-})
+  return users;
+});
 ```
 
 **Why good:** File suffix `.get.ts` restricts to GET method, getQuery extracts query params, typed return value
@@ -390,33 +396,33 @@ export default defineEventHandler(async (event): Promise<User[]> => {
 
 ```typescript
 // server/api/users.post.ts
-import { z } from 'zod'
+import { z } from "zod";
 
 const CreateUserSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email()
-})
+  email: z.string().email(),
+});
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const body = await readBody(event);
 
   // Validate request body
-  const result = CreateUserSchema.safeParse(body)
+  const result = CreateUserSchema.safeParse(body);
   if (!result.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Validation failed',
-      data: result.error.flatten()
-    })
+      statusMessage: "Validation failed",
+      data: result.error.flatten(),
+    });
   }
 
   const user = await db.users.create({
-    data: result.data
-  })
+    data: result.data,
+  });
 
-  setResponseStatus(event, 201)
-  return user
-})
+  setResponseStatus(event, 201);
+  return user;
+});
 ```
 
 **Why good:** readBody parses request body, Zod validation for type safety, createError for typed errors, setResponseStatus for custom status codes
@@ -426,26 +432,26 @@ export default defineEventHandler(async (event) => {
 ```typescript
 // server/api/users/[id].ts
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
+  const id = getRouterParam(event, "id");
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'User ID required'
-    })
+      statusMessage: "User ID required",
+    });
   }
 
-  const user = await db.users.findUnique({ where: { id } })
+  const user = await db.users.findUnique({ where: { id } });
 
   if (!user) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'User not found'
-    })
+      statusMessage: "User not found",
+    });
   }
 
-  return user
-})
+  return user;
+});
 ```
 
 **Why good:** getRouterParam extracts dynamic segments, early returns for validation, createError for HTTP errors
@@ -455,18 +461,18 @@ export default defineEventHandler(async (event) => {
 ```typescript
 // server/api/proxy/[...path].ts
 export default defineEventHandler(async (event) => {
-  const path = event.context.params?.path || ''
+  const path = event.context.params?.path || "";
 
   // Forward request to external API
   const response = await $fetch(`https://external-api.com/${path}`, {
     method: event.method,
     headers: {
-      Authorization: `Bearer ${process.env.API_KEY}`
-    }
-  })
+      Authorization: `Bearer ${process.env.API_KEY}`,
+    },
+  });
 
-  return response
-})
+  return response;
+});
 ```
 
 **Why good:** Catch-all for proxying, context.params for path segments, server-side secrets safe
@@ -482,10 +488,10 @@ export default defineEventHandler(async (event) => {
 ```vue
 <script setup lang="ts">
 // Shared state across components - key-based
-const counter = useState('counter', () => 0)
+const counter = useState("counter", () => 0);
 
 function increment() {
-  counter.value++
+  counter.value++;
 }
 </script>
 
@@ -504,41 +510,41 @@ function increment() {
 ```typescript
 // composables/use-user.ts
 interface User {
-  id: string
-  name: string
-  email: string
+  id: string;
+  name: string;
+  email: string;
 }
 
 export function useUser() {
-  const user = useState<User | null>('user', () => null)
-  const isLoggedIn = computed(() => user.value !== null)
+  const user = useState<User | null>("user", () => null);
+  const isLoggedIn = computed(() => user.value !== null);
 
   async function login(credentials: { email: string; password: string }) {
-    const response = await $fetch<User>('/api/auth/login', {
-      method: 'POST',
-      body: credentials
-    })
-    user.value = response
+    const response = await $fetch<User>("/api/auth/login", {
+      method: "POST",
+      body: credentials,
+    });
+    user.value = response;
   }
 
   async function logout() {
-    await $fetch('/api/auth/logout', { method: 'POST' })
-    user.value = null
+    await $fetch("/api/auth/logout", { method: "POST" });
+    user.value = null;
   }
 
   return {
     user: readonly(user),
     isLoggedIn,
     login,
-    logout
-  }
+    logout,
+  };
 }
 ```
 
 ```vue
 <!-- Using the composable -->
 <script setup lang="ts">
-const { user, isLoggedIn, logout } = useUser()
+const { user, isLoggedIn, logout } = useUser();
 </script>
 
 <template>
@@ -557,19 +563,19 @@ const { user, isLoggedIn, logout } = useUser()
 // CRITICAL: useState values must be JSON-serializable
 
 // WRONG - Functions not serializable
-const state = useState('fn', () => ({
-  callback: () => console.log('hi') // Error during hydration
-}))
+const state = useState("fn", () => ({
+  callback: () => console.log("hi"), // Error during hydration
+}));
 
 // WRONG - Classes not serializable
-const state = useState('class', () => new MyClass())
+const state = useState("class", () => new MyClass());
 
 // CORRECT - Plain objects and primitives
-const state = useState('data', () => ({
+const state = useState("data", () => ({
   count: 0,
   items: [],
-  settings: { theme: 'dark' }
-}))
+  settings: { theme: "dark" },
+}));
 ```
 
 **Why good:** Clear constraint - JSON-serializable only, prevents hydration mismatches
@@ -585,20 +591,20 @@ Middleware runs before navigating to a route. Use for authentication, authorizat
 ```typescript
 // middleware/auth.ts
 export default defineNuxtRouteMiddleware((to, from) => {
-  const { isLoggedIn } = useUser()
+  const { isLoggedIn } = useUser();
 
   if (!isLoggedIn.value) {
-    return navigateTo('/login')
+    return navigateTo("/login");
   }
-})
+});
 ```
 
 ```vue
 <!-- pages/dashboard.vue -->
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'auth'
-})
+  middleware: "auth",
+});
 </script>
 
 <template>
@@ -616,9 +622,9 @@ export default defineNuxtRouteMiddleware((to, from) => {
   // .global suffix runs on every route
   if (import.meta.client) {
     // Track page view (client-side only)
-    trackPageView(to.fullPath)
+    trackPageView(to.fullPath);
   }
-})
+});
 ```
 
 **Why good:** .global suffix for automatic execution, import.meta.client for client-only code
@@ -631,14 +637,14 @@ definePageMeta({
   middleware: [
     // Inline middleware for page-specific logic
     function (to, from) {
-      const hasPermission = checkPermission(to.params.id as string)
+      const hasPermission = checkPermission(to.params.id as string);
       if (!hasPermission) {
-        return abortNavigation()
+        return abortNavigation();
       }
     },
-    'auth' // Can mix with named middleware
-  ]
-})
+    "auth", // Can mix with named middleware
+  ],
+});
 </script>
 ```
 
@@ -655,7 +661,7 @@ Layouts wrap pages with shared UI. Use for navigation, footers, and page structu
 ```vue
 <!-- layouts/default.vue -->
 <script setup lang="ts">
-const { isLoggedIn, user } = useUser()
+const { isLoggedIn, user } = useUser();
 </script>
 
 <template>
@@ -673,7 +679,8 @@ const { isLoggedIn, user } = useUser()
     </header>
 
     <main>
-      <slot /> <!-- Page content renders here -->
+      <slot />
+      <!-- Page content renders here -->
     </main>
 
     <footer>
@@ -707,9 +714,9 @@ const { isLoggedIn, user } = useUser()
 <!-- pages/admin/index.vue -->
 <script setup lang="ts">
 definePageMeta({
-  layout: 'admin',
-  middleware: 'auth'
-})
+  layout: "admin",
+  middleware: "auth",
+});
 </script>
 
 <template>
@@ -723,12 +730,12 @@ definePageMeta({
 
 ```vue
 <script setup lang="ts">
-const route = useRoute()
+const route = useRoute();
 
 // Change layout based on condition
 const layout = computed(() => {
-  return route.query.print ? 'print' : 'default'
-})
+  return route.query.print ? "print" : "default";
+});
 </script>
 
 <template>
@@ -750,18 +757,16 @@ Nuxt provides composables for managing document head and SEO metadata.
 
 ```vue
 <script setup lang="ts">
-const SITE_NAME = 'My Awesome Site'
+const SITE_NAME = "My Awesome Site";
 
 useHead({
-  title: 'About Us',
+  title: "About Us",
   titleTemplate: (title) => `${title} | ${SITE_NAME}`,
   meta: [
-    { name: 'description', content: 'Learn about our company and mission' }
+    { name: "description", content: "Learn about our company and mission" },
   ],
-  link: [
-    { rel: 'canonical', href: 'https://example.com/about' }
-  ]
-})
+  link: [{ rel: "canonical", href: "https://example.com/about" }],
+});
 </script>
 
 <template>
@@ -778,17 +783,17 @@ useHead({
 
 ```vue
 <script setup lang="ts">
-const { data: post } = await useFetch(`/api/posts/${route.params.slug}`)
+const { data: post } = await useFetch(`/api/posts/${route.params.slug}`);
 
 useSeoMeta({
-  title: () => post.value?.title ?? 'Blog Post',
-  description: () => post.value?.excerpt ?? '',
-  ogTitle: () => post.value?.title ?? 'Blog Post',
-  ogDescription: () => post.value?.excerpt ?? '',
-  ogImage: () => post.value?.coverImage ?? '/default-og.png',
-  ogType: 'article',
-  twitterCard: 'summary_large_image'
-})
+  title: () => post.value?.title ?? "Blog Post",
+  description: () => post.value?.excerpt ?? "",
+  ogTitle: () => post.value?.title ?? "Blog Post",
+  ogDescription: () => post.value?.excerpt ?? "",
+  ogImage: () => post.value?.coverImage ?? "/default-og.png",
+  ogType: "article",
+  twitterCard: "summary_large_image",
+});
 </script>
 
 <template>
@@ -809,18 +814,14 @@ useSeoMeta({
 export default defineNuxtConfig({
   app: {
     head: {
-      charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1',
-      title: 'My App',
-      meta: [
-        { name: 'theme-color', content: '#ffffff' }
-      ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-      ]
-    }
-  }
-})
+      charset: "utf-8",
+      viewport: "width=device-width, initial-scale=1",
+      title: "My App",
+      meta: [{ name: "theme-color", content: "#ffffff" }],
+      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
+    },
+  },
+});
 ```
 
 **Why good:** Global defaults in config, page-level overrides with composables
@@ -836,31 +837,31 @@ Nuxt provides error boundaries and utilities for graceful error handling.
 ```typescript
 // In server routes
 export default defineEventHandler(async (event) => {
-  const user = await getUser(event)
+  const user = await getUser(event);
 
   if (!user) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'User not found',
-      message: 'The requested user does not exist',
-      data: { userId: getRouterParam(event, 'id') }
-    })
+      statusMessage: "User not found",
+      message: "The requested user does not exist",
+      data: { userId: getRouterParam(event, "id") },
+    });
   }
 
-  return user
-})
+  return user;
+});
 ```
 
 ```vue
 <!-- In pages -->
 <script setup lang="ts">
-const { data, error } = await useFetch('/api/protected')
+const { data, error } = await useFetch("/api/protected");
 
 if (error.value) {
   throw createError({
     statusCode: error.value.statusCode,
-    statusMessage: error.value.statusMessage
-  })
+    statusMessage: error.value.statusMessage,
+  });
 }
 </script>
 ```
@@ -872,20 +873,22 @@ if (error.value) {
 ```vue
 <!-- error.vue (root level, not in pages/) -->
 <script setup lang="ts">
-import type { NuxtError } from '#app'
+import type { NuxtError } from "#app";
 
 const props = defineProps<{
-  error: NuxtError
-}>()
+  error: NuxtError;
+}>();
 
-const handleError = () => clearError({ redirect: '/' })
+const handleError = () => clearError({ redirect: "/" });
 
-const HTTP_NOT_FOUND = 404
+const HTTP_NOT_FOUND = 404;
 </script>
 
 <template>
   <div class="error-page">
-    <h1>{{ error.statusCode === HTTP_NOT_FOUND ? 'Page Not Found' : 'Error' }}</h1>
+    <h1>
+      {{ error.statusCode === HTTP_NOT_FOUND ? "Page Not Found" : "Error" }}
+    </h1>
     <p>{{ error.message }}</p>
     <button @click="handleError">Go Home</button>
   </div>
@@ -913,7 +916,7 @@ const HTTP_NOT_FOUND = 404
 
 <script setup lang="ts">
 function handleError(error: Error) {
-  console.error('Caught error:', error)
+  console.error("Caught error:", error);
   // Report to error tracking service
 }
 </script>
@@ -935,16 +938,16 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Available everywhere via useNuxtApp()
   return {
     provide: {
-      hello: (name: string) => `Hello, ${name}!`
-    }
-  }
-})
+      hello: (name: string) => `Hello, ${name}!`,
+    },
+  };
+});
 ```
 
 ```vue
 <script setup lang="ts">
-const { $hello } = useNuxtApp()
-const greeting = $hello('World') // "Hello, World!"
+const { $hello } = useNuxtApp();
+const greeting = $hello("World"); // "Hello, World!"
 </script>
 ```
 
@@ -958,14 +961,14 @@ export default defineNuxtPlugin(() => {
   // .client suffix = runs only in browser
 
   // Initialize analytics
-  const analytics = initializeAnalytics()
+  const analytics = initializeAnalytics();
 
   return {
     provide: {
-      analytics
-    }
-  }
-})
+      analytics,
+    },
+  };
+});
 ```
 
 **Why good:** .client suffix for browser-only code, server-only with .server suffix
@@ -975,34 +978,34 @@ export default defineNuxtPlugin(() => {
 ```typescript
 // plugins/api.ts
 export default defineNuxtPlugin(async (nuxtApp) => {
-  const config = useRuntimeConfig()
+  const config = useRuntimeConfig();
 
   const api = $fetch.create({
     baseURL: config.public.apiBase,
     onRequest({ options }) {
       // Add auth header
-      const token = useCookie('token')
+      const token = useCookie("token");
       if (token.value) {
         options.headers = {
           ...options.headers,
-          Authorization: `Bearer ${token.value}`
-        }
+          Authorization: `Bearer ${token.value}`,
+        };
       }
-    }
-  })
+    },
+  });
 
   return {
-    provide: { api }
-  }
-})
+    provide: { api },
+  };
+});
 ```
 
 ```vue
 <script setup lang="ts">
-const { $api } = useNuxtApp()
+const { $api } = useNuxtApp();
 
 // Uses configured $fetch instance
-const { data } = await useAsyncData('users', () => $api('/users'))
+const { data } = await useAsyncData("users", () => $api("/users"));
 </script>
 ```
 
@@ -1019,20 +1022,24 @@ const { data } = await useAsyncData('users', () => $api('/users'))
 **Nuxt 3 is a full-stack Vue framework.** It handles routing, rendering, data fetching, and server-side logic. Other tools integrate through composables and plugins.
 
 **Styling integration:**
+
 - Apply styles via `class` attribute on components
 - Supports CSS, SCSS, CSS Modules, or any PostCSS-compatible solution
 - Global styles in `assets/` directory
 - Scoped styles in component `<style scoped>` blocks
 
 **Data fetching integration:**
+
 - Server data: `useFetch` and `useAsyncData` (built-in SSR support)
 - Real-time: WebSocket connections via client-only plugins
 
 **State management:**
+
 - Simple state: `useState` composable (SSR-safe)
 - Complex state: External state libraries via plugins with SSR considerations
 
 **Form handling:**
+
 - Native form submission with server routes
 - Client-side validation via composables
 

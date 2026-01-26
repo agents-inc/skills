@@ -1,5 +1,5 @@
 ---
-name: frontend/server-state-react-query+axios+zod (@vince)
+name: react-query+axios+zod (@vince)
 description: React Query, Axios, API classes for Photoroom webapp
 ---
 
@@ -58,6 +58,7 @@ description: React Query, Axios, API classes for Photoroom webapp
 - Request cancellation with AbortController (replaces deprecated CancelToken)
 
 **Detailed Resources:**
+
 - [examples/core.md](examples/core.md) - Axios instance, API classes, React Query setup (always loaded)
 - [examples/mutations.md](examples/mutations.md) - useMutation hooks, cache invalidation, notifications
 - [examples/validation.md](examples/validation.md) - Zod schema validation with safeParse

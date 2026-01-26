@@ -7,10 +7,11 @@ cli_name: Express
 cli_description: Express API framework
 usage_guidance: Use when building Express.js APIs, middleware chains, or error handling.
 compatible_with:
-  - backend/authentication
-  - backend/database
-  - security/security
-  - backend/observability
+  - better-auth+drizzle+hono (@vince)
+  - drizzle (@vince)
+  - prisma (@vince)
+  - security (@vince)
+  - axiom+pino+sentry (@vince)
 tags:
   - express
   - expressjs

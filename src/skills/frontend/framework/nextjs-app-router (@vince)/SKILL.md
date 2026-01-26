@@ -1,5 +1,5 @@
 ---
-name: frontend/nextjs-app-router (@vince)
+name: nextjs-app-router (@vince)
 description: Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Turbopack, async params
 ---
 
@@ -59,6 +59,7 @@ description: Next.js 15 App Router patterns - file-based routing, Server/Client 
 - Non-App Router Next.js projects
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For Next.js 15.5+ features (PPR, after(), typed routes), see [examples/nextjs-15-features.md](examples/nextjs-15-features.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
@@ -93,15 +94,15 @@ The App Router uses a file-system based router where folders define routes and s
 
 #### File Conventions
 
-| File | Purpose | Required |
-|------|---------|----------|
-| `page.tsx` | Unique UI for a route, makes the route publicly accessible | Yes |
-| `layout.tsx` | Shared UI for a segment and its children, preserves state | No |
-| `loading.tsx` | Loading UI for a segment, automatically wraps page in Suspense | No |
-| `error.tsx` | Error UI for a segment, catches runtime errors | No |
-| `not-found.tsx` | Not found UI, triggered by `notFound()` function | No |
-| `template.tsx` | Re-rendered layout (doesn't preserve state) | No |
-| `default.tsx` | Fallback UI for parallel routes when no match | No |
+| File            | Purpose                                                        | Required |
+| --------------- | -------------------------------------------------------------- | -------- |
+| `page.tsx`      | Unique UI for a route, makes the route publicly accessible     | Yes      |
+| `layout.tsx`    | Shared UI for a segment and its children, preserves state      | No       |
+| `loading.tsx`   | Loading UI for a segment, automatically wraps page in Suspense | No       |
+| `error.tsx`     | Error UI for a segment, catches runtime errors                 | No       |
+| `not-found.tsx` | Not found UI, triggered by `notFound()` function               | No       |
+| `template.tsx`  | Re-rendered layout (doesn't preserve state)                    | No       |
+| `default.tsx`   | Fallback UI for parallel routes when no match                  | No       |
 
 #### Route Segment Structure
 
@@ -410,7 +411,9 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPost(slug);
 
@@ -620,12 +623,12 @@ app/
 
 #### Intercepting Convention
 
-| Convention | Description |
-|------------|-------------|
-| `(.)` | Match same level |
-| `(..)` | Match one level up |
+| Convention | Description         |
+| ---------- | ------------------- |
+| `(.)`      | Match same level    |
+| `(..)`     | Match one level up  |
 | `(..)(..)` | Match two levels up |
-| `(...)` | Match from root |
+| `(...)`    | Match from root     |
 
 ```tsx
 // app/@modal/(.)photo/[id]/page.tsx
@@ -689,15 +692,18 @@ export default function RootLayout({
 **Next.js App Router is the framework foundation.** It handles routing, rendering strategies, and data fetching patterns. Other skills build on top of it.
 
 **Styling integration:**
+
 - Apply styles via `className` prop on components
 - Global styles imported in root layout
 - CSS Modules work with both Server and Client Components
 
 **Data fetching integration:**
+
 - Server Components fetch data directly (no client-side fetching library needed for server data)
 - Client Components use your data fetching solution for client-side state
 
 **State integration:**
+
 - Server state: fetch in Server Components, pass as props
 - Client state: use your state management solution in Client Components only
 

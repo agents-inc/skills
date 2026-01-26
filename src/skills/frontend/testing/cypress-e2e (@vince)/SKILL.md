@@ -1,5 +1,5 @@
 ---
-name: frontend/testing/cypress-e2e (@vince)
+name: cypress-e2e (@vince)
 description: Cypress E2E testing patterns - test structure, data-cy selectors, cy.intercept() mocking, custom commands, fixtures, component testing, accessibility testing with cypress-axe, and CI/CD integration
 ---
 
@@ -138,7 +138,10 @@ describe("Login Flow", () => {
       cy.get("[data-cy=password-input]").type("wrongpassword");
       cy.get("[data-cy=submit-button]").click();
 
-      cy.get("[data-cy=error-message]").should("contain", "Invalid credentials");
+      cy.get("[data-cy=error-message]").should(
+        "contain",
+        "Invalid credentials",
+      );
     });
   });
 });
@@ -328,7 +331,9 @@ describe("Login", () => {
 
 ```typescript
 it("displays products from fixture", () => {
-  cy.intercept("GET", "/api/products", { fixture: "products.json" }).as("getProducts");
+  cy.intercept("GET", "/api/products", { fixture: "products.json" }).as(
+    "getProducts",
+  );
 
   cy.visit("/products");
   cy.wait("@getProducts");
@@ -391,13 +396,19 @@ declare namespace Cypress {
      * Get element by data-cy attribute
      * @param selector - The data-cy value
      */
-    getBySel(selector: string, options?: Partial<Loggable & Timeoutable & Withinable & Shadow>): Chainable<JQuery<HTMLElement>>;
+    getBySel(
+      selector: string,
+      options?: Partial<Loggable & Timeoutable & Withinable & Shadow>,
+    ): Chainable<JQuery<HTMLElement>>;
 
     /**
      * Get element by partial data-cy attribute match
      * @param selector - Partial data-cy value
      */
-    getBySelLike(selector: string, options?: Partial<Loggable & Timeoutable & Withinable & Shadow>): Chainable<JQuery<HTMLElement>>;
+    getBySelLike(
+      selector: string,
+      options?: Partial<Loggable & Timeoutable & Withinable & Shadow>,
+    ): Chainable<JQuery<HTMLElement>>;
   }
 }
 ```

@@ -1,5 +1,5 @@
 ---
-name: frontend/testing+karma+playwright (@vince)
+name: karma+playwright (@vince)
 description: Karma, Mocha, Chai, Sinon for unit tests, Playwright E2E with custom fixtures and Page Object Model
 ---
 
@@ -153,6 +153,7 @@ See [reference.md](reference.md) for Mock Strategy and E2E Test Organization dec
 The webapp uses Chai assertions with Mocha. Use Chai syntax exclusively for unit tests.
 
 Key differences from Jest/Vitest:
+
 - Equality: `to.equal()` not `toBe()`
 - Deep equality: `to.deep.equal()` not `toEqual()`
 - Boolean checks: `to.be.true` / `to.be.false`
@@ -235,6 +236,7 @@ e2e/
 E2E tests use Playwright with specific configuration for the webapp.
 
 Key configuration:
+
 - Named constants for timeouts (3 minutes test, 60 seconds expect)
 - CI-specific retry and failure behavior
 - Screenshot thresholds for visual regression

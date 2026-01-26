@@ -7,9 +7,11 @@ cli_name: Storybook
 cli_description: Component documentation
 usage_guidance: Use when documenting components with Storybook, writing stories, or interaction tests.
 compatible_with:
-  - frontend/react
-  - frontend/testing/vitest
-  - frontend/testing/playwright-e2e
+  - react (@vince)
+  - vue-composition-api (@vince)
+  - angular-standalone (@vince)
+  - vitest (@vince)
+  - playwright-e2e (@vince)
 tags:
   - storybook
   - component-development
