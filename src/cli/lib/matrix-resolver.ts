@@ -65,16 +65,32 @@ export function getDependentSkills(
 }
 
 /**
+ * Options for skill availability checks
+ */
+export interface SkillCheckOptions {
+  /** When true, disables conflict and requirement checks (allows any combination) */
+  expertMode?: boolean;
+}
+
+/**
  * Check if a skill is disabled based on current selections
  * A skill is disabled if:
  * 1. It conflicts with any selected skill
  * 2. Its requirements are not met (required skills not selected)
+ *
+ * In expert mode, conflicts are ignored (always returns false)
  */
 export function isDisabled(
   skillId: string,
   currentSelections: string[],
   matrix: MergedSkillsMatrix,
+  options?: SkillCheckOptions,
 ): boolean {
+  // Expert mode disables all blocking
+  if (options?.expertMode) {
+    return false;
+  }
+
   const fullId = resolveAlias(skillId, matrix);
   const skill = matrix.skills[fullId];
 
@@ -496,8 +512,9 @@ export function getAvailableSkills(
   categoryId: string,
   currentSelections: string[],
   matrix: MergedSkillsMatrix,
+  options?: SkillCheckOptions,
 ): SkillOption[] {
-  const options: SkillOption[] = [];
+  const skillOptions: SkillOption[] = [];
   const resolvedSelections = currentSelections.map((s) =>
     resolveAlias(s, matrix),
   );
@@ -508,7 +525,7 @@ export function getAvailableSkills(
       continue;
     }
 
-    const disabled = isDisabled(skill.id, currentSelections, matrix);
+    const disabled = isDisabled(skill.id, currentSelections, matrix, options);
     const discouraged =
       !disabled && isDiscouraged(skill.id, currentSelections, matrix);
     const recommended =
@@ -516,7 +533,7 @@ export function getAvailableSkills(
       !discouraged &&
       isRecommended(skill.id, currentSelections, matrix);
 
-    options.push({
+    skillOptions.push({
       id: skill.id,
       alias: skill.alias,
       name: skill.name,
@@ -539,7 +556,7 @@ export function getAvailableSkills(
   }
 
   // Keep original order - don't sort
-  return options;
+  return skillOptions;
 }
 
 /**
@@ -569,7 +586,13 @@ export function isCategoryAllDisabled(
   categoryId: string,
   currentSelections: string[],
   matrix: MergedSkillsMatrix,
+  options?: SkillCheckOptions,
 ): { disabled: boolean; reason?: string } {
+  // In expert mode, nothing is ever disabled
+  if (options?.expertMode) {
+    return { disabled: false };
+  }
+
   const skills = getSkillsByCategory(categoryId, matrix);
 
   if (skills.length === 0) {
@@ -581,7 +604,7 @@ export function isCategoryAllDisabled(
     [];
 
   for (const skill of skills) {
-    if (isDisabled(skill.id, currentSelections, matrix)) {
+    if (isDisabled(skill.id, currentSelections, matrix, options)) {
       disabledSkills.push({
         skillId: skill.id,
         reason: getDisableReason(skill.id, currentSelections, matrix),

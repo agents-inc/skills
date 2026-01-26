@@ -318,10 +318,10 @@ describe("Integration: Full Stack Pipeline", () => {
     // Should reference skill plugins
     expect(result.skillPlugins.length).toBeGreaterThan(0);
 
-    // Skill references now use canonical frontmatter names (e.g., "frontend/react (@vince)")
+    // Skill references now use canonical frontmatter names (e.g., "react (@vince)")
     for (const skillPlugin of result.skillPlugins) {
-      // Should be in format: category/name (@author)
-      expect(skillPlugin).toMatch(/^[a-z]+\/[a-z0-9+\-]+ \(@\w+\)$/i);
+      // Should be in format: name (@author) - simplified IDs, generic terms may have category prefix with /
+      expect(skillPlugin).toMatch(/^[a-z0-9+\-\/]+ \(@\w+\)$/i);
     }
   });
 
@@ -585,14 +585,13 @@ describe("Integration: End-to-End Pipeline", () => {
       projectRoot: PROJECT_ROOT,
     });
 
-    // Skill references now use canonical frontmatter names (e.g., "frontend/react (@vince)")
-    // This preserves category prefixes for disambiguation and author attribution
+    // Skill references now use simplified canonical frontmatter names (e.g., "react (@vince)")
     expect(stackResult.skillPlugins.length).toBeGreaterThan(0);
 
     for (const skillPlugin of stackResult.skillPlugins) {
-      // Should be in format: category/name (@author)
-      // Examples: "frontend/react (@vince)", "backend/api-hono (@vince)"
-      expect(skillPlugin).toMatch(/^[a-z]+\/[a-z0-9+\-]+ \(@\w+\)$/i);
+      // Should be in format: name (@author) - simplified IDs, generic terms may have category prefix with /
+      // Examples: "react (@vince)", "hono (@vince)", "frontend/accessibility (@vince)"
+      expect(skillPlugin).toMatch(/^[a-z0-9+\-\/]+ \(@\w+\)$/i);
     }
 
     consoleSpy.mockRestore();
@@ -619,17 +618,16 @@ describe("Integration: End-to-End Pipeline", () => {
       skillResults.map((r) => r.manifest.name),
     );
 
-    // Stack skill references now use canonical frontmatter names (e.g., "frontend/react (@vince)")
+    // Stack skill references now use simplified canonical frontmatter names (e.g., "react (@vince)")
     // Compiled plugins use "skill-xxx" format (e.g., "skill-react")
     // To compare, extract the base name from both:
-    // - Stack: "frontend/react (@vince)" -> "react"
+    // - Stack: "react (@vince)" -> "react"
     // - Plugin: "skill-react" -> "react"
     const extractBaseName = (id: string) => {
-      // For canonical IDs like "frontend/react (@vince)"
-      // Split by "/" and take last part, then remove " (@author)"
-      if (id.includes("/")) {
-        const lastPart = id.split("/").pop() || id;
-        return lastPart.replace(/\s*\(@\w+\)$/, "").trim();
+      // For canonical IDs like "react (@vince)"
+      // Remove " (@author)" suffix
+      if (id.includes("(@")) {
+        return id.replace(/\s*\(@\w+\)$/, "").trim();
       }
       // For plugin names like "skill-react"
       return id.replace(/^skill-/, "");

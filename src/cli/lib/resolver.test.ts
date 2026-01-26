@@ -8,23 +8,23 @@ import type { SkillDefinition, SkillReference, StackConfig } from "../types";
 
 describe("resolveSkillReference", () => {
   const mockSkills: Record<string, SkillDefinition> = {
-    "frontend/react (@vince)": {
+    "react (@vince)": {
       path: "skills/frontend/framework/react (@vince)/",
       name: "React",
       description: "React component patterns",
-      canonicalId: "frontend/react (@vince)",
+      canonicalId: "react (@vince)",
     },
-    "backend/hono (@vince)": {
+    "hono (@vince)": {
       path: "skills/backend/api/hono (@vince)/",
       name: "Hono",
       description: "Hono API framework",
-      canonicalId: "backend/hono (@vince)",
+      canonicalId: "hono (@vince)",
     },
   };
 
   it("should resolve a skill reference to a full Skill object", () => {
     const ref: SkillReference = {
-      id: "frontend/react (@vince)",
+      id: "react (@vince)",
       usage: "when building React components",
       preloaded: true,
     };
@@ -32,7 +32,7 @@ describe("resolveSkillReference", () => {
     const result = resolveSkillReference(ref, mockSkills);
 
     expect(result).toEqual({
-      id: "frontend/react (@vince)",
+      id: "react (@vince)",
       path: "skills/frontend/framework/react (@vince)/",
       name: "React",
       description: "React component patterns",
@@ -43,7 +43,7 @@ describe("resolveSkillReference", () => {
 
   it("should default preloaded to false when not specified", () => {
     const ref: SkillReference = {
-      id: "backend/hono (@vince)",
+      id: "hono (@vince)",
       usage: "when building APIs",
     };
 
@@ -66,31 +66,31 @@ describe("resolveSkillReference", () => {
 
 describe("resolveSkillReferences", () => {
   const mockSkills: Record<string, SkillDefinition> = {
-    "frontend/react (@vince)": {
+    "react (@vince)": {
       path: "skills/frontend/framework/react (@vince)/",
       name: "React",
       description: "React component patterns",
-      canonicalId: "frontend/react (@vince)",
+      canonicalId: "react (@vince)",
     },
-    "frontend/zustand (@vince)": {
+    "zustand (@vince)": {
       path: "skills/frontend/client-state-management/zustand (@vince)/",
       name: "Zustand",
       description: "Lightweight state management",
-      canonicalId: "frontend/zustand (@vince)",
+      canonicalId: "zustand (@vince)",
     },
   };
 
   it("should resolve multiple skill references", () => {
     const refs: SkillReference[] = [
-      { id: "frontend/react (@vince)", usage: "for components" },
-      { id: "frontend/zustand (@vince)", usage: "for state", preloaded: true },
+      { id: "react (@vince)", usage: "for components" },
+      { id: "zustand (@vince)", usage: "for state", preloaded: true },
     ];
 
     const results = resolveSkillReferences(refs, mockSkills);
 
     expect(results).toHaveLength(2);
-    expect(results[0].id).toBe("frontend/react (@vince)");
-    expect(results[1].id).toBe("frontend/zustand (@vince)");
+    expect(results[0].id).toBe("react (@vince)");
+    expect(results[1].id).toBe("zustand (@vince)");
     expect(results[1].preloaded).toBe(true);
   });
 
