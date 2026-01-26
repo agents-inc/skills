@@ -1,5 +1,5 @@
 ---
-name: frontend/vue-i18n (@vince)
+name: vue-i18n (@vince)
 description: Type-safe i18n for Vue 3 Composition API
 ---
 
@@ -53,6 +53,7 @@ description: Type-safe i18n for Vue 3 Composition API
 - Non-Vue applications (use framework-specific i18n solution)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core.md, formatting.md, lazy-loading.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 

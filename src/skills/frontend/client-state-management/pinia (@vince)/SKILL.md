@@ -1,5 +1,5 @@
 ---
-name: frontend/state-pinia (@vince)
+name: pinia (@vince)
 description: Pinia stores, Vue 3 state patterns. Use when managing client state in Vue applications, choosing between Options/Setup stores, composing stores, or implementing persistence.
 ---
 
@@ -8,6 +8,7 @@ description: Pinia stores, Vue 3 state patterns. Use when managing client state 
 > **Quick Guide:** Use Pinia for all shared client state in Vue 3. Options stores for simplicity, Setup stores for flexibility. Server data? Use your data fetching solution. Use `storeToRefs()` when destructuring state.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -65,12 +66,12 @@ Pinia is the official state management solution for Vue 3, designed to be intuit
 
 **State Ownership:**
 
-| State Type | Solution | Reason |
-|------------|----------|--------|
-| Server/API data | Data fetching solution | Caching, synchronization, loading states |
-| Shared client state | Pinia | Reactivity, DevTools, persistence |
-| Component-local state | `ref()` / `reactive()` | Simpler, no overhead |
-| URL state (filters) | Route query params | Shareable, bookmarkable |
+| State Type            | Solution               | Reason                                   |
+| --------------------- | ---------------------- | ---------------------------------------- |
+| Server/API data       | Data fetching solution | Caching, synchronization, loading states |
+| Shared client state   | Pinia                  | Reactivity, DevTools, persistence        |
+| Component-local state | `ref()` / `reactive()` | Simpler, no overhead                     |
+| URL state (filters)   | Route query params     | Shareable, bookmarkable                  |
 
 </philosophy>
 
@@ -241,19 +242,21 @@ For implementation examples, see [examples/ssr.md](examples/ssr.md).
 **Vue Router Integration:**
 
 Use Setup stores to access router composables:
-```typescript
-import { useRoute, useRouter } from 'vue-router'
 
-export const useFiltersStore = defineStore('filters', () => {
-  const route = useRoute()
-  const router = useRouter()
+```typescript
+import { useRoute, useRouter } from "vue-router";
+
+export const useFiltersStore = defineStore("filters", () => {
+  const route = useRoute();
+  const router = useRouter();
   // Access route.query, call router.push(), etc.
-})
+});
 ```
 
 **DevTools:**
 
 Pinia has full Vue DevTools support:
+
 - Time-travel debugging
 - State inspection and editing
 - Action tracking

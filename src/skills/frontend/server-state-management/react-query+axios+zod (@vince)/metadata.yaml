@@ -7,8 +7,8 @@ cli_name: React Query + Axios
 cli_description: React Query + Axios (Photoroom)
 usage_guidance: Use when working with React Query + Axios in Photoroom codebase.
 compatible_with:
-  - frontend/react-mobx (@vince)
-  - frontend/mobx (@vince)
+  - react+mobx (@vince)
+  - mobx (@vince)
 tags:
   - react-query
   - mobx-query

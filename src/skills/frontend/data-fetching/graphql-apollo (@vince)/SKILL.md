@@ -1,5 +1,5 @@
 ---
-name: frontend/graphql-apollo (@vince)
+name: graphql-apollo (@vince)
 description: Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions
 ---
 
@@ -58,6 +58,7 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 - **v3.10+**: Schema-based testing with createTestSchema
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For v3.9+ Suspense patterns, see [examples/suspense.md](examples/suspense.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
@@ -78,6 +79,7 @@ Apollo Client is a comprehensive state management library for JavaScript that en
 4. **Type Safety**: Use GraphQL Codegen to generate TypeScript types from your schema
 
 **Apollo Client's Data Flow:**
+
 1. Component requests data via useQuery/useMutation
 2. Apollo checks InMemoryCache first
 3. If cache miss or stale, fetches from network
@@ -99,7 +101,8 @@ Configure ApolloClient with InMemoryCache and appropriate type policies for cach
 #### Constants
 
 ```typescript
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:4000/graphql";
+const GRAPHQL_ENDPOINT =
+  process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:4000/graphql";
 const DEFAULT_POLL_INTERVAL_MS = 30 * 1000;
 ```
 
@@ -116,7 +119,9 @@ const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
-      console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+      );
     });
   }
   if (networkError) {
@@ -644,7 +649,7 @@ const wsLink = new GraphQLWsLink(
       // Add auth token if needed
       authToken: localStorage.getItem("token"),
     }),
-  })
+  }),
 );
 
 // Split traffic between WebSocket (subscriptions) and HTTP (queries/mutations)
@@ -657,7 +662,7 @@ const splitLink = split(
     );
   },
   wsLink,
-  httpLink
+  httpLink,
 );
 
 const apolloClient = new ApolloClient({
@@ -764,7 +769,14 @@ const clearCart = () => {
   cartItemsVar([]);
 };
 
-export { themeVar, cartItemsVar, isAuthenticatedVar, addToCart, removeFromCart, clearCart };
+export {
+  themeVar,
+  cartItemsVar,
+  isAuthenticatedVar,
+  addToCart,
+  removeFromCart,
+  clearCart,
+};
 ```
 
 ```typescript
@@ -798,6 +810,7 @@ export { CartBadge };
 Use `useSuspenseQuery` for Suspense-enabled data fetching that integrates with React's concurrent features.
 
 See [examples/suspense.md](examples/suspense.md) for complete implementation patterns including:
+
 - `useSuspenseQuery` for component-level Suspense
 - `useLoadableQuery` for user-interaction triggered loading
 - `useBackgroundQuery` + `useReadQuery` for background loading

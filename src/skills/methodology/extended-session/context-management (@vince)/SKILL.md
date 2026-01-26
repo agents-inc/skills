@@ -1,5 +1,5 @@
 ---
-name: methodology/context-management (@vince)
+name: context-management (@vince)
 description: Long-term context management protocol - maintain project continuity across sessions through systematic documentation. Progress tracking, decision logging, insight preservation.
 ---
 

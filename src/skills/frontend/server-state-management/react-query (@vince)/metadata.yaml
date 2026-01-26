@@ -7,8 +7,10 @@ cli_name: React Query
 cli_description: Server state and caching
 usage_guidance: Use when fetching API data, caching responses, or managing server state.
 compatible_with:
-  - frontend/react
-  - frontend/client-state
+  - react (@vince)
+  - zustand (@vince)
+  - jotai (@vince)
+  - redux-toolkit (@vince)
 tags:
   - react-query
   - tanstack-query

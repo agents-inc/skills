@@ -1,5 +1,5 @@
 ---
-name: frontend/trpc (@vince)
+name: trpc (@vince)
 description: tRPC type-safe API patterns, procedures, React Query integration
 ---
 
@@ -53,6 +53,7 @@ description: tRPC type-safe API patterns, procedures, React Query integration
 - Optimistic updates and cache invalidation
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -157,22 +158,20 @@ const createUserSchema = z.object({
 
 export const userRouter = router({
   // Query - read operations
-  getById: publicProcedure
-    .input(userIdSchema)
-    .query(async ({ input, ctx }) => {
-      const user = await ctx.db.user.findUnique({
-        where: { id: input.id },
+  getById: publicProcedure.input(userIdSchema).query(async ({ input, ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `User with id ${input.id} not found`,
       });
+    }
 
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `User with id ${input.id} not found`,
-        });
-      }
-
-      return user;
-    }),
+    return user;
+  }),
 
   // Mutation - write operations
   create: publicProcedure
@@ -216,7 +215,7 @@ export interface Context {
 }
 
 export async function createContext(
-  opts: CreateNextContextOptions
+  opts: CreateNextContextOptions,
 ): Promise<Context> {
   const session = await getSessionFromRequest(opts.req);
   const user = session ? await getUserFromSession(session) : null;

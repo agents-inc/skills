@@ -7,9 +7,9 @@ cli_name: PostHog Analytics
 cli_description: Product analytics tracking
 usage_guidance: Use when tracking user events, setting up funnels, or implementing GDPR-compliant analytics.
 compatible_with:
-  - backend/posthog-flags
+  - posthog-flags (@vince)
 requires_setup:
-  - setup/posthog
+  - setup-posthog (@vince)
 tags:
   - posthog
   - analytics

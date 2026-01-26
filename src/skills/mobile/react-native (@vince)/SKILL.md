@@ -1,5 +1,5 @@
 ---
-name: mobile/react-native (@vince)
+name: react-native (@vince)
 description: React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, styling with StyleSheet/NativeWind, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, Expo SDK 52-54, React 19 features
 ---
 
@@ -86,6 +86,7 @@ React Native enables building native mobile apps using React patterns. The key i
 **New Architecture (React Native 0.76+):**
 
 The New Architecture removes the legacy bridge and provides:
+
 - **Fabric** - Modern rendering engine with synchronous layout effects
 - **TurboModules** - Lazy-loaded native modules with type-safe interfaces
 - **JSI (JavaScript Interface)** - Direct synchronous JS-to-native calls without serialization
@@ -480,7 +481,7 @@ export const useAuthStore = create<AuthStore>()(
           set(
             { user: null, token: null, isAuthenticated: false },
             false,
-            "auth/logout"
+            "auth/logout",
           );
         },
 
@@ -490,7 +491,7 @@ export const useAuthStore = create<AuthStore>()(
             set(
               { user: { ...currentUser, ...updates } },
               false,
-              "auth/updateUser"
+              "auth/updateUser",
             );
           }
         },
@@ -499,10 +500,10 @@ export const useAuthStore = create<AuthStore>()(
         name: "auth-storage",
         storage: createJSONStorage(() => AsyncStorage),
         partialize: (state) => ({ user: state.user, token: state.token }),
-      }
+      },
     ),
-    { name: "AuthStore" }
-  )
+    { name: "AuthStore" },
+  ),
 );
 
 // Selectors for performance

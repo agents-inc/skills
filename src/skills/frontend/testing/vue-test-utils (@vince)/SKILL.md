@@ -1,5 +1,5 @@
 ---
-name: frontend/testing/vue-test-utils (@vince)
+name: vue-test-utils (@vince)
 description: Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking
 ---
 
@@ -58,6 +58,7 @@ description: Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger
 - Stubbing child components
 
 **Detailed Resources:**
+
 - For code examples, see `examples/` folder:
   - [examples/core.md](examples/core.md) - Mounting, wrapper API, queries
   - [examples/async.md](examples/async.md) - flushPromises, nextTick, async setup
@@ -360,6 +361,7 @@ test("finds component by name", () => {
 ```
 
 **When to use getComponent vs findComponent:**
+
 - Use `getComponent` when the child **must** exist - provides clearer error messages on failure
 - Use `findComponent` when the child **may not** exist - check with `.exists()` first
 
@@ -387,7 +389,7 @@ interface ExtendedMountOptions extends MountingOptions<unknown> {
 
 function customMount<T extends Component>(
   component: T,
-  options: ExtendedMountOptions = {}
+  options: ExtendedMountOptions = {},
 ): VueWrapper {
   const { initialPiniaState, ...mountOptions } = options;
 
@@ -431,21 +433,25 @@ See [examples/mocking.md](examples/mocking.md) for complete mocking examples.
 ## Integration Guide
 
 **Works with Vitest:**
+
 - Configure test setup file to import global plugins
 - Use `vi.mock()` for module mocking
 - `flushPromises` works with Vitest's fake timers
 
 **Works with Pinia:**
+
 - Use `@pinia/testing` package for `createTestingPinia()`
 - Actions are stubbed by default
 - Initialize state via `initialState` option
 
 **Works with Vue Router:**
+
 - Stub `RouterLink` and `RouterView` for unit tests
 - Use `router-mock` for integration tests requiring navigation
 - Access route params via global mocks
 
 **Works with Axios/Fetch:**
+
 - Mock at module level with `vi.mock()`
 - Use MSW for network-level mocking
 - Always use `flushPromises()` after async operations

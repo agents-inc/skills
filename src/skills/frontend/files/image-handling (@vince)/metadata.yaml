@@ -18,5 +18,6 @@ tags:
   - file-api
   - client-side-processing
 compatible_with:
-  - frontend/react
-  - frontend/forms/*
+  - react (@vince)
+  - react-hook-form (@vince)
+  - vee-validate (@vince)

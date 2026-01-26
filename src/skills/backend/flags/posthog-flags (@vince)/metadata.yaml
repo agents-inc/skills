@@ -7,9 +7,9 @@ cli_name: PostHog Flags
 cli_description: Feature flags and A/B testing
 usage_guidance: Use when implementing feature flags, gradual rollouts, A/B tests, or remote configuration.
 compatible_with:
-  - backend/posthog-analytics
+  - posthog-analytics (@vince)
 requires_setup:
-  - setup/posthog
+  - setup-posthog (@vince)
 tags:
   - posthog
   - feature-flags

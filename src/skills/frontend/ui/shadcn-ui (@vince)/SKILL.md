@@ -1,5 +1,5 @@
 ---
-name: frontend/ui-shadcn-ui (@vince)
+name: shadcn-ui (@vince)
 description: shadcn/ui component library patterns, CLI usage, theming, customization
 ---
 
@@ -55,6 +55,7 @@ description: shadcn/ui component library patterns, CLI usage, theming, customiza
 - Applications where you cannot control the component source
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -198,14 +199,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "destructive" | "outline";
 }
 
-export function Button({ className, variant = "default", ...props }: ButtonProps) {
+export function Button({
+  className,
+  variant = "default",
+  ...props
+}: ButtonProps) {
   return (
     <button
       className={cn(
         "inline-flex items-center justify-center rounded-md text-sm font-medium",
-        variant === "destructive" && "bg-destructive text-destructive-foreground",
+        variant === "destructive" &&
+          "bg-destructive text-destructive-foreground",
         variant === "outline" && "border border-input bg-background",
-        className // Custom classes always come last
+        className, // Custom classes always come last
       )}
       {...props}
     />
@@ -353,10 +359,12 @@ shadcn/ui uses CSS custom properties for theming, enabling global style changes 
 #### Color Convention
 
 shadcn uses a background/foreground convention:
+
 - `--primary` is the background color
 - `--primary-foreground` is the text color for that background
 
 **Key Tailwind v4 changes:**
+
 - OKLCH color format replaces HSL for better perceptual uniformity
 - `@theme inline` directive maps CSS variables to Tailwind utilities
 - `@custom-variant dark` defines dark mode selector
@@ -386,7 +394,11 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 }
 
 // app/layout.tsx
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -451,16 +463,18 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export function FeatureCard({ title, description, onAction }: FeatureCardProps) {
+export function FeatureCard({
+  title,
+  description,
+  onAction,
+}: FeatureCardProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        {/* Your content here */}
-      </CardContent>
+      <CardContent>{/* Your content here */}</CardContent>
       <CardFooter>
         <Button onClick={onAction}>Learn more</Button>
       </CardFooter>
@@ -500,8 +514,14 @@ export function EditProfileDialog() {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">Name</Label>
-            <Input id="name" defaultValue="Pedro Duarte" className="col-span-3" />
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input
+              id="name"
+              defaultValue="Pedro Duarte"
+              className="col-span-3"
+            />
           </div>
         </div>
         <DialogFooter>
@@ -545,13 +565,11 @@ import { Input } from "@/components/ui/input";
       <FormControl>
         <Input placeholder="name@example.com" {...field} />
       </FormControl>
-      <FormDescription>
-        We will never share your email.
-      </FormDescription>
+      <FormDescription>We will never share your email.</FormDescription>
       <FormMessage />
     </FormItem>
   )}
-/>
+/>;
 ```
 
 #### Component Hierarchy

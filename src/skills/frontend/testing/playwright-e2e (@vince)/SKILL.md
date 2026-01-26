@@ -1,5 +1,5 @@
 ---
-name: frontend/testing/playwright-e2e (@vince)
+name: playwright-e2e (@vince)
 description: Playwright E2E testing patterns - test structure, Page Object Model, locator strategies, assertions, network mocking, visual regression, parallel execution, fixtures, and configuration
 ---
 
@@ -301,7 +301,9 @@ await page.locator("button").filter({ visible: true }).click();
 
 ```typescript
 // Combine conditions with .and() - element must match both
-const subscribedButton = page.getByRole("button").and(page.getByTitle("Subscribe"));
+const subscribedButton = page
+  .getByRole("button")
+  .and(page.getByTitle("Subscribe"));
 await subscribedButton.click();
 
 // Match either alternative with .or() - useful for conditional UI
@@ -368,7 +370,9 @@ test("soft assertions continue after failure", async ({ page }) => {
   // These won't stop the test if they fail
   await expect.soft(page.getByTestId("avatar")).toBeVisible();
   await expect.soft(page.getByText("Premium Member")).toBeVisible();
-  await expect.soft(page.getByRole("link", { name: /settings/i })).toBeEnabled();
+  await expect
+    .soft(page.getByRole("link", { name: /settings/i }))
+    .toBeEnabled();
 
   // Test continues, all failures reported at end
 });
@@ -437,7 +441,9 @@ test("handles API error gracefully", async ({ page }) => {
 });
 
 test("handles network failure", async ({ page }) => {
-  await page.route(API_USERS_ENDPOINT, (route) => route.abort(HTTP_NETWORK_OFFLINE));
+  await page.route(API_USERS_ENDPOINT, (route) =>
+    route.abort(HTTP_NETWORK_OFFLINE),
+  );
 
   await page.goto("/profile");
 
@@ -681,10 +687,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? CI_WORKERS : undefined,
-  reporter: [
-    ["html", { open: "never" }],
-    ["list"],
-  ],
+  reporter: [["html", { open: "never" }], ["list"]],
 
   use: {
     baseURL: BASE_URL,

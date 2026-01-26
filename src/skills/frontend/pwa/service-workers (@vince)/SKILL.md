@@ -1,5 +1,5 @@
 ---
-name: frontend/pwa/service-workers (@vince)
+name: service-workers (@vince)
 description: Service Worker lifecycle, caching strategies, offline patterns, update handling, precaching, runtime caching
 ---
 
@@ -54,6 +54,7 @@ description: Service Worker lifecycle, caching strategies, offline patterns, upd
 - For real-time data that must always be fresh (use network-only)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -86,6 +87,7 @@ Service Workers are **programmable network proxies** that run in a separate thre
 4. **Cache Versioning:** Version your caches to enable clean upgrades and prevent unbounded growth.
 
 **Lifecycle Diagram:**
+
 ```
 Registration → Download → Install → Waiting → Activate → Fetch
                             ↓          ↓
@@ -160,7 +162,10 @@ async function registerServiceWorker(): Promise<ServiceWorkerState> {
       if (!installing) return;
 
       installing.addEventListener("statechange", () => {
-        if (installing.state === "installed" && navigator.serviceWorker.controller) {
+        if (
+          installing.state === "installed" &&
+          navigator.serviceWorker.controller
+        ) {
           handleUpdate(installing);
         }
       });
@@ -250,7 +255,7 @@ self.addEventListener("install", (event: ExtendableEvent) => {
       await cache.addAll(PRECACHE_URLS);
       console.log("[SW] Precached", PRECACHE_URLS.length, "assets");
       // Do NOT call skipWaiting here - let user control updates
-    })()
+    })(),
   );
 });
 ```
@@ -274,13 +279,13 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
           .map((name) => {
             console.log("[SW] Deleting old cache:", name);
             return caches.delete(name);
-          })
+          }),
       );
 
       // Take control of all clients immediately
       await self.clients.claim();
       console.log("[SW] Claimed all clients");
-    })()
+    })(),
   );
 });
 ```
@@ -307,7 +312,10 @@ Return cached response immediately, fall back to network. Best for static assets
 
 ```typescript
 // Cache-first: Check cache, fall back to network
-async function cacheFirst(request: Request, cacheName: string): Promise<Response> {
+async function cacheFirst(
+  request: Request,
+  cacheName: string,
+): Promise<Response> {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
 
@@ -355,7 +363,7 @@ Try network first, fall back to cache if offline. Best for content that should b
 async function networkFirst(
   request: Request,
   cacheName: string,
-  timeoutMs: number = NETWORK_TIMEOUT_MS
+  timeoutMs: number = NETWORK_TIMEOUT_MS,
 ): Promise<Response> {
   const cache = await caches.open(cacheName);
 
@@ -364,7 +372,7 @@ async function networkFirst(
     const networkResponse = await Promise.race([
       fetch(request),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Network timeout")), timeoutMs)
+        setTimeout(() => reject(new Error("Network timeout")), timeoutMs),
       ),
     ]);
 
@@ -407,7 +415,7 @@ Return cached response immediately, update cache in background. Best for content
 // Stale-while-revalidate: Return cache, update in background
 async function staleWhileRevalidate(
   request: Request,
-  cacheName: string
+  cacheName: string,
 ): Promise<Response> {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
@@ -474,7 +482,9 @@ self.addEventListener("fetch", (event: FetchEvent) => {
     event.respondWith(networkFirst(request, CACHES.pages));
   } else if (request.destination === "image") {
     // Images: Cache-first with size limit
-    event.respondWith(cacheFirstWithLimit(request, CACHES.images, MAX_CACHE_ITEMS.images));
+    event.respondWith(
+      cacheFirstWithLimit(request, CACHES.images, MAX_CACHE_ITEMS.images),
+    );
   } else if (url.pathname.startsWith("/api/")) {
     // API requests: Stale-while-revalidate
     event.respondWith(staleWhileRevalidate(request, CACHES.api));
@@ -507,7 +517,7 @@ async function limitCacheSize(cache: Cache, maxItems: number): Promise<void> {
       toDelete.map((request) => {
         console.log("[SW] Evicting from cache:", request.url);
         return cache.delete(request);
-      })
+      }),
     );
   }
 }
@@ -516,7 +526,7 @@ async function limitCacheSize(cache: Cache, maxItems: number): Promise<void> {
 async function cacheFirstWithLimit(
   request: Request,
   cacheName: string,
-  maxItems: number
+  maxItems: number,
 ): Promise<Response> {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
@@ -580,7 +590,7 @@ async function handleNavigationFailure(request: Request): Promise<Response> {
     {
       status: 503,
       headers: { "Content-Type": "text/html" },
-    }
+    },
   );
 }
 ```

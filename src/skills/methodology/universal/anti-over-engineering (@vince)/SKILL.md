@@ -1,5 +1,5 @@
 ---
-name: methodology/anti-over-engineering (@vince)
+name: anti-over-engineering (@vince)
 description: Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.
 ---
 

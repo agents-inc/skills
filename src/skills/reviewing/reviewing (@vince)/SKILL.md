@@ -1,5 +1,5 @@
 ---
-name: reviewing/reviewing (@vince)
+name: reviewing (@vince)
 description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
 ---
 

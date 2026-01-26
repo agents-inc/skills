@@ -18,6 +18,7 @@ tags:
   - progress-tracking
   - accessibility
 compatible_with:
-  - frontend/react
-  - frontend/forms/*
-  - backend/api-hono (@vince)
+  - react (@vince)
+  - react-hook-form (@vince)
+  - vee-validate (@vince)
+  - hono (@vince)

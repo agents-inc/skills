@@ -1,5 +1,5 @@
 ---
-name: methodology/write-verification (@vince)
+name: write-verification (@vince)
 description: Write verification protocol - never report success without verifying work was actually saved. Re-read files after edits, verify changes exist, only report success after verification passes.
 ---
 

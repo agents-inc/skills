@@ -1,5 +1,5 @@
 ---
-name: frontend/client-state-management/ngrx-signalstore (@vince)
+name: ngrx-signalstore (@vince)
 description: NgRx SignalStore patterns for Angular state management. Use when managing client state with Angular Signals, composing store features, handling entities, or integrating RxJS effects.
 ---
 
@@ -8,6 +8,7 @@ description: NgRx SignalStore patterns for Angular state management. Use when ma
 > **Quick Guide:** Use NgRx SignalStore for reactive client state in Angular 17+. Compose stores with `withState`, `withComputed`, `withMethods`. Use `patchState` for immutable updates. Use `withEntities` for collections. NEVER use traditional NgRx patterns (actions, reducers, effects) in new SignalStore code.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - signalStore, withState, withComputed, withMethods
   - [entities.md](examples/entities.md) - withEntities, CRUD operations
@@ -89,12 +90,12 @@ NgRx SignalStore is a lightweight, functional state management solution built on
 
 **State Ownership:**
 
-| State Type | Solution | Reason |
-|------------|----------|--------|
-| Server/API data | HTTP services + rxMethod | Caching in store, fetch via services |
-| Shared client state | SignalStore | Reactivity, composition, DevTools |
-| Component-local state | Angular signals | Simpler, no overhead |
-| URL state (filters) | Router query params | Shareable, bookmarkable |
+| State Type            | Solution                 | Reason                               |
+| --------------------- | ------------------------ | ------------------------------------ |
+| Server/API data       | HTTP services + rxMethod | Caching in store, fetch via services |
+| Shared client state   | SignalStore              | Reactivity, composition, DevTools    |
+| Component-local state | Angular signals          | Simpler, no overhead                 |
+| URL state (filters)   | Router query params      | Shareable, bookmarkable              |
 
 </philosophy>
 
@@ -111,6 +112,7 @@ Create stores using `signalStore()` with `withState`, `withComputed`, and `withM
 #### Feature Ordering
 
 Features execute in order. State features must come first:
+
 1. `withState()` - Define state
 2. `withComputed()` - Derived values from state
 3. `withMethods()` - Actions that update state
@@ -205,12 +207,12 @@ Use `signalMethod()` for side effects that don't need RxJS operators.
 
 #### rxMethod vs signalMethod
 
-| Feature | `rxMethod` | `signalMethod` |
-|---------|-----------|---------------|
-| RxJS required | Yes | No |
-| Operators (debounce, switchMap) | Yes | No |
-| Race condition handling | Built-in | Manual |
-| Input types | T, Signal<T>, Observable<T> | T, Signal<T> |
+| Feature                         | `rxMethod`                  | `signalMethod` |
+| ------------------------------- | --------------------------- | -------------- |
+| RxJS required                   | Yes                         | No             |
+| Operators (debounce, switchMap) | Yes                         | No             |
+| Race condition handling         | Built-in                    | Manual         |
+| Input types                     | T, Signal<T>, Observable<T> | T, Signal<T>   |
 
 For implementation examples, see [examples/effects.md](examples/effects.md).
 
@@ -230,6 +232,7 @@ Use `signalStoreFeature()` to create reusable store functionality.
 #### Type Constraints
 
 Use `type()` helper to specify required store members:
+
 - Ensures feature is only used with compatible stores
 - Provides full type inference
 - Enables composition of features
@@ -292,8 +295,10 @@ SignalStore is an Angular service. Use `providedIn: 'root'` for singletons or co
 ```typescript
 // Root-level singleton
 export const GlobalStore = signalStore(
-  { providedIn: 'root' },
-  withState({ /* ... */ })
+  { providedIn: "root" },
+  withState({
+    /* ... */
+  }),
 );
 
 // Component-scoped
@@ -310,12 +315,12 @@ export class MyComponent {
 Use `@angular-architects/ngrx-toolkit` for Redux DevTools support:
 
 ```typescript
-import { withDevtools } from '@angular-architects/ngrx-toolkit';
+import { withDevtools } from "@angular-architects/ngrx-toolkit";
 
 export const FlightStore = signalStore(
-  { providedIn: 'root' },
-  withDevtools('flights'),
-  withState({ flights: [] as Flight[] })
+  { providedIn: "root" },
+  withDevtools("flights"),
+  withState({ flights: [] as Flight[] }),
 );
 ```
 

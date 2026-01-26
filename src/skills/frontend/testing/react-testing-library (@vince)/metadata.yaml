@@ -7,8 +7,8 @@ cli_name: React Testing Library
 cli_description: React component testing
 usage_guidance: Use when testing React components with user-centric queries.
 compatible_with:
-  - frontend/react
-  - frontend/testing/vitest
+  - react (@vince)
+  - vitest (@vince)
 tags:
   - react-testing-library
   - testing

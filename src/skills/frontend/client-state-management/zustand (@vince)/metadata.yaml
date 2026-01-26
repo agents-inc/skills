@@ -7,8 +7,9 @@ cli_name: Zustand
 cli_description: Lightweight client state
 usage_guidance: Use when managing global UI state, replacing Context misuse, or handling cross-component state.
 compatible_with:
-  - frontend/react
-  - frontend/api
+  - react (@vince)
+  - react-query (@vince)
+  - swr (@vince)
 tags:
   - zustand
   - state-management

@@ -1,5 +1,5 @@
 ---
-name: methodology/improvement-protocol (@vince)
+name: improvement-protocol (@vince)
 description: Self-improvement protocol for agents modifying their own prompts/configurations. Evidence-based improvements, structured changes, proven patterns from research.
 ---
 

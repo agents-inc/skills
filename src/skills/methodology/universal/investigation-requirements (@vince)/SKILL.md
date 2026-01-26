@@ -1,5 +1,5 @@
 ---
-name: methodology/investigation-requirements (@vince)
+name: investigation-requirements (@vince)
 description: Investigation requirement - never speculate about code you haven't read. List files, read completely, base analysis on evidence. Prevents hallucination in coding agents.
 ---
 

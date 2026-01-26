@@ -1,5 +1,5 @@
 ---
-name: frontend/utilities/native-js (@vince)
+name: native-js (@vince)
 description: Modern native JavaScript (ES2022-ES2025) utility patterns - array methods, object manipulation, set operations, deep cloning, and function utilities that replace lodash
 ---
 
@@ -46,6 +46,7 @@ description: Modern native JavaScript (ES2022-ES2025) utility patterns - array m
 - Objects containing functions that need cloning - `structuredClone` cannot clone functions
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -74,14 +75,14 @@ const cloned = structuredClone(complexObject);
 
 **ES Version Reference:**
 
-| Feature | ES Version | Browser Support |
-|---------|------------|-----------------|
-| Optional chaining (`?.`) | ES2020 | All modern browsers |
-| Nullish coalescing (`??`) | ES2020 | All modern browsers |
-| `at()` negative indexing | ES2022 | All modern browsers |
-| `toSorted`, `toReversed`, `with` | ES2023 | All modern browsers |
-| `Object.groupBy`, `Map.groupBy` | ES2024 | Chrome 117+, Safari 17.4+ |
-| Set methods (union, etc.) | ES2025 | Chrome 122+, Safari 17+ |
+| Feature                          | ES Version | Browser Support           |
+| -------------------------------- | ---------- | ------------------------- |
+| Optional chaining (`?.`)         | ES2020     | All modern browsers       |
+| Nullish coalescing (`??`)        | ES2020     | All modern browsers       |
+| `at()` negative indexing         | ES2022     | All modern browsers       |
+| `toSorted`, `toReversed`, `with` | ES2023     | All modern browsers       |
+| `Object.groupBy`, `Map.groupBy`  | ES2024     | Chrome 117+, Safari 17.4+ |
+| Set methods (union, etc.)        | ES2025     | Chrome 122+, Safari 17+   |
 
 </philosophy>
 
@@ -117,7 +118,9 @@ function getUserCity(user: User | null): string {
   return user?.address?.city ?? DEFAULT_CITY;
 }
 
-function getCoordinates(user: User | null): { lat: number; lng: number } | null {
+function getCoordinates(
+  user: User | null,
+): { lat: number; lng: number } | null {
   return user?.address?.coordinates ?? null;
 }
 
@@ -135,7 +138,8 @@ const firstItem = data?.items?.[0]?.name ?? "No items";
 import { get } from "lodash";
 
 // Verbose manual checking
-const city = user && user.address && user.address.city ? user.address.city : "Unknown";
+const city =
+  user && user.address && user.address.city ? user.address.city : "Unknown";
 
 // Lodash adds ~5KB for this
 const city = get(user, "address.city", "Unknown");
@@ -174,14 +178,18 @@ const reversed = products.toReversed();
 const INDEX_TO_UPDATE = 1;
 const updated = products.with(INDEX_TO_UPDATE, {
   ...products[INDEX_TO_UPDATE],
-  price: 20
+  price: 20,
 });
 
 // toSpliced - immutable splice
 const START_INDEX = 1;
 const DELETE_COUNT = 1;
 const withoutSecond = products.toSpliced(START_INDEX, DELETE_COUNT);
-const withInserted = products.toSpliced(START_INDEX, 0, { id: "4", name: "New", price: 10 });
+const withInserted = products.toSpliced(START_INDEX, 0, {
+  id: "4",
+  name: "New",
+  price: 10,
+});
 
 // Original array is unchanged
 console.log(products[1].price); // Still 15
@@ -214,13 +222,13 @@ Use `at()` for negative indices instead of `arr[arr.length - 1]`.
 const items = ["first", "second", "third", "fourth", "last"];
 
 // Access from end
-const last = items.at(-1);        // "last"
+const last = items.at(-1); // "last"
 const secondToLast = items.at(-2); // "fourth"
-const first = items.at(0);         // "first"
+const first = items.at(0); // "first"
 
 // Works with strings too
 const str = "hello";
-const lastChar = str.at(-1);       // "o"
+const lastChar = str.at(-1); // "o"
 
 // Useful in functions
 function getLastN<T>(arr: T[], n: number): T[] {
@@ -272,7 +280,11 @@ const logs: LogEntry[] = [
   { timestamp: new Date("2026-01-01"), level: "info", message: "Started" },
   { timestamp: new Date("2026-01-02"), level: "error", message: "Failed" },
   { timestamp: new Date("2026-01-03"), level: "info", message: "Recovered" },
-  { timestamp: new Date("2026-01-04"), level: "error", message: "Failed again" },
+  {
+    timestamp: new Date("2026-01-04"),
+    level: "error",
+    message: "Failed again",
+  },
 ];
 
 // Find last error
@@ -285,7 +297,7 @@ const lastErrorIndex = logs.findLastIndex((log) => log.level === "error");
 
 // Combine with other operations
 const lastInfoBeforeError = logs.findLast(
-  (log, index) => log.level === "info" && index < lastErrorIndex
+  (log, index) => log.level === "info" && index < lastErrorIndex,
 );
 ```
 
@@ -403,7 +415,7 @@ const byCategory = Object.groupBy(products, (product) => product.category);
 // Group by computed key
 const EXPENSIVE_THRESHOLD = 100;
 const byPriceRange = Object.groupBy(products, (product) =>
-  product.price >= EXPENSIVE_THRESHOLD ? "expensive" : "affordable"
+  product.price >= EXPENSIVE_THRESHOLD ? "expensive" : "affordable",
 );
 // { expensive: [laptop, phone], affordable: [shirt, pants] }
 
@@ -422,7 +434,7 @@ const inventory = [
 ];
 
 const byStockStatus = Map.groupBy(inventory, (item) =>
-  item.quantity < LOW_STOCK_THRESHOLD ? needsRestock : sufficient
+  item.quantity < LOW_STOCK_THRESHOLD ? needsRestock : sufficient,
 );
 // Access: byStockStatus.get(needsRestock)
 ```
@@ -431,14 +443,17 @@ const byStockStatus = Map.groupBy(inventory, (item) =>
 
 ```typescript
 // ❌ Bad Example - Reduce-based grouping
-const byCategory = products.reduce<Record<string, Product[]>>((acc, product) => {
-  const key = product.category;
-  if (!acc[key]) {
-    acc[key] = [];
-  }
-  acc[key].push(product);
-  return acc;
-}, {});
+const byCategory = products.reduce<Record<string, Product[]>>(
+  (acc, product) => {
+    const key = product.category;
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(product);
+    return acc;
+  },
+  {},
+);
 
 // Or lodash - adds bundle weight
 import { groupBy } from "lodash";

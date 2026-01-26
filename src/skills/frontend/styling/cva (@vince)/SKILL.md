@@ -1,5 +1,5 @@
 ---
-name: frontend/styling/cva (@vince)
+name: cva (@vince)
 description: Class Variance Authority - type-safe component variant styling with cva(), compound variants, and VariantProps
 ---
 
@@ -57,6 +57,7 @@ description: Class Variance Authority - type-safe component variant styling with
 - Extending and composing variant definitions
 
 **Detailed Resources:**
+
 - For code examples:
   - [variants.md](examples/variants.md) - Basic variants, boolean states, default values
   - [compound-variants.md](examples/compound-variants.md) - Multi-condition styles and combinations
@@ -140,7 +141,7 @@ const buttonVariants = cva(
       intent: "primary",
       size: "md",
     },
-  }
+  },
 );
 
 // Usage
@@ -204,7 +205,7 @@ const inputVariants = cva(
       disabled: false,
       error: false,
     },
-  }
+  },
 );
 
 // Usage
@@ -281,7 +282,7 @@ const buttonVariants = cva(
       size: "sm",
       disabled: false,
     },
-  }
+  },
 );
 ```
 
@@ -292,12 +293,11 @@ const buttonVariants = cva(
 const getButtonClasses = (intent: string, size: string, disabled: boolean) => {
   const base = "font-semibold border rounded";
   const intentClass = intent === "primary" ? "bg-blue-600" : "bg-white";
-  const hoverClass =
-    !disabled
-      ? intent === "primary"
-        ? "hover:bg-blue-700"
-        : "hover:bg-gray-100"
-      : "";
+  const hoverClass = !disabled
+    ? intent === "primary"
+      ? "hover:bg-blue-700"
+      : "hover:bg-gray-100"
+    : "";
   const sizeClass = size === "lg" && intent === "primary" ? "uppercase" : "";
   return `${base} ${intentClass} ${hoverClass} ${sizeClass}`;
 };
@@ -317,42 +317,39 @@ Match multiple variant values with array syntax for DRY compound definitions.
 import { cva } from "class-variance-authority";
 
 // ✅ Good Example - Array syntax matches multiple values
-const alertVariants = cva(
-  ["p-4", "rounded-lg", "border"],
-  {
-    variants: {
-      intent: {
-        info: ["bg-blue-50", "border-blue-200", "text-blue-800"],
-        success: ["bg-green-50", "border-green-200", "text-green-800"],
-        warning: ["bg-yellow-50", "border-yellow-200", "text-yellow-800"],
-        error: ["bg-red-50", "border-red-200", "text-red-800"],
-      },
-      size: {
-        sm: ["text-sm", "p-2"],
-        md: ["text-base", "p-4"],
-        lg: ["text-lg", "p-6"],
-      },
+const alertVariants = cva(["p-4", "rounded-lg", "border"], {
+  variants: {
+    intent: {
+      info: ["bg-blue-50", "border-blue-200", "text-blue-800"],
+      success: ["bg-green-50", "border-green-200", "text-green-800"],
+      warning: ["bg-yellow-50", "border-yellow-200", "text-yellow-800"],
+      error: ["bg-red-50", "border-red-200", "text-red-800"],
     },
-    compoundVariants: [
-      // Array syntax: applies to BOTH info AND success intents
-      {
-        intent: ["info", "success"],
-        size: "lg",
-        class: ["shadow-lg"],
-      },
-      // Array syntax: applies to warning OR error when medium or large
-      {
-        intent: ["warning", "error"],
-        size: ["md", "lg"],
-        class: ["font-medium"],
-      },
-    ],
-    defaultVariants: {
-      intent: "info",
-      size: "md",
+    size: {
+      sm: ["text-sm", "p-2"],
+      md: ["text-base", "p-4"],
+      lg: ["text-lg", "p-6"],
     },
-  }
-);
+  },
+  compoundVariants: [
+    // Array syntax: applies to BOTH info AND success intents
+    {
+      intent: ["info", "success"],
+      size: "lg",
+      class: ["shadow-lg"],
+    },
+    // Array syntax: applies to warning OR error when medium or large
+    {
+      intent: ["warning", "error"],
+      size: ["md", "lg"],
+      class: ["font-medium"],
+    },
+  ],
+  defaultVariants: {
+    intent: "info",
+    size: "md",
+  },
+});
 ```
 
 **Why good:** array syntax avoids duplicating compound variant rules, clear expression of "any of these values" matching, easier to maintain when adding similar styles to multiple variants
@@ -369,28 +366,25 @@ Use `VariantProps` to extract TypeScript types from variant definitions for comp
 import { cva, type VariantProps } from "class-variance-authority";
 
 // Define variants
-const cardVariants = cva(
-  ["rounded-lg", "border", "p-4"],
-  {
-    variants: {
-      elevation: {
-        flat: ["shadow-none"],
-        raised: ["shadow-md"],
-        floating: ["shadow-xl"],
-      },
-      padding: {
-        none: ["p-0"],
-        sm: ["p-2"],
-        md: ["p-4"],
-        lg: ["p-8"],
-      },
+const cardVariants = cva(["rounded-lg", "border", "p-4"], {
+  variants: {
+    elevation: {
+      flat: ["shadow-none"],
+      raised: ["shadow-md"],
+      floating: ["shadow-xl"],
     },
-    defaultVariants: {
-      elevation: "flat",
-      padding: "md",
+    padding: {
+      none: ["p-0"],
+      sm: ["p-2"],
+      md: ["p-4"],
+      lg: ["p-8"],
     },
-  }
-);
+  },
+  defaultVariants: {
+    elevation: "flat",
+    padding: "md",
+  },
+});
 
 // ✅ Good Example - Extract types from cva definition
 type CardVariants = VariantProps<typeof cardVariants>;
@@ -405,7 +399,9 @@ interface CardProps extends CardVariants {
 // Component implementation accesses typed variants
 function createCardClasses(props: CardProps): string {
   const { elevation, padding, className } = props;
-  return cardVariants({ elevation, padding }) + (className ? ` ${className}` : "");
+  return (
+    cardVariants({ elevation, padding }) + (className ? ` ${className}` : "")
+  );
 }
 ```
 
@@ -463,7 +459,7 @@ const badgeVariants = cva(
       },
     },
     // No defaultVariants - variants are required
-  }
+  },
 );
 
 // ✅ Good Example - Make specific variants required
@@ -499,32 +495,25 @@ Use `cx()` for class concatenation and external utilities for conflict resolutio
 ```typescript
 import { cva, cx } from "class-variance-authority";
 
-const buttonVariants = cva(
-  ["font-semibold", "rounded"],
-  {
-    variants: {
-      intent: {
-        primary: ["bg-blue-600", "text-white"],
-        secondary: ["bg-white", "text-gray-800"],
-      },
+const buttonVariants = cva(["font-semibold", "rounded"], {
+  variants: {
+    intent: {
+      primary: ["bg-blue-600", "text-white"],
+      secondary: ["bg-white", "text-gray-800"],
     },
-    defaultVariants: {
-      intent: "primary",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    intent: "primary",
+  },
+});
 
 // ✅ Good Example - Combine with cx()
 function getButtonClasses(
   variants: VariantProps<typeof buttonVariants>,
   additionalClasses?: string,
-  conditionalClasses?: Record<string, boolean>
+  conditionalClasses?: Record<string, boolean>,
 ): string {
-  return cx(
-    buttonVariants(variants),
-    additionalClasses,
-    conditionalClasses
-  );
+  return cx(buttonVariants(variants), additionalClasses, conditionalClasses);
 }
 
 // Usage
@@ -541,25 +530,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 // Example with a class-merging utility (e.g., clsx + tailwind-merge wrapper)
 import { cn } from "./utils"; // Your utility that merges and dedupes
 
-const buttonVariants = cva(
-  ["px-4", "py-2", "rounded"],
-  {
-    variants: {
-      size: {
-        sm: ["px-2", "py-1", "text-sm"],
-        lg: ["px-6", "py-3", "text-lg"],
-      },
+const buttonVariants = cva(["px-4", "py-2", "rounded"], {
+  variants: {
+    size: {
+      sm: ["px-2", "py-1", "text-sm"],
+      lg: ["px-6", "py-3", "text-lg"],
     },
-    defaultVariants: {
-      size: "sm",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    size: "sm",
+  },
+});
 
 // ✅ Good Example - Wrapper for conflict resolution
 function button(
   variants: VariantProps<typeof buttonVariants>,
-  className?: string
+  className?: string,
 ): string {
   return cn(buttonVariants(variants), className);
 }
@@ -583,75 +569,72 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 // ✅ Good Example - Separate cva for each part
 const formFieldVariants = {
-  label: cva(
-    ["block", "font-medium"],
-    {
-      variants: {
-        size: {
-          sm: ["text-sm", "mb-1"],
-          md: ["text-base", "mb-1.5"],
-          lg: ["text-lg", "mb-2"],
-        },
-        required: {
-          false: null,
-          true: ["after:content-['*']", "after:ml-0.5", "after:text-red-500"],
-        },
+  label: cva(["block", "font-medium"], {
+    variants: {
+      size: {
+        sm: ["text-sm", "mb-1"],
+        md: ["text-base", "mb-1.5"],
+        lg: ["text-lg", "mb-2"],
       },
-      defaultVariants: {
-        size: "md",
-        required: false,
+      required: {
+        false: null,
+        true: ["after:content-['*']", "after:ml-0.5", "after:text-red-500"],
       },
-    }
-  ),
+    },
+    defaultVariants: {
+      size: "md",
+      required: false,
+    },
+  }),
 
-  input: cva(
-    ["w-full", "border", "rounded", "transition-colors"],
-    {
-      variants: {
-        size: {
-          sm: ["text-sm", "px-2", "py-1"],
-          md: ["text-base", "px-3", "py-2"],
-          lg: ["text-lg", "px-4", "py-3"],
-        },
-        error: {
-          false: ["border-gray-300", "focus:border-blue-500"],
-          true: ["border-red-500", "focus:border-red-600"],
-        },
+  input: cva(["w-full", "border", "rounded", "transition-colors"], {
+    variants: {
+      size: {
+        sm: ["text-sm", "px-2", "py-1"],
+        md: ["text-base", "px-3", "py-2"],
+        lg: ["text-lg", "px-4", "py-3"],
       },
-      defaultVariants: {
-        size: "md",
-        error: false,
+      error: {
+        false: ["border-gray-300", "focus:border-blue-500"],
+        true: ["border-red-500", "focus:border-red-600"],
       },
-    }
-  ),
+    },
+    defaultVariants: {
+      size: "md",
+      error: false,
+    },
+  }),
 
-  helper: cva(
-    ["mt-1"],
-    {
-      variants: {
-        size: {
-          sm: ["text-xs"],
-          md: ["text-sm"],
-          lg: ["text-base"],
-        },
-        error: {
-          false: ["text-gray-500"],
-          true: ["text-red-600"],
-        },
+  helper: cva(["mt-1"], {
+    variants: {
+      size: {
+        sm: ["text-xs"],
+        md: ["text-sm"],
+        lg: ["text-base"],
       },
-      defaultVariants: {
-        size: "md",
-        error: false,
+      error: {
+        false: ["text-gray-500"],
+        true: ["text-red-600"],
       },
-    }
-  ),
+    },
+    defaultVariants: {
+      size: "md",
+      error: false,
+    },
+  }),
 };
 
 // Shared type for consistent sizing across parts
-type FormFieldSize = NonNullable<VariantProps<typeof formFieldVariants.input>["size"]>;
+type FormFieldSize = NonNullable<
+  VariantProps<typeof formFieldVariants.input>["size"]
+>;
 
 // Usage
-function getFormFieldClasses(size: FormFieldSize, hasError: boolean, isRequired: boolean) {
+function getFormFieldClasses(
+  size: FormFieldSize,
+  hasError: boolean,
+  isRequired: boolean,
+) {
   return {
     label: formFieldVariants.label({ size, required: isRequired }),
     input: formFieldVariants.input({ size, error: hasError }),
@@ -675,7 +658,12 @@ import { cva, cx, type VariantProps } from "class-variance-authority";
 
 // Base interactive element variants
 const interactiveVariants = cva(
-  ["transition-colors", "focus:outline-none", "focus:ring-2", "focus:ring-offset-2"],
+  [
+    "transition-colors",
+    "focus:outline-none",
+    "focus:ring-2",
+    "focus:ring-offset-2",
+  ],
   {
     variants: {
       focusRing: {
@@ -687,29 +675,26 @@ const interactiveVariants = cva(
     defaultVariants: {
       focusRing: "blue",
     },
-  }
+  },
 );
 
 // Button extends interactive with its own variants
-const buttonVariants = cva(
-  ["font-semibold", "rounded"],
-  {
-    variants: {
-      intent: {
-        primary: ["bg-blue-600", "text-white"],
-        secondary: ["bg-gray-200", "text-gray-800"],
-      },
-      size: {
-        sm: ["text-sm", "px-2", "py-1"],
-        md: ["text-base", "px-4", "py-2"],
-      },
+const buttonVariants = cva(["font-semibold", "rounded"], {
+  variants: {
+    intent: {
+      primary: ["bg-blue-600", "text-white"],
+      secondary: ["bg-gray-200", "text-gray-800"],
     },
-    defaultVariants: {
-      intent: "primary",
-      size: "md",
+    size: {
+      sm: ["text-sm", "px-2", "py-1"],
+      md: ["text-base", "px-4", "py-2"],
     },
-  }
-);
+  },
+  defaultVariants: {
+    intent: "primary",
+    size: "md",
+  },
+});
 
 // ✅ Good Example - Compose with cx()
 type ButtonProps = VariantProps<typeof buttonVariants> &
@@ -719,7 +704,7 @@ function button(props: ButtonProps): string {
   const { intent, size, focusRing } = props;
   return cx(
     interactiveVariants({ focusRing }),
-    buttonVariants({ intent, size })
+    buttonVariants({ intent, size }),
   );
 }
 
@@ -741,31 +726,28 @@ Handle responsive styling by combining CVA with CSS or passing breakpoint-aware 
 import { cva } from "class-variance-authority";
 
 // ✅ Good Example - Responsive classes in variants (utility-class approach)
-const containerVariants = cva(
-  ["w-full", "mx-auto", "px-4"],
-  {
-    variants: {
-      maxWidth: {
-        sm: ["max-w-screen-sm"],
-        md: ["max-w-screen-md"],
-        lg: ["max-w-screen-lg"],
-        xl: ["max-w-screen-xl"],
-        full: ["max-w-full"],
-      },
-      // Responsive padding using utility classes
-      padding: {
-        none: ["px-0"],
-        sm: ["px-2", "sm:px-4"],
-        md: ["px-4", "sm:px-6", "lg:px-8"],
-        lg: ["px-6", "sm:px-8", "lg:px-12"],
-      },
+const containerVariants = cva(["w-full", "mx-auto", "px-4"], {
+  variants: {
+    maxWidth: {
+      sm: ["max-w-screen-sm"],
+      md: ["max-w-screen-md"],
+      lg: ["max-w-screen-lg"],
+      xl: ["max-w-screen-xl"],
+      full: ["max-w-full"],
     },
-    defaultVariants: {
-      maxWidth: "lg",
-      padding: "md",
+    // Responsive padding using utility classes
+    padding: {
+      none: ["px-0"],
+      sm: ["px-2", "sm:px-4"],
+      md: ["px-4", "sm:px-6", "lg:px-8"],
+      lg: ["px-6", "sm:px-8", "lg:px-12"],
     },
-  }
-);
+  },
+  defaultVariants: {
+    maxWidth: "lg",
+    padding: "md",
+  },
+});
 ```
 
 **Why good:** responsive breakpoint classes defined in variant values, single variant prop controls all breakpoint styles, CSS handles actual responsive behavior
@@ -778,22 +760,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 // For dynamic responsive behavior, accept breakpoint-aware props
 type ResponsiveValue<T> = T | { base: T; sm?: T; md?: T; lg?: T };
 
-const textVariants = cva(
-  [],
-  {
-    variants: {
-      size: {
-        sm: ["text-sm"],
-        md: ["text-base"],
-        lg: ["text-lg"],
-        xl: ["text-xl"],
-      },
+const textVariants = cva([], {
+  variants: {
+    size: {
+      sm: ["text-sm"],
+      md: ["text-base"],
+      lg: ["text-lg"],
+      xl: ["text-xl"],
     },
-    defaultVariants: {
-      size: "md",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    size: "md",
+  },
+});
 
 type TextSize = NonNullable<VariantProps<typeof textVariants>["size"]>;
 

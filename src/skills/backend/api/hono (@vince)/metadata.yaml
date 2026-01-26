@@ -7,9 +7,10 @@ cli_name: Hono
 cli_description: Hono API framework
 usage_guidance: Use when building API routes with Hono, implementing OpenAPI specs, or Zod validation.
 compatible_with:
-  - backend/authentication
-  - backend/database
-  - security/security
+  - better-auth+drizzle+hono (@vince)
+  - drizzle (@vince)
+  - prisma (@vince)
+  - security (@vince)
 tags:
   - hono
   - openapi

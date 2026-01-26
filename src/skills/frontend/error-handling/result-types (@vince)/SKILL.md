@@ -1,5 +1,5 @@
 ---
-name: frontend/result-types (@vince)
+name: result-types (@vince)
 description: TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values
 ---
 
@@ -58,6 +58,7 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 - Framework boundaries that expect exceptions (Express error handlers)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For async patterns, see [examples/async.md](examples/async.md)
 - For combining multiple Results, see [examples/combining.md](examples/combining.md)
@@ -175,13 +176,13 @@ Transform success or error values without affecting the other case.
 // map - Transform success value
 export const map = <T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => U
+  fn: (value: T) => U,
 ): Result<U, E> => (result.ok ? ok(fn(result.value)) : result);
 
 // mapError - Transform error value
 export const mapError = <T, E, F>(
   result: Result<T, E>,
-  fn: (error: E) => F
+  fn: (error: E) => F,
 ): Result<T, F> => (result.ok ? result : err(fn(result.error)));
 ```
 
@@ -213,7 +214,7 @@ Chain operations that each return Results. This is the core of railway-oriented 
 ```typescript
 export const flatMap = <T, U, E, F>(
   result: Result<T, E>,
-  fn: (value: T) => Result<U, F>
+  fn: (value: T) => Result<U, F>,
 ): Result<U, E | F> => (result.ok ? fn(result.value) : result);
 
 // Alias - some prefer this name
@@ -260,7 +261,9 @@ const result = flatMap(parseNumber("42"), validatePositive);
 
 ```typescript
 // ❌ Bad Example - Nested if statements
-function processInput(input: string): Result<number, ParseError | ValidationError> {
+function processInput(
+  input: string,
+): Result<number, ParseError | ValidationError> {
   const parseResult = parseNumber(input);
   if (parseResult.ok) {
     const validateResult = validatePositive(parseResult.value);
@@ -284,7 +287,7 @@ Convert exception-throwing code to Result-returning code at boundaries.
 ```typescript
 export const tryCatch = <T, E>(
   fn: () => T,
-  onError: (error: unknown) => E
+  onError: (error: unknown) => E,
 ): Result<T, E> => {
   try {
     return ok(fn());
@@ -311,7 +314,7 @@ function safeJsonParse<T>(json: string): Result<T, JsonParseError> {
       code: "JSON_PARSE_ERROR",
       message: error instanceof Error ? error.message : "Unknown parse error",
       input: json,
-    })
+    }),
   );
 }
 
@@ -345,7 +348,7 @@ Handle both cases in a single expression with exhaustive pattern matching.
 ```typescript
 export const match = <T, E, U>(
   result: Result<T, E>,
-  handlers: { ok: (value: T) => U; err: (error: E) => U }
+  handlers: { ok: (value: T) => U; err: (error: E) => U },
 ): U => (result.ok ? handlers.ok(result.value) : handlers.err(result.error));
 ```
 

@@ -1,5 +1,5 @@
 ---
-name: frontend/mocks-msw (@vince)
+name: msw (@vince)
 description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
 ---
 
@@ -8,6 +8,7 @@ description: MSW handlers, browser/server workers, test data. Use when setting u
 > **Quick Guide:** Centralized mocks in `@repo/api-mocks`. Handlers with variant switching (default, empty, error). Shared between browser (dev) and Node (tests). Type-safe using generated types from `@repo/api/types`.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core, browser, node, testing, advanced)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -128,6 +129,7 @@ For code examples, see [examples/core.md](examples/core.md#mock-data-separation)
 Create handlers that support multiple response scenarios (default, empty, error) with runtime switching for development and explicit overrides for testing.
 
 Key principles:
+
 - Named constants for HTTP status codes
 - Response factories for consistency
 - Variant switching via centralized state
@@ -140,6 +142,7 @@ For implementation examples, see [examples/core.md](examples/core.md#variant-han
 ### Pattern 4: Browser Worker for Development
 
 Set up MSW browser worker to intercept requests during development. Key considerations:
+
 - Use `setupWorker` from `msw/browser`
 - Await worker start before rendering app
 - Configure `onUnhandledRequest: "bypass"` for unmocked requests
@@ -151,6 +154,7 @@ For app integration examples, see [examples/browser.md](examples/browser.md).
 ### Pattern 5: Server Worker for Tests
 
 Set up MSW server worker for Node.js test environment:
+
 - Use `setupServer` from `msw/node`
 - Lifecycle: `beforeAll` listen, `afterEach` reset, `afterAll` close
 - Always reset handlers to prevent test pollution

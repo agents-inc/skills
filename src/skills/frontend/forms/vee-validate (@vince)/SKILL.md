@@ -1,5 +1,5 @@
 ---
-name: frontend/forms/vee-validate (@vince)
+name: vee-validate (@vince)
 description: VeeValidate v4 patterns - useForm, useField, defineField, useFieldArray, schema validation with Composition API
 ---
 
@@ -54,6 +54,7 @@ description: VeeValidate v4 patterns - useForm, useField, defineField, useFieldA
 - Read-only data display (not a form scenario)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Basic form patterns
   - [validation.md](examples/validation.md) - Schema validation integration
@@ -78,11 +79,11 @@ VeeValidate v4 embraces Vue 3's Composition API as the primary approach, enablin
 
 **defineField vs useField:**
 
-| Feature | `defineField` | `useField` |
-|---------|---------------|------------|
-| **Use case** | Quick form setup with native inputs | Building reusable custom input components |
-| **Form context** | Always requires form context | Optional form integration |
-| **Best for** | Application-level forms | Component library development |
+| Feature          | `defineField`                       | `useField`                                |
+| ---------------- | ----------------------------------- | ----------------------------------------- |
+| **Use case**     | Quick form setup with native inputs | Building reusable custom input components |
+| **Form context** | Always requires form context        | Optional form integration                 |
+| **Best for**     | Application-level forms             | Component library development             |
 
 </philosophy>
 
@@ -98,18 +99,20 @@ Use `useForm` with `defineField` for the fastest form setup with native inputs.
 
 ```vue
 <script setup lang="ts">
-import { useForm } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import { z } from 'zod';
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
+import { z } from "zod";
 
 const MIN_PASSWORD_LENGTH = 8;
 
 // Define schema with type inference
 const schema = toTypedSchema(
   z.object({
-    email: z.string().min(1, 'Email is required').email('Invalid email'),
-    password: z.string().min(MIN_PASSWORD_LENGTH, `At least ${MIN_PASSWORD_LENGTH} characters`),
-  })
+    email: z.string().min(1, "Email is required").email("Invalid email"),
+    password: z
+      .string()
+      .min(MIN_PASSWORD_LENGTH, `At least ${MIN_PASSWORD_LENGTH} characters`),
+  }),
 );
 
 // Initialize form with typed schema
@@ -118,13 +121,13 @@ const { handleSubmit, errors, defineField } = useForm({
 });
 
 // defineField returns [model, attrs] tuple
-const [email, emailAttrs] = defineField('email');
-const [password, passwordAttrs] = defineField('password');
+const [email, emailAttrs] = defineField("email");
+const [password, passwordAttrs] = defineField("password");
 
 // Type-safe submit handler
 const onSubmit = handleSubmit((values) => {
   // values is fully typed: { email: string; password: string }
-  console.log('Submitting:', values);
+  console.log("Submitting:", values);
 });
 </script>
 
@@ -138,7 +141,12 @@ const onSubmit = handleSubmit((values) => {
 
     <div>
       <label for="password">Password</label>
-      <input id="password" v-model="password" v-bind="passwordAttrs" type="password" />
+      <input
+        id="password"
+        v-model="password"
+        v-bind="passwordAttrs"
+        type="password"
+      />
       <span v-if="errors.password" role="alert">{{ errors.password }}</span>
     </div>
 
@@ -157,7 +165,7 @@ For explicit type control without schema libraries.
 
 ```vue
 <script setup lang="ts">
-import { useForm } from 'vee-validate';
+import { useForm } from "vee-validate";
 
 interface LoginForm {
   email: string;
@@ -167,16 +175,16 @@ interface LoginForm {
 
 const { handleSubmit, errors, defineField } = useForm<LoginForm>({
   initialValues: {
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     rememberMe: false,
   },
 });
 
 // Fields are typed based on LoginForm interface
-const [email, emailAttrs] = defineField('email');
-const [password, passwordAttrs] = defineField('password');
-const [rememberMe, rememberMeAttrs] = defineField('rememberMe');
+const [email, emailAttrs] = defineField("email");
+const [password, passwordAttrs] = defineField("password");
+const [rememberMe, rememberMeAttrs] = defineField("rememberMe");
 
 const onSubmit = handleSubmit(async (values) => {
   // values: LoginForm
@@ -196,7 +204,7 @@ Use `useField` when building reusable input components.
 ```vue
 <!-- components/text-input.vue -->
 <script setup lang="ts">
-import { useField } from 'vee-validate';
+import { useField } from "vee-validate";
 
 interface Props {
   name: string;
@@ -206,18 +214,19 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  type: 'text',
-  placeholder: '',
+  type: "text",
+  placeholder: "",
 });
 
 // CRITICAL: Use function form to maintain reactivity
-const { value, errorMessage, handleBlur, handleChange, meta } = useField<string>(
-  () => props.name, // Function form maintains reactivity
-  undefined,
-  {
-    validateOnValueUpdate: false, // Lazy validation
-  }
-);
+const { value, errorMessage, handleBlur, handleChange, meta } =
+  useField<string>(
+    () => props.name, // Function form maintains reactivity
+    undefined,
+    {
+      validateOnValueUpdate: false, // Lazy validation
+    },
+  );
 </script>
 
 <template>
@@ -251,22 +260,24 @@ Access aggregated form state for UX features.
 
 ```vue
 <script setup lang="ts">
-import { useForm } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import { z } from 'zod';
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
+import { z } from "zod";
 
-const schema = toTypedSchema(z.object({
-  email: z.string().email(),
-}));
+const schema = toTypedSchema(
+  z.object({
+    email: z.string().email(),
+  }),
+);
 
 const { handleSubmit, meta, isSubmitting, resetForm, defineField } = useForm({
   validationSchema: schema,
   initialValues: {
-    email: '',
+    email: "",
   },
 });
 
-const [email, emailAttrs] = defineField('email');
+const [email, emailAttrs] = defineField("email");
 
 const onSubmit = handleSubmit(async (values) => {
   await submitForm(values);
@@ -277,16 +288,11 @@ const onSubmit = handleSubmit(async (values) => {
   <form @submit="onSubmit">
     <input v-model="email" v-bind="emailAttrs" type="email" />
 
-    <button
-      type="submit"
-      :disabled="!meta.valid || isSubmitting"
-    >
-      {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+    <button type="submit" :disabled="!meta.valid || isSubmitting">
+      {{ isSubmitting ? "Submitting..." : "Submit" }}
     </button>
 
-    <button type="button" @click="resetForm()">
-      Reset
-    </button>
+    <button type="button" @click="resetForm()">Reset</button>
 
     <p v-if="meta.dirty">You have unsaved changes</p>
   </form>
@@ -303,17 +309,17 @@ Control when validation triggers per field.
 
 ```vue
 <script setup lang="ts">
-import { useForm } from 'vee-validate';
+import { useForm } from "vee-validate";
 
 const { defineField } = useForm({
-  initialValues: { email: '', username: '' },
+  initialValues: { email: "", username: "" },
 });
 
 // Aggressive validation (default) - validates on every change
-const [email, emailAttrs] = defineField('email');
+const [email, emailAttrs] = defineField("email");
 
 // Lazy validation - validates on blur only
-const [username, usernameAttrs] = defineField('username', {
+const [username, usernameAttrs] = defineField("username", {
   validateOnModelUpdate: false, // Don't validate on input
 });
 </script>
@@ -329,19 +335,21 @@ Set errors from API responses.
 
 ```vue
 <script setup lang="ts">
-import { useForm } from 'vee-validate';
+import { useForm } from "vee-validate";
 
 interface ApiError {
   field: string;
   message: string;
 }
 
-const { handleSubmit, setErrors, setFieldError, errors, defineField } = useForm({
-  initialValues: { email: '', username: '' },
-});
+const { handleSubmit, setErrors, setFieldError, errors, defineField } = useForm(
+  {
+    initialValues: { email: "", username: "" },
+  },
+);
 
-const [email] = defineField('email');
-const [username] = defineField('username');
+const [email] = defineField("email");
+const [username] = defineField("username");
 
 const onSubmit = handleSubmit(async (values) => {
   try {
@@ -350,14 +358,17 @@ const onSubmit = handleSubmit(async (values) => {
     if (error.response?.data?.errors) {
       // Set multiple field errors from API
       const apiErrors = error.response.data.errors as ApiError[];
-      const errorMap = apiErrors.reduce((acc, err) => {
-        acc[err.field] = err.message;
-        return acc;
-      }, {} as Record<string, string>);
+      const errorMap = apiErrors.reduce(
+        (acc, err) => {
+          acc[err.field] = err.message;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
       setErrors(errorMap);
     } else {
       // Set single field error
-      setFieldError('apiError', 'Something went wrong');
+      setFieldError("apiError", "Something went wrong");
     }
   }
 });

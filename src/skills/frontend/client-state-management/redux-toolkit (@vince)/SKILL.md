@@ -1,5 +1,5 @@
 ---
-name: frontend/client-state-management/redux-toolkit (@vince)
+name: redux-toolkit (@vince)
 description: Redux Toolkit patterns for complex client state. Use when managing enterprise-scale state, needing DevTools, entity normalization, or RTK Query for data fetching.
 ---
 
@@ -8,6 +8,7 @@ description: Redux Toolkit patterns for complex client state. Use when managing 
 > **Quick Guide:** Use Redux Toolkit for complex client state requiring DevTools, middleware, or entity normalization. Use RTK Query for data fetching with caching. Prefer Zustand for simpler UI state. NEVER use legacy Redux patterns (createStore, combineReducers manually, switch statements in reducers).
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Store setup, slices
   - [typed-hooks.md](examples/typed-hooks.md) - Type-safe hooks
@@ -217,18 +218,21 @@ For middleware configuration and custom middleware, see [examples/middleware.md]
 ## Integration Guide
 
 **TypeScript Integration:**
+
 - Infer types from store using `ReturnType` and `typeof`
 - Use `PayloadAction<T>` for all action payloads
 - Define typed hooks with `.withTypes()` method
 - Use `createAppAsyncThunk` for pre-typed async thunks
 
 **DevTools Integration:**
+
 - `configureStore` enables DevTools automatically in development
 - Time-travel debugging available out of the box
 - Action history and state diff visualization
 - Custom DevTools options available via `devTools` config
 
 **Testing Integration:**
+
 - Test slices by importing reducer and calling with actions
 - Mock async operations at the network level (not thunk level)
 - Use `configureStore` with preloaded state for component tests

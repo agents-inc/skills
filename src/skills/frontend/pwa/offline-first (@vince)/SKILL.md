@@ -1,5 +1,5 @@
 ---
-name: frontend/offline-first (@vince)
+name: offline-first (@vince)
 description: Local-first architecture with sync queues
 ---
 
@@ -17,7 +17,7 @@ description: Local-first architecture with sync queues
 
 **(You MUST use IndexedDB (via wrapper library) as the single source of truth for all offline data)**
 
-**(You MUST implement sync metadata (_syncStatus, _lastModified, _localVersion) on ALL entities that need synchronization)**
+**(You MUST implement sync metadata (\_syncStatus, \_lastModified, \_localVersion) on ALL entities that need synchronization)**
 
 **(You MUST queue mutations during offline and process them when connectivity returns)**
 
@@ -64,6 +64,7 @@ description: Local-first architecture with sync queues
 - Safari: 7-day cap on script-writable storage (IndexedDB, Cache API) may evict data
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -128,19 +129,19 @@ interface SyncableEntity {
   id: string;
 
   // Sync tracking fields
-  _syncStatus: 'synced' | 'pending' | 'conflicted';
-  _lastModified: number;        // Client timestamp
-  _serverTimestamp?: number;    // Server timestamp for conflict resolution
-  _localVersion: string;        // Local revision ID (UUID)
-  _serverVersion?: string;      // Server revision ID
-  _deletedAt?: number;          // Soft delete timestamp (tombstone)
+  _syncStatus: "synced" | "pending" | "conflicted";
+  _lastModified: number; // Client timestamp
+  _serverTimestamp?: number; // Server timestamp for conflict resolution
+  _localVersion: string; // Local revision ID (UUID)
+  _serverVersion?: string; // Server revision ID
+  _deletedAt?: number; // Soft delete timestamp (tombstone)
 }
 
 // Named constants for sync status
 const SYNC_STATUS = {
-  SYNCED: 'synced',
-  PENDING: 'pending',
-  CONFLICTED: 'conflicted',
+  SYNCED: "synced",
+  PENDING: "pending",
+  CONFLICTED: "conflicted",
 } as const;
 
 // Example: Todo entity with sync metadata
@@ -191,7 +192,7 @@ Use a repository as the single access point for all data operations, encapsulati
 
 ```typescript
 // ✅ Good Example - Repository pattern
-import type { Table } from 'dexie';
+import type { Table } from "dexie";
 
 interface DataRepository<T extends SyncableEntity> {
   // Reads always from local
@@ -208,12 +209,12 @@ interface DataRepository<T extends SyncableEntity> {
   getPendingCount(): Promise<number>;
 }
 
-type SyncStatus = 'synced' | 'pending' | 'conflicted' | 'error';
+type SyncStatus = "synced" | "pending" | "conflicted" | "error";
 
 class TodoRepository implements DataRepository<Todo> {
   constructor(
     private readonly localDb: Table<Todo, string>,
-    private readonly syncQueue: SyncQueue
+    private readonly syncQueue: SyncQueue,
   ) {}
 
   async get(id: string): Promise<Todo | null> {
@@ -224,9 +225,7 @@ class TodoRepository implements DataRepository<Todo> {
   }
 
   async getAll(): Promise<Todo[]> {
-    return this.localDb
-      .filter(todo => !todo._deletedAt)
-      .toArray();
+    return this.localDb.filter((todo) => !todo._deletedAt).toArray();
   }
 
   async save(todo: Todo): Promise<void> {
@@ -245,8 +244,8 @@ class TodoRepository implements DataRepository<Todo> {
 
     // 2. Queue for background sync
     await this.syncQueue.enqueue({
-      type: 'UPSERT',
-      collection: 'todos',
+      type: "UPSERT",
+      collection: "todos",
       data: updatedTodo,
       timestamp: now,
     });
@@ -264,8 +263,8 @@ class TodoRepository implements DataRepository<Todo> {
 
     // Queue deletion for sync
     await this.syncQueue.enqueue({
-      type: 'DELETE',
-      collection: 'todos',
+      type: "DELETE",
+      collection: "todos",
       data: { id },
       timestamp: now,
     });
@@ -273,12 +272,12 @@ class TodoRepository implements DataRepository<Todo> {
 
   async getSyncStatus(id: string): Promise<SyncStatus> {
     const todo = await this.localDb.get(id);
-    return todo?._syncStatus ?? 'error';
+    return todo?._syncStatus ?? "error";
   }
 
   async getPendingCount(): Promise<number> {
     return this.localDb
-      .where('_syncStatus')
+      .where("_syncStatus")
       .equals(SYNC_STATUS.PENDING)
       .count();
   }
@@ -300,7 +299,7 @@ Queue operations when offline and process them reliably when connectivity return
 // ✅ Good Example - Robust sync queue
 interface QueuedOperation {
   id: string;
-  type: 'CREATE' | 'UPDATE' | 'DELETE' | 'UPSERT';
+  type: "CREATE" | "UPDATE" | "DELETE" | "UPSERT";
   collection: string;
   data: unknown;
   timestamp: number;
@@ -318,7 +317,7 @@ const JITTER_FACTOR = 0.5;
 function calculateBackoff(attempt: number): number {
   const exponentialDelay = Math.min(
     INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, attempt),
-    MAX_BACKOFF_MS
+    MAX_BACKOFF_MS,
   );
 
   // Add jitter to prevent thundering herd
@@ -329,20 +328,20 @@ function calculateBackoff(attempt: number): number {
 
 class SyncQueue {
   private readonly db: LocalDatabase;
-  private readonly STORE_NAME = 'syncQueue';
+  private readonly STORE_NAME = "syncQueue";
   private processing = false;
 
   constructor(db: LocalDatabase) {
     this.db = db;
 
     // Listen for online events
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => this.processQueue());
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", () => this.processQueue());
     }
   }
 
   async enqueue(
-    operation: Omit<QueuedOperation, 'id' | 'retryCount'>
+    operation: Omit<QueuedOperation, "id" | "retryCount">,
   ): Promise<void> {
     await this.db.add(this.STORE_NAME, {
       ...operation,
@@ -385,7 +384,7 @@ class SyncQueue {
 
     const response = await fetch(endpoint, {
       method: this.getHttpMethod(op.type),
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(op.data),
     });
 
@@ -394,25 +393,25 @@ class SyncQueue {
     }
   }
 
-  private getHttpMethod(type: QueuedOperation['type']): string {
-    const methods: Record<QueuedOperation['type'], string> = {
-      CREATE: 'POST',
-      UPDATE: 'PUT',
-      DELETE: 'DELETE',
-      UPSERT: 'PUT',
+  private getHttpMethod(type: QueuedOperation["type"]): string {
+    const methods: Record<QueuedOperation["type"], string> = {
+      CREATE: "POST",
+      UPDATE: "PUT",
+      DELETE: "DELETE",
+      UPSERT: "PUT",
     };
     return methods[type];
   }
 
   private async handleOperationError(
     op: QueuedOperation,
-    error: unknown
+    error: unknown,
   ): Promise<void> {
     if (op.retryCount >= MAX_RETRY_ATTEMPTS) {
       // Move to dead letter queue or notify user
       console.error(
         `Operation ${op.id} failed after ${MAX_RETRY_ATTEMPTS} retries`,
-        error
+        error,
       );
       await this.db.delete(this.STORE_NAME, op.id);
       // Emit event for UI to handle
@@ -426,7 +425,7 @@ class SyncQueue {
     await this.db.put(this.STORE_NAME, {
       ...op,
       retryCount: op.retryCount + 1,
-      lastError: error instanceof Error ? error.message : 'Unknown error',
+      lastError: error instanceof Error ? error.message : "Unknown error",
     });
 
     // Schedule retry
@@ -434,9 +433,7 @@ class SyncQueue {
   }
 
   private emitSyncFailure(op: QueuedOperation): void {
-    window.dispatchEvent(
-      new CustomEvent('sync-failure', { detail: op })
-    );
+    window.dispatchEvent(new CustomEvent("sync-failure", { detail: op }));
   }
 
   async getQueueLength(): Promise<number> {
@@ -459,14 +456,14 @@ Reliably detect network status and adjust behavior accordingly.
 
 ```typescript
 // ✅ Good Example - Robust network status detection
-type NetworkStatus = 'online' | 'offline' | 'slow';
+type NetworkStatus = "online" | "offline" | "slow";
 type NetworkListener = (status: NetworkStatus) => void;
 
 const SLOW_THRESHOLD_MS = 2000;
 const HEALTH_CHECK_INTERVAL_MS = 30000;
 
 class NetworkStatusManager {
-  private status: NetworkStatus = navigator.onLine ? 'online' : 'offline';
+  private status: NetworkStatus = navigator.onLine ? "online" : "offline";
   private listeners = new Set<NetworkListener>();
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -480,13 +477,13 @@ class NetworkStatusManager {
   }
 
   private setupEventListeners(): void {
-    window.addEventListener('online', () => {
-      this.updateStatus('online');
+    window.addEventListener("online", () => {
+      this.updateStatus("online");
       this.checkConnectionQuality();
     });
 
-    window.addEventListener('offline', () => {
-      this.updateStatus('offline');
+    window.addEventListener("offline", () => {
+      this.updateStatus("offline");
       this.stopHealthCheck();
     });
   }
@@ -494,7 +491,7 @@ class NetworkStatusManager {
   private updateStatus(newStatus: NetworkStatus): void {
     if (this.status !== newStatus) {
       this.status = newStatus;
-      this.listeners.forEach(listener => listener(newStatus));
+      this.listeners.forEach((listener) => listener(newStatus));
     }
   }
 
@@ -509,32 +506,32 @@ class NetworkStatusManager {
 
   async checkConnectionQuality(): Promise<NetworkStatus> {
     if (!navigator.onLine) {
-      this.updateStatus('offline');
-      return 'offline';
+      this.updateStatus("offline");
+      return "offline";
     }
 
     try {
       const start = performance.now();
 
       // Use a small health endpoint
-      const response = await fetch('/api/health', {
-        method: 'HEAD',
-        cache: 'no-store',
+      const response = await fetch("/api/health", {
+        method: "HEAD",
+        cache: "no-store",
       });
 
       const latency = performance.now() - start;
 
       if (!response.ok) {
-        this.updateStatus('offline');
-        return 'offline';
+        this.updateStatus("offline");
+        return "offline";
       }
 
-      const status = latency > SLOW_THRESHOLD_MS ? 'slow' : 'online';
+      const status = latency > SLOW_THRESHOLD_MS ? "slow" : "online";
       this.updateStatus(status);
       return status;
     } catch {
-      this.updateStatus('offline');
-      return 'offline';
+      this.updateStatus("offline");
+      return "offline";
     }
   }
 
@@ -542,7 +539,7 @@ class NetworkStatusManager {
     this.stopHealthCheck();
     this.healthCheckInterval = setInterval(
       () => this.checkConnectionQuality(),
-      HEALTH_CHECK_INTERVAL_MS
+      HEALTH_CHECK_INTERVAL_MS,
     );
   }
 
@@ -589,12 +586,16 @@ class OptimisticUpdateManager<T extends SyncableEntity> {
   async applyOptimistically(
     id: string,
     newValue: T,
-    localDb: { get: (id: string) => Promise<T | undefined>; put: (value: T) => Promise<void>; delete: (id: string) => Promise<void> },
+    localDb: {
+      get: (id: string) => Promise<T | undefined>;
+      put: (value: T) => Promise<void>;
+      delete: (id: string) => Promise<void>;
+    },
     onUpdate: (items: T[]) => void,
-    getAllItems: () => Promise<T[]>
+    getAllItems: () => Promise<T[]>,
   ): Promise<() => Promise<void>> {
     // Get current value for potential rollback
-    const previousValue = await localDb.get(id) ?? null;
+    const previousValue = (await localDb.get(id)) ?? null;
 
     // Store pending change
     this.pendingChanges.set(id, {
@@ -660,7 +661,7 @@ const FETCH_TIMEOUT_MS = 10000;
 
 interface FetchResult<T> {
   data: T;
-  source: 'network' | 'cache';
+  source: "network" | "cache";
   timestamp: number;
 }
 
@@ -672,21 +673,23 @@ interface LocalCache {
 async function fetchWithOfflineSupport<T>(
   url: string,
   localCache: LocalCache,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<FetchResult<T>> {
   const cacheKey = `fetch:${url}`;
 
   // Check if online
   if (!navigator.onLine) {
-    const cached = await localCache.get<{ data: T; timestamp: number }>(cacheKey);
+    const cached = await localCache.get<{ data: T; timestamp: number }>(
+      cacheKey,
+    );
     if (cached) {
       return {
         data: cached.data,
-        source: 'cache',
+        source: "cache",
         timestamp: cached.timestamp,
       };
     }
-    throw new Error('Offline and no cached data available');
+    throw new Error("Offline and no cached data available");
   }
 
   try {
@@ -705,15 +708,17 @@ async function fetchWithOfflineSupport<T>(
     // Cache successful response
     await localCache.set(cacheKey, { data, timestamp });
 
-    return { data, source: 'network', timestamp };
+    return { data, source: "network", timestamp };
   } catch (error) {
     // Try cache on network failure
-    const cached = await localCache.get<{ data: T; timestamp: number }>(cacheKey);
+    const cached = await localCache.get<{ data: T; timestamp: number }>(
+      cacheKey,
+    );
     if (cached) {
-      console.warn('Network failed, using cached data:', error);
+      console.warn("Network failed, using cached data:", error);
       return {
         data: cached.data,
-        source: 'cache',
+        source: "cache",
         timestamp: cached.timestamp,
       };
     }
@@ -761,7 +766,7 @@ export type { FetchResult, LocalCache };
 
 **(You MUST use IndexedDB (via wrapper library) as the single source of truth for all offline data)**
 
-**(You MUST implement sync metadata (_syncStatus, _lastModified, _localVersion) on ALL entities that need synchronization)**
+**(You MUST implement sync metadata (\_syncStatus, \_lastModified, \_localVersion) on ALL entities that need synchronization)**
 
 **(You MUST queue mutations during offline and process them when connectivity returns)**
 

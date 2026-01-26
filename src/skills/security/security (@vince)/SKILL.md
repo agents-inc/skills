@@ -1,5 +1,5 @@
 ---
-name: security/security (@vince)
+name: security (@vince)
 description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 ---
 
@@ -8,10 +8,12 @@ description: Authentication, authorization, secrets management, XSS prevention, 
 > **Quick Guide:** Managing secrets? Use .env.local (gitignored), CI secrets (GitHub/Vercel), rotate quarterly. Dependency security? Enable Dependabot, audit weekly, patch critical vulns within 24hrs. XSS prevention? React escapes by default - never use dangerouslySetInnerHTML with user input. Sanitize with DOMPurify if needed. Set CSP headers. CODEOWNERS? Require security team review for auth/, .env.example, workflows.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md) (essential patterns)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 **Additional Examples:**
+
 - [examples/xss-prevention.md](examples/xss-prevention.md) - XSS protection, DOMPurify, CSP headers
 - [examples/dependency-security.md](examples/dependency-security.md) - Dependabot, CI security checks
 - [examples/access-control.md](examples/access-control.md) - CODEOWNERS, rate limiting, branch protection
@@ -115,17 +117,20 @@ Secrets include: API keys, tokens, passwords, database credentials, private keys
 #### Where to Store Secrets
 
 **Development:**
+
 - `.env.local` (gitignored)
 - Per-developer local overrides
 - Never committed to repository
 
 **CI/CD:**
+
 - GitHub Secrets
 - Vercel Environment Variables
 - GitLab CI/CD Variables
 - Other platform secret managers
 
 **Production:**
+
 - Environment variables (injected by platform)
 - Secret management services (AWS Secrets Manager, HashiCorp Vault)
 - Never hardcoded in code
@@ -134,14 +139,14 @@ Secrets include: API keys, tokens, passwords, database credentials, private keys
 
 **Note:** NIST SP 800-63-4 (2025) recommends against mandatory periodic password rotation for users. Instead, use event-based rotation (on compromise, team member departure, or security incident). Periodic rotation is still recommended for service accounts and privileged access.
 
-| Secret Type | Rotation Frequency |
-|-------------|-------------------|
-| Service account credentials | 90 days (quarterly) |
-| API keys | 365 days (annually) or on compromise |
-| User passwords | On compromise only (NIST 2025 guidance) |
-| Privileged account passwords | 90 days (quarterly) |
-| Certificates | 30 days warning before expiry |
-| All secrets | Immediately on team member departure |
+| Secret Type                  | Rotation Frequency                      |
+| ---------------------------- | --------------------------------------- |
+| Service account credentials  | 90 days (quarterly)                     |
+| API keys                     | 365 days (annually) or on compromise    |
+| User passwords               | On compromise only (NIST 2025 guidance) |
+| Privileged account passwords | 90 days (quarterly)                     |
+| Certificates                 | 30 days warning before expiry           |
+| All secrets                  | Immediately on team member departure    |
 
 **See [examples/core.md](examples/core.md#pattern-1-secret-management) for code examples.**
 
@@ -154,12 +159,14 @@ Enable automated vulnerability scanning with Dependabot to catch security issues
 #### Update Policies
 
 **Security updates:**
+
 - **Critical vulnerabilities** - Immediate (within 24 hours)
 - **High vulnerabilities** - Within 1 week
 - **Medium vulnerabilities** - Within 1 month
 - **Low vulnerabilities** - Next regular update cycle
 
 **Regular updates:**
+
 - **Patch updates** (1.2.3 -> 1.2.4) - Auto-merge if tests pass
 - **Minor updates** (1.2.0 -> 1.3.0) - Review changes, test, merge
 - **Major updates** (1.0.0 -> 2.0.0) - Plan migration, test thoroughly
@@ -192,16 +199,16 @@ Configure CSP headers to prevent unauthorized script execution even if XSS occur
 
 This skill addresses the following OWASP Top 10:2025 categories:
 
-| OWASP Category | Coverage |
-|----------------|----------|
-| A01: Broken Access Control | CODEOWNERS, branch protection, rate limiting |
-| A02: Security Misconfiguration | CSP headers, security headers, Dependabot |
-| A03: Software Supply Chain Failures (NEW) | Dependabot, CI security audits, dependency review |
-| A04: Cryptographic Failures | HttpOnly/Secure cookies, HTTPS enforcement |
-| A05: Injection (includes XSS) | DOMPurify, React auto-escaping, CSP |
-| A07: Identification & Auth Failures | HttpOnly cookies, session management |
-| A09: Security Logging & Alerting | (See observability skill) |
-| A10: Mishandling Exceptional Conditions (NEW) | Fail securely principle, error handling |
+| OWASP Category                                | Coverage                                          |
+| --------------------------------------------- | ------------------------------------------------- |
+| A01: Broken Access Control                    | CODEOWNERS, branch protection, rate limiting      |
+| A02: Security Misconfiguration                | CSP headers, security headers, Dependabot         |
+| A03: Software Supply Chain Failures (NEW)     | Dependabot, CI security audits, dependency review |
+| A04: Cryptographic Failures                   | HttpOnly/Secure cookies, HTTPS enforcement        |
+| A05: Injection (includes XSS)                 | DOMPurify, React auto-escaping, CSP               |
+| A07: Identification & Auth Failures           | HttpOnly cookies, session management              |
+| A09: Security Logging & Alerting              | (See observability skill)                         |
+| A10: Mishandling Exceptional Conditions (NEW) | Fail securely principle, error handling           |
 
 </patterns>
 

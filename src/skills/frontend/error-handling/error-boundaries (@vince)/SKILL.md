@@ -1,5 +1,5 @@
 ---
-name: frontend/error-boundaries (@vince)
+name: error-boundaries (@vince)
 description: Error boundary patterns, fallback UI, reset/retry functionality, react-error-boundary library
 ---
 
@@ -59,6 +59,7 @@ description: Error boundary patterns, fallback UI, reset/retry functionality, re
 - API request errors (handle in data fetching layer)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For React 19 error hooks, see [examples/react-19-hooks.md](examples/react-19-hooks.md)
 - For testing patterns, see [examples/testing.md](examples/testing.md)
@@ -94,10 +95,10 @@ Error boundaries MUST be class components because `getDerivedStateFromError` and
 
 #### Two Lifecycle Methods
 
-| Method | Phase | Purpose | Side Effects |
-|--------|-------|---------|--------------|
-| `getDerivedStateFromError` | Render | Update state to show fallback | NOT allowed |
-| `componentDidCatch` | Commit | Log errors, call callbacks | Allowed |
+| Method                     | Phase  | Purpose                       | Side Effects |
+| -------------------------- | ------ | ----------------------------- | ------------ |
+| `getDerivedStateFromError` | Render | Update state to show fallback | NOT allowed  |
+| `componentDidCatch`        | Commit | Log errors, call callbacks    | Allowed      |
 
 #### Implementation
 
@@ -181,14 +182,14 @@ npm install react-error-boundary
 
 #### ErrorBoundary Component Props
 
-| Prop | Type | Purpose |
-|------|------|---------|
-| `fallback` | `ReactNode` | Static fallback UI |
-| `FallbackComponent` | `ComponentType` | Component that renders fallback |
-| `fallbackRender` | `(props) => ReactNode` | Render prop for fallback |
-| `onError` | `(error, info) => void` | Error logging callback |
-| `onReset` | `(details) => void` | Called when boundary resets |
-| `resetKeys` | `unknown[]` | Dependencies that trigger reset |
+| Prop                | Type                    | Purpose                         |
+| ------------------- | ----------------------- | ------------------------------- |
+| `fallback`          | `ReactNode`             | Static fallback UI              |
+| `FallbackComponent` | `ComponentType`         | Component that renders fallback |
+| `fallbackRender`    | `(props) => ReactNode`  | Render prop for fallback        |
+| `onError`           | `(error, info) => void` | Error logging callback          |
+| `onReset`           | `(details) => void`     | Called when boundary resets     |
+| `resetKeys`         | `unknown[]`             | Dependencies that trigger reset |
 
 #### Basic Usage
 
@@ -330,12 +331,12 @@ function AppWithRouteReset() {
 
 #### Common resetKeys Patterns
 
-| Pattern | Use Case |
-|---------|----------|
-| `[pathname]` | Reset on route change |
+| Pattern        | Use Case                          |
+| -------------- | --------------------------------- |
+| `[pathname]`   | Reset on route change             |
 | `[selectedId]` | Reset when viewing different item |
-| `[retryCount]` | Reset after programmatic retry |
-| `[queryKey]` | Reset when data source changes |
+| `[retryCount]` | Reset after programmatic retry    |
+| `[queryKey]`   | Reset when data source changes    |
 
 ---
 
@@ -490,11 +491,11 @@ React 19 introduces three new root-level error handlers that complement error bo
 
 #### Three Error Handlers
 
-| Handler | When Called | Use Case |
-|---------|-------------|----------|
-| `onCaughtError` | Error caught by an Error Boundary | Log errors that are handled by boundaries |
-| `onUncaughtError` | Error NOT caught by any boundary | Log/report fatal errors |
-| `onRecoverableError` | React auto-recovers from error | Log hydration mismatches, suspense errors |
+| Handler              | When Called                       | Use Case                                  |
+| -------------------- | --------------------------------- | ----------------------------------------- |
+| `onCaughtError`      | Error caught by an Error Boundary | Log errors that are handled by boundaries |
+| `onUncaughtError`    | Error NOT caught by any boundary  | Log/report fatal errors                   |
+| `onRecoverableError` | React auto-recovers from error    | Log hydration mismatches, suspense errors |
 
 #### Basic Setup
 

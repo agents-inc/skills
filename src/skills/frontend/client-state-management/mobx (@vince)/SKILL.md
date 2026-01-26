@@ -1,5 +1,5 @@
 ---
-name: frontend/state-mobx (@vince)
+name: mobx (@vince)
 description: MobX stores, RootStore pattern for Photoroom webapp
 ---
 
@@ -8,6 +8,7 @@ description: MobX stores, RootStore pattern for Photoroom webapp
 > **Quick Guide:** Use MobX for reactive client state management. RootStore pattern for orchestration. Arrow function methods OR `autoBind: true` for `this` binding. `makeAutoObservable` by default (or modern decorators with TypeScript 5+). `runInAction` after all `await` calls. `observer()` on ALL components reading MobX state. Use your data fetching solution for server data.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core, computed, reactions, rootstore, mobx-query, configuration)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 

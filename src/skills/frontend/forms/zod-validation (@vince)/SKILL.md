@@ -1,5 +1,5 @@
 ---
-name: frontend/forms/zod-validation (@vince)
+name: zod-validation (@vince)
 description: Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions
 ---
 
@@ -46,6 +46,7 @@ description: Zod schema validation patterns for TypeScript - schema definitions,
 - Performance-critical hot paths where validation overhead matters
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -95,11 +96,19 @@ const MAX_AGE = 150;
 
 // ✅ Good Example - Named constants, descriptive error messages
 const UserSchema = z.object({
-  username: z.string()
-    .min(MIN_USERNAME_LENGTH, `Username must be at least ${MIN_USERNAME_LENGTH} characters`)
-    .max(MAX_USERNAME_LENGTH, `Username cannot exceed ${MAX_USERNAME_LENGTH} characters`),
+  username: z
+    .string()
+    .min(
+      MIN_USERNAME_LENGTH,
+      `Username must be at least ${MIN_USERNAME_LENGTH} characters`,
+    )
+    .max(
+      MAX_USERNAME_LENGTH,
+      `Username cannot exceed ${MAX_USERNAME_LENGTH} characters`,
+    ),
   email: z.string().email("Invalid email format"),
-  age: z.number()
+  age: z
+    .number()
     .int("Age must be a whole number")
     .min(MIN_AGE, "Age cannot be negative")
     .max(MAX_AGE, `Age cannot exceed ${MAX_AGE}`),
@@ -114,7 +123,7 @@ type User = z.infer<typeof UserSchema>;
 ```typescript
 // ❌ Bad Example - Magic numbers, no error messages
 const UserSchema = z.object({
-  username: z.string().min(3).max(50),  // What are these limits?
+  username: z.string().min(3).max(50), // What are these limits?
   email: z.string().email(),
   age: z.number().int().min(0).max(150),
 });
@@ -152,7 +161,7 @@ type Product = z.infer<typeof ProductSchema>;
 // For schemas with transforms, use input/output types
 const DateSchema = z.string().transform((str) => new Date(str));
 
-type DateInput = z.input<typeof DateSchema>;   // string
+type DateInput = z.input<typeof DateSchema>; // string
 type DateOutput = z.output<typeof DateSchema>; // Date
 ```
 
@@ -171,7 +180,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  description?: string;  // Added here but not in schema!
+  description?: string; // Added here but not in schema!
 }
 ```
 
@@ -192,16 +201,23 @@ const UserSchema = z.object({
 });
 
 // ✅ Good Example - safeParse with discriminated union result
-function validateUserInput(data: unknown): { success: true; user: User } | { success: false; errors: Record<string, string> } {
+function validateUserInput(
+  data: unknown,
+):
+  | { success: true; user: User }
+  | { success: false; errors: Record<string, string> } {
   const result = UserSchema.safeParse(data);
 
   if (!result.success) {
     // Format errors for display
-    const errors = result.error.errors.reduce((acc, err) => {
-      const field = err.path.join(".");
-      acc[field] = err.message;
-      return acc;
-    }, {} as Record<string, string>);
+    const errors = result.error.errors.reduce(
+      (acc, err) => {
+        const field = err.path.join(".");
+        acc[field] = err.message;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
     return { success: false, errors };
   }
@@ -218,7 +234,7 @@ type User = z.infer<typeof UserSchema>;
 // ❌ Bad Example - Using parse for user input
 function validateUserInput(data: unknown) {
   try {
-    const user = UserSchema.parse(data);  // Throws on invalid!
+    const user = UserSchema.parse(data); // Throws on invalid!
     return { success: true, user };
   } catch (error) {
     // Generic catch loses type information
@@ -239,7 +255,8 @@ Use `refine` for custom validation logic that primitives can't express. Use `sup
 import { z } from "zod";
 
 // ✅ Good Example - Custom refinement with clear error
-const PasswordSchema = z.string()
+const PasswordSchema = z
+  .string()
   .min(8, "Password must be at least 8 characters")
   .refine((pwd) => /[A-Z]/.test(pwd), {
     message: "Password must contain at least one uppercase letter",
@@ -252,18 +269,20 @@ const PasswordSchema = z.string()
   });
 
 // Cross-field validation with superRefine
-const PasswordFormSchema = z.object({
-  password: z.string().min(8),
-  confirmPassword: z.string(),
-}).superRefine((data, ctx) => {
-  if (data.password !== data.confirmPassword) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Passwords do not match",
-      path: ["confirmPassword"],
-    });
-  }
-});
+const PasswordFormSchema = z
+  .object({
+    password: z.string().min(8),
+    confirmPassword: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+    }
+  });
 ```
 
 **Why good:** refine allows arbitrary validation logic, custom messages explain exact requirement, superRefine enables cross-field validation with specific error paths
@@ -296,7 +315,10 @@ import { z } from "zod";
 // ✅ Good Example - Transform string to Date
 const EventSchema = z.object({
   name: z.string(),
-  date: z.string().datetime().transform((str) => new Date(str)),
+  date: z
+    .string()
+    .datetime()
+    .transform((str) => new Date(str)),
   attendees: z.string().transform((str) => parseInt(str, 10)),
 });
 
@@ -313,7 +335,7 @@ const result = EventSchema.safeParse({
 });
 
 if (result.success) {
-  result.data.date.getFullYear();  // Date methods available
+  result.data.date.getFullYear(); // Date methods available
 }
 ```
 
@@ -395,16 +417,16 @@ const ProfileSchema = z.object({
   name: z.string(),
 
   // Optional - can be undefined or omitted entirely
-  bio: z.string().optional(),  // string | undefined
+  bio: z.string().optional(), // string | undefined
 
   // Nullable - must be present but can be null
-  avatar: z.string().url().nullable(),  // string | null
+  avatar: z.string().url().nullable(), // string | null
 
   // Nullish - can be undefined, null, or omitted
-  nickname: z.string().nullish(),  // string | null | undefined
+  nickname: z.string().nullish(), // string | null | undefined
 
   // Default - provides fallback value
-  theme: z.string().default("light"),  // string (always defined)
+  theme: z.string().default("light"), // string (always defined)
 });
 
 type Profile = z.infer<typeof ProfileSchema>;
@@ -431,9 +453,9 @@ const PaginationSchema = z.object({
 
 // Works with string inputs from query params
 const result = PaginationSchema.parse({
-  page: "3",        // Coerced to 3
-  limit: "50",      // Coerced to 50
-  includeDeleted: "true",  // Coerced to true
+  page: "3", // Coerced to 3
+  limit: "50", // Coerced to 50
+  includeDeleted: "true", // Coerced to true
 });
 
 // result.page is number, not string
@@ -495,12 +517,14 @@ const UpdateUserSchema = UserSchema.partial().omit({
 });
 
 // Merge two schemas
-const UserWithPrefsSchema = UserSchema.merge(z.object({
-  preferences: z.object({
-    theme: z.string(),
-    language: z.string(),
+const UserWithPrefsSchema = UserSchema.merge(
+  z.object({
+    preferences: z.object({
+      theme: z.string(),
+      language: z.string(),
+    }),
   }),
-}));
+);
 ```
 
 **Why good:** DRY schemas avoid duplication, pick/omit create focused schemas for specific use cases, partial enables PATCH-style updates
@@ -517,7 +541,8 @@ import { z } from "zod";
 // ✅ Good Example - Async refinement for uniqueness check
 const RegistrationSchema = z.object({
   email: z.string().email(),
-  username: z.string()
+  username: z
+    .string()
     .min(3)
     .refine(
       async (username) => {
@@ -525,7 +550,7 @@ const RegistrationSchema = z.object({
         const isAvailable = await checkUsernameAvailability(username);
         return isAvailable;
       },
-      { message: "Username is already taken" }
+      { message: "Username is already taken" },
     ),
 });
 

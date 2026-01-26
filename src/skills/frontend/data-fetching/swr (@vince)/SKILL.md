@@ -1,5 +1,5 @@
 ---
-name: frontend/swr (@vince)
+name: swr (@vince)
 description: SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll
 ---
 
@@ -59,6 +59,7 @@ description: SWR data fetching patterns - useSWR, useSWRMutation, caching, reval
 - Suspense integration
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -186,11 +187,11 @@ Understand all useSWR return values for proper state handling.
 ```typescript
 // Understanding useSWR states
 interface SWRState<T> {
-  data: T | undefined;        // The fetched data
-  error: Error | undefined;   // Error object if request failed
-  isLoading: boolean;         // True when fetching AND no data exists
-  isValidating: boolean;      // True when any request is in-flight
-  mutate: () => Promise<T>;   // Manually revalidate
+  data: T | undefined; // The fetched data
+  error: Error | undefined; // Error object if request failed
+  isLoading: boolean; // True when fetching AND no data exists
+  isValidating: boolean; // True when any request is in-flight
+  mutate: () => Promise<T>; // Manually revalidate
 }
 
 // State combinations:
@@ -413,7 +414,10 @@ interface GraphQLResponse<T> {
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "/graphql";
 
-async function graphqlFetcher<T>([query, variables]: [string, GraphQLVariables?]): Promise<T> {
+async function graphqlFetcher<T>([query, variables]: [
+  string,
+  GraphQLVariables?,
+]): Promise<T> {
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {

@@ -1,5 +1,5 @@
 ---
-name: backend/api-express (@vince)
+name: express (@vince)
 description: Express.js routes, middleware, error handling, request/response patterns
 ---
 
@@ -57,6 +57,7 @@ description: Express.js routes, middleware, error handling, request/response pat
 - Route guards for authentication/authorization
 
 **Detailed Resources:**
+
 - For code examples:
   - [middleware.md](examples/middleware.md) - Middleware chains, error handling, validation, auth guards
   - [routing.md](examples/routing.md) - Modular routes, parameters, response patterns
@@ -196,10 +197,18 @@ export { router as userRoutes };
 ```typescript
 // WRONG: All routes in main app file
 const app = express();
-app.get("/api/users", (req, res) => { /* ... */ });
-app.get("/api/users/:id", (req, res) => { /* ... */ });
-app.post("/api/users", (req, res) => { /* ... */ });
-app.get("/api/products", (req, res) => { /* ... */ });
+app.get("/api/users", (req, res) => {
+  /* ... */
+});
+app.get("/api/users/:id", (req, res) => {
+  /* ... */
+});
+app.post("/api/users", (req, res) => {
+  /* ... */
+});
+app.get("/api/products", (req, res) => {
+  /* ... */
+});
 // ... hundreds more lines
 
 export default app; // Default export
@@ -229,7 +238,7 @@ const errorHandler = (
   err: AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   console.error(`[Error] ${req.method} ${req.path}:`, err.message);
 
@@ -315,7 +324,7 @@ import type { Request, Response, NextFunction, RequestHandler } from "express";
 type AsyncHandler = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => Promise<void>;
 
 const asyncHandler = (fn: AsyncHandler): RequestHandler => {
@@ -337,7 +346,7 @@ router.get(
     const product = await getProductById(req.params.id);
     res.status(HTTP_OK).json({ data: product });
     // Errors automatically forwarded to error handler
-  })
+  }),
 );
 ```
 
@@ -375,13 +384,15 @@ interface UserCreateBody {
 const validateUserCreate = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const { name, email } = req.body as UserCreateBody;
   const errors: string[] = [];
 
   if (!name || name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
-    errors.push(`Name must be between ${MIN_NAME_LENGTH} and ${MAX_NAME_LENGTH} characters`);
+    errors.push(
+      `Name must be between ${MIN_NAME_LENGTH} and ${MAX_NAME_LENGTH} characters`,
+    );
   }
 
   if (!email || !email.includes("@")) {
@@ -451,7 +462,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     const pageNum = parseInt(page || String(DEFAULT_PAGE), 10);
     const limitNum = Math.min(
       parseInt(limit || String(DEFAULT_LIMIT), 10),
-      MAX_LIMIT
+      MAX_LIMIT,
     );
 
     const results = await searchItems({
@@ -485,7 +496,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export { router as searchRoutes };
@@ -516,7 +527,7 @@ interface AuthenticatedRequest extends Request {
 const requireAuth = (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const token = req.headers.authorization?.replace("Bearer ", "");
 
@@ -543,7 +554,7 @@ const requireRole = (allowedRoles: string[]) => {
   return (
     req: AuthenticatedRequest,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): void => {
     if (!req.user) {
       res.status(HTTP_UNAUTHORIZED).json({
@@ -607,14 +618,14 @@ app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: STATIC_MAX_AGE_MS,
     etag: true,
-  })
+  }),
 );
 
 // Serve uploaded files from 'uploads' with restricted access
 app.use(
   "/uploads",
   requireAuth, // Protect uploads
-  express.static(path.join(__dirname, "uploads"))
+  express.static(path.join(__dirname, "uploads")),
 );
 
 export { app };
@@ -657,7 +668,7 @@ const sendSuccess = <T>(
   res: Response,
   data: T,
   statusCode: number = HTTP_OK,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): void => {
   const response: SuccessResponse<T> = { success: true, data };
   if (meta) {
@@ -679,7 +690,7 @@ const sendError = (
   message: string,
   statusCode: number = HTTP_BAD_REQUEST,
   code?: string,
-  details?: unknown
+  details?: unknown,
 ): void => {
   const response: ErrorResponse = {
     success: false,
@@ -697,7 +708,11 @@ export { sendSuccess, sendCreated, sendNoContent, sendError, sendNotFound };
 
 ```typescript
 // Usage in routes
-import { sendSuccess, sendCreated, sendNotFound } from "../utils/response-helpers";
+import {
+  sendSuccess,
+  sendCreated,
+  sendNotFound,
+} from "../utils/response-helpers";
 
 router.get("/:id", async (req, res, next) => {
   try {
@@ -742,7 +757,7 @@ app.use(
   cors({
     origin: process.env.ALLOWED_ORIGINS?.split(",") || [],
     credentials: true,
-  })
+  }),
 );
 
 // 3. Rate limiting (before body parsing to save resources)
@@ -752,7 +767,7 @@ app.use(
     max: RATE_LIMIT_MAX_REQUESTS,
     standardHeaders: true,
     legacyHeaders: false,
-  })
+  }),
 );
 
 // 4. Body parsing

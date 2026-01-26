@@ -1,5 +1,5 @@
 ---
-name: backend/database-prisma (@vince)
+name: prisma (@vince)
 description: Prisma ORM, type-safe queries, migrations, relations
 ---
 
@@ -28,6 +28,7 @@ description: Prisma ORM, type-safe queries, migrations, relations
 ---
 
 **Detailed Resources:**
+
 - For code examples:
   - [queries.md](examples/queries.md) - CRUD operations, filtering, and sorting
   - [relations.md](examples/relations.md) - Relational queries, includes, N+1 prevention
@@ -489,7 +490,10 @@ type PaginationParams = {
   pageSize?: number;
 };
 
-const getPaginatedUsers = async ({ page = 1, pageSize = DEFAULT_PAGE_SIZE }: PaginationParams) => {
+const getPaginatedUsers = async ({
+  page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: PaginationParams) => {
   const take = Math.min(pageSize, MAX_PAGE_SIZE);
   const skip = (page - 1) * take;
 
@@ -524,7 +528,10 @@ type CursorPaginationParams = {
   take?: number;
 };
 
-const getCursorPaginatedPosts = async ({ cursor, take = DEFAULT_PAGE_SIZE }: CursorPaginationParams) => {
+const getCursorPaginatedPosts = async ({
+  cursor,
+  take = DEFAULT_PAGE_SIZE,
+}: CursorPaginationParams) => {
   const posts = await prisma.post.findMany({
     take: take + 1, // Fetch one extra to check for next page
     ...(cursor && {
