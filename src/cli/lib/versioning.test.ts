@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { getCurrentDate, hashString } from "./versioning";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import path from "path";
+import os from "os";
+import { mkdtemp, rm, mkdir, writeFile } from "fs/promises";
+import { getCurrentDate, hashString, hashSkillFolder } from "./versioning";
 
 describe("getCurrentDate", () => {
   it("should return date in YYYY-MM-DD format", () => {
@@ -50,5 +53,81 @@ describe("hashString", () => {
     // First 7 chars: 9f86d08
     const result = hashString("test");
     expect(result).toBe("9f86d08");
+  });
+});
+
+describe("hashSkillFolder", () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(path.join(os.tmpdir(), "versioning-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("should hash SKILL.md content", async () => {
+    await writeFile(
+      path.join(tempDir, "SKILL.md"),
+      "# Test Skill\n\nThis is a test.",
+    );
+
+    const hash = await hashSkillFolder(tempDir);
+
+    expect(hash).toMatch(/^[a-f0-9]{7}$/);
+  });
+
+  it("should return consistent hash for same content", async () => {
+    await writeFile(path.join(tempDir, "SKILL.md"), "# Test Skill");
+
+    const hash1 = await hashSkillFolder(tempDir);
+    const hash2 = await hashSkillFolder(tempDir);
+
+    expect(hash1).toBe(hash2);
+  });
+
+  it("should return different hash when content changes", async () => {
+    await writeFile(path.join(tempDir, "SKILL.md"), "# Version 1");
+    const hash1 = await hashSkillFolder(tempDir);
+
+    await writeFile(path.join(tempDir, "SKILL.md"), "# Version 2");
+    const hash2 = await hashSkillFolder(tempDir);
+
+    expect(hash1).not.toBe(hash2);
+  });
+
+  it("should include reference.md in hash", async () => {
+    await writeFile(path.join(tempDir, "SKILL.md"), "# Test");
+
+    const hashWithoutRef = await hashSkillFolder(tempDir);
+
+    await writeFile(path.join(tempDir, "reference.md"), "# Reference");
+    const hashWithRef = await hashSkillFolder(tempDir);
+
+    expect(hashWithoutRef).not.toBe(hashWithRef);
+  });
+
+  it("should include examples directory in hash", async () => {
+    await writeFile(path.join(tempDir, "SKILL.md"), "# Test");
+
+    const hashWithoutExamples = await hashSkillFolder(tempDir);
+
+    await mkdir(path.join(tempDir, "examples"), { recursive: true });
+    await writeFile(
+      path.join(tempDir, "examples", "example.ts"),
+      "// Example code",
+    );
+    const hashWithExamples = await hashSkillFolder(tempDir);
+
+    expect(hashWithoutExamples).not.toBe(hashWithExamples);
+  });
+
+  it("should handle empty skill folder", async () => {
+    // No files in tempDir
+    const hash = await hashSkillFolder(tempDir);
+
+    // Should still return a valid hash (hash of empty content)
+    expect(hash).toMatch(/^[a-f0-9]{7}$/);
   });
 });

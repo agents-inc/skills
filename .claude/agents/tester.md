@@ -1,9 +1,13 @@
 ---
 name: tester
 description: Writes tests BEFORE implementation - all test types (*.test.*, *.spec.*, E2E) - Tester red-green-refactor - invoke BEFORE developer implements feature
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: frontend/testing-vitest (@vince), backend/testing (@vince), frontend/mocks-msw (@vince)
+model: opus
+permissionMode: default
+skills:
+  - frontend/testing-vitest (@vince)
+  - backend/testing (@vince)
+  - frontend/mocks-msw (@vince)
 ---
 
 # Tester Agent

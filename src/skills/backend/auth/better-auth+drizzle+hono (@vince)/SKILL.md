@@ -1,5 +1,5 @@
 ---
-name: backend/auth-better-auth+drizzle+hono (@vince)
+name: better-auth+drizzle+hono (@vince)
 description: Better Auth patterns, sessions, OAuth
 ---
 
@@ -65,6 +65,7 @@ description: Better Auth patterns, sessions, OAuth
 - Passkey authentication (separate package: @better-auth/passkey)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Sign up, sign in, client setup, Drizzle adapter
   - [oauth.md](examples/oauth.md) - GitHub, Google OAuth providers, Generic OAuth plugin
@@ -153,9 +154,7 @@ export const auth = betterAuth({
     expiresIn: SESSION_EXPIRES_IN_SECONDS,
     updateAge: SESSION_UPDATE_AGE_SECONDS,
   },
-  trustedOrigins: [
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  ],
+  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"],
 });
 
 // Named export (project convention)
@@ -212,7 +211,7 @@ app.use(
     allowMethods: ["POST", "GET", "OPTIONS"],
     credentials: true,
     maxAge: CORS_MAX_AGE_SECONDS,
-  })
+  }),
 );
 
 // Mount Better Auth handler on /api/auth/*
@@ -252,7 +251,7 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
     c.set("session", session?.session ?? null);
 
     await next();
-  }
+  },
 );
 
 // Named export
@@ -300,7 +299,7 @@ app.openapi(getMeRoute, async (c) => {
   if (!user) {
     return c.json(
       { error: "unauthorized", message: "Authentication required" },
-      HTTP_STATUS_UNAUTHORIZED
+      HTTP_STATUS_UNAUTHORIZED,
     );
   }
 

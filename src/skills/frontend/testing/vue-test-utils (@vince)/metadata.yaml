@@ -7,8 +7,8 @@ cli_name: Vue Test Utils
 cli_description: Vue component testing
 usage_guidance: Use when testing Vue components with mount, shallowMount, or testing composables.
 compatible_with:
-  - frontend/framework/vue-composition-api
-  - frontend/client-state-management/pinia
+  - vue-composition-api (@vince)
+  - pinia (@vince)
 tags:
   - vue-test-utils
   - testing

@@ -5,7 +5,13 @@
   "description": "Metadata schema for individual metadata.yaml files (Phase 0B). Identity (name, description) comes from SKILL.md frontmatter. This file contains relationship, catalog, and CLI display data.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["category", "author", "version", "cli_name", "cli_description", "usage_guidance"],
+  "required": [
+    "category",
+    "author",
+    "cli_name",
+    "cli_description",
+    "usage_guidance"
+  ],
   "properties": {
     "category": {
       "$ref": "#/$defs/SkillCategory",
@@ -24,7 +30,7 @@
     },
     "version": {
       "type": "integer",
-      "description": "Integer version of the skill (1, 2, 3, etc.). NOT semantic versioning.",
+      "description": "DEPRECATED: Version now lives in plugin.json. This field is optional for backward compatibility.",
       "minimum": 1,
       "examples": [1, 2, 3]
     },
@@ -40,13 +46,20 @@
       "description": "Brief description (5-6 words max) for CLI display",
       "minLength": 1,
       "maxLength": 60,
-      "examples": ["React component patterns", "Lightweight client state", "Server state with caching"]
+      "examples": [
+        "React component patterns",
+        "Lightweight client state",
+        "Server state with caching"
+      ]
     },
     "usage_guidance": {
       "type": "string",
       "description": "When an AI agent should invoke this skill (decision criteria)",
       "minLength": 10,
-      "examples": ["Use when building React components, hooks, or following React 19 patterns.", "Use when managing global UI state, replacing Context misuse, or handling cross-component state."]
+      "examples": [
+        "Use when building React components, hooks, or following React 19 patterns.",
+        "Use when managing global UI state, replacing Context misuse, or handling cross-component state."
+      ]
     },
     "requires": {
       "type": "array",
@@ -55,7 +68,7 @@
         "$ref": "#/$defs/SkillReference"
       },
       "uniqueItems": true,
-      "examples": [["framework/*"], ["framework/react", "testing/vitest"]]
+      "examples": [["framework/*"], ["react (@vince)", "vitest (@vince)"]]
     },
     "compatible_with": {
       "type": "array",
@@ -64,7 +77,7 @@
         "$ref": "#/$defs/SkillReference"
       },
       "uniqueItems": true,
-      "examples": [["framework/react", "framework/vue"]]
+      "examples": [["react (@vince)", "vue-composition-api (@vince)"]]
     },
     "conflicts_with": {
       "type": "array",
@@ -73,7 +86,9 @@
         "$ref": "#/$defs/SkillReference"
       },
       "uniqueItems": true,
-      "examples": [["state/mobx", "state/redux", "state/pinia"]]
+      "examples": [
+        ["mobx (@vince)", "redux-toolkit (@vince)", "pinia (@vince)"]
+      ]
     },
     "tags": {
       "type": "array",
@@ -93,7 +108,7 @@
         "$ref": "#/$defs/SkillReference"
       },
       "uniqueItems": true,
-      "examples": [["setup/posthog"], ["setup/resend"]]
+      "examples": [["posthog-setup (@vince)"], ["resend-setup (@vince)"]]
     },
     "provides_setup_for": {
       "type": "array",
@@ -102,7 +117,10 @@
         "$ref": "#/$defs/SkillReference"
       },
       "uniqueItems": true,
-      "examples": [["backend/posthog-analytics", "backend/posthog-flags"], ["backend/resend"]]
+      "examples": [
+        ["posthog-analytics (@vince)", "posthog-flags (@vince)"],
+        ["resend (@vince)"]
+      ]
     },
     "content_hash": {
       "type": "string",
@@ -123,11 +141,11 @@
       "properties": {
         "skill_id": {
           "type": "string",
-          "description": "Original skill identifier (e.g., 'frontend/react (@vince)')"
+          "description": "Original skill identifier (e.g., 'react (@vince)')"
         },
         "version": {
           "type": "integer",
-          "description": "Upstream version at fork time",
+          "description": "DEPRECATED: Upstream version at fork time. Optional - content_hash is primary identifier.",
           "minimum": 1
         },
         "content_hash": {
@@ -144,7 +162,7 @@
           "description": "Date when forked"
         }
       },
-      "required": ["skill_id", "version", "content_hash", "date"]
+      "required": ["skill_id", "content_hash", "date"]
     }
   },
   "$defs": {
@@ -191,9 +209,9 @@
     },
     "SkillReference": {
       "type": "string",
-      "description": "Reference to a skill ID (e.g., 'frontend/react (@vince)') or pattern (e.g., 'framework/*')",
+      "description": "Reference to a skill ID (e.g., 'react (@vince)') or pattern (e.g., 'framework/*')",
       "minLength": 1,
-      "examples": ["frontend/react (@vince)", "backend/api-hono (@vince)", "framework/*"]
+      "examples": ["react (@vince)", "hono (@vince)", "framework/*"]
     }
   }
 }

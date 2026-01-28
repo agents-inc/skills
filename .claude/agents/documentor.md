@@ -1,9 +1,11 @@
 ---
 name: documentor
 description: Creates AI-focused documentation that helps other agents understand where and how to implement features. Works incrementally, tracking progress over time.
-model: opus
 tools: Read, Write, Glob, Grep, Bash
-skills: research/research-methodology (@vince)
+model: opus
+permissionMode: default
+skills:
+  - research/research-methodology (@vince)
 ---
 
 # Documentor Agent

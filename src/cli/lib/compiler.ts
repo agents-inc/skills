@@ -26,24 +26,6 @@ import type {
 } from "../types";
 
 /**
- * Read and concatenate principle files
- */
-async function readPrinciples(
-  promptNames: string[],
-  projectRoot: string,
-): Promise<string> {
-  const contents: string[] = [];
-  const principlesDir = path.join(projectRoot, DIRS.principles);
-
-  for (const name of promptNames) {
-    const content = await readFile(path.join(principlesDir, `${name}.md`));
-    contents.push(content);
-  }
-
-  return contents.join("\n\n---\n\n");
-}
-
-/**
  * Compile a single agent using LiquidJS
  */
 async function compileAgent(
@@ -73,12 +55,6 @@ async function compileAgent(
     "",
   );
 
-  // Read principles (core prompts)
-  const principlesContent = await readPrinciples(
-    agent.core_prompts,
-    projectRoot,
-  );
-
   // Extract category from agent path (e.g., "developer" from "developer/backend-developer")
   const agentPath = agent.path || name;
   const category = agentPath.split("/")[0];
@@ -97,19 +73,6 @@ async function compileAgent(
       "",
     );
   }
-
-  // Read ending principles
-  const endingPrinciplesContent = await readPrinciples(
-    agent.ending_prompts,
-    projectRoot,
-  );
-
-  // Format prompt names for display
-  const formatPromptName = (n: string) =>
-    n.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-
-  const formattedCorePromptNames = agent.core_prompts.map(formatPromptName);
-  const formattedEndingPromptNames = agent.ending_prompts.map(formatPromptName);
 
   // Partition skills into preloaded vs dynamic
   // Preloaded skills: listed in frontmatter, Claude Code loads them automatically
@@ -132,11 +95,7 @@ async function compileAgent(
     examples,
     criticalRequirementsTop,
     criticalReminders,
-    corePromptNames: formattedCorePromptNames,
-    corePromptsContent: principlesContent,
     outputFormat,
-    endingPromptNames: formattedEndingPromptNames,
-    endingPromptsContent: endingPrinciplesContent,
     skills: agent.skills,
     preloadedSkills,
     dynamicSkills,
@@ -175,8 +134,12 @@ export async function compileAllAgents(
         printOutputValidationResult(name, validationResult);
       }
     } catch (error) {
-      console.error(`  ✗ ${name}.md - ${error}`);
-      throw error;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`  ✗ ${name}.md - ${errorMessage}`);
+      throw new Error(
+        `Failed to compile agent '${name}': ${errorMessage}. Check that all required files exist in src/agents/${agent.path || name}/`,
+      );
     }
   }
 
@@ -244,8 +207,12 @@ export async function compileAllSkills(
         console.log(`  ✓ skills/${id}/SKILL.md`);
       }
     } catch (error) {
-      console.error(`  ✗ skills/${id}/SKILL.md - ${error}`);
-      throw error;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`  ✗ skills/${id}/SKILL.md - ${errorMessage}`);
+      throw new Error(
+        `Failed to compile skill '${skill.id}': ${errorMessage}. Expected skill at: ${sourcePath}`,
+      );
     }
   }
 }
@@ -295,8 +262,12 @@ export async function compileAllCommands(ctx: CompileContext): Promise<void> {
       await writeFile(path.join(outDir, file), content);
       console.log(`  ✓ ${file}`);
     } catch (error) {
-      console.error(`  ✗ ${file} - ${error}`);
-      throw error;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`  ✗ ${file} - ${errorMessage}`);
+      throw new Error(
+        `Failed to compile command '${file}': ${errorMessage}. Expected at: ${path.join(commandsDir, file)}`,
+      );
     }
   }
 }

@@ -1,5 +1,5 @@
 ---
-name: frontend/animation/css-animations (@vince)
+name: css-animations (@vince)
 description: CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion
 ---
 
@@ -58,6 +58,7 @@ description: CSS Animation patterns - transitions, keyframes, scroll-driven anim
 - Drag-and-drop animations - consider your animation library
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -487,29 +488,29 @@ For 60fps, each frame must complete in 16.67ms. Layout-triggering animations oft
 
 ### Properties by Performance Impact
 
-| Category | Properties | Impact |
-|----------|-----------|--------|
-| **Composite only (Best)** | transform, opacity | No layout, no paint, GPU-accelerated |
-| **Paint only (Okay)** | color, background-color, visibility | No layout, but repaints |
-| **Layout + Paint (Avoid)** | width, height, margin, padding, top, left | Full page recalculation |
+| Category                   | Properties                                | Impact                               |
+| -------------------------- | ----------------------------------------- | ------------------------------------ |
+| **Composite only (Best)**  | transform, opacity                        | No layout, no paint, GPU-accelerated |
+| **Paint only (Okay)**      | color, background-color, visibility       | No layout, but repaints              |
+| **Layout + Paint (Avoid)** | width, height, margin, padding, top, left | Full page recalculation              |
 
 ### Duration Guidelines
 
-| Animation Type | Duration | Reason |
-|---------------|----------|--------|
-| Micro-interactions | 100-200ms | Feels instant |
-| UI transitions | 200-300ms | Sweet spot for perception |
-| Page transitions | 300-500ms | Noticeable but not slow |
-| Complex sequences | 500-1000ms | Story-telling moments |
+| Animation Type     | Duration   | Reason                    |
+| ------------------ | ---------- | ------------------------- |
+| Micro-interactions | 100-200ms  | Feels instant             |
+| UI transitions     | 200-300ms  | Sweet spot for perception |
+| Page transitions   | 300-500ms  | Noticeable but not slow   |
+| Complex sequences  | 500-1000ms | Story-telling moments     |
 
 ### Transform Mapping
 
 Instead of animating layout properties, use equivalent transforms:
 
-| Instead of... | Use... |
-|---------------|--------|
-| `top`, `left` | `translate(x, y)` |
-| `width`, `height` | `scale()` |
+| Instead of...       | Use...                            |
+| ------------------- | --------------------------------- |
+| `top`, `left`       | `translate(x, y)`                 |
+| `width`, `height`   | `scale()`                         |
 | `margin`, `padding` | `translate()` or layout animation |
 
 </performance>

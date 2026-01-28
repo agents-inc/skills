@@ -1,5 +1,5 @@
 ---
-name: frontend/angular-standalone (@vince)
+name: angular-standalone (@vince)
 description: Angular 17-19 standalone components, signals, control flow, dependency injection patterns
 ---
 
@@ -312,11 +312,12 @@ type LoadingState = "idle" | "loading" | "error" | "success";
       @case ("success") {
         @if (users().length > 0) {
           <ul class="user-list">
-            @for (user of users(); track user.id; let i = $index, first = $first, last = $last) {
-              <li
-                [class.first]="first"
-                [class.last]="last"
-              >
+            @for (
+              user of users();
+              track user.id;
+              let i = $index, first = $first, last = $last
+            ) {
+              <li [class.first]="first" [class.last]="last">
                 <span class="index">{{ i + 1 }}.</span>
                 <span class="name">{{ user.name }}</span>
                 <span class="email">{{ user.email }}</span>
@@ -518,7 +519,7 @@ export class UserProfileComponent {
 export class UserProfileComponent {
   constructor(
     private route: ActivatedRoute,
-    private userService: UserService
+    private userService: UserService,
   ) {}
 }
 ```
@@ -561,7 +562,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(), // Bind route params to inputs
-      withPreloading(PreloadAllModules) // Preload lazy routes
+      withPreloading(PreloadAllModules), // Preload lazy routes
     ),
     provideHttpClient(),
   ],
@@ -586,7 +587,9 @@ export const routes: Routes = [
   {
     path: "users/:id",
     loadComponent: () =>
-      import("./users/user-detail.component").then((m) => m.UserDetailComponent),
+      import("./users/user-detail.component").then(
+        (m) => m.UserDetailComponent,
+      ),
   },
   {
     path: "admin",
@@ -597,7 +600,9 @@ export const routes: Routes = [
   {
     path: "**",
     loadComponent: () =>
-      import("./not-found/not-found.component").then((m) => m.NotFoundComponent),
+      import("./not-found/not-found.component").then(
+        (m) => m.NotFoundComponent,
+      ),
   },
 ];
 ```
@@ -699,13 +704,13 @@ export class ResizeObserverComponent {
 
 **Lifecycle hook mapping:**
 
-| Legacy Hook | Signal-Based Alternative |
-|------------|-------------------------|
-| ngOnInit | constructor + effect() |
-| ngOnChanges | effect() watching input() signals |
-| ngAfterViewInit | afterNextRender() |
-| ngAfterViewChecked | afterRender() |
-| ngOnDestroy | DestroyRef.onDestroy() |
+| Legacy Hook        | Signal-Based Alternative          |
+| ------------------ | --------------------------------- |
+| ngOnInit           | constructor + effect()            |
+| ngOnChanges        | effect() watching input() signals |
+| ngAfterViewInit    | afterNextRender()                 |
+| ngAfterViewChecked | afterRender()                     |
+| ngOnDestroy        | DestroyRef.onDestroy()            |
 
 </patterns>
 
@@ -726,7 +731,7 @@ import { AppComponent } from "./app/app.component";
 import { appConfig } from "./app/app.config";
 
 bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err)
+  console.error(err),
 );
 ```
 

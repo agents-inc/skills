@@ -1,14 +1,29 @@
 # Versioning Proposals
 
+> **⚠️ OUTDATED (2026-01-24)**: This document predates the plugin-based architecture.
+>
+> **Current Architecture**: Skills, agents, and stacks are ALL plugins. Version goes in `plugin.json`, NOT `metadata.yaml` or SKILL.md frontmatter.
+>
+> **Key Changes**:
+>
+> - Each skill compiles to a plugin with `plugin.json` containing `version`
+> - Each agent compiles to a plugin with `plugin.json` containing `version`
+> - Each stack is a plugin with `plugin.json` containing `version`
+> - The `versioning.ts` file needs refactoring to output to `plugin.json` instead of `metadata.yaml`
+>
+> This document is preserved for historical context on versioning research and the content-hash + date hybrid approach, which is still valid - just the OUTPUT location changed from `metadata.yaml` to `plugin.json`.
+
+---
+
 ## Approach Comparison
 
-| Approach | Complexity | Author Friction | Change Tracking | Automatable |
-|----------|------------|-----------------|-----------------|-------------|
-| npm/semver | Medium | High | Excellent | Partial |
-| Simple incrementing | Low | Low | Poor | Yes |
-| Date-based | Low | Low | Moderate | Yes |
-| Content-hash | Low | None | Poor (diff needed) | Yes |
-| Git-tag based | Medium | None | Excellent | Yes |
+| Approach            | Complexity | Author Friction | Change Tracking    | Automatable |
+| ------------------- | ---------- | --------------- | ------------------ | ----------- |
+| npm/semver          | Medium     | High            | Excellent          | Partial     |
+| Simple incrementing | Low        | Low             | Poor               | Yes         |
+| Date-based          | Low        | Low             | Moderate           | Yes         |
+| Content-hash        | Low        | None            | Poor (diff needed) | Yes         |
+| Git-tag based       | Medium     | None            | Excellent          | Yes         |
 
 ---
 
@@ -17,11 +32,13 @@
 **How it works:** Authors bump version based on change type (breaking/feature/fix).
 
 **Pros:**
+
 - Industry standard, universally understood
 - Communicates intent ("1.x to 2.x = breaking")
 - Enables version ranges in dependencies
 
 **Cons:**
+
 - Requires author judgment on every change
 - Skills are single-file markdown - "breaking change" is ambiguous
 - Overkill for content that rarely has API contracts
@@ -35,10 +52,12 @@
 **How it works:** Bump number on any change.
 
 **Pros:**
+
 - Zero cognitive load
 - Easy to implement
 
 **Cons:**
+
 - "v47 vs v48" tells you nothing about change magnitude
 - No semantic meaning
 - Still requires manual bump
@@ -52,11 +71,13 @@
 **How it works:** Version = modification date.
 
 **Pros:**
+
 - Zero author effort (auto-generated)
 - "When was this updated?" answered instantly
 - Natural sorting
 
 **Cons:**
+
 - Two changes same day = same version
 - Doesn't indicate change magnitude
 
@@ -69,12 +90,14 @@
 **How it works:** Hash the skill file(s) to generate version.
 
 **Pros:**
+
 - Completely automatic
 - Perfect deduplication
 - Enables caching and integrity verification
 - Same content = same hash (deterministic)
 
 **Cons:**
+
 - `abc123` vs `def456` tells you nothing about what changed
 - Requires storing hash-to-content mapping for comparison
 - Long hashes are unwieldy (can truncate to 7 chars like git)
@@ -88,12 +111,14 @@
 **How it works:** Use git history to derive version (tags, commit count, or hash).
 
 **Pros:**
+
 - Zero author effort
 - Full change history via `git log`
 - Can auto-generate changelogs
 - Works with existing git workflows
 
 **Cons:**
+
 - Requires git (not all distribution methods use git)
 - Version tied to repo, not content
 - Complexity if skills distributed outside git
@@ -113,8 +138,8 @@ For a Claude Code skill/stack system, use **content-hash as primary identifier**
 name: frontend/state-zustand (@vince)
 description: Zustand stores, client state patterns
 # Auto-generated, never manually edited:
-content_hash: a1b2c3d  # truncated SHA-256 of SKILL.md content
-updated: 2025-01-20    # file modification date
+content_hash: a1b2c3d # truncated SHA-256 of SKILL.md content
+updated: 2025-01-20 # file modification date
 ---
 ```
 
@@ -184,12 +209,12 @@ changelog:
     date: 2026-01-01
     reason: Initial skill creation
 ---
-
 # React Components
 ...
 ```
 
 **Pros:**
+
 - Single file contains all context - no need to look elsewhere
 - Version and changelog co-located with the content being versioned
 - Easy to parse programmatically from YAML
@@ -197,6 +222,7 @@ changelog:
 - Works well with user preference (version bump + reason)
 
 **Cons:**
+
 - Frontmatter grows over time (mitigated by keeping only recent N entries)
 - Mixes metadata with content
 - May need periodic pruning of old entries
@@ -223,29 +249,36 @@ skills/
 ```
 
 CHANGELOG.md contents:
+
 ```markdown
 # Changelog - frontend/react
 
 ## [1.3.0] - 2026-01-20
+
 - Add React 19 useActionState examples
 
 ## [1.2.0] - 2026-01-15
+
 - Update ref handling for React 19 (forwardRef deprecated)
 
 ## [1.1.0] - 2026-01-10
+
 - Add lucide-react icon patterns
 
 ## [1.0.0] - 2026-01-01
+
 - Initial skill creation
 ```
 
 **Pros:**
+
 - Follows industry convention (Keep a Changelog format)
 - Unlimited history without bloating the main file
 - Familiar to developers
 - Works with standard tooling
 
 **Cons:**
+
 - Extra file to maintain per skill
 - Authors must remember to update it (easy to forget)
 - Requires switching between files when editing
@@ -274,17 +307,20 @@ CHANGELOG.md contents:
 ```
 
 **Generation command:**
+
 ```bash
 git log --oneline --follow -- ".claude/skills/frontend-react*/SKILL.md" | head -10
 ```
 
 **Pros:**
+
 - Zero manual effort - always up to date
 - Accurate history from source of truth (git)
 - No extra files to maintain
 - Works with existing workflows
 
 **Cons:**
+
 - Requires consistent commit messages (garbage in, garbage out)
 - Commit messages often technical, not user-friendly descriptions
 - Multiple commits per logical change create noise
@@ -304,6 +340,7 @@ git log --oneline --follow -- ".claude/skills/frontend-react*/SKILL.md" | head -
 **Format example (prompt + output):**
 
 Prompt (on pre-commit hook or CI):
+
 ```
 Summarize the following diff for the skill changelog.
 Write ONE sentence explaining why this change was made (not what changed).
@@ -315,18 +352,21 @@ Format: "- [version]: [reason]"
 ```
 
 Output:
+
 ```markdown
 - 1.3.0: Add form submission patterns using React 19's new useActionState hook
 - 1.2.0: Update component examples to use ref as a regular prop following React 19 deprecation of forwardRef
 ```
 
 **Pros:**
+
 - Generates human-readable "reason" descriptions (matches user preference)
 - Can distill multiple commits into single logical entry
 - Consistent quality and format
 - No manual writing required
 
 **Cons:**
+
 - Requires AI API call (cost, latency)
 - May misinterpret intent without context
 - Needs review before commit (human in loop)
@@ -343,6 +383,7 @@ Output:
 **Update mechanism:** Automatic - parses commit messages following convention
 
 **Commit message format:**
+
 ```
 <type>(<scope>): <description>
 
@@ -352,6 +393,7 @@ Output:
 ```
 
 **Types relevant to skills:**
+
 - `feat(skills/react)`: New pattern added
 - `fix(skills/react)`: Corrected error or anti-pattern
 - `docs(skills/react)`: Improved documentation/examples
@@ -366,26 +408,31 @@ Output:
 ## [1.3.0] - 2026-01-20
 
 ### Features
+
 - Add React 19 useActionState examples
 
 ## [1.2.0] - 2026-01-15
 
 ### Documentation
+
 - Update ref handling for React 19
 
 ## [1.1.0] - 2026-01-10
 
 ### Features
+
 - Add lucide-react icon patterns
 ```
 
 **Pros:**
+
 - Industry standard with tooling support (conventional-changelog, release-it)
 - Automatic categorization (features vs fixes vs docs)
 - Enforced via commitlint
 - Works with semantic versioning
 
 **Cons:**
+
 - Requires discipline from all contributors
 - Commit messages are still technical, not "reason" focused
 - Tools generate verbose changelogs (too much detail)
@@ -442,7 +489,9 @@ const MAX_HISTORY_ENTRIES = 5;
 
 function validateSkillHistory(skill: Skill): void {
   if (skill.history?.length > MAX_HISTORY_ENTRIES) {
-    console.warn(`Skill ${skill.name} has ${skill.history.length} history entries, consider archiving`);
+    console.warn(
+      `Skill ${skill.name} has ${skill.history.length} history entries, consider archiving`,
+    );
   }
 }
 ```
@@ -451,14 +500,14 @@ function validateSkillHistory(skill: Skill): void {
 
 ## Changelog Comparison Matrix
 
-| Pattern | Storage | Update | Matches User Pref | Complexity |
-|---------|---------|--------|-------------------|------------|
-| Inline (Frontmatter) | In skill file | Manual | Yes | Low |
-| Separate CHANGELOG.md | Adjacent file | Manual | Partial | Medium |
-| Git-Derived | Generated | Auto | No | Low |
-| AI-Generated | Cache file | Auto | Yes | High |
-| Conventional Commits | Generated | Auto | Partial | Medium |
-| **Hybrid Inline (Recommended)** | In skill file | Manual | Yes | Low |
+| Pattern                         | Storage       | Update | Matches User Pref | Complexity |
+| ------------------------------- | ------------- | ------ | ----------------- | ---------- |
+| Inline (Frontmatter)            | In skill file | Manual | Yes               | Low        |
+| Separate CHANGELOG.md           | Adjacent file | Manual | Partial           | Medium     |
+| Git-Derived                     | Generated     | Auto   | No                | Low        |
+| AI-Generated                    | Cache file    | Auto   | Yes               | High       |
+| Conventional Commits            | Generated     | Auto   | Partial           | Medium     |
+| **Hybrid Inline (Recommended)** | In skill file | Manual | Yes               | Low        |
 
 ---
 
@@ -473,14 +522,14 @@ function validateSkillHistory(skill: Skill): void {
 
 ## Recommended Approach
 
-*Final synthesis by consolidation agent*
+_Final synthesis by consolidation agent_
 
 ### Summary of Choices
 
-| Aspect | Choice | Justification |
-|--------|--------|---------------|
-| Versioning Scheme | Content-hash + date | Zero friction, deterministic, enables caching |
-| Auto-Versioning | Compile-time generation | No hooks, no CLI commands, idempotent |
+| Aspect            | Choice                       | Justification                                      |
+| ----------------- | ---------------------------- | -------------------------------------------------- |
+| Versioning Scheme | Content-hash + date          | Zero friction, deterministic, enables caching      |
+| Auto-Versioning   | Compile-time generation      | No hooks, no CLI commands, idempotent              |
 | Changelog Pattern | Inline history (frontmatter) | Single file, matches "version + reason" preference |
 
 ---
@@ -490,6 +539,7 @@ function validateSkillHistory(skill: Skill): void {
 **Selected:** Truncated SHA-256 hash (7 characters) + ISO date
 
 **Rationale:**
+
 - Zero author friction: both fields auto-computed at compile time
 - Hash provides deterministic change detection for caching and diffing
 - Date provides human-readable "freshness" at a glance
@@ -504,6 +554,7 @@ function validateSkillHistory(skill: Skill): void {
 **Selected:** Compiler generates `content_hash` and `updated` on every build
 
 **Rationale:**
+
 - Authors never touch version fields - they edit content and commit
 - No commit hooks that block or slow down commits (user constraint)
 - No required CLI commands (user constraint)
@@ -518,6 +569,7 @@ function validateSkillHistory(skill: Skill): void {
 **Selected:** `history` array in YAML frontmatter with `v` (version) and `why` (reason)
 
 **Rationale:**
+
 - Single file contains all context (no switching between files)
 - Minimal keys: `v` and `why` match user language
 - Matches user preference: "every change bumps version and gets a small description"
@@ -576,6 +628,7 @@ function validateSkillHistory(skill: Skill): void {
 ```
 
 **Key constraint satisfaction:**
+
 - Zero friction for authors: edit content, optionally add history, commit
 - No commit hooks that block commits
 - No required CLI commands to bump versions
@@ -591,11 +644,12 @@ function validateSkillHistory(skill: Skill): void {
    - Add `history`: array of `{v: string, why: string}`, optional (author-maintained)
 
 2. **Create hash utility** (`src/cli/lib/hash-content.ts`)
+
    ```typescript
-   import { createHash } from 'crypto';
+   import { createHash } from "crypto";
 
    export function hashContent(content: string): string {
-     return createHash('sha256').update(content).digest('hex').slice(0, 7);
+     return createHash("sha256").update(content).digest("hex").slice(0, 7);
    }
    ```
 
@@ -638,7 +692,6 @@ history:
   - v: 1.1.0
     why: Add lucide-react icon examples
 ---
-
 # React Components
 
 [skill content...]
@@ -678,9 +731,9 @@ description: Component architecture, hooks, patterns
 ---
 name: frontend/react (@vince)
 description: Component architecture, hooks, patterns
-content_hash: a1b2c3d  # Auto-generated: truncated SHA-256
-updated: 2025-01-20    # Auto-generated: file modification date
-history:               # Author-maintained changelog
+content_hash: a1b2c3d # Auto-generated: truncated SHA-256
+updated: 2025-01-20 # Auto-generated: file modification date
+history: # Author-maintained changelog
   - v: 1.0.0
     why: Initial skill creation
 ---
@@ -689,6 +742,7 @@ history:               # Author-maintained changelog
 **Location:** Each `src/skills/**/SKILL.md` file (78+ files currently)
 
 **Files to modify:**
+
 - All SKILL.md files in `src/skills/` (add `content_hash`, `updated`, optionally `history`)
 - Note: `content_hash` and `updated` will be injected by compiler, not manually added
 
@@ -702,9 +756,9 @@ history:               # Author-maintained changelog
 
 ```typescript
 export interface SkillFrontmatter {
-  name: string
-  description: string
-  model?: string
+  name: string;
+  description: string;
+  model?: string;
 }
 ```
 
@@ -713,18 +767,18 @@ export interface SkillFrontmatter {
 ```typescript
 // New type for history entries
 export interface SkillHistoryEntry {
-  v: string    // Version label (e.g., "1.0.0" or just increment)
-  why: string  // Reason for change
+  v: string; // Version label (e.g., "1.0.0" or just increment)
+  why: string; // Reason for change
 }
 
 // Updated SkillFrontmatter interface
 export interface SkillFrontmatter {
-  name: string
-  description: string
-  model?: string
-  content_hash?: string             // Auto-generated: 7-char SHA-256
-  updated?: string                  // Auto-generated: YYYY-MM-DD
-  history?: SkillHistoryEntry[]     // Author-maintained: change log
+  name: string;
+  description: string;
+  model?: string;
+  content_hash?: string; // Auto-generated: 7-char SHA-256
+  updated?: string; // Auto-generated: YYYY-MM-DD
+  history?: SkillHistoryEntry[]; // Author-maintained: change log
 }
 ```
 
@@ -732,14 +786,14 @@ export interface SkillFrontmatter {
 
 ```typescript
 export interface SkillMetadataConfig {
-  category?: string
-  category_exclusive?: boolean
-  author?: string
-  version?: string  // Keep for legacy compatibility
-  tags?: string[]
-  requires?: string[]
-  compatible_with?: string[]
-  conflicts_with?: string[]
+  category?: string;
+  category_exclusive?: boolean;
+  author?: string;
+  version?: string; // Keep for legacy compatibility
+  tags?: string[];
+  requires?: string[];
+  compatible_with?: string[];
+  conflicts_with?: string[];
 }
 ```
 
@@ -762,7 +816,7 @@ suggested_stacks:
         framework: react
         meta-framework: nextjs-app-router
         styling: scss-modules
-    philosophy: 'Ship fast, iterate faster'
+    philosophy: "Ship fast, iterate faster"
 ```
 
 **Proposed addition (stack version for tracking):**
@@ -771,7 +825,7 @@ suggested_stacks:
 suggested_stacks:
   - id: modern-react
     name: Modern React Stack
-    version: 1.0.0        # NEW: Stack's own version
+    version: 1.0.0 # NEW: Stack's own version
     description: Fast, modern React for startups and MVPs with SCSS Modules
     audience: [startups, mvp, personal]
     skills:
@@ -779,7 +833,7 @@ suggested_stacks:
         framework: react
         meta-framework: nextjs-app-router
         styling: scss-modules
-    philosophy: 'Ship fast, iterate faster'
+    philosophy: "Ship fast, iterate faster"
 ```
 
 **Note:** Per the earlier decision, stacks reference skills by name (not version). The lockfile captures exact content_hash at compile time for reproducibility.
@@ -890,13 +944,17 @@ suggested_stacks:
 **New file:** `src/cli/lib/hash.ts`
 
 ```typescript
-import crypto from 'crypto';
-import { readFile } from '../utils/fs';
+import crypto from "crypto";
+import { readFile } from "../utils/fs";
 
 const HASH_TRUNCATE_LENGTH = 7;
 
 export function hashContent(content: string): string {
-  return crypto.createHash('sha256').update(content).digest('hex').slice(0, HASH_TRUNCATE_LENGTH);
+  return crypto
+    .createHash("sha256")
+    .update(content)
+    .digest("hex")
+    .slice(0, HASH_TRUNCATE_LENGTH);
 }
 
 export async function hashFile(filePath: string): Promise<string> {
@@ -910,8 +968,8 @@ export async function hashFile(filePath: string): Promise<string> {
 **In `src/cli/lib/compiler.ts`, add version extraction after reading SKILL.md:**
 
 ```typescript
-import { hashFile } from './hash';
-import fs from 'fs/promises';
+import { hashFile } from "./hash";
+import fs from "fs/promises";
 
 interface CompiledSkillMetadata {
   id: string;
@@ -923,15 +981,15 @@ interface CompiledSkillMetadata {
 
 async function extractSkillMetadata(
   skillPath: string,
-  skillId: string
+  skillId: string,
 ): Promise<CompiledSkillMetadata> {
-  const skillMdPath = path.join(skillPath, 'SKILL.md');
+  const skillMdPath = path.join(skillPath, "SKILL.md");
   const stats = await fs.stat(skillMdPath);
 
   return {
     id: skillId,
     content_hash: await hashFile(skillMdPath),
-    updated: stats.mtime.toISOString().split('T')[0],
+    updated: stats.mtime.toISOString().split("T")[0],
     path: skillPath,
     resolved_at: new Date().toISOString(),
   };
@@ -941,24 +999,27 @@ async function extractSkillMetadata(
 #### 5.3 Add lockfile generation
 
 ```typescript
-import YAML from 'yaml';
+import YAML from "yaml";
 
 export async function generateLockfile(
   compiledSkills: CompiledSkillMetadata[],
   stackId: string,
-  outputDir: string
+  outputDir: string,
 ): Promise<void> {
   const lockfile = {
     lockfile_version: 1,
     generated: new Date().toISOString(),
     digest: computeDigest(compiledSkills),
     resolved: Object.fromEntries(
-      compiledSkills.map(s => [s.id, {
-        content_hash: s.content_hash,
-        updated: s.updated,
-        path: s.path,
-        resolved_at: s.resolved_at,
-      }])
+      compiledSkills.map((s) => [
+        s.id,
+        {
+          content_hash: s.content_hash,
+          updated: s.updated,
+          path: s.path,
+          resolved_at: s.resolved_at,
+        },
+      ]),
     ),
   };
 
@@ -968,8 +1029,11 @@ export async function generateLockfile(
 }
 
 function computeDigest(skills: CompiledSkillMetadata[]): string {
-  const content = skills.map(s => `${s.id}:${s.content_hash}`).sort().join('\n');
-  return crypto.createHash('sha256').update(content).digest('hex').slice(0, 12);
+  const content = skills
+    .map((s) => `${s.id}:${s.content_hash}`)
+    .sort()
+    .join("\n");
+  return crypto.createHash("sha256").update(content).digest("hex").slice(0, 12);
 }
 ```
 
@@ -992,8 +1056,8 @@ skills:
 
 ```yaml
 skill_aliases:
-  react: 'frontend/framework/react (@vince)'
-  scss-modules: 'frontend/styling/scss-modules (@vince)'
+  react: "frontend/framework/react (@vince)"
+  scss-modules: "frontend/styling/scss-modules (@vince)"
 ```
 
 **Lockfile captures exact state for reproducibility:**
@@ -1008,6 +1072,7 @@ resolved:
 ```
 
 **Change detection workflow:**
+
 1. Compare previous lockfile `content_hash` to current computed hash
 2. If different, skill has changed
 3. Consumer can diff content for details or check `history` for author's explanation
@@ -1016,18 +1081,18 @@ resolved:
 
 ### 7. Implementation Priority (Versioning Integration)
 
-| Priority | Task | Files Affected | Effort |
-|----------|------|----------------|--------|
-| P0 | Create hash utility | New `src/cli/lib/hash.ts` | 1 hour |
-| P0 | Add version fields to types | `src/types.ts` | 30 min |
-| P0 | Create skill frontmatter schema | New `src/schemas/skill-frontmatter.schema.json` | 1 hour |
-| P1 | Extract metadata in compiler | `src/cli/lib/compiler.ts` | 2 hours |
-| P1 | Generate lockfile on compile | `src/cli/lib/compiler.ts` | 2 hours |
-| P1 | Create lockfile schema | New `src/schemas/stack.lock.schema.json` | 1 hour |
-| P1 | Add stack version to schema | `src/schemas/skills-matrix.schema.json` | 30 min |
-| P2 | CLI display of hash/date | CLI commands | 2 hours |
-| P2 | `claude skill outdated` command | New command file | 4 hours |
-| P3 | Non-blocking reminder hook | Git post-commit hook | 2 hours |
+| Priority | Task                            | Files Affected                                  | Effort  |
+| -------- | ------------------------------- | ----------------------------------------------- | ------- |
+| P0       | Create hash utility             | New `src/cli/lib/hash.ts`                       | 1 hour  |
+| P0       | Add version fields to types     | `src/types.ts`                                  | 30 min  |
+| P0       | Create skill frontmatter schema | New `src/schemas/skill-frontmatter.schema.json` | 1 hour  |
+| P1       | Extract metadata in compiler    | `src/cli/lib/compiler.ts`                       | 2 hours |
+| P1       | Generate lockfile on compile    | `src/cli/lib/compiler.ts`                       | 2 hours |
+| P1       | Create lockfile schema          | New `src/schemas/stack.lock.schema.json`        | 1 hour  |
+| P1       | Add stack version to schema     | `src/schemas/skills-matrix.schema.json`         | 30 min  |
+| P2       | CLI display of hash/date        | CLI commands                                    | 2 hours |
+| P2       | `claude skill outdated` command | New command file                                | 4 hours |
+| P3       | Non-blocking reminder hook      | Git post-commit hook                            | 2 hours |
 
 **Total estimated effort:** ~1.5 days for P0-P1, +1 day for P2-P3
 
@@ -1090,13 +1155,13 @@ resolved:
 
 ### 9. Summary Table
 
-| Question | Answer |
-|----------|--------|
-| Where does `version` field go in skill frontmatter? | `content_hash` and `updated` auto-generated in SKILL.md frontmatter. `history` array author-maintained. |
-| Where does `version` field go in stack definitions? | Optional `version` field in `suggested_stacks[].version` for stack versioning. Skills referenced by name. |
-| What schema changes are needed? | Add `skill-frontmatter.schema.json`, `stack.lock.schema.json`. Update `skills-matrix.schema.json` for stack version. |
-| How does the compiler use version info? | Computes `content_hash` from content, extracts `updated` from mtime, generates lockfile. |
-| How do stacks reference skill versions? | By name only. Lockfile captures exact `content_hash` for reproducibility and change detection. |
+| Question                                            | Answer                                                                                                               |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Where does `version` field go in skill frontmatter? | `content_hash` and `updated` auto-generated in SKILL.md frontmatter. `history` array author-maintained.              |
+| Where does `version` field go in stack definitions? | Optional `version` field in `suggested_stacks[].version` for stack versioning. Skills referenced by name.            |
+| What schema changes are needed?                     | Add `skill-frontmatter.schema.json`, `stack.lock.schema.json`. Update `skills-matrix.schema.json` for stack version. |
+| How does the compiler use version info?             | Computes `content_hash` from content, extracts `updated` from mtime, generates lockfile.                             |
+| How do stacks reference skill versions?             | By name only. Lockfile captures exact `content_hash` for reproducibility and change detection.                       |
 
 ---
 
@@ -1109,6 +1174,7 @@ This integration plan aligns with the **content-hash + date hybrid** decision:
 3. **`history`** - Author-maintained array with `v` and `why` fields
 
 And satisfies all constraints:
+
 - Zero friction for authors (edit content, optionally add history, commit)
 - No blocking commit hooks
 - No required CLI commands to bump versions
@@ -1128,12 +1194,15 @@ This section investigates five specific mechanisms for automatic versioning that
 ### Mechanism 1: Git Hooks (pre-commit, post-commit, pre-push)
 
 #### Does it require ANY manual author action?
+
 **YES** - Hooks must be installed per-developer (via `npm run prepare` / husky setup). Authors must commit changes for hooks to fire.
 
 #### Can it generate changelogs automatically?
+
 **YES** - Post-commit hooks can parse commit messages and update CHANGELOG files.
 
 #### Failure Modes
+
 - **Hook bypass**: `git commit --no-verify` skips hooks entirely
 - **Non-git workflows**: Direct file edits without commits are invisible
 - **Hook installation**: New contributors must run setup (husky, etc.)
@@ -1171,6 +1240,7 @@ done
 ```
 
 #### Verdict: **NOT IDEAL**
+
 Requires git operations and can be bypassed. Still has friction (commit workflow). Authors who bypass hooks or work outside git won't trigger versioning.
 
 ---
@@ -1178,12 +1248,15 @@ Requires git operations and can be bypassed. Still has friction (commit workflow
 ### Mechanism 2: GitHub Actions (CI Auto-Version on Merge)
 
 #### Does it require ANY manual author action?
+
 **MINIMAL** - Author creates PR, CI handles versioning on merge. No version editing required.
 
 #### Can it generate changelogs automatically?
+
 **YES** - Full control over changelog generation from commit history.
 
 #### Failure Modes
+
 - **PR-only**: Direct pushes to main bypass versioning
 - **Branch protection required**: Must enforce PR workflow
 - **CI delays**: Version updates happen asynchronously after merge
@@ -1199,8 +1272,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/skills/**/*.md'
-      - 'src/skills/**/metadata.yaml'
+      - "src/skills/**/*.md"
+      - "src/skills/**/metadata.yaml"
 
 jobs:
   version:
@@ -1244,6 +1317,7 @@ jobs:
 ```
 
 #### Verdict: **GOOD OPTION**
+
 Truly zero-effort for authors. Only drawback is version appears after merge, not during PR review. Requires branch protection to be reliable.
 
 ---
@@ -1251,12 +1325,15 @@ Truly zero-effort for authors. Only drawback is version appears after merge, not
 ### Mechanism 3: Content Hashing (Derive Version from File Content)
 
 #### Does it require ANY manual author action?
+
 **NO** - Completely automatic. Version IS the content hash.
 
 #### Can it generate changelogs automatically?
+
 **PARTIAL** - Can track changes, but no semantic meaning (hash changes don't indicate breaking/feature/fix).
 
 #### Failure Modes
+
 - **No semantic versioning**: `abc123` says nothing about compatibility
 - **Hash instability**: Whitespace changes create new versions
 - **Cache invalidation**: Every change invalidates caches
@@ -1266,30 +1343,32 @@ Truly zero-effort for authors. Only drawback is version appears after merge, not
 
 ```typescript
 // src/cli/lib/content-versioner.ts
-import { createHash } from 'crypto';
-import { readFile, glob } from '../utils/fs';
-import path from 'path';
+import { createHash } from "crypto";
+import { readFile, glob } from "../utils/fs";
+import path from "path";
 
 interface ContentVersion {
-  hash: string;      // Short SHA256 hash
+  hash: string; // Short SHA256 hash
   timestamp: number; // Build time
-  files: string[];   // Files included in hash
+  files: string[]; // Files included in hash
 }
 
-export async function computeSkillVersion(skillDir: string): Promise<ContentVersion> {
-  const files = await glob('**/*.md', skillDir);
+export async function computeSkillVersion(
+  skillDir: string,
+): Promise<ContentVersion> {
+  const files = await glob("**/*.md", skillDir);
   const contents: string[] = [];
 
   for (const file of files.sort()) {
     const content = await readFile(path.join(skillDir, file));
     // Normalize whitespace to prevent trivial changes
-    const normalized = content.trim().replace(/\r\n/g, '\n');
+    const normalized = content.trim().replace(/\r\n/g, "\n");
     contents.push(`${file}:${normalized}`);
   }
 
-  const fullHash = createHash('sha256')
-    .update(contents.join('\n---\n'))
-    .digest('hex');
+  const fullHash = createHash("sha256")
+    .update(contents.join("\n---\n"))
+    .digest("hex");
 
   return {
     hash: fullHash.substring(0, 8), // Short hash: "a1b2c3d4"
@@ -1311,17 +1390,18 @@ async function compileSkillWithVersion(skillDir: string) {
 ```typescript
 // metadata.yaml contains semver, but we append content hash for cache busting
 interface HybridVersion {
-  semver: string;  // "2.0.0" - human-managed for breaking changes
-  hash: string;    // "a1b2c3d4" - auto-generated for content tracking
-  full: string;    // "2.0.0+a1b2c3d4"
+  semver: string; // "2.0.0" - human-managed for breaking changes
+  hash: string; // "a1b2c3d4" - auto-generated for content tracking
+  full: string; // "2.0.0+a1b2c3d4"
 }
 
 function buildHybridVersion(semver: string, hash: string): string {
-  return `${semver}+${hash}`;  // "2.0.0+a1b2c3d4"
+  return `${semver}+${hash}`; // "2.0.0+a1b2c3d4"
 }
 ```
 
 #### Verdict: **EXCELLENT FOR CACHE INVALIDATION**
+
 Perfect for detecting changes automatically. Best combined with auto-incrementing patch version for ordering.
 
 ---
@@ -1329,12 +1409,15 @@ Perfect for detecting changes automatically. Best combined with auto-incrementin
 ### Mechanism 4: Compiler Integration (Auto-Detect and Version at Compile Time)
 
 #### Does it require ANY manual author action?
+
 **NO** - Compiler handles everything during `bun run compile`.
 
 #### Can it generate changelogs automatically?
+
 **YES** - Compiler can track what changed since last compile.
 
 #### Failure Modes
+
 - **Requires compile**: Version only updates when compile runs
 - **State management**: Must persist previous versions somewhere
 - **Build ordering**: Must compile before pushing to see version
@@ -1344,42 +1427,50 @@ Perfect for detecting changes automatically. Best combined with auto-incrementin
 
 ```typescript
 // Enhanced compiler.ts with auto-versioning
-import { createHash } from 'crypto';
-import { readFile, writeFile } from '../utils/fs';
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import path from 'path';
+import { createHash } from "crypto";
+import { readFile, writeFile } from "../utils/fs";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import path from "path";
 
 interface VersionCache {
-  skills: Record<string, { hash: string; version: string; lastModified: number }>;
+  skills: Record<
+    string,
+    { hash: string; version: string; lastModified: number }
+  >;
 }
 
-const VERSION_CACHE_FILE = '.skill-versions.json';
+const VERSION_CACHE_FILE = ".skill-versions.json";
 
 export async function compileAllSkillsWithVersioning(
   skills: Skill[],
-  ctx: CompileContext
+  ctx: CompileContext,
 ): Promise<void> {
   // Load version cache
   let cache: VersionCache = { skills: {} };
   try {
-    cache = JSON.parse(await readFile(path.join(ctx.projectRoot, VERSION_CACHE_FILE)));
+    cache = JSON.parse(
+      await readFile(path.join(ctx.projectRoot, VERSION_CACHE_FILE)),
+    );
   } catch {
     // First run, no cache
   }
 
   for (const skill of skills) {
-    const skillDir = path.join(ctx.projectRoot, 'src', skill.path);
-    const metadataPath = path.join(skillDir, 'metadata.yaml');
+    const skillDir = path.join(ctx.projectRoot, "src", skill.path);
+    const metadataPath = path.join(skillDir, "metadata.yaml");
 
     // Compute content hash
-    const content = await readFile(path.join(skillDir, 'SKILL.md'));
-    const hash = createHash('sha256').update(content.trim()).digest('hex').slice(0, 8);
+    const content = await readFile(path.join(skillDir, "SKILL.md"));
+    const hash = createHash("sha256")
+      .update(content.trim())
+      .digest("hex")
+      .slice(0, 8);
     const cached = cache.skills[skill.id];
 
     if (!cached || cached.hash !== hash) {
       // Content changed - bump version
       const metadata = parseYaml(await readFile(metadataPath));
-      const [major, minor, patch] = metadata.version.split('.').map(Number);
+      const [major, minor, patch] = metadata.version.split(".").map(Number);
 
       // Auto-bump patch version
       metadata.version = `${major}.${minor}.${patch + 1}`;
@@ -1402,12 +1493,13 @@ export async function compileAllSkillsWithVersioning(
   // Save cache
   await writeFile(
     path.join(ctx.projectRoot, VERSION_CACHE_FILE),
-    JSON.stringify(cache, null, 2)
+    JSON.stringify(cache, null, 2),
   );
 }
 ```
 
 #### Verdict: **RECOMMENDED APPROACH**
+
 Integrates naturally with existing workflow. Author runs `compile` (already required for publishing), versions update automatically. Zero additional steps.
 
 ---
@@ -1415,12 +1507,15 @@ Integrates naturally with existing workflow. Author runs `compile` (already requ
 ### Mechanism 5: File Modification Detection (Track Changes and Auto-Bump)
 
 #### Does it require ANY manual author action?
+
 **DEPENDS** - File watching requires a daemon; git-based detection requires commits.
 
 #### Can it generate changelogs automatically?
+
 **YES** - Can log all file modifications with timestamps.
 
 #### Failure Modes
+
 - **File system events**: May miss rapid changes or fail on network drives
 - **Platform differences**: fswatch/chokidar behave differently on macOS/Linux/Windows
 - **Daemon required**: Must run background process for real-time
@@ -1429,6 +1524,7 @@ Integrates naturally with existing workflow. Author runs `compile` (already requ
 #### Implementation Options
 
 **Option A: Git-based (post-commit hook)**
+
 ```bash
 #!/bin/bash
 # Track skill modifications and bump versions
@@ -1441,31 +1537,33 @@ done
 ```
 
 **Option B: File watcher daemon**
+
 ```typescript
 // scripts/watch-skills.ts
-import chokidar from 'chokidar';
-import { bumpSkillVersion } from './versioner';
+import chokidar from "chokidar";
+import { bumpSkillVersion } from "./versioner";
 
-const watcher = chokidar.watch('src/skills/**/*.md', {
+const watcher = chokidar.watch("src/skills/**/*.md", {
   persistent: true,
   ignoreInitial: true,
 });
 
-watcher.on('change', async (filePath) => {
+watcher.on("change", async (filePath) => {
   console.log(`Detected change: ${filePath}`);
   await bumpSkillVersion(filePath);
 });
 
-console.log('Watching for skill changes...');
+console.log("Watching for skill changes...");
 ```
 
 **Option C: Last-modified timestamp comparison**
+
 ```typescript
 // Compare mtime with stored timestamp
-import { stat } from 'fs/promises';
+import { stat } from "fs/promises";
 
 async function detectModifiedSkills(skillsDir: string, lastBuildTime: number) {
-  const skills = await glob('**/SKILL.md', skillsDir);
+  const skills = await glob("**/SKILL.md", skillsDir);
   const modified: string[] = [];
 
   for (const skill of skills) {
@@ -1480,6 +1578,7 @@ async function detectModifiedSkills(skillsDir: string, lastBuildTime: number) {
 ```
 
 #### Verdict: **USEFUL AS SUPPLEMENTARY**
+
 Good for dev experience but not reliable as sole source of truth. Best combined with compile-time detection.
 
 ---
@@ -1566,20 +1665,21 @@ Bot commits version update with [skip ci]
 
 ### Auto-Versioning Comparison Table
 
-| Mechanism | Zero Effort | Auto Changelog | Reliability | Complexity |
-|-----------|-------------|----------------|-------------|------------|
-| Git Hooks | Partial | Yes | Bypassable | Low |
-| GitHub Actions | Yes | Yes | High | Medium |
-| Content Hashing | Yes | Partial | High | Low |
-| Compiler Integration | Yes | Yes | High | Medium |
-| File Watching | Partial | Yes | Low | High |
-| **Compiler + CI (Recommended)** | **Yes** | **Yes** | **Very High** | **Medium** |
+| Mechanism                       | Zero Effort | Auto Changelog | Reliability   | Complexity |
+| ------------------------------- | ----------- | -------------- | ------------- | ---------- |
+| Git Hooks                       | Partial     | Yes            | Bypassable    | Low        |
+| GitHub Actions                  | Yes         | Yes            | High          | Medium     |
+| Content Hashing                 | Yes         | Partial        | High          | Low        |
+| Compiler Integration            | Yes         | Yes            | High          | Medium     |
+| File Watching                   | Partial     | Yes            | Low           | High       |
+| **Compiler + CI (Recommended)** | **Yes**     | **Yes**        | **Very High** | **Medium** |
 
 ### Final Verdict
 
 **Winner**: Compiler Integration + GitHub Actions Fallback
 
 This achieves the goal: **Author edits skill, version updates automatically** with:
+
 - No extra commands (compile is already required)
 - No manual version editing
 - No commit hooks to bypass

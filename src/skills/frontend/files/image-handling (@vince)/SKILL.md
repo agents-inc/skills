@@ -1,5 +1,5 @@
 ---
-name: frontend/files/image-handling (@vince)
+name: image-handling (@vince)
 description: Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup
 ---
 
@@ -78,11 +78,11 @@ Client-side image handling improves UX by providing instant previews and reducin
 
 **Preview Method Comparison:**
 
-| Method | Speed | Memory | Use Case |
-|--------|-------|--------|----------|
-| `URL.createObjectURL()` | Instant | Low (reference) | Display previews |
-| `FileReader.readAsDataURL()` | Slow | High (full Base64) | Need data URL string |
-| Canvas `toDataURL()` | Medium | Medium | After processing |
+| Method                       | Speed   | Memory             | Use Case             |
+| ---------------------------- | ------- | ------------------ | -------------------- |
+| `URL.createObjectURL()`      | Instant | Low (reference)    | Display previews     |
+| `FileReader.readAsDataURL()` | Slow    | High (full Base64) | Need data URL string |
+| Canvas `toDataURL()`         | Medium  | Medium             | After processing     |
 
 </philosophy>
 
@@ -100,14 +100,19 @@ Use `URL.createObjectURL()` for instant image previews. **Always cleanup** to pr
 
 ```typescript
 // image-preview.ts
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 ```
 
 #### Implementation
 
 ```typescript
 // use-image-preview.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface ImagePreviewState {
   file: File | null;
@@ -129,19 +134,22 @@ export function useImagePreview() {
     };
   }, [state.previewUrl]);
 
-  const setFile = useCallback((file: File | null) => {
-    // Revoke previous URL if exists
-    if (state.previewUrl) {
-      URL.revokeObjectURL(state.previewUrl);
-    }
+  const setFile = useCallback(
+    (file: File | null) => {
+      // Revoke previous URL if exists
+      if (state.previewUrl) {
+        URL.revokeObjectURL(state.previewUrl);
+      }
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setState({ file, previewUrl });
-    } else {
-      setState({ file: null, previewUrl: null });
-    }
-  }, [state.previewUrl]);
+      if (file) {
+        const previewUrl = URL.createObjectURL(file);
+        setState({ file, previewUrl });
+      } else {
+        setState({ file: null, previewUrl: null });
+      }
+    },
+    [state.previewUrl],
+  );
 
   const clear = useCallback(() => {
     if (state.previewUrl) {
@@ -182,7 +190,7 @@ Track multiple images with individual cleanup.
 
 ```typescript
 // use-multiple-image-preview.ts
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 
 interface ImageFile {
   id: string;
@@ -195,20 +203,23 @@ const DEFAULT_MAX_IMAGES = 10;
 export function useMultipleImagePreview(maxImages = DEFAULT_MAX_IMAGES) {
   const [images, setImages] = useState<ImageFile[]>([]);
 
-  const addImages = useCallback((files: File[]) => {
-    setImages((current) => {
-      const availableSlots = maxImages - current.length;
-      const filesToAdd = files.slice(0, availableSlots);
+  const addImages = useCallback(
+    (files: File[]) => {
+      setImages((current) => {
+        const availableSlots = maxImages - current.length;
+        const filesToAdd = files.slice(0, availableSlots);
 
-      const newImages: ImageFile[] = filesToAdd.map((file) => ({
-        id: crypto.randomUUID(),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
+        const newImages: ImageFile[] = filesToAdd.map((file) => ({
+          id: crypto.randomUUID(),
+          file,
+          previewUrl: URL.createObjectURL(file),
+        }));
 
-      return [...current, ...newImages];
-    });
-  }, [maxImages]);
+        return [...current, ...newImages];
+      });
+    },
+    [maxImages],
+  );
 
   const removeImage = useCallback((id: string) => {
     setImages((current) => {
@@ -270,18 +281,18 @@ interface ResizeOptions {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
-  mimeType?: 'image/jpeg' | 'image/png' | 'image/webp';
+  mimeType?: "image/jpeg" | "image/png" | "image/webp";
 }
 
 export async function resizeImage(
   file: File,
-  options: ResizeOptions = {}
+  options: ResizeOptions = {},
 ): Promise<Blob> {
   const {
     maxWidth = DEFAULT_MAX_WIDTH,
     maxHeight = DEFAULT_MAX_HEIGHT,
     quality = DEFAULT_QUALITY,
-    mimeType = 'image/jpeg',
+    mimeType = "image/jpeg",
   } = options;
 
   const img = await createImageFromFile(file);
@@ -289,21 +300,21 @@ export async function resizeImage(
     img.width,
     img.height,
     maxWidth,
-    maxHeight
+    maxHeight,
   );
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new Error('Failed to get canvas context');
+    throw new Error("Failed to get canvas context");
   }
 
   // Enable high-quality image smoothing
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = "high";
 
   ctx.drawImage(img, 0, 0, width, height);
 
@@ -313,11 +324,11 @@ export async function resizeImage(
         if (blob) {
           resolve(blob);
         } else {
-          reject(new Error('Failed to create blob'));
+          reject(new Error("Failed to create blob"));
         }
       },
       mimeType,
-      quality
+      quality,
     );
   });
 }
@@ -334,7 +345,7 @@ function createImageFromFile(file: File): Promise<HTMLImageElement> {
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     img.src = url;
@@ -345,7 +356,7 @@ function calculateDimensions(
   originalWidth: number,
   originalHeight: number,
   maxWidth: number,
-  maxHeight: number
+  maxHeight: number,
 ): { width: number; height: number } {
   // Clamp to browser canvas limits
   const safeMaxWidth = Math.min(maxWidth, MAX_CANVAS_DIMENSION);
@@ -373,7 +384,7 @@ function calculateDimensions(
 // BAD: May crash browser with large images
 async function badResize(file: File) {
   const img = await createImageFromFile(file);
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   // No dimension limit - can exceed 32k pixels and crash
   canvas.width = img.width;
   canvas.height = img.height;
@@ -399,7 +410,7 @@ export async function stepDownResize(
   file: File,
   targetWidth: number,
   targetHeight: number,
-  steps = DEFAULT_STEPS
+  steps = DEFAULT_STEPS,
 ): Promise<Blob> {
   const img = await createImageFromFile(file);
 
@@ -410,7 +421,10 @@ export async function stepDownResize(
 
   // Single-pass if reduction is less than 50%
   if (minRatio > STEP_THRESHOLD_RATIO) {
-    return resizeImage(file, { maxWidth: targetWidth, maxHeight: targetHeight });
+    return resizeImage(file, {
+      maxWidth: targetWidth,
+      maxHeight: targetHeight,
+    });
   }
 
   let currentWidth = img.width;
@@ -423,18 +437,22 @@ export async function stepDownResize(
   for (let i = 0; i < steps; i++) {
     const isLastStep = i === steps - 1;
 
-    currentWidth = isLastStep ? targetWidth : Math.round(currentWidth * widthFactor);
-    currentHeight = isLastStep ? targetHeight : Math.round(currentHeight * heightFactor);
+    currentWidth = isLastStep
+      ? targetWidth
+      : Math.round(currentWidth * widthFactor);
+    currentHeight = isLastStep
+      ? targetHeight
+      : Math.round(currentHeight * heightFactor);
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = currentWidth;
     canvas.height = currentHeight;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Failed to get context');
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Failed to get context");
 
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(source, 0, 0, currentWidth, currentHeight);
 
     source = canvas;
@@ -443,9 +461,10 @@ export async function stepDownResize(
   const finalCanvas = source as HTMLCanvasElement;
   return new Promise((resolve, reject) => {
     finalCanvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Blob creation failed'))),
-      'image/jpeg',
-      DEFAULT_QUALITY
+      (blob) =>
+        blob ? resolve(blob) : reject(new Error("Blob creation failed")),
+      "image/jpeg",
+      DEFAULT_QUALITY,
     );
   });
 }
@@ -460,10 +479,12 @@ export async function stepDownResize(
 Normalize image orientation from mobile photo metadata.
 
 > **Important (2020+):** Modern browsers automatically respect EXIF orientation:
+>
 > - `<img>` elements: CSS `image-orientation` defaults to `from-image`
 > - Canvas `drawImage()`: Chromium browsers (Chrome 81+) auto-apply EXIF rotation
 >
 > **Only use manual EXIF handling when:**
+>
 > - Processing images for upload/output files (server may not handle EXIF)
 > - Supporting legacy browsers (pre-2020)
 > - Using Node.js canvas (doesn't auto-rotate)
@@ -541,9 +562,9 @@ export async function normalizeOrientation(file: File): Promise<Blob> {
   }
 
   const img = await createImageFromFile(file);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Failed to get context');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get context");
 
   // Swap dimensions for 90/270 degree rotations
   const needsSwap = ORIENTATIONS_NEEDING_SWAP.includes(orientation);
@@ -555,9 +576,9 @@ export async function normalizeOrientation(file: File): Promise<Blob> {
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Blob failed'))),
-      file.type || 'image/jpeg',
-      DEFAULT_QUALITY
+      (blob) => (blob ? resolve(blob) : reject(new Error("Blob failed"))),
+      file.type || "image/jpeg",
+      DEFAULT_QUALITY,
     );
   });
 }
@@ -566,16 +587,30 @@ function applyOrientationTransform(
   ctx: CanvasRenderingContext2D,
   orientation: Orientation,
   width: number,
-  height: number
+  height: number,
 ): void {
   switch (orientation) {
-    case 2: ctx.transform(-1, 0, 0, 1, width, 0); break;     // Flip horizontal
-    case 3: ctx.transform(-1, 0, 0, -1, width, height); break; // Rotate 180
-    case 4: ctx.transform(1, 0, 0, -1, 0, height); break;    // Flip vertical
-    case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;          // Rotate 90 CW + flip
-    case 6: ctx.transform(0, 1, -1, 0, height, 0); break;    // Rotate 90 CW
-    case 7: ctx.transform(0, -1, -1, 0, height, width); break; // Rotate 90 CCW + flip
-    case 8: ctx.transform(0, -1, 1, 0, 0, width); break;     // Rotate 90 CCW
+    case 2:
+      ctx.transform(-1, 0, 0, 1, width, 0);
+      break; // Flip horizontal
+    case 3:
+      ctx.transform(-1, 0, 0, -1, width, height);
+      break; // Rotate 180
+    case 4:
+      ctx.transform(1, 0, 0, -1, 0, height);
+      break; // Flip vertical
+    case 5:
+      ctx.transform(0, 1, 1, 0, 0, 0);
+      break; // Rotate 90 CW + flip
+    case 6:
+      ctx.transform(0, 1, -1, 0, height, 0);
+      break; // Rotate 90 CW
+    case 7:
+      ctx.transform(0, -1, -1, 0, height, width);
+      break; // Rotate 90 CCW + flip
+    case 8:
+      ctx.transform(0, -1, 1, 0, 0, width);
+      break; // Rotate 90 CCW
   }
 }
 ```
@@ -594,12 +629,13 @@ Convert images to optimal formats for web delivery.
 // format-conversion.ts
 const FORMAT_SUPPORT_CACHE = new Map<string, boolean>();
 
-const WEBP_TEST_DATA = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
+const WEBP_TEST_DATA =
+  "data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=";
 
 const FORMAT_QUALITY_DEFAULTS: Record<string, number> = {
-  'image/jpeg': 0.85,
-  'image/webp': 0.82,
-  'image/png': 1, // PNG is lossless
+  "image/jpeg": 0.85,
+  "image/webp": 0.82,
+  "image/png": 1, // PNG is lossless
 };
 ```
 
@@ -608,8 +644,8 @@ const FORMAT_QUALITY_DEFAULTS: Record<string, number> = {
 ```typescript
 // format-conversion.ts
 export async function supportsWebP(): Promise<boolean> {
-  if (FORMAT_SUPPORT_CACHE.has('webp')) {
-    return FORMAT_SUPPORT_CACHE.get('webp')!;
+  if (FORMAT_SUPPORT_CACHE.has("webp")) {
+    return FORMAT_SUPPORT_CACHE.get("webp")!;
   }
 
   const supported = await new Promise<boolean>((resolve) => {
@@ -619,45 +655,46 @@ export async function supportsWebP(): Promise<boolean> {
     img.src = WEBP_TEST_DATA;
   });
 
-  FORMAT_SUPPORT_CACHE.set('webp', supported);
+  FORMAT_SUPPORT_CACHE.set("webp", supported);
   return supported;
 }
 
 export async function convertToFormat(
   file: File,
-  targetFormat: 'image/jpeg' | 'image/png' | 'image/webp',
-  quality?: number
+  targetFormat: "image/jpeg" | "image/png" | "image/webp",
+  quality?: number,
 ): Promise<Blob> {
   const img = await createImageFromFile(file);
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = img.width;
   canvas.height = img.height;
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Failed to get context');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get context");
 
   // Fill white background for JPEG (no transparency)
-  if (targetFormat === 'image/jpeg') {
-    ctx.fillStyle = '#ffffff';
+  if (targetFormat === "image/jpeg") {
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   ctx.drawImage(img, 0, 0);
 
-  const finalQuality = quality ?? FORMAT_QUALITY_DEFAULTS[targetFormat] ?? DEFAULT_QUALITY;
+  const finalQuality =
+    quality ?? FORMAT_QUALITY_DEFAULTS[targetFormat] ?? DEFAULT_QUALITY;
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Conversion failed'))),
+      (blob) => (blob ? resolve(blob) : reject(new Error("Conversion failed"))),
       targetFormat,
-      finalQuality
+      finalQuality,
     );
   });
 }
 
 export async function convertToOptimalFormat(file: File): Promise<Blob> {
   const webpSupported = await supportsWebP();
-  const targetFormat = webpSupported ? 'image/webp' : 'image/jpeg';
+  const targetFormat = webpSupported ? "image/webp" : "image/jpeg";
   return convertToFormat(file, targetFormat);
 }
 ```

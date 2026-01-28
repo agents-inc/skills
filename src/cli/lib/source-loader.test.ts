@@ -2,12 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import path from "path";
 import os from "os";
 import { mkdtemp, rm, mkdir, writeFile } from "fs/promises";
-import {
-  loadSkillsMatrixFromSource,
-  getSkillsDir,
-  type SourceLoadResult,
-} from "./source-loader";
-import { PROJECT_ROOT, SKILLS_MATRIX_PATH, SKILLS_DIR_PATH } from "../consts";
+import { loadSkillsMatrixFromSource } from "./source-loader";
+import { PROJECT_ROOT } from "../consts";
 
 describe("source-loader", () => {
   let tempDir: string;
@@ -106,30 +102,6 @@ describe("source-loader", () => {
           }),
         ).rejects.toThrow();
       });
-    });
-  });
-
-  describe("getSkillsDir", () => {
-    it("should return skills directory path from source result", () => {
-      // Minimal mock with required structure - using type assertion to satisfy TypeScript
-      // while keeping the test focused on getSkillsDir behavior
-      const mockSourceResult: SourceLoadResult = {
-        matrix: {
-          version: "1.0",
-          categories: {},
-          skills: {},
-          suggestedStacks: [],
-          aliases: {},
-          aliasesReverse: {},
-          generatedAt: new Date().toISOString(),
-        },
-        sourceConfig: { source: "test", sourceOrigin: "flag" as const },
-        sourcePath: "/my/source",
-        isLocal: true,
-      };
-
-      const skillsDir = getSkillsDir(mockSourceResult);
-      expect(skillsDir).toBe(`/my/source/${SKILLS_DIR_PATH}`);
     });
   });
 });

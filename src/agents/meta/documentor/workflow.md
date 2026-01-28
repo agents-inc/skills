@@ -8,6 +8,7 @@
 - **Using generic descriptions instead of file paths** -> STOP. Replace with specific paths like `/src/stores/UserStore.ts:45-89`.
 - **Describing patterns based on assumptions** -> STOP. Verify with Grep/Glob before documenting.
 - **Skipping the documentation map update** -> STOP. Update DOCUMENTATION_MAP.md before finishing.
+- **Skipping CLAUDE.md update** -> STOP. Add reference to generated docs in project CLAUDE.md.
 - **Reporting success without verifying file paths exist** -> STOP. Use Read to confirm paths.
 - **Writing tutorial-style content** -> STOP. Focus on WHERE and HOW, not WHY.
 
@@ -187,7 +188,28 @@ Mark area as documented/validated. Update status. Note what's next.
 - [ ] Documentation is structured for AI parsing
 - [ ] Cross-references to other docs are valid
 
-**Step 7: Report Progress**
+**Step 7: Update Project CLAUDE.md**
+
+After generating documentation, add a reference to the project's CLAUDE.md so other agents know where to find it:
+
+1. Read the existing CLAUDE.md at project root
+2. Check if a "Generated Documentation" section exists
+3. If not, add it at the end of the file:
+
+```markdown
+## Generated Documentation
+
+> AI-optimized documentation created by the documentor agent.
+
+- **Documentation Index:** `.claude/docs/DOCUMENTATION_MAP.md`
+- **Last Updated:** [current date]
+```
+
+4. If the section already exists, update the "Last Updated" date
+
+This ensures future agents and sessions know where to find AI-optimized documentation.
+
+**Step 8: Report Progress**
 
 Use the output format to show what was accomplished.
 </documentation_workflow>

@@ -1,5 +1,5 @@
 ---
-name: frontend/realtime/sse (@vince)
+name: sse (@vince)
 description: Server-Sent Events for unidirectional server-to-client streaming, EventSource API, fetch streaming, reconnection patterns, message parsing
 ---
 
@@ -57,6 +57,7 @@ description: Server-Sent Events for unidirectional server-to-client streaming, E
 - Sub-millisecond latency required (use WebSocket)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -79,6 +80,7 @@ Server-Sent Events (SSE) provide a simple, HTTP-based protocol for servers to pu
 4. **Text-Based Protocol:** Human-readable format makes debugging straightforward.
 
 **Connection Lifecycle:**
+
 ```
 CONNECTING (0) → OPEN (1) → messages... → CLOSED (2)
                     ↓                         ↓
@@ -86,6 +88,7 @@ CONNECTING (0) → OPEN (1) → messages... → CLOSED (2)
 ```
 
 **When to Choose SSE over WebSocket:**
+
 - Server sends updates, client only listens
 - Working with HTTP/2 (multiplexing multiple SSE streams)
 - Need automatic reconnection without custom logic
@@ -261,7 +264,7 @@ class SSEConnection {
     options?: {
       onStatusChange?: (status: SSEStatus) => void;
       onMessage?: (data: string, eventType: string) => void;
-    }
+    },
   ) {
     this.onStatusChange = options?.onStatusChange;
     this.onMessage = options?.onMessage;
@@ -345,13 +348,13 @@ Messages are separated by double newlines (`\n\n`). Fields are separated by sing
 
 #### Field Types
 
-| Field | Purpose | Example |
-|-------|---------|---------|
-| `data:` | Message content | `data: Hello World` |
-| `event:` | Custom event type | `event: notification` |
-| `id:` | Event ID for recovery | `id: 12345` |
-| `retry:` | Reconnection interval (ms) | `retry: 5000` |
-| `:` | Comment (keep-alive) | `: keep-alive` |
+| Field    | Purpose                    | Example               |
+| -------- | -------------------------- | --------------------- |
+| `data:`  | Message content            | `data: Hello World`   |
+| `event:` | Custom event type          | `event: notification` |
+| `id:`    | Event ID for recovery      | `id: 12345`           |
+| `retry:` | Reconnection interval (ms) | `retry: 5000`         |
+| `:`      | Comment (keep-alive)       | `: keep-alive`        |
 
 #### Example Messages
 
@@ -377,6 +380,7 @@ data: Reconnect in 10 seconds if disconnected
 ```
 
 **Key behaviors:**
+
 - Multiple `data:` lines are concatenated with newlines
 - `id:` persists across messages until changed
 - `retry:` is remembered for future reconnections
@@ -393,7 +397,12 @@ Use TypeScript discriminated unions for type-safe message handling.
 
 // Server message types
 type SSEMessage =
-  | { type: "notification"; title: string; body: string; priority: "low" | "high" }
+  | {
+      type: "notification";
+      title: string;
+      body: string;
+      priority: "low" | "high";
+    }
   | { type: "user-update"; userId: string; action: "joined" | "left" }
   | { type: "data-sync"; payload: unknown; timestamp: number }
   | { type: "heartbeat"; serverTime: number };

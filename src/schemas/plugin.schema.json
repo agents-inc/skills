@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/plugin.schema.json",
+  "title": "Plugin Manifest",
+  "description": "Plugin manifest schema for Claude Code plugins. Defines the structure of plugin.json files.",
+  "type": "object",
+  "required": ["name"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Plugin name in kebab-case",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "examples": ["skill-react", "stack-modern-react"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the plugin (major.minor.patch)",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": ["1.0.0", "2.1.0", "0.1.0-beta"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the plugin's purpose",
+      "minLength": 1,
+      "examples": ["React component patterns and best practices"]
+    },
+    "author": {
+      "$ref": "#/$defs/Author",
+      "description": "Plugin author information"
+    },
+    "homepage": {
+      "type": "string",
+      "description": "URL to plugin documentation or homepage",
+      "format": "uri",
+      "examples": ["https://docs.example.com"]
+    },
+    "repository": {
+      "type": "string",
+      "description": "URL to plugin source repository",
+      "format": "uri",
+      "examples": ["https://github.com/author/repo"]
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier",
+      "examples": ["MIT", "Apache-2.0", "GPL-3.0"]
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Keywords for discoverability",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "examples": [["react", "frontend", "components"]]
+    },
+    "commands": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to commands directory"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of paths to command files or directories"
+        }
+      ],
+      "examples": [
+        "./custom/commands/",
+        ["./commands/build.md", "./commands/deploy.md"]
+      ]
+    },
+    "agents": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to agents directory"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of paths to agent files or directories"
+        }
+      ],
+      "examples": ["./agents/", ["./agents/frontend.md", "./agents/backend.md"]]
+    },
+    "skills": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to skills directory"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of paths to skill files or directories"
+        }
+      ],
+      "examples": ["./skills/", ["./skills/react/", "./skills/typescript/"]]
+    },
+    "hooks": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to hooks configuration file"
+        },
+        {
+          "$ref": "#/$defs/HooksConfig",
+          "description": "Inline hooks configuration object"
+        }
+      ],
+      "examples": ["./hooks/hooks.json"]
+    },
+    "mcpServers": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to MCP servers configuration file"
+        },
+        {
+          "type": "object",
+          "description": "Inline MCP servers configuration object",
+          "additionalProperties": true
+        }
+      ],
+      "examples": ["./.mcp.json"]
+    }
+  },
+  "$defs": {
+    "Author": {
+      "type": "object",
+      "description": "Author information",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Author's display name",
+          "minLength": 1,
+          "examples": ["Vincent Bollaert"]
+        },
+        "email": {
+          "type": "string",
+          "description": "Author's email address",
+          "format": "email",
+          "examples": ["author@example.com"]
+        }
+      }
+    },
+    "HooksConfig": {
+      "type": "object",
+      "description": "Hooks configuration object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/HookDefinition"
+        }
+      }
+    },
+    "HookDefinition": {
+      "type": "object",
+      "description": "Single hook definition",
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Pattern to match for hook execution"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HookAction"
+          }
+        }
+      }
+    },
+    "HookAction": {
+      "type": "object",
+      "description": "Hook action to execute",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["command", "script", "prompt"],
+          "description": "Type of hook action"
+        },
+        "command": {
+          "type": "string",
+          "description": "Command to execute (for type: command)"
+        },
+        "script": {
+          "type": "string",
+          "description": "Script to run (for type: script)"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt to display (for type: prompt)"
+        }
+      }
+    }
+  }
+}

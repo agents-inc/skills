@@ -132,9 +132,7 @@ agents:
       - Grep
       - Glob
       - Bash
-    core_prompts: developer
-    ending_prompts: developer
-    output_format: output-formats-developer
+    # Output format: create output-format.md in agent directory (or use category fallback)
     skills:
       precompiled: []
       dynamic: []

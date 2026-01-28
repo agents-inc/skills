@@ -1,0 +1,18 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Cache
+.cache/
+*.cache
+
+# Coverage
+coverage/
+
+# Compiled output
+*.js.map
+
+# Backup files
+.claude_backup/

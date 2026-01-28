@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "title": "Claude Code Marketplace",
+  "description": "Schema for marketplace.json files that define collections of Claude Code plugins",
+  "type": "object",
+  "required": ["name", "version", "owner", "plugins"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON schema reference URL",
+      "format": "uri"
+    },
+    "name": {
+      "type": "string",
+      "description": "Marketplace name in kebab-case",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "examples": ["claude-collective"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Marketplace version (semantic versioning)",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$",
+      "examples": ["1.0.0"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the marketplace",
+      "minLength": 1,
+      "examples": ["Community skills and stacks for Claude Code"]
+    },
+    "owner": {
+      "$ref": "#/$defs/Owner",
+      "description": "Marketplace owner information"
+    },
+    "metadata": {
+      "$ref": "#/$defs/Metadata",
+      "description": "Additional metadata about the marketplace"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "List of plugins in the marketplace",
+      "items": {
+        "$ref": "#/$defs/MarketplacePlugin"
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "Owner": {
+      "type": "object",
+      "description": "Marketplace owner information",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Owner's display name",
+          "minLength": 1,
+          "examples": ["Claude Collective"]
+        },
+        "email": {
+          "type": "string",
+          "description": "Owner's contact email",
+          "format": "email",
+          "examples": ["hello@claude-collective.com"]
+        }
+      }
+    },
+    "Metadata": {
+      "type": "object",
+      "description": "Marketplace metadata",
+      "additionalProperties": false,
+      "properties": {
+        "pluginRoot": {
+          "type": "string",
+          "description": "Root directory for plugin sources",
+          "examples": ["./dist/plugins"]
+        }
+      }
+    },
+    "MarketplacePlugin": {
+      "type": "object",
+      "description": "Plugin entry in the marketplace",
+      "required": ["name", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Plugin name in kebab-case",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9+]+)*$",
+          "minLength": 1,
+          "examples": ["skill-react"]
+        },
+        "source": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Local path to plugin directory",
+              "examples": ["./dist/plugins/skill-react"]
+            },
+            {
+              "$ref": "#/$defs/RemoteSource",
+              "description": "Remote source configuration"
+            }
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the plugin",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "description": "Plugin version"
+        },
+        "author": {
+          "$ref": "#/$defs/Author",
+          "description": "Plugin author information"
+        },
+        "category": {
+          "type": "string",
+          "description": "Plugin category for organization",
+          "examples": ["frontend", "backend", "setup", "testing"]
+        },
+        "keywords": {
+          "type": "array",
+          "description": "Keywords for discoverability",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "RemoteSource": {
+      "type": "object",
+      "description": "Remote source configuration for plugins",
+      "required": ["source"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["github", "url"],
+          "description": "Source type"
+        },
+        "repo": {
+          "type": "string",
+          "description": "GitHub repository in owner/repo format",
+          "examples": ["claude-collective/skills"]
+        },
+        "url": {
+          "type": "string",
+          "description": "Direct URL to plugin archive",
+          "format": "uri"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Git ref (branch, tag, or commit)",
+          "examples": ["main", "v1.0.0"]
+        }
+      }
+    },
+    "Author": {
+      "type": "object",
+      "description": "Author information",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Author's display name",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "description": "Author's email address",
+          "format": "email"
+        }
+      }
+    }
+  }
+}

@@ -1,67 +1,117 @@
 ## Output Format
 
 <output_format>
-Provide your response in this structure:
+Provide your agent definition in this structure:
 
-<investigation_notes>
-**Files Examined:**
+<agent_definition>
 
-- [List files you read]
+## Agent: [name]
 
-**Patterns Found:**
+**Category:** [developer | reviewer | researcher | planning | pattern | meta | tester]
+**Purpose:** [one sentence]
 
-- [Key patterns and conventions discovered]
-- [Relevant utilities or components to reuse]
-  </investigation_notes>
+### agent.yaml
 
-<implementation_plan>
-**Approach:**
-[Brief description of how you'll solve this following existing patterns]
-
-**Files to Modify:**
-
-- [File 1]: [What changes]
-- [File 2]: [What changes]
-
-**Existing Code to Reuse:**
-
-- [Utility/component to use and why]
-  </implementation_plan>
-
-<implementation>
-**[filename.ts]**
-```typescript
-[Your code here]
+```yaml
+title: [Title]
+description: [Description for Task tool]
+model: [opus | sonnet | haiku]
+tools:
+  - [Tool1]
+  - [Tool2]
+core_prompts:
+  - [principle-name]
+ending_prompts:
+  - [principle-name]
 ```
 
-**[filename2.tsx]**
+### intro.md
 
-```tsx
-[Your code here]
+```markdown
+[Full intro content - define the agent's identity and expertise]
 ```
 
-[Additional files as needed]
-</implementation>
+### workflow.md
 
-<tests>
-**[filename.test.ts]**
-```typescript
-[Test code covering the implementation]
+```markdown
+[Full workflow content - step-by-step process the agent follows]
 ```
-</tests>
 
-<verification>
-✅ Criteria met:
-- [Criterion 1]: Verified
-- [Criterion 2]: Verified
+### output-format.md
 
-📊 Test results:
+```markdown
+[Full output format content - structure of the agent's responses]
+```
 
-- [Test suite]: All passing
-- Coverage: [X%]
+### critical-requirements.md (optional)
 
-⚠️ Notes:
+```markdown
+[If needed - non-negotiable constraints]
+```
 
-- [Any important notes or considerations]
-  </verification>
-  </output_format>
+### critical-reminders.md (optional)
+
+```markdown
+[If needed - reminders placed at end of prompt]
+```
+
+### examples.md (optional)
+
+```markdown
+[If needed - concrete examples of good agent behavior]
+```
+
+</agent_definition>
+
+<design_rationale>
+
+## Design Decisions
+
+**Why this category:** [reasoning for placement]
+
+**Why this model:**
+
+- [opus] - Complex reasoning, nuanced judgment, creative tasks
+- [sonnet] - Balanced capability and speed (default)
+- [haiku] - Simple, fast, high-volume tasks
+
+**Why these tools:**
+| Tool | Reason |
+|------|--------|
+| [Tool] | [Why this agent needs it] |
+
+**Why these principles:**
+| Principle | Reason |
+|-----------|--------|
+| [principle-name] | [What behavior it enforces] |
+
+**Output format design:**
+
+- Consumer: [Who uses this agent's output]
+- Key sections: [What the consumer needs]
+  </design_rationale>
+
+<considered_alternatives>
+
+## Alternatives Considered
+
+**Alternative 1:** [description]
+
+- Rejected because: [reason]
+
+**Alternative 2:** [description]
+
+- Rejected because: [reason]
+  </considered_alternatives>
+
+<validation>
+## Pre-Flight Checks
+
+- [ ] Tools match agent capabilities (no extra tools, no missing tools)
+- [ ] Model appropriate for task complexity
+- [ ] Output format matches consumer needs
+- [ ] No overlap with existing agents (checked against: [list])
+- [ ] Workflow is complete and unambiguous
+- [ ] Core prompts align with agent purpose
+      </validation>
+      </output_format>

@@ -1,5 +1,5 @@
 ---
-name: frontend/react-intl (@vince)
+name: react-intl (@vince)
 description: ICU message format internationalization
 ---
 
@@ -57,6 +57,7 @@ description: ICU message format internationalization
 - Server Components without React context (use createIntl from @formatjs/intl)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core.md, formatting.md, pluralization.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -271,7 +272,8 @@ export const productMessages = defineMessages({
   },
   reviewCount: {
     id: "product.reviewCount",
-    defaultMessage: "{count, plural, =0 {No reviews} one {# review} other {# reviews}}",
+    defaultMessage:
+      "{count, plural, =0 {No reviews} one {# review} other {# reviews}}",
     description: "Number of product reviews with pluralization",
   },
 });
@@ -534,7 +536,9 @@ const messageLoaders: Record<string, () => Promise<Record<string, string>>> = {
 
 const messageCache = new Map<string, Record<string, string>>();
 
-export async function loadMessages(locale: string): Promise<Record<string, string>> {
+export async function loadMessages(
+  locale: string,
+): Promise<Record<string, string>> {
   if (messageCache.has(locale)) {
     return messageCache.get(locale)!;
   }

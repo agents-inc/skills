@@ -1,5 +1,5 @@
 ---
-name: frontend/framework/solidjs (@vince)
+name: solidjs (@vince)
 description: SolidJS fine-grained reactivity patterns - signals, effects, memos, stores, createResource, control flow components, Suspense, SolidStart
 ---
 
@@ -58,6 +58,7 @@ description: SolidJS fine-grained reactivity patterns - signals, effects, memos,
 - When you need React-specific features (Server Components, concurrent mode)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -110,7 +111,7 @@ Signals are the foundation of Solid's reactivity. They hold a value and notify s
 #### Basic Signals
 
 ```typescript
-import { createSignal } from 'solid-js';
+import { createSignal } from "solid-js";
 
 const MAX_COUNT = 100;
 const INITIAL_COUNT = 0;
@@ -123,7 +124,7 @@ console.log(count()); // 0
 
 // Setting values
 setCount(5);
-setCount(prev => prev + 1); // Functional update
+setCount((prev) => prev + 1); // Functional update
 
 // With TypeScript explicit types
 const [user, setUser] = createSignal<User | null>(null);
@@ -165,23 +166,23 @@ Effects run automatically when their tracked dependencies change.
 #### createEffect
 
 ```typescript
-import { createSignal, createEffect, onCleanup } from 'solid-js';
+import { createSignal, createEffect, onCleanup } from "solid-js";
 
 const [count, setCount] = createSignal(0);
 
 // Automatically tracks count() as dependency
 createEffect(() => {
-  console.log('Count changed:', count());
+  console.log("Count changed:", count());
 });
 
 // Effect with cleanup
 createEffect(() => {
-  const handler = () => console.log('Clicked, count:', count());
-  window.addEventListener('click', handler);
+  const handler = () => console.log("Clicked, count:", count());
+  window.addEventListener("click", handler);
 
   // MUST clean up to prevent memory leaks
   onCleanup(() => {
-    window.removeEventListener('click', handler);
+    window.removeEventListener("click", handler);
   });
 });
 ```
@@ -191,22 +192,26 @@ createEffect(() => {
 #### Explicit Tracking with on()
 
 ```typescript
-import { createSignal, createEffect, on } from 'solid-js';
+import { createSignal, createEffect, on } from "solid-js";
 
 const [count, setCount] = createSignal(0);
-const [name, setName] = createSignal('');
+const [name, setName] = createSignal("");
 
 // Only tracks count, ignores name even if accessed
-createEffect(on(count, (value, prev) => {
-  console.log('Count went from', prev, 'to', value);
-  // name() here won't add a dependency
-  console.log('Current name:', name());
-}));
+createEffect(
+  on(count, (value, prev) => {
+    console.log("Count went from", prev, "to", value);
+    // name() here won't add a dependency
+    console.log("Current name:", name());
+  }),
+);
 
 // Multiple explicit dependencies
-createEffect(on([count, name], ([c, n]) => {
-  console.log('Either changed:', c, n);
-}));
+createEffect(
+  on([count, name], ([c, n]) => {
+    console.log("Either changed:", c, n);
+  }),
+);
 ```
 
 **Why good:** Explicit control over what triggers the effect, access to previous value
@@ -220,16 +225,16 @@ Memos cache computed values and only recalculate when dependencies change.
 #### createMemo
 
 ```typescript
-import { createSignal, createMemo } from 'solid-js';
+import { createSignal, createMemo } from "solid-js";
 
 const [items, setItems] = createSignal<Item[]>([]);
-const [filter, setFilter] = createSignal('');
+const [filter, setFilter] = createSignal("");
 
 // Only recalculates when items or filter changes
 const filteredItems = createMemo(() => {
-  console.log('Filtering...'); // Only runs when dependencies change
-  return items().filter(item =>
-    item.name.toLowerCase().includes(filter().toLowerCase())
+  console.log("Filtering..."); // Only runs when dependencies change
+  return items().filter((item) =>
+    item.name.toLowerCase().includes(filter().toLowerCase()),
   );
 });
 

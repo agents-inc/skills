@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-subagents.local/schemas/hooks.schema.json",
+  "title": "Hooks Configuration",
+  "description": "Schema for hooks.json files in Claude Code plugins. Defines event handlers for plugin lifecycle events.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hooks": {
+      "type": "object",
+      "description": "Hook event handlers keyed by event name",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/HookDefinition"
+        }
+      },
+      "propertyNames": {
+        "enum": [
+          "SessionStart",
+          "SessionEnd",
+          "UserPromptSubmit",
+          "PreToolUse",
+          "PostToolUse",
+          "PermissionRequest",
+          "Stop",
+          "SubagentStop",
+          "PreCompact",
+          "Setup"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "HookDefinition": {
+      "type": "object",
+      "description": "Single hook definition with optional matcher pattern",
+      "additionalProperties": false,
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Regex pattern to match tool/event names. Use | for alternatives (e.g., 'Write|Edit'). Omit for all matches.",
+          "examples": ["Write|Edit", "Bash", "*"]
+        },
+        "hooks": {
+          "type": "array",
+          "description": "Actions to execute when matcher triggers",
+          "items": {
+            "$ref": "#/$defs/HookAction"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["hooks"]
+    },
+    "HookAction": {
+      "type": "object",
+      "description": "Action to execute when hook triggers",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["command", "script", "prompt"],
+          "description": "Type of action to execute"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to execute. Supports ${CLAUDE_PLUGIN_ROOT} variable.",
+          "examples": [
+            "${CLAUDE_PLUGIN_ROOT}/scripts/format.sh",
+            "npm run lint:fix $FILE"
+          ]
+        },
+        "script": {
+          "type": "string",
+          "description": "Path to script file to run",
+          "examples": ["./scripts/validate.sh"]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt text for prompt-type actions"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Timeout in seconds for command execution",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30,
+          "examples": [30, 60]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "command" } }
+          },
+          "then": {
+            "required": ["command"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "script" } }
+          },
+          "then": {
+            "required": ["script"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "prompt" } }
+          },
+          "then": {
+            "required": ["prompt"]
+          }
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "hooks": {
+        "PostToolUse": [
+          {
+            "matcher": "Write|Edit",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/scripts/format.sh",
+                "timeout": 30
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "echo 'Session started'"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

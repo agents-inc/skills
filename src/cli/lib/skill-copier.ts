@@ -2,11 +2,6 @@ import path from "path";
 import { stringify as stringifyYaml, parse as parseYaml } from "yaml";
 import { copy, ensureDir, readFile, writeFile } from "../utils/fs";
 import { hashFile } from "./hash";
-import {
-  PROJECT_ROOT,
-  COLLECTIVE_DIR,
-  COLLECTIVE_STACKS_SUBDIR,
-} from "../consts";
 import type { MergedSkillsMatrix, ResolvedSkill } from "../types-matrix";
 import type { SourceLoadResult } from "./source-loader";
 
@@ -15,7 +10,6 @@ import type { SourceLoadResult } from "./source-loader";
  */
 interface ForkedFromMetadata {
   skill_id: string;
-  version: number;
   content_hash: string;
   date: string;
 }
@@ -24,7 +18,6 @@ interface ForkedFromMetadata {
  * Metadata structure (subset needed for forked_from injection)
  */
 interface SkillMetadata {
-  version: number;
   content_hash?: string;
   forked_from?: ForkedFromMetadata;
   // Allow other properties
@@ -41,10 +34,11 @@ const METADATA_FILE_NAME = "metadata.yaml";
  */
 export interface CopiedSkill {
   skillId: string;
-  version: string;
   contentHash: string;
   sourcePath: string;
   destPath: string;
+  /** True if this is a local skill (not copied, stays in place) */
+  local?: boolean;
 }
 
 /**
@@ -87,8 +81,7 @@ function getCurrentDate(): string {
 /**
  * Inject forked_from metadata into a copied skill's metadata.yaml
  * - Removes the yaml-language-server schema comment (path is invalid in destination)
- * - Records the original skill_id, version, and content_hash
- * - Resets local version to 1 (fresh fork)
+ * - Records the original skill_id and content_hash for provenance tracking
  */
 async function injectForkedFromMetadata(
   destPath: string,
@@ -109,19 +102,12 @@ async function injectForkedFromMetadata(
   // Parse the metadata
   const metadata = parseYaml(yamlContent) as SkillMetadata;
 
-  // Store the original version before resetting
-  const originalVersion = metadata.version;
-
-  // Add forked_from provenance
+  // Add forked_from provenance (content_hash is the primary identifier)
   metadata.forked_from = {
     skill_id: skillId,
-    version: originalVersion,
     content_hash: contentHash,
     date: getCurrentDate(),
   };
-
-  // Reset local version to 1 (fresh fork)
-  metadata.version = 1;
 
   // Write back without schema comment
   const newYamlContent = stringifyYaml(metadata, { lineWidth: 0 });
@@ -151,38 +137,10 @@ export async function copySkill(
 
   return {
     skillId: skill.id,
-    version: skill.version,
     contentHash,
     sourcePath,
     destPath,
   };
-}
-
-/**
- * Copy all selected skills to a stack directory
- *
- * @deprecated Use copySkillsToStackFromSource for new code
- */
-export async function copySkillsToStack(
-  selectedSkillIds: string[],
-  stackDir: string,
-  matrix: MergedSkillsMatrix,
-  registryRoot: string = PROJECT_ROOT,
-): Promise<CopiedSkill[]> {
-  const copiedSkills: CopiedSkill[] = [];
-
-  for (const skillId of selectedSkillIds) {
-    const skill = matrix.skills[skillId];
-    if (!skill) {
-      console.warn(`Warning: Skill not found in matrix: ${skillId}`);
-      continue;
-    }
-
-    const copied = await copySkill(skill, stackDir, registryRoot);
-    copiedSkills.push(copied);
-  }
-
-  return copiedSkills;
 }
 
 /**
@@ -220,7 +178,6 @@ export async function copySkillFromSource(
 
   return {
     skillId: skill.id,
-    version: skill.version,
     contentHash,
     sourcePath,
     destPath,
@@ -228,12 +185,15 @@ export async function copySkillFromSource(
 }
 
 /**
- * Copy all selected skills to a stack directory from a source
- * This is the preferred method that supports remote skill sources
+ * Copy all selected skills to a plugin directory from a source
+ * This is the primary method for single-plugin-per-project architecture
+ *
+ * Local skills (from .claude/skills/) are NOT copied - they stay in place
+ * and are referenced by their relative path from project root.
  */
-export async function copySkillsToStackFromSource(
+export async function copySkillsToPluginFromSource(
   selectedSkillIds: string[],
-  stackDir: string,
+  pluginDir: string,
   matrix: MergedSkillsMatrix,
   sourceResult: SourceLoadResult,
 ): Promise<CopiedSkill[]> {
@@ -246,21 +206,25 @@ export async function copySkillsToStackFromSource(
       continue;
     }
 
-    const copied = await copySkillFromSource(skill, stackDir, sourceResult);
+    // Skip copying local skills - they stay in place
+    if (skill.local && skill.localPath) {
+      // Compute hash from the local skill's SKILL.md in the project directory
+      const localSkillPath = path.join(process.cwd(), skill.localPath);
+      const contentHash = await generateSkillHash(localSkillPath);
+
+      copiedSkills.push({
+        skillId: skill.id,
+        sourcePath: skill.localPath, // Relative path from project root
+        destPath: skill.localPath, // Same - not copied
+        contentHash,
+        local: true,
+      });
+      continue;
+    }
+
+    const copied = await copySkillFromSource(skill, pluginDir, sourceResult);
     copiedSkills.push(copied);
   }
 
   return copiedSkills;
-}
-
-/**
- * Get the stack directory path in .claude-collective/stacks/
- */
-export function getStackDir(projectDir: string, stackName: string): string {
-  return path.join(
-    projectDir,
-    COLLECTIVE_DIR,
-    COLLECTIVE_STACKS_SUBDIR,
-    stackName,
-  );
 }

@@ -7,7 +7,11 @@ cli_name: Tailwind
 cli_description: Tailwind CSS utility styling
 usage_guidance: Use when styling with Tailwind CSS utility classes or design tokens.
 compatible_with:
-  - frontend/react-mobx (@vince)
+  - react (@vince)
+  - react+mobx (@vince)
+  - vue-composition-api (@vince)
+  - angular-standalone (@vince)
+  - solidjs (@vince)
 tags:
   - tailwind
   - tailwind-v4

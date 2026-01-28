@@ -1,9 +1,11 @@
 ---
 name: architecture
 description: Scaffolds new applications in the monorepo with all foundational patterns (Next.js, Better Auth, Drizzle, Hono, PostHog, Pino/Sentry/Axiom, GitHub Actions)
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: setup/monorepo-turborepo (@vince)
+model: opus
+permissionMode: default
+skills:
+  - setup/monorepo-turborepo (@vince)
 ---
 
 # Architecture Agent

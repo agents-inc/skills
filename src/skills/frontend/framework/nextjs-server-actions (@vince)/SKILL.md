@@ -1,5 +1,5 @@
 ---
-name: frontend/framework/nextjs-server-actions (@vince)
+name: nextjs-server-actions (@vince)
 description: Server Actions patterns for mutations, revalidation, and form handling in Next.js App Router
 ---
 
@@ -48,6 +48,7 @@ description: Server Actions patterns for mutations, revalidation, and form handl
 - Error handling and validation
 
 **React 19 Integration:**
+
 - `useActionState`, `useFormStatus`, and `useOptimistic` are React 19 hooks (not Next.js-specific)
 - `useActionState` replaces the deprecated `ReactDOM.useFormState` from React Canary
 - These hooks work with Server Actions for form state management
@@ -59,6 +60,7 @@ description: Server Actions patterns for mutations, revalidation, and form handl
 - Real-time subscriptions (use WebSockets or SSE)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -97,18 +99,18 @@ Define Server Actions using the `'use server'` directive. Place it at the file l
 
 ```typescript
 // app/actions.ts
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from "next/cache";
 
 export async function createPost(formData: FormData) {
-  const title = formData.get('title') as string
-  const content = formData.get('content') as string
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
 
   // Mutation logic here (defer to your database solution)
   // ...
 
-  revalidatePath('/posts')
+  revalidatePath("/posts");
 }
 ```
 
@@ -164,18 +166,18 @@ After mutations, revalidate the cache to reflect changes in the UI. Use `revalid
 #### revalidatePath - Refresh Specific Routes
 
 ```typescript
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from "next/cache";
 
 export async function updatePost(id: string, formData: FormData) {
   // Update in database...
 
   // Revalidate the posts list page
-  revalidatePath('/posts')
+  revalidatePath("/posts");
 
   // Revalidate the specific post page
-  revalidatePath(`/posts/${id}`)
+  revalidatePath(`/posts/${id}`);
 }
 ```
 
@@ -184,15 +186,15 @@ export async function updatePost(id: string, formData: FormData) {
 #### revalidateTag - Invalidate Tagged Cache
 
 ```typescript
-'use server'
+"use server";
 
-import { revalidateTag } from 'next/cache'
+import { revalidateTag } from "next/cache";
 
 export async function createPost(formData: FormData) {
   // Create in database...
 
   // Invalidate all data tagged with 'posts'
-  revalidateTag('posts')
+  revalidateTag("posts");
 }
 ```
 
@@ -207,19 +209,19 @@ export async function createPost(formData: FormData) {
 Redirect users after successful mutations. Call `revalidatePath()` BEFORE `redirect()` to ensure the destination shows fresh data.
 
 ```typescript
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function createPost(formData: FormData) {
   // Create in database...
 
   // Revalidate BEFORE redirect
-  revalidatePath('/posts')
+  revalidatePath("/posts");
 
   // Redirect to posts list
-  redirect('/posts')
+  redirect("/posts");
 }
 ```
 
@@ -233,10 +235,10 @@ Pass arguments beyond FormData using JavaScript's `bind()` method.
 
 ```typescript
 // actions.ts
-'use server'
+"use server";
 
 export async function updateUser(userId: string, formData: FormData) {
-  const name = formData.get('name') as string
+  const name = formData.get("name") as string;
   // Update user with userId...
 }
 ```
@@ -305,36 +307,36 @@ Validate all input data on the server. Use a validation library for type-safe pa
 
 ```typescript
 // app/actions.ts
-'use server'
+"use server";
 
-import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const CreatePostSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200),
-  content: z.string().min(1, 'Content is required'),
-})
+  title: z.string().min(1, "Title is required").max(200),
+  content: z.string().min(1, "Content is required"),
+});
 
 export async function createPost(formData: FormData) {
   const rawData = {
-    title: formData.get('title'),
-    content: formData.get('content'),
-  }
+    title: formData.get("title"),
+    content: formData.get("content"),
+  };
 
-  const validatedFields = CreatePostSchema.safeParse(rawData)
+  const validatedFields = CreatePostSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
     return {
       success: false,
       errors: validatedFields.error.flatten().fieldErrors,
-    }
+    };
   }
 
   // Proceed with mutation using validatedFields.data
   // ...
 
-  revalidatePath('/posts')
-  return { success: true }
+  revalidatePath("/posts");
+  return { success: true };
 }
 ```
 
@@ -348,33 +350,33 @@ Server Actions are public HTTP endpoints. Perform authorization checks inside EV
 
 ```typescript
 // app/actions.ts
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from "next/cache";
 
 export async function deletePost(postId: string) {
   // Defer to your authentication solution for user/session retrieval
-  const user = await getCurrentUser()
+  const user = await getCurrentUser();
 
   if (!user) {
-    throw new Error('Unauthorized: Not authenticated')
+    throw new Error("Unauthorized: Not authenticated");
   }
 
   // Defer to your database solution for fetching the post
-  const post = await getPost(postId)
+  const post = await getPost(postId);
 
   if (!post) {
-    throw new Error('Not found')
+    throw new Error("Not found");
   }
 
   if (post.authorId !== user.id) {
-    throw new Error('Forbidden: Not the author')
+    throw new Error("Forbidden: Not the author");
   }
 
   // Proceed with deletion
   // ...
 
-  revalidatePath('/posts')
+  revalidatePath("/posts");
 }
 ```
 

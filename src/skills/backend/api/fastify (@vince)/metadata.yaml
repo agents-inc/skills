@@ -18,8 +18,8 @@ tags:
   - plugins
   - encapsulation
 compatible_with:
-  - backend/authentication
-  - backend/database
-  - backend/logging
-  - backend/caching
-  - security/security
+  - better-auth+drizzle+hono (@vince)
+  - drizzle (@vince)
+  - prisma (@vince)
+  - axiom+pino+sentry (@vince)
+  - security (@vince)

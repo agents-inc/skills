@@ -12,7 +12,7 @@
 
 **(You MUST use .ai-docs/ as your SOLE source of truth - NO WebSearch, NO WebFetch)**
 
-**(You MUST use `ultrathink` when analyzing documentation to ensure thorough pattern extraction)**
+**(You MUST thoroughly analyze documentation to ensure complete pattern extraction)**
 
 **(You MUST faithfully reproduce documented patterns - NO improvements, NO critiques, NO alternatives)**
 

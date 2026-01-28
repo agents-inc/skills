@@ -1,5 +1,5 @@
 ---
-name: backend/database-drizzle (@vince)
+name: drizzle (@vince)
 description: Drizzle ORM, queries, migrations
 ---
 
@@ -28,6 +28,7 @@ description: Drizzle ORM, queries, migrations
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Connection setup and schema definition (always loaded)
   - [queries.md](examples/queries.md) - Relational queries and query builder
@@ -217,12 +218,19 @@ Fetch related data efficiently in a single SQL query.
 import { and, eq, desc, asc, isNull } from "drizzle-orm";
 
 const job = await db.query.jobs.findFirst({
-  where: and(eq(jobs.id, jobId), eq(jobs.isActive, true), isNull(jobs.deletedAt)),
+  where: and(
+    eq(jobs.id, jobId),
+    eq(jobs.isActive, true),
+    isNull(jobs.deletedAt),
+  ),
   with: {
     company: {
       with: {
         locations: {
-          orderBy: [desc(companyLocations.isHeadquarters), asc(companyLocations.name)],
+          orderBy: [
+            desc(companyLocations.isHeadquarters),
+            asc(companyLocations.name),
+          ],
         },
       },
     },

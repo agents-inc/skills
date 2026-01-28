@@ -19,6 +19,9 @@ import {
   getAvailableSkills,
   validateSelection,
   isCategoryAllDisabled,
+  getDependentSkills,
+  resolveAlias,
+  type SkillCheckOptions,
 } from "./matrix-resolver";
 
 // =============================================================================
@@ -27,6 +30,7 @@ import {
 
 const BACK_VALUE = "__back__";
 const CONTINUE_VALUE = "__continue__";
+const EXPERT_MODE_VALUE = "__expert_mode__";
 
 // =============================================================================
 // Types
@@ -51,6 +55,8 @@ interface WizardState {
   lastSelectedCategory: string | null;
   lastSelectedSubcategory: string | null;
   lastSelectedSkill: string | null;
+  /** When true, disables conflict checking - allows any skill combination */
+  expertMode: boolean;
 }
 
 export interface WizardResult {
@@ -66,6 +72,8 @@ export interface WizardResult {
 interface WizardOptions {
   /** Pre-selected skill IDs (for update mode) */
   initialSkills?: string[];
+  /** Whether local skills were discovered (auto-enables expert mode) */
+  hasLocalSkills?: boolean;
 }
 
 function createInitialState(options: WizardOptions = {}): WizardState {
@@ -84,6 +92,8 @@ function createInitialState(options: WizardOptions = {}): WizardState {
     lastSelectedCategory: null,
     lastSelectedSubcategory: null,
     lastSelectedSkill: null,
+    // Auto-enable expert mode when local skills exist (dependencies can't be checked)
+    expertMode: options.hasLocalSkills ?? false,
   };
 }
 
@@ -93,6 +103,42 @@ function pushHistory(state: WizardState): void {
 
 function popHistory(state: WizardState): WizardStep | null {
   return state.history.pop() || null;
+}
+
+/**
+ * Recursively collect all skills that depend on the given skill
+ * If deselecting A removes B, and B has dependents C, also includes C
+ */
+function collectAllDependents(
+  skillId: string,
+  currentSelections: string[],
+  matrix: MergedSkillsMatrix,
+): string[] {
+  const allDependents: string[] = [];
+  const visited = new Set<string>();
+  const queue = [skillId];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    // Get direct dependents of current skill
+    const directDependents = getDependentSkills(
+      current,
+      currentSelections,
+      matrix,
+    );
+
+    for (const dependent of directDependents) {
+      if (!visited.has(dependent) && !allDependents.includes(dependent)) {
+        allDependents.push(dependent);
+        queue.push(dependent);
+      }
+    }
+  }
+
+  return allDependents;
 }
 
 // =============================================================================
@@ -201,18 +247,52 @@ function formatStackOption(stack: ResolvedStack): {
   };
 }
 
+/**
+ * Create the Expert Mode toggle option
+ * Shows current state and allows toggling
+ */
+function formatExpertModeOption(expertMode: boolean): {
+  value: string;
+  label: string;
+  hint: string;
+} {
+  if (expertMode) {
+    return {
+      value: EXPERT_MODE_VALUE,
+      label: pc.yellow("Expert Mode: ON"),
+      hint: "click to disable - currently allowing any skill combination",
+    };
+  }
+  return {
+    value: EXPERT_MODE_VALUE,
+    label: pc.dim("Expert Mode: OFF"),
+    hint: "click to enable - allows combining conflicting skills",
+  };
+}
+
 // =============================================================================
 // Wizard Steps
 // =============================================================================
 
-async function stepApproach(): Promise<"scratch" | "stack" | symbol> {
+async function stepApproach(
+  state: WizardState,
+): Promise<"scratch" | "stack" | "expert_mode" | symbol> {
   clearTerminal();
+
+  // Show current expert mode status if enabled
+  if (state.expertMode) {
+    console.log(
+      pc.yellow("\n  Expert Mode is ON") +
+        pc.dim(" - conflict checking disabled\n"),
+    );
+  }
+
   const result = await p.select({
     message: "How would you like to set up your stack?",
     options: [
       {
         value: "stack",
-        label: "Use a pre-built stack",
+        label: "Use a pre-built template",
         hint: "recommended - quickly get started with a curated selection",
       },
       {
@@ -220,10 +300,11 @@ async function stepApproach(): Promise<"scratch" | "stack" | symbol> {
         label: "Start from scratch",
         hint: "choose each skill yourself",
       },
+      formatExpertModeOption(state.expertMode),
     ],
   });
 
-  return result as "scratch" | "stack" | symbol;
+  return result as "scratch" | "stack" | "expert_mode" | symbol;
 }
 
 async function stepSelectStack(
@@ -279,7 +360,7 @@ async function stepSelectTopCategory(
   );
 
   // Build options for categories (no icons, no descriptions)
-  const options = topCategories.map((catId) => {
+  const categoryOptions = topCategories.map((catId) => {
     const cat = matrix.categories[catId];
     return {
       value: catId,
@@ -310,7 +391,7 @@ async function stepSelectTopCategory(
 
   const result = await p.select({
     message: `Select a category to configure (${unvisitedCategories.length} remaining):`,
-    options: [...topNavOptions, ...options, ...bottomNavOptions],
+    options: [...topNavOptions, ...categoryOptions, ...bottomNavOptions],
     initialValue: state.lastSelectedCategory || undefined,
   });
 
@@ -330,11 +411,17 @@ async function stepSelectSubcategory(
 
   const subcategories = getSubcategories(topCategory, matrix);
   const topCat = matrix.categories[topCategory];
+  const checkOptions: SkillCheckOptions = { expertMode: state.expertMode };
 
   // Build options for subcategories (no descriptions, show selected skill name or disabled state)
-  const options = subcategories.map((subId) => {
+  const subcategoryOptions = subcategories.map((subId) => {
     const sub = matrix.categories[subId];
-    const skills = getAvailableSkills(subId, state.selectedSkills, matrix);
+    const skills = getAvailableSkills(
+      subId,
+      state.selectedSkills,
+      matrix,
+      checkOptions,
+    );
     const selectedInCategory = skills.filter((s) => s.selected);
     const hasSelection = selectedInCategory.length > 0;
 
@@ -343,6 +430,7 @@ async function stepSelectSubcategory(
       subId,
       state.selectedSkills,
       matrix,
+      checkOptions,
     );
 
     let label: string;
@@ -365,7 +453,7 @@ async function stepSelectSubcategory(
     };
   });
 
-  // Navigation options - just Back, no Done
+  // Navigation options - just Back
   const navigationOptions: Array<{
     value: string;
     label: string;
@@ -374,7 +462,7 @@ async function stepSelectSubcategory(
 
   const result = await p.select({
     message: `${topCat.name} - Select a subcategory:`,
-    options: [...navigationOptions, ...options],
+    options: [...navigationOptions, ...subcategoryOptions],
     initialValue: state.lastSelectedSubcategory || undefined,
   });
 
@@ -393,10 +481,12 @@ async function stepSelectSkill(
   }
 
   const subcategory = matrix.categories[subcategoryId];
+  const checkOptions: SkillCheckOptions = { expertMode: state.expertMode };
   const skills = getAvailableSkills(
     subcategoryId,
     state.selectedSkills,
     matrix,
+    checkOptions,
   );
 
   // Build skill options - keep original order, don't reorder
@@ -485,15 +575,37 @@ export async function runWizard(
   matrix: MergedSkillsMatrix,
   options: WizardOptions = {},
 ): Promise<WizardResult | null> {
-  const state = createInitialState(options);
+  // Check if matrix contains local skills
+  const hasLocalSkills = Object.values(matrix.skills).some(
+    (skill) => skill.local === true,
+  );
+
+  const state = createInitialState({
+    ...options,
+    hasLocalSkills,
+  });
+
+  // Show message if expert mode was auto-enabled due to local skills
+  if (hasLocalSkills && state.expertMode) {
+    console.log(
+      pc.yellow("\n  Local skills detected") +
+        pc.dim(" - Expert Mode enabled (dependency checking disabled)\n"),
+    );
+  }
 
   while (true) {
     switch (state.currentStep) {
       case "approach": {
-        const result = await stepApproach();
+        const result = await stepApproach(state);
 
         if (p.isCancel(result)) {
           return null;
+        }
+
+        if (result === EXPERT_MODE_VALUE) {
+          // Toggle expert mode and stay on same screen
+          state.expertMode = !state.expertMode;
+          break;
         }
 
         if (result === "stack") {
@@ -664,10 +776,43 @@ export async function runWizard(
             state.selectedSkills.includes(selectedSkillId);
 
           if (alreadySelected) {
-            // Deselect - remove from list
-            const index = state.selectedSkills.indexOf(selectedSkillId);
-            if (index > -1) {
-              state.selectedSkills.splice(index, 1);
+            // Check for dependent skills before deselecting
+            const allDependents = collectAllDependents(
+              selectedSkillId,
+              state.selectedSkills,
+              matrix,
+            );
+
+            if (allDependents.length > 0) {
+              // Show confirmation dialog with dependent skill names
+              const dependentNames = allDependents
+                .map((id) => matrix.skills[id]?.name || id)
+                .join(", ");
+              const skillName =
+                matrix.skills[resolveAlias(selectedSkillId, matrix)]?.name ||
+                selectedSkillId;
+
+              const shouldDeselect = await p.confirm({
+                message: `Deselecting ${skillName} will also remove: ${dependentNames}. Continue?`,
+                initialValue: false,
+              });
+
+              if (p.isCancel(shouldDeselect) || !shouldDeselect) {
+                // User cancelled or said no - keep skill selected
+                continue;
+              }
+
+              // Cascade deselect all dependents
+              const toRemove = new Set([selectedSkillId, ...allDependents]);
+              state.selectedSkills = state.selectedSkills.filter(
+                (id) => !toRemove.has(id),
+              );
+            } else {
+              // No dependents - simple deselect
+              const index = state.selectedSkills.indexOf(selectedSkillId);
+              if (index > -1) {
+                state.selectedSkills.splice(index, 1);
+              }
             }
           } else {
             // Select - if exclusive, remove others from same category first

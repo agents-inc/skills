@@ -1,5 +1,5 @@
 ---
-name: backend/api-fastify (@vince)
+name: fastify (@vince)
 description: Fastify routes, JSON Schema validation, plugin system, TypeScript type providers
 ---
 
@@ -57,6 +57,7 @@ description: Fastify routes, JSON Schema validation, plugin system, TypeScript t
 - Async handler patterns
 
 **Detailed Resources:**
+
 - For code examples:
   - [plugins.md](examples/plugins.md) - Plugin system, encapsulation, decorators
   - [schemas.md](examples/schemas.md) - TypeBox schemas, validation, type-safe routes
@@ -76,12 +77,14 @@ description: Fastify routes, JSON Schema validation, plugin system, TypeScript t
 **Performance without sacrifice.** Fastify achieves 2-3x throughput over Express while maintaining developer ergonomics through TypeScript integration and comprehensive hook system.
 
 **Use Fastify when:**
+
 - Building production APIs requiring high throughput
 - Need schema validation at the framework level
 - Want plugin architecture for large codebases
 - Require fine-grained lifecycle control
 
 **Use alternatives when:**
+
 - Simple internal endpoints (your existing patterns)
 - Edge deployments with bundle size constraints
 - Need Express middleware ecosystem compatibility
@@ -503,6 +506,7 @@ export const requestContext = fp(requestContextPlugin, {
 **Why good:** onRequest for early setup, preHandler for validation-dependent logic, onResponse for metrics (non-blocking), onError for centralized error logging
 
 **Hook execution order:**
+
 1. `onRequest` - First, before body parsing
 2. `preParsing` - Transform request stream
 3. `preValidation` - Before schema validation
@@ -555,7 +559,10 @@ export const errorHandler = (
 
   // Fastify validation errors
   if (error.validation) {
-    request.log.warn({ requestId, validation: error.validation }, "Validation failed");
+    request.log.warn(
+      { requestId, validation: error.validation },
+      "Validation failed",
+    );
 
     return reply.status(HTTP_BAD_REQUEST).send({
       statusCode: HTTP_BAD_REQUEST,
@@ -915,26 +922,31 @@ describe("User API", () => {
 Fastify integrates with your existing infrastructure through its plugin system.
 
 **External Resources:**
+
 - Create plugins that decorate `fastify` with external clients
 - Use `onClose` hook for connection cleanup
 - Wrap with `fastify-plugin` to expose to all routes
 
 **Authentication:**
+
 - Implement auth logic in `preHandler` hooks
 - Use request decorators for user state (`request.userId`)
 - Plugin-level hooks for route groups, route-level for specific endpoints
 
 **Logging:**
+
 - Fastify's built-in logger provides high-performance JSON logging
 - Configure via server options: `logger: { level: 'info' }`
 - Use `request.log` for request-scoped logging with automatic request ID
 
 **Caching:**
+
 - Use `onSend` hook to add Cache-Control headers
 - Implement ETag support in `preSerialization`
 - Response schemas enable efficient serialization
 
 **API Documentation:**
+
 - Use `@fastify/swagger` with `@fastify/swagger-ui`
 - Schemas are automatically extracted from route definitions
 - TypeBox schemas generate OpenAPI-compatible JSON Schema

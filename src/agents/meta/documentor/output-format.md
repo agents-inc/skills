@@ -1,190 +1,237 @@
-# Output Format: Documentor
+## Output Format
 
-**Purpose:** Structured output format for AI-focused documentation creation
+<output_format>
+Provide your documentation output in this structure:
 
----
-
-## Session Start Response
-
-```xml
-<documentation_session>
-**Mode:** [new | validate | update]
-**Target Area:** [what you're documenting this session]
-**Progress:** [X of Y areas documented]
-
-<map_status>
-**Documentation Map:** `.claude/docs/DOCUMENTATION_MAP.md`
-**Last Updated:** [date or "not exists"]
-
-**Documented Areas:**
-- [Area 1] - [status: complete | partial | needs-validation]
-- [Area 2] - [status]
-
-**Undocumented Areas:**
-- [Area 1]
-- [Area 2]
-
-**Next Priority:** [what should be documented next]
-</map_status>
-</documentation_session>
-```
-
----
-
-## Documentation Creation Response
-
-```xml
-<documentation_created>
-**Area:** [what was documented]
-**File:** [path to doc file created/updated]
-**Type:** [store-map | anti-patterns | module-map | component-patterns | user-flows | component-relationships]
-
-<investigation_summary>
-**Files Examined:** [count]
-**Patterns Found:** [count]
-**Anti-Patterns Found:** [count]
-**Relationships Mapped:** [count]
-</investigation_summary>
-
-<documentation_content>
-[Show key sections of what was documented]
-</documentation_content>
-
-<map_update>
-**Updated:** `.claude/docs/DOCUMENTATION_MAP.md`
-**Status:** [area] marked as [complete | partial]
-**Next:** [suggestion for next documentation task]
-</map_update>
-
-<validation>
-**Accuracy Check:**
-- [ ] All file paths verified to exist
-- [ ] All patterns confirmed in actual code
-- [ ] All relationships validated
-- [ ] Examples are concrete (not abstract)
-
-**Completeness:**
-- [ ] All major files in area covered
-- [ ] Edge cases documented
-- [ ] Anti-patterns noted
-- [ ] Related areas cross-referenced
-</validation>
-</documentation_created>
-```
-
----
-
-## Validation Response
-
-```xml
-<validation_report>
-**Documentation File:** [path]
-**Last Updated:** [date from file]
-**Current Date:** [today]
-
-<findings>
-| Section | Status | Issue | Action Needed |
-|---------|--------|-------|---------------|
-| Store Map | ✅ Valid | None | None |
-| Actions List | ⚠️ Drift | New action `resetState()` not documented | Add to docs |
-| File Paths | ❌ Invalid | `EditorStore.ts` moved to `stores/` | Update path |
-</findings>
-
-<drift_summary>
-**Valid:** [count] sections
-**Drifted:** [count] sections (documented but code changed)
-**Invalid:** [count] sections (documented but no longer exists)
-**Missing:** [count] new patterns not yet documented
-</drift_summary>
-
-<updates_applied>
-- Updated [section] in [file]
-- Added [new pattern] to [file]
-- Removed [obsolete section] from [file]
-</updates_applied>
-
-<map_update>
-**Status:** [area] validation complete
-**Next Validation:** [suggestion for what to validate next]
-</map_update>
-</validation_report>
-```
-
----
-
-## Session End Summary
-
-```xml
 <session_summary>
-**Work Completed:**
-- [Action 1: e.g., "Documented EditorStore in store-map.md"]
-- [Action 2: e.g., "Validated component-patterns.md"]
-- [Action 3: e.g., "Updated DOCUMENTATION_MAP.md"]
+**Mode:** [New Documentation | Validation | Update]
+**Target Area:** [What was documented - feature, module, store, etc.]
+**Files Created/Updated:** [count]
+**Coverage Change:** [X% → Y%]
+</session_summary>
 
-**Files Created/Modified:**
-- [file path 1]
-- [file path 2]
+<investigation>
+**Files Examined:**
 
-**Documentation Coverage:**
+| File               | Lines | What Was Learned               |
+| ------------------ | ----- | ------------------------------ |
+| [/path/to/file.ts] | [X-Y] | [Pattern/structure discovered] |
+
+**Patterns Identified:**
+
+- [Pattern type]: [Description] - [/path:lines]
+- [Pattern type]: [Description] - [/path:lines]
+
+**Relationships Discovered:**
+
+- [Component A] → [Component B] via [mechanism]
+- [Store X] used by [count] components
+
+</investigation>
+
+<documentation_created>
+
+## Documentation Files
+
+### [filename.md]
+
+**Location:** `/.claude/docs/[filename.md]`
+**Purpose:** [What this doc helps agents do]
+
+```markdown
+# [Document Title]
+
+## [Section 1]
+
+[Content with explicit file paths and line references]
+
+## [Section 2]
+
+[Content with tables for AI parsing]
+
+## [Section 3]
+
+[Mermaid diagrams for relationships]
+```
+
+### [filename2.md] (if multiple)
+
+[Same structure...]
+
+</documentation_created>
+
+<map_updates>
+
+## Documentation Map Updates
+
+**File:** `/.claude/docs/DOCUMENTATION_MAP.md`
+
+**Changes:**
+
+| Section | Previous Status                        | New Status    | Last Updated |
+| ------- | -------------------------------------- | ------------- | ------------ |
+| [Area]  | [❌ Not started / 📝 Needs validation] | [✅ Complete] | [Today]      |
+
+**New Entries Added:**
+
+- [New documentation entry]
+
+**Validation Schedule Updated:**
+
+- [Area]: Revalidate in [X days]
+
+</map_updates>
+
+<validation_results>
+
+## Content Validation
+
+**All File Paths Verified:**
+
+| Path               | Exists | Current                            |
+| ------------------ | ------ | ---------------------------------- |
+| [/path/to/file.ts] | ✅     | [Still matches documented pattern] |
+| [/path/to/file.ts] | ⚠️     | [Drifted - needs update]           |
+| [/path/to/file.ts] | ❌     | [No longer exists]                 |
+
+**Code Examples Verified:**
+
+| Example Location | Status     | Notes                  |
+| ---------------- | ---------- | ---------------------- |
+| [Doc section]    | ✅ Valid   | [Matches current code] |
+| [Doc section]    | ⚠️ Drifted | [Line numbers changed] |
+
+**Pattern Claims Verified:**
+
+| Claim                    | Evidence           | Status      |
+| ------------------------ | ------------------ | ----------- |
+| "[Pattern X is used]"    | [X/Y files follow] | ✅ Verified |
+| "[Convention Y applies]" | [Found exceptions] | ⚠️ Partial  |
+
+</validation_results>
+
+<anti_patterns_documented>
+
+## Anti-Patterns Identified
+
+| Anti-Pattern | Location      | Why Problematic | Correct Pattern      |
+| ------------ | ------------- | --------------- | -------------------- |
+| [Name]       | [/path:lines] | [Problem]       | [What to do instead] |
+
+</anti_patterns_documented>
+
+<diagrams>
+
+## Relationship Diagrams
+
+### [Diagram Name]
+
+```mermaid
+graph TD
+    A[Component A] --> B[Component B]
+    A --> C[Store C]
+    B --> C
+```
+
+**What This Shows:** [Explanation of the relationship]
+
+</diagrams>
+
+<next_session>
+
+## Recommendations for Next Session
+
+**Priority Documentation Needed:**
+
+| Area   | Priority | Reason          |
+| ------ | -------- | --------------- |
+| [Area] | High     | [Why urgent]    |
+| [Area] | Medium   | [Why important] |
+
+**Validation Due:**
+
+| Area   | Last Updated | Revalidate By |
+| ------ | ------------ | ------------- |
+| [Area] | [Date]       | [Date]        |
+
+**Observations:**
+
+- [Something noticed that may need documentation]
+- [Potential drift detected in [area]]
+
+</next_session>
+
+<notes>
+
+## Session Notes
+
+**Decisions Made:**
+
+- [Decision about documentation structure]
+- [Decision about what to include/exclude]
+
+**Blockers Encountered:**
+
+- [Issue] - [How resolved / still blocked]
+
+**Coverage Metrics:**
+
 - Before: [X]% of codebase documented
 - After: [Y]% of codebase documented
-- Progress: +[Z]%
+- Target: [Z]%
 
-**Recommended Next Session:**
-[What should be documented or validated next, and why]
+</notes>
 
-**Notes for Future Sessions:**
-[Any observations, patterns noticed, or things to investigate further]
-</session_summary>
-```
+</output_format>
 
 ---
 
-## Error/Issue Response
+## Section Guidelines
 
-```xml
-<documentation_issue>
-**Problem:** [brief description]
-**Impact:** [what can't be documented or validated]
+### Documentation Types Created
 
-<details>
-**Attempted:** [what you tried to do]
-**Blocker:** [what prevented it]
-**Examples:** [specific cases]
-</details>
+| Type                   | Purpose                            | For Which Agents        |
+| ---------------------- | ---------------------------------- | ----------------------- |
+| **Store Map**          | State management overview          | Frontend developers     |
+| **Feature Map**        | Feature structure and entry points | All developers          |
+| **Component Patterns** | Naming and structure conventions   | Frontend developers     |
+| **Anti-Patterns**      | What NOT to do                     | All developers          |
+| **User Flows**         | Step-by-step with file refs        | All developers, testers |
+| **Relationships**      | How components/modules connect     | All developers          |
 
-<recommendation>
-**Option 1:** [possible solution]
-**Option 2:** [alternative approach]
-**Preferred:** [which and why]
-</recommendation>
-</documentation_issue>
-```
+### Documentation Quality Principles
 
----
+| Principle          | Implementation                                       |
+| ------------------ | ---------------------------------------------------- |
+| **Be Explicit**    | Absolute file paths, line numbers, concrete examples |
+| **Be Structured**  | Tables for AI parsing, mermaid for relationships     |
+| **Be Validated**   | Every path verified, every pattern confirmed         |
+| **Be Progressive** | Track coverage, build incrementally, update map      |
 
-## Key Principles
+### Validation Schedule
 
-**Be Explicit:**
+| Documentation Type | Revalidation Interval |
+| ------------------ | --------------------- |
+| Store/State        | 7 days                |
+| Component Patterns | 14 days               |
+| User Flows         | 14 days               |
+| Feature Maps       | 30 days               |
+| Anti-Patterns      | 30 days               |
 
-- Always include absolute file paths
-- Use concrete examples from actual code
-- Avoid abstract descriptions
+### What Makes Documentation AI-Useful
 
-**Be Structured:**
+**Include:**
 
-- Use tables for easy AI parsing
-- Group related information
-- Cross-reference related docs
+- Explicit file paths with line numbers
+- Concrete code snippets from actual files
+- Tables for structured data
+- Mermaid diagrams for relationships
+- Instance counts for pattern prevalence
+- Both patterns AND anti-patterns
 
-**Be Validated:**
+**Avoid:**
 
-- Every claim must be verifiable
-- Every file path must exist
-- Every pattern must have examples
-
-**Be Progressive:**
-
-- Track what's done vs not done
-- Build documentation incrementally
-- Update the map after every session
+- Abstract descriptions without file references
+- Explanations of "why" (that's for human docs)
+- Stale information (validate regularly)
+- Vague claims without evidence

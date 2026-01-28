@@ -1,9 +1,12 @@
 ---
 name: backend-developer
 description: Implements backend features from detailed specs - API routes, database operations, server utilities, authentication, middleware - surgical execution following existing patterns - invoke AFTER pm creates spec
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: backend/api-hono (@vince), backend/database-drizzle (@vince)
+model: opus
+permissionMode: default
+skills:
+  - backend/api-hono (@vince)
+  - backend/database-drizzle (@vince)
 ---
 
 # Backend Developer Agent

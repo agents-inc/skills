@@ -1,5 +1,5 @@
 ---
-name: research/research-methodology (@vince)
+name: research-methodology (@vince)
 description: Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
 ---
 
@@ -10,6 +10,7 @@ description: Investigation flow (Glob -> Grep -> Read), evidence-based research 
 ---
 
 **Detailed Resources:**
+
 - For code examples and templates, see [examples/core.md](examples/core.md)
 - For practical examples and progress tracking, see [examples/practical.md](examples/practical.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
@@ -119,20 +120,23 @@ Every claim in research findings must have supporting evidence with file paths a
 
 #### Claim Structure
 
-```markdown
+````markdown
 ## Pattern: [Pattern Name]
 
 **File:** `/path/to/file.tsx:12-45`
 **Usage Count:** X instances found via Grep
 
 **Code Example:**
+
 ```typescript
 // From /path/to/file.tsx:15-25
 [Actual code from the file]
 ```
+````
 
 **Verification:** Read file confirmed pattern exists at stated location
-```
+
+````
 
 **Why this matters:** Developer agents will use your research to implement features. Inaccurate or unverified claims will lead them astray.
 
@@ -175,7 +179,7 @@ Research findings follow a consistent structure for AI consumption.
 | Finding | Verification | Status |
 |---------|--------------|--------|
 | [Claim] | [How verified] | Verified/Failed |
-```
+````
 
 **Why structured:** Other AI agents parse this output. Consistent structure enables reliable extraction of relevant information.
 
@@ -234,20 +238,24 @@ Only report findings when you have verified evidence for all claims.
 **Status:** [In Progress | Complete]
 
 **Files Examined:**
+
 - [x] /path/to/file1.tsx - Pattern X found
 - [x] /path/to/file2.tsx - No relevant patterns
 - [ ] /path/to/file3.tsx - Not yet examined
 
 **Patterns Found:**
+
 1. [Pattern A] - 12 instances
 2. [Pattern B] - 3 instances
 
 **Gaps Identified:**
+
 - Could not find [expected pattern]
 - [Area] has inconsistent patterns
 ```
 
 **Use progress tracking when:**
+
 - Research spans multiple packages/directories
 - Investigation reveals unexpected complexity
 - You need to pause and resume research
@@ -262,7 +270,7 @@ Only report findings when you have verified evidence for all claims.
 
 **Works with:**
 
-- **Glob tool**: Find files by pattern (*.tsx, *store*, *auth*)
+- **Glob tool**: Find files by pattern (*.tsx, *store*, *auth\*)
 - **Grep tool**: Search file contents for patterns
 - **Read tool**: Examine files completely
 - **Bash tool**: Run read-only commands (ls, find, wc for counts)

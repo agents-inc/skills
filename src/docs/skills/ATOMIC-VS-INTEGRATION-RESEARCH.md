@@ -193,9 +193,9 @@ The current naming is correct:
 **Date:** 2026-01-17
 **Skills Analyzed:**
 
-- `frontend/react (@vince)` - Atomic React skill
-- `frontend/client-state-management/mobx (@vince)` - Atomic MobX skill
-- `frontend/react+mobx (@vince)` - Integration skill
+- `react (@vince)` - Atomic React skill
+- `mobx (@vince)` - Atomic MobX skill
+- `react+mobx (@vince)` - Integration skill
 
 ### Executive Summary
 
@@ -260,9 +260,9 @@ The React+MobX integration skill contains **pattern overrides** that cannot exis
 // Standard React pattern
 useEffect(() => {
   if (isLoaded) {
-    doSomething()
+    doSomething();
   }
-}, [isLoaded])
+}, [isLoaded]);
 ```
 
 **MobX Atomic Teaches:**
@@ -271,10 +271,10 @@ useEffect(() => {
 // MobX pattern for side effects
 reaction(
   () => this.isLoaded,
-  isLoaded => {
-    if (isLoaded) this.doSomething()
+  (isLoaded) => {
+    if (isLoaded) this.doSomething();
   },
-)
+);
 ```
 
 **Integration Skill MUST Teach:**
@@ -301,7 +301,7 @@ reaction(() => this.isLoaded, (isLoaded) => { ... });
 
 ```typescript
 // Standard React memoization
-const activeItems = useMemo(() => items.filter(item => item.active), [items])
+const activeItems = useMemo(() => items.filter((item) => item.active), [items]);
 ```
 
 **MobX Atomic Teaches:**
@@ -711,8 +711,10 @@ conflicts_with:
 function validateSkillCompatibility(skills: Skill[]): void {
   for (const skill of skills) {
     for (const conflictId of skill.conflicts_with ?? []) {
-      if (skills.some(s => s.id === conflictId)) {
-        throw new Error(`Skill conflict: "${skill.id}" cannot be used with "${conflictId}"`)
+      if (skills.some((s) => s.id === conflictId)) {
+        throw new Error(
+          `Skill conflict: "${skill.id}" cannot be used with "${conflictId}"`,
+        );
       }
     }
   }

@@ -52,6 +52,15 @@ categories:
     order: 4
     icon: "🛠️"
 
+  reviewing:
+    id: reviewing
+    name: Reviewing & Code Quality
+    description: Code review patterns, feedback principles, quality assurance
+    exclusive: false
+    required: false
+    order: 5
+    icon: "👀"
+
   # ─────────────────────────────────────────────────────────────────
   # Frontend subcategories
   # ─────────────────────────────────────────────────────────────────
@@ -237,23 +246,18 @@ relationships:
   conflicts:
     # Framework conflicts (only one core framework)
     - skills: [react, vue, angular, solidjs]
-      reason: "Core frameworks are mutually exclusive - choose one"
+      reason: "Core frameworks are mutually exclusive within a single application. Exception: micro-frontend architectures (Single-SPA, Module Federation) can combine frameworks in isolation."
 
     # Meta-framework conflicts
     - skills: [nextjs-app-router, remix, nuxt]
       reason: "Meta-frameworks are mutually exclusive - choose one"
 
-    # Styling conflicts
-    - skills: [scss-modules, tailwind]
-      reason: "Different CSS paradigms - SCSS Modules vs Tailwind utility-first"
-
-    # Client state management conflicts (React ecosystem)
-    - skills: [zustand, redux-toolkit, mobx]
-      reason: "React state libraries - choose one approach"
+    # NOTE: scss-modules/tailwind moved to discourages - they're technically compatible
 
     # Client state management (Vue ecosystem)
+    # NOTE: zustand/redux-toolkit/mobx moved to discourages - can coexist for migrations
     - skills: [pinia, zustand, redux-toolkit, mobx]
-      reason: "Pinia is Vue-only, others are React-only"
+      reason: "Pinia is Vue-only. Our zustand/redux-toolkit/mobx skills teach React patterns (though these libraries technically support other frameworks)."
 
     # Client state management (Angular ecosystem)
     - skills: [ngrx-signalstore, zustand, pinia, redux-toolkit, mobx]
@@ -281,19 +285,23 @@ relationships:
 
     # Backend API framework conflicts
     - skills: [hono, express, fastify]
-      reason: "API frameworks are mutually exclusive"
+      reason: "API frameworks are mutually exclusive within a single service. Multiple frameworks can coexist in monorepo architectures."
 
     # Database ORM conflicts
     - skills: [drizzle, prisma]
-      reason: "Both are ORMs - choose one"
+      reason: "Both are ORMs serving similar purposes. Choose one per service; migration scenarios and multi-service architectures may involve both."
 
   # ─────────────────────────────────────────────────────────────────
   # DISCOURAGES (Soft warnings - selecting A shows warning for B but doesn't disable)
   # ─────────────────────────────────────────────────────────────────
   discourages:
-    # Styling paradigm mixing is unusual
+    # Styling paradigm mixing is unusual but technically compatible
     - skills: [scss-modules, tailwind]
-      reason: "Mixing CSS paradigms (SCSS Modules + Tailwind) is unusual - most projects pick one approach"
+      reason: "Mixing CSS paradigms causes slower builds (Tailwind runs per-module) and inconsistent patterns - pick one approach for new projects. Valid for gradual migrations."
+
+    # React state libraries - can coexist but adds complexity
+    - skills: [zustand, redux-toolkit, mobx]
+      reason: "Using multiple React state libraries adds complexity - choose one primary approach. Migration patterns exist for gradual transitions."
 
     # Redux is heavy for small projects with Zustand available
     - skills: [redux-toolkit, zustand]
@@ -310,9 +318,9 @@ relationships:
     - skills: [express, fastify]
       reason: "Express is mature but Fastify offers better performance"
 
-    # Cypress vs Playwright for cross-browser
+    # Cypress vs Playwright - different strengths
     - skills: [cypress-e2e, playwright-e2e]
-      reason: "Cypress has better DX but Playwright has better cross-browser support"
+      reason: "Cypress excels at interactive debugging and component testing; Playwright has better cross-browser support, parallelization, and CI/CD performance"
 
   # ─────────────────────────────────────────────────────────────────
   # RECOMMENDS (Soft suggestions - selecting A highlights B)
@@ -337,7 +345,7 @@ relationships:
     # Vue ecosystem recommendations
     - when: vue
       suggest: [pinia, vee-validate, vue-test-utils]
-      reason: "Official Vue ecosystem libraries"
+      reason: "Vue community standard libraries (Pinia is official, VeeValidate is community-maintained)"
 
     # Angular ecosystem recommendations
     - when: angular
@@ -398,17 +406,14 @@ relationships:
     # Mobile recommendations
     - when: react-native
       suggest: [zustand, react-query, react-hook-form, zod-validation]
-      reason: "React Native shares React ecosystem"
+      reason: "React Native shares React ecosystem. Note: Use Jest for testing (Vitest doesn't support RN)."
 
     # Observability recommendations
     - when: axiom-pino-sentry
       suggest: [posthog]
       reason: "Complete observability with analytics"
 
-    # Email recommendations
-    - when: resend
-      suggest: [react]
-      reason: "React Email templates work with Resend"
+    # NOTE: Removed resend recommends [react] - Resend works with plain HTML/text, React Email is optional
 
     # Fastify recommendations
     - when: fastify
@@ -439,29 +444,30 @@ relationships:
   # REQUIRES (Hard dependencies - A requires B to be selected first)
   # ─────────────────────────────────────────────────────────────────
   requires:
-    # React-specific libraries
+    # React-specific libraries (note: these libraries have vanilla/other-framework options, but our skills teach React patterns)
     - skill: zustand
       needs: [react, react-native]
       needs_any: true
-      reason: "Zustand is React/React Native only"
+      reason: "Our Zustand skill covers React/React Native patterns (zustand/vanilla exists for other frameworks)"
 
     - skill: redux-toolkit
       needs: [react, react-native]
       needs_any: true
-      reason: "Redux Toolkit is React/React Native only"
+      reason: "Our Redux Toolkit skill covers React/React Native patterns (RTK core is framework-agnostic)"
 
     - skill: mobx
       needs: [react]
-      reason: "MobX skill is configured for React"
+      reason: "Our MobX skill teaches React patterns. Note: MobX core has official Vue (mobx-vue) and Angular (mobx-angular) bindings."
 
     - skill: react-query
       needs: [react, react-native]
       needs_any: true
-      reason: "TanStack Query React adapter"
+      reason: "TanStack Query's React adapter. Note: TanStack Query also supports Vue, Solid, Svelte via separate adapters."
 
     - skill: swr
-      needs: [react]
-      reason: "SWR is React only"
+      needs: [react, react-native]
+      needs_any: true
+      reason: "SWR is a React Hooks library. For React Native, requires @nandorojo/swr-react-native wrapper."
 
     - skill: react-hook-form
       needs: [react, react-native]
@@ -502,18 +508,11 @@ relationships:
 
     # Backend dependencies
     - skill: better-auth
-      needs: [drizzle]
-      reason: "Better Auth integration uses Drizzle"
-
-    - skill: drizzle
-      needs: [hono, express, fastify]
+      needs: [drizzle, prisma]
       needs_any: true
-      reason: "Drizzle needs an API framework"
+      reason: "Better Auth supports multiple database adapters (Drizzle, Prisma, Kysely, MongoDB). Our skill uses Drizzle adapter."
 
-    - skill: prisma
-      needs: [hono, express, fastify]
-      needs_any: true
-      reason: "Prisma needs an API framework"
+    # NOTE: Removed drizzle/prisma requires API framework - ORMs work standalone for scripts, CLI tools, workers, etc.
 
     # UI component dependencies
     - skill: shadcn-ui
@@ -522,14 +521,14 @@ relationships:
 
     # GraphQL clients need a framework
     - skill: graphql-apollo
-      needs: [react, vue]
+      needs: [react, vue, angular]
       needs_any: true
-      reason: "Apollo Client for React or Vue"
+      reason: "Apollo Client - first-party React support, community-maintained Vue/Angular integrations. Note: Svelte/Solid bindings exist but are stale (2020-2022)."
 
     - skill: graphql-urql
-      needs: [react, vue]
+      needs: [react, vue, svelte, solidjs]
       needs_any: true
-      reason: "URQL for React or Vue"
+      reason: "URQL has first-party support for React, Vue, Svelte, and Solid (no Angular support)"
 
   # ─────────────────────────────────────────────────────────────────
   # ALTERNATIVES (Interchangeable options for same purpose)
@@ -545,7 +544,7 @@ relationships:
       skills: [scss-modules, tailwind]
 
     - purpose: "Client State (React)"
-      skills: [zustand, redux-toolkit, mobx]
+      skills: [zustand, redux-toolkit, mobx, jotai]
 
     - purpose: "Client State (Vue)"
       skills: [pinia]
@@ -621,6 +620,10 @@ suggested_stacks:
         api: hono
         database: drizzle
         auth: better-auth
+      reviewing:
+        reviewing: reviewing
+      research:
+        research: research-methodology
     philosophy: "Ship fast, iterate faster"
 
   - id: fullstack-react
@@ -659,6 +662,10 @@ suggested_stacks:
         monorepo: turborepo
         env: env
         tooling: tooling
+      reviewing:
+        reviewing: reviewing
+      research:
+        research: research-methodology
     philosophy: "Production-ready from day one"
 
   - id: modern-react-tailwind
@@ -837,123 +844,154 @@ suggested_stacks:
 
 skill_aliases:
   # ─────────────────────────────────────────────────────────────────
-  # Frameworks (actual skill IDs from the skills directory)
+  # Frameworks (no prefix)
   # ─────────────────────────────────────────────────────────────────
-  react: "frontend/react (@vince)"
-  vue: "frontend/framework/vue-composition-api (@vince)"
-  angular: "frontend/angular-standalone (@vince)"
-  solidjs: "frontend/framework/solidjs (@vince)"
+  react: "react (@vince)"
+  vue: "vue-composition-api (@vince)"
+  angular: "angular-standalone (@vince)"
+  solidjs: "solidjs (@vince)"
+  # svelte: "svelte (@vince)"  # TODO: Skill not yet created
 
-  # Meta-frameworks
-  nextjs-app-router: "frontend/nextjs-app-router (@vince)"
-  nextjs-server-actions: "frontend/framework/nextjs-server-actions (@vince)"
-  remix: "frontend/framework/remix (@vince)"
-  nuxt: "frontend/framework/nuxt (@vince)"
-
-  # ─────────────────────────────────────────────────────────────────
-  # Styling
-  # ─────────────────────────────────────────────────────────────────
-  scss-modules: "frontend/styling-scss-modules (@vince)"
-  tailwind: "frontend/styling-tailwind (@vince)"
-  cva: "frontend/styling/cva (@vince)"
+  # Meta-frameworks (no prefix)
+  nextjs-app-router: "nextjs-app-router (@vince)"
+  nextjs-server-actions: "nextjs-server-actions (@vince)"
+  remix: "remix (@vince)"
+  nuxt: "nuxt (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
-  # Client State
+  # Styling (no prefix)
   # ─────────────────────────────────────────────────────────────────
-  zustand: "frontend/state-zustand (@vince)"
-  redux-toolkit: "frontend/client-state-management/redux-toolkit (@vince)"
-  mobx: "frontend/state-mobx (@vince)"
-  pinia: "frontend/state-pinia (@vince)"
-  ngrx-signalstore: "frontend/client-state-management/ngrx-signalstore (@vince)"
-  # Note: jotai skill does not exist yet
+  scss-modules: "scss-modules (@vince)"
+  tailwind: "tailwind (@vince)"
+  cva: "cva (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
-  # Server State / Data Fetching
+  # Client State (no prefix)
   # ─────────────────────────────────────────────────────────────────
-  react-query: "frontend/server-state-react-query (@vince)"
-  swr: "frontend/swr (@vince)"
-  graphql-apollo: "frontend/graphql-apollo (@vince)"
-  graphql-urql: "frontend/graphql-urql (@vince)"
-  trpc: "frontend/trpc (@vince)"
+  zustand: "zustand (@vince)"
+  redux-toolkit: "redux-toolkit (@vince)"
+  mobx: "mobx (@vince)"
+  pinia: "pinia (@vince)"
+  ngrx-signalstore: "ngrx-signalstore (@vince)"
+  jotai: "jotai (@vince)"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Server State / Data Fetching (no prefix)
+  # ─────────────────────────────────────────────────────────────────
+  react-query: "react-query (@vince)"
+  swr: "swr (@vince)"
+  graphql-apollo: "graphql-apollo (@vince)"
+  graphql-urql: "graphql-urql (@vince)"
+  trpc: "trpc (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Forms & Validation
   # ─────────────────────────────────────────────────────────────────
-  react-hook-form: "frontend/forms/react-hook-form (@vince)"
-  vee-validate: "frontend/forms/vee-validate (@vince)"
-  zod-validation: "frontend/forms/zod-validation (@vince)"
+  react-hook-form: "react-hook-form (@vince)"
+  vee-validate: "vee-validate (@vince)"
+  zod-validation: "zod-validation (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
-  # Testing
+  # Testing (no prefix)
   # ─────────────────────────────────────────────────────────────────
-  vitest: "frontend/testing-vitest (@vince)"
-  playwright-e2e: "frontend/testing/playwright-e2e (@vince)"
-  cypress-e2e: "frontend/testing/cypress-e2e (@vince)"
-  react-testing-library: "frontend/testing/react-testing-library (@vince)"
-  vue-test-utils: "frontend/testing/vue-test-utils (@vince)"
+  vitest: "vitest (@vince)"
+  playwright-e2e: "playwright-e2e (@vince)"
+  cypress-e2e: "cypress-e2e (@vince)"
+  react-testing-library: "react-testing-library (@vince)"
+  vue-test-utils: "vue-test-utils (@vince)"
 
-  # Mocking
-  msw: "frontend/mocks-msw (@vince)"
+  # Mocking - maps to msw skill
+  msw: "msw (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # UI Components
   # ─────────────────────────────────────────────────────────────────
-  shadcn-ui: "frontend/ui-shadcn-ui (@vince)"
-  tanstack-table: "frontend/ui-tanstack-table (@vince)"
-  # Note: radix-ui skill does not exist yet
+  shadcn-ui: "shadcn-ui (@vince)"
+  tanstack-table: "tanstack-table (@vince)"
+  radix-ui: "radix-ui (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
-  # Backend
+  # Backend (no prefix)
   # ─────────────────────────────────────────────────────────────────
-  hono: "backend/api-hono (@vince)"
-  express: "backend/api-express (@vince)"
-  fastify: "backend/api-fastify (@vince)"
+  hono: "hono (@vince)"
+  express: "express (@vince)"
+  fastify: "fastify (@vince)"
 
-  drizzle: "backend/database-drizzle (@vince)"
-  prisma: "backend/database-prisma (@vince)"
+  drizzle: "drizzle (@vince)"
+  prisma: "prisma (@vince)"
 
-  better-auth: "backend/auth-better-auth+drizzle+hono (@vince)"
+  # Auth - uses full composite name
+  better-auth: "better-auth+drizzle+hono (@vince)"
 
-  axiom-pino-sentry: "backend/observability+axiom+pino+sentry (@vince)"
-  posthog: "backend/analytics-posthog (@vince)"
-  posthog-flags: "backend/flags-posthog (@vince)"
+  # Observability - uses full composite name
+  axiom-pino-sentry: "axiom+pino+sentry (@vince)"
 
-  resend: "backend/email-resend+react-email (@vince)"
+  # Analytics - uses posthog-analytics
+  posthog: "posthog-analytics (@vince)"
+  posthog-flags: "posthog-flags (@vince)"
+
+  # Email - uses full composite name
+  resend: "resend+react-email (@vince)"
+
+  # CI/CD
+  github-actions: "github-actions (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Mobile
   # ─────────────────────────────────────────────────────────────────
-  react-native: "mobile/react-native (@vince)"
-  # Note: expo skill does not exist yet
+  react-native: "react-native (@vince)"
+  expo: "expo (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
-  # Setup
+  # Setup (setup- prefix with hyphen for setup-specific skills)
   # ─────────────────────────────────────────────────────────────────
-  turborepo: "setup/monorepo-turborepo (@vince)"
+  turborepo: "turborepo (@vince)"
   tooling: "setup/tooling (@vince)"
-  posthog-setup: "setup/analytics-posthog (@vince)"
+  posthog-setup: "setup-posthog (@vince)"
   env: "setup/env (@vince)"
-  observability-setup: "setup/observability+axiom+pino+sentry (@vince)"
-  email-setup: "setup/email-resend+react-email (@vince)"
+  observability-setup: "setup-axiom+pino+sentry (@vince)"
+  email-setup: "setup-resend (@vince)"
 
   # ─────────────────────────────────────────────────────────────────
   # Additional Skills (Animation, PWA, Realtime, etc.)
   # ─────────────────────────────────────────────────────────────────
-  framer-motion: "frontend/animation/framer-motion (@vince)"
-  css-animations: "frontend/animation/css-animations (@vince)"
-  view-transitions: "frontend/animation/view-transitions (@vince)"
-  storybook: "frontend/tooling/storybook (@vince)"
-  error-boundaries: "frontend/error-boundaries (@vince)"
+  framer-motion: "framer-motion (@vince)"
+  css-animations: "css-animations (@vince)"
+  view-transitions: "view-transitions (@vince)"
+  storybook: "storybook (@vince)"
+  error-boundaries: "error-boundaries (@vince)"
   accessibility: "frontend/accessibility (@vince)"
-  websockets: "frontend/realtime/websockets (@vince)"
-  sse: "frontend/realtime/sse (@vince)"
-  socket-io: "frontend/realtime/socket-io (@vince)"
-  service-workers: "frontend/pwa/service-workers (@vince)"
-  file-upload: "frontend/file-upload/file-upload-patterns (@vince)"
-  image-handling: "frontend/files/image-handling (@vince)"
-  date-fns: "frontend/utilities/date-fns (@vince)"
-  github-actions: "backend/ci-cd-github-actions (@vince)"
+  websockets: "websockets (@vince)"
+  sse: "sse (@vince)"
+  socket-io: "socket-io (@vince)"
+  service-workers: "service-workers (@vince)"
+  file-upload: "file-upload-patterns (@vince)"
+  image-handling: "image-handling (@vince)"
+  date-fns: "date-fns (@vince)"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Backend-specific with category prefix (generic terms)
+  # ─────────────────────────────────────────────────────────────────
   backend-testing: "backend/testing (@vince)"
   backend-performance: "backend/performance (@vince)"
   frontend-performance: "frontend/performance (@vince)"
-  security: "security/security (@vince)"
+
+  # Security (no prefix)
+  security: "security (@vince)"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Reviewing / Meta (no prefix)
+  # ─────────────────────────────────────────────────────────────────
+  reviewing: "reviewing (@vince)"
+  research-methodology: "research-methodology (@vince)"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Methodology (Universal principles + Implementation + Extended session)
+  # Note: core-principles is embedded in agent template, not a skill
+  # ─────────────────────────────────────────────────────────────────
+  investigation-requirements: "investigation-requirements (@vince)"
+  anti-over-engineering: "anti-over-engineering (@vince)"
+  success-criteria: "success-criteria (@vince)"
+  write-verification: "write-verification (@vince)"
+  improvement-protocol: "improvement-protocol (@vince)"
+  context-management: "context-management (@vince)"

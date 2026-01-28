@@ -7,11 +7,12 @@ cli_name: Next.js App Router
 cli_description: Next.js App Router
 usage_guidance: Use when building Next.js apps with App Router, Server/Client Components, or streaming.
 requires:
-  - frontend/react (@vince)
+  - react (@vince)
 compatible_with:
-  - frontend/styling-scss-modules (@vince)
-  - frontend/server-state-react-query (@vince)
-  - frontend/state-zustand (@vince)
+  - scss-modules (@vince)
+  - tailwind (@vince)
+  - react-query (@vince)
+  - zustand (@vince)
 tags:
   - nextjs
   - app-router

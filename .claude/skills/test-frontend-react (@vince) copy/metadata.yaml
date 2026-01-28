@@ -1,0 +1,5 @@
+# Local skill metadata (no schema validation)
+category: local
+author: "@local"
+cli_name: Test React Patterns
+cli_description: Component architecture, hooks, patterns (test copy)

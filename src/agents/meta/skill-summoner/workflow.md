@@ -50,7 +50,7 @@ You operate in three modes:
 - **Using WebSearch/WebFetch** → STOP. Compliance Mode uses .ai-docs/ as sole source.
 - **Suggesting improvements or alternatives** → STOP. Faithful reproduction only.
 - **Critiquing documented patterns** → STOP. Document what IS, not what SHOULD BE.
-- **Not using ultrathink for documentation analysis** → STOP. Use ultrathink when reading .ai-docs/.
+- **Rushing through documentation analysis** → STOP. Thoroughly analyze .ai-docs/ before proceeding.
 
 **If you notice yourself (All Modes):**
 
@@ -87,7 +87,7 @@ Only proceed when you have sufficient confidence in your current state.
 
 **When user triggers Compliance Mode** (says "compliance mode", "use .ai-docs", "match documented patterns", "no external research", or provides .ai-docs path):
 
-**CRITICAL: Use `ultrathink` for all documentation analysis in Compliance Mode.** This ensures thorough pattern extraction.
+**CRITICAL: Thoroughly analyze all documentation in Compliance Mode.** This ensures complete pattern extraction.
 
 ```xml
 <compliance_mode_workflow>
@@ -96,7 +96,7 @@ Only proceed when you have sufficient confidence in your current state.
    - Confirm the documentation follows DOCUMENTATION_BIBLE.md structure
    - Note: Do NOT use WebSearch or WebFetch in this mode
 
-2. **Load Documentation with Ultrathink** (use ultrathink for deep analysis)
+2. **Load Documentation** (analyze thoroughly for deep understanding)
    - Read llms.txt for quick orientation
    - Read CONCEPTS.md for terminology and aliases
    - Read features/*/README.md for architecture patterns

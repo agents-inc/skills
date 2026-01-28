@@ -7,8 +7,9 @@ cli_name: Karma + Playwright
 cli_description: Karma testing (Photoroom)
 usage_guidance: Use when working with Karma/Mocha tests in Photoroom codebase.
 compatible_with:
-  - frontend/react
-  - frontend/mobx
+  - react (@vince)
+  - react+mobx (@vince)
+  - mobx (@vince)
 requires: []
 tags:
   - testing

@@ -1,0 +1,149 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Modern Angular Stack - Angular 19 with Signals and NgRx SignalStore
+
+name: "Modern Angular Stack"
+description: >
+  Angular 19 with Signals and NgRx SignalStore.
+  Frontend: Angular standalone components + SCSS Modules, NgRx SignalStore.
+  Backend: Hono, Drizzle.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: angular-standalone (@vince)
+  - id: scss-modules (@vince)
+  - id: ngrx-signalstore (@vince)
+  # Backend
+  - id: hono (@vince)
+  - id: drizzle (@vince)
+  # Shared
+  - id: reviewing (@vince)
+  # Research
+  - id: research-methodology (@vince)
+
+agents:
+  # Developer agents
+  - frontend-developer
+  - backend-developer
+  - architecture
+  # Reviewer agents
+  - frontend-reviewer
+  - backend-reviewer
+  # Researcher agents
+  - frontend-researcher
+  - backend-researcher
+  # Planning agents
+  - pm
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
+  - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: angular-standalone (@vince)
+        preloaded: true
+    styling:
+      - id: scss-modules (@vince)
+        preloaded: true
+    state:
+      - id: ngrx-signalstore (@vince)
+
+  backend-developer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+
+  frontend-reviewer:
+    framework:
+      - id: angular-standalone (@vince)
+        preloaded: true
+    styling:
+      - id: scss-modules (@vince)
+        preloaded: true
+    state:
+      - id: ngrx-signalstore (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  tester:
+    framework:
+      - id: angular-standalone (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: angular-standalone (@vince)
+    styling:
+      - id: scss-modules (@vince)
+    state:
+      - id: ngrx-signalstore (@vince)
+    api:
+      - id: hono (@vince)
+    database:
+      - id: drizzle (@vince)
+
+  frontend-researcher:
+    framework:
+      - id: angular-standalone (@vince)
+        preloaded: true
+    styling:
+      - id: scss-modules (@vince)
+    state:
+      - id: ngrx-signalstore (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Enterprise-grade and type-safe"
+
+principles:
+  - Use standalone components over NgModules
+  - Signals for reactive state management
+  - NgRx SignalStore for complex state
+  - SCSS Modules for component styles
+  - Strict TypeScript configuration
+  - Follow Angular style guide
+
+tags:
+  - angular
+  - typescript
+  - scss-modules
+  - ngrx
+  - signals
+  - enterprise

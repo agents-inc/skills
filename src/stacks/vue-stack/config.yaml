@@ -1,0 +1,173 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Modern Vue Stack - Vue 3 with Composition API, Pinia, and Tailwind
+
+name: "Modern Vue Stack"
+description: >
+  Vue 3 with Composition API, Pinia, and Tailwind.
+  Frontend: Vue 3 Composition API + Tailwind, Pinia state, VeeValidate forms.
+  Backend: Hono, Drizzle.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: vue-composition-api (@vince)
+  - id: tailwind (@vince)
+  - id: pinia (@vince)
+  - id: vee-validate (@vince)
+  - id: zod-validation (@vince)
+  - id: vue-test-utils (@vince)
+  # Backend
+  - id: hono (@vince)
+  - id: drizzle (@vince)
+  # Shared
+  - id: reviewing (@vince)
+  # Research
+  - id: research-methodology (@vince)
+
+agents:
+  # Developer agents
+  - frontend-developer
+  - backend-developer
+  - architecture
+  # Reviewer agents
+  - frontend-reviewer
+  - backend-reviewer
+  # Researcher agents
+  - frontend-researcher
+  - backend-researcher
+  # Planning agents
+  - pm
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
+  - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: vue-composition-api (@vince)
+        preloaded: true
+    styling:
+      - id: tailwind (@vince)
+        preloaded: true
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+
+  backend-developer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+
+  frontend-reviewer:
+    framework:
+      - id: vue-composition-api (@vince)
+        preloaded: true
+    styling:
+      - id: tailwind (@vince)
+        preloaded: true
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  tester:
+    testing:
+      - id: vue-test-utils (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: vue-composition-api (@vince)
+    styling:
+      - id: tailwind (@vince)
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+    api:
+      - id: hono (@vince)
+    database:
+      - id: drizzle (@vince)
+
+  frontend-researcher:
+    framework:
+      - id: vue-composition-api (@vince)
+        preloaded: true
+    styling:
+      - id: tailwind (@vince)
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Progressive and approachable"
+
+principles:
+  - Use Composition API over Options API
+  - Pinia for state management
+  - VeeValidate with Zod for form validation
+  - Tailwind for utility-first styling
+  - Test with Vue Test Utils
+  - Type everything with TypeScript
+
+tags:
+  - vue
+  - vue3
+  - typescript
+  - tailwind
+  - pinia
+  - composition-api
+  - modern

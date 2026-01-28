@@ -12,21 +12,21 @@
 
 ## Performance Metrics at a Glance
 
-| Technique | Impact | Evidence Source |
-|-----------|--------|-----------------|
-| Self-reminder loop | 60-70% ↓ off-task behavior | Anthropic (30+ hour sessions) |
-| Investigation-first | 80%+ ↓ hallucination | Aider, SWE-agent, Community |
-| Emphatic repetition | 70%+ ↓ scope creep | Aider production data |
-| XML tags | 30%+ ↑ accuracy, 60% ↓ format errors | Anthropic training data |
-| Documents first, query last | 30% ↑ performance | Anthropic research (75K tokens) |
-| Expansion modifiers | Unlocks full Sonnet 4.5 capability | Required for Claude 4.x |
-| Self-correction triggers | 74.4% SWE-bench with mid-run guidance | Refact.ai production |
-| Post-action reflection | Improved long-horizon reasoning | Anthropic context engineering |
-| Progress tracking | 30+ hour session focus | Anthropic experiments |
-| Positive framing | Better instruction adherence | Opus 4.5 docs |
-| "Think" alternatives | Prevents Opus 4.5 confusion | Anthropic Claude 4 docs |
-| Just-in-time loading | Preserves context window | SWE-agent, Aider |
-| Write verification | Prevents false-success reports | All agents (production use) |
+| Technique                   | Impact                                | Evidence Source                 |
+| --------------------------- | ------------------------------------- | ------------------------------- |
+| Self-reminder loop          | 60-70% ↓ off-task behavior            | Anthropic (30+ hour sessions)   |
+| Investigation-first         | 80%+ ↓ hallucination                  | Aider, SWE-agent, Community     |
+| Emphatic repetition         | 70%+ ↓ scope creep                    | Aider production data           |
+| XML tags                    | 30%+ ↑ accuracy, 60% ↓ format errors  | Anthropic training data         |
+| Documents first, query last | 30% ↑ performance                     | Anthropic research (75K tokens) |
+| Expansion modifiers         | Unlocks full Sonnet 4.5 capability    | Required for Claude 4.x         |
+| Self-correction triggers    | 74.4% SWE-bench with mid-run guidance | Refact.ai production            |
+| Post-action reflection      | Improved long-horizon reasoning       | Anthropic context engineering   |
+| Progress tracking           | 30+ hour session focus                | Anthropic experiments           |
+| Positive framing            | Better instruction adherence          | Opus 4.5 docs                   |
+| "Think" alternatives        | Prevents Opus 4.5 confusion           | Anthropic Claude 4 docs         |
+| Just-in-time loading        | Preserves context window              | SWE-agent, Aider                |
+| Write verification          | Prevents false-success reports        | All agents (production use)     |
 
 ---
 
@@ -49,6 +49,7 @@ These techniques are validated by Anthropic research, production systems (Aider:
 ### Technique #1: Self-Reminder Loop (60-70% Reduction in Off-Task Behavior)
 
 **The Pattern:**
+
 ```markdown
 <core_principles>
 Principle 1: Investigation First
@@ -68,12 +69,14 @@ Principle 5: Verify Everything
 ```
 
 **Why It Works:**
+
 - Creates self-reinforcing loop: The meta-instruction to display all principles is itself displayed
 - Keeps all 5 core principles in recent context throughout conversation
 - The instruction to display principles appears at start and end of prompt
 - Prevents instruction drift in long sessions
 
 **Impact & Evidence:**
+
 - **60-70% reduction in off-task behavior**
 - Anthropic confirms "Sonnet 4.5 maintains focus for 30+ hours" with proper reminders
 - All production long-running agents use variants of this pattern
@@ -87,6 +90,7 @@ Create 3-5 core principles for each agent, followed by a meta-instruction: "Disp
 ### Technique #2: Investigation-First Protocol (80%+ Reduction in Hallucination)
 
 **The Pattern:**
+
 ```markdown
 <investigation_requirement>
 **CRITICAL: Never speculate about code you have not opened.**
@@ -99,6 +103,7 @@ Before making any claims or implementing anything:
 4. **If uncertain, ask**
 
 If you don't have access to necessary files:
+
 - Explicitly state what files you need
 - Ask for them to be added
 - Do not proceed without proper investigation
@@ -108,12 +113,14 @@ If you don't have access to necessary files:
 ```
 
 **Why It Works:**
+
 - Forces evidence-based responses, prevents hallucinated patterns
 - Requires systematic examination before claims
 - Eliminates speculation about code structure
 - Creates accountability for file reading
 
 **Impact & Evidence:**
+
 - **80%+ reduction in hallucination issues**
 - Aider, SWE-agent, Cursor: All require file reading before action
 - Anthropic guidance: "Always ground responses in provided context"
@@ -127,8 +134,10 @@ Always include investigation requirements BEFORE task-specific instructions. Thi
 ### Technique #3: Emphatic Repetition for Critical Rules (70%+ Reduction in Scope Creep)
 
 **The Pattern:**
+
 ```markdown
 <critical_requirements>
+
 ## CRITICAL: Before Any Work
 
 **(You MUST use existing utilities instead of creating new abstractions)**
@@ -139,6 +148,7 @@ Always include investigation requirements BEFORE task-specific instructions. Thi
 [Body of prompt]
 
 <critical_reminders>
+
 ## CRITICAL REMINDERS
 
 **(You MUST use existing utilities)** - never create new ones when they exist
@@ -150,6 +160,7 @@ Always include investigation requirements BEFORE task-specific instructions. Thi
 ```
 
 **Formatting that Works:**
+
 - **Bold** for emphasis
 - **(Bold + parentheses)** for ultra-critical rules using "You MUST" format
 - ALL CAPS for section headers only
@@ -157,15 +168,17 @@ Always include investigation requirements BEFORE task-specific instructions. Thi
 - Repeat critical rules at start AND end using `<critical_requirements>` and `<critical_reminders>` tags
 
 **Why It Works:**
+
 - Sonnet 4.5 responds strongly to emphasis
 - Creates cognitive anchor at start and reinforcement at end
 - Double emphasis for most critical constraints
 - Final reminder appears right before response generation
 
 **Impact & Evidence:**
+
 - **70%+ reduction in scope creep**
 - **40-50% increase in compliance** with repetition
-- Aider uses "ONLY EVER RETURN CODE IN A *SEARCH/REPLACE BLOCK*!" successfully with asterisks
+- Aider uses "ONLY EVER RETURN CODE IN A _SEARCH/REPLACE BLOCK_!" successfully with asterisks
 - SWE-agent: Multiple exclamation marks for critical rules
 - Community reports 80%+ reduction in format violations
 
@@ -177,6 +190,7 @@ Identify the single most important rule for each agent type (e.g., "Never modify
 ### Technique #4: XML Tags for Semantic Boundaries (30%+ Accuracy Improvement)
 
 **The Pattern:**
+
 ```xml
 <role>
 You are an expert TypeScript developer.
@@ -209,12 +223,14 @@ Similar pattern from SettingsForm.tsx:
 ```
 
 **Why It Works:**
+
 - Anthropic trained Claude specifically to recognize XML
 - Creates semantic boundaries preventing instruction mixing
 - Tags act as cognitive separators between sections
 - Enables structured parsing by the model
 
 **Impact & Evidence:**
+
 - **30%+ accuracy improvement** over plain text for complex tasks
 - **60% reduction in format errors** according to production systems
 - Anthropic documentation: "Claude was trained with XML tags in its training data"
@@ -222,6 +238,7 @@ Similar pattern from SettingsForm.tsx:
 - Community developers report consistent improvements
 
 **Best Practices:**
+
 - Use semantic tag names: `<thinking>`, `<investigation>`, `<output>` rather than generic `<section1>`
 - Keep nesting ≤3 levels deep for best results
 - Choose names that clearly convey meaning
@@ -235,6 +252,7 @@ Wrap all major sections in semantic XML tags. Use nested tags for hierarchical c
 ### Technique #5: Documents First, Query Last (30% Performance Boost)
 
 **The Pattern:**
+
 ```markdown
 <documents>
 <document index="1">
@@ -259,18 +277,21 @@ Wrap all major sections in semantic XML tags. Use nested tags for hierarchical c
 ```
 
 **Why It Works:**
+
 - Attention mechanisms process information sequentially
 - Early context has stronger retention throughout response generation
 - Allows Claude to fully internalize context before applying instructions
 - Prevents juggling task requirements while processing content
 
 **When to Use:**
+
 - Prompts with 20K+ tokens
 - Multiple documents to reference
 - Long-context analysis tasks
 - When comprehensive context is essential
 
 **Impact & Evidence:**
+
 - **Up to 30% improvement** on long-context tasks
 - Anthropic internal research: Tested on 75K-90K token government documents
 - Achieved **90% accuracy** with query-last vs significantly lower with query-first
@@ -285,6 +306,7 @@ For prompts with substantial context (20K+ tokens), always place documents/files
 ### Technique #6: Explicit Expansion Modifiers for Sonnet 4.5
 
 **The Pattern:**
+
 ```markdown
 <task>
 Create an analytics dashboard.
@@ -295,6 +317,7 @@ Go beyond the basics to create a fully-featured implementation.**
 ```
 
 **Why It Works:**
+
 - Sonnet 4.5 is trained for precise instruction following
 - Without expansion modifiers, produces minimal viable implementations
 - Claude 4.x is **more conservative than 3.5** despite higher capability
@@ -306,14 +329,17 @@ Sonnet 4.5 interprets instructions very literally. Without expansion modifiers, 
 **Additional Patterns for 4.5:**
 
 **Explicit Permission:**
+
 ```markdown
 Feel free to refactor architecture if needed to achieve the goal.
 You have permission to make substantial changes within [scope].
 ```
 
 **Extended Thinking for Complex Tasks:**
+
 ```markdown
 Before answering, consider step-by-step inside <thinking> tags about:
+
 1. What assumptions am I making?
 2. What are potential failure modes?
 3. What's the optimal approach?
@@ -322,6 +348,7 @@ Then provide your answer in <output> tags.
 ```
 
 **Impact & Evidence:**
+
 - Unlocks full Sonnet 4.5 capability
 - Counters conservative defaults in Claude 4.x
 - Anthropic: "Claude 4.x requires explicit permission to be thorough"
@@ -329,6 +356,7 @@ Then provide your answer in <output> tags.
 - Solves the widespread "Claude 4 is less helpful than 3.5" complaint
 
 **Key Modifiers That Work:**
+
 - "Include as many relevant features and interactions as possible"
 - "Go beyond the basics to create a fully-featured implementation"
 - "Feel free to refactor entire architecture if needed"
@@ -342,11 +370,13 @@ Add expansion modifiers to EVERY task description when using Sonnet 4+, otherwis
 ### Technique #7: Self-Correction Triggers (Mid-Run Guidance)
 
 **The Pattern:**
+
 ```markdown
 <self_correction_triggers>
 **Self-Correction Checkpoints:**
 
 If you notice yourself:
+
 - **Generating code without reading files first** → Stop. Read the files.
 - **Creating complex abstractions** → Simplify. Follow existing patterns.
 - **Making assumptions about behavior** → Stop. Verify first.
@@ -357,12 +387,14 @@ These checkpoints prevent drift during long sessions.
 ```
 
 **Why It Works:**
+
 - Provides "guardrails" that the model can self-apply
 - Acts like mid-run messages without external scaffolding
 - Catches common failure modes before they compound
 - Maintains quality throughout extended sessions
 
 **Impact & Evidence:**
+
 - **74.4% on SWE-bench Verified** with mid-run guidance (Refact.ai)
 - Significant stability improvements in long-running agents
 - Prevents cascade errors from early mistakes
@@ -375,6 +407,7 @@ Include 4-6 specific self-correction triggers relevant to your agent's domain. F
 ### Technique #8: Post-Action Reflection
 
 **The Pattern:**
+
 ```markdown
 <post_action_reflection>
 **After each major action, evaluate:**
@@ -389,12 +422,14 @@ Only proceed when you have sufficient confidence in your current state.
 ```
 
 **Why It Works:**
+
 - Forces intentional pauses between actions
 - Prevents runaway execution based on faulty assumptions
 - Encourages iterative refinement
 - Improves decision quality in multi-step tasks
 
 **Impact & Evidence:**
+
 - Anthropic guidance: "After receiving tool results, carefully reflect on their quality"
 - Improves long-horizon reasoning capability
 - Reduces error propagation in agentic workflows
@@ -407,11 +442,13 @@ Add reflection prompts after tool use sections or at natural decision points in 
 ### Technique #9: Progress Tracking for Extended Sessions
 
 **The Pattern:**
+
 ```markdown
 <progress_tracking>
 **Progress Notes Pattern:**
 
 When working on complex tasks:
+
 1. **Track findings** after each major step
 2. **Note confidence levels** (high/medium/low)
 3. **Document unresolved questions** for clarification
@@ -422,12 +459,14 @@ This maintains orientation across extended sessions.
 ```
 
 **Why It Works:**
+
 - Creates structured mental state across conversation
 - Prevents losing track of goals in long sessions
 - Supports retrieval of earlier context
 - Enables better handoffs between conversation turns
 
 **Impact & Evidence:**
+
 - Anthropic context engineering: "Structured note-taking enables persistent memory"
 - Claude maintained focus in 30+ hour Pokémon sessions using similar patterns
 - Community validation for complex multi-file refactors
@@ -440,23 +479,28 @@ Include progress tracking for any agent that handles tasks spanning multiple con
 ### Technique #10: Positive Framing for Constraints
 
 **The Pattern:**
+
 ```markdown
 # Instead of:
+
 ❌ "Do NOT use default exports"
 ❌ "Never create magic numbers"
 
 # Use:
+
 ✅ "Use named exports for all public APIs"
 ✅ "Define all numeric values as named constants"
 ```
 
 **Why It Works:**
+
 - Positive instructions are easier to follow than prohibitions
 - Reduces cognitive load (don't have to invert the instruction)
 - More actionable (tells what TO do, not just what NOT to do)
 - Better for Opus 4.5 which responds well to clear guidance
 
 **Impact & Evidence:**
+
 - Anthropic: "Instead of 'Do not use markdown,' say 'Your response should be composed of prose'"
 - Opus 4.5 is "more responsive to the system prompt than previous models"
 - Clearer mental model for the agent
@@ -469,23 +513,28 @@ When documenting constraints, lead with the positive approach (✅), then show w
 ### Technique #11: "Think" Alternatives for Opus 4.5
 
 **The Pattern:**
+
 ```markdown
 # When extended thinking is disabled, avoid:
+
 ❌ "Think about the implications"
 ❌ "Think through the problem"
 
 # Use instead:
+
 ✅ "Consider the implications"
 ✅ "Evaluate the problem"
 ✅ "Analyze the requirements"
 ```
 
 **Why It Works:**
+
 - Opus 4.5 is "particularly sensitive to the word 'think' and its variants"
 - When extended thinking is disabled, "think" can cause confusion
 - Alternative words provide the same guidance without triggering issues
 
 **Recommended Replacements:**
+
 - think → consider, evaluate, analyze
 - think about → reflect on, assess
 - think through → work through, examine
@@ -494,35 +543,25 @@ When documenting constraints, lead with the positive approach (✅), then show w
 **Application:**
 Audit prompts for "think" variants when targeting Opus 4.5 without extended thinking enabled. This is less critical for Sonnet 4.5 but still good practice.
 
-**EXCEPTION: Claude Code Thinking Triggers**
+**Note on Extended Thinking (January 2026 Update)**
 
-When working in Claude Code (CLI), you CAN and SHOULD use specific trigger words to explicitly enable extended thinking with increasing token budgets:
+As of January 2026, Claude Code **enables extended thinking by default** with a maximum budget of 31,999 tokens. The trigger keywords (`think`, `megathink`, `ultrathink`) have been **deprecated** and no longer have any effect.
 
-| Trigger | Token Budget | When to Use |
-|---------|--------------|-------------|
-| "think" | ~4,000 tokens | Routine debugging, simple features |
-| "megathink" | ~10,000 tokens | API integration, performance optimization, refactoring |
-| "ultrathink" | ~31,999 tokens | Major architecture, critical migrations, complex debugging |
+**Current system:**
 
-**Ultrathink trigger phrases:** "think harder", "think intensely", "think longer", "think really hard", "think super hard", "think very hard", "ultrathink"
+- Extended thinking is **always on** by default (max 31,999 tokens)
+- Use `MAX_THINKING_TOKENS` environment variable to limit or disable thinking
+- Toggle with `Alt+T` (session-level) or `/config` (global setting)
+- View thinking with `Ctrl+O` (verbose mode)
 
-**Key distinction:**
-- **In agent prompts/skills** (static text): Avoid "think" → use consider/evaluate/analyze
-- **In user requests to Claude Code**: Use "think"/"megathink"/"ultrathink" to explicitly allocate thinking budget
-
-**When to escalate to ultrathink:**
-- Claude gets stuck in repetitive loops
-- Complex architectural decisions needed
-- Critical migration or systemic problem resolution
-- New pattern design requiring deep analysis
-
-> **Note:** These trigger words only work in Claude Code (CLI), not in the web chat or API.
+**In agent prompts:** Still avoid the word "think" → use consider/evaluate/analyze (prevents confusion with Opus 4.5's thinking system).
 
 ---
 
 ### Technique #12: Just-in-Time Context Loading
 
 **The Pattern:**
+
 ```markdown
 <retrieval_strategy>
 **Just-in-Time Loading:**
@@ -531,16 +570,18 @@ When working in Claude Code (CLI), you CAN and SHOULD use specific trigger words
 - Start with file paths and naming patterns
 - Load detailed content only when needed
 - This preserves context window for actual work
-</retrieval_strategy>
+  </retrieval_strategy>
 ```
 
 **Why It Works:**
+
 - Preserves precious context window space
 - Avoids overwhelming the model with irrelevant detail
 - Enables deeper exploration of actually-needed content
 - Matches how production agents (SWE-agent, Aider) operate
 
 **Impact & Evidence:**
+
 - Anthropic: "Maintain lightweight identifiers and dynamically load data at runtime"
 - Context engineering principle: "smallest set of high-signal tokens"
 - Production systems use glob/grep before full file reads
@@ -553,6 +594,7 @@ Include retrieval guidance in agents that explore codebases. Encourage pattern-b
 ### Technique #13: Write Verification Protocol (Prevents False-Success Reports)
 
 **The Pattern:**
+
 ```markdown
 <write_verification_protocol>
 **After completing ANY file edits, you MUST:**
@@ -567,16 +609,18 @@ Include retrieval guidance in agents that explore codebases. Encourage pattern-b
    - Do NOT report success
    - Re-attempt the edit operation
 4. **Only report success AFTER verification passes**
-</write_verification_protocol>
+   </write_verification_protocol>
 ```
 
 **Why It Works:**
+
 - Agents can plan and generate correctly but fail to execute the Write/Edit operation
 - Without verification, agents report success based on what they intended to do
 - This causes downstream failures that are hard to debug
 - Explicit re-reading creates an unbreakable verification loop
 
 **Impact & Evidence:**
+
 - **Prevents false-success reports** from file operations
 - Catches tool execution failures immediately
 - Enables accurate progress tracking and debugging
@@ -638,22 +682,26 @@ Based on convergent evidence from Anthropic, production systems, and academic re
 
 <domain_scope>
 **You handle:**
+
 - [Responsibility 1]
 - [Responsibility 2]
 
 **You DON'T handle:**
+
 - [Other agent's domain 1] → [Agent Name]
 - [Other agent's domain 2] → [Agent Name]
-</domain_scope>
+  </domain_scope>
 
 ---
 
 ## Main Content Sections
 
 ### [Section 1]
+
 [Agent-specific patterns, checklists, guidelines]
 
 ### [Section 2]
+
 [Code examples, anti-patterns, best practices]
 
 ---
@@ -698,12 +746,14 @@ Based on convergent evidence from Anthropic, production systems, and academic re
 13. **Final Reminder** - Reinforces self-reminder loop AND write verification (closes both loops)
 
 **Why This Order:**
+
 - **Early sections prevent fundamental errors** (hallucination, scope creep, instruction drift)
 - **Middle sections provide domain knowledge** (patterns, standards, examples)
 - **Late sections handle reinforcement** (emphatic repetition, loop closure)
 - **Final reminder closes both the self-reinforcing loop AND write verification**
 
 This ordering is based on:
+
 - Anthropic's "documents first, query last" guidance
 - Production system analysis (Aider, SWE-agent, Cursor)
 - Academic research on prompt structure impact
@@ -817,6 +867,7 @@ This ordering is based on:
 ### XML Naming Conventions
 
 **Good semantic names:**
+
 - `<thinking>`, `<planning>`, `<implementation>`
 - `<must_fix>`, `<suggestions>`, `<positive_feedback>`
 - `<test_suite>`, `<coverage_analysis>`
@@ -831,12 +882,14 @@ This ordering is based on:
 - `<critical_reminders>` (for rules at BOTTOM)
 
 **Avoid generic names:**
+
 - `<section1>`, `<section2>`
 - `<part_a>`, `<part_b>`
 - `<info>`, `<data>`
 - `<content>`, `<text>`
 
 **Nesting Guidelines:**
+
 - Keep nesting ≤3 levels deep
 - Use flat structures when possible
 - Semantic hierarchy over deep nesting
@@ -847,14 +900,14 @@ This ordering is based on:
 
 ### Sonnet 4.5 vs Opus 4.5 Quick Comparison
 
-| Characteristic | Sonnet 4.5 | Opus 4.5 |
-|----------------|------------|----------|
-| Default behavior | Conservative, minimal | Over-engineering tendency |
-| Instruction following | Very literal | More interpretive |
-| Expansion modifiers | **Required** to unlock capability | Helpful but less critical |
-| "Think" sensitivity | Low | **High** (avoid in prompts) |
-| System prompt responsiveness | Standard | **More responsive** |
-| Parallel tool execution | Standard | **Excels** at parallel ops |
+| Characteristic               | Sonnet 4.5                        | Opus 4.5                    |
+| ---------------------------- | --------------------------------- | --------------------------- |
+| Default behavior             | Conservative, minimal             | Over-engineering tendency   |
+| Instruction following        | Very literal                      | More interpretive           |
+| Expansion modifiers          | **Required** to unlock capability | Helpful but less critical   |
+| "Think" sensitivity          | Low                               | **High** (avoid in prompts) |
+| System prompt responsiveness | Standard                          | **More responsive**         |
+| Parallel tool execution      | Standard                          | **Excels** at parallel ops  |
 
 ### Critical Differences from Sonnet 3.5
 
@@ -877,12 +930,16 @@ This ordering is based on:
    - More precise instruction adherence
 
    **Example - Be Explicit with Sonnet:**
+
    ```markdown
    # ❌ Vague (Sonnet may under-deliver)
+
    Add a user profile feature
 
    # ✅ Explicit (Sonnet delivers fully)
+
    Add a user profile feature with:
+
    - Avatar upload with preview
    - Bio field (markdown supported)
    - Social links section
@@ -898,6 +955,7 @@ This ordering is based on:
 ### Required Adjustments for 4.5
 
 **Add Expansion Modifiers:**
+
 ```markdown
 <task>
 [Task description]
@@ -908,6 +966,7 @@ Go beyond the basics to create a fully-featured implementation.**
 ```
 
 **Explicit Permission for Changes:**
+
 ```markdown
 <constraints>
 Feel free to refactor architecture if needed to achieve the goal.
@@ -916,6 +975,7 @@ You have permission to make substantial changes within [scope].
 ```
 
 **Token Budget Awareness:**
+
 ```markdown
 You have approximately [X] tokens remaining in context.
 Prioritize [most important information] if approaching limits.
@@ -923,6 +983,7 @@ Consider summarizing [less critical sections] to preserve space.
 ```
 
 **Extended Thinking for Complex Tasks:**
+
 ```markdown
 <instructions>
 Before answering, consider step-by-step inside <thinking> tags about:
@@ -935,6 +996,7 @@ Then provide your answer in <output> tags.
 ```
 
 **Performance Metrics:**
+
 - Extended thinking: 68.0% → 84.8% on GPQA Diamond
 - Math accuracy: 82.2% → 96.2% on MATH 500 benchmark
 - 30+ hour session focus with proper structure
@@ -945,18 +1007,21 @@ Opus 4.5 has some unique characteristics that differ from Sonnet 4.5:
 
 **1. "Think" Sensitivity**
 When extended thinking is disabled, Opus 4.5 is particularly sensitive to the word "think" and its variants. Use alternatives:
+
 - think → consider, evaluate, analyze
 - think about → reflect on, assess
 - think through → work through, examine
 
 **2. Over-Engineering Tendency**
 Opus 4.5 has a tendency to over-engineer solutions. Add explicit guidance:
+
 ```markdown
 Avoid over-engineering. Only make changes that are directly requested or clearly necessary. Keep solutions simple and focused. Don't add features, refactor code, or make "improvements" beyond what was asked.
 ```
 
 **3. System Prompt Responsiveness**
 Opus 4.5 is more responsive to the system prompt than previous models. This means:
+
 - Aggressive directives (CRITICAL, MUST, etc.) may cause over-caution
 - Use clear, direct language without excessive emphasis
 - Positive framing works better than prohibitions
@@ -969,9 +1034,11 @@ Opus 4.5 excels at parallel tool execution. Structure prompts to allow simultane
 
 ```markdown
 # ✅ Good - Opus can parallelize
+
 Read these 3 files and compare their patterns: file1.ts, file2.ts, file3.ts
 
 # ❌ Less optimal - forces sequential
+
 Read file1.ts. Then read file2.ts. Then read file3.ts.
 ```
 
@@ -1046,6 +1113,7 @@ Use this checklist to validate any agent or prompt before deployment.
 ### Example 1: Developer Agent (Before)
 
 ❌ **Common mistakes:**
+
 ```markdown
 # Developer Agent
 
@@ -1061,6 +1129,7 @@ Make sure your code is clean and follows conventions.
 ```
 
 **Problems:**
+
 - No self-reminder loop (will forget instructions mid-task)
 - No investigation requirement (will hallucinate patterns)
 - Vague "best practices" and "conventions" (no actionable guidance)
@@ -1075,6 +1144,7 @@ Make sure your code is clean and follows conventions.
 ### Example 1: Developer Agent (After)
 
 ✅ **Optimal structure:**
+
 ```markdown
 # Developer Agent
 
@@ -1103,6 +1173,7 @@ Principle 5: **Verify Everything** - Re-read files after editing. Provide eviden
 ---
 
 <critical_requirements>
+
 ## CRITICAL: Before Any Work
 
 **(You MUST read pattern files before implementing)**
@@ -1116,11 +1187,12 @@ Principle 5: **Verify Everything** - Re-read files after editing. Provide eviden
 **CRITICAL: Never speculate about code you have not opened.**
 
 Before making any claims or implementing anything:
+
 1. List the files you need to examine
 2. Read each file completely
 3. Base analysis strictly on what you find
 4. If uncertain, ask
-</investigation_requirement>
+   </investigation_requirement>
 
 ---
 
@@ -1149,11 +1221,12 @@ Before making any claims or implementing anything:
 
 <self_correction_triggers>
 **If you notice yourself:**
+
 - **Generating code without reading files first** → Stop. Read the files.
 - **Creating new abstractions** → Stop. Check for existing utilities.
 - **Making assumptions about patterns** → Stop. Verify in the codebase.
 - **Skipping tests** → Stop. Tests are required for completion.
-</self_correction_triggers>
+  </self_correction_triggers>
 
 ---
 
@@ -1175,6 +1248,7 @@ Never skip investigation—ALWAYS examine referenced files before implementing.
 **CRITICAL: Make minimal necessary changes only.**
 
 Before implementing:
+
 1. Does existing code do this? → Use it
 2. Is this requested? → If no, don't add it
 3. Can this be simpler? → Make it simpler
@@ -1205,6 +1279,7 @@ Before implementing:
 ---
 
 <critical_reminders>
+
 ## CRITICAL REMINDERS
 
 **(You MUST read pattern files before implementing)**
@@ -1222,6 +1297,7 @@ Before implementing:
 ```
 
 **Improvements:**
+
 - ✅ Self-reminder loop prevents drift (60-70% reduction)
 - ✅ Investigation requirement prevents hallucination (80%+ reduction)
 - ✅ Emphatic repetition with `<critical_requirements>` and `<critical_reminders>` (40-50% better compliance)
@@ -1236,11 +1312,13 @@ Before implementing:
 ### Example 2: Complex Task Prompt (Before)
 
 ❌ **Common mistakes:**
+
 ```
 Create a user authentication system with login, signup, and password reset.
 ```
 
 **Problems:**
+
 - No structure (plain text, no XML)
 - No examples (no guidance on format/patterns)
 - No constraints (over-engineering likely)
@@ -1254,7 +1332,8 @@ Create a user authentication system with login, signup, and password reset.
 ### Example 2: Complex Task Prompt (After)
 
 ✅ **Optimal structure:**
-```xml
+
+````xml
 <documents>
 <document index="1">
 <source>auth-service.ts</source>
@@ -1337,7 +1416,7 @@ const handleSubmit = async (data: FormData) => {
     setLoading(false);
   }
 };
-```
+````
 
 This shows the established error handling and loading state pattern.
 </example>
@@ -1351,6 +1430,7 @@ This shows the established error handling and loading state pattern.
 - Modify user-store structure (extend only)
 
 **YOU MUST:**
+
 - Use existing apiClient for all requests
 - Follow form patterns from signup-form.tsx exactly
 - Use Tailwind utility classes (no custom CSS)
@@ -1361,6 +1441,7 @@ This shows the established error handling and loading state pattern.
 
 <success_criteria>
 **User-Facing:**
+
 1. User can log in with email/password
 2. User can create account with validation
 3. User can reset password via email
@@ -1368,6 +1449,7 @@ This shows the established error handling and loading state pattern.
 5. Clear error messages for all failure cases
 
 **Technical:**
+
 1. All tests in auth/ directory pass
 2. No modifications to auth-service.ts core logic
 3. Follows existing form patterns exactly
@@ -1375,10 +1457,11 @@ This shows the established error handling and loading state pattern.
 5. Loading and error states handled properly
 
 **Verification:**
+
 - Manual test: Complete signup → login → password reset flow
 - Automated: Run auth tests
 - Check: No changes to existing auth endpoints
-</success_criteria>
+  </success_criteria>
 
 <workflow>
 BEFORE implementing:
@@ -1388,12 +1471,13 @@ BEFORE implementing:
 4. Understand the existing JWT flow
 
 THEN:
+
 1. Plan implementation matching these patterns
 2. Implement following the plan exactly
 3. Write comprehensive tests
 4. Re-read files to verify changes
 5. Verify all success criteria met
-</workflow>
+   </workflow>
 
 <output_format>
 <investigation_notes>
@@ -1418,6 +1502,7 @@ THEN:
 </output_format>
 
 <critical_reminders>
+
 ## CRITICAL REMINDERS
 
 **(You MUST read auth-service.ts and signup-form.tsx before implementing)**
@@ -1433,6 +1518,7 @@ Implement the complete authentication system following all patterns and constrai
 ```
 
 **Improvements:**
+
 - ✅ Documents first, query last (30% boost on long-context)
 - ✅ XML structure for semantic boundaries (30%+ accuracy improvement)
 - ✅ Specific examples with line numbers (reduces misinterpretation)
@@ -1453,6 +1539,7 @@ Implement the complete authentication system following all patterns and constrai
 **Root Cause:** No self-reminder loop
 
 **Solution:**
+
 ```markdown
 <core_principles>
 Principle 1: [Rule 1]
@@ -1482,16 +1569,18 @@ Principle 5: [Rule 5]
 **Root Cause:** No investigation requirement
 
 **Solution:**
+
 ```markdown
 <investigation_requirement>
 **CRITICAL: Never speculate about code you have not opened.**
 
 Before making any claims or implementing anything:
+
 1. List the files you need to examine
 2. Read each file completely
 3. Base analysis strictly on what you find
 4. If uncertain, ask
-</investigation_requirement>
+   </investigation_requirement>
 ```
 
 **Evidence:** 80%+ reduction in hallucination issues
@@ -1505,11 +1594,13 @@ Before making any claims or implementing anything:
 **Root Cause:** No anti-over-engineering guards
 
 **Solution:**
+
 ```markdown
 <anti_over_engineering>
 **CRITICAL: Make minimal necessary changes only.**
 
 Before implementing:
+
 1. Does existing code do this? → Use it
 2. Is this requested? → If no, don't add it
 3. Can this be simpler? → Make it simpler
@@ -1529,6 +1620,7 @@ Before implementing:
 **Root Cause:** Conservative Sonnet 4.5 defaults without expansion modifiers
 
 **Solution:**
+
 ```markdown
 <task>
 [Task description]
@@ -1549,8 +1641,10 @@ Go beyond the basics to create a fully-featured implementation.**
 **Root Cause:** Missing emphatic repetition
 
 **Solution:**
+
 ```markdown
 <critical_requirements>
+
 ## CRITICAL: Before Any Work
 
 **(You MUST [rule 1])**
@@ -1561,6 +1655,7 @@ Go beyond the basics to create a fully-featured implementation.**
 [Body of prompt]
 
 <critical_reminders>
+
 ## CRITICAL REMINDERS
 
 **(You MUST [rule 1])** - [reinforcement]
@@ -1582,6 +1677,7 @@ Go beyond the basics to create a fully-featured implementation.**
 **Root Cause:** No output format specification
 
 **Solution:**
+
 ```markdown
 <output_format>
 <investigation_notes>
@@ -1609,6 +1705,7 @@ Go beyond the basics to create a fully-featured implementation.**
 **Root Cause:** No write verification protocol
 
 **Solution:**
+
 ```markdown
 <write_verification_protocol>
 **After completing ANY file edits, you MUST:**
@@ -1617,7 +1714,7 @@ Go beyond the basics to create a fully-featured implementation.**
 2. Verify your changes exist in the file
 3. If verification fails, report failure and re-attempt
 4. Only report success AFTER verification passes
-</write_verification_protocol>
+   </write_verification_protocol>
 
 ---
 
@@ -1631,6 +1728,7 @@ Go beyond the basics to create a fully-featured implementation.**
 ## Conclusion
 
 This structure represents the convergence of:
+
 - **Anthropic's official guidance** - XML tags, document placement, system prompts, context engineering
 - **Production systems** - Aider: 72.7% SWE-bench, Augment: 65.4% SWE-bench Verified, Refact.ai: 74.4% SWE-bench Verified, Mini-SWE: 65%+
 - **Academic research** - Prompt structure impact, few-shot examples, chain-of-thought
@@ -1654,6 +1752,7 @@ This structure represents the convergence of:
 13. **Write verification prevents false-success reports** - Re-read files after edits, close with dual reminder
 
 **Validation Metrics:**
+
 - Aider: 72.7% on SWE-bench (Sonnet 4)
 - Refact.ai: 74.4% on SWE-bench Verified (with mid-run guidance)
 - Augment: 65.4% on SWE-bench Verified
@@ -1665,6 +1764,7 @@ This structure represents the convergence of:
 ---
 
 **Version History:**
+
 - v2.0 (November 2025): Separated implementation-specific content to CLAUDE_ARCHITECTURE_BIBLE.md (formerly AGENTS_ARCHITECTURE.md). Made document portable and universal. Updated emphatic repetition to use `<critical_requirements>` and `<critical_reminders>` pattern. Added dual final reminder (principles + write verification).
 - v1.2 (November 2025): Added Technique #13 (Write Verification Protocol), updated to 13 essential techniques
 - v1.1 (November 2025): Added 6 new techniques (self-correction triggers, post-action reflection, progress tracking, positive framing, "think" alternatives, just-in-time loading), Opus 4.5-specific guidance, updated to 12 essential techniques

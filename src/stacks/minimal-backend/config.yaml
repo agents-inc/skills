@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Minimal Backend - Lightweight API without frontend - just Hono and Drizzle
+
+name: "Minimal Backend"
+description: >
+  Lightweight API without frontend - just Hono and Drizzle.
+  Backend: Hono API framework, Drizzle ORM.
+  Perfect for microservices and API-only projects.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Backend
+  - id: hono (@vince)
+  - id: drizzle (@vince)
+  # Shared
+  - id: reviewing (@vince)
+  # Research
+  - id: research-methodology (@vince)
+
+agents:
+  # Developer agents
+  - backend-developer
+  - architecture
+  # Reviewer agents
+  - backend-reviewer
+  # Researcher agents
+  - backend-researcher
+  # Planning agents
+  - pm
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
+  - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
+
+agent_skills:
+  backend-developer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  tester:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+
+  pm:
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    api:
+      - id: hono (@vince)
+    database:
+      - id: drizzle (@vince)
+
+  backend-researcher:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Just the essentials"
+
+principles:
+  - Keep it simple
+  - Hono for fast, edge-ready APIs
+  - Drizzle for type-safe database access
+  - No unnecessary abstractions
+  - Test API endpoints thoroughly
+
+tags:
+  - api
+  - hono
+  - drizzle
+  - typescript
+  - microservices
+  - minimal

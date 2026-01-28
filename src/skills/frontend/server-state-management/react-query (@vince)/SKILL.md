@@ -1,5 +1,5 @@
 ---
-name: frontend/server-state-react-query (@vince)
+name: react-query (@vince)
 description: REST APIs, React Query, data fetching
 ---
 
@@ -49,6 +49,7 @@ description: REST APIs, React Query, data fetching
 - Type safety from generated types (never manual type definitions)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/core.md](examples/core.md)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -61,6 +62,7 @@ description: REST APIs, React Query, data fetching
 OpenAPI-first development ensures a single source of truth for your API contract. The hey-api code generator (@hey-api/openapi-ts) transforms your OpenAPI schema into fully typed client code, React Query hooks, and query options—eliminating manual type definitions and reducing bugs.
 
 This approach prioritizes:
+
 - **Single source of truth**: OpenAPI schema drives types, client code, and mocks
 - **Zero manual typing**: Generated code eliminates type drift
 - **Consistent patterns**: All API calls use the same generated query options
@@ -152,7 +154,11 @@ export default defineConfig({
     path: OUTPUT_PATH,
   },
   // Generate both fetch client AND React Query hooks
-  plugins: [...defaultPlugins, "@hey-api/client-fetch", "@tanstack/react-query"],
+  plugins: [
+    ...defaultPlugins,
+    "@hey-api/client-fetch",
+    "@tanstack/react-query",
+  ],
 });
 ```
 
@@ -259,10 +265,11 @@ import type { QueryObserverOptions } from "@tanstack/react-query";
 import { getFeaturesQueryKey, getFeatures } from "./services.gen";
 import type { GetFeaturesResponse } from "./types.gen";
 
-export const getFeaturesOptions = (): QueryObserverOptions<GetFeaturesResponse> => ({
-  queryKey: getFeaturesQueryKey(),
-  queryFn: () => getFeatures(),
-});
+export const getFeaturesOptions =
+  (): QueryObserverOptions<GetFeaturesResponse> => ({
+    queryKey: getFeaturesQueryKey(),
+    queryFn: () => getFeatures(),
+  });
 
 // Query key is also generated
 export function getFeaturesQueryKey() {

@@ -1,9 +1,12 @@
 ---
 name: pattern-critique
 description: Critiques extracted patterns against industry standards (Airbnb, Stripe, Meta, Vercel) - frontend/React architecture focus - invoke AFTER pattern-scout extracts patterns
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: research/research-methodology (@vince), shared/reviewing (@vince)
+model: opus
+permissionMode: default
+skills:
+  - research/research-methodology (@vince)
+  - shared/reviewing (@vince)
 ---
 
 # Pattern Critique Agent

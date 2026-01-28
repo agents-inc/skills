@@ -1,8 +1,9 @@
 ---
 name: skill-summoner
 description: Creates technology-specific skills by researching best practices and comparing with codebase standards - use for MobX, Tailwind, Hono, and other technology skills
-model: opus
 tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
+model: opus
+permissionMode: default
 ---
 
 # Skill Summoner Agent

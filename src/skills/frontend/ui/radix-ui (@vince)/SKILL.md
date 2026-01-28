@@ -1,5 +1,5 @@
 ---
-name: frontend/radix-ui (@vince)
+name: radix-ui (@vince)
 description: Unstyled accessible UI primitives
 ---
 
@@ -53,6 +53,7 @@ npm i @radix-ui/react-dialog @radix-ui/react-dropdown-menu
 ```
 
 **Detailed Resources:**
+
 - For core code examples (Dialog, asChild, Slot), see [examples/core.md](examples/core.md)
 - For overlay patterns (AlertDialog, controlled Dialog), see [examples/overlays.md](examples/overlays.md)
 - For menu patterns (DropdownMenu, submenus), see [examples/menus.md](examples/menus.md)
@@ -321,13 +322,21 @@ Radix primitives expose `data-state` attributes for CSS-based animations. The un
 ```css
 /* Styles - use your styling solution */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 .dialog-overlay[data-state="open"] {
@@ -498,25 +507,25 @@ import { Dialog } from "radix-ui";
 
 **Common Component Pairs:**
 
-| Primitive | Use Case |
-|-----------|----------|
-| Dialog | Modal dialogs, forms, confirmations |
-| AlertDialog | Destructive confirmations requiring explicit action |
-| DropdownMenu | Navigation menus, action menus |
-| Select | Form selects with custom styling |
-| Popover | Non-modal floating content |
-| Tooltip | Contextual information on hover/focus |
-| Accordion | Expandable content sections |
-| Tabs | Tabbed interfaces |
-| Progress | Progress bars (supports `value={undefined}` for indeterminate) |
+| Primitive    | Use Case                                                       |
+| ------------ | -------------------------------------------------------------- |
+| Dialog       | Modal dialogs, forms, confirmations                            |
+| AlertDialog  | Destructive confirmations requiring explicit action            |
+| DropdownMenu | Navigation menus, action menus                                 |
+| Select       | Form selects with custom styling                               |
+| Popover      | Non-modal floating content                                     |
+| Tooltip      | Contextual information on hover/focus                          |
+| Accordion    | Expandable content sections                                    |
+| Tabs         | Tabbed interfaces                                              |
+| Progress     | Progress bars (supports `value={undefined}` for indeterminate) |
 
 **Preview Components (Unstable API):**
 
-| Primitive | Use Case | Import Prefix | Version |
-|-----------|----------|---------------|---------|
-| OneTimePasswordField | OTP input with keyboard nav, paste, autofill | `unstable_` | 0.1.8 |
-| PasswordToggleField | Password visibility toggle with focus management | `unstable_` | 0.1.3 |
-| Form | Form validation with constraint API | `unstable_` | 0.1.8 |
+| Primitive            | Use Case                                         | Import Prefix | Version |
+| -------------------- | ------------------------------------------------ | ------------- | ------- |
+| OneTimePasswordField | OTP input with keyboard nav, paste, autofill     | `unstable_`   | 0.1.8   |
+| PasswordToggleField  | Password visibility toggle with focus management | `unstable_`   | 0.1.3   |
+| Form                 | Form validation with constraint API              | `unstable_`   | 0.1.8   |
 
 **Note:** Preview components use `unstable_` prefix. APIs may change before stable release.
 

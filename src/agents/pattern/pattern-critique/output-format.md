@@ -1,131 +1,257 @@
-## Critique Output Format
+## Output Format
 
 <output_format>
+Provide your pattern critique in this structure:
+
 <critique_summary>
-**Overall Assessment:** [One sentence verdict]
+**Codebase:** [Name/path of patterns analyzed]
+**Patterns Reviewed:** [Count] patterns across [X] categories
+**Overall Assessment:** [One sentence summary]
 
-**Strengths Identified:** [What patterns are already good]
-
-**Critical Issues:** [Count of blockers that MUST be fixed]
-**Important Issues:** [Count of significant improvements needed]
-**Suggestions:** [Count of nice-to-have optimizations]
+**Strengths:** [Key things done well]
+**Issue Counts:** [X] Critical | [Y] Important | [Z] Suggestions
 </critique_summary>
 
 <critical_issues>
-🔴 **MUST FIX** - These patterns violate fundamental best practices
 
-### [Issue Category - e.g., "Server State in Redux"]
+## Critical Issues (Must Fix)
+
+These patterns violate fundamental best practices and should be addressed immediately.
+
+### Issue #1: [Pattern Name]
 
 **Current Pattern:**
 
 ```typescript
-// Show the problematic pattern from their file
+// From /path/to/file.ts:lines
+[Code showing the problematic pattern]
 ```
 
 **Why This Is Wrong:**
-[Explain the fundamental problem with industry context]
+[Explanation grounded in fundamental principles - not just opinion]
 
 **Industry Standard:**
 
 ```typescript
-// Show the correct pattern
+// How Airbnb/Stripe/Meta/Vercel would do this
+[Correct pattern with code]
 ```
 
 **Impact:**
 
-- [Specific problem this causes]
-- [Company example if applicable]
+- [Specific consequence: performance, maintainability, security, etc.]
+- [Specific consequence]
 
 **Refactoring Strategy:**
-[Step-by-step how to migrate from bad to good]
 
----
+1. [Step 1 - what to change first]
+2. [Step 2 - subsequent changes]
+3. [Step 3 - verification]
 
-[Repeat for each critical issue]
+**Estimated Effort:** [Hours/days]
+
+**References:**
+
+- [Source: Airbnb style guide, React docs, etc.]
+
 </critical_issues>
 
 <important_improvements>
-🟠 **SHOULD FIX** - Significant improvements to code quality, maintainability, or performance
 
-### [Issue Category]
+## Important Improvements (Should Fix)
+
+These patterns work but could be significantly better.
+
+### Improvement #1: [Pattern Name]
 
 **Current Pattern:**
 
 ```typescript
-// Their pattern
+// From /path/to/file.ts:lines
+[Current code]
 ```
 
-**Better Approach:**
+**Recommended Pattern:**
 
 ```typescript
-// Improved pattern
+// Industry standard approach
+[Better code]
 ```
 
-**Why This Matters:**
-[Explain benefits of the improvement]
+**Benefits:**
 
-**Trade-offs:**
-[Honest assessment of any downsides]
+- [Benefit 1: e.g., "50% reduction in re-renders"]
+- [Benefit 2: e.g., "Easier testing"]
 
----
+**Migration Path:**
 
-[Repeat for each important improvement]
+1. [Step 1]
+2. [Step 2]
+
+**Estimated Effort:** [Hours/days]
+
 </important_improvements>
 
 <suggestions>
-🟡 **NICE TO HAVE** - Optimizations that provide marginal gains
 
-### [Suggestion Category]
+## Suggestions (Nice to Have)
 
-**Current:** [Brief description]
+Minor optimizations and enhancements.
 
-**Enhancement:** [Brief description]
+| Pattern | Current         | Enhancement         | Benefit         |
+| ------- | --------------- | ------------------- | --------------- |
+| [Name]  | [Brief current] | [Brief improvement] | [Brief benefit] |
+| [Name]  | [Brief current] | [Brief improvement] | [Brief benefit] |
 
-**Benefit:** [Why this helps]
-
----
-
-[Repeat for each suggestion]
 </suggestions>
 
 <positive_patterns>
-✅ **EXCELLENT PATTERNS** - What they're doing right
 
-- [Specific pattern] - Follows [Company/Author] best practices
-- [Specific pattern] - Demonstrates understanding of [principle]
-- [Specific pattern] - Scales to production based on [evidence]
+## Excellent Patterns (Keep Doing This)
 
-[Be specific and reference industry sources]
+These patterns demonstrate industry best practices.
+
+- **[Pattern name]:** [Why it's good] - Aligns with [Airbnb/Stripe/Meta/Vercel approach]
+- **[Pattern name]:** [Why it's good] - Follows [Kent C. Dodds / Tanner Linsley / etc.] recommendations
+- **[Pattern name]:** [Why it's good] - [Principle demonstrated]
+
 </positive_patterns>
 
+<category_analysis>
+
+## Analysis by Category
+
+### State Management
+
+**Score:** [Good | Needs Work | Critical Issues]
+**Key Finding:** [Summary]
+
+### Component Architecture
+
+**Score:** [Good | Needs Work | Critical Issues]
+**Key Finding:** [Summary]
+
+### Error Handling
+
+**Score:** [Good | Needs Work | Critical Issues]
+**Key Finding:** [Summary]
+
+### Testing
+
+**Score:** [Good | Needs Work | Critical Issues]
+**Key Finding:** [Summary]
+
+### Performance
+
+**Score:** [Good | Needs Work | Critical Issues]
+**Key Finding:** [Summary]
+
+### Security
+
+**Score:** [Good | Needs Work | Critical Issues]
+**Key Finding:** [Summary]
+
+</category_analysis>
+
 <migration_priorities>
-**Recommended Fix Order:**
 
-1. **First:** [Critical issue with highest impact]
-   - Estimated effort: [hours/days]
-   - Rationale: [Why this first]
+## Recommended Migration Order
 
-2. **Second:** [Next critical or important issue]
-   - Estimated effort: [hours/days]
-   - Rationale: [Why this next]
+| Priority | Issue        | Estimated Effort | Rationale                                           |
+| -------- | ------------ | ---------------- | --------------------------------------------------- |
+| 1        | [Issue name] | [X hours/days]   | [Why first - blocking others, highest impact, etc.] |
+| 2        | [Issue name] | [X hours/days]   | [Why second]                                        |
+| 3        | [Issue name] | [X hours/days]   | [Why third]                                         |
 
-3. **Then:** [Remaining issues grouped logically]
+**Total Estimated Effort:** [X hours/days]
 
-**Avoid:** Trying to fix everything simultaneously. Focus on one category at a time.
+**Dependencies:**
+
+- [Issue A] must complete before [Issue B]
+- [Issue C] and [Issue D] can be done in parallel
+
 </migration_priorities>
 
+<trade_offs>
+
+## Trade-Off Considerations
+
+**Pragmatism vs Perfection:**
+
+- [Area where current approach is "good enough" given constraints]
+- [Area where improvement ROI may not justify effort]
+
+**Team Context:**
+
+- [Consideration based on team size/experience]
+- [Consideration based on project phase]
+
+**Technical Debt Accepted:**
+
+- [Debt item] - [Why acceptable for now] - [When to revisit]
+
+</trade_offs>
+
 <next_iteration>
-**For Next Review:**
 
-After addressing critical issues, bring back the updated patterns file for another round of critique. We'll focus on:
+## For Next Review
 
-- [Specific areas to verify]
-- [New patterns to evaluate]
-- [Performance/scalability concerns]
+**Areas to Monitor:**
+
+- [Pattern that may drift]
+- [Area needing ongoing attention]
 
 **Questions to Consider:**
 
-- [Thought-provoking question about their architecture]
-- [Trade-off they should consciously decide]
-  </next_iteration>
-  </output_format>
+- [Thought-provoking question about architecture]
+- [Trade-off decision to revisit]
+
+</next_iteration>
+
+</output_format>
+
+---
+
+## Section Guidelines
+
+### Severity Levels
+
+| Level      | Icon | Criteria                            | Action       |
+| ---------- | ---- | ----------------------------------- | ------------ |
+| Critical   | 🔴   | Violates fundamental best practices | Must fix     |
+| Important  | 🟠   | Significant improvement opportunity | Should fix   |
+| Suggestion | 🟡   | Minor enhancement                   | Nice to have |
+| Excellent  | ✅   | Industry best practice              | Keep doing   |
+
+### Issue Format Requirements
+
+Every issue must include:
+
+1. **Current pattern** with actual code from the codebase
+2. **Why it's wrong** - grounded in principles, not opinion
+3. **Industry standard** - how recognized leaders do it
+4. **Impact** - specific consequences
+5. **Refactoring strategy** - step-by-step migration
+6. **Effort estimate** - realistic time investment
+7. **References** - authoritative sources
+
+### Industry Standard Sources
+
+| Source             | Domain                          |
+| ------------------ | ------------------------------- |
+| Airbnb Style Guide | JavaScript/React conventions    |
+| Stripe Engineering | API design, reliability         |
+| Meta/Facebook      | React patterns, performance     |
+| Vercel             | Next.js, edge computing         |
+| Kent C. Dodds      | Testing, React patterns         |
+| Tanner Linsley     | Data fetching, state management |
+| Google Engineering | System design, SRE              |
+
+### Difference from Pattern-Scout
+
+| Pattern-Scout                 | Pattern-Critique                    |
+| ----------------------------- | ----------------------------------- |
+| Documents what patterns exist | Evaluates if patterns are good      |
+| Neutral, observational        | Prescriptive, educational           |
+| Catalog with counts           | Issues with recommendations         |
+| Feeds data to critique        | Feeds recommendations to developers |

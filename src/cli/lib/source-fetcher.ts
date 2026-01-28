@@ -2,8 +2,9 @@ import path from "path";
 import { downloadTemplate } from "giget";
 import { verbose } from "../utils/logger";
 import { CACHE_DIR } from "../consts";
-import { ensureDir, directoryExists, copy, remove } from "../utils/fs";
+import { ensureDir, directoryExists, readFile } from "../utils/fs";
 import { isLocalSource } from "./config";
+import type { Marketplace, MarketplaceFetchResult } from "../../types";
 
 /**
  * Options for fetching from a source
@@ -28,19 +29,26 @@ export interface FetchResult {
 }
 
 /**
+ * Get a sanitized cache key from a source URL
+ * Exported for use by other fetchers
+ */
+export function sanitizeSourceForCache(source: string): string {
+  // Sanitize source URL for use as directory name
+  // Keep protocol prefix to distinguish github:org/repo from gitlab:org/repo
+  return source
+    .replace(/:/g, "-") // github:org/repo -> github-org/repo
+    .replace(/[\/]/g, "-") // github-org/repo -> github-org-repo
+    .replace(/--+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
  * Get the cache directory for a specific source
  * Creates a sanitized directory name from the source URL
  * Preserves protocol prefix to avoid collisions between different platforms
  */
 function getCacheDir(source: string): string {
-  // Sanitize source URL for use as directory name
-  // Keep protocol prefix to distinguish github:org/repo from gitlab:org/repo
-  const sanitized = source
-    .replace(/:/g, "-") // github:org/repo -> github-org/repo
-    .replace(/[\/]/g, "-") // github-org/repo -> github-org-repo
-    .replace(/--+/g, "-")
-    .replace(/^-|-$/g, "");
-
+  const sanitized = sanitizeSourceForCache(source);
   return path.join(CACHE_DIR, "sources", sanitized);
 }
 
@@ -187,53 +195,43 @@ function wrapGigetError(error: unknown, source: string): Error {
 }
 
 /**
- * Copy fetched content to a destination directory
+ * Fetch marketplace.json from a source
+ *
+ * @param source - Source URL (e.g., "github:claude-collective/skills")
+ * @param options - Fetch options
+ * @returns Marketplace data with metadata
  */
-export async function copyFetchedContent(
-  fetchResult: FetchResult,
-  destDir: string,
-  subPath?: string,
-): Promise<void> {
-  const sourcePath = subPath
-    ? path.join(fetchResult.path, subPath)
-    : fetchResult.path;
-
-  if (!(await directoryExists(sourcePath))) {
-    throw new Error(`Source path not found: ${sourcePath}`);
-  }
-
-  await ensureDir(destDir);
-  await copy(sourcePath, destDir);
-
-  verbose(`Copied ${sourcePath} to ${destDir}`);
-}
-
-/**
- * Clear the cache for a specific source or all sources
- */
-export async function clearCache(source?: string): Promise<void> {
-  if (source) {
-    const cacheDir = getCacheDir(source);
-    if (await directoryExists(cacheDir)) {
-      verbose(`Clearing cache for ${source}: ${cacheDir}`);
-      await remove(cacheDir);
-    }
-  } else {
-    const sourcesCache = path.join(CACHE_DIR, "sources");
-    if (await directoryExists(sourcesCache)) {
-      verbose(`Clearing all source caches: ${sourcesCache}`);
-      await remove(sourcesCache);
-    }
-  }
-}
-
-/**
- * Get cache info for a source
- */
-export async function getCacheInfo(
+export async function fetchMarketplace(
   source: string,
-): Promise<{ exists: boolean; path: string }> {
-  const cacheDir = getCacheDir(source);
-  const exists = await directoryExists(cacheDir);
-  return { exists, path: cacheDir };
+  options: FetchOptions = {},
+): Promise<MarketplaceFetchResult> {
+  const result = await fetchFromSource(source, {
+    forceRefresh: options.forceRefresh,
+    subdir: "", // Root of repo
+  });
+
+  const marketplacePath = path.join(
+    result.path,
+    ".claude-plugin",
+    "marketplace.json",
+  );
+
+  if (!(await directoryExists(path.dirname(marketplacePath)))) {
+    throw new Error(
+      `Marketplace not found at: ${marketplacePath}\n\n` +
+        `Expected .claude-plugin/marketplace.json in the source repository.`,
+    );
+  }
+
+  const content = await readFile(marketplacePath);
+  const marketplace = JSON.parse(content) as Marketplace;
+
+  verbose(`Loaded marketplace: ${marketplace.name} v${marketplace.version}`);
+
+  return {
+    marketplace,
+    sourcePath: result.path,
+    fromCache: result.fromCache ?? false,
+    cacheKey: sanitizeSourceForCache(source),
+  };
 }

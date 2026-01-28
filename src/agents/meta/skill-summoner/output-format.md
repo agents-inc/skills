@@ -1,67 +1,134 @@
 ## Output Format
 
 <output_format>
-Provide your response in this structure:
+Provide your skill definition in this structure:
 
-<investigation_notes>
-**Files Examined:**
+<skill_definition>
 
-- [List files you read]
+## Skill: [category]/[name] (@[author])
 
-**Patterns Found:**
+### metadata.yaml
 
-- [Key patterns and conventions discovered]
-- [Relevant utilities or components to reuse]
-  </investigation_notes>
+```yaml
+# yaml-language-server: $schema=../../schemas/metadata.schema.json
+category: [category]
+author: [@author]
+version: 1
+cli_name: [Display Name]
+cli_description: [5-6 words max]
+usage_guidance: >-
+  [When AI agent should invoke this skill - be specific about triggers]
+requires: []
+compatible_with: []
+conflicts_with: []
+tags:
+  - [tag1]
+  - [tag2]
+```
 
-<implementation_plan>
-**Approach:**
-[Brief description of how you'll solve this following existing patterns]
+### SKILL.md
 
-**Files to Modify:**
+````markdown
+---
+name: [Name]
+description: [One-line description]
+---
 
-- [File 1]: [What changes]
-- [File 2]: [What changes]
+# [Name] Patterns
 
-**Existing Code to Reuse:**
+## When to Use This Skill
 
-- [Utility/component to use and why]
-  </implementation_plan>
+[Clear criteria for when this skill applies]
 
-<implementation>
-**[filename.ts]**
+## Core Patterns
+
+### Pattern 1: [Name]
+
+[Description and rationale]
+
 ```typescript
-[Your code here]
+// Example code
 ```
+````
 
-**[filename2.tsx]**
+### Pattern 2: [Name]
 
-```tsx
-[Your code here]
-```
+[Continue with all patterns...]
 
-[Additional files as needed]
-</implementation>
+## Anti-Patterns
 
-<tests>
-**[filename.test.ts]**
-```typescript
-[Test code covering the implementation]
-```
-</tests>
+### [Anti-pattern name]
 
-<verification>
-✅ Criteria met:
-- [Criterion 1]: Verified
-- [Criterion 2]: Verified
+**Problem:**
+[What's wrong]
 
-📊 Test results:
+**Instead:**
+[What to do]
 
-- [Test suite]: All passing
-- Coverage: [X%]
+## Decision Trees
 
-⚠️ Notes:
+[If applicable - flowcharts for decision-making]
 
-- [Any important notes or considerations]
-  </verification>
-  </output_format>
+## Quick Reference
+
+[Cheat sheet of key patterns]
+
+````
+
+### reference.md (optional)
+```markdown
+# [Name] Quick Reference
+
+[Condensed reference for quick lookups]
+````
+
+### examples/ (optional)
+
+[List any example files needed]
+</skill_definition>
+
+<research_sources>
+
+## Sources Used
+
+| Source              | URL/Location  | What Was Used             |
+| ------------------- | ------------- | ------------------------- |
+| Official docs       | [url]         | [specific section]        |
+| Codebase pattern    | [/path:lines] | [what pattern]            |
+| Best practice guide | [url]         | [specific recommendation] |
+
+</research_sources>
+
+<skill_relationships>
+
+## Relationship Analysis
+
+**Requires (hard dependencies):**
+
+- [skill-id] - [why required]
+
+**Compatible with (works well together):**
+
+- [skill-id] - [why compatible]
+
+**Conflicts with (mutually exclusive):**
+
+- [skill-id] - [why conflicts]
+
+**Category:** [category]
+**Category exclusive:** [true/false] - [reasoning]
+</skill_relationships>
+
+<validation>
+## Skill Quality Checks
+
+- [ ] All code examples are syntactically correct
+- [ ] Examples follow the patterns described (no contradictions)
+- [ ] Usage guidance is specific (not vague "use when needed")
+- [ ] Follows existing skill structure in codebase
+- [ ] No overlap with existing skills (checked against: [list])
+- [ ] Tags are lowercase kebab-case
+- [ ] Author handle starts with @
+- [ ] cli_description is 5-6 words max
+      </validation>
+      </output_format>

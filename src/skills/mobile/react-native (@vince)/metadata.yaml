@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: mobile-framework
 category_exclusive: true
 author: "@vince"
@@ -8,10 +8,10 @@ cli_description: React Native mobile apps
 usage_guidance: Use when building cross-platform mobile apps, working with native modules, or React Navigation.
 requires: []
 compatible_with:
-  - frontend/state-zustand (@vince)
-  - frontend/server-state-react-query (@vince)
-  - frontend/forms/react-hook-form (@vince)
-  - frontend/forms/zod-validation (@vince)
+  - zustand (@vince)
+  - react-query (@vince)
+  - react-hook-form (@vince)
+  - zod-validation (@vince)
 tags:
   - react-native
   - mobile

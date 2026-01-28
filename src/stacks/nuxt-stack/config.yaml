@@ -1,0 +1,180 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Nuxt Full-Stack - Vue 3 with Nuxt for full-stack Vue development
+
+name: "Nuxt Full-Stack"
+description: >
+  Vue 3 with Nuxt for full-stack Vue development.
+  Frontend: Vue 3 + Nuxt + Tailwind, Pinia, VeeValidate, Vue Test Utils.
+  Backend: Hono, Drizzle.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: vue-composition-api (@vince)
+  - id: nuxt (@vince)
+  - id: tailwind (@vince)
+  - id: pinia (@vince)
+  - id: vee-validate (@vince)
+  - id: zod-validation (@vince)
+  - id: vue-test-utils (@vince)
+  # Backend
+  - id: hono (@vince)
+  - id: drizzle (@vince)
+  # Shared
+  - id: reviewing (@vince)
+  # Research
+  - id: research-methodology (@vince)
+
+agents:
+  # Developer agents
+  - frontend-developer
+  - backend-developer
+  - architecture
+  # Reviewer agents
+  - frontend-reviewer
+  - backend-reviewer
+  # Researcher agents
+  - frontend-researcher
+  - backend-researcher
+  # Planning agents
+  - pm
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
+  - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: vue-composition-api (@vince)
+        preloaded: true
+      - id: nuxt (@vince)
+        preloaded: true
+    styling:
+      - id: tailwind (@vince)
+        preloaded: true
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+
+  backend-developer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+
+  frontend-reviewer:
+    framework:
+      - id: vue-composition-api (@vince)
+        preloaded: true
+      - id: nuxt (@vince)
+        preloaded: true
+    styling:
+      - id: tailwind (@vince)
+        preloaded: true
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  backend-reviewer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  tester:
+    testing:
+      - id: vue-test-utils (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: vue-composition-api (@vince)
+      - id: nuxt (@vince)
+    styling:
+      - id: tailwind (@vince)
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+    api:
+      - id: hono (@vince)
+    database:
+      - id: drizzle (@vince)
+
+  frontend-researcher:
+    framework:
+      - id: vue-composition-api (@vince)
+        preloaded: true
+      - id: nuxt (@vince)
+    styling:
+      - id: tailwind (@vince)
+    state:
+      - id: pinia (@vince)
+    forms:
+      - id: vee-validate (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vue-test-utils (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Progressive Vue with Nuxt power"
+
+principles:
+  - Use Composition API over Options API
+  - Leverage Nuxt auto-imports
+  - Pinia for state management
+  - VeeValidate with Zod for forms
+  - Tailwind for utility-first styling
+  - Vue Test Utils for testing
+
+tags:
+  - vue
+  - vue3
+  - nuxt
+  - typescript
+  - tailwind
+  - pinia
+  - full-stack

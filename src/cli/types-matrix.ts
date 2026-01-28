@@ -15,25 +15,25 @@
  */
 export interface SkillsMatrixConfig {
   /** Semantic version of the matrix schema (e.g., "1.0.0") */
-  version: string
+  version: string;
 
   /**
    * Category definitions indexed by category ID
    * Includes both top-level (frontend, backend) and subcategories (styling, state)
    */
-  categories: Record<string, CategoryDefinition>
+  categories: Record<string, CategoryDefinition>;
 
   /** Relationship rules between skills */
-  relationships: RelationshipDefinitions
+  relationships: RelationshipDefinitions;
 
   /** Pre-configured technology combinations for quick setup */
-  suggested_stacks: SuggestedStack[]
+  suggested_stacks: SuggestedStack[];
 
   /**
    * Maps short alias names to full skill IDs
-   * @example { "react": "frontend/react (@vince)", "zustand": "frontend/state-zustand (@vince)" }
+   * @example { "react": "react (@vince)", "zustand": "zustand (@vince)" }
    */
-  skill_aliases: Record<string, string>
+  skill_aliases: Record<string, string>;
 }
 
 /**
@@ -42,40 +42,40 @@ export interface SkillsMatrixConfig {
  */
 export interface CategoryDefinition {
   /** Unique identifier (e.g., "styling", "state-management") */
-  id: string
+  id: string;
 
   /** Human-readable display name (e.g., "State Management") */
-  name: string
+  name: string;
 
   /** Brief description shown in wizard */
-  description: string
+  description: string;
 
   /**
    * Parent category ID for subcategories
    * If undefined, this is a top-level category
    * @example "frontend" for styling, state-management subcategories
    */
-  parent?: string
+  parent?: string;
 
   /**
    * If true, only one skill from this category can be selected
    * @default true
    * @example true for framework (can't have React AND Vue)
    */
-  exclusive: boolean
+  exclusive: boolean;
 
   /**
    * If true, user MUST select something from this category
    * @default false
    * @example true for framework, false for state-management
    */
-  required: boolean
+  required: boolean;
 
   /** Display order within parent category (lower = earlier) */
-  order: number
+  order: number;
 
   /** Optional emoji icon for display */
-  icon?: string
+  icon?: string;
 }
 
 /**
@@ -83,19 +83,19 @@ export interface CategoryDefinition {
  */
 export interface RelationshipDefinitions {
   /** Mutual exclusion rules - selecting one disables the others */
-  conflicts: ConflictRule[]
+  conflicts: ConflictRule[];
 
   /** Soft warnings - selecting one shows warning for others but doesn't disable */
-  discourages: DiscourageRule[]
+  discourages: DiscourageRule[];
 
   /** Soft suggestions - selecting one highlights recommended companions */
-  recommends: RecommendRule[]
+  recommends: RecommendRule[];
 
   /** Hard dependencies - skill A requires skill B to be selected first */
-  requires: RequireRule[]
+  requires: RequireRule[];
 
   /** Groups of interchangeable skills for the same purpose */
-  alternatives: AlternativeGroup[]
+  alternatives: AlternativeGroup[];
 }
 
 /**
@@ -106,10 +106,10 @@ export interface ConflictRule {
    * List of skill aliases/IDs that conflict with each other
    * Selecting any one disables ALL others in this list
    */
-  skills: string[]
+  skills: string[];
 
   /** Human-readable explanation shown when option is disabled */
-  reason: string
+  reason: string;
 }
 
 /**
@@ -121,10 +121,10 @@ export interface DiscourageRule {
    * List of skill aliases/IDs that discourage each other
    * Selecting any one shows a warning for ALL others in this list
    */
-  skills: string[]
+  skills: string[];
 
   /** Human-readable explanation shown as a warning */
-  reason: string
+  reason: string;
 }
 
 /**
@@ -132,13 +132,13 @@ export interface DiscourageRule {
  */
 export interface RecommendRule {
   /** Skill alias/ID that triggers this recommendation */
-  when: string
+  when: string;
 
   /** List of skill aliases/IDs to highlight as recommended */
-  suggest: string[]
+  suggest: string[];
 
   /** Human-readable explanation shown with recommendation */
-  reason: string
+  reason: string;
 }
 
 /**
@@ -146,20 +146,20 @@ export interface RecommendRule {
  */
 export interface RequireRule {
   /** Skill alias/ID that has requirements */
-  skill: string
+  skill: string;
 
   /** Skills that must be selected before this one */
-  needs: string[]
+  needs: string[];
 
   /**
    * If true, only ONE of the `needs` skills is required (OR logic)
    * If false/undefined, ALL of the `needs` skills are required (AND logic)
    * @default false
    */
-  needs_any?: boolean
+  needs_any?: boolean;
 
   /** Human-readable explanation shown when requirement not met */
-  reason: string
+  reason: string;
 }
 
 /**
@@ -168,10 +168,10 @@ export interface RequireRule {
  */
 export interface AlternativeGroup {
   /** Description of what these skills are for */
-  purpose: string
+  purpose: string;
 
   /** List of interchangeable skill aliases/IDs */
-  skills: string[]
+  skills: string[];
 }
 
 /**
@@ -179,25 +179,25 @@ export interface AlternativeGroup {
  */
 export interface SuggestedStack {
   /** Unique identifier for this stack */
-  id: string
+  id: string;
 
   /** Human-readable display name */
-  name: string
+  name: string;
 
   /** Brief description of the stack's purpose */
-  description: string
+  description: string;
 
   /** Target audiences (e.g., "startups", "enterprise", "personal") */
-  audience: string[]
+  audience: string[];
 
   /**
    * Skill selections organized by category
    * Structure: { category: { subcategory: skill_alias } }
    */
-  skills: Record<string, Record<string, string>>
+  skills: Record<string, Record<string, string>>;
 
   /** Guiding principle for this stack */
-  philosophy: string
+  philosophy: string;
 }
 
 // =============================================================================
@@ -214,23 +214,30 @@ export interface ExtractedSkillMetadata {
   // --- Identity (from SKILL.md frontmatter) ---
 
   /**
-   * Unique skill identifier
-   * Format: "domain/skill-name (@author)"
-   * @example "frontend/state-zustand (@vince)"
+   * Unique skill identifier (from frontmatter name)
+   * Format: "skill-name (@author)"
+   * @example "react (@vince)"
    */
-  id: string
+  id: string;
+
+  /**
+   * Directory path for filesystem access
+   * Used for loading skill files from the filesystem
+   * @example "frontend/framework/react (@vince)"
+   */
+  directoryPath: string;
 
   /**
    * Display name derived from id
-   * @example "State Zustand" from "frontend/state-zustand (@vince)"
+   * @example "Zustand" from "zustand (@vince)"
    */
-  name: string
+  name: string;
 
   /** Brief description of the skill's purpose (for CLI display) */
-  description: string
+  description: string;
 
   /** When an AI agent should invoke this skill (decision criteria) */
-  usageGuidance?: string
+  usageGuidance?: string;
 
   // --- Catalog Data (from metadata.yaml) ---
 
@@ -238,58 +245,55 @@ export interface ExtractedSkillMetadata {
    * Primary category this skill belongs to
    * @example "state", "styling", "framework", "backend"
    */
-  category: string
+  category: string;
 
   /**
    * If true, only one skill from this category can be active
    * @default true
    */
-  categoryExclusive: boolean
+  categoryExclusive: boolean;
 
   /** Author handle for attribution */
-  author: string
-
-  /** Semantic version of the skill content */
-  version: string
+  author: string;
 
   /** Tags for search and filtering */
-  tags: string[]
+  tags: string[];
 
   // --- Relationships (from metadata.yaml) ---
 
   /**
    * Skills this works well with (soft recommendation)
-   * @example ["frontend/react", "frontend/api"]
+   * @example ["react (@vince)", "hono (@vince)"]
    */
-  compatibleWith: string[]
+  compatibleWith: string[];
 
   /**
    * Skills that cannot coexist with this one
-   * @example ["state/mobx", "state/redux"]
+   * @example ["mobx (@vince)", "redux (@vince)"]
    */
-  conflictsWith: string[]
+  conflictsWith: string[];
 
   /**
    * Skills that must be present for this to work
-   * @example ["framework/react"] for zustand
+   * @example ["react (@vince)"] for zustand
    */
-  requires: string[]
+  requires: string[];
 
   // --- Setup Relationships (from metadata.yaml) ---
 
   /**
    * Setup skills that must be completed first
    * Links usage skills to their prerequisites
-   * @example ["setup/posthog"] for backend/posthog-analytics
+   * @example ["posthog-setup (@vince)"] for posthog-analytics
    */
-  requiresSetup: string[]
+  requiresSetup: string[];
 
   /**
    * Usage skills this setup skill configures
    * Links setup skills to what they enable
-   * @example ["backend/posthog-analytics", "backend/posthog-flags"]
+   * @example ["posthog-analytics (@vince)", "posthog-flags (@vince)"]
    */
-  providesSetupFor: string[]
+  providesSetupFor: string[];
 
   // --- Location ---
 
@@ -297,7 +301,20 @@ export interface ExtractedSkillMetadata {
    * Relative path from src/ to the skill directory
    * @example "skills/frontend/client-state-management/zustand (@vince)"
    */
-  path: string
+  path: string;
+
+  // --- Local Skill Fields ---
+
+  /**
+   * True if this skill is from .claude/skills/ (user-defined local skill)
+   */
+  local?: boolean;
+
+  /**
+   * Relative path from project root for local skills
+   * @example ".claude/skills/my-skill/"
+   */
+  localPath?: string;
 }
 
 // =============================================================================
@@ -315,34 +332,34 @@ export interface ExtractedSkillMetadata {
  */
 export interface MergedSkillsMatrix {
   /** Schema version for compatibility checking */
-  version: string
+  version: string;
 
   /** Category definitions for wizard navigation */
-  categories: Record<string, CategoryDefinition>
+  categories: Record<string, CategoryDefinition>;
 
   /**
    * Fully resolved skills with computed relationship data
    * Indexed by full skill ID for O(1) lookup
    */
-  skills: Record<string, ResolvedSkill>
+  skills: Record<string, ResolvedSkill>;
 
   /** Pre-configured stacks with resolved skill references */
-  suggestedStacks: ResolvedStack[]
+  suggestedStacks: ResolvedStack[];
 
   /**
    * Alias lookup map (alias -> full skill ID)
-   * @example { "react": "frontend/react (@vince)" }
+   * @example { "react": "react (@vince)" }
    */
-  aliases: Record<string, string>
+  aliases: Record<string, string>;
 
   /**
    * Reverse alias lookup (full skill ID -> alias)
-   * @example { "frontend/react (@vince)": "react" }
+   * @example { "react (@vince)": "react" }
    */
-  aliasesReverse: Record<string, string>
+  aliasesReverse: Record<string, string>;
 
   /** Generated timestamp for cache invalidation */
-  generatedAt: string
+  generatedAt: string;
 }
 
 /**
@@ -352,42 +369,42 @@ export interface MergedSkillsMatrix {
 export interface ResolvedSkill {
   // --- Identity ---
 
-  /** Full unique identifier: "frontend/state-zustand (@vince)" */
-  id: string
+  /** Full unique identifier: "zustand (@vince)" */
+  id: string;
 
   /**
    * Short alias if defined in skill_aliases
-   * @example "zustand" for "frontend/state-zustand (@vince)"
+   * @example "zustand" for "zustand (@vince)"
    */
-  alias?: string
+  alias?: string;
 
   /** Human-readable display name */
-  name: string
+  name: string;
 
   /** Brief description (for CLI display) */
-  description: string
+  description: string;
 
   /** When an AI agent should invoke this skill (decision criteria) */
-  usageGuidance?: string
+  usageGuidance?: string;
 
   // --- Categorization ---
 
   /** Primary category ID (matches key in matrix.categories) */
-  category: string
+  category: string;
 
   /** If true, only one skill from this category can be selected */
-  categoryExclusive: boolean
+  categoryExclusive: boolean;
 
   /** Tags for filtering and search */
-  tags: string[]
+  tags: string[];
 
   // --- Authorship ---
 
   /** Author handle */
-  author: string
+  author: string;
 
-  /** Semantic version */
-  version: string
+  /** DEPRECATED: Version now lives in plugin.json. Optional for backward compatibility. */
+  version?: string;
 
   // --- Computed Relationships (populated by resolver) ---
 
@@ -396,68 +413,81 @@ export interface ResolvedSkill {
    * Computed from: metadata.yaml conflicts_with + skills-matrix.yaml conflicts
    * Format: Array of { skillId, reason }
    */
-  conflictsWith: SkillRelation[]
+  conflictsWith: SkillRelation[];
 
   /**
    * Skills that are recommended when this is selected
    * Computed from: metadata.yaml compatible_with + skills-matrix.yaml recommends
    * Format: Array of { skillId, reason }
    */
-  recommends: SkillRelation[]
+  recommends: SkillRelation[];
 
   /**
    * Skills that recommend THIS skill when THEY are selected
    * Inverse of recommends - "who recommends me?"
    * Format: Array of { skillId, reason }
    */
-  recommendedBy: SkillRelation[]
+  recommendedBy: SkillRelation[];
 
   /**
    * Skills that THIS skill requires (must select first)
    * Computed from: metadata.yaml requires + skills-matrix.yaml requires
    * Format: Array of { skillId, reason, needsAny }
    */
-  requires: SkillRequirement[]
+  requires: SkillRequirement[];
 
   /**
    * Skills that require THIS skill (I am their dependency)
    * Inverse of requires - "who needs me?"
    * Format: Array of { skillId, reason }
    */
-  requiredBy: SkillRelation[]
+  requiredBy: SkillRelation[];
 
   /**
    * Alternative skills that serve the same purpose
    * From skills-matrix.yaml alternatives groups
    * Format: Array of { skillId, purpose }
    */
-  alternatives: SkillAlternative[]
+  alternatives: SkillAlternative[];
 
   /**
    * Skills that are discouraged when this is selected (show warning)
    * Computed from: skills-matrix.yaml discourages
    * Format: Array of { skillId, reason }
    */
-  discourages: SkillRelation[]
+  discourages: SkillRelation[];
 
   // --- Setup Relationships ---
 
   /**
    * Setup skills that must be completed before using this
-   * @example ["setup/posthog (@vince)"] for posthog-analytics
+   * @example ["posthog-setup (@vince)"] for posthog-analytics
    */
-  requiresSetup: string[]
+  requiresSetup: string[];
 
   /**
    * Usage skills that this setup skill configures
-   * @example ["backend/posthog-analytics (@vince)"] for setup/posthog
+   * @example ["posthog-analytics (@vince)"] for posthog-setup
    */
-  providesSetupFor: string[]
+  providesSetupFor: string[];
 
   // --- File Location ---
 
   /** Relative path to skill directory from src/ */
-  path: string
+  path: string;
+
+  // --- Local Skill Fields ---
+
+  /**
+   * True if this skill is from .claude/skills/ (user-defined local skill)
+   */
+  local?: boolean;
+
+  /**
+   * Relative path from project root for local skills
+   * @example ".claude/skills/my-skill/"
+   */
+  localPath?: string;
 }
 
 /**
@@ -465,10 +495,10 @@ export interface ResolvedSkill {
  */
 export interface SkillRelation {
   /** Full skill ID of the related skill */
-  skillId: string
+  skillId: string;
 
   /** Human-readable explanation of the relationship */
-  reason: string
+  reason: string;
 }
 
 /**
@@ -476,17 +506,17 @@ export interface SkillRelation {
  */
 export interface SkillRequirement {
   /** Full skill IDs that are required */
-  skillIds: string[]
+  skillIds: string[];
 
   /**
    * If true, only ONE of skillIds is needed (OR)
    * If false, ALL of skillIds are needed (AND)
    * @default false
    */
-  needsAny: boolean
+  needsAny: boolean;
 
   /** Human-readable explanation */
-  reason: string
+  reason: string;
 }
 
 /**
@@ -494,10 +524,10 @@ export interface SkillRequirement {
  */
 export interface SkillAlternative {
   /** Full skill ID of the alternative */
-  skillId: string
+  skillId: string;
 
   /** What purpose this alternative serves */
-  purpose: string
+  purpose: string;
 }
 
 /**
@@ -505,33 +535,33 @@ export interface SkillAlternative {
  */
 export interface ResolvedStack {
   /** Stack identifier */
-  id: string
+  id: string;
 
   /** Display name */
-  name: string
+  name: string;
 
   /** Description */
-  description: string
+  description: string;
 
   /** Target audiences */
-  audience: string[]
+  audience: string[];
 
   /**
    * Skill selections with FULL skill IDs (aliases resolved)
    * Structure: { category: { subcategory: fullSkillId } }
-   * @example { frontend: { styling: "frontend/styling-scss-modules (@vince)" } }
+   * @example { frontend: { styling: "scss-modules (@vince)" } }
    */
-  skills: Record<string, Record<string, string>>
+  skills: Record<string, Record<string, string>>;
 
   /**
    * Flat list of all skill IDs in this stack
    * Computed for easy iteration
-   * @example ["frontend/react (@vince)", "frontend/styling-scss-modules (@vince)", ...]
+   * @example ["react (@vince)", "scss-modules (@vince)", ...]
    */
-  allSkillIds: string[]
+  allSkillIds: string[];
 
   /** Guiding principle */
-  philosophy: string
+  philosophy: string;
 }
 
 // =============================================================================
@@ -544,64 +574,63 @@ export interface ResolvedStack {
  */
 export interface SkillOption {
   /** Full skill ID */
-  id: string
+  id: string;
 
   /** Short alias if available */
-  alias?: string
+  alias?: string;
 
   /** Display name */
-  name: string
+  name: string;
 
   /** Description */
-  description: string
+  description: string;
 
   /** Whether this option is currently disabled */
-  disabled: boolean
+  disabled: boolean;
 
   /**
    * Why this option is disabled
    * @example "Conflicts with Tailwind (already selected)"
    */
-  disabledReason?: string
+  disabledReason?: string;
 
   /** Whether this option is discouraged (not recommended) based on current selections */
-  discouraged: boolean
+  discouraged: boolean;
 
   /**
    * Why this is not recommended
    * @example "Mixing CSS paradigms is unusual"
    */
-  discouragedReason?: string
+  discouragedReason?: string;
 
   /** Whether this option is recommended based on current selections */
-  recommended: boolean
+  recommended: boolean;
 
   /**
    * Why this is recommended
    * @example "Works great with React"
    */
-  recommendedReason?: string
+  recommendedReason?: string;
 
   /** Whether this skill is already selected */
-  selected: boolean
+  selected: boolean;
 
   /** Alternative skills that serve the same purpose */
-  alternatives: string[]
+  alternatives: string[];
 }
-
 
 /**
  * Current wizard state for computing available options
  */
 export interface WizardState {
   /** Currently selected skill IDs (full IDs, not aliases) */
-  selectedSkills: string[]
+  selectedSkills: string[];
 
   /** Current step/category being displayed */
-  currentCategory: string
+  currentCategory: string;
 
   /** Selected stack (if user chose a pre-built stack) */
-  selectedStack?: string
+  selectedStack?: string;
 }
 
 // =============================================================================
@@ -613,13 +642,13 @@ export interface WizardState {
  */
 export interface SelectionValidation {
   /** Whether the selection is valid */
-  valid: boolean
+  valid: boolean;
 
   /** Error messages if invalid */
-  errors: ValidationError[]
+  errors: ValidationError[];
 
   /** Warning messages (valid but with caveats) */
-  warnings: ValidationWarning[]
+  warnings: ValidationWarning[];
 }
 
 /**
@@ -627,13 +656,13 @@ export interface SelectionValidation {
  */
 export interface ValidationError {
   /** Type of error */
-  type: 'conflict' | 'missing_requirement' | 'category_exclusive'
+  type: "conflict" | "missing_requirement" | "category_exclusive";
 
   /** Human-readable message */
-  message: string
+  message: string;
 
   /** Skill IDs involved in the error */
-  skills: string[]
+  skills: string[];
 }
 
 /**
@@ -641,11 +670,11 @@ export interface ValidationError {
  */
 export interface ValidationWarning {
   /** Type of warning */
-  type: 'missing_recommendation' | 'unused_setup'
+  type: "missing_recommendation" | "unused_setup";
 
   /** Human-readable message */
-  message: string
+  message: string;
 
   /** Skill IDs involved */
-  skills: string[]
+  skills: string[];
 }

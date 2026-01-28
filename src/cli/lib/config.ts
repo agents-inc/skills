@@ -3,7 +3,11 @@ import os from "os";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { readFile, writeFile, fileExists, ensureDir } from "../utils/fs";
 import { verbose } from "../utils/logger";
-import { COLLECTIVE_DIR } from "../consts";
+
+/**
+ * Legacy project config directory (still used for backwards compatibility)
+ */
+const PROJECT_CONFIG_DIR = ".claude-collective";
 
 /**
  * Default skills source repository
@@ -93,7 +97,7 @@ export function getGlobalConfigPath(): string {
  * Get the project config file path
  */
 export function getProjectConfigPath(projectDir: string): string {
-  return path.join(projectDir, COLLECTIVE_DIR, PROJECT_CONFIG_FILE);
+  return path.join(projectDir, PROJECT_CONFIG_DIR, PROJECT_CONFIG_FILE);
 }
 
 /**
@@ -171,7 +175,7 @@ export async function saveProjectConfig(
   config: ProjectConfig,
 ): Promise<void> {
   const configPath = getProjectConfigPath(projectDir);
-  await ensureDir(path.join(projectDir, COLLECTIVE_DIR));
+  await ensureDir(path.join(projectDir, PROJECT_CONFIG_DIR));
   const content = stringifyYaml(config, { lineWidth: 0 });
   await writeFile(configPath, content);
   verbose(`Saved project config to ${configPath}`);

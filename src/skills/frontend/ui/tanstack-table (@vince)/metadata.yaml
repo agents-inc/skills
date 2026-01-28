@@ -16,4 +16,6 @@ tags:
   - virtual-scrolling
   - server-side
 compatible_with:
-  - frontend/react (@vince)
+  - react (@vince)
+  - vue-composition-api (@vince)
+  - solidjs (@vince)

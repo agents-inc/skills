@@ -1,5 +1,5 @@
 ---
-name: frontend/realtime/websockets (@vince)
+name: websockets (@vince)
 description: Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks
 ---
 
@@ -61,6 +61,7 @@ description: Native WebSocket API patterns, connection lifecycle, reconnection s
 - When automatic backpressure handling is critical (consider WebSocketStream when widely supported)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
@@ -83,6 +84,7 @@ WebSockets provide full-duplex communication channels over a single TCP connecti
 4. **Type Safety:** WebSocket messages are untyped strings. Use discriminated unions with a shared `type` field for compile-time safety.
 
 **Connection Lifecycle:**
+
 ```
 CONNECTING → OPEN ↔ (messages) → CLOSING → CLOSED
                 ↓                    ↓
@@ -166,7 +168,7 @@ const JITTER_FACTOR = 0.5; // 50% randomness
 function calculateBackoff(attempt: number): number {
   const exponentialDelay = Math.min(
     INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, attempt),
-    MAX_BACKOFF_MS
+    MAX_BACKOFF_MS,
   );
 
   // Add jitter: random value between 50% and 150% of delay
@@ -410,7 +412,9 @@ function handleServerMessage(message: ServerMessage): void {
   // TypeScript narrows the type based on the `type` field
   switch (message.type) {
     case "subscribed":
-      console.log(`Joined ${message.channel} with ${message.members.length} members`);
+      console.log(
+        `Joined ${message.channel} with ${message.members.length} members`,
+      );
       break;
     case "unsubscribed":
       console.log(`Left ${message.channel}`);
@@ -501,7 +505,10 @@ class BinaryWebSocket {
     const payloadLength = view.getUint32(4);
 
     // Extract payload
-    const payload = buffer.slice(BINARY_HEADER_SIZE, BINARY_HEADER_SIZE + payloadLength);
+    const payload = buffer.slice(
+      BINARY_HEADER_SIZE,
+      BINARY_HEADER_SIZE + payloadLength,
+    );
 
     switch (messageType) {
       case BinaryMessageTypes.IMAGE:
@@ -537,9 +544,15 @@ class BinaryWebSocket {
     // ...
   }
 
-  private handleImage(payload: ArrayBuffer): void { /* ... */ }
-  private handleAudio(payload: ArrayBuffer): void { /* ... */ }
-  private handleFile(payload: ArrayBuffer): void { /* ... */ }
+  private handleImage(payload: ArrayBuffer): void {
+    /* ... */
+  }
+  private handleAudio(payload: ArrayBuffer): void {
+    /* ... */
+  }
+  private handleFile(payload: ArrayBuffer): void {
+    /* ... */
+  }
 }
 ```
 
@@ -591,7 +604,7 @@ class AuthenticatedWebSocket {
     url: string,
     token: string,
     onAuthenticated: () => void,
-    onAuthError: (error: string) => void
+    onAuthError: (error: string) => void,
   ) {
     this.socket = new WebSocket(url);
     this.onAuthenticated = onAuthenticated;
@@ -678,7 +691,10 @@ class RoomWebSocket {
   private rooms: Map<string, RoomState> = new Map();
   private onRoomMessage: (roomId: string, message: unknown) => void;
 
-  constructor(url: string, onRoomMessage: (roomId: string, message: unknown) => void) {
+  constructor(
+    url: string,
+    onRoomMessage: (roomId: string, message: unknown) => void,
+  ) {
     this.socket = new WebSocket(url);
     this.onRoomMessage = onRoomMessage;
 
@@ -699,10 +715,12 @@ class RoomWebSocket {
       joined: false,
     });
 
-    this.socket.send(JSON.stringify({
-      type: "join_room",
-      roomId,
-    }));
+    this.socket.send(
+      JSON.stringify({
+        type: "join_room",
+        roomId,
+      }),
+    );
   }
 
   public leaveRoom(roomId: string): void {
@@ -710,10 +728,12 @@ class RoomWebSocket {
       return;
     }
 
-    this.socket.send(JSON.stringify({
-      type: "leave_room",
-      roomId,
-    }));
+    this.socket.send(
+      JSON.stringify({
+        type: "leave_room",
+        roomId,
+      }),
+    );
 
     this.rooms.delete(roomId);
   }
@@ -725,15 +745,21 @@ class RoomWebSocket {
       return;
     }
 
-    this.socket.send(JSON.stringify({
-      type: "room_message",
-      roomId,
-      payload: message,
-    }));
+    this.socket.send(
+      JSON.stringify({
+        type: "room_message",
+        roomId,
+        payload: message,
+      }),
+    );
   }
 
   private handleMessage(data: unknown): void {
-    const message = data as { type: string; roomId?: string; [key: string]: unknown };
+    const message = data as {
+      type: string;
+      roomId?: string;
+      [key: string]: unknown;
+    };
 
     switch (message.type) {
       case "room_joined": {

@@ -9,7 +9,15 @@ import {
   extractAllSkills,
   mergeMatrixWithSkills,
 } from "./matrix-loader";
-import type { MergedSkillsMatrix } from "../types-matrix";
+import {
+  discoverLocalSkills,
+  type LocalSkillDiscoveryResult,
+} from "./local-skill-loader";
+import type {
+  MergedSkillsMatrix,
+  ResolvedSkill,
+  CategoryDefinition,
+} from "../types-matrix";
 
 /**
  * Options for loading from a source
@@ -60,11 +68,28 @@ export async function loadSkillsMatrixFromSource(
   // Local mode: source points to this repo or a local path
   const isLocal = isLocalSource(source) || (await isDevMode(source));
 
+  let result: SourceLoadResult;
   if (isLocal) {
-    return loadFromLocal(source, sourceConfig);
+    result = await loadFromLocal(source, sourceConfig);
+  } else {
+    result = await loadFromRemote(source, sourceConfig, forceRefresh);
   }
 
-  return loadFromRemote(source, sourceConfig, forceRefresh);
+  // Discover and merge local skills from project's .claude/skills/
+  const resolvedProjectDir = projectDir || process.cwd();
+  const localSkillsResult = await discoverLocalSkills(resolvedProjectDir);
+
+  if (localSkillsResult && localSkillsResult.skills.length > 0) {
+    verbose(
+      `Found ${localSkillsResult.skills.length} local skill(s) in ${localSkillsResult.localSkillsPath}`,
+    );
+    result.matrix = mergeLocalSkillsIntoMatrix(
+      result.matrix,
+      localSkillsResult,
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -163,20 +188,93 @@ async function loadFromRemote(
 }
 
 /**
- * Get the skills directory path for a loaded source
+ * Local category definitions for project-local skills
+ * Two-level structure required by wizard: top-level -> subcategory -> skills
  */
-export function getSkillsDir(sourceResult: SourceLoadResult): string {
-  return path.join(sourceResult.sourcePath, SKILLS_DIR_PATH);
-}
+const LOCAL_CATEGORY_TOP: CategoryDefinition = {
+  id: "local",
+  name: "Local Skills",
+  description: "Project-specific skills from .claude/skills/",
+  exclusive: false,
+  required: false,
+  order: 0, // Display first in category list
+};
+
+const LOCAL_CATEGORY_CUSTOM: CategoryDefinition = {
+  id: "local/custom",
+  name: "Custom",
+  description: "Your project-specific skills",
+  exclusive: false,
+  required: false,
+  order: 0,
+  parent: "local", // Links to top-level category
+};
 
 /**
- * Resolve a skill path relative to the source
+ * Merge local skills from project's .claude/skills/ into the skills matrix
+ *
+ * Local skills:
+ * - Are added to a dedicated "local" category
+ * - Have `local: true` and `localPath` set for special handling
+ * - Have no conflict checking (can combine with any marketplace skill)
+ * - Use ID format: "skill-name (@local)"
  */
-export function resolveSkillPath(
-  sourceResult: SourceLoadResult,
-  skillRelativePath: string,
-): string {
-  // skillRelativePath is like "skills/frontend/react (@vince)/"
-  // We need to join with src/ because that's where skills live in the source
-  return path.join(sourceResult.sourcePath, "src", skillRelativePath);
+function mergeLocalSkillsIntoMatrix(
+  matrix: MergedSkillsMatrix,
+  localResult: LocalSkillDiscoveryResult,
+): MergedSkillsMatrix {
+  // Add both category levels if they don't exist
+  // Top-level: "local" (shows in category selection)
+  // Subcategory: "local/custom" (holds the skills)
+  if (!matrix.categories["local"]) {
+    matrix.categories["local"] = LOCAL_CATEGORY_TOP;
+  }
+  if (!matrix.categories["local/custom"]) {
+    matrix.categories["local/custom"] = LOCAL_CATEGORY_CUSTOM;
+  }
+
+  // Convert each local skill metadata to ResolvedSkill and add to matrix
+  for (const metadata of localResult.skills) {
+    const resolvedSkill: ResolvedSkill = {
+      // Identity
+      id: metadata.id,
+      alias: undefined, // Local skills don't have aliases
+      name: metadata.name,
+      description: metadata.description,
+      usageGuidance: metadata.usageGuidance,
+
+      // Categorization - use subcategory so wizard works correctly
+      category: "local/custom",
+      categoryExclusive: false, // Multiple local skills can be selected
+      tags: metadata.tags ?? [],
+
+      // Authorship
+      author: "@local",
+
+      // Relationships - empty for local skills (no conflict checking)
+      conflictsWith: [],
+      recommends: [],
+      recommendedBy: [],
+      requires: [],
+      requiredBy: [],
+      alternatives: [],
+      discourages: [],
+
+      // Setup relationships
+      requiresSetup: [],
+      providesSetupFor: [],
+
+      // Location - use the local path
+      path: metadata.path,
+
+      // Local skill markers
+      local: true,
+      localPath: metadata.localPath,
+    };
+
+    matrix.skills[metadata.id] = resolvedSkill;
+    verbose(`Added local skill: ${metadata.id}`);
+  }
+
+  return matrix;
 }

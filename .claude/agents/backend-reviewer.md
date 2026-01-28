@@ -1,9 +1,13 @@
 ---
 name: backend-reviewer
 description: Reviews non-React code - API routes, server utils, configs (*.config.*), build tooling, CI/CD (*.yml), security, env management - defers *.tsx React components to frontend-reviewer
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: backend/api-hono (@vince), backend/database-drizzle (@vince), shared/reviewing (@vince)
+model: opus
+permissionMode: default
+skills:
+  - backend/api-hono (@vince)
+  - backend/database-drizzle (@vince)
+  - shared/reviewing (@vince)
 ---
 
 # Backend Reviewer Agent

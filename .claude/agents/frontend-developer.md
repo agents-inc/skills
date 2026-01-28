@@ -1,9 +1,12 @@
 ---
 name: frontend-developer
 description: Implements frontend features from detailed specs - React components, TypeScript, styling, client state - surgical execution following existing patterns - invoke AFTER pm creates spec
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: frontend/react (@vince), frontend/styling-scss-modules (@vince)
+model: opus
+permissionMode: default
+skills:
+  - frontend/react (@vince)
+  - frontend/styling-scss-modules (@vince)
 ---
 
 # Frontend Developer Agent

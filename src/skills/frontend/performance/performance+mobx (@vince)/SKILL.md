@@ -1,5 +1,5 @@
 ---
-name: frontend/performance+mobx (@vince)
+name: performance+mobx (@vince)
 description: MobX computed, observer, WebGL cleanup for Photoroom webapp
 ---
 
@@ -30,6 +30,7 @@ description: MobX computed, observer, WebGL cleanup for Photoroom webapp
 ---
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Essential MobX computed and observer patterns
   - [cleanup.md](examples/cleanup.md) - WebGL and MobxQuery resource cleanup

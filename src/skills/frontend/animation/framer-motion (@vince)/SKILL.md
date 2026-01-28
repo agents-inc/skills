@@ -1,5 +1,5 @@
 ---
-name: frontend/animation/framer-motion (@vince)
+name: framer-motion (@vince)
 description: Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility
 ---
 
@@ -76,6 +76,7 @@ npm install motion
 ```
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 

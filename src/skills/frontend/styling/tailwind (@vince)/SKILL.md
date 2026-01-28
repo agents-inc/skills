@@ -1,5 +1,5 @@
 ---
-name: frontend/styling-tailwind (@vince)
+name: tailwind (@vince)
 description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 ---
 
@@ -8,6 +8,7 @@ description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 > **Quick Guide:** Tailwind CSS v4 is the primary styling approach. Use `clsx` for class composition. Design tokens via `@theme` directive in CSS. SCSS is minimal (global styles only). Always expose `className` prop on components for composability.
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) (core, variants, responsive, global-styles, icons, v4-features)
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
 - For Tailwind v4 specific features, see [examples/v4-features.md](examples/v4-features.md)
@@ -54,7 +55,7 @@ description: Tailwind CSS, clsx, design tokens for Photoroom webapp
 - Design tokens via @theme (replaces tailwind.config.js)
 - OKLCH color system for P3 wide gamut support
 - Container queries (@container, @sm:, @max-sm:)
-- 3D transforms (perspective-*, rotate-x-*, translate-z-*)
+- 3D transforms (perspective-_, rotate-x-_, translate-z-\*)
 - SCSS usage (minimal - global styles only)
 - Custom font definitions
 - Exposing className prop on components

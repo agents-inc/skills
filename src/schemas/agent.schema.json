@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://claude-subagents.local/schemas/agent.schema.json",
   "title": "Agent Definition",
-  "description": "Schema for agent.yaml files in agents/{category}/{id}/agent.yaml",
+  "description": "Schema for agent.yaml files in agents/{category}/{id}/agent.yaml. Supports official Claude Code plugin format.",
   "type": "object",
   "required": ["id", "title", "description", "tools"],
   "additionalProperties": false,
@@ -26,9 +26,9 @@
     },
     "model": {
       "type": "string",
-      "description": "Claude model to use",
-      "default": "opus",
-      "enum": ["opus", "sonnet", "haiku"]
+      "description": "Claude model to use. Use 'inherit' to use parent model.",
+      "default": "inherit",
+      "enum": ["opus", "sonnet", "haiku", "inherit"]
     },
     "tools": {
       "type": "array",
@@ -51,11 +51,90 @@
         ]
       }
     },
-    "output_format": {
+    "disallowed_tools": {
+      "type": "array",
+      "description": "Tools this agent cannot use (overrides tools list)",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "Read",
+          "Write",
+          "Edit",
+          "Grep",
+          "Glob",
+          "Bash",
+          "WebSearch",
+          "WebFetch",
+          "Task",
+          "TaskOutput"
+        ]
+      }
+    },
+    "permission_mode": {
       "type": "string",
-      "description": "Output format template (references _principles/{value}.md)",
-      "minLength": 1,
-      "examples": ["output-formats-developer", "output-formats-reviewer"]
+      "description": "Permission mode for agent operations",
+      "default": "default",
+      "enum": [
+        "default",
+        "acceptEdits",
+        "dontAsk",
+        "bypassPermissions",
+        "plan",
+        "delegate"
+      ]
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Lifecycle hooks for agent execution",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/HookDefinition"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "HookDefinition": {
+      "type": "object",
+      "description": "Hook definition with matcher and hook actions",
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Tool name or pattern to match for this hook"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HookAction"
+          }
+        }
+      }
+    },
+    "HookAction": {
+      "type": "object",
+      "description": "Individual hook action to execute",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of hook action",
+          "enum": ["command", "script", "prompt"]
+        },
+        "command": {
+          "type": "string",
+          "description": "Command to execute (for type: command)"
+        },
+        "script": {
+          "type": "string",
+          "description": "Script path to execute (for type: script)"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt to display (for type: prompt)"
+        }
+      }
     }
   }
 }

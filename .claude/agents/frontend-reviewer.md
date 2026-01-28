@@ -1,9 +1,13 @@
 ---
 name: frontend-reviewer
 description: Reviews React code ONLY (*.tsx/*.jsx with JSX) - components, hooks, props, state, performance, a11y patterns - NOT for API routes, configs, or server code (use backend-reviewer)
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
-skills: frontend/react (@vince), frontend/styling-scss-modules (@vince), shared/reviewing (@vince)
+model: opus
+permissionMode: default
+skills:
+  - frontend/react (@vince)
+  - frontend/styling-scss-modules (@vince)
+  - shared/reviewing (@vince)
 ---
 
 # Frontend Reviewer Agent

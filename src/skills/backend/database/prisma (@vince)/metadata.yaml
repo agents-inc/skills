@@ -7,9 +7,11 @@ cli_name: Prisma
 cli_description: Prisma ORM patterns
 usage_guidance: Use when writing database queries, migrations, or working with Prisma ORM.
 compatible_with:
-  - backend/api
-  - backend/authentication
-  - backend/testing
+  - hono (@vince)
+  - express (@vince)
+  - fastify (@vince)
+  - better-auth+drizzle+hono (@vince)
+  - backend-testing (@vince)
 tags:
   - prisma
   - orm

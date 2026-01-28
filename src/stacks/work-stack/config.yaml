@@ -2,124 +2,143 @@
 # Work Stack - Exact 1:1 mapping of work profile
 # Photoroom webapp stack with Tailwind, MobX, React Query
 
-name: 'Work Stack'
+name: "Work Stack"
 description: >
   Photoroom webapp stack - exact 1:1 mapping of work profile.
   Tailwind CSS for styling, MobX for state management with RootStore pattern,
   and React Query bridged to MobX via MobxQuery.
-author: '@photoroom'
-version: '1.0.0'
+author: "@photoroom"
+version: "1.0.0"
 
 skills:
   # Frontend - Photoroom specific
-  - id: frontend/react+mobx (@vince)
-  - id: frontend/styling-tailwind (@vince)
-  - id: frontend/state-mobx (@vince)
-  - id: frontend/server-state-react-query+axios+zod (@vince)
+  - id: react+mobx (@vince)
+  - id: tailwind (@vince)
+  - id: mobx (@vince)
+  - id: react-query+axios+zod (@vince)
   - id: frontend/accessibility (@vince)
-  - id: frontend/performance+mobx (@vince)
+  - id: performance+mobx (@vince)
   - id: frontend/mocks (@vince)
-  - id: frontend/testing+karma+playwright (@vince)
+  # testing+karma+playwright (@vince) doesn't exist - commented out
+  # - id: testing+karma+playwright (@vince)
 
 agents:
+  # Developer agents
   - frontend-developer
+  - architecture
+  # Reviewer agents
   - frontend-reviewer
-  - tester
+  # Researcher agents
+  - frontend-researcher
+  # Planning agents
   - pm
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
   - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
 
 # Per-agent skill assignments (hierarchical by category)
 agent_skills:
   frontend-developer:
     framework:
-      - id: frontend/react+mobx (@vince)
+      - id: react+mobx (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
         preloaded: true
     state:
-      - id: frontend/state-mobx (@vince)
+      - id: mobx (@vince)
         preloaded: true
     server-state:
-      - id: frontend/server-state-react-query+axios+zod (@vince)
+      - id: react-query+axios+zod (@vince)
     accessibility:
       - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance+mobx (@vince)
+      - id: performance+mobx (@vince)
     mocks:
       - id: frontend/mocks (@vince)
-    testing:
-      - id: frontend/testing+karma+playwright (@vince)
+    # testing skill doesn't exist - commented out
+    # testing:
+    #   - id: testing+karma+playwright (@vince)
 
   frontend-reviewer:
     framework:
-      - id: frontend/react+mobx (@vince)
+      - id: react+mobx (@vince)
         preloaded: true
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
         preloaded: true
     state:
-      - id: frontend/state-mobx (@vince)
+      - id: mobx (@vince)
         preloaded: true
     server-state:
-      - id: frontend/server-state-react-query+axios+zod (@vince)
+      - id: react-query+axios+zod (@vince)
     accessibility:
       - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance+mobx (@vince)
+      - id: performance+mobx (@vince)
     mocks:
       - id: frontend/mocks (@vince)
-    testing:
-      - id: frontend/testing+karma+playwright (@vince)
+    # testing skill doesn't exist - commented out
+    # testing:
+    #   - id: testing+karma+playwright (@vince)
 
   tester:
     framework:
-      - id: frontend/react+mobx (@vince)
+      - id: react+mobx (@vince)
     state:
-      - id: frontend/state-mobx (@vince)
+      - id: mobx (@vince)
     mocks:
       - id: frontend/mocks (@vince)
-    testing:
-      - id: frontend/testing+karma+playwright (@vince)
-        preloaded: true
+    # testing skill doesn't exist - commented out
+    # testing:
+    #   - id: testing+karma+playwright (@vince)
+    #     preloaded: true
 
   pm:
     framework:
-      - id: frontend/react+mobx (@vince)
+      - id: react+mobx (@vince)
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
     state:
-      - id: frontend/state-mobx (@vince)
+      - id: mobx (@vince)
     server-state:
-      - id: frontend/server-state-react-query+axios+zod (@vince)
+      - id: react-query+axios+zod (@vince)
     accessibility:
       - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance+mobx (@vince)
+      - id: performance+mobx (@vince)
     mocks:
       - id: frontend/mocks (@vince)
-    testing:
-      - id: frontend/testing+karma+playwright (@vince)
+    # testing skill doesn't exist - commented out
+    # testing:
+    #   - id: testing+karma+playwright (@vince)
 
   skill-summoner:
     framework:
-      - id: frontend/react+mobx (@vince)
+      - id: react+mobx (@vince)
     styling:
-      - id: frontend/styling-tailwind (@vince)
+      - id: tailwind (@vince)
     state:
-      - id: frontend/state-mobx (@vince)
+      - id: mobx (@vince)
     server-state:
-      - id: frontend/server-state-react-query+axios+zod (@vince)
+      - id: react-query+axios+zod (@vince)
     accessibility:
       - id: frontend/accessibility (@vince)
     performance:
-      - id: frontend/performance+mobx (@vince)
+      - id: performance+mobx (@vince)
     mocks:
       - id: frontend/mocks (@vince)
-    testing:
-      - id: frontend/testing+karma+playwright (@vince)
+    # testing skill doesn't exist - commented out
+    # testing:
+    #   - id: testing+karma+playwright (@vince)
 
-philosophy: 'Design system first, move fast'
+philosophy: "Design system first, move fast"
 
 principles:
   - Wrap ALL components with observer() when reading MobX state
@@ -128,7 +147,7 @@ principles:
   - Use reaction() in stores for side effects, NOT useEffect
   - React Query for server state, MobX for client state
   - Tailwind CSS with @photoroom/ui preset
-  - '@photoroom/icons for all icons (not lucide-react)'
+  - "@photoroom/icons for all icons (not lucide-react)"
   - Use type for props, NOT interface (ESLint enforced)
 
 tags:

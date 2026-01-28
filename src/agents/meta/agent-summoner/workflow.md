@@ -544,9 +544,7 @@ agents:
       - Grep
       - Glob
       - Bash
-    core_prompts: developer # References core_prompt_sets (developer, reviewer, pm, etc.)
-    ending_prompts: developer # References ending_prompt_sets
-    output_format: output-formats-developer # File in _principles/
+    # Output format: determined by file system (see below)
     skills:
       precompiled: # Skills bundled into agent (always in context)
         - id: frontend/react
@@ -564,12 +562,9 @@ agents:
 
 **Key configuration points:**
 
-- **core_prompts**: Selects which core prompts appear at BEGINNING (from `core_prompt_sets`)
-  - `developer`: includes core-principles, investigation, write-verification, **anti-over-engineering**
-  - `reviewer`: includes core-principles, investigation, write-verification (no anti-over-engineering)
-  - `pm`: includes core-principles, investigation, write-verification (no anti-over-engineering)
-- **ending_prompts**: Selects which prompts appear at END (from `ending_prompt_sets`)
-- **output_format**: Which output format file to include
+- **Output format**: Determined by file system with cascading resolution:
+  1. Agent-level: `src/agents/{category}/{agent-name}/output-format.md`
+  2. Category fallback: `src/agents/{category}/output-format.md`
 - **skills.precompiled**: Skills bundled into agent (for 80%+ of tasks)
 - **skills.dynamic**: Skills agent invokes on demand (<20% of tasks)
 
@@ -1053,8 +1048,6 @@ For each improvement, provide:
 </agent_analysis>
 
 <configuration_plan>
-**Core Prompts Set:** [developer/reviewer/pm/etc. - from core_prompt_sets]
-
 **Precompiled Skills:**
 
 - [List with rationale - for 80%+ of tasks]
@@ -1063,11 +1056,11 @@ For each improvement, provide:
 
 - [List with rationale - for <20% of tasks]
 
-**Output Format:** [Which output-formats-*.md file]
+**Output Format:** Create `output-format.md` in agent directory, or use category-level fallback
 </configuration_plan>
 
 <directory_structure>
-**Create directory:** `src/agents/{agent-name}/`
+**Create directory:** `src/agents/{category}/{agent-name}/`
 
 **Create files:**
 
@@ -1076,6 +1069,7 @@ For each improvement, provide:
 - `critical-requirements.md` - MUST rules (no XML wrappers)
 - `critical-reminders.md` - Repeated rules (no XML wrappers)
 - `examples.md` - Example output (optional)
+- `output-format.md` - Agent-specific output format (optional - falls back to category level)
   </directory_structure>
 
 <config_entry>
@@ -1089,9 +1083,7 @@ agents:
     description: One-line description
     model: opus
     tools: [...]
-    core_prompts: [set name]
-    ending_prompts: [set name]
-    output_format: output-formats-[role]
+    # Output format: create output-format.md in agent directory
     skills:
       precompiled: [...]
       dynamic: [...]
@@ -1479,9 +1471,7 @@ agents:
     description: One-line description
     model: opus
     tools: [Read, Write, Edit, Grep, Glob, Bash]
-    core_prompts: developer
-    ending_prompts: developer
-    output_format: output-formats-developer
+    # Output format: create output-format.md in agent directory
     skills:
       precompiled: []
       dynamic: []
@@ -1493,35 +1483,35 @@ agents:
 
 ## Reference: Core Prompts Available
 
-Core prompts are configured via `core_prompt_sets` in config.yaml. The template automatically includes them based on the agent's `core_prompts` setting.
+Core prompts are embedded in the template and apply to all agents.
 
-| Prompt                       | Purpose                | Included For       |
-| ---------------------------- | ---------------------- | ------------------ |
-| core-principles.md           | Self-reminder loop     | All agents         |
-| investigation-requirement.md | Prevents hallucination | All agents         |
-| write-verification.md        | Prevents false success | All agents         |
-| anti-over-engineering.md     | Prevents scope creep   | developer, scout   |
-| context-management.md        | Session continuity     | Via ending_prompts |
-| improvement-protocol.md      | Self-improvement       | Via ending_prompts |
-| output-formats-developer.md  | Implementation output  | Developers         |
-| output-formats-pm.md         | Specification output   | PMs                |
-| output-formats-reviewer.md   | Review output          | Reviewers          |
-| output-formats-tester.md     | Test output            | Testers            |
+| Prompt                       | Purpose                | Included For     |
+| ---------------------------- | ---------------------- | ---------------- |
+| core-principles.md           | Self-reminder loop     | All agents       |
+| investigation-requirement.md | Prevents hallucination | All agents       |
+| write-verification.md        | Prevents false success | All agents       |
+| anti-over-engineering.md     | Prevents scope creep   | developer, scout |
+| context-management.md        | Session continuity     | All agents       |
+| improvement-protocol.md      | Self-improvement       | All agents       |
 
-**Core Prompt Sets in config.yaml:**
+## Reference: Output Format System
 
-```yaml
-core_prompt_sets:
-  developer:
-    - core-principles
-    - investigation-requirement
-    - write-verification
-    - anti-over-engineering
-  reviewer:
-    - core-principles
-    - investigation-requirement
-    - write-verification
-```
+Output formats are now determined by the file system with cascading resolution:
+
+1. **Agent-level**: `src/agents/{category}/{agent-name}/output-format.md`
+2. **Category fallback**: `src/agents/{category}/output-format.md`
+
+Each agent category has a default format, and individual agents can override with their own:
+
+| Category   | Agents with custom formats                          |
+| ---------- | --------------------------------------------------- |
+| developer  | frontend-developer, backend-developer, architecture |
+| reviewer   | frontend-reviewer, backend-reviewer                 |
+| researcher | frontend-researcher, backend-researcher             |
+| planning   | pm                                                  |
+| tester     | tester-agent                                        |
+| pattern    | pattern-scout, pattern-critique                     |
+| meta       | documentor, agent-summoner, skill-summoner          |
 
 ---
 

@@ -7,8 +7,9 @@ cli_name: Jotai
 cli_description: Atomic client state
 usage_guidance: Use when managing atomic state with bottom-up composition.
 compatible_with:
-  - frontend/react
-  - frontend/api
+  - react (@vince)
+  - react-query (@vince)
+  - swr (@vince)
 tags:
   - jotai
   - state-management

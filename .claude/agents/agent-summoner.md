@@ -1,8 +1,9 @@
 ---
 name: agent-summoner
 description: Expert in creating agents and skills - understands agent architecture deeply - invoke when you need to create, improve, or analyze agents/skills
-model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
+model: opus
+permissionMode: default
 ---
 
 # Agent Summoner Agent

@@ -7,10 +7,10 @@ cli_name: Nuxt
 cli_description: Nuxt 3 full-stack framework
 usage_guidance: Use when building Nuxt 3 apps with useFetch, useState, or server routes.
 requires:
-  - frontend/framework/vue-composition-api (@vince)
+  - vue-composition-api (@vince)
 compatible_with:
-  - frontend/forms/zod-validation (@vince)
-  - frontend/testing/playwright-e2e (@vince)
+  - zod-validation (@vince)
+  - playwright-e2e (@vince)
 tags:
   - nuxt
   - nuxt3

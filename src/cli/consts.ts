@@ -13,10 +13,13 @@ export const OUTPUT_DIR = ".claude";
 export const GITHUB_REPO = "claude-collective/claude-collective";
 export const DEFAULT_MATRIX_PATH = "src/config/skills-matrix.yaml";
 
-// Source stacks directory (user's local stacks)
-export const COLLECTIVE_DIR = ".claude-collective";
-export const COLLECTIVE_STACKS_SUBDIR = "stacks";
-export const ACTIVE_STACK_FILE = "active-stack";
+export const PLUGIN_NAME = "claude-collective";
+
+// Plugin directories
+export const CLAUDE_DIR = ".claude";
+export const PLUGINS_SUBDIR = "plugins";
+export const PLUGIN_MANIFEST_DIR = ".claude-plugin";
+export const PLUGIN_MANIFEST_FILE = "plugin.json";
 
 // Use os.homedir() instead of process.env.HOME for cross-platform
 export const CACHE_DIR = path.join(os.homedir(), ".cache", "claude-collective");
@@ -27,12 +30,14 @@ export const SKILLS_MATRIX_PATH = "src/config/skills-matrix.yaml";
 // Skills directory within a source repository
 export const SKILLS_DIR_PATH = "src/skills";
 
+// Local skills directory within a project (user-defined skills)
+export const LOCAL_SKILLS_PATH = ".claude/skills";
+
 // Directory paths relative to project root
 export const DIRS = {
   agents: "src/agents",
   skills: "src/skills",
   stacks: "src/stacks",
-  principles: "src/agents/_principles",
   templates: "src/agents/_templates",
   commands: "src/commands",
 } as const;

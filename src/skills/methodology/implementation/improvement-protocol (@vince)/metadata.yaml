@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../../../schemas/metadata.schema.json
+category: methodology
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Improvement Protocol
+cli_description: Evidence-based self-improvement for agents
+usage_guidance: Use when agents need to improve their own prompts or configurations. Evidence-based changes only.
+tags:
+  - methodology
+  - implementation
+  - self-improvement
+  - meta

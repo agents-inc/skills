@@ -1,0 +1,226 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# Modern React Stack - Fast, modern React for startups and MVPs with SCSS Modules
+
+name: "Modern React Stack"
+description: >
+  Fast, modern React for startups and MVPs with SCSS Modules.
+  Frontend: React + Next.js App Router + SCSS Modules, Zustand, React Query, Vitest, Playwright.
+  Backend: Hono, Drizzle, Better Auth.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Frontend
+  - id: react (@vince)
+  - id: nextjs-app-router (@vince)
+  - id: scss-modules (@vince)
+  - id: zustand (@vince)
+  - id: react-query (@vince)
+  - id: react-hook-form (@vince)
+  - id: zod-validation (@vince)
+  - id: vitest (@vince)
+  - id: react-testing-library (@vince)
+  - id: playwright-e2e (@vince)
+  - id: msw (@vince)
+  # Backend
+  - id: hono (@vince)
+  - id: drizzle (@vince)
+  - id: better-auth+drizzle+hono (@vince)
+  # Shared
+  - id: reviewing (@vince)
+  # Research
+  - id: research-methodology (@vince)
+
+agents:
+  # Developer agents
+  - frontend-developer
+  - backend-developer
+  - architecture
+  # Reviewer agents
+  - frontend-reviewer
+  - backend-reviewer
+  # Researcher agents
+  - frontend-researcher
+  - backend-researcher
+  # Planning agents
+  - pm
+  # Pattern agents
+  - pattern-scout
+  - pattern-critique
+  # Meta agents
+  - agent-summoner
+  - skill-summoner
+  - documentor
+  # Tester agents
+  - tester
+
+agent_skills:
+  frontend-developer:
+    framework:
+      - id: react (@vince)
+        preloaded: true
+      - id: nextjs-app-router (@vince)
+    styling:
+      - id: scss-modules (@vince)
+        preloaded: true
+    state:
+      - id: zustand (@vince)
+    server-state:
+      - id: react-query (@vince)
+    forms:
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
+    mocks:
+      - id: msw (@vince)
+    auth:
+      - id: better-auth+drizzle+hono (@vince)
+
+  backend-developer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: better-auth+drizzle+hono (@vince)
+
+  frontend-reviewer:
+    framework:
+      - id: react (@vince)
+        preloaded: true
+      - id: nextjs-app-router (@vince)
+    styling:
+      - id: scss-modules (@vince)
+        preloaded: true
+    state:
+      - id: zustand (@vince)
+    server-state:
+      - id: react-query (@vince)
+    forms:
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
+    mocks:
+      - id: msw (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+    auth:
+      - id: better-auth+drizzle+hono (@vince)
+
+  backend-reviewer:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: better-auth+drizzle+hono (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+
+  tester:
+    testing:
+      - id: vitest (@vince)
+        preloaded: true
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
+    mocks:
+      - id: msw (@vince)
+        preloaded: true
+
+  pm:
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: react (@vince)
+      - id: nextjs-app-router (@vince)
+    styling:
+      - id: scss-modules (@vince)
+    state:
+      - id: zustand (@vince)
+    server-state:
+      - id: react-query (@vince)
+    forms:
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
+    mocks:
+      - id: msw (@vince)
+    api:
+      - id: hono (@vince)
+    database:
+      - id: drizzle (@vince)
+    auth:
+      - id: better-auth+drizzle+hono (@vince)
+
+  frontend-researcher:
+    framework:
+      - id: react (@vince)
+        preloaded: true
+      - id: nextjs-app-router (@vince)
+    styling:
+      - id: scss-modules (@vince)
+    state:
+      - id: zustand (@vince)
+    server-state:
+      - id: react-query (@vince)
+    forms:
+      - id: react-hook-form (@vince)
+      - id: zod-validation (@vince)
+    testing:
+      - id: vitest (@vince)
+      - id: react-testing-library (@vince)
+      - id: playwright-e2e (@vince)
+    mocks:
+      - id: msw (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+  backend-researcher:
+    api:
+      - id: hono (@vince)
+        preloaded: true
+    database:
+      - id: drizzle (@vince)
+    auth:
+      - id: better-auth+drizzle+hono (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+philosophy: "Ship fast, iterate faster"
+
+principles:
+  - Prefer composition over inheritance
+  - Use hooks for everything, avoid class components
+  - SCSS Modules for co-located styles
+  - Zustand for client state, React Query for server state
+  - Test user behavior, not implementation details
+  - Type everything - zero tolerance for any
+
+tags:
+  - react
+  - nextjs
+  - typescript
+  - scss-modules
+  - zustand
+  - react-query
+  - modern
+  - mvp
+  - startups

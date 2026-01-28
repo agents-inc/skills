@@ -1,61 +1,61 @@
-import { describe, it, expect } from 'vitest'
-import { parseFrontmatter } from './loader'
+import { describe, it, expect } from "vitest";
+import { parseFrontmatter } from "./loader";
 
-describe('parseFrontmatter', () => {
-  it('should parse valid frontmatter with name and description', () => {
+describe("parseFrontmatter", () => {
+  it("should parse valid frontmatter with name and description", () => {
     const content = `---
-name: frontend/react (@vince)
+name: react (@vince)
 description: React component patterns and hooks
 ---
 
 # React Skill
 
-Content here...`
+Content here...`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).not.toBeNull()
-    expect(result?.name).toBe('frontend/react (@vince)')
-    expect(result?.description).toBe('React component patterns and hooks')
-  })
+    expect(result).not.toBeNull();
+    expect(result?.name).toBe("react (@vince)");
+    expect(result?.description).toBe("React component patterns and hooks");
+  });
 
-  it('should return null for content without frontmatter', () => {
+  it("should return null for content without frontmatter", () => {
     const content = `# Just a markdown file
 
-No frontmatter here.`
+No frontmatter here.`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).toBeNull()
-  })
+    expect(result).toBeNull();
+  });
 
-  it('should return null for invalid frontmatter (missing name)', () => {
+  it("should return null for invalid frontmatter (missing name)", () => {
     const content = `---
 description: Missing name field
 ---
 
-Content`
+Content`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).toBeNull()
-  })
+    expect(result).toBeNull();
+  });
 
-  it('should return null for invalid frontmatter (missing description)', () => {
+  it("should return null for invalid frontmatter (missing description)", () => {
     const content = `---
 name: skill-name
 ---
 
-Content`
+Content`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).toBeNull()
-  })
+    expect(result).toBeNull();
+  });
 
-  it('should handle frontmatter with additional fields', () => {
+  it("should handle frontmatter with additional fields", () => {
     const content = `---
-name: backend/api
+name: hono (@vince)
 description: API patterns
 version: 1
 author: "@test"
@@ -64,16 +64,16 @@ tags:
   - backend
 ---
 
-Content`
+Content`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).not.toBeNull()
-    expect(result?.name).toBe('backend/api')
-    expect(result?.description).toBe('API patterns')
-  })
+    expect(result).not.toBeNull();
+    expect(result?.name).toBe("hono (@vince)");
+    expect(result?.description).toBe("API patterns");
+  });
 
-  it('should handle multiline description', () => {
+  it("should handle multiline description", () => {
     const content = `---
 name: complex-skill
 description: >
@@ -82,58 +82,59 @@ description: >
   multiple lines
 ---
 
-Content`
+Content`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).not.toBeNull()
-    expect(result?.name).toBe('complex-skill')
-    expect(result?.description).toContain('multiline')
-  })
+    expect(result).not.toBeNull();
+    expect(result?.name).toBe("complex-skill");
+    expect(result?.description).toContain("multiline");
+  });
 
-  it('should handle frontmatter at the very start', () => {
+  it("should handle frontmatter at the very start", () => {
     const content = `---
 name: skill
 description: desc
----`
+---`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).not.toBeNull()
-    expect(result?.name).toBe('skill')
-  })
+    expect(result).not.toBeNull();
+    expect(result?.name).toBe("skill");
+  });
 
-  it('should not parse frontmatter that is not at the start', () => {
+  it("should not parse frontmatter that is not at the start", () => {
     const content = `Some text before
 
 ---
 name: skill
 description: desc
----`
+---`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).toBeNull()
-  })
+    expect(result).toBeNull();
+  });
 
-  it('should handle empty content between frontmatter delimiters', () => {
+  it("should handle empty content between frontmatter delimiters", () => {
     const content = `---
 ---
 
-Content`
+Content`;
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
-    expect(result).toBeNull()
-  })
+    expect(result).toBeNull();
+  });
 
-  it('should not handle frontmatter with Windows line endings (current limitation)', () => {
-    const content = "---\r\nname: skill\r\ndescription: desc\r\n---\r\n\r\nContent"
+  it("should not handle frontmatter with Windows line endings (current limitation)", () => {
+    const content =
+      "---\r\nname: skill\r\ndescription: desc\r\n---\r\n\r\nContent";
 
-    const result = parseFrontmatter(content)
+    const result = parseFrontmatter(content);
 
     // The current regex expects \n only, not \r\n
     // This is a known limitation - SKILL.md files should use Unix line endings
-    expect(result).toBeNull()
-  })
-})
+    expect(result).toBeNull();
+  });
+});

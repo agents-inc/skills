@@ -1,67 +1,196 @@
 ## Output Format
 
 <output_format>
-Provide your response in this structure:
+Provide your pattern extraction in this structure:
 
-<investigation_notes>
-**Files Examined:**
+<extraction_summary>
+**Codebase:** [name/path]
+**Extraction Date:** [date]
+**Files Analyzed:** [count]
+**Pattern Categories:** [count]/15
+</extraction_summary>
 
-- [List files you read]
+<pattern_catalog>
 
-**Patterns Found:**
+## 1. Code Architecture Patterns
 
-- [Key patterns and conventions discovered]
-- [Relevant utilities or components to reuse]
-  </investigation_notes>
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
 
-<implementation_plan>
-**Approach:**
-[Brief description of how you'll solve this following existing patterns]
+**Example:**
 
-**Files to Modify:**
-
-- [File 1]: [What changes]
-- [File 2]: [What changes]
-
-**Existing Code to Reuse:**
-
-- [Utility/component to use and why]
-  </implementation_plan>
-
-<implementation>
-**[filename.ts]**
 ```typescript
-[Your code here]
+// From /path:lines
 ```
 
-**[filename2.tsx]**
+## 2. Component Patterns
 
-```tsx
-[Your code here]
-```
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
 
-[Additional files as needed]
-</implementation>
+**Example:**
 
-<tests>
-**[filename.test.ts]**
 ```typescript
-[Test code covering the implementation]
+// From /path:lines
 ```
-</tests>
 
-<verification>
-✅ Criteria met:
-- [Criterion 1]: Verified
-- [Criterion 2]: Verified
+## 3. State Management Patterns
 
-📊 Test results:
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
 
-- [Test suite]: All passing
-- Coverage: [X%]
+**Example:**
 
-⚠️ Notes:
+```typescript
+// From /path:lines
+```
 
-- [Any important notes or considerations]
-  </verification>
-  </output_format>
+## 4. API Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+**Example:**
+
+```typescript
+// From /path:lines
+```
+
+## 5. Database Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+**Example:**
+
+```typescript
+// From /path:lines
+```
+
+## 6. Testing Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+**Example:**
+
+```typescript
+// From /path:lines
+```
+
+## 7. Error Handling Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+**Example:**
+
+```typescript
+// From /path:lines
+```
+
+## 8. Styling Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+**Example:**
+
+```scss
+// From /path:lines
+```
+
+## 9. Build/Tooling Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+## 10. CI/CD Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+## 11. Environment/Config Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+## 12. Security Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+## 13. Logging/Observability Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+## 14. Performance Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+## 15. Documentation Patterns
+
+| Pattern | Location      | Confidence     | Instances |
+| ------- | ------------- | -------------- | --------- |
+| [name]  | [/path:lines] | [High/Med/Low] | [count]   |
+
+</pattern_catalog>
+
+<anti_patterns>
+
+## Anti-Patterns Observed
+
+| Anti-Pattern | Location      | Why Problematic | Occurrences |
+| ------------ | ------------- | --------------- | ----------- |
+| [name]       | [/path:lines] | [reason]        | [count]     |
+
+</anti_patterns>
+
+<consistency_analysis>
+
+## Consistency Score
+
+| Category       | Consistency    | Notes         |
+| -------------- | -------------- | ------------- |
+| Naming         | [High/Med/Low] | [observation] |
+| Error handling | [High/Med/Low] | [observation] |
+| Testing        | [High/Med/Low] | [observation] |
+
+**Coverage Gaps:**
+
+- [Missing pattern category]
+- [Inconsistent area]
+  </consistency_analysis>
+
+<raw_patterns_export>
+
+## Machine-Readable Export
+
+```yaml
+patterns:
+  code_architecture:
+    - name: [name]
+      file: [/path]
+      lines: [start-end]
+      confidence: [high|medium|low]
+  # ... all categories
+```
+
+</raw_patterns_export>
+</output_format>

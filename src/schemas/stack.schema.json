@@ -18,7 +18,11 @@
       "type": "string",
       "description": "Human-readable display name for the stack",
       "minLength": 1,
-      "examples": ["Modern React Stack", "Enterprise React Stack", "YOLO Modern React Stack"]
+      "examples": [
+        "Modern React Stack",
+        "Enterprise React Stack",
+        "YOLO Modern React Stack"
+      ]
     },
     "version": {
       "type": "string",
@@ -36,7 +40,9 @@
       "type": "string",
       "description": "Detailed description of the stack's purpose and use cases (supports multiline)",
       "minLength": 1,
-      "examples": ["Modern React with Tailwind, Zustand, and React Query.\nMove fast without breaking things."]
+      "examples": [
+        "Modern React with Tailwind, Zustand, and React Query.\nMove fast without breaking things."
+      ]
     },
     "created": {
       "type": "string",
@@ -65,10 +71,10 @@
       },
       "examples": [
         [
-          { "id": "frontend/react (@vince)", "preloaded": true },
-          { "id": "frontend/styling-scss-modules (@vince)", "preloaded": true },
-          { "id": "frontend/state-zustand (@vince)" },
-          { "id": "backend/api-hono (@vince)" }
+          { "id": "react (@vince)", "preloaded": true },
+          { "id": "scss-modules (@vince)", "preloaded": true },
+          { "id": "zustand (@vince)" },
+          { "id": "hono (@vince)" }
         ]
       ]
     },
@@ -104,23 +110,18 @@
       "examples": [
         {
           "frontend-developer": {
-            "framework": [
-              { "id": "frontend/react (@vince)", "preloaded": true }
-            ],
+            "framework": [{ "id": "react (@vince)", "preloaded": true }],
             "styling": [
-              { "id": "frontend/styling-scss-modules (@vince)", "preloaded": true }
+              {
+                "id": "scss-modules (@vince)",
+                "preloaded": true
+              }
             ],
-            "state-management": [
-              { "id": "frontend/state-zustand (@vince)" }
-            ]
+            "state-management": [{ "id": "zustand (@vince)" }]
           },
           "backend-developer": {
-            "api": [
-              { "id": "backend/api-hono (@vince)", "preloaded": true }
-            ],
-            "database": [
-              { "id": "backend/database-drizzle (@vince)", "preloaded": true }
-            ]
+            "api": [{ "id": "hono (@vince)", "preloaded": true }],
+            "database": [{ "id": "drizzle (@vince)", "preloaded": true }]
           }
         }
       ]
@@ -129,7 +130,10 @@
       "type": "string",
       "description": "Short guiding principle or motto for the stack",
       "minLength": 1,
-      "examples": ["Ship fast, iterate faster", "Stability and type safety first"]
+      "examples": [
+        "Ship fast, iterate faster",
+        "Stability and type safety first"
+      ]
     },
     "principles": {
       "type": "array",
@@ -157,7 +161,9 @@
         "minLength": 1
       },
       "uniqueItems": true,
-      "examples": [["react", "typescript", "tailwind", "zustand", "modern", "startup"]]
+      "examples": [
+        ["react", "typescript", "tailwind", "zustand", "modern", "startup"]
+      ]
     },
     "overrides": {
       "type": "object",
@@ -173,6 +179,45 @@
     "metrics": {
       "$ref": "#/$defs/Metrics",
       "description": "Community-driven trust signals (automatically tracked)"
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Lifecycle hooks for the stack plugin. Defines event handlers for plugin lifecycle events.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/HookDefinition"
+        }
+      },
+      "propertyNames": {
+        "enum": [
+          "SessionStart",
+          "SessionEnd",
+          "UserPromptSubmit",
+          "PreToolUse",
+          "PostToolUse",
+          "PermissionRequest",
+          "Stop",
+          "SubagentStop",
+          "PreCompact",
+          "Setup"
+        ]
+      },
+      "examples": [
+        {
+          "PostToolUse": [
+            {
+              "matcher": "Write|Edit",
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "${CLAUDE_PLUGIN_ROOT}/scripts/format.sh"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   },
   "$defs": {
@@ -184,7 +229,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Skill ID from SKILL.md frontmatter (e.g., 'frontend/react (@vince)')",
+          "description": "Skill ID from SKILL.md frontmatter (e.g., 'react (@vince)')",
           "minLength": 1
         },
         "preloaded": {
@@ -236,6 +281,65 @@
           "description": "Number of times the stack has been downloaded/used",
           "minimum": 0,
           "default": 0
+        }
+      }
+    },
+    "HookDefinition": {
+      "type": "object",
+      "description": "Single hook definition with optional matcher pattern",
+      "additionalProperties": false,
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Regex pattern to match tool/event names. Use | for alternatives (e.g., 'Write|Edit'). Omit for all matches.",
+          "examples": ["Write|Edit", "Bash", "*"]
+        },
+        "hooks": {
+          "type": "array",
+          "description": "Actions to execute when matcher triggers",
+          "items": {
+            "$ref": "#/$defs/HookAction"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["hooks"]
+    },
+    "HookAction": {
+      "type": "object",
+      "description": "Action to execute when hook triggers",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["command", "script", "prompt"],
+          "description": "Type of action to execute"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to execute. Supports ${CLAUDE_PLUGIN_ROOT} variable.",
+          "examples": [
+            "${CLAUDE_PLUGIN_ROOT}/scripts/format.sh",
+            "npm run lint:fix $FILE"
+          ]
+        },
+        "script": {
+          "type": "string",
+          "description": "Path to script file to run",
+          "examples": ["./scripts/validate.sh"]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt text for prompt-type actions"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Timeout in seconds for command execution",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30,
+          "examples": [30, 60]
         }
       }
     }

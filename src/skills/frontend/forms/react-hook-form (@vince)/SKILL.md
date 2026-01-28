@@ -1,5 +1,5 @@
 ---
-name: frontend/forms/react-hook-form (@vince)
+name: react-hook-form (@vince)
 description: React Hook Form patterns - useForm, Controller, useFieldArray, validation resolver, performance optimization
 ---
 
@@ -56,6 +56,7 @@ description: React Hook Form patterns - useForm, Controller, useFieldArray, vali
 - Read-only data display (not a form scenario)
 
 **Detailed Resources:**
+
 - For code examples, see [examples/](examples/) folder:
   - [core.md](examples/core.md) - Basic form patterns
   - [controlled-components.md](examples/controlled-components.md) - Controller pattern
