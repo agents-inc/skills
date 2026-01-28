@@ -215,10 +215,10 @@ project/
 
 ## Next Steps
 
-1. **Create GitHub repo for skills** - `github:claude-collective/skills` is the default source but doesn't exist yet
-2. **Rename skills repo** - `claude-subagents` -> `claude-collective-skills`
+1. ~~**Create GitHub repo for skills**~~ - **DONE** - This repo IS the marketplace (renamed to `claude-collective-skills`)
+2. ~~**Rename skills repo**~~ - **DONE** (2026-01-29) - Renamed via `gh repo rename claude-collective-skills`
 3. **Manual skill testing** - Verify all 76 skills work correctly
-4. **Update methodology skills** - Uncomment in stack configs
+4. ~~**Update methodology skills**~~ - **DONE** - Added to 4 stacks
 
 ## Remote Fetching Status
 
@@ -230,14 +230,13 @@ The CLI is ready for remote fetching:
 - **Local fallback**: Works perfectly with local paths
 - **Tests**: 10 source-fetcher tests pass (mostly local paths)
 
-**Blocker**: The default source `github:claude-collective/skills` doesn't exist on GitHub. Once created, the CLI will work with remote sources.
+**Status**: The repository is now `github:vincentbollaert/claude-collective-skills`. The CLI default source should be updated to match.
 
 **To test remote fetching**:
 
 ```bash
-# Create the GitHub repo first, then:
 cd /home/vince/dev/cli
-bun run src/cli/index.ts init --source github:claude-collective/skills
+bun run src/cli/index.ts init --source github:vincentbollaert/claude-collective-skills
 ```
 
 ---
