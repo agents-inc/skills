@@ -12,10 +12,10 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
-  # Methodology skills commented out - these don't exist yet
-  # - id: methodology/universal
-  # - id: methodology/implementation
-  # - id: methodology/extended-session
+  # Methodology
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
   # Frontend
   - id: react (@vince)
   - id: scss-modules (@vince)
@@ -69,12 +69,11 @@ agents:
 # Per-agent skill assignments (hierarchical by category)
 agent_skills:
   frontend-developer:
-    # methodology skills commented out - these don't exist yet
-    # methodology:
-    #   - id: methodology/universal
-    #     preloaded: true
-    #   - id: methodology/implementation
-    #     preloaded: true
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -103,12 +102,11 @@ agent_skills:
       - id: security (@vince)
 
   backend-developer:
-    # methodology skills commented out - these don't exist yet
-    # methodology:
-    #   - id: methodology/universal
-    #     preloaded: true
-    #   - id: methodology/implementation
-    #     preloaded: true
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -195,12 +193,11 @@ agent_skills:
         preloaded: true
 
   tester:
-    # methodology skills commented out - these don't exist yet
-    # methodology:
-    #   - id: methodology/universal
-    #     preloaded: true
-    #   - id: methodology/implementation
-    #     preloaded: true
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
     testing:
       - id: vitest (@vince)
         preloaded: true
@@ -211,10 +208,9 @@ agent_skills:
         preloaded: true
 
   pm:
-    # methodology skills commented out - these don't exist yet
-    # methodology:
-    #   - id: methodology/universal
-    #     preloaded: true
+    methodology:
+      - id: methodology/universal
+        preloaded: true
     research:
       - id: research-methodology (@vince)
         preloaded: true
