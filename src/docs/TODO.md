@@ -34,12 +34,12 @@
 
 > Complete these while skills and CLI live in same repo.
 
-| Priority | Task                                  | Description                                                                                                                                                                                                                            |
-| -------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| HIGH     | A7 Inline agent test                  | Test `--agents` JSON flag with model/tools (CLI-AGENT-INVOCATION.md)                                                                                                                                                                   |
-| HIGH     | Manual skill testing                  | Manually test all 76 skills and 11 stacks for correctness                                                                                                                                                                              |
-| MEDIUM   | Re-add schema to skills               | Post-migration: inject schema path once CLI repo bundles the schema                                                                                                                                                                    |
-| MEDIUM   | Update stacks with methodology skills | Uncomment methodology skills in all stack configs - skills exist but are commented out with outdated "don't exist yet" note. Use directory refs: `methodology/universal`, `methodology/implementation`, `methodology/extended-session` |
+| Priority   | Task                                      | Description                                                                                  |
+| ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+| HIGH       | A7 Inline agent test                      | Test `--agents` JSON flag with model/tools (CLI-AGENT-INVOCATION.md)                         |
+| HIGH       | Manual skill testing                      | Manually test all 76 skills and 11 stacks for correctness                                    |
+| MEDIUM     | Re-add schema to skills                   | Post-migration: inject schema path once CLI repo bundles the schema                          |
+| ~~MEDIUM~~ | ~~Update stacks with methodology skills~~ | **DONE** (2026-01-29) - Added to fullstack-react, modern-react, enterprise-react, work-stack |
 
 ---
 
@@ -95,35 +95,35 @@
 | MEDIUM   | Output styles research      | Investigate Claude Code output styles for sub-agents; could set concise mode for agent cross-communication                                                                                                                                                                                                                                                                                                                                    |
 | LOW      | Template refactoring        | Split agent.liquid into partials (partials bundled in CLI repo alongside templates, not in public skills repo)                                                                                                                                                                                                                                                                                                                                |
 | LOW      | Marketplace foundation      | Stack Marketplace Phase 1-2                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| LOW      | Community submission        | `cc submit` flow                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| LOW      | Community submission        | `cc submit` flow. will do this manually later                                                                                                                                                                                                                                                                                                                                                                                                 |
 | LOW      | External skill sources      | `cc add skill-id --source github:user/repo` fetches external skills to local                                                                                                                                                                                                                                                                                                                                                                  |
-| LOW      | Claude simplifier hook      | Add hook that simplifies/improves Claude's responses or workflow                                                                                                                                                                                                                                                                                                                                                                              |
+| LOW      | Claude simplifier hook      | Add hook that simplifies/improves Claude's responses or workflow. will do this manually later                                                                                                                                                                                                                                                                                                                                                 |
 | LOW      | CLI branding                | ASCII art logo + animated mascot on startup                                                                                                                                                                                                                                                                                                                                                                                                   |
 | LOW      | Agent partials refactor     | Review agent partials bundled in CLI (workflow.md, intro.md, examples.md) - improve naming, modularity. Note: Partials live in CLI repo, not public skills repo                                                                                                                                                                                                                                                                               |
 | LOW      | Configurable thinking       | CLI flags `--thinking <tokens>` and `--agent-thinking <agent>:<tokens>` to override default max thinking                                                                                                                                                                                                                                                                                                                                      |
 | LOW      | Metadata auto-generation    | Generate metadata.yaml from SKILL.md frontmatter for custom skills (no schema comment, relaxed validation)                                                                                                                                                                                                                                                                                                                                    |
-| LOW      | Project agent-hooks         | `.claude/agent-hooks.yaml` maps agents to package.json scripts; merged at compile time. See `AGENT-HOOKS-PORTABILITY.md`                                                                                                                                                                                                                                                                                                                      |
+| LOW      | Project agent-hooks         | `.claude/agent-hooks.yaml` maps agents to package.json scripts; merged at compile time. See `AGENT-HOOKS-PORTABILITY.md`. will do this manually later                                                                                                                                                                                                                                                                                         |
 
 ### Documentation
 
-| Priority | Task                    | Description                                 |
-| -------- | ----------------------- | ------------------------------------------- |
-| LOW      | GitHub raw URLs         | Update `yaml-language-server` references    |
-| LOW      | SchemaStore PR          | Automatic IDE detection                     |
-| LOW      | Platform support docs   | GitHub, GitLab, GitHub Enterprise           |
-| LOW      | Unsupported platforms   | Bitbucket private, Azure DevOps, CodeCommit |
-| LOW      | Generalize MobX skill   | Remove PhotoRoom-specific patterns          |
-| LOW      | Generalize Tailwind     | Remove PhotoRoom-specific patterns          |
-| LOW      | Contribution guidelines | For community skills                        |
-| LOW      | Private skill guide     | For company-specific skills                 |
+| Priority | Task                    | Description                                                              |
+| -------- | ----------------------- | ------------------------------------------------------------------------ |
+| LOW      | GitHub raw URLs         | Update `yaml-language-server` references                                 |
+| LOW      | SchemaStore PR          | Automatic IDE detection                                                  |
+| LOW      | Platform support docs   | GitHub, GitLab, GitHub Enterprise. will do this manually later           |
+| LOW      | Unsupported platforms   | Bitbucket private, Azure DevOps, CodeCommit. will do this manually later |
+| LOW      | Generalize MobX skill   | Remove PhotoRoom-specific patterns. will do this manually later          |
+| LOW      | Generalize Tailwind     | Remove PhotoRoom-specific patterns. will do this manually later          |
+| LOW      | Contribution guidelines | For community skills. will do this manually later                        |
+| LOW      | Private skill guide     | For company-specific skills. will do this manually later                 |
 
 ### Testing
 
-| Priority | Task                  | Description                          |
-| -------- | --------------------- | ------------------------------------ |
-| LOW      | Private repo blockers | Document Bitbucket, Azure DevOps     |
-| LOW      | Content linting       | Skills can omit sections             |
-| LOW      | Skill structure valid | Missing required sections undetected |
+| Priority | Task                  | Description                                                   |
+| -------- | --------------------- | ------------------------------------------------------------- |
+| LOW      | Private repo blockers | Document Bitbucket, Azure DevOps. will do this manually later |
+| LOW      | Content linting       | Skills can omit sections. will do this manually later         |
+| LOW      | Skill structure valid | Missing required sections undetected                          |
 
 ---
 

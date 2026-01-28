@@ -294,11 +294,11 @@ cc create agent migration-manager --generate --purpose "Manages database migrati
 - [x] Verify `--agents` JSON flag accepts inline agent definitions ✅ (2026-01-22)
 - [x] Verify `--agent` can reference an agent defined in `--agents` ✅ (2026-01-22)
 - [x] Verify CLI subprocess inherits Claude auth ✅ (2026-01-22)
-- [ ] Verify `--agents` JSON accepts `model` and `tools` fields
-- [ ] Test with large prompt (skill-summoner is ~2000 lines)
-- [ ] Test tool restrictions are enforced
-- [ ] Test model selection is respected
-- [ ] Verify output is written to correct location
+- [ ] Verify `--agents` JSON accepts `model` and `tools` fields (requires manual interactive test)
+- [ ] Test with large prompt (skill-summoner is ~2000 lines) (requires manual interactive test)
+- [ ] Test tool restrictions are enforced (requires manual interactive test)
+- [ ] Test model selection is respected (requires manual interactive test)
+- [ ] Verify output is written to correct location (requires manual interactive test)
 
 ### Test Results (2026-01-22)
 
