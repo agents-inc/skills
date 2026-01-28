@@ -34,12 +34,13 @@
 
 > Complete these while skills and CLI live in same repo.
 
-| Priority   | Task                                      | Description                                                                                  |
-| ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| HIGH       | A7 Inline agent test                      | Test `--agents` JSON flag with model/tools (CLI-AGENT-INVOCATION.md)                         |
-| HIGH       | Manual skill testing                      | Manually test all 76 skills and 11 stacks for correctness                                    |
-| MEDIUM     | Re-add schema to skills                   | Post-migration: inject schema path once CLI repo bundles the schema                          |
-| ~~MEDIUM~~ | ~~Update stacks with methodology skills~~ | **DONE** (2026-01-29) - Added to fullstack-react, modern-react, enterprise-react, work-stack |
+| Priority   | Task                                      | Description                                                                                                                                                                                                                                        |
+| ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HIGH       | A7 Inline agent test                      | Test `--agents` JSON flag with model/tools (CLI-AGENT-INVOCATION.md)                                                                                                                                                                               |
+| HIGH       | Test entire flow and all permutations     | once marketplace has been created, use the CLI to generate stacks from manual skill selections, local skill selections, skill plugins to local, skill plugins to plugin, and make sure that the correct files are created and no errors are thrown |
+| HIGH       | Manual skill testing                      | Manually test all 76 skills and 11 stacks for correctness                                                                                                                                                                                          |
+| MEDIUM     | Re-add schema to skills                   | Post-migration: inject schema path once CLI repo bundles the schema                                                                                                                                                                                |
+| ~~MEDIUM~~ | ~~Update stacks with methodology skills~~ | **DONE** (2026-01-29) - Added to fullstack-react, modern-react, enterprise-react, work-stack                                                                                                                                                       |
 
 ---
 
