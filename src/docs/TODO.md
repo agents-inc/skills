@@ -1,10 +1,10 @@
 # Outstanding Tasks
 
 > **Generated**: 2026-01-21
-> **Updated**: 2026-01-26
+> **Updated**: 2026-01-29
 > **Completed Tasks**: See [TODO-COMPLETED.md](./TODO-COMPLETED.md)
 >
-> **Architecture Status**: Simplified plugin architecture complete. See [plugins/INDEX.md](./plugins/INDEX.md) for documentation.
+> **Architecture Status**: Dual-repo architecture complete. CLI at `/home/vince/dev/cli`, skills here. See [DUAL-REPO-ARCHITECTURE.md](./.claude/research/findings/v2/DUAL-REPO-ARCHITECTURE.md).
 
 ---
 
@@ -12,7 +12,7 @@
 
 | File                                | Purpose                                                     | Location                        |
 | ----------------------------------- | ----------------------------------------------------------- | ------------------------------- |
-| `DUAL-REPO-ARCHITECTURE.md`         | **Next Refactor** - Public marketplace + private work repo  | `.claude/research/findings/v2/` |
+| `DUAL-REPO-ARCHITECTURE.md`         | **IMPLEMENTED** - Public marketplace + private work repo    | `.claude/research/findings/v2/` |
 | `SIMPLIFIED-PLUGIN-MIGRATION.md`    | **Complete** - 8-phase migration tracking                   | `.claude/tasks/`                |
 | `SKILLS-MATRIX-VERIFICATION.md`     | **Complete** - 18-agent verification of skill relationships | `.claude/research/`             |
 | `SIMPLIFIED-PLUGIN-ARCHITECTURE.md` | **Complete** - One plugin per project architecture          | `.claude/research/findings/v2/` |
@@ -25,7 +25,7 @@
 | Status              | Count       |
 | ------------------- | ----------- |
 | **Do Now**          | 3           |
-| **After Migration** | 8 (3 done)  |
+| **After Migration** | 8 (4 done)  |
 | **Backlog**         | 21 (3 done) |
 
 ---
@@ -58,16 +58,16 @@
 
 ### Post-Split Features
 
-| Priority | Task                                | Description                                                                                                  |
-| -------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| HIGH     | Add marketplace for this repository | Add marketplace                                                                                              |
-| HIGH     | C1 Schema Distribution              | GitHub raw URLs, SchemaStore PR                                                                              |
-| ~~HIGH~~ | ~~C8 Agent plugins~~                | **REMOVED** - Agents are compiled output, not marketplace plugins. Only Skills and Stacks are distributable. |
-| ~~HIGH~~ | ~~C9 `cc add <agent>`~~             | **REMOVED** - Agents are compiled from templates + skills, not installed individually.                       |
-| ~~HIGH~~ | ~~C10 Essential vs optional~~       | **REMOVED** - All agents compiled locally from bundled templates.                                            |
-| HIGH     | C11 Hooks in frontmatter            | Support PreToolUse/PostToolUse/Stop hooks in agent.yaml                                                      |
-| MEDIUM   | C6 `cc doctor`                      | Diagnose connectivity/auth issues                                                                            |
-| MEDIUM   | C7 `cc eject`                       | Local export or GitHub fork for full independence                                                            |
+| Priority   | Task                                | Description                                                                                                    |
+| ---------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| HIGH       | Add marketplace for this repository | Add marketplace                                                                                                |
+| HIGH       | C1 Schema Distribution              | GitHub raw URLs, SchemaStore PR                                                                                |
+| ~~HIGH~~   | ~~C8 Agent plugins~~                | **REMOVED** - Agents are compiled output, not marketplace plugins. Only Skills and Stacks are distributable.   |
+| ~~HIGH~~   | ~~C9 `cc add <agent>`~~             | **REMOVED** - Agents are compiled from templates + skills, not installed individually.                         |
+| ~~HIGH~~   | ~~C10 Essential vs optional~~       | **REMOVED** - All agents compiled locally from bundled templates.                                              |
+| HIGH       | C11 Hooks in frontmatter            | Support PreToolUse/PostToolUse/Stop hooks in agent.yaml                                                        |
+| MEDIUM     | C6 `cc doctor`                      | Diagnose connectivity/auth issues                                                                              |
+| ~~MEDIUM~~ | ~~C7 `cc eject`~~                   | **DONE** (2026-01-29) - `cc eject templates`, `cc eject skills`, `cc eject config`, `cc eject all` implemented |
 
 ---
 
