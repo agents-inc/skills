@@ -2,8 +2,8 @@
 
 ## Repository Split
 
-- **claude-collective-cli**: CLI tool, installed via npm
-- **claude-collective-skills**: Skills content, fetched via giget
+- **claude-collective/cli**: CLI tool, installed via npm
+- **claude-collective/skills**: Skills content, fetched via giget
 
 ## Schema Distribution
 

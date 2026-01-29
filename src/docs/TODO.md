@@ -53,7 +53,7 @@
 | Priority     | Task                     | Description                                                                                   |
 | ------------ | ------------------------ | --------------------------------------------------------------------------------------------- |
 | ~~CRITICAL~~ | ~~B1 CLI Repository~~    | **DONE** (2026-01-29) - CLI at `/home/vince/dev/cli`, all phases implemented                  |
-| ~~CRITICAL~~ | ~~B2 Rename Repository~~ | **DONE** (2026-01-29) - Repository renamed to `claude-collective-skills` via `gh repo rename` |
+| ~~CRITICAL~~ | ~~B2 Rename Repository~~ | **DONE** (2026-01-29) - Repository renamed to `claude-collective/skills` via `gh repo rename` |
 | ~~CRITICAL~~ | ~~B3 Remote fetching~~   | **DONE** (2026-01-29) - giget integration in source-fetcher.ts, tested locally                |
 
 ### Post-Split Features

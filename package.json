@@ -5,14 +5,14 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vincentbollaert/claude-subagents.git"
+    "url": "git+https://github.com/claude-collective/skills.git"
   },
   "author": "Vincent Bollaert",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/vincentbollaert/claude-subagents/issues"
+    "url": "https://github.com/claude-collective/skills/issues"
   },
-  "homepage": "https://github.com/vincentbollaert/claude-subagents#readme",
+  "homepage": "https://github.com/claude-collective/skills#readme",
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",

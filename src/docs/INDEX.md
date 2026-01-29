@@ -156,7 +156,7 @@ This repository is now part of a **dual-repo architecture**:
 | Repository             | Purpose                               | Location                   |
 | ---------------------- | ------------------------------------- | -------------------------- |
 | **CLI Repo**           | CLI tool (`cc`) for managing skills   | Separate repo              |
-| **Skills Repo** (this) | Skills, stacks, agents, documentation | `claude-collective-skills` |
+| **Skills Repo** (this) | Skills, stacks, agents, documentation | `claude-collective/skills` |
 
 ### What Lives Where
 
