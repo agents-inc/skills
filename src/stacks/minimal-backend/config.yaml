@@ -10,6 +10,10 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
+  # Methodology (core agent behaviors)
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
   # Backend
   - id: hono (@vince)
   - id: drizzle (@vince)
@@ -40,6 +44,13 @@ agents:
 
 agent_skills:
   backend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -48,6 +59,13 @@ agent_skills:
         preloaded: true
 
   backend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -59,6 +77,13 @@ agent_skills:
         preloaded: true
 
   tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -66,6 +91,13 @@ agent_skills:
       - id: drizzle (@vince)
 
   pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     research:
       - id: research-methodology (@vince)
         preloaded: true
@@ -75,6 +107,13 @@ agent_skills:
       - id: drizzle (@vince)
 
   backend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true

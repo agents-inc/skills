@@ -10,6 +10,10 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
+  # Methodology (core agent behaviors)
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
   # Frontend
   - id: react (@vince)
   - id: nextjs-app-router (@vince)
@@ -55,6 +59,13 @@ agents:
 
 agent_skills:
   frontend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -79,6 +90,13 @@ agent_skills:
       - id: better-auth+drizzle+hono (@vince)
 
   backend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -89,6 +107,13 @@ agent_skills:
       - id: better-auth+drizzle+hono (@vince)
 
   frontend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -116,6 +141,13 @@ agent_skills:
       - id: better-auth+drizzle+hono (@vince)
 
   backend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -129,6 +161,13 @@ agent_skills:
         preloaded: true
 
   tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     testing:
       - id: vitest (@vince)
         preloaded: true
@@ -137,6 +176,13 @@ agent_skills:
         preloaded: true
 
   pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     research:
       - id: research-methodology (@vince)
         preloaded: true
@@ -166,6 +212,13 @@ agent_skills:
       - id: better-auth+drizzle+hono (@vince)
 
   frontend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -190,6 +243,13 @@ agent_skills:
         preloaded: true
 
   backend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true

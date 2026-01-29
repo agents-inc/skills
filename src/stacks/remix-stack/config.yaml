@@ -10,6 +10,10 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
+  # Methodology (core agent behaviors)
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
   # Frontend
   - id: react (@vince)
   - id: remix (@vince)
@@ -52,6 +56,13 @@ agents:
 
 agent_skills:
   frontend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -70,6 +81,13 @@ agent_skills:
       - id: playwright-e2e (@vince)
 
   backend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -78,6 +96,13 @@ agent_skills:
         preloaded: true
 
   frontend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -99,6 +124,13 @@ agent_skills:
         preloaded: true
 
   backend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -110,12 +142,26 @@ agent_skills:
         preloaded: true
 
   tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     testing:
       - id: vitest (@vince)
         preloaded: true
       - id: playwright-e2e (@vince)
 
   pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     research:
       - id: research-methodology (@vince)
         preloaded: true
@@ -138,6 +184,13 @@ agent_skills:
       - id: drizzle (@vince)
 
   frontend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -157,6 +210,13 @@ agent_skills:
         preloaded: true
 
   backend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true

@@ -1,0 +1,280 @@
+# yaml-language-server: $schema=../../schemas/stack.schema.json
+# CLI Stack - Node.js CLI development with Commander.js and @clack/prompts
+
+name: "CLI Stack"
+description: >
+  Node.js CLI development stack for building command-line tools.
+  Includes Commander.js for argument parsing, @clack/prompts for interactive UX,
+  and picocolors for terminal styling.
+author: "@vince"
+version: "1.0.0"
+
+skills:
+  # Methodology (core agent behaviors)
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
+  # CLI Core
+  - id: cli-commander (@vince)
+  # CLI Reviewing
+  - id: cli-reviewing (@vince)
+  # Testing
+  - id: vitest (@vince)
+  # Shared
+  - id: reviewing (@vince)
+  - id: research-methodology (@vince)
+  # Setup/Tooling (relevant for CLI projects)
+  - id: turborepo (@vince)
+  - id: setup/tooling (@vince)
+  - id: setup/env (@vince)
+  # CI/CD
+  - id: github-actions (@vince)
+
+agents:
+  - cli-developer
+  - cli-reviewer
+  - backend-developer
+  - backend-reviewer
+  - backend-researcher
+  - architecture
+  - pm
+  - tester
+  - skill-summoner
+  - agent-summoner
+  - documentor
+
+# Per-agent skill assignments
+agent_skills:
+  cli-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+        preloaded: true
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/env (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  cli-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+        preloaded: true
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+      - id: cli-reviewing (@vince)
+        preloaded: true
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    testing:
+      - id: vitest (@vince)
+        preloaded: true
+
+  backend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/env (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  backend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+        preloaded: true
+      - id: cli-reviewing (@vince)
+    testing:
+      - id: vitest (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  backend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+
+  architecture:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    setup:
+      - id: turborepo (@vince)
+        preloaded: true
+      - id: setup/tooling (@vince)
+      - id: setup/env (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+
+  skill-summoner:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+      - id: cli-reviewing (@vince)
+    research:
+      - id: research-methodology (@vince)
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/env (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  agent-summoner:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+      - id: cli-reviewing (@vince)
+    research:
+      - id: research-methodology (@vince)
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+      - id: setup/env (@vince)
+    ci-cd:
+      - id: github-actions (@vince)
+
+  documentor:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
+    cli:
+      - id: cli-commander (@vince)
+    reviewing:
+      - id: reviewing (@vince)
+      - id: cli-reviewing (@vince)
+    research:
+      - id: research-methodology (@vince)
+        preloaded: true
+    testing:
+      - id: vitest (@vince)
+    setup:
+      - id: turborepo (@vince)
+      - id: setup/tooling (@vince)
+
+philosophy: "Clear, helpful CLI interactions"
+
+principles:
+  - Always handle SIGINT gracefully with proper cleanup
+  - Use spinners for operations >500ms
+  - Provide clear error messages with actionable guidance
+  - Use exit codes semantically (0 success, 1 user error, 2 system error)
+  - Test cancellation paths as thoroughly as happy paths
+
+tags:
+  - cli
+  - commander
+  - clack
+  - prompts
+  - terminal
+  - node

@@ -54,6 +54,8 @@ agent_skills:
         preloaded: true
       - id: methodology/implementation
         preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react+mobx (@vince)
         preloaded: true
@@ -76,6 +78,13 @@ agent_skills:
     #   - id: testing+karma+playwright (@vince)
 
   frontend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react+mobx (@vince)
         preloaded: true
@@ -103,6 +112,8 @@ agent_skills:
         preloaded: true
       - id: methodology/implementation
         preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react+mobx (@vince)
     state:
@@ -117,6 +128,10 @@ agent_skills:
   pm:
     methodology:
       - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
         preloaded: true
     framework:
       - id: react+mobx (@vince)
@@ -137,6 +152,13 @@ agent_skills:
     #   - id: testing+karma+playwright (@vince)
 
   skill-summoner:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react+mobx (@vince)
     styling:

@@ -10,6 +10,10 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
+  # Methodology (core agent behaviors)
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
   # Frontend
   - id: vue-composition-api (@vince)
   - id: tailwind (@vince)
@@ -50,6 +54,13 @@ agents:
 
 agent_skills:
   frontend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: vue-composition-api (@vince)
         preloaded: true
@@ -65,6 +76,13 @@ agent_skills:
       - id: vue-test-utils (@vince)
 
   backend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -73,6 +91,13 @@ agent_skills:
         preloaded: true
 
   frontend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: vue-composition-api (@vince)
         preloaded: true
@@ -91,6 +116,13 @@ agent_skills:
         preloaded: true
 
   backend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -102,11 +134,25 @@ agent_skills:
         preloaded: true
 
   tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     testing:
       - id: vue-test-utils (@vince)
         preloaded: true
 
   pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     research:
       - id: research-methodology (@vince)
         preloaded: true
@@ -127,6 +173,13 @@ agent_skills:
       - id: drizzle (@vince)
 
   frontend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: vue-composition-api (@vince)
         preloaded: true
@@ -144,6 +197,13 @@ agent_skills:
         preloaded: true
 
   backend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true

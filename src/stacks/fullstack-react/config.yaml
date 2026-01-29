@@ -74,6 +74,8 @@ agent_skills:
         preloaded: true
       - id: methodology/implementation
         preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -107,6 +109,8 @@ agent_skills:
         preloaded: true
       - id: methodology/implementation
         preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -133,6 +137,13 @@ agent_skills:
       - id: security (@vince)
 
   frontend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     framework:
       - id: react (@vince)
         preloaded: true
@@ -164,6 +175,13 @@ agent_skills:
       - id: security (@vince)
 
   backend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     api:
       - id: hono (@vince)
         preloaded: true
@@ -197,6 +215,8 @@ agent_skills:
       - id: methodology/universal
         preloaded: true
       - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
         preloaded: true
     testing:
       - id: vitest (@vince)
@@ -250,6 +270,13 @@ agent_skills:
       - id: security (@vince)
 
   skill-summoner:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # All skills - needs to understand them all to create new ones
     framework:
       - id: react (@vince)
@@ -300,6 +327,13 @@ agent_skills:
       - id: research-methodology (@vince)
 
   agent-summoner:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # All skills - needs to understand them all to create agents
     framework:
       - id: react (@vince)
@@ -350,6 +384,13 @@ agent_skills:
       - id: research-methodology (@vince)
 
   pattern-scout:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # Research + all frontend + all backend - needs to find patterns
     research:
       - id: research-methodology (@vince)
@@ -390,6 +431,13 @@ agent_skills:
       - id: github-actions (@vince)
 
   pattern-critique:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # Research + reviewing + all frontend + all backend
     research:
       - id: research-methodology (@vince)
@@ -433,6 +481,13 @@ agent_skills:
       - id: github-actions (@vince)
 
   documentor:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # Research + all skills - needs to document everything
     research:
       - id: research-methodology (@vince)
@@ -484,6 +539,13 @@ agent_skills:
       - id: setup-axiom+pino+sentry (@vince)
 
   architecture:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # All setup + all backend + security - scaffolds full apps
     framework:
       - id: react (@vince)
@@ -519,6 +581,13 @@ agent_skills:
       - id: security (@vince)
 
   frontend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # All frontend + research
     framework:
       - id: react (@vince)
@@ -542,6 +611,13 @@ agent_skills:
         preloaded: true
 
   backend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     # All backend + research
     api:
       - id: hono (@vince)

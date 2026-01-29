@@ -10,6 +10,10 @@ author: "@vince"
 version: "1.0.0"
 
 skills:
+  # Methodology (core agent behaviors)
+  - id: methodology/universal
+  - id: methodology/implementation
+  - id: methodology/extended-session
   # Mobile
   - id: react-native (@vince)
   # Frontend (shared with mobile)
@@ -44,6 +48,13 @@ agents:
 
 agent_skills:
   frontend-developer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     mobile:
       - id: react-native (@vince)
         preloaded: true
@@ -56,6 +67,13 @@ agent_skills:
       - id: zod-validation (@vince)
 
   frontend-reviewer:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     mobile:
       - id: react-native (@vince)
         preloaded: true
@@ -71,11 +89,25 @@ agent_skills:
         preloaded: true
 
   tester:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     mobile:
       - id: react-native (@vince)
         preloaded: true
 
   pm:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     research:
       - id: research-methodology (@vince)
         preloaded: true
@@ -90,6 +122,13 @@ agent_skills:
       - id: zod-validation (@vince)
 
   frontend-researcher:
+    methodology:
+      - id: methodology/universal
+        preloaded: true
+      - id: methodology/implementation
+        preloaded: true
+      - id: methodology/extended-session
+        preloaded: true
     mobile:
       - id: react-native (@vince)
         preloaded: true
