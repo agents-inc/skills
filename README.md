@@ -1,188 +1,95 @@
-# Claude Collective
+# Claude Collective Skills
 
-A plugin distribution system for Claude Code. Compile skills into distributable plugins with the CLI, or install from the marketplace.
+this is the skills marketplace for Claude Code. it contains curated skills and pre-built stacks that you can customise and install via the CLI.
 
-## Quick Start
+## what's here
 
-### Initialize Plugin
-
-```bash
-# Create your plugin (runs interactive wizard)
-cc init
-
-# Select skills through the wizard
-# Outputs to:
-#   ~/.claude/plugins/claude-collective/          (plugin)
+```
+.claude/
+  skills/       # compiled skills (what Claude loads)
+  agents/       # agent definitions
+src/
+  skills/       # source skills organized by category
+  stacks/       # stack configurations (skill bundles)
+  schemas/      # JSON schemas for validation
+  docs/         # documentation
 ```
 
-### Managing Your Plugin
+**counts:** 84 skills, 16 agents, 7 stacks
+
+## skill categories
+
+| category | examples                                                                         |
+| -------- | -------------------------------------------------------------------------------- |
+| web      | react, next.js, remix, vue, angular, solidjs, scss-modules, zustand, react-query |
+| api      | hono, drizzle, better-auth, posthog, resend, axiom+pino+sentry                   |
+| mobile   | react-native, expo                                                               |
+| cli      | commander.js, clack prompts                                                      |
+| infra    | turborepo, github-actions, env config                                            |
+| security | auth patterns, xss prevention, secrets management                                |
+| meta     | reviewing, research-methodology                                                  |
+
+## stacks
+
+stacks bundle related skills with pre-configured agents. available stacks:
+
+- **nextjs-fullstack** - Next.js App Router + Hono + Drizzle + PostHog
+- **react-native-stack** - React Native with Expo
+- **vue-stack** - Vue 3 + Nuxt
+- **angular-stack** - Angular 17+ standalone components
+- **remix-stack** - Remix with loaders/actions
+- **solidjs-stack** - SolidJS fine-grained reactivity
+- **nuxt-stack** - Nuxt 3 with Nitro
+
+## CLI
+
+the CLI lives in a separate repo. use it to install skills and compile stacks:
 
 ```bash
-# Show plugin information
-cc list
+# initialize a plugin with selected skills
+cc init
 
-# Edit skills in your plugin
+# edit your skill selection
 cc edit
 
-# Recompile agents after changes
+# recompile after changes
 cc compile
 ```
 
-### Install from Marketplace
+see the [CLI repo](https://github.com/claude-collective/cli) for installation.
+
+## development
 
 ```bash
-# Add marketplace (one time)
-/plugin marketplace add claude-collective/skills
-
-# Install individual skills
-/plugin install skill-react@claude-collective
-
-# Or install a pre-built stack
-/plugin install stack-nextjs-fullstack@claude-collective
-```
-
----
-
-## What's Included
-
-- **83 skill plugins** covering frontend, backend, testing, mobile, and more
-- **Pre-built stacks** with agents and curated skill combinations
-- **CLI** for building custom stacks and managing plugins
-
-### Skill Categories
-
-| Category | Skills | Examples                                |
-| -------- | ------ | --------------------------------------- |
-| Frontend | 33     | React, Vue, Angular, Next.js, Remix     |
-| Backend  | 12     | Hono, Express, Fastify, Drizzle, Prisma |
-| Testing  | 8      | Vitest, Playwright, Cypress, RTL        |
-| API      | 12     | React Query, tRPC, GraphQL, WebSocket   |
-| Mobile   | 3      | React Native, Expo                      |
-| Tooling  | 6      | ESLint, Prettier, Vite, Turborepo       |
-
-See [marketplace README](./.claude-plugin/README.md) for the full list.
-
----
-
-## Plugin System
-
-### Architecture
-
-The CLI creates a single plugin in your Claude plugins directory:
-
-```
-~/.claude/plugins/claude-collective/     # PLUGIN
-├── .claude-plugin/plugin.json
-├── agents/                              # Compiled agents
-├── skills/                              # Your selected skills
-├── CLAUDE.md
-└── README.md
-```
-
-### CLI Commands
-
-```bash
-# Initialize plugin (interactive wizard)
-cc init
-
-# Edit skills in your plugin
-cc edit
-
-# Show plugin information
-cc list
-
-# Recompile agents after manual edits
-cc compile
-```
-
-### Publishing Commands (CI Only)
-
-```bash
-# Compile all skills to plugins
-cc compile-plugins
-
-# Compile a stack
-cc compile-stack -s nextjs-fullstack
-
-# Generate marketplace.json
-cc generate-marketplace
-
-# Validate plugins
-cc validate ./dist/plugins --all
-```
-
-See [CLI Reference](./src/docs/plugins/CLI-REFERENCE.md) for complete documentation.
-
----
-
-## Development
-
-### Project Structure
-
-```
-claude-collective/
-  src/
-    skills/           # Source skills organized by category
-    stacks/           # Stack configurations
-    agents/           # Agent templates and definitions
-    cli/              # CLI implementation
-    docs/             # Documentation
-    schemas/          # JSON schemas for validation
-  dist/
-    plugins/          # Compiled skill plugins (83 plugins)
-    stacks/           # Compiled stack plugins
-  .claude-plugin/
-    marketplace.json  # Marketplace definition
-    README.md         # Marketplace documentation
-```
-
-### Build Commands
-
-```bash
-# Install dependencies
+# install deps (for prettier hooks)
 bun install
 
-# Run CLI commands
-bun src/cli/index.ts init
-bun src/cli/index.ts edit
-bun src/cli/index.ts list
-
-# Compile all plugins (for marketplace)
-bun src/cli/index.ts compile-plugins
-
-# Compile stacks (for marketplace)
-bun src/cli/index.ts compile-stack -s nextjs-fullstack
-
-# Generate marketplace
-bun src/cli/index.ts generate-marketplace
-
-# Validate all plugins
-bun src/cli/index.ts validate dist/plugins --all
+# format files
+bun run format
 ```
 
-### Adding a New Skill
+### adding a skill
 
-1. Create skill directory: `src/skills/<category>/<name> (@author)/`
-2. Add `SKILL.md` with frontmatter and content
-3. Add `metadata.yaml` with version and description
-4. Run `cc compile-plugins --skill <category>/<name>`
-5. Run `cc generate-marketplace`
+1. create `src/skills/<category>/<name> (@author)/SKILL.md`
+2. add examples in `examples/` subdirectory
+3. add `reference.md` for API docs
+4. run the CLI to compile
 
-See [Plugin Development Guide](./src/docs/plugins/PLUGIN-DEVELOPMENT.md) for details.
+### stack config format
 
----
+stacks are defined in `src/stacks/<name>/config.yaml`:
 
-## Documentation
+```yaml
+name: "Stack Name"
+description: "what this stack does"
+author: "@handle"
+version: "1.0.0"
 
-| Document                                                                      | Description                        |
-| ----------------------------------------------------------------------------- | ---------------------------------- |
-| [CLI Reference](./src/docs/plugins/CLI-REFERENCE.md)                          | Complete CLI command documentation |
-| [Plugin Development](./src/docs/plugins/PLUGIN-DEVELOPMENT.md)                | How to create and publish plugins  |
-| [Plugin Architecture](./src/docs/plugins/PLUGIN-DISTRIBUTION-ARCHITECTURE.md) | Technical architecture details     |
-| [Marketplace README](./.claude-plugin/README.md)                              | Available skills and installation  |
+skills:
+  - id: web/framework/react (@vince)
+  - id: api/framework/hono (@vince)
+```
 
----
-
-## License
+## license
 
 MIT
