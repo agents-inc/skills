@@ -150,7 +150,7 @@ Answer: [Auth flow, session handling, key files - nothing more]
 
 Research produces findings. Implementation is for developer agents.
 
-````markdown
+`````markdown
 # WRONG - Implementation in research
 
 "Here's how to implement the feature:
@@ -164,7 +164,9 @@ export const NewComponent = () => { ... }
 1. /path/to/similar.tsx:12-45 - Best reference
 2. /path/to/variant.tsx:8-30 - Alternative approach"
 ````
-````
+`````
+
+`````
 
 **Why this matters:** Research informs implementation; it doesn't replace it.
 
@@ -258,7 +260,7 @@ test -f /path/to/file.tsx && echo "exists"
 // From /path/to/file.tsx:15-25
 [Actual code]
 ```
-````
+`````
 
 **Variations:**
 
