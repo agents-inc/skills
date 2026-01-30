@@ -1,7 +1,32 @@
 # Completed Tasks
 
 > **Purpose**: Archive of all completed work. Moved from TODO.md for cleaner tracking.
-> **Last Updated**: 2026-01-29
+> **Last Updated**: 2026-01-30
+
+---
+
+## Triad & Agent Renaming (2026-01-30)
+
+> Human + AI collaboration tasks and domain prefix migration completed.
+
+### Triad Tasks
+
+| Task                             | Description                                           | Completed  |
+| -------------------------------- | ----------------------------------------------------- | ---------- |
+| Finish CLI skills & subagents    | Complete setup of CLI skills and subagent definitions | 2026-01-30 |
+| Meta-review CLI skills & agents  | Review CLI skills/agents with meta agents before use  | 2026-01-30 |
+| Audit CLI repo with CLI reviewer | Run CLI reviewer subagent on `/home/vince/dev/cli`    | 2026-01-30 |
+| Implement refactors via CLI dev  | Execute approved refactors using CLI developer agent  | 2026-01-30 |
+
+### Agent Domain Prefix Migration
+
+| Task                        | Description                                        | Completed  |
+| --------------------------- | -------------------------------------------------- | ---------- |
+| Rename agents domain prefix | `frontend-developer` → `web-frontend-developer`   | 2026-01-30 |
+| Update stack agent refs     | Update all stack configs with new agent names      | 2026-01-30 |
+| Update agent compilation    | Ensure compiler uses domain-prefixed agent names   | 2026-01-30 |
+| Update agent partials       | Update partials to reference new agent names       | 2026-01-30 |
+| CLI skill name refs         | Update CLI TypeScript refs to new skill paths      | 2026-01-30 |
 
 ---
 

@@ -1,6 +1,6 @@
 # Outstanding Tasks
 
-> **Generated**: 2026-01-21 | **Updated**: 2026-01-29 | **Completed**: [TODO-COMPLETED.md](./TODO-COMPLETED.md)
+> **Generated**: 2026-01-21 | **Updated**: 2026-01-30 | **Completed**: [TODO-COMPLETED.md](./TODO-COMPLETED.md)
 >
 > **Architecture**: Dual-repo complete. CLI at `/home/vince/dev/cli`. See [DUAL-REPO-ARCHITECTURE.md](./.claude/research/findings/v2/DUAL-REPO-ARCHITECTURE.md).
 
@@ -20,41 +20,22 @@
 
 ## Counts
 
-| Do Now | After Migration | Backlog | Triad |
-| ------ | --------------- | ------- | ----- |
-| 10     | 2               | 19      | 4     |
-
----
-
-## 0. Triad (Human + AI Collaboration Required)
-
-> Tasks the AI should NOT execute autonomously. Require human review at each step.
-
-| Pri | Task                             | Status | Description                                           |
-| --- | -------------------------------- | ------ | ----------------------------------------------------- |
-| H   | Finish CLI skills & subagents    | DONE   | Complete setup of CLI skills and subagent definitions |
-| H   | Meta-review CLI skills & agents  | DONE   | Review CLI skills/agents with meta agents before use  |
-| H   | Audit CLI repo with CLI reviewer | DONE   | Run CLI reviewer subagent on `/home/vince/dev/cli`    |
-| H   | Implement refactors via CLI dev  | DONE   | Execute approved refactors using CLI developer agent  |
-
-**Workflow**: Task 1 → Task 2 (meta-review must pass) → Task 3 → Task 4
+| Do Now | After Migration | Backlog |
+| ------ | --------------- | ------- |
+| 6      | 2               | 20      |
 
 ---
 
 ## 1. Do Now
 
-| Pri | Task                        | Status  | Description                                              |
-| --- | --------------------------- | ------- | -------------------------------------------------------- |
-| H   | Rename agents domain prefix | DONE    | `frontend-developer` → `web-frontend-developer` etc [^6] |
-| H   | Update stack agent refs     | DONE    | Update all stack configs with new agent names            |
-| H   | Update agent compilation    | DONE    | Ensure compiler uses domain-prefixed agent names         |
-| H   | Update agent partials       | DONE    | Update partials to reference new agent names             |
-| H   | CLI skill name refs         | DONE    | Update CLI TypeScript refs to new skill paths [^7]       |
-| H   | A7 Inline agent test        | PARTIAL | Needs: `model`/`tools` fields, large prompt test [^1]    |
-| H   | E2E flow tests              | PARTIAL | 385 unit pass. Missing E2E wizard + flow tests [^2]      |
-| H   | Manual skill testing        | TODO    | Test all 82 skills + 14 stacks                           |
-| H   | Update all documentation    | TODO    | Bibles reference non-existent CLI commands, wrong paths  |
-| M   | Re-add schema to skills     | TODO    | Inject schema path once CLI bundles it                   |
+| Pri | Task                     | Status  | Description                                             |
+| --- | ------------------------ | ------- | ------------------------------------------------------- |
+| H   | Multi-marketplace support | TODO    | Support multiple marketplaces with default fallback [^6] |
+| H   | A7 Inline agent test     | PARTIAL | Needs: `model`/`tools` fields, large prompt test [^1]   |
+| H   | E2E flow tests           | PARTIAL | 385 unit pass. Missing E2E wizard + flow tests [^2]     |
+| H   | Manual skill testing     | TODO    | Test all 82 skills + 14 stacks                          |
+| H   | Update all documentation | TODO    | Bibles reference non-existent CLI commands, wrong paths |
+| M   | Re-add schema to skills  | TODO    | Inject schema path once CLI bundles it                  |
 
 ---
 
@@ -83,6 +64,7 @@
 
 | Pri | Task                     | Description                                            |
 | --- | ------------------------ | ------------------------------------------------------ |
+| H   | Fix `cc eject` command   | `cc eject skills` should eject actual marketplace skills to `.claude/skills/`, not just create a scaffold template |
 | M   | Multi-stack merging      | Compile + merge multiple stacks with agent rename [^5] |
 | M   | Advanced wizard UI       | Migrate @clack → Ink [^4]                              |
 | M   | Output styles research   | Concise mode for agent cross-communication             |
@@ -143,17 +125,16 @@
 
 Requires renaming agents across all 14 stacks and updating `agent_skills` mappings.
 
-[^6]: **Rename agents domain prefix** - Rename all agents with domain prefixes to enable multi-stack installation without collisions:
+[^6]: **Multi-marketplace support** - CLI must support multiple marketplaces simultaneously:
 
-- `frontend-developer` → `web-frontend-developer`
-- `frontend-reviewer` → `web-frontend-reviewer`
-- `backend-developer` → `api-backend-developer`
-- `backend-reviewer` → `api-backend-reviewer`
-- Mobile stack: `mobile-developer`, `mobile-reviewer`, `mobile-pm`
-- Meta agents stay unprefixed: `pm`, `skill-summoner`, `agent-summoner`, `documentor`
-- Update: agent definitions in `src/agents/`, stack configs, agent_skills mappings, partials
+1. **Default marketplace** (always included): `https://github.com/claude-collective/skills`
+2. **Private marketplaces**: e.g., `https://github.com/vincentbollaert-pr/photoroom-skills`
 
-[^7]: **CLI skill name refs** - The CLI has TypeScript files that reference skill names (e.g., skill-to-agent mapping). These need updating to use new paths (`web/framework/react` instead of `frontend/framework/react`, `api/framework/hono` instead of `backend/api/hono`). Check `/home/vince/dev/cli/src/` for hardcoded skill references.
+**Requirements**:
+- `cc init` should install from marketplace by plugin name (e.g., `photoroom-web-minimal@photoroom`), not compile locally
+- Support `--marketplace` flag or config to specify which marketplace to use
+- Fallback chain: private marketplace → default marketplace
+- Marketplace sources should be GitHub URLs, not local paths (local is dev-only)
 
 ---
 
