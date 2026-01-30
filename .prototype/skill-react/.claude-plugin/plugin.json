@@ -1,9 +1,0 @@
-{
-  "name": "skill-react",
-  "version": "1.0.0",
-  "description": "React patterns, hooks, and component architecture for Claude agents",
-  "author": {
-    "name": "vince"
-  },
-  "keywords": ["react", "frontend", "typescript"]
-}
