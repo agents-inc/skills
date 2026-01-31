@@ -5,12 +5,12 @@ tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
 model: opus
 permissionMode: default
 skills:
-  - investigation-requirements (@vince)
-  - anti-over-engineering (@vince)
-  - success-criteria (@vince)
-  - write-verification (@vince)
-  - improvement-protocol (@vince)
-  - context-management (@vince)
+  - meta/methodology/anti-over-engineering (@vince)
+  - meta/methodology/context-management (@vince)
+  - meta/methodology/improvement-protocol (@vince)
+  - meta/methodology/investigation-requirements (@vince)
+  - meta/methodology/success-criteria (@vince)
+  - meta/methodology/write-verification (@vince)
 ---
 
 # Skill Summoner Agent
@@ -146,167 +146,167 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ## Available Skills (Require Loading)
 
-### react (@vince)
+### web/framework/react (@vince)
 
-- Description: Component architecture, hooks, patterns
-- Invoke: `skill: "react (@vince)"`
-- Use when: when working with react
+- Description: React component patterns
+- Invoke: `skill: "web/framework/react (@vince)"`
+- Use when: when working with react @vince
 
-### scss-modules (@vince)
+### web/styling/scss-modules (@vince)
 
-- Description: SCSS Modules, cva, design tokens
-- Invoke: `skill: "scss-modules (@vince)"`
-- Use when: when working with scss modules
+- Description: SCSS Modules styling
+- Invoke: `skill: "web/styling/scss-modules (@vince)"`
+- Use when: when working with scss modules @vince
 
-### react-query (@vince)
+### web/server-state/react-query (@vince)
 
-- Description: REST APIs, React Query, data fetching
-- Invoke: `skill: "react-query (@vince)"`
-- Use when: when working with react query
+- Description: Server state and caching
+- Invoke: `skill: "web/server-state/react-query (@vince)"`
+- Use when: when working with react query @vince
 
-### zustand (@vince)
+### web/state/zustand (@vince)
 
-- Description: Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
-- Invoke: `skill: "zustand (@vince)"`
-- Use when: when working with zustand
+- Description: Lightweight client state
+- Invoke: `skill: "web/state/zustand (@vince)"`
+- Use when: when working with zustand @vince
 
-### frontend/accessibility (@vince)
+### web/accessibility/web-accessibility (@vince)
 
-- Description: WCAG, ARIA, keyboard navigation
-- Invoke: `skill: "frontend/accessibility (@vince)"`
-- Use when: when working with accessibility
+- Description: WCAG accessibility patterns
+- Invoke: `skill: "web/accessibility/web-accessibility (@vince)"`
+- Use when: when working with accessibility @vince
 
-### frontend/performance (@vince)
+### web/performance/web-performance (@vince)
 
-- Description: Bundle optimization, render performance
-- Invoke: `skill: "frontend/performance (@vince)"`
-- Use when: when working with performance
+- Description: Bundle and render optimization
+- Invoke: `skill: "web/performance/web-performance (@vince)"`
+- Use when: when working with frontend performance @vince
 
-### backend/performance (@vince)
+### api/performance/api-performance (@vince)
 
-- Description: Query optimization, caching, indexing
-- Invoke: `skill: "backend/performance (@vince)"`
-- Use when: when working with performance
+- Description: Query and caching optimization
+- Invoke: `skill: "api/performance/api-performance (@vince)"`
+- Use when: when working with backend performance @vince
 
-### vitest (@vince)
+### web/testing/vitest (@vince)
 
-- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
-- Invoke: `skill: "vitest (@vince)"`
-- Use when: when working with vitest
+- Description: Unit and integration testing
+- Invoke: `skill: "web/testing/vitest (@vince)"`
+- Use when: when working with vitest @vince
 
-### backend/testing (@vince)
+### api/testing/api-testing (@vince)
 
-- Description: API tests, integration tests
-- Invoke: `skill: "backend/testing (@vince)"`
-- Use when: when working with testing
+- Description: API and integration tests
+- Invoke: `skill: "api/testing/api-testing (@vince)"`
+- Use when: when working with backend testing @vince
 
-### msw (@vince)
+### web/mocks/msw (@vince)
 
-- Description: MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
-- Invoke: `skill: "msw (@vince)"`
-- Use when: when working with msw
+- Description: API mocking
+- Invoke: `skill: "web/mocks/msw (@vince)"`
+- Use when: when working with msw @vince
 
-### hono (@vince)
+### api/framework/hono (@vince)
 
-- Description: Hono routes, OpenAPI, Zod validation
-- Invoke: `skill: "hono (@vince)"`
-- Use when: when working with hono
+- Description: Hono API framework
+- Invoke: `skill: "api/framework/hono (@vince)"`
+- Use when: when working with hono @vince
 
-### drizzle (@vince)
+### api/database/drizzle (@vince)
 
-- Description: Drizzle ORM, queries, migrations
-- Invoke: `skill: "drizzle (@vince)"`
-- Use when: when working with drizzle
+- Description: Drizzle ORM patterns
+- Invoke: `skill: "api/database/drizzle (@vince)"`
+- Use when: when working with drizzle @vince
 
-### better-auth+drizzle+hono (@vince)
+### api/auth/better-auth+drizzle+hono (@vince)
 
-- Description: Better Auth patterns, sessions, OAuth
-- Invoke: `skill: "better-auth+drizzle+hono (@vince)"`
-- Use when: when working with better auth+drizzle+hono
+- Description: Authentication and sessions
+- Invoke: `skill: "api/auth/better-auth+drizzle+hono (@vince)"`
+- Use when: when working with better auth @vince
 
-### posthog-analytics (@vince)
+### api/analytics/posthog-analytics (@vince)
 
-- Description: PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.
-- Invoke: `skill: "posthog-analytics (@vince)"`
-- Use when: when working with posthog analytics
+- Description: Product analytics tracking
+- Invoke: `skill: "api/analytics/posthog-analytics (@vince)"`
+- Use when: when working with posthog analytics @vince
 
-### posthog-flags (@vince)
+### api/flags/posthog-flags (@vince)
 
-- Description: PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
-- Invoke: `skill: "posthog-flags (@vince)"`
-- Use when: when working with posthog flags
+- Description: Feature flags and A/B testing
+- Invoke: `skill: "api/flags/posthog-flags (@vince)"`
+- Use when: when working with posthog flags @vince
 
-### resend+react-email (@vince)
+### api/email/resend+react-email (@vince)
 
-- Description: Resend + React Email templates
-- Invoke: `skill: "resend+react-email (@vince)"`
-- Use when: when working with resend+react email
+- Description: Transactional email templates
+- Invoke: `skill: "api/email/resend+react-email (@vince)"`
+- Use when: when working with resend @vince
 
-### axiom+pino+sentry (@vince)
+### api/observability/axiom+pino+sentry (@vince)
 
-- Description: Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
-- Invoke: `skill: "axiom+pino+sentry (@vince)"`
-- Use when: when working with axiom+pino+sentry
+- Description: Logging and error tracking
+- Invoke: `skill: "api/observability/axiom+pino+sentry (@vince)"`
+- Use when: when working with observability @vince
 
-### github-actions (@vince)
+### api/ci-cd/github-actions (@vince)
 
-- Description: GitHub Actions, pipelines, deployment
-- Invoke: `skill: "github-actions (@vince)"`
-- Use when: when working with github actions
+- Description: CI/CD pipelines
+- Invoke: `skill: "api/ci-cd/github-actions (@vince)"`
+- Use when: when working with github actions @vince
 
-### security (@vince)
+### security/auth/security (@vince)
 
-- Description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
-- Invoke: `skill: "security (@vince)"`
-- Use when: when working with security
+- Description: Application security patterns
+- Invoke: `skill: "security/auth/security (@vince)"`
+- Use when: when working with security @vince
 
-### reviewing (@vince)
+### meta/reviewing/reviewing (@vince)
 
-- Description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
-- Invoke: `skill: "reviewing (@vince)"`
-- Use when: when working with reviewing
+- Description: Code review guidance
+- Invoke: `skill: "meta/reviewing/reviewing (@vince)"`
+- Use when: when working with code review @vince
 
-### turborepo (@vince)
+### infra/monorepo/turborepo (@vince)
 
-- Description: Turborepo, workspaces, package architecture, @repo/\* naming, exports, tree-shaking
-- Invoke: `skill: "turborepo (@vince)"`
-- Use when: when working with turborepo
+- Description: Monorepo orchestration
+- Invoke: `skill: "infra/monorepo/turborepo (@vince)"`
+- Use when: when working with turborepo @vince
 
-### setup/env (@vince)
+### infra/env/setup-env (@vince)
 
-- Description: Environment configuration, Zod validation
-- Invoke: `skill: "setup/env (@vince)"`
-- Use when: when working with env
+- Description: Environment variable management
+- Invoke: `skill: "infra/env/setup-env (@vince)"`
+- Use when: when working with environment @vince
 
-### setup/tooling (@vince)
+### infra/tooling/setup-tooling (@vince)
 
-- Description: ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos
-- Invoke: `skill: "setup/tooling (@vince)"`
-- Use when: when working with tooling
+- Description: Build tooling and linting
+- Invoke: `skill: "infra/tooling/setup-tooling (@vince)"`
+- Use when: when working with build tooling @vince
 
-### setup-posthog (@vince)
+### api/analytics/setup-posthog (@vince)
 
-- Description: PostHog analytics and feature flags setup
-- Invoke: `skill: "setup-posthog (@vince)"`
-- Use when: when working with setup posthog
+- Description: PostHog initial setup
+- Invoke: `skill: "api/analytics/setup-posthog (@vince)"`
+- Use when: when working with posthog setup @vince
 
-### setup-resend (@vince)
+### api/email/setup-resend (@vince)
 
-- Description: Resend email setup, domain verification
-- Invoke: `skill: "setup-resend (@vince)"`
-- Use when: when working with setup resend
+- Description: Email service setup
+- Invoke: `skill: "api/email/setup-resend (@vince)"`
+- Use when: when working with email setup @vince
 
-### setup-axiom+pino+sentry (@vince)
+### api/observability/setup-axiom+pino+sentry (@vince)
 
-- Description: Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload
-- Invoke: `skill: "setup-axiom+pino+sentry (@vince)"`
-- Use when: when working with setup axiom+pino+sentry
+- Description: Logging and monitoring setup
+- Invoke: `skill: "api/observability/setup-axiom+pino+sentry (@vince)"`
+- Use when: when working with observability setup @vince
 
-### research-methodology (@vince)
+### meta/research/research-methodology (@vince)
 
-- Description: Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
-- Invoke: `skill: "research-methodology (@vince)"`
-- Use when: when working with research methodology
+- Description: Codebase investigation
+- Invoke: `skill: "meta/research/research-methodology (@vince)"`
+- Use when: when working with research @vince
 
 </skill_activation_protocol>
 
@@ -1930,8 +1930,8 @@ For complex skill creation/improvement tasks spanning multiple conversation turn
 - Creating agents (not skills) → agent-summoner
 - Improving existing agents → agent-summoner
 - Creating new core prompts or patterns → agent-summoner
-- Implementation work → frontend-developer, backend-developer
-- Code review → frontend-reviewer or backend-reviewer
+- Implementation work → web-developer, api-developer
+- Code review → web-reviewer or api-reviewer
 - Testing → tester
 - Architecture planning → pm
 

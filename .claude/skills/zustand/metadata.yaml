@@ -1,0 +1,20 @@
+category: client-state
+category_exclusive: true
+author: "@vince"
+version: 1
+cli_name: Zustand
+cli_description: Lightweight client state
+usage_guidance: Use when managing global UI state, replacing Context misuse, or handling cross-component state.
+compatible_with:
+  - react (@vince)
+  - react-query (@vince)
+  - swr (@vince)
+tags:
+  - zustand
+  - state-management
+  - stores
+  - client-state
+forked_from:
+  skill_id: web/state/zustand (@vince)
+  content_hash: 57c0d40
+  date: 2026-01-31

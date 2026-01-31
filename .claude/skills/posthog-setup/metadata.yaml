@@ -1,0 +1,24 @@
+category: setup
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: PostHog Setup
+cli_description: PostHog initial setup
+usage_guidance: Use when setting up PostHog analytics or feature flags for the first time.
+compatible_with:
+  - posthog-analytics (@vince)
+  - posthog-flags (@vince)
+  - setup-env (@vince)
+provides_setup_for:
+  - posthog-analytics (@vince)
+  - posthog-flags (@vince)
+tags:
+  - posthog
+  - setup
+  - analytics
+  - feature-flags
+  - installation
+forked_from:
+  skill_id: api/analytics/setup-posthog (@vince)
+  content_hash: ce35d7e
+  date: 2026-01-31

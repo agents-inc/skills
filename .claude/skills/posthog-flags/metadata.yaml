@@ -1,0 +1,21 @@
+category: analytics
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: PostHog Flags
+cli_description: Feature flags and A/B testing
+usage_guidance: Use when implementing feature flags, gradual rollouts, A/B tests, or remote configuration.
+compatible_with:
+  - posthog-analytics (@vince)
+requires_setup:
+  - setup-posthog (@vince)
+tags:
+  - posthog
+  - feature-flags
+  - rollouts
+  - ab-testing
+  - experiments
+forked_from:
+  skill_id: api/flags/posthog-flags (@vince)
+  content_hash: "1700328"
+  date: 2026-01-31

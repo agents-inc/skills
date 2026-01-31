@@ -1,0 +1,25 @@
+category: methodology
+category_exclusive: false
+author: "@vince"
+cli_name: CLI Reviewing
+cli_description: CLI code review patterns for Commander.js and @clack/prompts
+usage_guidance: Use when reviewing CLI applications built with Commander.js, @clack/prompts, or similar tools. Covers exit codes, signal handling, cancellation, error messages, spinners, and testing adequacy.
+requires:
+  - cli-commander (@vince)
+compatible_with:
+  - reviewing (@vince)
+  - testing (@vince)
+tags:
+  - cli
+  - review
+  - commander
+  - clack
+  - exit-codes
+  - signal-handling
+  - error-handling
+  - user-experience
+  - methodology
+forked_from:
+  skill_id: meta/reviewing/cli-reviewing (@vince)
+  content_hash: 4710f5e
+  date: 2026-01-31

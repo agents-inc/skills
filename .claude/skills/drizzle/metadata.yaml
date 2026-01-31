@@ -1,0 +1,23 @@
+category: database
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Drizzle
+cli_description: Drizzle ORM patterns
+usage_guidance: Use when writing database queries, migrations, or working with Drizzle ORM.
+compatible_with:
+  - hono (@vince)
+  - express (@vince)
+  - fastify (@vince)
+  - better-auth+drizzle+hono (@vince)
+tags:
+  - drizzle
+  - orm
+  - database
+  - migrations
+  - queries
+  - postgresql
+forked_from:
+  skill_id: api/database/drizzle (@vince)
+  content_hash: "7154525"
+  date: 2026-01-31

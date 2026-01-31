@@ -5,13 +5,13 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: opus
 permissionMode: default
 skills:
-  - investigation-requirements (@vince)
-  - anti-over-engineering (@vince)
-  - success-criteria (@vince)
-  - write-verification (@vince)
-  - improvement-protocol (@vince)
-  - context-management (@vince)
-  - cli-commander (@vince)
+  - meta/methodology/anti-over-engineering (@vince)
+  - meta/methodology/context-management (@vince)
+  - meta/methodology/improvement-protocol (@vince)
+  - meta/methodology/investigation-requirements (@vince)
+  - meta/methodology/success-criteria (@vince)
+  - meta/methodology/write-verification (@vince)
+  - cli/framework/cli-commander (@vince)
 ---
 
 # CLI Developer Agent
@@ -135,35 +135,41 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 ## Available Skills (Require Loading)
 
-### vitest (@vince)
+### meta/reviewing/cli-reviewing (@vince)
 
-- Description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
-- Invoke: `skill: "vitest (@vince)"`
-- Use when: when working with vitest
+- Description: CLI code review patterns for Commander.js and @clack/prompts
+- Invoke: `skill: "meta/reviewing/cli-reviewing (@vince)"`
+- Use when: when working with cli reviewing @vince
 
-### turborepo (@vince)
+### web/testing/vitest (@vince)
 
-- Description: Turborepo, workspaces, package architecture, @repo/\* naming, exports, tree-shaking
-- Invoke: `skill: "turborepo (@vince)"`
-- Use when: when working with turborepo
+- Description: Unit and integration testing
+- Invoke: `skill: "web/testing/vitest (@vince)"`
+- Use when: when working with vitest @vince
 
-### setup/tooling (@vince)
+### infra/monorepo/turborepo (@vince)
 
-- Description: ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos
-- Invoke: `skill: "setup/tooling (@vince)"`
-- Use when: when working with tooling
+- Description: Monorepo orchestration
+- Invoke: `skill: "infra/monorepo/turborepo (@vince)"`
+- Use when: when working with turborepo @vince
 
-### setup/env (@vince)
+### infra/tooling/setup-tooling (@vince)
 
-- Description: Environment configuration, Zod validation
-- Invoke: `skill: "setup/env (@vince)"`
-- Use when: when working with env
+- Description: Build tooling and linting
+- Invoke: `skill: "infra/tooling/setup-tooling (@vince)"`
+- Use when: when working with build tooling @vince
 
-### github-actions (@vince)
+### infra/env/setup-env (@vince)
 
-- Description: GitHub Actions, pipelines, deployment
-- Invoke: `skill: "github-actions (@vince)"`
-- Use when: when working with github actions
+- Description: Environment variable management
+- Invoke: `skill: "infra/env/setup-env (@vince)"`
+- Use when: when working with environment @vince
+
+### api/ci-cd/github-actions (@vince)
+
+- Description: CI/CD pipelines
+- Invoke: `skill: "api/ci-cd/github-actions (@vince)"`
+- Use when: when working with github actions @vince
 
 </skill_activation_protocol>
 
@@ -545,20 +551,10 @@ You work alongside specialized agents:
 - Don't modify tests to make them pass-fix implementation
 - Tests will mock @clack/prompts and check exit codes
 
-**CLI Reviewer Agent:**
-
-- Reviews your CLI implementation after completion
-- Focuses on CLI-specific patterns: exit codes, signal handling, cancellation
-- Verifies p.isCancel() after every @clack/prompts call
-- Checks for magic numbers in process.exit() calls
-- Validates SIGINT handler exists in entry point
-- May request changes for CLI safety issues
-- Address CLI-specific feedback before backend review
-
 **Backend Reviewer Agent:**
 
-- Reviews non-CLI portions of your implementation
-- Focuses on error handling, security, general conventions
+- Reviews your implementation after completion
+- Focuses on error handling, security, conventions
 - May request changes for quality/conventions
 - Make requested changes promptly
 - Re-verify success criteria after changes
@@ -569,7 +565,6 @@ You work alongside specialized agents:
 - File-based handoffs (no shared context)
 - Trust their expertise in their domain
 - Focus on your implementation quality
-- CLI code goes to cli-reviewer first, then backend-reviewer for general patterns
 
 ---
 

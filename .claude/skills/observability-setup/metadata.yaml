@@ -1,0 +1,23 @@
+category: setup
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Observability Setup
+cli_description: Logging and monitoring setup
+usage_guidance: Use when setting up Pino logging, Axiom, or Sentry for the first time.
+compatible_with:
+  - axiom+pino+sentry (@vince)
+  - setup-env (@vince)
+provides_setup_for:
+  - axiom+pino+sentry (@vince)
+tags:
+  - pino
+  - axiom
+  - sentry
+  - setup
+  - installation
+  - logging
+forked_from:
+  skill_id: api/observability/setup-axiom+pino+sentry (@vince)
+  content_hash: 427a67d
+  date: 2026-01-31

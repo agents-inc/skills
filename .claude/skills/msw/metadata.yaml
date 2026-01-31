@@ -1,0 +1,23 @@
+category: mocking
+category_exclusive: true
+author: "@vince"
+version: 1
+cli_name: MSW
+cli_description: API mocking
+usage_guidance: Use when mocking APIs for development or testing with MSW handlers.
+compatible_with:
+  - vitest (@vince)
+  - playwright-e2e (@vince)
+  - cypress-e2e (@vince)
+  - react-query (@vince)
+  - swr (@vince)
+tags:
+  - msw
+  - mock-service-worker
+  - mocking
+  - test-data
+  - api-mocking
+forked_from:
+  skill_id: web/mocks/msw (@vince)
+  content_hash: a52e890
+  date: 2026-01-31

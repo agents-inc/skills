@@ -1,0 +1,21 @@
+category: backend
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: GitHub Actions
+cli_description: CI/CD pipelines
+usage_guidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
+compatible_with:
+  - turborepo (@vince)
+  - setup/tooling (@vince)
+tags:
+  - github-actions
+  - pipelines
+  - deployment
+  - ci
+  - cd
+  - automation
+forked_from:
+  skill_id: api/ci-cd/github-actions (@vince)
+  content_hash: 7b69921
+  date: 2026-01-31

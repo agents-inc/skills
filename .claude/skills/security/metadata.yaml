@@ -1,0 +1,25 @@
+category: security
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Security
+cli_description: Application security patterns
+usage_guidance: Use when implementing authentication, authorization, XSS prevention, CSRF protection, CSP headers, or managing secrets.
+compatible_with:
+  - better-auth+drizzle+hono (@vince)
+  - hono (@vince)
+  - express (@vince)
+  - fastify (@vince)
+  - setup-env (@vince)
+tags:
+  - security
+  - authentication
+  - authorization
+  - secrets
+  - xss
+  - csrf
+  - input-validation
+forked_from:
+  skill_id: security/auth/security (@vince)
+  content_hash: 6b2f9f4
+  date: 2026-01-31

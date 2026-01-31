@@ -1,0 +1,20 @@
+category: forms
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Zod
+cli_description: Schema validation
+usage_guidance: Use when defining validation schemas, type inference, or data transforms.
+tags:
+  - zod
+  - validation
+  - schema
+  - typescript
+  - type-inference
+  - runtime-validation
+  - zod-v3
+  - zod-v4
+forked_from:
+  skill_id: web/forms/zod-validation (@vince)
+  content_hash: e9d638b
+  date: 2026-01-31

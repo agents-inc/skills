@@ -1,0 +1,24 @@
+category: auth
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Better Auth
+cli_description: Authentication and sessions
+usage_guidance: Use when implementing authentication, sessions, OAuth, or user management.
+requires:
+  - drizzle (@vince)
+compatible_with:
+  - hono (@vince)
+  - express (@vince)
+  - fastify (@vince)
+  - security (@vince)
+tags:
+  - better-auth
+  - sessions
+  - oauth
+  - authentication
+  - authorization
+forked_from:
+  skill_id: api/auth/better-auth+drizzle+hono (@vince)
+  content_hash: b7dba19
+  date: 2026-01-31

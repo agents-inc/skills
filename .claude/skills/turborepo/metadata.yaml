@@ -1,0 +1,25 @@
+category: monorepo
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Turborepo
+cli_description: Monorepo orchestration
+usage_guidance: Use when configuring monorepo pipelines, workspaces, or package architecture.
+compatible_with:
+  - setup-tooling (@vince)
+  - github-actions (@vince)
+tags:
+  - turborepo
+  - workspaces
+  - monorepo
+  - package-management
+  - bun
+  - package
+  - exports
+  - conventions
+  - internal-packages
+  - typescript
+forked_from:
+  skill_id: infra/monorepo/turborepo (@vince)
+  content_hash: b4a262d
+  date: 2026-01-31
