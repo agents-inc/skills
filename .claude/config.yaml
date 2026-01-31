@@ -1,0 +1,777 @@
+name: claude-collective
+version: 1.0.0
+author: "@vince"
+description: >
+  Production-ready Next.js stack with complete backend infrastructure. Frontend: Next.js App Router + Server Actions,
+  SCSS Modules + cva, Zustand, React Query, Vitest, MSW. Backend: Hono, Drizzle, Better Auth, PostHog (analytics +
+  flags), Resend email. Infrastructure: Axiom + Pino + Sentry observability, GitHub Actions CI/CD.
+skills:
+  - id: meta/methodology/anti-over-engineering (@vince)
+  - id: meta/methodology/context-management (@vince)
+  - id: meta/methodology/improvement-protocol (@vince)
+  - id: meta/methodology/investigation-requirements (@vince)
+  - id: meta/methodology/success-criteria (@vince)
+  - id: meta/methodology/write-verification (@vince)
+  - id: web/framework/react (@vince)
+  - id: web/framework/nextjs-app-router (@vince)
+  - id: web/framework/nextjs-server-actions (@vince)
+  - id: web/styling/scss-modules (@vince)
+  - id: web/server-state/react-query (@vince)
+  - id: web/state/zustand (@vince)
+  - id: web/accessibility/web-accessibility (@vince)
+  - id: web/performance/web-performance (@vince)
+  - id: web/testing/vitest (@vince)
+  - id: web/mocks/msw (@vince)
+  - id: api/framework/hono (@vince)
+  - id: api/database/drizzle (@vince)
+  - id: api/auth/better-auth+drizzle+hono (@vince)
+  - id: api/analytics/posthog-analytics (@vince)
+  - id: api/flags/posthog-flags (@vince)
+  - id: api/email/resend+react-email (@vince)
+  - id: api/observability/axiom+pino+sentry (@vince)
+  - id: api/ci-cd/github-actions (@vince)
+  - id: api/performance/api-performance (@vince)
+  - id: api/testing/api-testing (@vince)
+  - id: security/auth/security (@vince)
+  - id: cli/framework/cli-commander (@vince)
+  - id: meta/reviewing/cli-reviewing (@vince)
+  - id: meta/reviewing/reviewing (@vince)
+  - id: infra/monorepo/turborepo (@vince)
+  - id: infra/env/setup-env (@vince)
+  - id: infra/tooling/setup-tooling (@vince)
+  - id: api/analytics/setup-posthog (@vince)
+  - id: api/email/setup-resend (@vince)
+  - id: api/observability/setup-axiom+pino+sentry (@vince)
+  - id: meta/research/research-methodology (@vince)
+agents:
+  - web-developer
+  - api-developer
+  - cli-developer
+  - web-reviewer
+  - api-reviewer
+  - cli-reviewer
+  - web-tester
+  - web-pm
+  - skill-summoner
+  - agent-summoner
+  - pattern-scout
+  - web-pattern-critique
+  - documentor
+  - web-architecture
+  - web-researcher
+  - api-researcher
+agent_skills:
+  web-developer:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+        preloaded: true
+    styling:
+      - id: web/styling/scss-modules (@vince)
+        preloaded: true
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    security:
+      - id: security/auth/security (@vince)
+  api-developer:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    api:
+      - id: api/framework/hono (@vince)
+        preloaded: true
+    database:
+      - id: api/database/drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    performance:
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: api/testing/api-testing (@vince)
+    security:
+      - id: security/auth/security (@vince)
+  web-reviewer:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+        preloaded: true
+    styling:
+      - id: web/styling/scss-modules (@vince)
+        preloaded: true
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+        preloaded: true
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    security:
+      - id: security/auth/security (@vince)
+  api-reviewer:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    api:
+      - id: api/framework/hono (@vince)
+        preloaded: true
+    database:
+      - id: api/database/drizzle (@vince)
+        preloaded: true
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    performance:
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: api/testing/api-testing (@vince)
+    security:
+      - id: security/auth/security (@vince)
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+        preloaded: true
+  web-tester:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    testing:
+      - id: web/testing/vitest (@vince)
+        preloaded: true
+      - id: api/testing/api-testing (@vince)
+        preloaded: true
+    mocks:
+      - id: web/mocks/msw (@vince)
+        preloaded: true
+  web-pm:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    research:
+      - id: meta/research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+      - id: api/testing/api-testing (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    security:
+      - id: security/auth/security (@vince)
+  skill-summoner:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+      - id: api/testing/api-testing (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    security:
+      - id: security/auth/security (@vince)
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+    setup:
+      - id: infra/monorepo/turborepo (@vince)
+      - id: infra/env/setup-env (@vince)
+      - id: infra/tooling/setup-tooling (@vince)
+      - id: api/analytics/setup-posthog (@vince)
+      - id: api/email/setup-resend (@vince)
+      - id: api/observability/setup-axiom+pino+sentry (@vince)
+    research:
+      - id: meta/research/research-methodology (@vince)
+  agent-summoner:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+      - id: api/testing/api-testing (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    security:
+      - id: security/auth/security (@vince)
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+    setup:
+      - id: infra/monorepo/turborepo (@vince)
+      - id: infra/env/setup-env (@vince)
+      - id: infra/tooling/setup-tooling (@vince)
+      - id: api/analytics/setup-posthog (@vince)
+      - id: api/email/setup-resend (@vince)
+      - id: api/observability/setup-axiom+pino+sentry (@vince)
+    research:
+      - id: meta/research/research-methodology (@vince)
+  pattern-scout:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    research:
+      - id: meta/research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+      - id: api/testing/api-testing (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+  web-pattern-critique:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    research:
+      - id: meta/research/research-methodology (@vince)
+        preloaded: true
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+      - id: api/testing/api-testing (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+  documentor:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    research:
+      - id: meta/research/research-methodology (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+      - id: api/testing/api-testing (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    security:
+      - id: security/auth/security (@vince)
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+    setup:
+      - id: infra/monorepo/turborepo (@vince)
+      - id: infra/env/setup-env (@vince)
+      - id: infra/tooling/setup-tooling (@vince)
+      - id: api/analytics/setup-posthog (@vince)
+      - id: api/email/setup-resend (@vince)
+      - id: api/observability/setup-axiom+pino+sentry (@vince)
+  web-architecture:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+    setup:
+      - id: infra/monorepo/turborepo (@vince)
+        preloaded: true
+      - id: infra/env/setup-env (@vince)
+      - id: infra/tooling/setup-tooling (@vince)
+      - id: api/analytics/setup-posthog (@vince)
+      - id: api/email/setup-resend (@vince)
+      - id: api/observability/setup-axiom+pino+sentry (@vince)
+    api:
+      - id: api/framework/hono (@vince)
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    performance:
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: api/testing/api-testing (@vince)
+    security:
+      - id: security/auth/security (@vince)
+  web-researcher:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    framework:
+      - id: web/framework/react (@vince)
+        preloaded: true
+    styling:
+      - id: web/styling/scss-modules (@vince)
+    server-state:
+      - id: web/server-state/react-query (@vince)
+    state:
+      - id: web/state/zustand (@vince)
+    accessibility:
+      - id: web/accessibility/web-accessibility (@vince)
+    performance:
+      - id: web/performance/web-performance (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+    mocks:
+      - id: web/mocks/msw (@vince)
+    research:
+      - id: meta/research/research-methodology (@vince)
+        preloaded: true
+  api-researcher:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    api:
+      - id: api/framework/hono (@vince)
+        preloaded: true
+    database:
+      - id: api/database/drizzle (@vince)
+    auth:
+      - id: api/auth/better-auth+drizzle+hono (@vince)
+    analytics:
+      - id: api/analytics/posthog-analytics (@vince)
+    flags:
+      - id: api/flags/posthog-flags (@vince)
+    email:
+      - id: api/email/resend+react-email (@vince)
+    observability:
+      - id: api/observability/axiom+pino+sentry (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+    performance:
+      - id: api/performance/api-performance (@vince)
+    testing:
+      - id: api/testing/api-testing (@vince)
+    research:
+      - id: meta/research/research-methodology (@vince)
+        preloaded: true
+  cli-developer:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    cli:
+      - id: cli/framework/cli-commander (@vince)
+        preloaded: true
+    reviewing:
+      - id: meta/reviewing/cli-reviewing (@vince)
+    testing:
+      - id: web/testing/vitest (@vince)
+    setup:
+      - id: infra/monorepo/turborepo (@vince)
+      - id: infra/tooling/setup-tooling (@vince)
+      - id: infra/env/setup-env (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+  cli-reviewer:
+    methodology:
+      - id: meta/methodology/anti-over-engineering (@vince)
+        preloaded: true
+      - id: meta/methodology/context-management (@vince)
+        preloaded: true
+      - id: meta/methodology/improvement-protocol (@vince)
+        preloaded: true
+      - id: meta/methodology/investigation-requirements (@vince)
+        preloaded: true
+      - id: meta/methodology/success-criteria (@vince)
+        preloaded: true
+      - id: meta/methodology/write-verification (@vince)
+        preloaded: true
+    cli:
+      - id: cli/framework/cli-commander (@vince)
+        preloaded: true
+    reviewing:
+      - id: meta/reviewing/reviewing (@vince)
+        preloaded: true
+      - id: meta/reviewing/cli-reviewing (@vince)
+        preloaded: true
+    testing:
+      - id: web/testing/vitest (@vince)
+    setup:
+      - id: infra/monorepo/turborepo (@vince)
+      - id: infra/tooling/setup-tooling (@vince)
+    ci-cd:
+      - id: api/ci-cd/github-actions (@vince)
+philosophy: Ship fast, iterate faster
+principles:
+  - Prefer composition over inheritance
+  - Use hooks for everything, avoid class components
+  - SCSS Modules for co-located styles, cva for variants
+  - Zustand for client state, React Query for server state
+  - Test user behavior, not implementation details
+  - Type everything - zero tolerance for any
+tags:
+  - react
+  - typescript
+  - scss-modules
+  - zustand
+  - react-query
+  - modern
+  - fullstack
