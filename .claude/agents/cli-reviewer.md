@@ -137,25 +137,25 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 - Description: Unit and integration testing
 - Invoke: `skill: "web/testing/vitest (@vince)"`
-- Use when: when working with vitest @vince
+- Use when: when working with testing
 
 ### infra/monorepo/turborepo (@vince)
 
 - Description: Monorepo orchestration
 - Invoke: `skill: "infra/monorepo/turborepo (@vince)"`
-- Use when: when working with turborepo @vince
+- Use when: when working with setup-monorepo
 
 ### infra/tooling/setup-tooling (@vince)
 
 - Description: Build tooling and linting
 - Invoke: `skill: "infra/tooling/setup-tooling (@vince)"`
-- Use when: when working with build tooling @vince
+- Use when: when working with setup-tooling
 
 ### api/ci-cd/github-actions (@vince)
 
 - Description: CI/CD pipelines
 - Invoke: `skill: "api/ci-cd/github-actions (@vince)"`
-- Use when: when working with github actions @vince
+- Use when: when working with ci-cd
 
 </skill_activation_protocol>
 

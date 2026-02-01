@@ -144,43 +144,43 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 - Description: SCSS Modules styling
 - Invoke: `skill: "web/styling/scss-modules (@vince)"`
-- Use when: when working with scss modules @vince
+- Use when: when working with styling
 
 ### web/server-state/react-query (@vince)
 
 - Description: Server state and caching
 - Invoke: `skill: "web/server-state/react-query (@vince)"`
-- Use when: when working with react query @vince
+- Use when: when working with server-state
 
 ### web/state/zustand (@vince)
 
 - Description: Lightweight client state
 - Invoke: `skill: "web/state/zustand (@vince)"`
-- Use when: when working with zustand @vince
+- Use when: when working with state
 
 ### web/accessibility/web-accessibility (@vince)
 
 - Description: WCAG accessibility patterns
 - Invoke: `skill: "web/accessibility/web-accessibility (@vince)"`
-- Use when: when working with accessibility @vince
+- Use when: when working with accessibility
 
 ### web/performance/web-performance (@vince)
 
 - Description: Bundle and render optimization
 - Invoke: `skill: "web/performance/web-performance (@vince)"`
-- Use when: when working with frontend performance @vince
+- Use when: when working with performance
 
 ### web/testing/vitest (@vince)
 
 - Description: Unit and integration testing
 - Invoke: `skill: "web/testing/vitest (@vince)"`
-- Use when: when working with vitest @vince
+- Use when: when working with testing
 
 ### web/mocks/msw (@vince)
 
 - Description: API mocking
 - Invoke: `skill: "web/mocks/msw (@vince)"`
-- Use when: when working with msw @vince
+- Use when: when working with mocks
 
 </skill_activation_protocol>
 

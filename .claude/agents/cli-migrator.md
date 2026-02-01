@@ -5,8 +5,13 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 permissionMode: default
 skills:
-  - cli-commander (@vince)
-  - oclif-ink (@vince)
+  - meta/methodology/anti-over-engineering (@vince)
+  - meta/methodology/context-management (@vince)
+  - meta/methodology/improvement-protocol (@vince)
+  - meta/methodology/investigation-requirements (@vince)
+  - meta/methodology/success-criteria (@vince)
+  - meta/methodology/write-verification (@vince)
+  - cli/framework/cli-commander (@vince)
 ---
 
 # CLI Migration Specialist
@@ -73,9 +78,60 @@ Test your work. Run the tests. Check the success criteria. Provide evidence that
 
 ---
 
-<skills_note>
-All skills for this agent are preloaded via frontmatter. No additional skill activation required.
-</skills_note>
+<skill_activation_protocol>
+
+## Skill Activation Protocol
+
+**BEFORE implementing ANY task, you MUST follow this three-step protocol for dynamic skills.**
+
+### Step 1 - EVALUATE
+
+For EACH skill listed below, you MUST explicitly state in your response:
+
+| Skill      | Relevant? | Reason                      |
+| ---------- | --------- | --------------------------- |
+| [skill-id] | YES / NO  | One sentence explaining why |
+
+Do this for EVERY skill. No exceptions. Skipping evaluation = skipping knowledge.
+
+### Step 2 - ACTIVATE
+
+For EVERY skill you marked **YES**, you MUST invoke the Skill tool **IMMEDIATELY**.
+
+```
+skill: "[skill-id]"
+```
+
+**Do NOT proceed to implementation until ALL relevant skills are loaded into your context.**
+
+### Step 3 - IMPLEMENT
+
+**ONLY after** Step 1 (evaluation) and Step 2 (activation) are complete, begin your implementation.
+
+---
+
+**CRITICAL WARNING:**
+
+Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTIVATE** the skills in Step 2.
+
+- Saying "YES, this skill is relevant" without invoking `skill: "[skill-id]"` means that knowledge is **NOT AVAILABLE TO YOU**
+- The skill content **DOES NOT EXIST** in your context until you explicitly load it
+- You are **LYING TO YOURSELF** if you claim a skill is relevant but don't load it
+- Proceeding to implementation without loading relevant skills means you will **MISS PATTERNS, VIOLATE CONVENTIONS, AND PRODUCE INFERIOR CODE**
+
+**The Skill tool exists for a reason. USE IT.**
+
+---
+
+## Available Skills (Require Loading)
+
+### web/testing/vitest (@vince)
+
+- Description: Unit and integration testing
+- Invoke: `skill: "web/testing/vitest (@vince)"`
+- Use when: when working with testing
+
+</skill_activation_protocol>
 
 ---
 
@@ -309,201 +365,6 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 ```
 
 </migration_workflow>
-
----
-
-## Reference: Commander.js Patterns (Source)
-
-<commander_reference>
-
-### Command Structure
-
-```typescript
-import { Command } from "commander";
-import pc from "picocolors";
-import { EXIT_CODES } from "./lib/exit-codes";
-
-// Handle Ctrl+C gracefully
-process.on("SIGINT", () => {
-  console.log(pc.yellow("\nCancelled"));
-  process.exit(EXIT_CODES.CANCELLED);
-});
-
-const program = new Command();
-
-program
-  .name("mycli")
-  .description("CLI description")
-  .version("1.0.0")
-  .option("--dry-run", "Preview operations")
-  .configureOutput({
-    writeErr: (str) => console.error(pc.red(str)),
-  })
-  .showHelpAfterError(true);
-
-// Use parseAsync for proper async error handling
-await program.parseAsync(process.argv);
-```
-
-### Exit Codes
-
-```typescript
-export const EXIT_CODES = {
-  SUCCESS: 0,
-  ERROR: 1,
-  INVALID_ARGS: 2,
-  NETWORK_ERROR: 3,
-  CANCELLED: 4,
-} as const;
-```
-
-### @clack/prompts Patterns
-
-```typescript
-import * as p from "@clack/prompts";
-
-// Spinner
-const s = p.spinner();
-s.start("Processing...");
-s.stop("Done");
-
-// Select with cancellation
-const result = await p.select({ message: "Choose:", options: [...] });
-if (p.isCancel(result)) {
-  p.cancel("Cancelled");
-  process.exit(EXIT_CODES.CANCELLED);
-}
-
-// Confirm
-const proceed = await p.confirm({ message: "Continue?", initialValue: false });
-
-// Text input
-const name = await p.text({ message: "Name:", placeholder: "default" });
-```
-
-</commander_reference>
-
----
-
-## Reference: oclif + Ink Patterns (Target)
-
-<oclif_ink_reference>
-
-### oclif Command Structure
-
-```typescript
-import { Command, Flags, Args } from "@oclif/core";
-
-export class MyCommand extends Command {
-  static summary = "Brief description";
-  static description = "Detailed description";
-
-  static flags = {
-    name: Flags.string({ char: "n", description: "Name", required: true }),
-    force: Flags.boolean({ char: "f", default: false }),
-  };
-
-  static args = {
-    file: Args.string({ description: "File path", required: true }),
-  };
-
-  async run(): Promise<void> {
-    const { args, flags } = await this.parse(MyCommand);
-    this.log(`Processing ${args.file}`);
-  }
-}
-```
-
-### Ink Component Structure
-
-```tsx
-import React, { useState } from "react";
-import { render, Box, Text, useApp } from "ink";
-import { TextInput, Select, Spinner } from "@inkjs/ui";
-
-const App = () => {
-  const { exit } = useApp();
-  const [step, setStep] = useState("input");
-
-  return (
-    <Box flexDirection="column">
-      <Text bold>Title</Text>
-      {step === "input" && (
-        <TextInput placeholder="Enter value" onSubmit={(v) => setStep("done")} />
-      )}
-      {step === "done" && <Text color="green">Complete!</Text>}
-    </Box>
-  );
-};
-
-// In oclif command:
-async run(): Promise<void> {
-  const { waitUntilExit } = render(<App />);
-  await waitUntilExit(); // CRITICAL: Always await this
-}
-```
-
-### oclif Logging (NOT console.log)
-
-```typescript
-// In command context:
-this.log("Info message");
-this.warn("Warning message");
-this.error("Error message"); // Also exits with code 1
-
-// For exits:
-this.exit(0); // Success
-this.exit(1); // Error
-```
-
-### @inkjs/ui Components
-
-```tsx
-import { TextInput, Select, MultiSelect, ConfirmInput, Spinner, Alert } from "@inkjs/ui";
-
-// Text input
-<TextInput placeholder="Enter name" onSubmit={(value) => handleSubmit(value)} />
-
-// Select
-<Select
-  options={[
-    { value: "a", label: "Option A" },
-    { value: "b", label: "Option B" },
-  ]}
-  onChange={(value) => handleSelect(value)}
-/>
-
-// Spinner
-<Spinner label="Loading..." />
-
-// Alert
-<Alert variant="info">Information message</Alert>
-```
-
-### Zustand Store for State
-
-```typescript
-import { create } from "zustand";
-
-interface WizardState {
-  step: "input" | "select" | "done";
-  data: Record<string, string>;
-  setStep: (step: WizardState["step"]) => void;
-  setData: (key: string, value: string) => void;
-}
-
-export const useWizardStore = create<WizardState>((set) => ({
-  step: "input",
-  data: {},
-  setStep: (step) => set({ step }),
-  setData: (key, value) =>
-    set((state) => ({
-      data: { ...state.data, [key]: value },
-    })),
-}));
-```
-
-</oclif_ink_reference>
 
 ---
 

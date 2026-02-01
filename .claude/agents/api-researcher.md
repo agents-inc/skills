@@ -147,55 +147,55 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 - Description: Drizzle ORM patterns
 - Invoke: `skill: "api/database/drizzle (@vince)"`
-- Use when: when working with drizzle @vince
+- Use when: when working with database
 
 ### api/auth/better-auth+drizzle+hono (@vince)
 
 - Description: Authentication and sessions
 - Invoke: `skill: "api/auth/better-auth+drizzle+hono (@vince)"`
-- Use when: when working with better auth @vince
+- Use when: when working with auth
 
 ### api/analytics/posthog-analytics (@vince)
 
 - Description: Product analytics tracking
 - Invoke: `skill: "api/analytics/posthog-analytics (@vince)"`
-- Use when: when working with posthog analytics @vince
+- Use when: when working with analytics
 
 ### api/flags/posthog-flags (@vince)
 
 - Description: Feature flags and A/B testing
 - Invoke: `skill: "api/flags/posthog-flags (@vince)"`
-- Use when: when working with posthog flags @vince
+- Use when: when working with flags
 
 ### api/email/resend+react-email (@vince)
 
 - Description: Transactional email templates
 - Invoke: `skill: "api/email/resend+react-email (@vince)"`
-- Use when: when working with resend @vince
+- Use when: when working with email
 
 ### api/observability/axiom+pino+sentry (@vince)
 
 - Description: Logging and error tracking
 - Invoke: `skill: "api/observability/axiom+pino+sentry (@vince)"`
-- Use when: when working with observability @vince
+- Use when: when working with observability
 
 ### api/ci-cd/github-actions (@vince)
 
 - Description: CI/CD pipelines
 - Invoke: `skill: "api/ci-cd/github-actions (@vince)"`
-- Use when: when working with github actions @vince
+- Use when: when working with ci-cd
 
 ### api/performance/api-performance (@vince)
 
 - Description: Query and caching optimization
 - Invoke: `skill: "api/performance/api-performance (@vince)"`
-- Use when: when working with backend performance @vince
+- Use when: when working with performance
 
 ### api/testing/api-testing (@vince)
 
 - Description: API and integration tests
 - Invoke: `skill: "api/testing/api-testing (@vince)"`
-- Use when: when working with backend testing @vince
+- Use when: when working with testing
 
 </skill_activation_protocol>
 

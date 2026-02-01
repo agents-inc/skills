@@ -28,14 +28,14 @@
 
 ## 1. Do Now
 
-| Pri | Task                     | Status  | Description                                             |
-| --- | ------------------------ | ------- | ------------------------------------------------------- |
+| Pri | Task                      | Status  | Description                                              |
+| --- | ------------------------- | ------- | -------------------------------------------------------- |
 | H   | Multi-marketplace support | TODO    | Support multiple marketplaces with default fallback [^6] |
-| H   | A7 Inline agent test     | PARTIAL | Needs: `model`/`tools` fields, large prompt test [^1]   |
-| H   | E2E flow tests           | PARTIAL | 385 unit pass. Missing E2E wizard + flow tests [^2]     |
-| H   | Manual skill testing     | TODO    | Test all 82 skills + 14 stacks                          |
-| H   | Update all documentation | TODO    | Bibles reference non-existent CLI commands, wrong paths |
-| M   | Re-add schema to skills  | TODO    | Inject schema path once CLI bundles it                  |
+| H   | A7 Inline agent test      | PARTIAL | Needs: `model`/`tools` fields, large prompt test [^1]    |
+| H   | E2E flow tests            | PARTIAL | 385 unit pass. Missing E2E wizard + flow tests [^2]      |
+| H   | Manual skill testing      | TODO    | Test all 82 skills + 14 stacks                           |
+| H   | Update all documentation  | TODO    | Bibles reference non-existent CLI commands, wrong paths  |
+| M   | Re-add schema to skills   | TODO    | Inject schema path once CLI bundles it                   |
 
 ---
 
@@ -52,32 +52,33 @@
 
 ### Skills & Content
 
-| Pri | Task                       | Description                                           |
-| --- | -------------------------- | ----------------------------------------------------- |
-| H   | Skill optimization suite   | Eval existing tools + build meta-skills [^3]          |
-| M   | Skill granularity refactor | Split into `examples/` + `patterns/` folders          |
-| L   | New skills (Critical)      | tailwind, nx, docker, k8s, vite, svelte, supabase, AI |
-| L   | New skills (High)          | astro, firebase, clerk, cloudflare, terraform         |
-| L   | Roadmap Phase 3-5          | background-jobs, caching, i18n, payments              |
+| Pri | Task                       | Description                                                |
+| --- | -------------------------- | ---------------------------------------------------------- |
+| H   | Skill optimization suite   | Eval existing tools + build meta-skills [^3]               |
+| M   | Skill granularity refactor | Split into `examples/` + `patterns/` folders               |
+| M   | Format then ignore .md     | Run prettier on all .md, then add \*.md to .prettierignore |
+| L   | New skills (Critical)      | tailwind, nx, docker, k8s, vite, svelte, supabase, AI      |
+| L   | New skills (High)          | astro, firebase, clerk, cloudflare, terraform              |
+| L   | Roadmap Phase 3-5          | background-jobs, caching, i18n, payments                   |
 
 ### CLI & Infrastructure
 
-| Pri | Task                     | Description                                            |
-| --- | ------------------------ | ------------------------------------------------------ |
+| Pri | Task                     | Description                                                                                                        |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | H   | Fix `cc eject` command   | `cc eject skills` should eject actual marketplace skills to `.claude/skills/`, not just create a scaffold template |
-| M   | Multi-stack merging      | Compile + merge multiple stacks with agent rename [^5] |
-| M   | Advanced wizard UI       | Migrate @clack → Ink [^4]                              |
-| M   | Output styles research   | Concise mode for agent cross-communication             |
-| L   | Template refactoring     | Split agent.liquid into partials                       |
-| L   | Marketplace foundation   | Stack Marketplace Phase 1-2                            |
-| L   | Community submission     | `cc submit` flow                                       |
-| L   | External skill sources   | `cc add --source github:user/repo`                     |
-| L   | Claude simplifier hook   | Hook to simplify Claude responses                      |
-| L   | CLI branding             | ASCII art logo + animated mascot                       |
-| L   | Agent partials refactor  | Improve naming/modularity of workflow.md, intro.md     |
-| L   | Configurable thinking    | `--thinking <tokens>`, `--agent-thinking <agent>:<n>`  |
-| L   | Metadata auto-generation | Generate metadata.yaml from SKILL.md frontmatter       |
-| L   | Project agent-hooks      | `.claude/agent-hooks.yaml` → package.json scripts      |
+| M   | Multi-stack merging      | Compile + merge multiple stacks with agent rename [^5]                                                             |
+| M   | Advanced wizard UI       | Migrate @clack → Ink [^4]                                                                                          |
+| M   | Output styles research   | Concise mode for agent cross-communication                                                                         |
+| L   | Template refactoring     | Split agent.liquid into partials                                                                                   |
+| L   | Marketplace foundation   | Stack Marketplace Phase 1-2                                                                                        |
+| L   | Community submission     | `cc submit` flow                                                                                                   |
+| L   | External skill sources   | `cc add --source github:user/repo`                                                                                 |
+| L   | Claude simplifier hook   | Hook to simplify Claude responses                                                                                  |
+| L   | CLI branding             | ASCII art logo + animated mascot                                                                                   |
+| L   | Agent partials refactor  | Improve naming/modularity of workflow.md, intro.md                                                                 |
+| L   | Configurable thinking    | `--thinking <tokens>`, `--agent-thinking <agent>:<n>`                                                              |
+| L   | Metadata auto-generation | Generate metadata.yaml from SKILL.md frontmatter                                                                   |
+| L   | Project agent-hooks      | `.claude/agent-hooks.yaml` → package.json scripts                                                                  |
 
 ### Documentation
 
@@ -131,6 +132,7 @@ Requires renaming agents across all 14 stacks and updating `agent_skills` mappin
 2. **Private marketplaces**: e.g., `https://github.com/vincentbollaert-pr/photoroom-skills`
 
 **Requirements**:
+
 - `cc init` should install from marketplace by plugin name (e.g., `photoroom-web-minimal@photoroom`), not compile locally
 - Support `--marketplace` flag or config to specify which marketplace to use
 - Fallback chain: private marketplace → default marketplace

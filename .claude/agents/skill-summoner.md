@@ -150,163 +150,163 @@ Your evaluation in Step 1 is **COMPLETELY WORTHLESS** unless you actually **ACTI
 
 - Description: React component patterns
 - Invoke: `skill: "web/framework/react (@vince)"`
-- Use when: when working with react @vince
+- Use when: when working with framework
 
 ### web/styling/scss-modules (@vince)
 
 - Description: SCSS Modules styling
 - Invoke: `skill: "web/styling/scss-modules (@vince)"`
-- Use when: when working with scss modules @vince
+- Use when: when working with styling
 
 ### web/server-state/react-query (@vince)
 
 - Description: Server state and caching
 - Invoke: `skill: "web/server-state/react-query (@vince)"`
-- Use when: when working with react query @vince
+- Use when: when working with server-state
 
 ### web/state/zustand (@vince)
 
 - Description: Lightweight client state
 - Invoke: `skill: "web/state/zustand (@vince)"`
-- Use when: when working with zustand @vince
+- Use when: when working with state
 
 ### web/accessibility/web-accessibility (@vince)
 
 - Description: WCAG accessibility patterns
 - Invoke: `skill: "web/accessibility/web-accessibility (@vince)"`
-- Use when: when working with accessibility @vince
+- Use when: when working with accessibility
 
 ### web/performance/web-performance (@vince)
 
 - Description: Bundle and render optimization
 - Invoke: `skill: "web/performance/web-performance (@vince)"`
-- Use when: when working with frontend performance @vince
+- Use when: when working with performance-web
 
 ### api/performance/api-performance (@vince)
 
 - Description: Query and caching optimization
 - Invoke: `skill: "api/performance/api-performance (@vince)"`
-- Use when: when working with backend performance @vince
+- Use when: when working with performance-api
 
 ### web/testing/vitest (@vince)
 
 - Description: Unit and integration testing
 - Invoke: `skill: "web/testing/vitest (@vince)"`
-- Use when: when working with vitest @vince
+- Use when: when working with testing-vitest
 
 ### api/testing/api-testing (@vince)
 
 - Description: API and integration tests
 - Invoke: `skill: "api/testing/api-testing (@vince)"`
-- Use when: when working with backend testing @vince
+- Use when: when working with testing-api
 
 ### web/mocks/msw (@vince)
 
 - Description: API mocking
 - Invoke: `skill: "web/mocks/msw (@vince)"`
-- Use when: when working with msw @vince
+- Use when: when working with mocks
 
 ### api/framework/hono (@vince)
 
 - Description: Hono API framework
 - Invoke: `skill: "api/framework/hono (@vince)"`
-- Use when: when working with hono @vince
+- Use when: when working with api
 
 ### api/database/drizzle (@vince)
 
 - Description: Drizzle ORM patterns
 - Invoke: `skill: "api/database/drizzle (@vince)"`
-- Use when: when working with drizzle @vince
+- Use when: when working with database
 
 ### api/auth/better-auth+drizzle+hono (@vince)
 
 - Description: Authentication and sessions
 - Invoke: `skill: "api/auth/better-auth+drizzle+hono (@vince)"`
-- Use when: when working with better auth @vince
+- Use when: when working with auth
 
 ### api/analytics/posthog-analytics (@vince)
 
 - Description: Product analytics tracking
 - Invoke: `skill: "api/analytics/posthog-analytics (@vince)"`
-- Use when: when working with posthog analytics @vince
+- Use when: when working with analytics
 
 ### api/flags/posthog-flags (@vince)
 
 - Description: Feature flags and A/B testing
 - Invoke: `skill: "api/flags/posthog-flags (@vince)"`
-- Use when: when working with posthog flags @vince
+- Use when: when working with flags
 
 ### api/email/resend+react-email (@vince)
 
 - Description: Transactional email templates
 - Invoke: `skill: "api/email/resend+react-email (@vince)"`
-- Use when: when working with resend @vince
+- Use when: when working with email
 
 ### api/observability/axiom+pino+sentry (@vince)
 
 - Description: Logging and error tracking
 - Invoke: `skill: "api/observability/axiom+pino+sentry (@vince)"`
-- Use when: when working with observability @vince
+- Use when: when working with observability
 
 ### api/ci-cd/github-actions (@vince)
 
 - Description: CI/CD pipelines
 - Invoke: `skill: "api/ci-cd/github-actions (@vince)"`
-- Use when: when working with github actions @vince
+- Use when: when working with ci-cd
 
 ### security/auth/security (@vince)
 
 - Description: Application security patterns
 - Invoke: `skill: "security/auth/security (@vince)"`
-- Use when: when working with security @vince
+- Use when: when working with security
 
 ### meta/reviewing/reviewing (@vince)
 
 - Description: Code review guidance
 - Invoke: `skill: "meta/reviewing/reviewing (@vince)"`
-- Use when: when working with code review @vince
+- Use when: when working with reviewing
 
 ### infra/monorepo/turborepo (@vince)
 
 - Description: Monorepo orchestration
 - Invoke: `skill: "infra/monorepo/turborepo (@vince)"`
-- Use when: when working with turborepo @vince
+- Use when: when working with setup-monorepo
 
 ### infra/env/setup-env (@vince)
 
 - Description: Environment variable management
 - Invoke: `skill: "infra/env/setup-env (@vince)"`
-- Use when: when working with environment @vince
+- Use when: when working with setup-env
 
 ### infra/tooling/setup-tooling (@vince)
 
 - Description: Build tooling and linting
 - Invoke: `skill: "infra/tooling/setup-tooling (@vince)"`
-- Use when: when working with build tooling @vince
+- Use when: when working with setup-tooling
 
 ### api/analytics/setup-posthog (@vince)
 
 - Description: PostHog initial setup
 - Invoke: `skill: "api/analytics/setup-posthog (@vince)"`
-- Use when: when working with posthog setup @vince
+- Use when: when working with setup-posthog
 
 ### api/email/setup-resend (@vince)
 
 - Description: Email service setup
 - Invoke: `skill: "api/email/setup-resend (@vince)"`
-- Use when: when working with email setup @vince
+- Use when: when working with setup-resend
 
 ### api/observability/setup-axiom+pino+sentry (@vince)
 
 - Description: Logging and monitoring setup
 - Invoke: `skill: "api/observability/setup-axiom+pino+sentry (@vince)"`
-- Use when: when working with observability setup @vince
+- Use when: when working with setup-observability
 
 ### meta/research/research-methodology (@vince)
 
 - Description: Codebase investigation
 - Invoke: `skill: "meta/research/research-methodology (@vince)"`
-- Use when: when working with research @vince
+- Use when: when working with research
 
 </skill_activation_protocol>
 
