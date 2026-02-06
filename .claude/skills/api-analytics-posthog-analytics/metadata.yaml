@@ -1,0 +1,20 @@
+category: analytics
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: PostHog Analytics
+cli_description: Product analytics tracking
+usage_guidance: Use when tracking user events, setting up funnels, or implementing GDPR-compliant analytics.
+compatible_with:
+  - posthog-flags (@vince)
+requires_setup:
+  - setup-posthog (@vince)
+tags:
+  - posthog
+  - analytics
+  - event-tracking
+  - user-identification
+forked_from:
+  skill_id: api-analytics-posthog-analytics
+  content_hash: bdeccff
+  date: 2026-02-03

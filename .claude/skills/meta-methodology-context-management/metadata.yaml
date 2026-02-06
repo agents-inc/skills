@@ -1,0 +1,17 @@
+category: methodology
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Context Management
+cli_description: Maintain continuity across sessions
+usage_guidance: Use for long-running agents and multi-session projects. Ensures context is preserved between sessions.
+tags:
+  - methodology
+  - extended-session
+  - context
+  - continuity
+  - documentation
+forked_from:
+  skill_id: meta-methodology-context-management
+  content_hash: dd5b09a
+  date: 2026-02-03

@@ -1,0 +1,79 @@
+name: claude-collective
+installMode: local
+description: Production-ready Next.js with complete backend infrastructure
+skills:
+  - web-framework-react
+  - web-styling-scss-modules
+  - web-state-zustand
+  - web-server-state-react-query
+  - web-testing-vitest
+  - web-mocks-msw
+  - web-accessibility-web-accessibility
+  - api-framework-hono
+  - api-database-drizzle
+  - api-auth-better-auth-drizzle-hono
+  - api-observability-axiom-pino-sentry
+  - api-analytics-posthog-analytics
+  - api-email-resend-react-email
+  - api-ci-cd-github-actions
+  - api-testing-api-testing
+  - cli-framework-cli-commander
+  - meta-reviewing-reviewing
+  - meta-reviewing-cli-reviewing
+  - web-testing-playwright-e2e
+  - meta-methodology-anti-over-engineering
+  - meta-methodology-context-management
+  - meta-methodology-improvement-protocol
+  - meta-methodology-investigation-requirements
+  - meta-methodology-success-criteria
+  - meta-methodology-write-verification
+agents:
+  - web-developer
+  - api-developer
+  - cli-developer
+  - web-reviewer
+  - api-reviewer
+  - cli-reviewer
+  - web-tester
+  - cli-tester
+  - web-pm
+  - skill-summoner
+  - agent-summoner
+  - pattern-scout
+  - web-pattern-critique
+  - documentor
+  - web-architecture
+  - web-researcher
+  - api-researcher
+  - cli-migrator
+philosophy: Ship fast, iterate faster
+stack:
+  web-developer:
+    framework: web-framework-react
+    styling: web-styling-scss-modules
+    client-state: web-state-zustand
+    server-state: web-server-state-react-query
+    testing: web-testing-vitest
+    mocks: web-mocks-msw
+    accessibility: web-accessibility-web-accessibility
+  api-developer:
+    api: api-framework-hono
+    database: api-database-drizzle
+    auth: api-auth-better-auth-drizzle-hono
+    observability: api-observability-axiom-pino-sentry
+    analytics: api-analytics-posthog-analytics
+    email: api-email-resend-react-email
+    ci-cd: api-ci-cd-github-actions
+    testing: api-testing-api-testing
+  cli-developer:
+    cli: cli-framework-cli-commander
+  web-reviewer:
+    reviewing: meta-reviewing-reviewing
+  api-reviewer:
+    reviewing: meta-reviewing-reviewing
+  cli-reviewer:
+    reviewing: meta-reviewing-cli-reviewing
+  web-tester:
+    testing: web-testing-vitest
+    e2e: web-testing-playwright-e2e
+source: github:claude-collective/skills

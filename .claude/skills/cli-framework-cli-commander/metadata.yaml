@@ -1,0 +1,25 @@
+category: cli
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: CLI Commander
+cli_description: CLI dev with Commander.js, clack, picocolors
+usage_guidance: Use when building CLI applications, interactive prompts, wizard flows, or command-line tools with Node.js.
+compatible_with:
+  - tooling (@vince)
+  - testing (@vince)
+tags:
+  - cli
+  - commander
+  - clack
+  - prompts
+  - terminal
+  - node
+  - interactive
+  - wizard
+  - state-machine
+  - picocolors
+forked_from:
+  skill_id: cli-framework-cli-commander
+  content_hash: deeb8a8
+  date: 2026-02-03

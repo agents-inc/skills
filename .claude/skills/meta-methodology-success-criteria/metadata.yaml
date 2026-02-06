@@ -1,0 +1,17 @@
+category: methodology
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Success Criteria
+cli_description: Define done with measurable criteria
+usage_guidance: Define success criteria before starting any task. Verify each criterion and provide evidence after completion.
+tags:
+  - methodology
+  - foundational
+  - universal
+  - verification
+  - quality
+forked_from:
+  skill_id: meta-methodology-success-criteria
+  content_hash: 6cd9996
+  date: 2026-02-03

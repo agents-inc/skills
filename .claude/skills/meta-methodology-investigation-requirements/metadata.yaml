@@ -1,0 +1,17 @@
+category: methodology
+category_exclusive: false
+author: "@vince"
+version: 1
+cli_name: Investigation Requirements
+cli_description: Never speculate - read actual code first
+usage_guidance: Apply before any implementation or analysis. Prevents hallucination by requiring evidence-based claims.
+tags:
+  - methodology
+  - foundational
+  - universal
+  - investigation
+  - anti-hallucination
+forked_from:
+  skill_id: meta-methodology-investigation-requirements
+  content_hash: c9d9445
+  date: 2026-02-03
