@@ -17,7 +17,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## ⚠️ CRITICAL: Before Using This Skill
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
@@ -140,7 +140,7 @@ Tailwind v4 uses mobile-first responsive design with breakpoint variants. Defaul
 
 - Mobile-first: base styles apply to all, breakpoint variants add overrides
 - Custom breakpoints defined in `@theme` with `--breakpoint-*` namespace
-- Stack breakpoints for ranges: `md:lg:hidden` (hide between md and lg)
+- Stack breakpoints for ranges: `md:max-lg:hidden` (hide between md and lg)
 - Use `max-*` variants for max-width queries: `max-md:hidden`
 
 For implementation examples, see [examples/core.md](examples/core.md#pattern-2-responsive-design).
@@ -466,7 +466,7 @@ Is the project actively maintained?
 
 <critical_reminders>
 
-## CRITICAL REMINDERS
+## ⚠️ CRITICAL REMINDERS
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
