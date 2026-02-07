@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/claude-collective/skills/main/src/schemas/metadata.schema.json
-category: cli
+category: cli-framework
 author: "@vince"
 version: 1
 cli_name: oclif + Ink

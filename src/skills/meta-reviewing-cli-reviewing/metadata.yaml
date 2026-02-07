@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=../../../schemas/metadata.schema.json
-category: methodology
+category: reviewing
 category_exclusive: false
 author: "@vince"
 cli_name: CLI Reviewing
