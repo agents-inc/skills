@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../../schemas/metadata.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: reviewing
 categoryExclusive: false
 author: "@vince"
