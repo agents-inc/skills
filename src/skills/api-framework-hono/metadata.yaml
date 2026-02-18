@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: api
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Hono
-cli_description: Hono API framework
-usage_guidance: Use when building API routes with Hono, implementing OpenAPI specs, or Zod validation.
-compatible_with:
+cliName: Hono
+cliDescription: Hono API framework
+usageGuidance: Use when building API routes with Hono, implementing OpenAPI specs, or Zod validation.
+compatibleWith:
   - api-auth-better-auth-drizzle-hono
   - api-database-drizzle
   - api-database-prisma

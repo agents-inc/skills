@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: client-state
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: NgRx SignalStore
-cli_description: Angular signal-based state
-usage_guidance: Use when managing Angular state with Signals and SignalStore.
-compatible_with:
+cliName: NgRx SignalStore
+cliDescription: Angular signal-based state
+usageGuidance: Use when managing Angular state with Signals and SignalStore.
+compatibleWith:
   - web-framework-angular-standalone
   - web-server-state-react-query
   - web-data-fetching-swr

@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: utilities
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: date-fns
-cli_description: Date utilities
-usage_guidance: Use when formatting, parsing, or manipulating dates with date-fns.
+cliName: date-fns
+cliDescription: Date utilities
+usageGuidance: Use when formatting, parsing, or manipulating dates with date-fns.
 tags:
   - date-fns
   - dates

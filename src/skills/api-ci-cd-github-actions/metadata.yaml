@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: ci-cd
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: GitHub Actions
-cli_description: CI/CD pipelines
-usage_guidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
-compatible_with:
+cliName: GitHub Actions
+cliDescription: CI/CD pipelines
+usageGuidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
+compatibleWith:
   - infra-monorepo-turborepo
   - infra-tooling-setup-tooling
 tags:

@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: email
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Resend
-cli_description: Transactional email templates
-usage_guidance: Use when sending transactional emails or building React Email templates.
-compatible_with: []
-requires_setup:
+cliName: Resend
+cliDescription: Transactional email templates
+usageGuidance: Use when sending transactional emails or building React Email templates.
+compatibleWith: []
+requiresSetup:
   - api-email-setup-resend
 tags:
   - resend

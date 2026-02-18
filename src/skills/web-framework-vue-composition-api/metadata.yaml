@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: framework
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Vue
-cli_description: Vue 3 Composition API
-usage_guidance: Use when building Vue 3 apps with Composition API, composables, or reactivity.
+cliName: Vue
+cliDescription: Vue 3 Composition API
+usageGuidance: Use when building Vue 3 apps with Composition API, composables, or reactivity.
 tags:
   - vue
   - vue-35
@@ -16,7 +16,7 @@ tags:
   - define-model
   - use-template-ref
   - use-id
-compatible_with:
+compatibleWith:
   - web-styling-scss-modules
   - web-styling-tailwind
   - web-testing-vitest

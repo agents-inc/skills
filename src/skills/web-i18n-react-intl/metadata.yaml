@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: i18n
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: React Intl
-cli_description: React internationalization
-usage_guidance: Use when implementing i18n in React with FormatJS/react-intl.
+cliName: React Intl
+cliDescription: React internationalization
+usageGuidance: Use when implementing i18n in React with FormatJS/react-intl.
 tags:
   - react-intl
   - formatjs

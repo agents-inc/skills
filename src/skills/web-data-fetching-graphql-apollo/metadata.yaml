@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: server-state
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Apollo Client
-cli_description: Apollo GraphQL client
-usage_guidance: Use when working with Apollo Client for GraphQL queries and mutations.
-compatible_with:
+cliName: Apollo Client
+cliDescription: Apollo GraphQL client
+usageGuidance: Use when working with Apollo Client for GraphQL queries and mutations.
+compatibleWith:
   - web-framework-react
   - web-state-zustand
   - web-state-jotai

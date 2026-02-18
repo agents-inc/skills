@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: web-performance
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Frontend Performance
-cli_description: Bundle and render optimization
-usage_guidance: Use when optimizing bundle size, render performance, or implementing memoization.
-compatible_with:
+cliName: Frontend Performance
+cliDescription: Bundle and render optimization
+usageGuidance: Use when optimizing bundle size, render performance, or implementing memoization.
+compatibleWith:
   - web-framework-react
   - web-framework-vue-composition-api
   - web-framework-angular-standalone

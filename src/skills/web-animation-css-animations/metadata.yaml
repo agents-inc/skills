@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: animation
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: CSS Animations
-cli_description: Native CSS animations
-usage_guidance: Use when implementing CSS transitions, keyframes, or scroll-driven animations.
+cliName: CSS Animations
+cliDescription: Native CSS animations
+usageGuidance: Use when implementing CSS transitions, keyframes, or scroll-driven animations.
 requires: []
-compatible_with:
+compatibleWith:
   - web-styling-scss-modules
   - web-styling-tailwind
   - web-accessibility-web-accessibility

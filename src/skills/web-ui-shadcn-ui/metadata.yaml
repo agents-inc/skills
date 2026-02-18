@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: ui-components
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: shadcn/ui
-cli_description: Tailwind component library
-usage_guidance: Use when using shadcn/ui components, theming, or customization.
+cliName: shadcn/ui
+cliDescription: Tailwind component library
+usageGuidance: Use when using shadcn/ui components, theming, or customization.
 tags:
   - shadcn
   - ui-components
@@ -14,6 +14,6 @@ tags:
   - dark-mode
   - forms
   - accessibility
-compatible_with:
+compatibleWith:
   - web-framework-react
   - web-styling-tailwind

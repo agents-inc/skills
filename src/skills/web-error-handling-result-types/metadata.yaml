@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: error-handling
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Result Types
-cli_description: Type-safe error handling
-usage_guidance: Use when implementing Result/Either types for type-safe error handling.
-compatible_with:
+cliName: Result Types
+cliDescription: Type-safe error handling
+usageGuidance: Use when implementing Result/Either types for type-safe error handling.
+compatibleWith:
   - web-framework-react
   - api-framework-hono
   - api-framework-express

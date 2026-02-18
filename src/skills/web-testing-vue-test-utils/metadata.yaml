@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: testing
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Vue Test Utils
-cli_description: Vue component testing
-usage_guidance: Use when testing Vue components with mount, shallowMount, or testing composables.
-compatible_with:
+cliName: Vue Test Utils
+cliDescription: Vue component testing
+usageGuidance: Use when testing Vue components with mount, shallowMount, or testing composables.
+compatibleWith:
   - web-framework-vue-composition-api
   - web-state-pinia
 tags:

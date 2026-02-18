@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: i18n
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: next-intl
-cli_description: Next.js internationalization
-usage_guidance: Use when implementing i18n in Next.js with next-intl.
+cliName: next-intl
+cliDescription: Next.js internationalization
+usageGuidance: Use when implementing i18n in Next.js with next-intl.
 tags:
   - next-intl
   - i18n

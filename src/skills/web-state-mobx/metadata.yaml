@@ -1,18 +1,18 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: client-state
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: MobX
-cli_description: Observable reactive state management
-usage_guidance: >-
+cliName: MobX
+cliDescription: Observable reactive state management
+usageGuidance: >-
   Use when implementing client-side state with MobX observables, computed values,
   actions, reactions, or the observer HOC from mobx-react-lite. Not for server
   state (use React Query) or simple UI state (use useState/Zustand).
 requires: []
-compatible_with:
+compatibleWith:
   - web-framework-react
-conflicts_with:
+conflictsWith:
   - web-state-zustand
   - web-state-redux-toolkit
 tags:

@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: styling
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: CVA
-cli_description: Component variant styling
-usage_guidance: Use when building component variants with class-variance-authority.
+cliName: CVA
+cliDescription: Component variant styling
+usageGuidance: Use when building component variants with class-variance-authority.
 tags:
   - cva
   - class-variance-authority
@@ -15,6 +15,6 @@ tags:
   - typescript
   - css-classes
   - design-system
-compatible_with:
+compatibleWith:
   - web-styling-scss-modules
   - web-styling-tailwind

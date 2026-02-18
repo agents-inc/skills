@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: forms
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: React Hook Form
-cli_description: React form handling
-usage_guidance: Use when building forms in React with validation, field arrays, or Controller.
+cliName: React Hook Form
+cliDescription: React form handling
+usageGuidance: Use when building forms in React with validation, field arrays, or Controller.
 tags:
   - forms
   - react-hook-form

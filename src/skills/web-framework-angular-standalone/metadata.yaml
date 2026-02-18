@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: framework
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Angular
-cli_description: Angular standalone components
-usage_guidance: Use when building Angular 17+ apps with standalone components, signals, or DI.
+cliName: Angular
+cliDescription: Angular standalone components
+usageGuidance: Use when building Angular 17+ apps with standalone components, signals, or DI.
 tags:
   - angular
   - angular-19

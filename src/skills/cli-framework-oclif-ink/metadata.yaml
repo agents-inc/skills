@@ -2,19 +2,19 @@
 category: cli-framework
 author: "@vince"
 version: 1
-cli_name: oclif + Ink
-cli_description: CLI dev with oclif framework and Ink React
-usage_guidance: >-
+cliName: oclif + Ink
+cliDescription: CLI dev with oclif framework and Ink React
+usageGuidance: >-
   Use when building command-line interfaces with oclif framework, React-based
   terminal UIs with Ink, or integrating both for interactive CLI applications.
   Triggers: oclif, Ink, @oclif/core, @inkjs/ui, terminal React, CLI commands,
   useInput, useApp, render(), Command class, Flags, Args.
 requires: []
-compatible_with:
+compatibleWith:
   - web-framework-react
   - web-state-zustand
   - web-testing-vitest
-conflicts_with:
+conflictsWith:
   - cli-framework-cli-commander
 tags:
   - cli

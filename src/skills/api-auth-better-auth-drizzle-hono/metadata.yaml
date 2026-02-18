@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: auth
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Better Auth
-cli_description: Authentication and sessions
-usage_guidance: Use when implementing authentication, sessions, OAuth, or user management.
+cliName: Better Auth
+cliDescription: Authentication and sessions
+usageGuidance: Use when implementing authentication, sessions, OAuth, or user management.
 requires:
   - api-database-drizzle
-compatible_with:
+compatibleWith:
   - api-framework-hono
   - api-framework-express
   - api-framework-fastify

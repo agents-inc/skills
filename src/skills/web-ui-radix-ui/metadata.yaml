@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: ui-components
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Radix UI
-cli_description: Accessible UI primitives
-usage_guidance: Use when building accessible UI with Radix primitives.
+cliName: Radix UI
+cliDescription: Accessible UI primitives
+usageGuidance: Use when building accessible UI with Radix primitives.
 tags:
   - radix
   - radix-ui

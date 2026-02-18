@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: research
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Research
-cli_description: Codebase investigation
-usage_guidance: Use when investigating codebase patterns, researching implementations, or discovering how things work.
+cliName: Research
+cliDescription: Codebase investigation
+usageGuidance: Use when investigating codebase patterns, researching implementations, or discovering how things work.
 tags:
   - research
   - investigation

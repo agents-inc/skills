@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: tooling
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Storybook
-cli_description: Component documentation
-usage_guidance: Use when documenting components with Storybook, writing stories, or interaction tests.
-compatible_with:
+cliName: Storybook
+cliDescription: Component documentation
+usageGuidance: Use when documenting components with Storybook, writing stories, or interaction tests.
+compatibleWith:
   - web-framework-react
   - web-framework-vue-composition-api
   - web-framework-angular-standalone

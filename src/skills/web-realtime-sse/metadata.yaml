@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: realtime
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Server-Sent Events
-cli_description: Server-to-client streaming
-usage_guidance: Use when implementing Server-Sent Events for server-to-client streaming.
+cliName: Server-Sent Events
+cliDescription: Server-to-client streaming
+usageGuidance: Use when implementing Server-Sent Events for server-to-client streaming.
 tags:
   - sse
   - server-sent-events

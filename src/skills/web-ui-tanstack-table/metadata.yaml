@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: ui-components
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: TanStack Table
-cli_description: Data table component
-usage_guidance: Use when building data tables with sorting, filtering, or pagination.
+cliName: TanStack Table
+cliDescription: Data table component
+usageGuidance: Use when building data tables with sorting, filtering, or pagination.
 tags:
   - table
   - datagrid
@@ -15,7 +15,7 @@ tags:
   - row-selection
   - virtual-scrolling
   - server-side
-compatible_with:
+compatibleWith:
   - web-framework-react
   - web-framework-vue-composition-api
   - web-framework-solidjs

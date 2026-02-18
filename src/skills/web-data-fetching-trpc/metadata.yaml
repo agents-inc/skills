@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: server-state
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: tRPC
-cli_description: Type-safe API layer
-usage_guidance: Use when building type-safe APIs with tRPC procedures and React Query.
-compatible_with:
+cliName: tRPC
+cliDescription: Type-safe API layer
+usageGuidance: Use when building type-safe APIs with tRPC procedures and React Query.
+compatibleWith:
   - web-framework-react
   - web-state-zustand
   - web-state-jotai

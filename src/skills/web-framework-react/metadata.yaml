@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: framework
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 2
-cli_name: React
-cli_description: React component patterns
-usage_guidance: Use when building React components, hooks, or following React 19 patterns.
+cliName: React
+cliDescription: React component patterns
+usageGuidance: Use when building React components, hooks, or following React 19 patterns.
 tags:
   - react
   - react-19
@@ -18,5 +18,5 @@ tags:
   - actions
   - jsx
   - tsx
-content_hash: c48bfef
+contentHash: c48bfef
 updated: 2026-01-22

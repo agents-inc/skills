@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: database
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Prisma
-cli_description: Prisma ORM patterns
-usage_guidance: Use when writing database queries, migrations, or working with Prisma ORM.
-compatible_with:
+cliName: Prisma
+cliDescription: Prisma ORM patterns
+usageGuidance: Use when writing database queries, migrations, or working with Prisma ORM.
+compatibleWith:
   - api-framework-hono
   - api-framework-express
   - api-framework-fastify

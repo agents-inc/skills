@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: database
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Drizzle
-cli_description: Drizzle ORM patterns
-usage_guidance: Use when writing database queries, migrations, or working with Drizzle ORM.
-compatible_with:
+cliName: Drizzle
+cliDescription: Drizzle ORM patterns
+usageGuidance: Use when writing database queries, migrations, or working with Drizzle ORM.
+compatibleWith:
   - api-framework-hono
   - api-framework-express
   - api-framework-fastify

@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: methodology
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Investigation Requirements
-cli_description: Never speculate - read actual code first
-usage_guidance: Apply before any implementation or analysis. Prevents hallucination by requiring evidence-based claims.
+cliName: Investigation Requirements
+cliDescription: Never speculate - read actual code first
+usageGuidance: Apply before any implementation or analysis. Prevents hallucination by requiring evidence-based claims.
 tags:
   - methodology
   - foundational

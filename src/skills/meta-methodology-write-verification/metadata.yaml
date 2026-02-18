@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: methodology
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Write Verification
-cli_description: Verify edits were actually saved
-usage_guidance: Apply after any file write or edit operation. Re-read and verify before reporting success.
+cliName: Write Verification
+cliDescription: Verify edits were actually saved
+usageGuidance: Apply after any file write or edit operation. Re-read and verify before reporting success.
 tags:
   - methodology
   - implementation

@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: files
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Image Handling
-cli_description: Client-side image processing
-usage_guidance: Use when processing images client-side, resizing, or format conversion.
+cliName: Image Handling
+cliDescription: Client-side image processing
+usageGuidance: Use when processing images client-side, resizing, or format conversion.
 tags:
   - image-preview
   - canvas-api
@@ -17,7 +17,7 @@ tags:
   - blob
   - file-api
   - client-side-processing
-compatible_with:
+compatibleWith:
   - web-framework-react
   - web-forms-react-hook-form
   - web-forms-vee-validate

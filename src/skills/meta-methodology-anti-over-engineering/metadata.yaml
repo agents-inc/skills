@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: methodology
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Anti-Over-Engineering
-cli_description: Surgical implementation, not architectural innovation
-usage_guidance: Apply to every implementation task. Prevents scope creep, unnecessary abstractions, and "while I'm here" syndrome.
+cliName: Anti-Over-Engineering
+cliDescription: Surgical implementation, not architectural innovation
+usageGuidance: Apply to every implementation task. Prevents scope creep, unnecessary abstractions, and "while I'm here" syndrome.
 tags:
   - methodology
   - foundational

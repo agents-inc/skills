@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: server-state
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: URQL
-cli_description: URQL GraphQL client
-usage_guidance: Use when working with URQL client for GraphQL.
-compatible_with:
+cliName: URQL
+cliDescription: URQL GraphQL client
+usageGuidance: Use when working with URQL client for GraphQL.
+compatibleWith:
   - web-framework-react
   - web-state-zustand
   - web-state-jotai

@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: file-upload
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: File Upload
-cli_description: File upload handling
-usage_guidance: Use when implementing file uploads, drag-drop, or chunked uploads.
+cliName: File Upload
+cliDescription: File upload handling
+usageGuidance: Use when implementing file uploads, drag-drop, or chunked uploads.
 tags:
   - file-upload
   - drag-drop
@@ -17,7 +17,7 @@ tags:
   - file-validation
   - progress-tracking
   - accessibility
-compatible_with:
+compatibleWith:
   - web-framework-react
   - web-forms-react-hook-form
   - web-forms-vee-validate

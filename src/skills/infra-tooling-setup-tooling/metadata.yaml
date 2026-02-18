@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: tooling
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Build Tooling
-cli_description: Build tooling and linting
-usage_guidance: Use when configuring ESLint, Prettier, TypeScript, Vite, or git hooks for a project.
-compatible_with:
+cliName: Build Tooling
+cliDescription: Build tooling and linting
+usageGuidance: Use when configuring ESLint, Prettier, TypeScript, Vite, or git hooks for a project.
+compatibleWith:
   - infra-monorepo-turborepo
 tags:
   - eslint

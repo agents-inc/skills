@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: realtime
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: WebSockets
-cli_description: Bidirectional real-time communication
-usage_guidance: Use when implementing WebSocket connections, reconnection, or message handling.
-compatible_with:
+cliName: WebSockets
+cliDescription: Bidirectional real-time communication
+usageGuidance: Use when implementing WebSocket connections, reconnection, or message handling.
+compatibleWith:
   - web-framework-react
   - web-state-zustand
   - web-state-jotai

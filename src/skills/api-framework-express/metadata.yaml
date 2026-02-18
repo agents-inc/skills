@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: api
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Express
-cli_description: Express API framework
-usage_guidance: Use when building Express.js APIs, middleware chains, or error handling.
-compatible_with:
+cliName: Express
+cliDescription: Express API framework
+usageGuidance: Use when building Express.js APIs, middleware chains, or error handling.
+compatibleWith:
   - api-auth-better-auth-drizzle-hono
   - api-database-drizzle
   - api-database-prisma

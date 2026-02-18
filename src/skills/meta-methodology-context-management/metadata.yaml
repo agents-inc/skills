@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: methodology
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Context Management
-cli_description: Maintain continuity across sessions
-usage_guidance: Use for long-running agents and multi-session projects. Ensures context is preserved between sessions.
+cliName: Context Management
+cliDescription: Maintain continuity across sessions
+usageGuidance: Use for long-running agents and multi-session projects. Ensures context is preserved between sessions.
 tags:
   - methodology
   - extended-session

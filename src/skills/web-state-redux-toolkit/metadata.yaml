@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: client-state
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Redux Toolkit
-cli_description: Enterprise client state
-usage_guidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
-compatible_with:
+cliName: Redux Toolkit
+cliDescription: Enterprise client state
+usageGuidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
+compatibleWith:
   - web-framework-react
   - web-server-state-react-query
   - web-data-fetching-swr

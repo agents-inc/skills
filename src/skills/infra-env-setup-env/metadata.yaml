@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: tooling
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Environment
-cli_description: Environment variable management
-usage_guidance: Use when setting up environment variables, .env files, or Zod validation for config.
-compatible_with:
+cliName: Environment
+cliDescription: Environment variable management
+usageGuidance: Use when setting up environment variables, .env files, or Zod validation for config.
+compatibleWith:
   - security-auth-security
   - infra-monorepo-turborepo
 tags:

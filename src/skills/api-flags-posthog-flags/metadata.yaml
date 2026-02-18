@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: analytics
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: PostHog Flags
-cli_description: Feature flags and A/B testing
-usage_guidance: Use when implementing feature flags, gradual rollouts, A/B tests, or remote configuration.
-compatible_with:
+cliName: PostHog Flags
+cliDescription: Feature flags and A/B testing
+usageGuidance: Use when implementing feature flags, gradual rollouts, A/B tests, or remote configuration.
+compatibleWith:
   - api-analytics-posthog-analytics
-requires_setup:
+requiresSetup:
   - api-analytics-setup-posthog
 tags:
   - posthog

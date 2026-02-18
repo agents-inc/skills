@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: analytics
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: PostHog Analytics
-cli_description: Product analytics tracking
-usage_guidance: Use when tracking user events, setting up funnels, or implementing GDPR-compliant analytics.
-compatible_with:
+cliName: PostHog Analytics
+cliDescription: Product analytics tracking
+usageGuidance: Use when tracking user events, setting up funnels, or implementing GDPR-compliant analytics.
+compatibleWith:
   - api-flags-posthog-flags
-requires_setup:
+requiresSetup:
   - api-analytics-setup-posthog
 tags:
   - posthog

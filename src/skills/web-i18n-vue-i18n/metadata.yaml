@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: i18n
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Vue I18n
-cli_description: Vue internationalization
-usage_guidance: Use when implementing i18n in Vue with vue-i18n.
+cliName: Vue I18n
+cliDescription: Vue internationalization
+usageGuidance: Use when implementing i18n in Vue with vue-i18n.
 tags:
   - vue-i18n
   - i18n

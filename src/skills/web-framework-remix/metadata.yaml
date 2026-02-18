@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: meta-framework
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Remix
-cli_description: Remix full-stack framework
-usage_guidance: Use when building Remix apps with loaders, actions, or useFetcher.
+cliName: Remix
+cliDescription: Remix full-stack framework
+usageGuidance: Use when building Remix apps with loaders, actions, or useFetcher.
 tags:
   - remix
   - remix-v2
@@ -19,7 +19,7 @@ tags:
   - client-action
   - single-fetch
   - progressive-enhancement
-compatible_with:
+compatibleWith:
   - web-styling-scss-modules
   - web-styling-tailwind
   - web-testing-vitest

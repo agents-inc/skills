@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../../schemas/metadata.schema.json
 category: realtime
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Socket.IO
-cli_description: Bidirectional real-time communication
-usage_guidance: Use when implementing Socket.IO client connections, rooms, or namespaces.
-compatible_with:
+cliName: Socket.IO
+cliDescription: Bidirectional real-time communication
+usageGuidance: Use when implementing Socket.IO client connections, rooms, or namespaces.
+compatibleWith:
   - web-framework-react
   - web-state-zustand
   - web-state-jotai

@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=../../../schemas/metadata.schema.json
 category: reviewing
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
-cli_name: CLI Reviewing
-cli_description: CLI code review patterns for Commander.js and @clack/prompts
-usage_guidance: Use when reviewing CLI applications built with Commander.js, @clack/prompts, or similar tools. Covers exit codes, signal handling, cancellation, error messages, spinners, and testing adequacy.
+cliName: CLI Reviewing
+cliDescription: CLI code review patterns for Commander.js and @clack/prompts
+usageGuidance: Use when reviewing CLI applications built with Commander.js, @clack/prompts, or similar tools. Covers exit codes, signal handling, cancellation, error messages, spinners, and testing adequacy.
 requires:
   - cli-framework-cli-commander
-compatible_with:
+compatibleWith:
   - meta-reviewing-reviewing
   - web-testing-vitest
 tags:

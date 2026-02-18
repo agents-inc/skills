@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../schemas/metadata.schema.json
 category: mobile-framework
-category_exclusive: true
+categoryExclusive: true
 author: "@vince"
 version: 1
-cli_name: Expo
-cli_description: Expo managed workflow
-usage_guidance: Use when building React Native apps with Expo, configuring EAS builds, or using Expo Router.
+cliName: Expo
+cliDescription: Expo managed workflow
+usageGuidance: Use when building React Native apps with Expo, configuring EAS builds, or using Expo Router.
 tags:
   - expo
   - expo-router

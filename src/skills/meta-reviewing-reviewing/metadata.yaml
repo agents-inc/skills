@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=../../../schemas/metadata.schema.json
 category: reviewing
-category_exclusive: false
+categoryExclusive: false
 author: "@vince"
 version: 1
-cli_name: Code Review
-cli_description: Code review guidance
-usage_guidance: Use when reviewing code, PRs, or making approval/rejection decisions.
+cliName: Code Review
+cliDescription: Code review guidance
+usageGuidance: Use when reviewing code, PRs, or making approval/rejection decisions.
 tags:
   - code-review
   - feedback
