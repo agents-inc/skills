@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: meta-framework
+category: web-framework
 categoryExclusive: false
 author: "@vince"
 version: 1
@@ -7,7 +7,7 @@ cliName: Next.js Server Actions
 cliDescription: Next.js Server Actions
 usageGuidance: Use when implementing Server Actions for mutations, revalidation, or form handling.
 requires:
-  - web-framework-react
+  - web-framework-nextjs-app-router
 compatibleWith:
   - web-forms-react-hook-form
   - web-forms-zod-validation

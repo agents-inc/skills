@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: analytics
+category: api-analytics
 categoryExclusive: false
 author: "@vince"
 version: 1

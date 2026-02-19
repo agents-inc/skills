@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: ui-components
+category: web-ui-components
 categoryExclusive: false
 author: "@vince"
 version: 1

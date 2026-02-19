@@ -1,13 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: meta-framework
+category: web-framework
 categoryExclusive: true
 author: "@vince"
 version: 1
 cliName: Next.js App Router
 cliDescription: Next.js App Router
 usageGuidance: Use when building Next.js apps with App Router, Server/Client Components, or streaming.
-requires:
-  - web-framework-react
 compatibleWith:
   - web-styling-scss-modules
   - web-styling-tailwind

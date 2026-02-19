@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: client-state
+category: web-client-state
 categoryExclusive: true
 author: "@vince"
 version: 1

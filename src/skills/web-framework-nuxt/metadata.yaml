@@ -1,13 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: meta-framework
+category: web-framework
 categoryExclusive: true
 author: "@vince"
 version: 1
 cliName: Nuxt
 cliDescription: Nuxt 3 full-stack framework
 usageGuidance: Use when building Nuxt 3 apps with useFetch, useState, or server routes.
-requires:
-  - web-framework-vue-composition-api
 compatibleWith:
   - web-forms-zod-validation
   - web-testing-playwright-e2e
