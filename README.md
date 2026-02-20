@@ -117,10 +117,10 @@ src/skills/<domain>-<subcategory>-<name>/
 Stacks are defined in `src/stacks/<name>/config.yaml`:
 
 ```yaml
-name: 'Stack Name'
-description: 'What this stack covers'
-author: '@handle'
-version: '1.0.0'
+name: "Stack Name"
+description: "What this stack covers"
+author: "@handle"
+version: "1.0.0"
 
 skills:
   - id: web-framework-react

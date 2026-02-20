@@ -31,20 +31,20 @@ Quick reference for AI agents making commits to this repository.
 
 ## Scope Conventions
 
-| Scope | When to use |
-| --- | --- |
-| `skills/web` | Adding or modifying web skills |
-| `skills/api` | Adding or modifying API skills |
-| `skills/mobile` | Adding or modifying mobile skills |
-| `skills/meta` | Adding or modifying meta skills |
-| `skills/cli` | Adding or modifying CLI skills |
-| `skills/infra` | Adding or modifying infra skills |
-| `skills` | Changes spanning multiple skill categories |
-| `metadata` | metadata.yaml changes across skills |
-| `stacks` | Stack configuration changes |
-| `agents` | Agent definition changes |
-| `ci` | CI/CD pipeline changes |
-| _(no scope)_ | Broad changes: `chore: remove deprecated files` |
+| Scope           | When to use                                     |
+| --------------- | ----------------------------------------------- |
+| `skills/web`    | Adding or modifying web skills                  |
+| `skills/api`    | Adding or modifying API skills                  |
+| `skills/mobile` | Adding or modifying mobile skills               |
+| `skills/meta`   | Adding or modifying meta skills                 |
+| `skills/cli`    | Adding or modifying CLI skills                  |
+| `skills/infra`  | Adding or modifying infra skills                |
+| `skills`        | Changes spanning multiple skill categories      |
+| `metadata`      | metadata.yaml changes across skills             |
+| `stacks`        | Stack configuration changes                     |
+| `agents`        | Agent definition changes                        |
+| `ci`            | CI/CD pipeline changes                          |
+| _(no scope)_    | Broad changes: `chore: remove deprecated files` |
 
 ## What NOT to Commit
 
