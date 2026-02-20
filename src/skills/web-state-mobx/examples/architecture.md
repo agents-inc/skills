@@ -674,9 +674,7 @@ function exportTodosToCSV(todoStore: TodoStore): string {
 
   // Now safe to pass to libraries that don't understand MobX proxies
   const headers = "id,title,completed";
-  const rows = plainTodos.map(
-    (t) => `${t.id},${t.title},${t.completed}`,
-  );
+  const rows = plainTodos.map((t) => `${t.id},${t.title},${t.completed}`);
   return [headers, ...rows].join("\n");
 }
 

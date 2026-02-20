@@ -98,6 +98,7 @@ Unlike Zustand (minimal, explicit subscriptions) or Redux (immutable state, expl
 `makeAutoObservable` infers annotations automatically: properties become `observable`, getters become `computed`, methods become `action`, and generator functions become `flow`. It cannot be used on classes with `super` or that are subclassed.
 
 **Key points:**
+
 - Call `makeAutoObservable(this)` in the constructor
 - Use `autoBind: true` option to auto-bind methods (safe for event handlers and callbacks)
 - Pass overrides as second argument to exclude or customize specific properties
@@ -112,6 +113,7 @@ For implementation examples, see [examples/core.md](examples/core.md#pattern-1-s
 `makeObservable` requires explicit annotation of each property. Use when you need inheritance (subclassed stores) or want explicit control over which properties are observable.
 
 **Key points:**
+
 - Annotate each property explicitly: `observable`, `computed`, `action`, `flow`
 - Required for classes using `extends` (inheritance)
 - More verbose but gives full control over reactivity annotations
@@ -126,6 +128,7 @@ For implementation examples, see [examples/core.md](examples/core.md#pattern-2-s
 Factory functions with `makeAutoObservable` offer an alternative to classes. They avoid `this` and `new` issues, compose easily, and can hide private members via closures.
 
 **Key points:**
+
 - Return a plain object from a factory function
 - `makeAutoObservable` works the same on plain objects
 - Getters become computed, methods become actions
@@ -140,6 +143,7 @@ For implementation examples, see [examples/core.md](examples/core.md#pattern-3-f
 The `observer` HOC from `mobx-react-lite` makes React components reactive. It automatically tracks which observables are read during render and re-renders only when those specific values change.
 
 **Key points:**
+
 - Wrap EVERY component that reads observables in `observer()`
 - `observer` automatically applies `React.memo` (no need to add it separately)
 - Pass observable objects (not extracted primitives) to child observer components
@@ -154,6 +158,7 @@ For implementation examples, see [examples/core.md](examples/core.md#pattern-4-r
 `useLocalObservable` creates a local observable store scoped to a component. Use for complex local state that benefits from computed values but does not need to be shared.
 
 **Key points:**
+
 - Properties become observable, getters become computed, methods become actions
 - The store persists across re-renders (like `useRef` but reactive)
 - Reserve for complex local state with computed values -- simple state should use `useState`
@@ -168,6 +173,7 @@ For implementation examples, see [examples/core.md](examples/core.md#pattern-5-u
 Computed values are derivations that automatically cache and recalculate when their dependencies change. They are the MobX equivalent of spreadsheet formulas.
 
 **Key points:**
+
 - Defined as getters in classes/objects, automatically inferred by `makeAutoObservable`
 - Cached: only recalculate when observed dependencies actually change
 - Should be pure: no side effects, no modification of other observables
@@ -183,6 +189,7 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 Actions are the only place you should modify observable state. They batch mutations into transactions, so reactions only fire after the outermost action completes.
 
 **Key points:**
+
 - Methods are automatically marked as actions by `makeAutoObservable`
 - Use `runInAction()` for inline state mutations (especially after `await`)
 - Actions batch: intermediate states are not visible to observers
@@ -197,6 +204,7 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 MobX provides two patterns for async state updates. Code after `await` runs in a new tick and is NOT part of the original action, so state mutations must be wrapped.
 
 **Key points:**
+
 - **`runInAction` pattern**: Wrap state mutations after `await` in `runInAction(() => { ... })`
 - **`flow` pattern** (recommended): Use generator functions (`function*`) with `yield` instead of `async/await` -- no wrapping needed
 - `flow` returns a cancellable promise with `.cancel()` method
@@ -211,6 +219,7 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 Reactions are side effects that run automatically when observed state changes. They bridge reactive MobX state to imperative side effects (logging, network requests, DOM updates).
 
 **Key points:**
+
 - **`autorun`**: Runs immediately and re-runs whenever any read observable changes
 - **`reaction`**: Takes a data function and effect function -- effect only runs when data function return value changes (not on init)
 - **`when`**: Runs effect once when a predicate becomes true, then auto-disposes
@@ -226,6 +235,7 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 The root store pattern organizes multiple domain and UI stores into a single coordinator that enables store-to-store communication.
 
 **Key points:**
+
 - Create a `RootStore` class that instantiates all stores
 - Each store receives a reference to the root store for cross-store access
 - Provide the root store via React Context (dependency injection, NOT state management)
@@ -241,6 +251,7 @@ For implementation examples, see [examples/architecture.md](examples/architectur
 MobX has first-class TypeScript support. Stores are naturally typed through class definitions and interface-based factory functions.
 
 **Key points:**
+
 - Class stores get type inference automatically from property declarations
 - Use `makeAutoObservable<Store, "privateField">` to annotate private fields
 - Use `import type` for type-only imports
@@ -256,6 +267,7 @@ For implementation examples, see [examples/architecture.md](examples/architectur
 MobX provides fine-grained reactivity out of the box, but understanding how to structure components and observables maximizes performance.
 
 **Key points:**
+
 - Use many small `observer` components -- smaller scope means fewer re-renders
 - Dereference observables as late as possible (pass objects, not extracted primitives)
 - Render lists in dedicated observer components to avoid reconciling entire lists
@@ -322,15 +334,15 @@ Need to run effect immediately and on every change?
 
 ### Quick Reference Table
 
-| Use Case                        | Solution                    | Why                                           |
-| ------------------------------- | --------------------------- | --------------------------------------------- |
-| Server/API data                 | React Query                 | Caching, refetch, loading states              |
-| Simple local UI state           | useState                    | Lightweight, component-scoped                 |
-| Shared state with derivations   | MobX                        | Automatic tracking, computed values           |
-| Lightweight shared state        | Zustand                     | Simpler API, less conceptual overhead         |
-| Complex domain models           | MobX                        | Class stores, inter-store references          |
-| URL-shareable state             | searchParams                | Bookmarkable, browser navigation              |
-| Dependency injection            | React Context               | Singletons, providers (NOT state management)  |
+| Use Case                      | Solution      | Why                                          |
+| ----------------------------- | ------------- | -------------------------------------------- |
+| Server/API data               | React Query   | Caching, refetch, loading states             |
+| Simple local UI state         | useState      | Lightweight, component-scoped                |
+| Shared state with derivations | MobX          | Automatic tracking, computed values          |
+| Lightweight shared state      | Zustand       | Simpler API, less conceptual overhead        |
+| Complex domain models         | MobX          | Class stores, inter-store references         |
+| URL-shareable state           | searchParams  | Bookmarkable, browser navigation             |
+| Dependency injection          | React Context | Singletons, providers (NOT state management) |
 
 </decision_framework>
 

@@ -383,7 +383,8 @@ class ProjectStore {
   // Start fetch with cancellation support
   startFetch(): void {
     this.cancelFetch(); // Cancel any previous fetch
-    this.currentFetch = this.fetchProjects() as unknown as CancellablePromise<void>;
+    this.currentFetch =
+      this.fetchProjects() as unknown as CancellablePromise<void>;
   }
 }
 

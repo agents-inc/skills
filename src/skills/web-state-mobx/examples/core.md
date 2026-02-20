@@ -69,7 +69,9 @@ class TodoStore {
     }
   }
 
-  setFilter(filter: typeof ACTIVE_STATUS | typeof COMPLETED_STATUS | "all"): void {
+  setFilter(
+    filter: typeof ACTIVE_STATUS | typeof COMPLETED_STATUS | "all",
+  ): void {
     this.filter = filter;
   }
 }
