@@ -7,7 +7,7 @@
 </p>
 -->
 
-# Agents Inc Skills
+# Agents Inc skills
 
 The official skills marketplace for [Agents Inc](https://github.com/agents-inc/cli).
 
