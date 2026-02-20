@@ -30,11 +30,7 @@
 ```tsx
 // Usage - works with all variants
 function LazySection({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="content-auto lg:content-auto">
-      {children}
-    </section>
-  );
+  return <section className="content-auto lg:content-auto">{children}</section>;
 }
 
 export { LazySection };
@@ -77,10 +73,7 @@ export { LazySection };
 
 ```html
 <!-- Usage examples -->
-<pre class="tab-4">         <!-- matches --tab-size-4 -->
-<pre class="tab-github">    <!-- matches --tab-size-github if defined -->
-<pre class="tab-12">        <!-- matches bare integer 12 -->
-<pre class="tab-[16]">      <!-- arbitrary value [16] -->
+<pre class="tab-4">></pre>
 ```
 
 **Why good:** multiple `--value()` declarations cascade (last match wins), supports theme values, bare values, and arbitrary values, type constraints (`integer`) prevent invalid inputs
@@ -104,9 +97,13 @@ export { LazySection };
 
 ```html
 <!-- Usage -->
-<div class="gutter-4">     <!-- padding-inline: calc(var(--spacing) * 4) -->
-<div class="gutter-8">     <!-- padding-inline: calc(var(--spacing) * 8) -->
-<div class="gutter-[2rem]"> <!-- padding-inline: 2rem -->
+<div class="gutter-4">
+  <!-- padding-inline: calc(var(--spacing) * 4) -->
+  <div class="gutter-8">
+    <!-- padding-inline: calc(var(--spacing) * 8) -->
+    <div class="gutter-[2rem]"><!-- padding-inline: 2rem --></div>
+  </div>
+</div>
 ```
 
 **Why good:** `--spacing()` integrates with the theme spacing scale, negative variant for inverse values, arbitrary values as escape hatch
@@ -125,10 +122,10 @@ export { LazySection };
 
 ```html
 <!-- Usage -->
-<p class="text-lg">                 <!-- font-size only -->
-<p class="text-lg/relaxed">         <!-- font-size + line-height from theme -->
-<p class="text-lg/[1.8]">           <!-- font-size + arbitrary line-height -->
-<p class="text-[1.25rem]/[1.75rem]"> <!-- both arbitrary -->
+<p class="text-lg"><!-- font-size only --></p>
+<p class="text-lg/relaxed"><!-- font-size + line-height from theme --></p>
+<p class="text-lg/[1.8]"><!-- font-size + arbitrary line-height --></p>
+<p class="text-[1.25rem]/[1.75rem]"><!-- both arbitrary --></p>
 ```
 
 **Why good:** `--modifier()` handles the optional `/modifier` syntax, omitted modifier means the line-height declaration is skipped entirely, supports theme references and arbitrary values
@@ -146,9 +143,13 @@ export { LazySection };
 
 ```html
 <!-- Usage -->
-<div class="aspect-video">    <!-- matches --aspect-ratio-video -->
-<div class="aspect-3/4">      <!-- ratio type: 3/4 -->
-<div class="aspect-[7/9]">    <!-- arbitrary ratio -->
+<div class="aspect-video">
+  <!-- matches --aspect-ratio-video -->
+  <div class="aspect-3/4">
+    <!-- ratio type: 3/4 -->
+    <div class="aspect-[7/9]"><!-- arbitrary ratio --></div>
+  </div>
+</div>
 ```
 
 **Why good:** `ratio` type matches fraction syntax like `3/4` naturally
@@ -170,7 +171,9 @@ export { LazySection };
 <!-- Usage -->
 <html data-theme="midnight">
   <body>
-    <div class="bg-white theme-midnight:bg-gray-900 text-gray-900 theme-midnight:text-white">
+    <div
+      class="bg-white theme-midnight:bg-gray-900 text-gray-900 theme-midnight:text-white"
+    >
       <!-- Styled when data-theme="midnight" is set -->
     </div>
   </body>
@@ -206,11 +209,13 @@ const TOUCH_TARGET_SIZE = 44; // minimum touch target in px
 
 function TouchButton({ children }: { children: React.ReactNode }) {
   return (
-    <button className="
+    <button
+      className="
       rounded-lg bg-blue-600 px-4 py-2 text-white
       any-hover:bg-blue-700
       pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]
-    ">
+    "
+    >
       {children}
     </button>
   );
@@ -237,13 +242,15 @@ export { TouchButton };
 // ✅ Good Example - multi-theme component
 function ThemedCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="
+    <div
+      className="
       rounded-lg p-6
       bg-white dark:bg-gray-900
       theme-ocean:bg-cyan-50 theme-ocean:dark:bg-cyan-950
       theme-forest:bg-green-50 theme-forest:dark:bg-green-950
       theme-sunset:bg-orange-50 theme-sunset:dark:bg-orange-950
-    ">
+    "
+    >
       {children}
     </div>
   );
@@ -283,12 +290,8 @@ function DashboardWidget({ children }: { children: React.ReactNode }) {
   return (
     <div className="@container">
       <div className="flex flex-col gap-4 @sm:flex-row @lg:gap-6">
-        <div className="@sm:w-1/3">
-          {/* Sidebar content */}
-        </div>
-        <div className="@sm:w-2/3">
-          {children}
-        </div>
+        <div className="@sm:w-1/3">{/* Sidebar content */}</div>
+        <div className="@sm:w-2/3">{children}</div>
       </div>
     </div>
   );
@@ -394,14 +397,22 @@ export { AdaptiveCard };
 
 ```tsx
 // ✅ Good Example - 3D card with perspective
-function Card3D({ title, children }: { title: string; children: React.ReactNode }) {
+function Card3D({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="perspective-distant">
-      <div className="
+      <div
+        className="
         transform-3d rounded-xl bg-white p-6 shadow-lg
         transition-transform duration-300
         hover:rotate-x-2 hover:rotate-y-3 hover:scale-105
-      ">
+      "
+      >
         <h3 className="text-xl font-bold">{title}</h3>
         <div className="mt-2">{children}</div>
       </div>
@@ -418,14 +429,22 @@ export { Card3D };
 
 ```tsx
 // ✅ Good Example - card flip with backface-hidden
-function FlipCard({ front, back }: { front: React.ReactNode; back: React.ReactNode }) {
+function FlipCard({
+  front,
+  back,
+}: {
+  front: React.ReactNode;
+  back: React.ReactNode;
+}) {
   return (
     <div className="group perspective-near h-64 w-48">
-      <div className="
+      <div
+        className="
         relative h-full w-full transform-3d
         transition-transform duration-500
         group-hover:rotate-y-180
-      ">
+      "
+      >
         {/* Front face */}
         <div className="absolute inset-0 backface-hidden rounded-xl bg-white p-4 shadow-lg">
           {front}
@@ -448,7 +467,13 @@ export { FlipCard };
 
 ```tsx
 // ✅ Good Example - popover with entrance animation
-function Popover({ trigger, content }: { trigger: string; content: React.ReactNode }) {
+function Popover({
+  trigger,
+  content,
+}: {
+  trigger: string;
+  content: React.ReactNode;
+}) {
   return (
     <div>
       <button popovertarget="info-popover">{trigger}</button>
@@ -645,7 +670,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 const badgeVariants = cva(
-  ["inline-flex", "items-center", "rounded-full", "px-2.5", "py-0.5", "text-xs", "font-medium"],
+  [
+    "inline-flex",
+    "items-center",
+    "rounded-full",
+    "px-2.5",
+    "py-0.5",
+    "text-xs",
+    "font-medium",
+  ],
   {
     variants: {
       variant: {
@@ -700,7 +733,13 @@ export type { BadgeProps };
 
 ```tsx
 // ❌ Bad Example - string concatenation for classes
-function Button({ variant, className }: { variant: string; className?: string }) {
+function Button({
+  variant,
+  className,
+}: {
+  variant: string;
+  className?: string;
+}) {
   const classes = `rounded-lg px-4 py-2 ${variant === "primary" ? "bg-blue-600" : "bg-gray-100"} ${className || ""}`;
   return <button className={classes}>Click</button>;
 }
@@ -716,21 +755,21 @@ export default Button;
 
 ### Quick Reference of Renamed Utilities
 
-| v3 | v4 | Notes |
-|----|------|-------|
-| `shadow-sm` | `shadow-xs` | Scale shifted down |
-| `shadow` | `shadow-sm` | Scale shifted down |
-| `rounded-sm` | `rounded-xs` | Scale shifted down |
-| `rounded` | `rounded-sm` | Scale shifted down |
-| `blur-sm` | `blur-xs` | Scale shifted down |
-| `blur` | `blur-sm` | Scale shifted down |
-| `ring` | `ring-3` | Default width changed 3px -> 1px |
-| `outline-none` | `outline-hidden` | Accessibility improvement |
-| `!flex` | `flex!` | Important modifier moved to end |
-| `bg-[--var]` | `bg-(--var)` | Parentheses for CSS variables |
-| `bg-opacity-50` | `bg-black/50` | Use opacity modifier syntax |
-| `flex-shrink` | `shrink` | Renamed |
-| `flex-grow` | `grow` | Renamed |
+| v3              | v4               | Notes                            |
+| --------------- | ---------------- | -------------------------------- |
+| `shadow-sm`     | `shadow-xs`      | Scale shifted down               |
+| `shadow`        | `shadow-sm`      | Scale shifted down               |
+| `rounded-sm`    | `rounded-xs`     | Scale shifted down               |
+| `rounded`       | `rounded-sm`     | Scale shifted down               |
+| `blur-sm`       | `blur-xs`        | Scale shifted down               |
+| `blur`          | `blur-sm`        | Scale shifted down               |
+| `ring`          | `ring-3`         | Default width changed 3px -> 1px |
+| `outline-none`  | `outline-hidden` | Accessibility improvement        |
+| `!flex`         | `flex!`          | Important modifier moved to end  |
+| `bg-[--var]`    | `bg-(--var)`     | Parentheses for CSS variables    |
+| `bg-opacity-50` | `bg-black/50`    | Use opacity modifier syntax      |
+| `flex-shrink`   | `shrink`         | Renamed                          |
+| `flex-grow`     | `grow`           | Renamed                          |
 
 ### Automated Migration
 

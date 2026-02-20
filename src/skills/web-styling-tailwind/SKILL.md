@@ -35,7 +35,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 
 ---
 
-**Auto-detection:** Tailwind CSS, tailwindcss, @import "tailwindcss", @theme, @utility, @custom-variant, utility classes, bg-*, text-*, flex, grid, responsive design, dark:, hover:, focus:, @tailwindcss/vite, @tailwindcss/postcss, tailwind-merge, cn()
+**Auto-detection:** Tailwind CSS, tailwindcss, @import "tailwindcss", @theme, @utility, @custom-variant, utility classes, bg-_, text-_, flex, grid, responsive design, dark:, hover:, focus:, @tailwindcss/vite, @tailwindcss/postcss, tailwind-merge, cn()
 
 **When to use:**
 
@@ -88,20 +88,20 @@ Tailwind CSS v4 follows a **utility-first, CSS-native** approach: style directly
 
 **v4 vs v3 -- Key Differences:**
 
-| Aspect | v3 | v4 |
-|--------|----|----|
-| Config | `tailwind.config.js` | `@theme` in CSS |
-| Import | `@tailwind base/components/utilities` | `@import "tailwindcss"` |
-| Custom utilities | `@layer utilities {}` | `@utility name {}` |
-| Custom variants | `addVariant()` plugin | `@custom-variant` |
-| Content detection | Manual `content: []` | Automatic |
-| Colors | sRGB hex/rgb | oklch (P3 gamut) |
-| Border default | `gray-200` | `currentColor` |
-| Ring default | `3px blue-500` | `1px currentColor` |
-| Important modifier | `!flex` | `flex!` |
-| Arbitrary vars | `bg-[--var]` | `bg-(--var)` |
-| Container queries | Plugin required | Built-in |
-| 3D transforms | Not available | Built-in |
+| Aspect             | v3                                    | v4                      |
+| ------------------ | ------------------------------------- | ----------------------- |
+| Config             | `tailwind.config.js`                  | `@theme` in CSS         |
+| Import             | `@tailwind base/components/utilities` | `@import "tailwindcss"` |
+| Custom utilities   | `@layer utilities {}`                 | `@utility name {}`      |
+| Custom variants    | `addVariant()` plugin                 | `@custom-variant`       |
+| Content detection  | Manual `content: []`                  | Automatic               |
+| Colors             | sRGB hex/rgb                          | oklch (P3 gamut)        |
+| Border default     | `gray-200`                            | `currentColor`          |
+| Ring default       | `3px blue-500`                        | `1px currentColor`      |
+| Important modifier | `!flex`                               | `flex!`                 |
+| Arbitrary vars     | `bg-[--var]`                          | `bg-(--var)`            |
+| Container queries  | Plugin required                       | Built-in                |
+| 3D transforms      | Not available                         | Built-in                |
 
 </philosophy>
 
@@ -196,20 +196,20 @@ The `@theme` directive defines design tokens that generate both utility classes 
 
 #### Namespaces
 
-| Namespace | Generates | Example |
-|-----------|-----------|---------|
-| `--color-*` | Color utilities | `bg-brand-500`, `text-brand-500` |
-| `--font-*` | Font family | `font-display` |
-| `--text-*` | Font size | `text-display` |
-| `--spacing-*` | Spacing | `px-compact` |
-| `--breakpoint-*` | Responsive variants | `3xl:flex` |
-| `--radius-*` | Border radius | `rounded-card` |
-| `--shadow-*` | Box shadows | `shadow-card` |
-| `--ease-*` | Timing functions | `ease-fluid` |
-| `--animate-*` | Animations | `animate-fade-in` |
-| `--blur-*` | Blur filters | `blur-card` |
-| `--perspective-*` | 3D perspective | `perspective-card` |
-| `--aspect-*` | Aspect ratios | `aspect-cinema` |
+| Namespace         | Generates           | Example                          |
+| ----------------- | ------------------- | -------------------------------- |
+| `--color-*`       | Color utilities     | `bg-brand-500`, `text-brand-500` |
+| `--font-*`        | Font family         | `font-display`                   |
+| `--text-*`        | Font size           | `text-display`                   |
+| `--spacing-*`     | Spacing             | `px-compact`                     |
+| `--breakpoint-*`  | Responsive variants | `3xl:flex`                       |
+| `--radius-*`      | Border radius       | `rounded-card`                   |
+| `--shadow-*`      | Box shadows         | `shadow-card`                    |
+| `--ease-*`        | Timing functions    | `ease-fluid`                     |
+| `--animate-*`     | Animations          | `animate-fade-in`                |
+| `--blur-*`        | Blur filters        | `blur-card`                      |
+| `--perspective-*` | 3D perspective      | `perspective-card`               |
+| `--aspect-*`      | Aspect ratios       | `aspect-cinema`                  |
 
 #### Key Concepts
 

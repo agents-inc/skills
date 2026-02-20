@@ -142,8 +142,8 @@ export { ProductGrid };
 @import "tailwindcss";
 
 @theme {
-  --breakpoint-3xl: 120rem;    /* 1920px */
-  --breakpoint-4xl: 160rem;    /* 2560px - ultra-wide */
+  --breakpoint-3xl: 120rem; /* 1920px */
+  --breakpoint-4xl: 160rem; /* 2560px - ultra-wide */
 }
 ```
 
@@ -193,9 +193,7 @@ function Card({ title, description }: { title: string; description: string }) {
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
         {title}
       </h3>
-      <p className="mt-2 text-gray-600 dark:text-gray-300">
-        {description}
-      </p>
+      <p className="mt-2 text-gray-600 dark:text-gray-300">{description}</p>
     </div>
   );
 }
@@ -312,9 +310,9 @@ export { Button };
 /* ❌ Bad Example - v3 dark mode config */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: "class",
+  darkmode: "class";
   /* ... */
-};
+}
 ```
 
 **Why bad:** JavaScript config not used in v4, `darkMode` option replaced by `@custom-variant dark`
@@ -327,7 +325,13 @@ module.exports = {
 
 ```tsx
 // ✅ Good Example - comprehensive interactive states
-function InteractiveButton({ children, disabled }: { children: React.ReactNode; disabled?: boolean }) {
+function InteractiveButton({
+  children,
+  disabled,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
   return (
     <button
       disabled={disabled}
@@ -356,9 +360,7 @@ export { InteractiveButton };
 function CardWithHover() {
   return (
     <div className="group rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-lg">
-      <h3 className="text-gray-900 group-hover:text-blue-600">
-        Card Title
-      </h3>
+      <h3 className="text-gray-900 group-hover:text-blue-600">Card Title</h3>
       <p className="text-gray-500 group-hover:text-gray-700">
         Description changes when card is hovered
       </p>
@@ -382,12 +384,14 @@ function FormField() {
         placeholder=" "
         className="peer w-full rounded-lg border border-gray-300 px-3 pb-2 pt-5 focus:border-blue-500 focus:outline-none"
       />
-      <label className="
+      <label
+        className="
         pointer-events-none absolute left-3 top-4 text-gray-400
         transition-all
         peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
         peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-500
-      ">
+      "
+      >
         Email Address
       </label>
       <p className="mt-1 hidden text-sm text-red-500 peer-invalid:block">
@@ -423,7 +427,7 @@ export { NestedCards };
 
 **Why good:** named groups (`group/card`, `group/button`) prevent ambiguity in nested group contexts
 
-### not-* Variant (New in v4)
+### not-\* Variant (New in v4)
 
 ```tsx
 // ✅ Good Example - not-* variant for inverse conditions
@@ -448,7 +452,13 @@ export { HoverFade };
 // ✅ Good Example - data attribute driven styling
 const STATES = { active: "active", inactive: "inactive" } as const;
 
-function Tab({ isActive, children }: { isActive: boolean; children: React.ReactNode }) {
+function Tab({
+  isActive,
+  children,
+}: {
+  isActive: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <button
       data-state={isActive ? STATES.active : STATES.inactive}
@@ -535,7 +545,7 @@ export { BrandCard };
 @import "tailwindcss";
 
 @theme {
-  --color-*: initial;  /* Remove ALL default colors */
+  --color-*: initial; /* Remove ALL default colors */
 
   /* Define only project colors */
   --color-white: oklch(1 0 0);
@@ -569,18 +579,34 @@ export { BrandCard };
   --animate-scale-in: scale-in 0.2s ease-out;
 
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(1rem); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 ```
