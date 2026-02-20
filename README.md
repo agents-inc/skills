@@ -40,15 +40,26 @@ A `web-developer` subagent might get React, Tailwind, and Vitest skills. A `web-
 
 87+ skills organized by domain:
 
-| Category | Examples                                                                                                                                                                                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web      | React, Vue, Angular, SolidJS, Next.js, Remix, Nuxt, SCSS Modules, CVA, Zustand, Pinia, NgRx SignalStore, Jotai, React Query, SWR, tRPC, GraphQL, React Hook Form, Zod, shadcn/ui, Radix UI, TanStack Table, Vitest, Playwright, Cypress, MSW, Framer Motion, Storybook, accessibility |
-| API      | Hono, Express, Fastify, Drizzle, Prisma, Better Auth, PostHog, Resend, Axiom + Pino + Sentry, GitHub Actions                                                                                                                                                                          |
-| Mobile   | React Native, Expo                                                                                                                                                                                                                                                                    |
-| CLI      | Commander, oclif + Ink                                                                                                                                                                                                                                                                |
-| Infra    | Turborepo, tooling, env config                                                                                                                                                                                                                                                        |
-| Security | Auth patterns, XSS prevention, secrets management                                                                                                                                                                                                                                     |
-| Meta     | Code reviewing, research methodology, investigation requirements, anti-over-engineering, context management                                                                                                                                                                           |
+**Web**<br>
+`React` `Vue` `Angular` `SolidJS` `Next.js` `Remix` `Nuxt` `SCSS Modules` `CVA` `Zustand` `Pinia` `NgRx SignalStore` `Jotai` `React Query` `SWR` `tRPC` `GraphQL` `React Hook Form` `Zod` `shadcn/ui` `Radix UI` `TanStack Table` `Vitest` `Playwright` `Cypress` `MSW` `Framer Motion` `Storybook` `Accessibility`
+
+**API**<br>
+`Hono` `Express` `Fastify` `Drizzle` `Prisma` `Better Auth` `PostHog` `Resend` `Axiom + Pino + Sentry` `GitHub Actions`
+
+**Mobile**<br>
+`React Native` `Expo`
+
+**CLI**<br>
+`Commander` `oclif + Ink`
+
+**Infra**<br>
+`Turborepo` `Tooling` `Env config`
+
+**Security**<br>
+`Auth patterns` `XSS prevention` `Secrets management`
+
+**Meta**<br>
+`Code reviewing` `Research methodology` `Investigation requirements` `Anti-over-engineering` `Context management`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
 
