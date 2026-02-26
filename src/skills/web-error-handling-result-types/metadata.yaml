@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Result Types
 cliDescription: Type-safe error handling
 usageGuidance: Use when implementing Result/Either types for type-safe error handling.
-compatibleWith:
-  - web-framework-react
-  - api-framework-hono
-  - api-framework-express
-  - api-framework-fastify
 tags:
   - result-type
   - either-type

@@ -5,12 +5,6 @@ author: "@vince"
 cliName: Vitest
 cliDescription: Unit and integration testing
 usageGuidance: Use when writing unit tests, integration tests, or configuring Vitest.
-compatibleWith:
-  - web-framework-react
-  - web-framework-vue-composition-api
-  - web-framework-angular-standalone
-  - web-framework-solidjs
-  - web-mocks-msw
 tags:
   - playwright
   - vitest

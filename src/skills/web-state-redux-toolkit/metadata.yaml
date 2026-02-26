@@ -5,10 +5,6 @@ author: "@vince"
 cliName: Redux Toolkit
 cliDescription: Enterprise client state
 usageGuidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
-compatibleWith:
-  - web-framework-react
-  - web-server-state-react-query
-  - web-data-fetching-swr
 tags:
   - redux
   - redux-toolkit

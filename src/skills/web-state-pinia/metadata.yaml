@@ -5,10 +5,6 @@ author: "@vince"
 cliName: Pinia
 cliDescription: Vue client state
 usageGuidance: Use when managing state in Vue apps with Options or Setup stores.
-compatibleWith:
-  - web-framework-vue-composition-api
-  - web-server-state-react-query
-  - web-data-fetching-swr
 tags:
   - pinia
   - state-management

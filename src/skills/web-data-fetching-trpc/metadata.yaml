@@ -5,11 +5,6 @@ author: "@vince"
 cliName: tRPC
 cliDescription: Type-safe API layer
 usageGuidance: Use when building type-safe APIs with tRPC procedures and React Query.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - trpc
   - type-safe-api

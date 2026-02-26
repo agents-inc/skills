@@ -5,12 +5,6 @@ author: "@vince"
 cliName: MSW
 cliDescription: API mocking
 usageGuidance: Use when mocking APIs for development or testing with MSW handlers.
-compatibleWith:
-  - web-testing-vitest
-  - web-testing-playwright-e2e
-  - web-testing-cypress-e2e
-  - web-server-state-react-query
-  - web-data-fetching-swr
 tags:
   - msw
   - mock-service-worker

@@ -5,11 +5,6 @@ author: "@vince"
 cliName: SCSS Modules
 cliDescription: SCSS Modules styling
 usageGuidance: Use when styling with SCSS Modules, design tokens, or CSS cascade layers.
-compatibleWith:
-  - web-framework-react
-  - web-framework-vue-composition-api
-  - web-framework-angular-standalone
-  - web-framework-solidjs
 tags:
   - scss
   - css-modules

@@ -5,9 +5,6 @@ author: "@vince"
 cliName: Vue Test Utils
 cliDescription: Vue component testing
 usageGuidance: Use when testing Vue components with mount, shallowMount, or testing composables.
-compatibleWith:
-  - web-framework-vue-composition-api
-  - web-state-pinia
 tags:
   - vue-test-utils
   - testing

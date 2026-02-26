@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Email Setup
 cliDescription: Email service setup
 usageGuidance: Use when configuring Resend email service or domain verification.
-compatibleWith:
-  - api-email-resend-react-email
-  - infra-env-setup-env
-providesSetupFor:
-  - api-email-resend-react-email
 tags:
   - resend
   - setup

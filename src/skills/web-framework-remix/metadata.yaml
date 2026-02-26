@@ -18,9 +18,3 @@ tags:
   - client-action
   - single-fetch
   - progressive-enhancement
-compatibleWith:
-  - web-styling-scss-modules
-  - web-styling-tailwind
-  - web-testing-vitest
-  - web-testing-playwright-e2e
-  - web-testing-cypress-e2e

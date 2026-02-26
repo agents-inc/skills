@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Next.js App Router
 cliDescription: Next.js App Router
 usageGuidance: Use when building Next.js apps with App Router, Server/Client Components, or streaming.
-compatibleWith:
-  - web-styling-scss-modules
-  - web-styling-tailwind
-  - web-server-state-react-query
-  - web-state-zustand
 tags:
   - nextjs
   - app-router

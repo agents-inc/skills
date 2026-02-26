@@ -5,10 +5,6 @@ author: "@vince"
 cliName: Zustand
 cliDescription: Lightweight client state
 usageGuidance: Use when managing global UI state, replacing Context misuse, or handling cross-component state.
-compatibleWith:
-  - web-framework-react
-  - web-server-state-react-query
-  - web-data-fetching-swr
 tags:
   - zustand
   - state-management

@@ -8,12 +8,6 @@ usageGuidance: >-
   Use when implementing client-side state with MobX observables, computed values,
   actions, reactions, or the observer HOC from mobx-react-lite. Not for server
   state (use React Query) or simple UI state (use useState/Zustand).
-requires: []
-compatibleWith:
-  - web-framework-react
-conflictsWith:
-  - web-state-zustand
-  - web-state-redux-toolkit
 tags:
   - mobx
   - state-management

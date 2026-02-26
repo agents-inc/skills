@@ -14,7 +14,3 @@ tags:
   - row-selection
   - virtual-scrolling
   - server-side
-compatibleWith:
-  - web-framework-react
-  - web-framework-vue-composition-api
-  - web-framework-solidjs

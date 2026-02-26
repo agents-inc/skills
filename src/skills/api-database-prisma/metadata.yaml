@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Prisma
 cliDescription: Prisma ORM patterns
 usageGuidance: Use when writing database queries, migrations, or working with Prisma ORM.
-compatibleWith:
-  - api-framework-hono
-  - api-framework-express
-  - api-framework-fastify
-  - api-auth-better-auth-drizzle-hono
 tags:
   - prisma
   - orm

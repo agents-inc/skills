@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Hono
 cliDescription: Hono API framework
 usageGuidance: Use when building API routes with Hono, implementing OpenAPI specs, or Zod validation.
-compatibleWith:
-  - api-auth-better-auth-drizzle-hono
-  - api-database-drizzle
-  - api-database-prisma
-  - security-auth-security
 tags:
   - hono
   - openapi

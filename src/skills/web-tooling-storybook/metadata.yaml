@@ -5,12 +5,6 @@ author: "@vince"
 cliName: Storybook
 cliDescription: Component documentation
 usageGuidance: Use when documenting components with Storybook, writing stories, or interaction tests.
-compatibleWith:
-  - web-framework-react
-  - web-framework-vue-composition-api
-  - web-framework-angular-standalone
-  - web-testing-vitest
-  - web-testing-playwright-e2e
 tags:
   - storybook
   - component-development

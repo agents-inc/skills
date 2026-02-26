@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Observability Setup
 cliDescription: Logging and monitoring setup
 usageGuidance: Use when setting up Pino logging, Axiom, or Sentry for the first time.
-compatibleWith:
-  - api-observability-axiom-pino-sentry
-  - infra-env-setup-env
-providesSetupFor:
-  - api-observability-axiom-pino-sentry
 tags:
   - pino
   - axiom

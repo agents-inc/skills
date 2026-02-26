@@ -5,12 +5,6 @@ author: "@vince"
 cliName: Security
 cliDescription: Application security patterns
 usageGuidance: Use when implementing authentication, authorization, XSS prevention, CSRF protection, CSP headers, or managing secrets.
-compatibleWith:
-  - api-auth-better-auth-drizzle-hono
-  - api-framework-hono
-  - api-framework-express
-  - api-framework-fastify
-  - infra-env-setup-env
 tags:
   - security
   - authentication

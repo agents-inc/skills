@@ -5,8 +5,6 @@ author: "@vince"
 cliName: Build Tooling
 cliDescription: Build tooling and linting
 usageGuidance: Use when configuring ESLint, Prettier, TypeScript, Vite, or git hooks for a project.
-compatibleWith:
-  - infra-monorepo-turborepo
 tags:
   - eslint
   - prettier

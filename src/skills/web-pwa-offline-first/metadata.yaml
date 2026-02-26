@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Offline First
 cliDescription: Offline-first patterns
 usageGuidance: Use when building offline-first apps with IndexedDB or sync queues.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - offline-first
   - indexeddb

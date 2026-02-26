@@ -16,7 +16,3 @@ tags:
   - blob
   - file-api
   - client-side-processing
-compatibleWith:
-  - web-framework-react
-  - web-forms-react-hook-form
-  - web-forms-vee-validate

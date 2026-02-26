@@ -5,11 +5,6 @@ author: "@vince"
 cliName: URQL
 cliDescription: URQL GraphQL client
 usageGuidance: Use when working with URQL client for GraphQL.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - urql
   - graphql

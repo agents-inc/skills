@@ -5,10 +5,6 @@ author: "@vince"
 cliName: PostHog Flags
 cliDescription: Feature flags and A/B testing
 usageGuidance: Use when implementing feature flags, gradual rollouts, A/B tests, or remote configuration.
-compatibleWith:
-  - api-analytics-posthog-analytics
-requiresSetup:
-  - api-analytics-setup-posthog
 tags:
   - posthog
   - feature-flags

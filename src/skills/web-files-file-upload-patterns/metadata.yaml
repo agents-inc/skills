@@ -16,8 +16,3 @@ tags:
   - file-validation
   - progress-tracking
   - accessibility
-compatibleWith:
-  - web-framework-react
-  - web-forms-react-hook-form
-  - web-forms-vee-validate
-  - api-framework-hono

@@ -5,8 +5,6 @@ author: "@vince"
 cliName: Error Boundaries
 cliDescription: Error UI handling
 usageGuidance: Use when implementing React error boundaries, fallback UIs, or retry logic.
-compatibleWith:
-  - web-framework-react
 tags:
   - error-boundary
   - error-handling

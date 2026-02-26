@@ -5,12 +5,6 @@ author: "@vince"
 cliName: Backend Performance
 cliDescription: Query and caching optimization
 usageGuidance: Use when optimizing database queries, implementing caching, or improving API response times.
-compatibleWith:
-  - api-database-drizzle
-  - api-database-prisma
-  - api-framework-hono
-  - api-framework-express
-  - api-framework-fastify
 tags:
   - performance
   - query-optimization

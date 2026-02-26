@@ -5,9 +5,6 @@ author: "@vince"
 cliName: Observability
 cliDescription: Logging and error tracking
 usageGuidance: Use when implementing structured logging, error tracking, or performance monitoring.
-compatibleWith: []
-requiresSetup:
-  - api-observability-setup-axiom-pino-sentry
 tags:
   - pino
   - sentry

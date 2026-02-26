@@ -13,6 +13,3 @@ tags:
   - dark-mode
   - forms
   - accessibility
-compatibleWith:
-  - web-framework-react
-  - web-styling-tailwind

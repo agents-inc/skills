@@ -5,9 +5,6 @@ author: "@vince"
 cliName: Resend
 cliDescription: Transactional email templates
 usageGuidance: Use when sending transactional emails or building React Email templates.
-compatibleWith: []
-requiresSetup:
-  - api-email-setup-resend
 tags:
   - resend
   - react-email

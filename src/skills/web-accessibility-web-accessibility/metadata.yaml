@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Accessibility
 cliDescription: WCAG accessibility patterns
 usageGuidance: Use when implementing WCAG compliance, ARIA attributes, or keyboard navigation.
-compatibleWith:
-  - web-framework-react
-  - web-framework-vue-composition-api
-  - web-framework-angular-standalone
-  - web-framework-solidjs
 tags:
   - wcag
   - wcag-22

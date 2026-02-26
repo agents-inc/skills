@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Apollo Client
 cliDescription: Apollo GraphQL client
 usageGuidance: Use when working with Apollo Client for GraphQL queries and mutations.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - apollo-client
   - graphql

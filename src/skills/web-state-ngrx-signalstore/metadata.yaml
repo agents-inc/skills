@@ -5,10 +5,6 @@ author: "@vince"
 cliName: NgRx SignalStore
 cliDescription: Angular signal-based state
 usageGuidance: Use when managing Angular state with Signals and SignalStore.
-compatibleWith:
-  - web-framework-angular-standalone
-  - web-server-state-react-query
-  - web-data-fetching-swr
 tags:
   - ngrx
   - signalstore

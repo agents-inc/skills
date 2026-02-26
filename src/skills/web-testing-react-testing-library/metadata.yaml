@@ -5,9 +5,6 @@ author: "@vince"
 cliName: React Testing Library
 cliDescription: React component testing
 usageGuidance: Use when testing React components with user-centric queries.
-compatibleWith:
-  - web-framework-react
-  - web-testing-vitest
 tags:
   - react-testing-library
   - testing

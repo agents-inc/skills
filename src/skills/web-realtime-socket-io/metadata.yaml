@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Socket.IO
 cliDescription: Bidirectional real-time communication
 usageGuidance: Use when implementing Socket.IO client connections, rooms, or namespaces.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - socket-io
   - realtime

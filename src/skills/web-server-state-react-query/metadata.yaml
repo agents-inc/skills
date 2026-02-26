@@ -5,11 +5,6 @@ author: "@vince"
 cliName: React Query
 cliDescription: Server state and caching
 usageGuidance: Use when fetching API data, caching responses, or managing server state.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - react-query
   - tanstack-query

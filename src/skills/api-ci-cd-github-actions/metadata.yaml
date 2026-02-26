@@ -5,9 +5,6 @@ author: "@vince"
 cliName: GitHub Actions
 cliDescription: CI/CD pipelines
 usageGuidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
-compatibleWith:
-  - infra-monorepo-turborepo
-  - infra-tooling-setup-tooling
 tags:
   - github-actions
   - pipelines

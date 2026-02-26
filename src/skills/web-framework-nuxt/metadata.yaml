@@ -5,9 +5,6 @@ author: "@vince"
 cliName: Nuxt
 cliDescription: Nuxt 3 full-stack framework
 usageGuidance: Use when building Nuxt 3 apps with useFetch, useState, or server routes.
-compatibleWith:
-  - web-forms-zod-validation
-  - web-testing-playwright-e2e
 tags:
   - nuxt
   - nuxt3

@@ -5,13 +5,6 @@ author: "@vince"
 cliName: Better Auth
 cliDescription: Authentication and sessions
 usageGuidance: Use when implementing authentication, sessions, OAuth, or user management.
-requires:
-  - api-database-drizzle
-compatibleWith:
-  - api-framework-hono
-  - api-framework-express
-  - api-framework-fastify
-  - security-auth-security
 tags:
   - better-auth
   - sessions

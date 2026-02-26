@@ -16,9 +16,3 @@ tags:
   - typescript
   - plugins
   - encapsulation
-compatibleWith:
-  - api-auth-better-auth-drizzle-hono
-  - api-database-drizzle
-  - api-database-prisma
-  - api-observability-axiom-pino-sentry
-  - security-auth-security

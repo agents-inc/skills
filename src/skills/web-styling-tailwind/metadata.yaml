@@ -8,12 +8,6 @@ usageGuidance: >-
   Use when styling with Tailwind CSS v4 utility classes, configuring themes with
   @theme directive, implementing dark mode, responsive design, custom utilities
   with @utility, or integrating Tailwind with React components.
-requires: []
-compatibleWith:
-  - web-framework-react
-  - web-styling-cva
-conflictsWith:
-  - web-styling-scss-modules
 tags:
   - tailwind
   - tailwindcss

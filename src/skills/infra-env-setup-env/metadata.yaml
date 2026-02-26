@@ -5,9 +5,6 @@ author: "@vince"
 cliName: Environment
 cliDescription: Environment variable management
 usageGuidance: Use when setting up environment variables, .env files, or Zod validation for config.
-compatibleWith:
-  - security-auth-security
-  - infra-monorepo-turborepo
 tags:
   - environment
   - env

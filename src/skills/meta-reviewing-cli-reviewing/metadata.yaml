@@ -5,11 +5,6 @@ author: "@vince"
 cliName: CLI Reviewing
 cliDescription: CLI code review patterns for Commander.js and @clack/prompts
 usageGuidance: Use when reviewing CLI applications built with Commander.js, @clack/prompts, or similar tools. Covers exit codes, signal handling, cancellation, error messages, spinners, and testing adequacy.
-requires:
-  - cli-framework-cli-commander
-compatibleWith:
-  - meta-reviewing-reviewing
-  - web-testing-vitest
 tags:
   - cli
   - review

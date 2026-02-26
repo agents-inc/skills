@@ -5,12 +5,6 @@ author: "@vince"
 cliName: React Native
 cliDescription: React Native mobile apps
 usageGuidance: Use when building cross-platform mobile apps, working with native modules, or React Navigation.
-requires: []
-compatibleWith:
-  - web-state-zustand
-  - web-server-state-react-query
-  - web-forms-react-hook-form
-  - web-forms-zod-validation
 tags:
   - react-native
   - mobile

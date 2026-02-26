@@ -5,11 +5,6 @@ author: "@vince"
 cliName: WebSockets
 cliDescription: Bidirectional real-time communication
 usageGuidance: Use when implementing WebSocket connections, reconnection, or message handling.
-compatibleWith:
-  - web-framework-react
-  - web-state-zustand
-  - web-state-jotai
-  - web-state-redux-toolkit
 tags:
   - websocket
   - realtime

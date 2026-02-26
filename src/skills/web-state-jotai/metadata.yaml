@@ -5,10 +5,6 @@ author: "@vince"
 cliName: Jotai
 cliDescription: Atomic client state
 usageGuidance: Use when managing atomic state with bottom-up composition.
-compatibleWith:
-  - web-framework-react
-  - web-server-state-react-query
-  - web-data-fetching-swr
 tags:
   - jotai
   - state-management

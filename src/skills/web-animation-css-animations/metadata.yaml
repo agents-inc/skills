@@ -5,12 +5,6 @@ author: "@vince"
 cliName: CSS Animations
 cliDescription: Native CSS animations
 usageGuidance: Use when implementing CSS transitions, keyframes, or scroll-driven animations.
-requires: []
-compatibleWith:
-  - web-styling-scss-modules
-  - web-styling-tailwind
-  - web-accessibility-web-accessibility
-  - web-performance-web-performance
 tags:
   - animation
   - css

@@ -5,9 +5,6 @@ author: "@vince"
 cliName: Turborepo
 cliDescription: Monorepo orchestration
 usageGuidance: Use when configuring monorepo pipelines, workspaces, or package architecture.
-compatibleWith:
-  - infra-tooling-setup-tooling
-  - api-ci-cd-github-actions
 tags:
   - turborepo
   - workspaces

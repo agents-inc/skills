@@ -5,12 +5,6 @@ author: "@vince"
 cliName: Motion
 cliDescription: Motion animation library
 usageGuidance: Use when animating React components with Motion (Framer Motion).
-requires:
-  - web-framework-react
-compatibleWith:
-  - web-styling-scss-modules
-  - web-styling-tailwind
-  - web-accessibility-web-accessibility
 tags:
   - animation
   - motion

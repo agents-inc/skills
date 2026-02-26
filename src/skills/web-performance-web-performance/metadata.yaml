@@ -5,11 +5,6 @@ author: "@vince"
 cliName: Frontend Performance
 cliDescription: Bundle and render optimization
 usageGuidance: Use when optimizing bundle size, render performance, or implementing memoization.
-compatibleWith:
-  - web-framework-react
-  - web-framework-vue-composition-api
-  - web-framework-angular-standalone
-  - web-framework-solidjs
 tags:
   - bundle-optimization
   - render-performance
