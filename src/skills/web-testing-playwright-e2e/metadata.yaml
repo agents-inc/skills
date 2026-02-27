@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-testing
 author: "@vince"
-cliName: Playwright
+displayName: Playwright
 cliDescription: E2E browser testing
 usageGuidance: Use when writing E2E tests, Page Object Models, or visual regression tests.
 tags:

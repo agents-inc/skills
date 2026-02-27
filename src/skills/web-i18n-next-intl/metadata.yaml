@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-i18n
 author: "@vince"
-cliName: next-intl
+displayName: next-intl
 cliDescription: Next.js internationalization
 usageGuidance: Use when implementing i18n in Next.js with next-intl.
 tags:

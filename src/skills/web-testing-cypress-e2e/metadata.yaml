@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-testing
 author: "@vince"
-cliName: Cypress
+displayName: Cypress
 cliDescription: E2E browser testing
 usageGuidance: Use when writing Cypress E2E tests, custom commands, or component tests.
 tags:

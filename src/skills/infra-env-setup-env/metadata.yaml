@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: shared-tooling
 author: "@vince"
-cliName: Environment
+displayName: Environment
 cliDescription: Environment variable management
 usageGuidance: Use when setting up environment variables, .env files, or Zod validation for config.
 tags:

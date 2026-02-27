@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-server-state
 author: "@vince"
-cliName: React Query
+displayName: React Query
 cliDescription: Server state and caching
 usageGuidance: Use when fetching API data, caching responses, or managing server state.
 tags:

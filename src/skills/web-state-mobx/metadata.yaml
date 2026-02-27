@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-client-state
 author: "@vince"
-cliName: MobX
+displayName: MobX
 cliDescription: Observable reactive state management
 usageGuidance: >-
   Use when implementing client-side state with MobX observables, computed values,

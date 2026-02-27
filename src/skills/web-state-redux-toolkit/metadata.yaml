@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-client-state
 author: "@vince"
-cliName: Redux Toolkit
+displayName: Redux Toolkit
 cliDescription: Enterprise client state
 usageGuidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
 tags:

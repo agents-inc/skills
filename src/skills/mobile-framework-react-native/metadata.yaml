@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: mobile-framework
 author: "@vince"
-cliName: React Native
+displayName: React Native
 cliDescription: React Native mobile apps
 usageGuidance: Use when building cross-platform mobile apps, working with native modules, or React Navigation.
 tags:

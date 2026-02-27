@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: shared-research
 author: "@vince"
-cliName: Research
+displayName: Research
 cliDescription: Codebase investigation
 usageGuidance: Use when investigating codebase patterns, researching implementations, or discovering how things work.
 tags:

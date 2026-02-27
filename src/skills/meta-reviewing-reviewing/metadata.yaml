@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: shared-reviewing
 author: "@vince"
-cliName: Code Review
+displayName: Code Review
 cliDescription: Code review guidance
 usageGuidance: Use when reviewing code, PRs, or making approval/rejection decisions.
 tags:

@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-client-state
 author: "@vince"
-cliName: NgRx SignalStore
+displayName: NgRx SignalStore
 cliDescription: Angular signal-based state
 usageGuidance: Use when managing Angular state with Signals and SignalStore.
 tags:

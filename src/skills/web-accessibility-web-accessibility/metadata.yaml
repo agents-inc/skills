@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-accessibility
 author: "@vince"
-cliName: Accessibility
+displayName: Accessibility
 cliDescription: WCAG accessibility patterns
 usageGuidance: Use when implementing WCAG compliance, ARIA attributes, or keyboard navigation.
 tags:

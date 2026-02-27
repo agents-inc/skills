@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-client-state
 author: "@vince"
-cliName: Zustand
+displayName: Zustand
 cliDescription: Lightweight client state
 usageGuidance: Use when managing global UI state, replacing Context misuse, or handling cross-component state.
 tags:

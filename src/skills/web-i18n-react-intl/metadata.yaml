@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-i18n
 author: "@vince"
-cliName: React Intl
+displayName: React Intl
 cliDescription: React internationalization
 usageGuidance: Use when implementing i18n in React with FormatJS/react-intl.
 tags:

@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-framework
 author: "@vince"
-cliName: Next.js Server Actions
+displayName: Next.js Server Actions
 cliDescription: Next.js Server Actions
 usageGuidance: Use when implementing Server Actions for mutations, revalidation, or form handling.
 tags:

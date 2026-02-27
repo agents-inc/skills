@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-ui-components
 author: "@vince"
-cliName: shadcn/ui
+displayName: shadcn/ui
 cliDescription: Tailwind component library
 usageGuidance: Use when using shadcn/ui components, theming, or customization.
 tags:

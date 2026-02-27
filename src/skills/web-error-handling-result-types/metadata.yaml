@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-error-handling
 author: "@vince"
-cliName: Result Types
+displayName: Result Types
 cliDescription: Type-safe error handling
 usageGuidance: Use when implementing Result/Either types for type-safe error handling.
 tags:

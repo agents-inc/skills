@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-server-state
 author: "@vince"
-cliName: URQL
+displayName: URQL
 cliDescription: URQL GraphQL client
 usageGuidance: Use when working with URQL client for GraphQL.
 tags:

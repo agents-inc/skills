@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-styling
 author: "@vince"
-cliName: SCSS Modules
+displayName: SCSS Modules
 cliDescription: SCSS Modules styling
 usageGuidance: Use when styling with SCSS Modules, design tokens, or CSS cascade layers.
 tags:

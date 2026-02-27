@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: api-auth
 author: "@vince"
-cliName: Better Auth
+displayName: Better Auth
 cliDescription: Authentication and sessions
 usageGuidance: Use when implementing authentication, sessions, OAuth, or user management.
 tags:

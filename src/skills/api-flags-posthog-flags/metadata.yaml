@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: api-analytics
 author: "@vince"
-cliName: PostHog Flags
+displayName: PostHog Flags
 cliDescription: Feature flags and A/B testing
 usageGuidance: Use when implementing feature flags, gradual rollouts, A/B tests, or remote configuration.
 tags:

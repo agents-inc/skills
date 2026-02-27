@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: api-email
 author: "@vince"
-cliName: Email Setup
+displayName: Email Setup
 cliDescription: Email service setup
 usageGuidance: Use when configuring Resend email service or domain verification.
 tags:

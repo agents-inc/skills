@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: shared-monorepo
 author: "@vince"
-cliName: Turborepo
+displayName: Turborepo
 cliDescription: Monorepo orchestration
 usageGuidance: Use when configuring monorepo pipelines, workspaces, or package architecture.
 tags:

@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-animation
 author: "@vince"
-cliName: Motion
+displayName: Motion
 cliDescription: Motion animation library
 usageGuidance: Use when animating React components with Motion (Framer Motion).
 tags:

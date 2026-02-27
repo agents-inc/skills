@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-error-handling
 author: "@vince"
-cliName: Error Boundaries
+displayName: Error Boundaries
 cliDescription: Error UI handling
 usageGuidance: Use when implementing React error boundaries, fallback UIs, or retry logic.
 tags:

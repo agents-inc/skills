@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: api-database
 author: "@vince"
-cliName: Drizzle
+displayName: Drizzle
 cliDescription: Drizzle ORM patterns
 usageGuidance: Use when writing database queries, migrations, or working with Drizzle ORM.
 tags:

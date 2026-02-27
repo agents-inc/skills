@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-pwa
 author: "@vince"
-cliName: Service Workers
+displayName: Service Workers
 cliDescription: Offline caching strategies
 usageGuidance: Use when implementing service workers, caching strategies, or offline support.
 tags:
