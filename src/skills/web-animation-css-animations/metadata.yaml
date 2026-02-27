@@ -1,6 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-animation
-categoryExclusive: false
 author: "@vince"
 cliName: CSS Animations
 cliDescription: Native CSS animations

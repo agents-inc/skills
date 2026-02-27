@@ -1,6 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-framework
-categoryExclusive: false
 author: "@vince"
 cliName: Next.js Server Actions
 cliDescription: Next.js Server Actions

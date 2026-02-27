@@ -1,6 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: shared-methodology
-categoryExclusive: false
 author: "@vince"
 cliName: Anti-Over-Engineering
 cliDescription: Surgical implementation, not architectural innovation

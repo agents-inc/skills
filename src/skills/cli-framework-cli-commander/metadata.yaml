@@ -1,6 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: cli-framework
-categoryExclusive: false
 author: "@vince"
 cliName: CLI Commander
 cliDescription: CLI dev with Commander.js, clack, picocolors
