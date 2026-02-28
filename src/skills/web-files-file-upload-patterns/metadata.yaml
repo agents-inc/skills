@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-file-upload
+domain: web
 author: "@vince"
 displayName: File Upload
 cliDescription: File upload handling

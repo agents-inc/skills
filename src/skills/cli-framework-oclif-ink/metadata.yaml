@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: cli-framework
+domain: cli
 author: "@vince"
 displayName: oclif + Ink
 cliDescription: CLI dev with oclif framework and Ink React
