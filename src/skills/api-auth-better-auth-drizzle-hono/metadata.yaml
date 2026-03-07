@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: api-auth
+slug: better-auth-drizzle-hono
 domain: api
 author: "@vince"
 displayName: Better Auth

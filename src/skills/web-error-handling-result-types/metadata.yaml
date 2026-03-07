@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
 category: web-error-handling
+slug: result-types
 domain: web
 author: "@vince"
 displayName: Result Types
