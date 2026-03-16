@@ -198,8 +198,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
             },
             elements: {
               // Target specific internal elements
-              formButtonPrimary:
-                "bg-indigo-600 hover:bg-indigo-700 text-white",
+              formButtonPrimary: "bg-indigo-600 hover:bg-indigo-700 text-white",
               card: "shadow-lg border border-gray-200",
               headerTitle: "text-2xl font-bold",
             },
@@ -314,17 +313,11 @@ const SIGN_UP_REDIRECT = "/onboarding";
 export function AuthButtons() {
   return (
     <div className="auth-buttons">
-      <SignInButton
-        mode="redirect"
-        forceRedirectUrl={SIGN_IN_REDIRECT}
-      >
+      <SignInButton mode="redirect" forceRedirectUrl={SIGN_IN_REDIRECT}>
         <button className="btn btn-primary">Sign In</button>
       </SignInButton>
 
-      <SignUpButton
-        mode="redirect"
-        forceRedirectUrl={SIGN_UP_REDIRECT}
-      >
+      <SignUpButton mode="redirect" forceRedirectUrl={SIGN_UP_REDIRECT}>
         <button className="btn btn-secondary">Get Started</button>
       </SignUpButton>
     </div>

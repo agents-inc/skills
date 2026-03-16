@@ -356,10 +356,7 @@ export function DeleteAccountButton() {
   });
 
   return (
-    <button
-      onClick={() => deleteAccount()}
-      className="btn btn-danger"
-    >
+    <button onClick={() => deleteAccount()} className="btn btn-danger">
       Delete My Account
     </button>
   );

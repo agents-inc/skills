@@ -16,7 +16,7 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 async function uploadFile(
   userId: string,
   file: File,
-  folder = "uploads"
+  folder = "uploads",
 ): Promise<string> {
   if (file.size > MAX_FILE_SIZE_BYTES) {
     throw new Error(`File exceeds ${MAX_FILE_SIZE_MB}MB limit`);
@@ -133,7 +133,7 @@ function getPublicFileUrl(filePath: string): string {
 function getResizedImageUrl(
   filePath: string,
   width: number,
-  height: number
+  height: number,
 ): string {
   const {
     data: { publicUrl },
@@ -181,9 +181,7 @@ async function listUserFiles(userId: string) {
 
 // Delete files
 async function deleteFiles(filePaths: string[]) {
-  const { error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .remove(filePaths);
+  const { error } = await supabase.storage.from(BUCKET_NAME).remove(filePaths);
 
   if (error) {
     throw new Error(`Failed to delete files: ${error.message}`);
@@ -293,11 +291,7 @@ async function createUploadUrl(filePath: string) {
 }
 
 // Client-side: Upload directly to the signed URL
-async function uploadToSignedUrl(
-  signedUrl: string,
-  token: string,
-  file: File
-) {
+async function uploadToSignedUrl(signedUrl: string, token: string, file: File) {
   const { data, error } = await supabase.storage
     .from("documents")
     .uploadToSignedUrl(signedUrl, token, file);
