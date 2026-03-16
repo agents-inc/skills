@@ -1356,6 +1356,123 @@
       "category": "web"
     },
     {
+      "name": "web-meta-framework-astro",
+      "source": "./dist/plugins/web-meta-framework-astro",
+      "description": "Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "astro",
+        "islands",
+        "content-collections",
+        "ssg",
+        "ssr",
+        "view-transitions",
+        "server-islands"
+      ],
+      "category": "web"
+    },
+    {
+      "name": "web-meta-framework-nextjs",
+      "source": "./dist/plugins/web-meta-framework-nextjs",
+      "description": "Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "nextjs",
+        "app-router",
+        "server-components",
+        "server-actions",
+        "streaming",
+        "suspense",
+        "ssr",
+        "ssg",
+        "routing",
+        "mutations",
+        "revalidation",
+        "forms"
+      ],
+      "category": "web"
+    },
+    {
+      "name": "web-meta-framework-nuxt",
+      "source": "./dist/plugins/web-meta-framework-nuxt",
+      "description": "Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "nuxt",
+        "nuxt3",
+        "vue",
+        "vue3",
+        "ssr",
+        "ssg",
+        "routing",
+        "server-routes",
+        "nitro",
+        "usefetch",
+        "useasyncdata",
+        "usestate",
+        "auto-imports",
+        "file-based-routing",
+        "seo",
+        "universal-rendering"
+      ],
+      "category": "web"
+    },
+    {
+      "name": "web-meta-framework-remix",
+      "source": "./dist/plugins/web-meta-framework-remix",
+      "description": "File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "remix",
+        "remix-v2",
+        "react-router-v7",
+        "react-router",
+        "react",
+        "full-stack",
+        "ssr",
+        "loaders",
+        "actions",
+        "client-action",
+        "single-fetch",
+        "progressive-enhancement"
+      ],
+      "category": "web"
+    },
+    {
+      "name": "web-meta-framework-sveltekit",
+      "source": "./dist/plugins/web-meta-framework-sveltekit",
+      "description": "SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "sveltekit",
+        "routing",
+        "load-functions",
+        "form-actions",
+        "hooks",
+        "ssr",
+        "ssg",
+        "server-routes",
+        "streaming",
+        "progressive-enhancement"
+      ],
+      "category": "web"
+    },
+    {
       "name": "web-mocks-msw",
       "source": "./dist/plugins/web-mocks-msw",
       "description": "MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.",
