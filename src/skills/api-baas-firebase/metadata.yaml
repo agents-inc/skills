@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-baas
+slug: firebase
+domain: api
+author: "@vince"
+displayName: Firebase
+cliDescription: Google Firebase platform for web and mobile
+usageGuidance: >-
+  Use when building with Firebase — Firestore, Authentication, Cloud Functions,
+  Storage, Hosting, Realtime Database, and Firebase Admin SDK.

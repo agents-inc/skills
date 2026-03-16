@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: redis
+domain: api
+author: "@vince"
+displayName: Redis
+cliDescription: Redis in-memory data store with ioredis
+usageGuidance: Use when implementing caching, session storage, rate limiting, pub/sub messaging, queues, or real-time leaderboards with Redis.
