@@ -1,24 +1,6 @@
 # EAS (Expo Application Services) Patterns
 
-Cloud build, submit, and OTA update workflows.
-
----
-
-## EAS Setup
-
-```bash
-# Install EAS CLI globally
-npm install -g eas-cli
-
-# Login to your Expo account
-eas login
-
-# Initialize EAS in your project
-eas init
-
-# Verify setup
-eas whoami
-```
+> Cloud build, submit, and OTA update workflows. See [SKILL.md](../SKILL.md) for decisions and philosophy.
 
 ---
 
@@ -342,17 +324,13 @@ export default {
 ### Publish Updates
 
 ```bash
-# Publish to preview channel
+# SDK 55+ uses --environment (replaces --channel)
+eas update --environment preview --message "Bug fix for login flow"
+eas update --environment production --message "Version 1.2.0 release"
+
+# SDK 54 and earlier uses --channel
 eas update --channel preview --message "Bug fix for login flow"
-
-# Publish to production channel
 eas update --channel production --message "Version 1.2.0 release"
-
-# Publish specific branch to channel
-eas update --branch main --message "Latest main"
-
-# Interactive mode
-eas update --channel preview
 ```
 
 ### Update Workflow
@@ -593,78 +571,4 @@ jobs:
         run: eas build --profile production --platform all --non-interactive
 ```
 
-### EAS Build Webhooks
-
-```json
-{
-  "build": {
-    "production": {
-      "channel": "production"
-    }
-  }
-}
-```
-
-Configure webhooks in Expo dashboard to notify on build completion.
-
----
-
-## Debugging Builds
-
-```bash
-# View build logs
-eas build:view [build-id]
-
-# Download build artifacts
-eas build:download --id [build-id]
-
-# List recent builds
-eas build:list
-
-# Cancel running build
-eas build:cancel [build-id]
-
-# View build configuration
-eas config --platform ios --profile production
-```
-
----
-
-## CLI Commands Reference
-
-```bash
-# Build
-eas build --platform [ios|android|all] --profile [profile]
-eas build:list
-eas build:view [id]
-eas build:cancel [id]
-eas build:run --platform [platform] --id [id]
-
-# Submit
-eas submit --platform [ios|android] --id [build-id]
-
-# Update
-eas update --channel [channel] --message "description"
-eas update:list
-eas update:rollback --channel [channel]
-
-# Credentials
-eas credentials --platform [ios|android]
-eas credentials:configure-build
-
-# Secrets
-eas secret:create --name [name] --value [value]
-eas secret:list
-eas secret:delete --name [name]
-
-# Devices (iOS internal distribution)
-eas device:create
-eas device:list
-eas device:delete [udid]
-
-# Project
-eas init
-eas config --platform [platform] --profile [profile]
-eas whoami
-eas logout
-```
+> For complete CLI reference, see [reference.md](../reference.md) - CLI Commands Quick Reference section.
