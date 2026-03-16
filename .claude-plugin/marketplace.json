@@ -429,6 +429,51 @@
       }
     },
     {
+      "name": "shared-ci-cd-github-actions",
+      "source": "./dist/plugins/shared-ci-cd-github-actions",
+      "description": "GitHub Actions, pipelines, deployment",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-infra-setup-env",
+      "source": "./dist/plugins/shared-infra-setup-env",
+      "description": "Environment configuration, Zod validation",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-meta-cli-reviewing",
+      "source": "./dist/plugins/shared-meta-cli-reviewing",
+      "description": "CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-meta-research-methodology",
+      "source": "./dist/plugins/shared-meta-research-methodology",
+      "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-meta-reviewing",
+      "source": "./dist/plugins/shared-meta-reviewing",
+      "description": "Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "shared-monorepo-nx",
       "source": "./dist/plugins/shared-monorepo-nx",
       "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
@@ -442,6 +487,24 @@
       "source": "./dist/plugins/shared-monorepo-pnpm-workspaces",
       "description": "pnpm workspace protocol, filtering, catalogs, shared dependencies, publishing, and CI/CD for monorepo management",
       "version": "2.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-monorepo-turborepo",
+      "source": "./dist/plugins/shared-monorepo-turborepo",
+      "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-security-auth-security",
+      "source": "./dist/plugins/shared-security-auth-security",
+      "description": "Secrets management, XSS prevention, CSRF protection, dependency scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
