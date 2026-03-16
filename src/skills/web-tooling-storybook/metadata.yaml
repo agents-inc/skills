@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-tooling
+category: web-tooling
 slug: storybook
-domain: shared
+domain: web
 author: "@vince"
 displayName: Storybook
 cliDescription: Component documentation
