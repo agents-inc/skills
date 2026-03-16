@@ -391,6 +391,33 @@
       "category": "security"
     },
     {
+      "name": "shared-tooling-eslint-prettier",
+      "source": "./dist/plugins/shared-tooling-eslint-prettier",
+      "description": "ESLint 9 flat config with defineConfig(), Prettier v3.0+ shared config, eslint-config-prettier integration, typescript-eslint v8+ projectService",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-tooling-git-hooks",
+      "source": "./dist/plugins/shared-tooling-git-hooks",
+      "description": "Husky v9 setup + migration from v8, lint-staged patterns, commitlint + conventional commits, VS Code integration, CI/production handling",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-tooling-typescript-config",
+      "source": "./dist/plugins/shared-tooling-typescript-config",
+      "description": "Shared TypeScript strict mode configs, TS 5.x options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "web-accessibility-web-accessibility",
       "source": "./dist/plugins/web-accessibility-web-accessibility",
       "description": "WCAG, ARIA, keyboard navigation",
@@ -932,6 +959,16 @@
       "name": "web-tooling-storybook",
       "source": "./dist/plugins/web-tooling-storybook",
       "description": "Storybook 8 patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "web"
+    },
+    {
+      "name": "web-tooling-vite",
+      "source": "./dist/plugins/web-tooling-vite",
+      "description": "Vite config, path aliases, vendor chunk splitting (manualChunks), environment-specific builds, Rolldown advancedChunks, Environment API, Sass modern API, build targets, module preload",
       "version": "1.0.0",
       "author": {
         "name": "@vince"

@@ -1,0 +1,9 @@
+{
+  "name": "web-tooling-vite",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Vite config, path aliases, vendor chunk splitting (manualChunks), environment-specific builds, Rolldown advancedChunks, Environment API, Sass modern API, build targets, module preload",
+  "author": {
+    "name": "@vince"
+  }
+}

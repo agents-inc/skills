@@ -1,8 +1,8 @@
-# Tooling - ESLint 9 Configuration
+# ESLint 9 Configuration Examples
 
 > ESLint 9 flat config patterns with shared configurations and only-warn plugin for better developer experience. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
-
-> **WARNING**: ESLint 10 (January 2026) completely removes .eslintrc support. Migrate to flat config now.
+>
+> **WARNING**: ESLint 10 (February 2026) completely removes .eslintrc support. Migrate to flat config now.
 
 ---
 
@@ -11,15 +11,14 @@
 ESLint 9.15+ introduced `defineConfig()` for type-safe configuration with automatic flattening.
 
 ```typescript
-// packages/eslint-config/base.ts (TypeScript config supported since ESLint 9)
+// eslint.config.ts (TypeScript config supported since ESLint 9.15)
 import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
-import turboPlugin from "eslint-plugin-turbo";
 import * as onlyWarnPlugin from "eslint-plugin-only-warn";
 
-export const baseConfig = defineConfig(
+export default defineConfig(
   // Global ignores using the new helper function
   globalIgnores(["dist/**", "generated/**", ".next/**", "node_modules/**"]),
 
@@ -28,15 +27,6 @@ export const baseConfig = defineConfig(
 
   // typescript-eslint configs (use defineConfig, not tseslint.config)
   tseslint.configs.recommended,
-
-  {
-    plugins: {
-      turbo: turboPlugin,
-    },
-    rules: {
-      "turbo/no-undeclared-env-vars": "warn",
-    },
-  },
 
   // Convert all errors to warnings for better DX (must be last)
   {
@@ -50,7 +40,7 @@ export const baseConfig = defineConfig(
 **Why good:** `defineConfig()` provides type safety and auto-flattens nested arrays, `globalIgnores()` explicitly marks global ignores (clearer intent than bare `ignores`), TypeScript config files supported natively, only-warn plugin loaded last converts all preceding errors to warnings
 
 ```javascript
-// BAD: Legacy .eslintrc format (WILL BREAK in ESLint 10)
+// BAD: Legacy .eslintrc format (BROKEN in ESLint 10)
 // .eslintrc.json (DON'T USE THIS)
 {
   "extends": ["eslint:recommended", "prettier"],
@@ -62,7 +52,7 @@ export const baseConfig = defineConfig(
 }
 ```
 
-**Why bad:** Legacy .eslintrc is deprecated in ESLint 9 and **completely removed in ESLint 10** (January 2026), error severity blocks developers during development reducing productivity, no only-warn plugin means disruptive error messages, harder to compose and extend configs
+**Why bad:** Legacy .eslintrc is deprecated in ESLint 9 and **completely removed in ESLint 10** (February 2026), error severity blocks developers during development reducing productivity, no only-warn plugin means disruptive error messages, harder to compose and extend configs
 
 ---
 
@@ -132,7 +122,7 @@ export default tseslint.config(tseslint.configs.recommended);
 
 ---
 
-## Shared Config Pattern (Updated)
+## Shared Config Pattern
 
 ```typescript
 // packages/eslint-config/base.ts
@@ -140,7 +130,6 @@ import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
-import turboPlugin from "eslint-plugin-turbo";
 import * as onlyWarnPlugin from "eslint-plugin-only-warn";
 
 export const baseConfig = defineConfig(
@@ -149,15 +138,6 @@ export const baseConfig = defineConfig(
   js.configs.recommended,
   eslintConfigPrettier,
   tseslint.configs.recommended,
-
-  {
-    plugins: {
-      turbo: turboPlugin,
-    },
-    rules: {
-      "turbo/no-undeclared-env-vars": "warn",
-    },
-  },
 
   // Convert all errors to warnings for better DX
   {
@@ -172,7 +152,7 @@ export const baseConfig = defineConfig(
 
 ---
 
-## Custom ESLint Rules for Monorepo
+## Custom ESLint Rules
 
 ```javascript
 // packages/eslint-config/custom-rules.js
@@ -225,7 +205,7 @@ export const config = [
 ## Using Shared Config in Apps
 
 ```typescript
-// apps/client-react/eslint.config.ts
+// apps/my-app/eslint.config.ts
 import { defineConfig } from "eslint/config";
 import { baseConfig } from "@repo/eslint-config";
 import { customRules } from "@repo/eslint-config/custom-rules";
@@ -268,19 +248,52 @@ export default [
 
 ## ESLint 10 Migration Notes
 
-ESLint 10 (January 2026) completely removes .eslintrc support. Before upgrading:
+ESLint 10 was released February 6, 2026 and completely removes .eslintrc support. Before upgrading:
 
 1. **Remove .eslintrc files** - Replace with `eslint.config.ts`
 2. **Remove .eslintignore** - Use `globalIgnores()` in config
 3. **Update CLI scripts** - Remove `--no-eslintrc`, `--env`, `--rulesdir` flags
-4. **Update Node.js** - Minimum Node.js 20.19.0 required for ESLint 10
+4. **Remove `/* eslint-env */` comments** - These now trigger errors in ESLint 10
+5. **Update Node.js** - Minimum Node.js 20.19.0 required for ESLint 10
+
+**Key ESLint 10 changes:**
+
+- Config lookup starts from linted file directory (not cwd) - better monorepo support
+- JSX reference tracking improved - fewer false positives with `no-unused-vars`
+- Updated `eslint:recommended` with new rules
+- Deprecated `Linter` methods removed (`defineParser()`, `defineRule()`, `getRules()`)
+- Built-in TypeScript definitions (no more `@types/eslint` needed)
+
+**ESLint 10 compatible config:**
+
+```typescript
+// eslint.config.ts - works with both ESLint 9.15+ and ESLint 10
+import js from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
+import eslintConfigPrettier from "eslint-config-prettier";
+import * as onlyWarnPlugin from "eslint-plugin-only-warn";
+
+export default defineConfig(
+  globalIgnores(["dist/**", "node_modules/**"]),
+  js.configs.recommended,
+  eslintConfigPrettier,
+  tseslint.configs.recommended,
+  {
+    plugins: {
+      "only-warn": onlyWarnPlugin,
+    },
+  },
+);
+```
+
+**Why good:** This config works with both ESLint 9.15+ and ESLint 10 with zero changes needed - `defineConfig()` and `globalIgnores()` are the forward-compatible API
 
 ---
 
 ## See Also
 
-- [core.md](core.md) for Prettier configuration
-- [typescript.md](typescript.md) for TypeScript integration
+- [prettier.md](prettier.md) for Prettier configuration
 - [reference.md](../reference.md) for ESLint vs Biome decision framework
 
 **Official Documentation:**
@@ -288,3 +301,4 @@ ESLint 10 (January 2026) completely removes .eslintrc support. Before upgrading:
 - [ESLint Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files)
 - [ESLint Migration Guide](https://eslint.org/docs/latest/use/configure/migration-guide)
 - [typescript-eslint v8](https://typescript-eslint.io/blog/announcing-typescript-eslint-v8/)
+- [ESLint 10 Release](https://eslint.org/blog/2026/02/eslint-v10.0.0-released/)

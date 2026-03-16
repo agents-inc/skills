@@ -1,9 +1,0 @@
-{
-  "name": "infra-tooling-setup-tooling",
-  "version": "1.0.0",
-  "skills": "./skills/",
-  "description": "ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos",
-  "author": {
-    "name": "@vince"
-  }
-}

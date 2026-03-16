@@ -1,6 +1,6 @@
-# Tooling - Git Hooks
+# Git Hooks Examples
 
-> Husky v9 pre-commit hooks with lint-staged and VS Code integration for consistent code quality. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Husky v9 pre-commit hooks with lint-staged, commitlint, and VS Code integration for consistent code quality. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 ---
 
@@ -10,6 +10,8 @@
 - **Hook files**: Plain shell scripts in `.husky/` directory (no shebang required in v9)
 - **Disable hooks**: Set `HUSKY=0` environment variable (for CI/production)
 - **Debug mode**: Set `HUSKY=2` (replaces deprecated `HUSKY_DEBUG=1`)
+- **Direct commands**: v9.1.1+ allows running package commands directly without npx/bunx
+- **Pre-merge-commit**: v9.1.5+ supports the `pre-merge-commit` hook type
 
 ---
 
@@ -186,6 +188,15 @@ export default {
 };
 ```
 
+**Why good:** Different file types get appropriate tooling, array syntax runs multiple commands sequentially, function syntax allows running commands on all files (not just staged)
+
+### lint-staged v16 Changes
+
+- `--shell` flag removed - create shell scripts instead of inline shell commands
+- Switched to `picomatch` for glob matching (from `micromatch`)
+- Better subprocess management with `tinyexec`
+- Improved error handling - backup stash restored on spawn failures
+
 ---
 
 ## Pre-commit Timing Guidelines
@@ -237,6 +248,15 @@ export default {
 
 **Why bad:** Hook file names must match Git's exact hook names (e.g., `pre-commit`, `commit-msg`). No extensions or variations.
 
+```bash
+# BAD: Deprecated shebang and husky.sh sourcing (v8 style)
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+bunx lint-staged
+```
+
+**Why bad:** Shebang lines and husky.sh sourcing are deprecated in v9 and will **fail in v10.0.0**. Use plain scripts instead.
+
 ---
 
 ## Husky v9 Migration from v8
@@ -267,9 +287,16 @@ rm .husky/.gitignore
 bun remove pinst
 ```
 
+**Important:** Hooks containing deprecated shebang and husky.sh sourcing will **fail in v10.0.0**. Migrate now to avoid breakage.
+
 ---
 
 ## Husky v9 Commitlint Integration
+
+```bash
+# Install commitlint
+bun add -D @commitlint/cli @commitlint/config-conventional
+```
 
 ```bash
 # .husky/commit-msg
@@ -283,12 +310,32 @@ export default {
 };
 ```
 
-**Note:** In v9, use `$1` instead of the deprecated `HUSKY_GIT_PARAMS` environment variable.
+**Why good:** Enforces consistent commit message format, enables automatic changelog generation, machine-readable commit history
+
+**Note:** In v9, use `$1` instead of the deprecated `HUSKY_GIT_PARAMS` environment variable. Use `.mjs` extension for the config file (Node v24 may fail to load `.js` configs).
+
+### Conventional Commit Format
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
+
+### commitlint v20 Changes
+
+- CLI migrated to pure ESM
+- New `breaking-change-exclamation-mark` rule
+- `body-max-line-length` now ignores lines containing URLs
+- Use `.mjs` config extension for Node v24 compatibility
 
 ---
 
 ## See Also
 
-- [eslint.md](eslint.md) for ESLint configuration
-- [core.md](core.md) for Prettier configuration
-- [reference.md](../reference.md) for when to use git hooks decision framework
+- [reference.md](../reference.md) for decision frameworks and anti-patterns
+- `shared-tooling-eslint-prettier` for ESLint and Prettier configuration

@@ -1,6 +1,6 @@
-# infra-tooling-setup-tooling
+# shared-tooling-git-hooks
 
-ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos
+Husky v9 setup + migration from v8, lint-staged patterns, commitlint + conventional commits, VS Code integration, CI/production handling
 
 ## Installation
 
@@ -8,7 +8,7 @@ Add this plugin to your Claude Code configuration:
 
 ```json
 {
-  "plugins": ["infra-tooling-setup-tooling"]
+  "plugins": ["shared-tooling-git-hooks"]
 }
 ```
 
