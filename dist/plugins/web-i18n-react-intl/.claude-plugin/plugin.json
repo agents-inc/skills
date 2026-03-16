@@ -5,16 +5,5 @@
   "description": "ICU message format internationalization",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "react-intl",
-    "formatjs",
-    "i18n",
-    "internationalization",
-    "localization",
-    "translations",
-    "icu",
-    "formatted-message",
-    "use-intl"
-  ]
+  }
 }

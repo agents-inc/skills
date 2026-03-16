@@ -5,13 +5,5 @@
   "description": "Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "playwright",
-    "vitest",
-    "react-testing-library",
-    "e2e",
-    "unit-testing",
-    "integration-testing"
-  ]
+  }
 }

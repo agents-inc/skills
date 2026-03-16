@@ -2,10 +2,6 @@
 
 Investigation requirement - never speculate about code you haven't read. List files, read completely, base analysis on evidence. Prevents hallucination in coding agents.
 
-## Tags
-
-`methodology` `foundational` `universal` `investigation` `anti-hallucination`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

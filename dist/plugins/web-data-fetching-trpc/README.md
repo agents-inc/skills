@@ -2,10 +2,6 @@
 
 tRPC type-safe API patterns, procedures, React Query integration
 
-## Tags
-
-`trpc` `type-safe-api` `react-query` `typescript` `monorepo` `rpc`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

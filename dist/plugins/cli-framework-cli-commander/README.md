@@ -2,10 +2,6 @@
 
 Node.js CLI development with Commander.js, @clack/prompts, and picocolors. Command structure, interactive prompts, state machines, error handling, exit codes, configuration hierarchies.
 
-## Tags
-
-`cli` `commander` `clack` `prompts` `terminal` `node` `interactive` `wizard` `state-machine` `picocolors`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

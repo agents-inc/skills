@@ -2,10 +2,6 @@
 
 MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.
 
-## Tags
-
-`msw` `mock-service-worker` `mocking` `test-data` `api-mocking`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

@@ -5,15 +5,5 @@
   "description": "Type-safe i18n for Vue 3 Composition API",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "vue-i18n",
-    "i18n",
-    "internationalization",
-    "localization",
-    "translations",
-    "vue-3",
-    "composition-api",
-    "pluralization"
-  ]
+  }
 }

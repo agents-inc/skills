@@ -2,10 +2,6 @@
 
 SCSS Modules, cva, design tokens
 
-## Tags
-
-`scss` `css-modules` `cva` `design-tokens` `styling`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

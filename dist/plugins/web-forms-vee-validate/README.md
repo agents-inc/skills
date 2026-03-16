@@ -2,10 +2,6 @@
 
 VeeValidate v4 patterns - useForm, useField, defineField, useFieldArray, schema validation with Composition API
 
-## Tags
-
-`forms` `vee-validate` `vue` `use-form` `use-field` `define-field` `use-field-array` `validation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

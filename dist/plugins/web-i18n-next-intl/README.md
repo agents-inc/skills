@@ -2,10 +2,6 @@
 
 Type-safe i18n for Next.js App Router
 
-## Tags
-
-`next-intl` `i18n` `internationalization` `localization` `translations` `icu` `next-intl-v4`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

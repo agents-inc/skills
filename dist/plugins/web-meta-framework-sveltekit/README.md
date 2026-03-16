@@ -2,10 +2,6 @@
 
 SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement
 
-## Tags
-
-`sveltekit` `routing` `load-functions` `form-actions` `hooks` `ssr` `ssg` `server-routes` `streaming` `progressive-enhancement`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

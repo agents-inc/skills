@@ -2,10 +2,6 @@
 
 Auth.js (NextAuth v5) authentication patterns - configuration, providers, session strategies, middleware, database adapters, role-based access, Edge compatibility
 
-## Tags
-
-`auth-js` `nextauth` `oauth` `authentication` `sessions` `jwt` `middleware`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

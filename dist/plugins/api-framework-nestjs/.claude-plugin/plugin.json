@@ -5,19 +5,5 @@
   "description": "NestJS backend framework - modules, controllers, services, DI, guards, pipes, interceptors, exception filters, middleware, DTOs with class-validator",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "nestjs",
-    "nest",
-    "typescript",
-    "decorators",
-    "dependency-injection",
-    "modules",
-    "controllers",
-    "services",
-    "guards",
-    "interceptors",
-    "pipes",
-    "middleware"
-  ]
+  }
 }

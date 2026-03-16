@@ -2,10 +2,6 @@
 
 Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking
 
-## Tags
-
-`turborepo` `workspaces` `monorepo` `package-management` `bun` `package` `exports` `conventions` `internal-packages` `typescript`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

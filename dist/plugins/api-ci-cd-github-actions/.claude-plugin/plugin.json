@@ -5,13 +5,5 @@
   "description": "GitHub Actions, pipelines, deployment",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "github-actions",
-    "pipelines",
-    "deployment",
-    "ci",
-    "cd",
-    "automation"
-  ]
+  }
 }

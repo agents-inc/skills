@@ -2,10 +2,6 @@
 
 GitHub Actions, pipelines, deployment
 
-## Tags
-
-`github-actions` `pipelines` `deployment` `ci` `cd` `automation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

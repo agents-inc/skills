@@ -2,10 +2,6 @@
 
 TanStack Table v8 patterns - useReactTable, column definitions, sorting, filtering, pagination, row selection, virtual scrolling, server-side data
 
-## Tags
-
-`table` `datagrid` `sorting` `filtering` `pagination` `row-selection` `virtual-scrolling` `server-side`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

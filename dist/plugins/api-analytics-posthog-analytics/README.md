@@ -2,10 +2,6 @@
 
 PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.
 
-## Tags
-
-`posthog` `analytics` `event-tracking` `user-identification`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

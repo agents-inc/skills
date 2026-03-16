@@ -5,13 +5,5 @@
   "description": "Environment configuration, Zod validation",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "environment",
-    "env",
-    "configuration",
-    "zod",
-    "validation",
-    "dotenv"
-  ]
+  }
 }

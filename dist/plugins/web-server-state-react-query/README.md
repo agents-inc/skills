@@ -2,10 +2,6 @@
 
 REST APIs, React Query, data fetching
 
-## Tags
-
-`react-query` `tanstack-query` `data-fetching` `rest-api` `caching`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

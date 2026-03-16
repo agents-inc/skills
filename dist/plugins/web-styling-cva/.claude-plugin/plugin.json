@@ -5,15 +5,5 @@
   "description": "Class Variance Authority - type-safe component variant styling with cva(), compound variants, and VariantProps",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "cva",
-    "class-variance-authority",
-    "variants",
-    "type-safe",
-    "component-styling",
-    "typescript",
-    "css-classes",
-    "design-system"
-  ]
+  }
 }

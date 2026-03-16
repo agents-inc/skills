@@ -2,10 +2,6 @@
 
 Better Auth patterns, sessions, OAuth
 
-## Tags
-
-`better-auth` `sessions` `oauth` `authentication` `authorization`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

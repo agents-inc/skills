@@ -2,10 +2,6 @@
 
 Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO
 
-## Tags
-
-`nuxt` `nuxt3` `vue` `vue3` `ssr` `ssg` `routing` `server-routes` `nitro` `usefetch` `useasyncdata` `usestate` `auto-imports` `file-based-routing` `seo` `universal-rendering`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

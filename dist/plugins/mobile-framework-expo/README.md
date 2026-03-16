@@ -2,10 +2,6 @@
 
 Expo managed workflow
 
-## Tags
-
-`expo` `expo-router` `eas-build` `eas-update` `expo-dev-client` `expo-prebuild` `managed-workflow` `ota-updates` `config-plugins` `react-native`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

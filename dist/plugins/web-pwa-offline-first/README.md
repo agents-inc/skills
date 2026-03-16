@@ -2,10 +2,6 @@
 
 Local-first architecture with sync queues
 
-## Tags
-
-`offline-first` `indexeddb` `dexie` `idb` `local-first` `sync-queue` `conflict-resolution` `optimistic-ui` `pwa` `background-sync` `version-vector` `delta-sync`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

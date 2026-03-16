@@ -2,10 +2,6 @@
 
 React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing
 
-## Tags
-
-`react-testing-library` `testing` `component-testing` `accessibility` `user-event` `queries` `async-testing` `render-hook`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

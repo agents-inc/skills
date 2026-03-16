@@ -2,10 +2,6 @@
 
 PostHog analytics and feature flags setup
 
-## Tags
-
-`posthog` `setup` `analytics` `feature-flags` `installation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

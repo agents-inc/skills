@@ -5,12 +5,5 @@
   "description": "PostHog analytics and feature flags setup",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "posthog",
-    "setup",
-    "analytics",
-    "feature-flags",
-    "installation"
-  ]
+  }
 }

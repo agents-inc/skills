@@ -2,10 +2,6 @@
 
 Drizzle ORM, queries, migrations
 
-## Tags
-
-`drizzle` `orm` `database` `migrations` `queries` `postgresql`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

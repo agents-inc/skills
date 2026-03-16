@@ -2,10 +2,6 @@
 
 Storybook 8 patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration
 
-## Tags
-
-`storybook` `component-development` `documentation` `visual-testing` `interaction-testing` `csf3` `autodocs` `controls` `design-system`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

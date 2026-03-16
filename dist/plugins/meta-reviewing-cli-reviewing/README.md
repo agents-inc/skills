@@ -2,10 +2,6 @@
 
 CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.
 
-## Tags
-
-`cli` `review` `commander` `clack` `exit-codes` `signal-handling` `error-handling` `user-experience` `methodology`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

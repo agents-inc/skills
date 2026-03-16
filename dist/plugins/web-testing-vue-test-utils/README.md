@@ -2,10 +2,6 @@
 
 Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking
 
-## Tags
-
-`vue-test-utils` `testing` `component-testing` `mount` `shallow-mount` `wrapper` `trigger` `set-value` `flush-promises` `composables` `pinia-testing`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

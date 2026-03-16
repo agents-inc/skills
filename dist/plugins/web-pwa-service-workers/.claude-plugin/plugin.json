@@ -5,15 +5,5 @@
   "description": "Service Worker lifecycle, caching strategies, offline patterns, update handling, precaching, runtime caching",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "service-worker",
-    "pwa",
-    "offline-first",
-    "cache-first",
-    "network-first",
-    "stale-while-revalidate",
-    "cache-api",
-    "precache"
-  ]
+  }
 }

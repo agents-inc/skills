@@ -2,10 +2,6 @@
 
 Resend + React Email templates
 
-## Tags
-
-`resend` `react-email` `email` `templates` `transactional`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

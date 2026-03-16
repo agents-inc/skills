@@ -5,19 +5,5 @@
   "description": "Local-first architecture with sync queues",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "offline-first",
-    "indexeddb",
-    "dexie",
-    "idb",
-    "local-first",
-    "sync-queue",
-    "conflict-resolution",
-    "optimistic-ui",
-    "pwa",
-    "background-sync",
-    "version-vector",
-    "delta-sync"
-  ]
+  }
 }

@@ -2,10 +2,6 @@
 
 Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client
 
-## Tags
-
-`supabase` `postgres` `auth` `realtime` `storage` `edge-functions` `rls` `row-level-security` `baas`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

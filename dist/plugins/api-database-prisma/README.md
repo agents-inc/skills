@@ -2,10 +2,6 @@
 
 Prisma ORM, type-safe queries, migrations, relations
 
-## Tags
-
-`prisma` `orm` `database` `typescript` `migrations` `queries` `postgresql` `mysql` `sqlite` `type-safety`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

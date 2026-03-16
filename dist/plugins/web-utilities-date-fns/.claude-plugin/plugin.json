@@ -5,15 +5,5 @@
   "description": "date-fns patterns for TypeScript - formatting, parsing, manipulation, comparison, timezone handling, and internationalization",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "date-fns",
-    "dates",
-    "time",
-    "formatting",
-    "parsing",
-    "timezone",
-    "internationalization",
-    "manipulation"
-  ]
+  }
 }

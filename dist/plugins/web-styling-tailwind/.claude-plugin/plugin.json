@@ -5,14 +5,5 @@
   "description": "Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "tailwind",
-    "tailwindcss",
-    "css",
-    "utility-first",
-    "responsive",
-    "styling",
-    "dark-mode"
-  ]
+  }
 }

@@ -2,10 +2,6 @@
 
 Pinia stores, Vue 3 state patterns. Use when managing client state in Vue applications, choosing between Options/Setup stores, composing stores, or implementing persistence.
 
-## Tags
-
-`pinia` `state-management` `vue` `vue3` `stores` `client-state`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

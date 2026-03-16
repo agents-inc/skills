@@ -5,16 +5,5 @@
   "description": "Clerk managed authentication - ClerkProvider, middleware, pre-built components, hooks, server-side auth, organizations, webhooks",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "clerk",
-    "auth",
-    "authentication",
-    "user-management",
-    "organizations",
-    "sso",
-    "mfa",
-    "webhooks",
-    "session"
-  ]
+  }
 }

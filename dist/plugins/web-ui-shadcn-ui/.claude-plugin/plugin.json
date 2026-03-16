@@ -5,14 +5,5 @@
   "description": "shadcn/ui component library patterns, CLI usage, theming, customization",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "shadcn",
-    "ui-components",
-    "radix",
-    "theming",
-    "dark-mode",
-    "forms",
-    "accessibility"
-  ]
+  }
 }

@@ -5,14 +5,5 @@
   "description": "Auth.js (NextAuth v5) authentication patterns - configuration, providers, session strategies, middleware, database adapters, role-based access, Edge compatibility",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "auth-js",
-    "nextauth",
-    "oauth",
-    "authentication",
-    "sessions",
-    "jwt",
-    "middleware"
-  ]
+  }
 }

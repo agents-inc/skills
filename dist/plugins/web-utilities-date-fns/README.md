@@ -2,10 +2,6 @@
 
 date-fns patterns for TypeScript - formatting, parsing, manipulation, comparison, timezone handling, and internationalization
 
-## Tags
-
-`date-fns` `dates` `time` `formatting` `parsing` `timezone` `internationalization` `manipulation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

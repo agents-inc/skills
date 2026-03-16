@@ -2,10 +2,6 @@
 
 Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
 
-## Tags
-
-`research` `investigation` `evidence-based` `methodology` `analysis`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

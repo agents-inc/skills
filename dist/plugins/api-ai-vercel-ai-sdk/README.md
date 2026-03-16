@@ -2,10 +2,6 @@
 
 Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG
 
-## Tags
-
-`ai` `ai-sdk` `vercel` `streaming` `chat` `completion` `tools` `function-calling` `rag` `embeddings` `openai` `anthropic`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

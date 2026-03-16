@@ -2,10 +2,6 @@
 
 Component architecture, hooks, patterns
 
-## Tags
-
-`react` `react-19` `components` `hooks` `use-action-state` `use-form-status` `use-optimistic` `use` `actions` `jsx` `tsx`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

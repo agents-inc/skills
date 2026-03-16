@@ -2,10 +2,6 @@
 
 ICU message format internationalization
 
-## Tags
-
-`react-intl` `formatjs` `i18n` `internationalization` `localization` `translations` `icu` `formatted-message` `use-intl`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

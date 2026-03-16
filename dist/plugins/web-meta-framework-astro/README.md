@@ -2,10 +2,6 @@
 
 Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support
 
-## Tags
-
-`astro` `islands` `content-collections` `ssg` `ssr` `view-transitions` `server-islands`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

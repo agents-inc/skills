@@ -2,10 +2,6 @@
 
 SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll
 
-## Tags
-
-`swr` `swr-v2` `data-fetching` `caching` `stale-while-revalidate` `react-hooks` `vercel` `use-swr-mutation` `preload`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

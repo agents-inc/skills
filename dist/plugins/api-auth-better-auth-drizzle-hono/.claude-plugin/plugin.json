@@ -5,12 +5,5 @@
   "description": "Better Auth patterns, sessions, OAuth",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "better-auth",
-    "sessions",
-    "oauth",
-    "authentication",
-    "authorization"
-  ]
+  }
 }

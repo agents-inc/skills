@@ -2,10 +2,6 @@
 
 URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions
 
-## Tags
-
-`urql` `graphql` `data-fetching` `caching` `real-time` `subscriptions` `exchanges` `graphcache`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

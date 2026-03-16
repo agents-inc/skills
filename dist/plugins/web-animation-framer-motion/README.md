@@ -2,10 +2,6 @@
 
 Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility
 
-## Tags
-
-`animation` `motion` `framer-motion` `motion-react` `transitions` `gestures` `scroll` `layout` `v11`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

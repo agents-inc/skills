@@ -5,16 +5,5 @@
   "description": "SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "swr",
-    "swr-v2",
-    "data-fetching",
-    "caching",
-    "stale-while-revalidate",
-    "react-hooks",
-    "vercel",
-    "use-swr-mutation",
-    "preload"
-  ]
+  }
 }

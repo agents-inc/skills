@@ -2,10 +2,6 @@
 
 Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
 
-## Tags
-
-`playwright` `vitest` `react-testing-library` `e2e` `unit-testing` `integration-testing`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

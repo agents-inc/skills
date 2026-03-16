@@ -5,13 +5,5 @@
   "description": "Redux Toolkit patterns for complex client state. Use when managing enterprise-scale state, needing DevTools, entity normalization, or RTK Query for data fetching.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "redux",
-    "redux-toolkit",
-    "rtk-query",
-    "state-management",
-    "client-state",
-    "entity-adapter"
-  ]
+  }
 }

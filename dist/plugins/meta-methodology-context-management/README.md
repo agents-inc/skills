@@ -2,10 +2,6 @@
 
 Long-term context management protocol - maintain project continuity across sessions through systematic documentation. Progress tracking, decision logging, insight preservation.
 
-## Tags
-
-`methodology` `extended-session` `context` `continuity` `documentation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

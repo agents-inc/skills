@@ -5,13 +5,5 @@
   "description": "MobX observable state management patterns with mobx-react-lite. Use when implementing reactive client state with observables, computed values, actions, and the observer HOC.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "mobx",
-    "state-management",
-    "observable",
-    "reactive",
-    "computed",
-    "actions"
-  ]
+  }
 }

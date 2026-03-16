@@ -2,10 +2,6 @@
 
 Resend email setup, domain verification
 
-## Tags
-
-`resend` `setup` `email` `domain-verification` `installation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

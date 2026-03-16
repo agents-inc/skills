@@ -5,12 +5,5 @@
   "description": "Hono routes, OpenAPI, Zod validation",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "hono",
-    "openapi",
-    "zod",
-    "rest-api",
-    "validation"
-  ]
+  }
 }

@@ -5,12 +5,5 @@
   "description": "Query optimization, caching, indexing",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "performance",
-    "query-optimization",
-    "caching",
-    "indexing",
-    "backend"
-  ]
+  }
 }

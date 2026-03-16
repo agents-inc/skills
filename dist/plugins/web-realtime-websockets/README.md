@@ -2,10 +2,6 @@
 
 Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks
 
-## Tags
-
-`websocket` `realtime` `bidirectional` `connection-management` `heartbeat` `reconnection` `binary-data`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

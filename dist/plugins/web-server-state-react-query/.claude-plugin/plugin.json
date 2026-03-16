@@ -5,12 +5,5 @@
   "description": "REST APIs, React Query, data fetching",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "react-query",
-    "tanstack-query",
-    "data-fetching",
-    "rest-api",
-    "caching"
-  ]
+  }
 }

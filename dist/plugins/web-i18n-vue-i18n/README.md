@@ -2,10 +2,6 @@
 
 Type-safe i18n for Vue 3 Composition API
 
-## Tags
-
-`vue-i18n` `i18n` `internationalization` `localization` `translations` `vue-3` `composition-api` `pluralization`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

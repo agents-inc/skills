@@ -2,10 +2,6 @@
 
 Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload
 
-## Tags
-
-`pino` `axiom` `sentry` `setup` `installation` `logging`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

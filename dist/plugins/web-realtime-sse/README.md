@@ -2,10 +2,6 @@
 
 Server-Sent Events for unidirectional server-to-client streaming, EventSource API, fetch streaming, reconnection patterns, message parsing
 
-## Tags
-
-`sse` `server-sent-events` `eventsource` `streaming` `realtime` `server-push` `fetch-streaming` `llm-streaming`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

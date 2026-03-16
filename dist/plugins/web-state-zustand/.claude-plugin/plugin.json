@@ -5,11 +5,5 @@
   "description": "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "zustand",
-    "state-management",
-    "stores",
-    "client-state"
-  ]
+  }
 }

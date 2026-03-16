@@ -5,12 +5,5 @@
   "description": "Atomic state management with auto-dependency tracking",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "jotai",
-    "state-management",
-    "atoms",
-    "client-state",
-    "atomic-state"
-  ]
+  }
 }

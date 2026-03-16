@@ -2,10 +2,6 @@
 
 Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling
 
-## Tags
-
-`nextjs` `app-router` `server-components` `server-actions` `streaming` `suspense` `ssr` `ssg` `routing` `mutations` `revalidation` `forms`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

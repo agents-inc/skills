@@ -2,10 +2,6 @@
 
 Angular 17-19 standalone components, signals, control flow, dependency injection patterns
 
-## Tags
-
-`angular` `angular-19` `standalone` `signals` `linked-signal` `resource` `components` `control-flow` `dependency-injection`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

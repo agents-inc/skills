@@ -5,12 +5,5 @@
   "description": "SCSS Modules, cva, design tokens",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "scss",
-    "css-modules",
-    "cva",
-    "design-tokens",
-    "styling"
-  ]
+  }
 }

@@ -5,15 +5,5 @@
   "description": "React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "react-testing-library",
-    "testing",
-    "component-testing",
-    "accessibility",
-    "user-event",
-    "queries",
-    "async-testing",
-    "render-hook"
-  ]
+  }
 }

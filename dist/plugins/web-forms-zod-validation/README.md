@@ -2,10 +2,6 @@
 
 Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions
 
-## Tags
-
-`zod` `validation` `schema` `typescript` `type-inference` `runtime-validation` `zod-v3` `zod-v4`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

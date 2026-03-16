@@ -5,16 +5,5 @@
   "description": "Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "supabase",
-    "postgres",
-    "auth",
-    "realtime",
-    "storage",
-    "edge-functions",
-    "rls",
-    "row-level-security",
-    "baas"
-  ]
+  }
 }

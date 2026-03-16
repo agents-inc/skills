@@ -5,11 +5,5 @@
   "description": "Self-improvement protocol for agents modifying their own prompts/configurations. Evidence-based improvements, structured changes, proven patterns from research.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "methodology",
-    "implementation",
-    "self-improvement",
-    "meta"
-  ]
+  }
 }

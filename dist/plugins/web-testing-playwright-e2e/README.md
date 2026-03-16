@@ -2,10 +2,6 @@
 
 Playwright E2E testing patterns - test structure, Page Object Model, locator strategies, assertions, network mocking, visual regression, parallel execution, fixtures, and configuration
 
-## Tags
-
-`playwright` `e2e` `end-to-end` `browser-testing` `visual-regression` `page-object-model`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

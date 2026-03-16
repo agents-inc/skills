@@ -5,12 +5,5 @@
   "description": "Long-term context management protocol - maintain project continuity across sessions through systematic documentation. Progress tracking, decision logging, insight preservation.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "methodology",
-    "extended-session",
-    "context",
-    "continuity",
-    "documentation"
-  ]
+  }
 }

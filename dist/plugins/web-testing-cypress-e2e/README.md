@@ -2,10 +2,6 @@
 
 Cypress E2E testing patterns - test structure, data-cy selectors, cy.intercept() mocking, custom commands, fixtures, component testing, accessibility testing with cypress-axe, and CI/CD integration
 
-## Tags
-
-`cypress` `e2e` `end-to-end` `browser-testing` `component-testing` `data-cy` `cy-intercept` `cypress-axe`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

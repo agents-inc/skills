@@ -5,17 +5,5 @@
   "description": "Prisma ORM, type-safe queries, migrations, relations",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "prisma",
-    "orm",
-    "database",
-    "typescript",
-    "migrations",
-    "queries",
-    "postgresql",
-    "mysql",
-    "sqlite",
-    "type-safety"
-  ]
+  }
 }

@@ -5,13 +5,5 @@
   "description": "React Hook Form patterns - useForm, Controller, useFieldArray, validation resolver, performance optimization",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "forms",
-    "react-hook-form",
-    "use-form",
-    "use-field-array",
-    "controller",
-    "validation"
-  ]
+  }
 }

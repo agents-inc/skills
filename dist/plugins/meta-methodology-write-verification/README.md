@@ -2,10 +2,6 @@
 
 Write verification protocol - never report success without verifying work was actually saved. Re-read files after edits, verify changes exist, only report success after verification passes.
 
-## Tags
-
-`methodology` `implementation` `verification` `quality-assurance`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

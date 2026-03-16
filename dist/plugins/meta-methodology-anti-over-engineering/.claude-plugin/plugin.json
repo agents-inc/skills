@@ -5,12 +5,5 @@
   "description": "Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "methodology",
-    "foundational",
-    "universal",
-    "anti-patterns",
-    "minimal-changes"
-  ]
+  }
 }

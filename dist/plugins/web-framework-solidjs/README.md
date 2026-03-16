@@ -2,10 +2,6 @@
 
 SolidJS fine-grained reactivity patterns - signals, effects, memos, stores, createResource, control flow components, Suspense, SolidStart
 
-## Tags
-
-`solidjs` `signals` `fine-grained-reactivity` `stores` `create-resource` `jsx` `suspense`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

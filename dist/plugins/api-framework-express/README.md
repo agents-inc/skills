@@ -2,10 +2,6 @@
 
 Express.js routes, middleware, error handling, request/response patterns
 
-## Tags
-
-`express` `expressjs` `nodejs` `rest-api` `middleware` `routing` `http`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

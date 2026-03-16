@@ -2,10 +2,6 @@
 
 Success criteria template - every task needs explicit, measurable criteria defining "done". Specific, measurable, achievable, verifiable requirements with verification checklist.
 
-## Tags
-
-`methodology` `foundational` `universal` `verification` `quality`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

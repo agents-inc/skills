@@ -2,10 +2,6 @@
 
 MobX observable state management patterns with mobx-react-lite. Use when implementing reactive client state with observables, computed values, actions, and the observer HOC.
 
-## Tags
-
-`mobx` `state-management` `observable` `reactive` `computed` `actions`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

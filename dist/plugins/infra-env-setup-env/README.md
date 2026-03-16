@@ -2,10 +2,6 @@
 
 Environment configuration, Zod validation
 
-## Tags
-
-`environment` `env` `configuration` `zod` `validation` `dotenv`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

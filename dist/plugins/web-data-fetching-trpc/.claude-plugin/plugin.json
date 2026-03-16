@@ -5,13 +5,5 @@
   "description": "tRPC type-safe API patterns, procedures, React Query integration",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "trpc",
-    "type-safe-api",
-    "react-query",
-    "typescript",
-    "monorepo",
-    "rpc"
-  ]
+  }
 }

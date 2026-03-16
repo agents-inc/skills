@@ -2,10 +2,6 @@
 
 Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 
-## Tags
-
-`security` `authentication` `authorization` `secrets` `xss` `csrf` `input-validation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

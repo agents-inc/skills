@@ -2,10 +2,6 @@
 
 File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement
 
-## Tags
-
-`remix` `remix-v2` `react-router-v7` `react-router` `react` `full-stack` `ssr` `loaders` `actions` `client-action` `single-fetch` `progressive-enhancement`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

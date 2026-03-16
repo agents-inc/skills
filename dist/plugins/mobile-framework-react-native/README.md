@@ -2,10 +2,6 @@
 
 React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, styling with StyleSheet/NativeWind, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, Expo SDK 52-54, React 19 features
 
-## Tags
-
-`react-native` `mobile` `ios` `android` `expo` `navigation` `react-navigation` `nativewind` `reanimated` `gesture-handler` `flatlist` `flashlist` `performance` `new-architecture` `fabric` `turbomodules` `jsi` `react-19` `box-shadow` `filter`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

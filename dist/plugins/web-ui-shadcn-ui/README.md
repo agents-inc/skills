@@ -2,10 +2,6 @@
 
 shadcn/ui component library patterns, CLI usage, theming, customization
 
-## Tags
-
-`shadcn` `ui-components` `radix` `theming` `dark-mode` `forms` `accessibility`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

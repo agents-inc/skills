@@ -2,10 +2,6 @@
 
 Bundle optimization, render performance
 
-## Tags
-
-`bundle-optimization` `render-performance` `code-splitting` `lazy-loading` `memoization`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

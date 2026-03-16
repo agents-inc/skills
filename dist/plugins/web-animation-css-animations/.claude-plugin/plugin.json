@@ -5,15 +5,5 @@
   "description": "CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "animation",
-    "css",
-    "transitions",
-    "keyframes",
-    "scroll-driven",
-    "view-transitions",
-    "accessibility",
-    "performance"
-  ]
+  }
 }

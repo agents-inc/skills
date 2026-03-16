@@ -2,10 +2,6 @@
 
 ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos
 
-## Tags
-
-`eslint` `prettier` `typescript` `vite` `rolldown` `configuration` `linting` `formatting` `bundler`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

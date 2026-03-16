@@ -5,17 +5,5 @@
   "description": "Fastify routes, JSON Schema validation, plugin system, TypeScript type providers",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "fastify",
-    "nodejs",
-    "high-performance",
-    "rest-api",
-    "json-schema",
-    "schema-validation",
-    "typebox",
-    "typescript",
-    "plugins",
-    "encapsulation"
-  ]
+  }
 }

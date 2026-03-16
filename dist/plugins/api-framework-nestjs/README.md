@@ -2,10 +2,6 @@
 
 NestJS backend framework - modules, controllers, services, DI, guards, pipes, interceptors, exception filters, middleware, DTOs with class-validator
 
-## Tags
-
-`nestjs` `nest` `typescript` `decorators` `dependency-injection` `modules` `controllers` `services` `guards` `interceptors` `pipes` `middleware`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

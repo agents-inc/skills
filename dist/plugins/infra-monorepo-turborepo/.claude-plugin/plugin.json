@@ -5,17 +5,5 @@
   "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "turborepo",
-    "workspaces",
-    "monorepo",
-    "package-management",
-    "bun",
-    "package",
-    "exports",
-    "conventions",
-    "internal-packages",
-    "typescript"
-  ]
+  }
 }

@@ -18,20 +18,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "ai",
-        "ai-sdk",
-        "vercel",
-        "streaming",
-        "chat",
-        "completion",
-        "tools",
-        "function-calling",
-        "rag",
-        "embeddings",
-        "openai",
-        "anthropic"
-      ],
       "category": "api"
     },
     {
@@ -42,12 +28,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "posthog",
-        "analytics",
-        "event-tracking",
-        "user-identification"
-      ],
       "category": "api"
     },
     {
@@ -58,13 +38,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "posthog",
-        "setup",
-        "analytics",
-        "feature-flags",
-        "installation"
-      ],
       "category": "api"
     },
     {
@@ -75,13 +48,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "better-auth",
-        "sessions",
-        "oauth",
-        "authentication",
-        "authorization"
-      ],
       "category": "api"
     },
     {
@@ -92,17 +58,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "clerk",
-        "auth",
-        "authentication",
-        "user-management",
-        "organizations",
-        "sso",
-        "mfa",
-        "webhooks",
-        "session"
-      ],
       "category": "api"
     },
     {
@@ -113,15 +68,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "auth-js",
-        "nextauth",
-        "oauth",
-        "authentication",
-        "sessions",
-        "jwt",
-        "middleware"
-      ],
       "category": "api"
     },
     {
@@ -132,17 +78,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "supabase",
-        "postgres",
-        "auth",
-        "realtime",
-        "storage",
-        "edge-functions",
-        "rls",
-        "row-level-security",
-        "baas"
-      ],
       "category": "api"
     },
     {
@@ -153,14 +88,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "github-actions",
-        "pipelines",
-        "deployment",
-        "ci",
-        "cd",
-        "automation"
-      ],
       "category": "api"
     },
     {
@@ -171,14 +98,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "drizzle",
-        "orm",
-        "database",
-        "migrations",
-        "queries",
-        "postgresql"
-      ],
       "category": "api"
     },
     {
@@ -189,17 +108,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "mongodb",
-        "mongoose",
-        "nosql",
-        "document-database",
-        "schemas",
-        "models",
-        "aggregation",
-        "indexes",
-        "atlas"
-      ],
       "category": "api"
     },
     {
@@ -210,18 +118,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "prisma",
-        "orm",
-        "database",
-        "typescript",
-        "migrations",
-        "queries",
-        "postgresql",
-        "mysql",
-        "sqlite",
-        "type-safety"
-      ],
       "category": "api"
     },
     {
@@ -232,13 +128,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "resend",
-        "react-email",
-        "email",
-        "templates",
-        "transactional"
-      ],
       "category": "api"
     },
     {
@@ -249,13 +138,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "resend",
-        "setup",
-        "email",
-        "domain-verification",
-        "installation"
-      ],
       "category": "api"
     },
     {
@@ -266,13 +148,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "posthog",
-        "feature-flags",
-        "rollouts",
-        "ab-testing",
-        "experiments"
-      ],
       "category": "api"
     },
     {
@@ -283,15 +158,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "express",
-        "expressjs",
-        "nodejs",
-        "rest-api",
-        "middleware",
-        "routing",
-        "http"
-      ],
       "category": "api"
     },
     {
@@ -302,18 +168,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "fastify",
-        "nodejs",
-        "high-performance",
-        "rest-api",
-        "json-schema",
-        "schema-validation",
-        "typebox",
-        "typescript",
-        "plugins",
-        "encapsulation"
-      ],
       "category": "api"
     },
     {
@@ -324,7 +178,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": ["hono", "openapi", "zod", "rest-api", "validation"],
       "category": "api"
     },
     {
@@ -335,20 +188,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "nestjs",
-        "nest",
-        "typescript",
-        "decorators",
-        "dependency-injection",
-        "modules",
-        "controllers",
-        "services",
-        "guards",
-        "interceptors",
-        "pipes",
-        "middleware"
-      ],
       "category": "api"
     },
     {
@@ -359,14 +198,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "pino",
-        "sentry",
-        "axiom",
-        "logging",
-        "error-tracking",
-        "monitoring"
-      ],
       "category": "api"
     },
     {
@@ -377,14 +208,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "pino",
-        "axiom",
-        "sentry",
-        "setup",
-        "installation",
-        "logging"
-      ],
       "category": "api"
     },
     {
@@ -395,13 +218,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "performance",
-        "query-optimization",
-        "caching",
-        "indexing",
-        "backend"
-      ],
       "category": "api"
     },
     {
@@ -412,18 +228,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "cli",
-        "commander",
-        "clack",
-        "prompts",
-        "terminal",
-        "node",
-        "interactive",
-        "wizard",
-        "state-machine",
-        "picocolors"
-      ],
       "category": "cli"
     },
     {
@@ -434,7 +238,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": ["cli", "oclif", "ink", "react", "terminal", "framework"],
       "category": "cli"
     },
     {
@@ -445,14 +248,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "environment",
-        "env",
-        "configuration",
-        "zod",
-        "validation",
-        "dotenv"
-      ],
       "category": "infra"
     },
     {
@@ -463,18 +258,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "turborepo",
-        "workspaces",
-        "monorepo",
-        "package-management",
-        "bun",
-        "package",
-        "exports",
-        "conventions",
-        "internal-packages",
-        "typescript"
-      ],
       "category": "infra"
     },
     {
@@ -485,17 +268,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "eslint",
-        "prettier",
-        "typescript",
-        "vite",
-        "rolldown",
-        "configuration",
-        "linting",
-        "formatting",
-        "bundler"
-      ],
       "category": "infra"
     },
     {
@@ -506,13 +278,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "methodology",
-        "foundational",
-        "universal",
-        "anti-patterns",
-        "minimal-changes"
-      ],
       "category": "methodology"
     },
     {
@@ -523,13 +288,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "methodology",
-        "extended-session",
-        "context",
-        "continuity",
-        "documentation"
-      ],
       "category": "methodology"
     },
     {
@@ -540,7 +298,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": ["methodology", "implementation", "self-improvement", "meta"],
       "category": "methodology"
     },
     {
@@ -551,13 +308,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "methodology",
-        "foundational",
-        "universal",
-        "investigation",
-        "anti-hallucination"
-      ],
       "category": "methodology"
     },
     {
@@ -568,13 +318,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "methodology",
-        "foundational",
-        "universal",
-        "verification",
-        "quality"
-      ],
       "category": "methodology"
     },
     {
@@ -585,12 +328,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "methodology",
-        "implementation",
-        "verification",
-        "quality-assurance"
-      ],
       "category": "methodology"
     },
     {
@@ -601,13 +338,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "research",
-        "investigation",
-        "evidence-based",
-        "methodology",
-        "analysis"
-      ],
       "category": "methodology"
     },
     {
@@ -618,17 +348,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "cli",
-        "review",
-        "commander",
-        "clack",
-        "exit-codes",
-        "signal-handling",
-        "error-handling",
-        "user-experience",
-        "methodology"
-      ],
       "category": "methodology"
     },
     {
@@ -639,13 +358,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "code-review",
-        "feedback",
-        "patterns",
-        "review-principles",
-        "quality"
-      ],
       "category": "methodology"
     },
     {
@@ -656,18 +368,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "expo",
-        "expo-router",
-        "eas-build",
-        "eas-update",
-        "expo-dev-client",
-        "expo-prebuild",
-        "managed-workflow",
-        "ota-updates",
-        "config-plugins",
-        "react-native"
-      ],
       "category": "mobile"
     },
     {
@@ -678,28 +378,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "react-native",
-        "mobile",
-        "ios",
-        "android",
-        "expo",
-        "navigation",
-        "react-navigation",
-        "nativewind",
-        "reanimated",
-        "gesture-handler",
-        "flatlist",
-        "flashlist",
-        "performance",
-        "new-architecture",
-        "fabric",
-        "turbomodules",
-        "jsi",
-        "react-19",
-        "box-shadow",
-        "filter"
-      ],
       "category": "mobile"
     },
     {
@@ -710,15 +388,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "security",
-        "authentication",
-        "authorization",
-        "secrets",
-        "xss",
-        "csrf",
-        "input-validation"
-      ],
       "category": "security"
     },
     {
@@ -729,21 +398,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "wcag",
-        "wcag-22",
-        "aria",
-        "keyboard-navigation",
-        "a11y",
-        "accessibility",
-        "screen-reader",
-        "axe-core",
-        "jest-axe",
-        "vitest-axe",
-        "cypress-axe",
-        "prefers-reduced-motion",
-        "focus-management"
-      ],
       "category": "web"
     },
     {
@@ -754,16 +408,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "animation",
-        "css",
-        "transitions",
-        "keyframes",
-        "scroll-driven",
-        "view-transitions",
-        "accessibility",
-        "performance"
-      ],
       "category": "web"
     },
     {
@@ -774,17 +418,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "animation",
-        "motion",
-        "framer-motion",
-        "motion-react",
-        "transitions",
-        "gestures",
-        "scroll",
-        "layout",
-        "v11"
-      ],
       "category": "web"
     },
     {
@@ -795,15 +428,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "view-transitions",
-        "page-transitions",
-        "shared-element",
-        "hero-animation",
-        "spa-transitions",
-        "mpa-transitions",
-        "css-animations"
-      ],
       "category": "web"
     },
     {
@@ -814,19 +438,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "apollo-client",
-        "graphql",
-        "data-fetching",
-        "caching",
-        "real-time",
-        "subscriptions",
-        "optimistic-updates",
-        "suspense",
-        "use-suspense-query",
-        "use-loadable-query",
-        "apollo-client-v4"
-      ],
       "category": "web"
     },
     {
@@ -837,16 +448,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "urql",
-        "graphql",
-        "data-fetching",
-        "caching",
-        "real-time",
-        "subscriptions",
-        "exchanges",
-        "graphcache"
-      ],
       "category": "web"
     },
     {
@@ -857,17 +458,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "swr",
-        "swr-v2",
-        "data-fetching",
-        "caching",
-        "stale-while-revalidate",
-        "react-hooks",
-        "vercel",
-        "use-swr-mutation",
-        "preload"
-      ],
       "category": "web"
     },
     {
@@ -878,14 +468,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "trpc",
-        "type-safe-api",
-        "react-query",
-        "typescript",
-        "monorepo",
-        "rpc"
-      ],
       "category": "web"
     },
     {
@@ -896,17 +478,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "error-boundary",
-        "error-handling",
-        "fallback-ui",
-        "react-error-boundary",
-        "get-derived-state-from-error",
-        "component-did-catch",
-        "use-error-boundary",
-        "error-recovery",
-        "graceful-degradation"
-      ],
       "category": "web"
     },
     {
@@ -917,20 +488,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "result-type",
-        "either-type",
-        "error-handling",
-        "railway-oriented-programming",
-        "typed-errors",
-        "flat-map",
-        "and-then",
-        "try-catch",
-        "discriminated-union",
-        "neverthrow",
-        "fp-ts",
-        "error-as-value"
-      ],
       "category": "web"
     },
     {
@@ -941,18 +498,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "file-upload",
-        "drag-drop",
-        "react-dropzone",
-        "uppy",
-        "tus-protocol",
-        "s3-presigned",
-        "multipart-upload",
-        "file-validation",
-        "progress-tracking",
-        "accessibility"
-      ],
       "category": "web"
     },
     {
@@ -963,18 +508,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "image-preview",
-        "canvas-api",
-        "image-resize",
-        "image-compression",
-        "exif-orientation",
-        "object-url",
-        "thumbnail",
-        "blob",
-        "file-api",
-        "client-side-processing"
-      ],
       "category": "web"
     },
     {
@@ -985,14 +518,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "forms",
-        "react-hook-form",
-        "use-form",
-        "use-field-array",
-        "controller",
-        "validation"
-      ],
       "category": "web"
     },
     {
@@ -1003,16 +528,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "forms",
-        "vee-validate",
-        "vue",
-        "use-form",
-        "use-field",
-        "define-field",
-        "use-field-array",
-        "validation"
-      ],
       "category": "web"
     },
     {
@@ -1023,16 +538,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "zod",
-        "validation",
-        "schema",
-        "typescript",
-        "type-inference",
-        "runtime-validation",
-        "zod-v3",
-        "zod-v4"
-      ],
       "category": "web"
     },
     {
@@ -1043,60 +548,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "angular",
-        "angular-19",
-        "standalone",
-        "signals",
-        "linked-signal",
-        "resource",
-        "components",
-        "control-flow",
-        "dependency-injection"
-      ],
-      "category": "web"
-    },
-    {
-      "name": "web-framework-astro",
-      "source": "./dist/plugins/web-framework-astro",
-      "description": "Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "astro",
-        "islands",
-        "content-collections",
-        "ssg",
-        "ssr",
-        "view-transitions",
-        "server-islands"
-      ],
-      "category": "web"
-    },
-    {
-      "name": "web-framework-nextjs",
-      "source": "./dist/plugins/web-framework-nextjs",
-      "description": "Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "nextjs",
-        "app-router",
-        "server-components",
-        "server-actions",
-        "streaming",
-        "suspense",
-        "ssr",
-        "ssg",
-        "routing",
-        "mutations",
-        "revalidation",
-        "forms"
-      ],
       "category": "web"
     },
     {
@@ -1138,34 +589,6 @@
       "category": "web"
     },
     {
-      "name": "web-framework-nuxt",
-      "source": "./dist/plugins/web-framework-nuxt",
-      "description": "Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "nuxt",
-        "nuxt3",
-        "vue",
-        "vue3",
-        "ssr",
-        "ssg",
-        "routing",
-        "server-routes",
-        "nitro",
-        "usefetch",
-        "useasyncdata",
-        "usestate",
-        "auto-imports",
-        "file-based-routing",
-        "seo",
-        "universal-rendering"
-      ],
-      "category": "web"
-    },
-    {
       "name": "web-framework-react",
       "source": "./dist/plugins/web-framework-react",
       "description": "Component architecture, hooks, patterns",
@@ -1173,43 +596,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "react",
-        "react-19",
-        "components",
-        "hooks",
-        "use-action-state",
-        "use-form-status",
-        "use-optimistic",
-        "use",
-        "actions",
-        "jsx",
-        "tsx"
-      ],
-      "category": "web"
-    },
-    {
-      "name": "web-framework-remix",
-      "source": "./dist/plugins/web-framework-remix",
-      "description": "File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "remix",
-        "remix-v2",
-        "react-router-v7",
-        "react-router",
-        "react",
-        "full-stack",
-        "ssr",
-        "loaders",
-        "actions",
-        "client-action",
-        "single-fetch",
-        "progressive-enhancement"
-      ],
       "category": "web"
     },
     {
@@ -1220,15 +606,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "solidjs",
-        "signals",
-        "fine-grained-reactivity",
-        "stores",
-        "create-resource",
-        "jsx",
-        "suspense"
-      ],
       "category": "web"
     },
     {
@@ -1239,39 +616,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "svelte",
-        "runes",
-        "reactivity",
-        "components",
-        "snippets",
-        "state",
-        "derived",
-        "effect",
-        "props"
-      ],
-      "category": "web"
-    },
-    {
-      "name": "web-framework-sveltekit",
-      "source": "./dist/plugins/web-framework-sveltekit",
-      "description": "SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "sveltekit",
-        "routing",
-        "load-functions",
-        "form-actions",
-        "hooks",
-        "ssr",
-        "ssg",
-        "server-routes",
-        "streaming",
-        "progressive-enhancement"
-      ],
       "category": "web"
     },
     {
@@ -1282,17 +626,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "vue",
-        "vue-35",
-        "composition-api",
-        "script-setup",
-        "composables",
-        "reactivity",
-        "define-model",
-        "use-template-ref",
-        "use-id"
-      ],
       "category": "web"
     },
     {
@@ -1303,15 +636,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "next-intl",
-        "i18n",
-        "internationalization",
-        "localization",
-        "translations",
-        "icu",
-        "next-intl-v4"
-      ],
       "category": "web"
     },
     {
@@ -1322,17 +646,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "react-intl",
-        "formatjs",
-        "i18n",
-        "internationalization",
-        "localization",
-        "translations",
-        "icu",
-        "formatted-message",
-        "use-intl"
-      ],
       "category": "web"
     },
     {
@@ -1343,16 +656,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "vue-i18n",
-        "i18n",
-        "internationalization",
-        "localization",
-        "translations",
-        "vue-3",
-        "composition-api",
-        "pluralization"
-      ],
       "category": "web"
     },
     {
@@ -1363,15 +666,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "astro",
-        "islands",
-        "content-collections",
-        "ssg",
-        "ssr",
-        "view-transitions",
-        "server-islands"
-      ],
       "category": "web"
     },
     {
@@ -1382,20 +676,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "nextjs",
-        "app-router",
-        "server-components",
-        "server-actions",
-        "streaming",
-        "suspense",
-        "ssr",
-        "ssg",
-        "routing",
-        "mutations",
-        "revalidation",
-        "forms"
-      ],
       "category": "web"
     },
     {
@@ -1406,24 +686,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "nuxt",
-        "nuxt3",
-        "vue",
-        "vue3",
-        "ssr",
-        "ssg",
-        "routing",
-        "server-routes",
-        "nitro",
-        "usefetch",
-        "useasyncdata",
-        "usestate",
-        "auto-imports",
-        "file-based-routing",
-        "seo",
-        "universal-rendering"
-      ],
       "category": "web"
     },
     {
@@ -1434,20 +696,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "remix",
-        "remix-v2",
-        "react-router-v7",
-        "react-router",
-        "react",
-        "full-stack",
-        "ssr",
-        "loaders",
-        "actions",
-        "client-action",
-        "single-fetch",
-        "progressive-enhancement"
-      ],
       "category": "web"
     },
     {
@@ -1458,18 +706,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "sveltekit",
-        "routing",
-        "load-functions",
-        "form-actions",
-        "hooks",
-        "ssr",
-        "ssg",
-        "server-routes",
-        "streaming",
-        "progressive-enhancement"
-      ],
       "category": "web"
     },
     {
@@ -1480,13 +716,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "msw",
-        "mock-service-worker",
-        "mocking",
-        "test-data",
-        "api-mocking"
-      ],
       "category": "web"
     },
     {
@@ -1497,13 +726,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "bundle-optimization",
-        "render-performance",
-        "code-splitting",
-        "lazy-loading",
-        "memoization"
-      ],
       "category": "web"
     },
     {
@@ -1514,20 +736,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "offline-first",
-        "indexeddb",
-        "dexie",
-        "idb",
-        "local-first",
-        "sync-queue",
-        "conflict-resolution",
-        "optimistic-ui",
-        "pwa",
-        "background-sync",
-        "version-vector",
-        "delta-sync"
-      ],
       "category": "web"
     },
     {
@@ -1538,16 +746,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "service-worker",
-        "pwa",
-        "offline-first",
-        "cache-first",
-        "network-first",
-        "stale-while-revalidate",
-        "cache-api",
-        "precache"
-      ],
       "category": "web"
     },
     {
@@ -1558,19 +756,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "socket-io",
-        "realtime",
-        "bidirectional",
-        "rooms",
-        "namespaces",
-        "acknowledgments",
-        "connection-management",
-        "reconnection",
-        "authentication",
-        "binary-data",
-        "typescript"
-      ],
       "category": "web"
     },
     {
@@ -1581,16 +766,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "sse",
-        "server-sent-events",
-        "eventsource",
-        "streaming",
-        "realtime",
-        "server-push",
-        "fetch-streaming",
-        "llm-streaming"
-      ],
       "category": "web"
     },
     {
@@ -1601,15 +776,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "websocket",
-        "realtime",
-        "bidirectional",
-        "connection-management",
-        "heartbeat",
-        "reconnection",
-        "binary-data"
-      ],
       "category": "web"
     },
     {
@@ -1620,13 +786,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "react-query",
-        "tanstack-query",
-        "data-fetching",
-        "rest-api",
-        "caching"
-      ],
       "category": "web"
     },
     {
@@ -1637,13 +796,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "jotai",
-        "state-management",
-        "atoms",
-        "client-state",
-        "atomic-state"
-      ],
       "category": "web"
     },
     {
@@ -1654,14 +806,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "mobx",
-        "state-management",
-        "observable",
-        "reactive",
-        "computed",
-        "actions"
-      ],
       "category": "web"
     },
     {
@@ -1672,16 +816,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "ngrx",
-        "signalstore",
-        "angular",
-        "signals",
-        "state-management",
-        "client-state",
-        "entities",
-        "rxjs"
-      ],
       "category": "web"
     },
     {
@@ -1692,14 +826,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "pinia",
-        "state-management",
-        "vue",
-        "vue3",
-        "stores",
-        "client-state"
-      ],
       "category": "web"
     },
     {
@@ -1710,14 +836,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "redux",
-        "redux-toolkit",
-        "rtk-query",
-        "state-management",
-        "client-state",
-        "entity-adapter"
-      ],
       "category": "web"
     },
     {
@@ -1728,7 +846,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": ["zustand", "state-management", "stores", "client-state"],
       "category": "web"
     },
     {
@@ -1739,16 +856,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "cva",
-        "class-variance-authority",
-        "variants",
-        "type-safe",
-        "component-styling",
-        "typescript",
-        "css-classes",
-        "design-system"
-      ],
       "category": "web"
     },
     {
@@ -1759,7 +866,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": ["scss", "css-modules", "cva", "design-tokens", "styling"],
       "category": "web"
     },
     {
@@ -1770,15 +876,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "tailwind",
-        "tailwindcss",
-        "css",
-        "utility-first",
-        "responsive",
-        "styling",
-        "dark-mode"
-      ],
       "category": "web"
     },
     {
@@ -1789,16 +886,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "cypress",
-        "e2e",
-        "end-to-end",
-        "browser-testing",
-        "component-testing",
-        "data-cy",
-        "cy-intercept",
-        "cypress-axe"
-      ],
       "category": "web"
     },
     {
@@ -1809,14 +896,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "playwright",
-        "e2e",
-        "end-to-end",
-        "browser-testing",
-        "visual-regression",
-        "page-object-model"
-      ],
       "category": "web"
     },
     {
@@ -1827,16 +906,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "react-testing-library",
-        "testing",
-        "component-testing",
-        "accessibility",
-        "user-event",
-        "queries",
-        "async-testing",
-        "render-hook"
-      ],
       "category": "web"
     },
     {
@@ -1847,14 +916,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "playwright",
-        "vitest",
-        "react-testing-library",
-        "e2e",
-        "unit-testing",
-        "integration-testing"
-      ],
       "category": "web"
     },
     {
@@ -1865,19 +926,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "vue-test-utils",
-        "testing",
-        "component-testing",
-        "mount",
-        "shallow-mount",
-        "wrapper",
-        "trigger",
-        "set-value",
-        "flush-promises",
-        "composables",
-        "pinia-testing"
-      ],
       "category": "web"
     },
     {
@@ -1888,17 +936,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "storybook",
-        "component-development",
-        "documentation",
-        "visual-testing",
-        "interaction-testing",
-        "csf3",
-        "autodocs",
-        "controls",
-        "design-system"
-      ],
       "category": "web"
     },
     {
@@ -1909,23 +946,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "radix",
-        "radix-ui",
-        "primitives",
-        "headless",
-        "accessibility",
-        "compound-components",
-        "as-child",
-        "dialog",
-        "popover",
-        "tooltip",
-        "dropdown",
-        "react-19",
-        "rsc",
-        "otp",
-        "password-toggle"
-      ],
       "category": "web"
     },
     {
@@ -1936,15 +956,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "shadcn",
-        "ui-components",
-        "radix",
-        "theming",
-        "dark-mode",
-        "forms",
-        "accessibility"
-      ],
       "category": "web"
     },
     {
@@ -1955,16 +966,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "table",
-        "datagrid",
-        "sorting",
-        "filtering",
-        "pagination",
-        "row-selection",
-        "virtual-scrolling",
-        "server-side"
-      ],
       "category": "web"
     },
     {
@@ -1975,16 +976,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "date-fns",
-        "dates",
-        "time",
-        "formatting",
-        "parsing",
-        "timezone",
-        "internationalization",
-        "manipulation"
-      ],
       "category": "web"
     },
     {
@@ -1995,19 +986,6 @@
       "author": {
         "name": "@vince"
       },
-      "keywords": [
-        "native-javascript",
-        "es2023",
-        "es2024",
-        "es2025",
-        "lodash-alternative",
-        "array-methods",
-        "object-methods",
-        "set-operations",
-        "structured-clone",
-        "optional-chaining",
-        "immutable-arrays"
-      ],
       "category": "web"
     }
   ],

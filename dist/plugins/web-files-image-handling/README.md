@@ -2,10 +2,6 @@
 
 Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup
 
-## Tags
-
-`image-preview` `canvas-api` `image-resize` `image-compression` `exif-orientation` `object-url` `thumbnail` `blob` `file-api` `client-side-processing`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

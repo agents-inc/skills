@@ -2,10 +2,6 @@
 
 Service Worker lifecycle, caching strategies, offline patterns, update handling, precaching, runtime caching
 
-## Tags
-
-`service-worker` `pwa` `offline-first` `cache-first` `network-first` `stale-while-revalidate` `cache-api` `precache`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

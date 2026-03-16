@@ -2,10 +2,6 @@
 
 TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values
 
-## Tags
-
-`result-type` `either-type` `error-handling` `railway-oriented-programming` `typed-errors` `flat-map` `and-then` `try-catch` `discriminated-union` `neverthrow` `fp-ts` `error-as-value`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

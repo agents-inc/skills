@@ -5,12 +5,5 @@
   "description": "MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "msw",
-    "mock-service-worker",
-    "mocking",
-    "test-data",
-    "api-mocking"
-  ]
+  }
 }

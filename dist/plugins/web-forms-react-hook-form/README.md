@@ -2,10 +2,6 @@
 
 React Hook Form patterns - useForm, Controller, useFieldArray, validation resolver, performance optimization
 
-## Tags
-
-`forms` `react-hook-form` `use-form` `use-field-array` `controller` `validation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

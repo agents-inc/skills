@@ -2,10 +2,6 @@
 
 File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)
 
-## Tags
-
-`file-upload` `drag-drop` `react-dropzone` `uppy` `tus-protocol` `s3-presigned` `multipart-upload` `file-validation` `progress-tracking` `accessibility`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

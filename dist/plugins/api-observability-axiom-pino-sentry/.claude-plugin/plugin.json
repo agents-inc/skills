@@ -5,13 +5,5 @@
   "description": "Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "pino",
-    "sentry",
-    "axiom",
-    "logging",
-    "error-tracking",
-    "monitoring"
-  ]
+  }
 }

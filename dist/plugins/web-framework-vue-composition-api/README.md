@@ -2,10 +2,6 @@
 
 Vue 3 Composition API patterns, reactivity primitives, composables, lifecycle hooks
 
-## Tags
-
-`vue` `vue-35` `composition-api` `script-setup` `composables` `reactivity` `define-model` `use-template-ref` `use-id`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

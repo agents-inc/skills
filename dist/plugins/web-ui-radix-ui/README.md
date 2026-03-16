@@ -2,10 +2,6 @@
 
 Unstyled accessible UI primitives
 
-## Tags
-
-`radix` `radix-ui` `primitives` `headless` `accessibility` `compound-components` `as-child` `dialog` `popover` `tooltip` `dropdown` `react-19` `rsc` `otp` `password-toggle`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

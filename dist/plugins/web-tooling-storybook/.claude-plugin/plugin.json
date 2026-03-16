@@ -5,16 +5,5 @@
   "description": "Storybook 8 patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "storybook",
-    "component-development",
-    "documentation",
-    "visual-testing",
-    "interaction-testing",
-    "csf3",
-    "autodocs",
-    "controls",
-    "design-system"
-  ]
+  }
 }

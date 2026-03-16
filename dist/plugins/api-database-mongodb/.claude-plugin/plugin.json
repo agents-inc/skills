@@ -5,16 +5,5 @@
   "description": "MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "mongodb",
-    "mongoose",
-    "nosql",
-    "document-database",
-    "schemas",
-    "models",
-    "aggregation",
-    "indexes",
-    "atlas"
-  ]
+  }
 }

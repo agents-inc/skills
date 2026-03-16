@@ -2,10 +2,6 @@
 
 Socket.IO v4.x client patterns, connection lifecycle, reconnection, authentication, rooms, namespaces, acknowledgments, binary data, TypeScript integration
 
-## Tags
-
-`socket-io` `realtime` `bidirectional` `rooms` `namespaces` `acknowledgments` `connection-management` `reconnection` `authentication` `binary-data` `typescript`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

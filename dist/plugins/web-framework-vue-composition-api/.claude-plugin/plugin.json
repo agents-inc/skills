@@ -5,16 +5,5 @@
   "description": "Vue 3 Composition API patterns, reactivity primitives, composables, lifecycle hooks",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "vue",
-    "vue-35",
-    "composition-api",
-    "script-setup",
-    "composables",
-    "reactivity",
-    "define-model",
-    "use-template-ref",
-    "use-id"
-  ]
+  }
 }

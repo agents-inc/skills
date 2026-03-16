@@ -2,10 +2,6 @@
 
 NgRx SignalStore patterns for Angular state management. Use when managing client state with Angular Signals, composing store features, handling entities, or integrating RxJS effects.
 
-## Tags
-
-`ngrx` `signalstore` `angular` `signals` `state-management` `client-state` `entities` `rxjs`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

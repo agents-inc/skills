@@ -2,10 +2,6 @@
 
 Class Variance Authority - type-safe component variant styling with cva(), compound variants, and VariantProps
 
-## Tags
-
-`cva` `class-variance-authority` `variants` `type-safe` `component-styling` `typescript` `css-classes` `design-system`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

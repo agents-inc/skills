@@ -5,12 +5,5 @@
   "description": "Resend email setup, domain verification",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "resend",
-    "setup",
-    "email",
-    "domain-verification",
-    "installation"
-  ]
+  }
 }

@@ -5,13 +5,5 @@
   "description": "Drizzle ORM, queries, migrations",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "drizzle",
-    "orm",
-    "database",
-    "migrations",
-    "queries",
-    "postgresql"
-  ]
+  }
 }

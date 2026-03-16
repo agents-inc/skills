@@ -2,10 +2,6 @@
 
 View Transitions API patterns - same-document transitions, cross-document MPA transitions, shared element animations, pseudo-element styling, accessibility
 
-## Tags
-
-`view-transitions` `page-transitions` `shared-element` `hero-animation` `spa-transitions` `mpa-transitions` `css-animations`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

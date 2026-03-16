@@ -2,10 +2,6 @@
 
 Query optimization, caching, indexing
 
-## Tags
-
-`performance` `query-optimization` `caching` `indexing` `backend`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

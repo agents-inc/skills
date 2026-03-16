@@ -5,22 +5,5 @@
   "description": "Unstyled accessible UI primitives",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "radix",
-    "radix-ui",
-    "primitives",
-    "headless",
-    "accessibility",
-    "compound-components",
-    "as-child",
-    "dialog",
-    "popover",
-    "tooltip",
-    "dropdown",
-    "react-19",
-    "rsc",
-    "otp",
-    "password-toggle"
-  ]
+  }
 }

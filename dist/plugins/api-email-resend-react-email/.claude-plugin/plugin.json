@@ -5,12 +5,5 @@
   "description": "Resend + React Email templates",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "resend",
-    "react-email",
-    "email",
-    "templates",
-    "transactional"
-  ]
+  }
 }

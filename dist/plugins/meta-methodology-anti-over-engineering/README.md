@@ -2,10 +2,6 @@
 
 Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.
 
-## Tags
-
-`methodology` `foundational` `universal` `anti-patterns` `minimal-changes`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

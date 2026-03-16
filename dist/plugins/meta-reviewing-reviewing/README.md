@@ -2,10 +2,6 @@
 
 Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
 
-## Tags
-
-`code-review` `feedback` `patterns` `review-principles` `quality`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

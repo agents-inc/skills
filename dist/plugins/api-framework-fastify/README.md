@@ -2,10 +2,6 @@
 
 Fastify routes, JSON Schema validation, plugin system, TypeScript type providers
 
-## Tags
-
-`fastify` `nodejs` `high-performance` `rest-api` `json-schema` `schema-validation` `typebox` `typescript` `plugins` `encapsulation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

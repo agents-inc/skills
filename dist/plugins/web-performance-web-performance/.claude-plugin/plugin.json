@@ -5,12 +5,5 @@
   "description": "Bundle optimization, render performance",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "bundle-optimization",
-    "render-performance",
-    "code-splitting",
-    "lazy-loading",
-    "memoization"
-  ]
+  }
 }

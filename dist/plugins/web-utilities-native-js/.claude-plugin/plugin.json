@@ -5,18 +5,5 @@
   "description": "Modern native JavaScript (ES2022-ES2025) utility patterns - array methods, object manipulation, set operations, deep cloning, and function utilities that replace lodash",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "native-javascript",
-    "es2023",
-    "es2024",
-    "es2025",
-    "lodash-alternative",
-    "array-methods",
-    "object-methods",
-    "set-operations",
-    "structured-clone",
-    "optional-chaining",
-    "immutable-arrays"
-  ]
+  }
 }

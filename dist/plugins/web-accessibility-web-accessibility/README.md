@@ -2,10 +2,6 @@
 
 WCAG, ARIA, keyboard navigation
 
-## Tags
-
-`wcag` `wcag-22` `aria` `keyboard-navigation` `a11y` `accessibility` `screen-reader` `axe-core` `jest-axe` `vitest-axe` `cypress-axe` `prefers-reduced-motion` `focus-management`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

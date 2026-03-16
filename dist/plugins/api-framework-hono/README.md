@@ -2,10 +2,6 @@
 
 Hono routes, OpenAPI, Zod validation
 
-## Tags
-
-`hono` `openapi` `zod` `rest-api` `validation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

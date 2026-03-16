@@ -2,10 +2,6 @@
 
 MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management
 
-## Tags
-
-`mongodb` `mongoose` `nosql` `document-database` `schemas` `models` `aggregation` `indexes` `atlas`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

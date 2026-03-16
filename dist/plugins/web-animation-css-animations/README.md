@@ -2,10 +2,6 @@
 
 CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion
 
-## Tags
-
-`animation` `css` `transitions` `keyframes` `scroll-driven` `view-transitions` `accessibility` `performance`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

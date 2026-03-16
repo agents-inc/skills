@@ -2,10 +2,6 @@
 
 Error boundary patterns, fallback UI, reset/retry functionality, react-error-boundary library
 
-## Tags
-
-`error-boundary` `error-handling` `fallback-ui` `react-error-boundary` `get-derived-state-from-error` `component-did-catch` `use-error-boundary` `error-recovery` `graceful-degradation`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

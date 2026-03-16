@@ -2,10 +2,6 @@
 
 Redux Toolkit patterns for complex client state. Use when managing enterprise-scale state, needing DevTools, entity normalization, or RTK Query for data fetching.
 
-## Tags
-
-`redux` `redux-toolkit` `rtk-query` `state-management` `client-state` `entity-adapter`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

@@ -2,10 +2,6 @@
 
 Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting
 
-## Tags
-
-`pino` `sentry` `axiom` `logging` `error-tracking` `monitoring`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

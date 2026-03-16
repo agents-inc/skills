@@ -2,10 +2,6 @@
 
 Self-improvement protocol for agents modifying their own prompts/configurations. Evidence-based improvements, structured changes, proven patterns from research.
 
-## Tags
-
-`methodology` `implementation` `self-improvement` `meta`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

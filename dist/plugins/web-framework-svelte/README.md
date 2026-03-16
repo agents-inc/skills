@@ -2,10 +2,6 @@
 
 Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API
 
-## Tags
-
-`svelte` `runes` `reactivity` `components` `snippets` `state` `derived` `effect` `props`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

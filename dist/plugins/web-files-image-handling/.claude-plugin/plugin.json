@@ -5,17 +5,5 @@
   "description": "Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "image-preview",
-    "canvas-api",
-    "image-resize",
-    "image-compression",
-    "exif-orientation",
-    "object-url",
-    "thumbnail",
-    "blob",
-    "file-api",
-    "client-side-processing"
-  ]
+  }
 }

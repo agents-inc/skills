@@ -2,10 +2,6 @@
 
 PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.
 
-## Tags
-
-`posthog` `feature-flags` `rollouts` `ab-testing` `experiments`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

@@ -2,10 +2,6 @@
 
 Modern CLI development combining oclif's command framework with Ink's React-based terminal rendering
 
-## Tags
-
-`cli` `oclif` `ink` `react` `terminal` `framework`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

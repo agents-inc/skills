@@ -5,19 +5,5 @@
   "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "ai",
-    "ai-sdk",
-    "vercel",
-    "streaming",
-    "chat",
-    "completion",
-    "tools",
-    "function-calling",
-    "rag",
-    "embeddings",
-    "openai",
-    "anthropic"
-  ]
+  }
 }

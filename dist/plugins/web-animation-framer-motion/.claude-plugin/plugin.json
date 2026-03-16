@@ -5,16 +5,5 @@
   "description": "Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility",
   "author": {
     "name": "@vince"
-  },
-  "keywords": [
-    "animation",
-    "motion",
-    "framer-motion",
-    "motion-react",
-    "transitions",
-    "gestures",
-    "scroll",
-    "layout",
-    "v11"
-  ]
+  }
 }

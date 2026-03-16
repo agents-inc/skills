@@ -2,10 +2,6 @@
 
 Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
 
-## Tags
-
-`zustand` `state-management` `stores` `client-state`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

@@ -2,10 +2,6 @@
 
 Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions
 
-## Tags
-
-`apollo-client` `graphql` `data-fetching` `caching` `real-time` `subscriptions` `optimistic-updates` `suspense` `use-suspense-query` `use-loadable-query` `apollo-client-v4`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

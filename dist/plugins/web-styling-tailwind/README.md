@@ -2,10 +2,6 @@
 
 Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration
 
-## Tags
-
-`tailwind` `tailwindcss` `css` `utility-first` `responsive` `styling` `dark-mode`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

@@ -2,10 +2,6 @@
 
 Clerk managed authentication - ClerkProvider, middleware, pre-built components, hooks, server-side auth, organizations, webhooks
 
-## Tags
-
-`clerk` `auth` `authentication` `user-management` `organizations` `sso` `mfa` `webhooks` `session`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:

@@ -2,10 +2,6 @@
 
 Atomic state management with auto-dependency tracking
 
-## Tags
-
-`jotai` `state-management` `atoms` `client-state` `atomic-state`
-
 ## Installation
 
 Add this plugin to your Claude Code configuration:
