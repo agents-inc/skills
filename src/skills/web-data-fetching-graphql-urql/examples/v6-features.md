@@ -20,7 +20,7 @@
 // lib/urql-client.ts
 import { Client, cacheExchange, fetchExchange } from "urql";
 
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
+const GRAPHQL_ENDPOINT = process.env.GRAPHQL_URL || "";
 
 // Option 1: Disable GET requests (use POST for everything)
 const client = new Client({

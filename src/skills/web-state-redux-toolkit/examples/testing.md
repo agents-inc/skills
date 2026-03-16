@@ -12,7 +12,7 @@ Testing patterns for Redux slices, reducers, and async thunks.
 
 ```typescript
 // store/slices/todos-slice.test.ts
-import { describe, it, expect } from "vitest";
+// Using your test runner (describe, it, expect)
 import {
   todosReducer,
   addTodo,
@@ -77,7 +77,7 @@ describe("todosSlice", () => {
 
 ```typescript
 // store/slices/users-slice.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// Using your test runner (describe, it, expect, mock/spy functions, beforeEach)
 import { configureStore } from "@reduxjs/toolkit";
 import { fetchUsers, usersReducer } from "./users-slice";
 
@@ -88,12 +88,12 @@ const MOCK_USERS = [
 
 describe("users async thunks", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    // Reset mocks between tests
   });
 
   it("should fetch users successfully", async () => {
-    // Mock fetch at network level
-    global.fetch = vi.fn().mockResolvedValue({
+    // Mock fetch at network level using your test runner's mock API
+    global.fetch = mockFn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(MOCK_USERS),
     });
@@ -111,7 +111,7 @@ describe("users async thunks", () => {
   });
 
   it("should handle fetch error", async () => {
-    global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    global.fetch = mockFn().mockRejectedValue(new Error("Network error"));
 
     const store = configureStore({
       reducer: { users: usersReducer },
@@ -134,7 +134,7 @@ describe("users async thunks", () => {
 
 ```typescript
 // store/selectors/todos-selectors.test.ts
-import { describe, it, expect } from "vitest";
+// Using your test runner (describe, it, expect)
 import { selectFilteredTodos, selectTodoStats } from "./todos-selectors";
 
 const MOCK_STATE = {

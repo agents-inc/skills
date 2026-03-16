@@ -1,6 +1,6 @@
 # URQL GraphQL Client - Reference
 
-> Decision frameworks, anti-patterns, and integration guides. See [SKILL.md](SKILL.md) for core concepts.
+> Decision frameworks, anti-patterns, and API reference. See [SKILL.md](SKILL.md) for core concepts.
 
 ---
 
@@ -36,10 +36,8 @@ How should this query fetch data?
 │   └─ requestPolicy: "cache-and-network" (recommended)
 ├─ Fast response, cache is reliable?
 │   └─ requestPolicy: "cache-first" (default)
-├─ Only use cache, never fetch?
-│   └─ requestPolicy: "cache-only"
-└─ Fetch once, never refetch?
-    └─ requestPolicy: "no-cache"
+└─ Only use cache, never fetch?
+    └─ requestPolicy: "cache-only"
 ```
 
 ### Caching Strategy Selection
@@ -276,8 +274,6 @@ if (error && data) {
 - **fetchExchange before cacheExchange** - Cache is bypassed, all requests hit network
 - **Missing Provider wrapper** - All hooks throw runtime errors (v4+)
 - **Missing `__typename` in optimistic responses** - Graphcache normalization fails
-- **Magic numbers for timeouts/retries** - Use named constants like `MAX_RETRY_ATTEMPTS`
-- **Default exports** - Use named exports for tree-shaking
 
 **Medium Priority Issues:**
 

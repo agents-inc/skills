@@ -1,16 +1,17 @@
-# Jotai Testing Patterns
+# Jotai - Store, Provider, and Testing Examples
 
-Patterns for testing Jotai atoms and components.
+> Extended examples for stores, providers, and test isolation. See [core.md](core.md) for fundamental atom patterns.
+
+**Prerequisites**: Understand primitive and derived atoms from core examples first.
 
 ---
 
-## Pattern 1: Store and Provider Patterns
+## Pattern 1: Custom Store
 
-### Good Example - Custom Store
+### Good Example - Store for Outside-React Access
 
 ```typescript
-import { atom, createStore, Provider } from "jotai";
-import type { ReactNode } from "react";
+import { atom, createStore } from "jotai";
 
 const countAtom = atom(0);
 
@@ -20,56 +21,47 @@ const myStore = createStore();
 // Pre-populate values
 myStore.set(countAtom, 10);
 
+// Read values outside React
+const currentCount = myStore.get(countAtom);
+
 // Subscribe to changes outside React
 const unsubscribe = myStore.sub(countAtom, () => {
-  console.log("Count changed:", myStore.get(countAtom));
+  const newValue = myStore.get(countAtom);
+  // React to changes (logging, analytics, side effects)
 });
 
-// Provider with custom store
+export { myStore, countAtom };
+```
+
+**Why good:** Store enables Jotai state access in non-React code (event handlers, WebSocket callbacks, analytics)
+
+### Good Example - Provider with Custom Store
+
+```tsx
+import { createStore, Provider } from "jotai";
+import type { ReactNode } from "react";
+
 interface AppProviderProps {
   children: ReactNode;
 }
 
+const appStore = createStore();
+
 function AppProvider({ children }: AppProviderProps) {
-  return <Provider store={myStore}>{children}</Provider>;
+  return <Provider store={appStore}>{children}</Provider>;
 }
 
-export { myStore, AppProvider, countAtom };
+export { appStore, AppProvider };
 ```
 
-### Good Example - Using Store Outside React
-
-```typescript
-import { createStore, atom } from "jotai";
-
-const countAtom = atom(0);
-const store = createStore();
-
-// Get value
-const currentCount = store.get(countAtom);
-
-// Set value
-store.set(countAtom, 42);
-
-// Subscribe to changes
-const unsub = store.sub(countAtom, () => {
-  console.log("New value:", store.get(countAtom));
-});
-
-// Cleanup later
-// unsub();
-
-export { store };
-```
-
-### Good Example - Provider-less Mode (Default)
+### Good Example - Provider-less Mode
 
 ```tsx
 import { useAtom, atom } from "jotai";
 
 const countAtom = atom(0);
 
-// Works without Provider - uses default store
+// Works without Provider -- uses default global store
 function Counter() {
   const [count, setCount] = useAtom(countAtom);
   return <button onClick={() => setCount((c) => c + 1)}>{count}</button>;
@@ -78,13 +70,13 @@ function Counter() {
 export { Counter };
 ```
 
-**Why good:** Provider-less mode works for simple cases, custom store enables access outside React, subscription pattern for external integrations
+**Why good:** Provider-less mode works for simple apps, custom store enables external access
 
 ---
 
 ## Pattern 2: Resetting All State
 
-### Good Example - Fresh Store for Reset
+### Good Example - Fresh Store for Full Reset
 
 ```tsx
 import { useState } from "react";
@@ -99,7 +91,7 @@ function ResettableProvider({ children }: ResettableProviderProps) {
   const [store, setStore] = useState(() => createStore());
 
   const resetAll = () => {
-    setStore(createStore()); // Fresh store = reset all atoms
+    setStore(createStore()); // Fresh store = all atoms reset to initial values
   };
 
   return (
@@ -113,54 +105,51 @@ function ResettableProvider({ children }: ResettableProviderProps) {
 export { ResettableProvider };
 ```
 
-**Why good:** Creating new store resets all atoms to initial values, useful for logout or testing scenarios
+**Why good:** Creating new store resets every atom to its initial value, useful for logout or "start over" features
 
 ---
 
-## Pattern 3: Testing with Custom Store
+## Pattern 3: Test Isolation with Fresh Store
 
-### Good Example - Unit Testing Atoms
+Jotai atoms use a global default store. Without isolation, state from one test leaks into the next.
+
+### Good Example - Fresh Store Per Test
 
 ```typescript
-import { createStore, atom } from "jotai";
-import { describe, it, expect, beforeEach } from "vitest";
+import { createStore, Provider, atom } from "jotai";
+import type { ReactNode } from "react";
 
 const countAtom = atom(0);
 const doubleAtom = atom((get) => get(countAtom) * 2);
 
-describe("countAtom", () => {
-  let store: ReturnType<typeof createStore>;
+// Unit testing atoms directly via store (no component rendering)
+// Use your test runner's describe/it/expect
+let store: ReturnType<typeof createStore>;
 
-  beforeEach(() => {
-    store = createStore();
-  });
-
-  it("starts with initial value", () => {
-    expect(store.get(countAtom)).toBe(0);
-  });
-
-  it("can be updated", () => {
-    store.set(countAtom, 5);
-    expect(store.get(countAtom)).toBe(5);
-  });
-
-  it("derived atom updates when base changes", () => {
-    store.set(countAtom, 3);
-    expect(store.get(doubleAtom)).toBe(6);
-  });
+// Fresh store before each test
+beforeEach(() => {
+  store = createStore();
 });
+
+// Test: starts with initial value
+store.get(countAtom); // 0
+
+// Test: can be updated
+store.set(countAtom, 5);
+store.get(countAtom); // 5
+
+// Test: derived atom updates when base changes
+store.set(countAtom, 3);
+store.get(doubleAtom); // 6
 ```
 
-### Good Example - Testing Components with Atoms
+### Good Example - Component Test Wrapper
 
 ```tsx
-import { render, screen, fireEvent } from "@testing-library/react";
-import { Provider, createStore, atom } from "jotai";
-import { describe, it, expect, beforeEach } from "vitest";
-import type { ReactNode } from "react";
+import { createStore, Provider } from "jotai";
+import type { ReactNode, ReactElement } from "react";
 
-const countAtom = atom(0);
-
+// Reusable test wrapper -- fresh store each test
 interface TestProviderProps {
   children: ReactNode;
   store?: ReturnType<typeof createStore>;
@@ -170,42 +159,23 @@ function TestProvider({ children, store }: TestProviderProps) {
   return <Provider store={store}>{children}</Provider>;
 }
 
-describe("Counter component", () => {
-  let store: ReturnType<typeof createStore>;
+// In your test setup:
+let store: ReturnType<typeof createStore>;
 
-  beforeEach(() => {
-    store = createStore();
-  });
-
-  it("renders initial count", () => {
-    render(
-      <TestProvider store={store}>
-        <Counter />
-      </TestProvider>,
-    );
-    expect(screen.getByText("0")).toBeInTheDocument();
-  });
-
-  it("increments count on click", () => {
-    render(
-      <TestProvider store={store}>
-        <Counter />
-      </TestProvider>,
-    );
-    fireEvent.click(screen.getByRole("button"));
-    expect(screen.getByText("1")).toBeInTheDocument();
-  });
-
-  it("can start with pre-populated value", () => {
-    store.set(countAtom, 10);
-    render(
-      <TestProvider store={store}>
-        <Counter />
-      </TestProvider>,
-    );
-    expect(screen.getByText("10")).toBeInTheDocument();
-  });
+beforeEach(() => {
+  store = createStore();
 });
+
+// Render with isolated store
+const renderWithStore = (ui: ReactElement) => {
+  // Use your testing library's render function
+  return render(<TestProvider store={store}>{ui}</TestProvider>);
+};
+
+// Pre-populate store for specific test scenarios
+store.set(countAtom, 10);
+renderWithStore(<Counter />);
+// Counter shows 10, isolated from other tests
 ```
 
-**Why good:** Fresh store per test prevents state leakage, pre-populate values for specific test scenarios, same patterns work in unit and integration tests
+**Why good:** Fresh store prevents state leakage between tests, pre-populate for specific scenarios, same pattern works for unit and integration tests

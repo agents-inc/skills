@@ -13,16 +13,16 @@ What kind of state do I have?
 
 Is it server data (from API)?
 ├─ YES → Do you need sophisticated caching/invalidation?
-│   ├─ YES → RTK Query (if already using RTK) or React Query
-│   └─ NO → React Query (simpler) or RTK Query
+│   ├─ YES → RTK Query (if already using RTK) or your data fetching solution
+│   └─ NO → Your data fetching solution or RTK Query
 └─ NO → Is it complex client state with many interactions?
     ├─ YES → Do you need DevTools/time-travel debugging?
     │   ├─ YES → Redux Toolkit
     │   └─ NO → Is state deeply nested or relational?
     │       ├─ YES → Redux Toolkit with Entity Adapters
-    │       └─ NO → Zustand (simpler API)
+    │       └─ NO → A lighter state management solution
     └─ NO → Is it needed in 2+ components?
-        ├─ YES → Zustand (simplest) or Redux Toolkit
+        ├─ YES → Your state management solution or Redux Toolkit
         └─ NO → useState (component local)
 ```
 
@@ -61,14 +61,14 @@ Does each item have a unique ID?
 
 ### Quick Reference Table
 
-| Use Case                     | Solution                  | Why                               |
-| ---------------------------- | ------------------------- | --------------------------------- |
-| Server/API data with caching | RTK Query                 | Auto caching, invalidation, hooks |
-| Complex client state         | Redux Toolkit createSlice | DevTools, predictable updates     |
-| Collections with IDs         | createEntityAdapter       | Normalized state, CRUD operations |
-| Complex async flows          | createAsyncThunk          | Lifecycle actions, state access   |
-| Simple UI state              | Zustand or useState       | Less boilerplate                  |
-| Side effects                 | Custom middleware         | Centralized, testable             |
+| Use Case                     | Solution                      | Why                               |
+| ---------------------------- | ----------------------------- | --------------------------------- |
+| Server/API data with caching | RTK Query                     | Auto caching, invalidation, hooks |
+| Complex client state         | Redux Toolkit createSlice     | DevTools, predictable updates     |
+| Collections with IDs         | createEntityAdapter           | Normalized state, CRUD operations |
+| Complex async flows          | createAsyncThunk              | Lifecycle actions, state access   |
+| Simple UI state              | useState or lightweight store | Less boilerplate                  |
+| Side effects                 | Custom middleware             | Centralized, testable             |
 
 ---
 
@@ -526,14 +526,14 @@ npx @reduxjs/rtk-codemods createReducerBuilder ./src
 6. **Replace mapStateToProps with useAppSelector**
 7. **Replace mapDispatchToProps with useAppDispatch**
 
-### From React Query to RTK Query
+### From External Data Fetching to RTK Query
 
 Only migrate if you need unified state management with Redux:
 
 1. **Create API slice** with createApi
 2. **Define endpoints** matching existing queries
 3. **Add cache tags** for invalidation
-4. **Replace useQuery with generated hooks**
+4. **Replace existing hooks with generated RTK Query hooks**
 5. **Configure store** with API middleware
 
 ---

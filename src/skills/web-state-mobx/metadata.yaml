@@ -8,4 +8,4 @@ cliDescription: Observable reactive state management
 usageGuidance: >-
   Use when implementing client-side state with MobX observables, computed values,
   actions, reactions, or the observer HOC from mobx-react-lite. Not for server
-  state (use React Query) or simple UI state (use useState/Zustand).
+  state or simple local UI state (use useState).

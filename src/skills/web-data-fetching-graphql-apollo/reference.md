@@ -325,7 +325,8 @@ const { data } = useQuery(GET_USER, {
 - `ApolloError` class removed - use `CombinedGraphQLErrors.is()` for type checking
 - `useMutation` types now enforce required variables at call site
 - `rxjs` is a peer dependency in v4 - must install explicitly
-- `defaultOptions` removed from `useQuery` - use global client defaults instead
+- `from()`, `concat()`, `split()` are now static methods on `ApolloLink`, not standalone functions
+- `createHttpLink()` removed - use `new HttpLink()` instead
 
 </red_flags>
 
@@ -366,7 +367,7 @@ const { data } = useQuery(GET_USER, {
 | `ready`        | 7     | Complete                   |
 | `error`        | 8     | Error state                |
 
-Use `notifyOnNetworkStatusChange: true` to receive these status updates.
+Use `notifyOnNetworkStatusChange: true` to receive these status updates. (v4 defaults to `true`; v3 defaults to `false`.)
 
 ---
 

@@ -5,4 +5,4 @@ domain: web
 author: "@vince"
 displayName: React Query
 cliDescription: Server state and caching
-usageGuidance: Use when fetching API data, caching responses, or managing server state.
+usageGuidance: Use when fetching API data with React Query, generating API clients from OpenAPI specs with hey-api, or configuring query caching and error handling.

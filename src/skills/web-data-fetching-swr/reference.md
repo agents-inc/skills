@@ -1,49 +1,12 @@
 # SWR Data Fetching - Reference
 
-> Decision frameworks, anti-patterns, and integration guides. See [SKILL.md](SKILL.md) for core concepts.
+> Decision frameworks, configuration reference, and anti-patterns. See [SKILL.md](SKILL.md) for core concepts.
 
 ---
 
 <decision_framework>
 
 ## Decision Framework
-
-### When to Use SWR vs Alternatives
-
-```
-Need data fetching in React?
-├─ Is it GraphQL?
-│   └─ YES → Use Apollo Client or urql
-├─ Is it tRPC?
-│   └─ YES → Use tRPC (built on React Query)
-├─ Need complex mutation workflows?
-│   ├─ YES → Use React Query (more mutation features)
-│   └─ NO → Continue...
-├─ Bundle size critical?
-│   ├─ YES → Use SWR (5.3KB vs 16KB)
-│   └─ NO → Either works
-├─ Need DevTools?
-│   ├─ YES → Use React Query (built-in DevTools)
-│   └─ NO → SWR is fine
-├─ Using Next.js?
-│   └─ YES → SWR (same team, seamless integration) ✓
-└─ Simple read-heavy app?
-    └─ YES → SWR ✓
-```
-
-### SWR vs React Query Feature Comparison
-
-| Feature              | SWR                          | React Query                 |
-| -------------------- | ---------------------------- | --------------------------- |
-| Bundle size          | 5.3KB                        | 16.2KB                      |
-| DevTools             | Yes (v2+, browser extension) | Yes (built-in)              |
-| Request cancellation | Manual                       | Built-in                    |
-| Mutations            | useSWRMutation               | useMutation (more features) |
-| Infinite queries     | useSWRInfinite               | useInfiniteQuery            |
-| Optimistic updates   | Yes                          | Yes                         |
-| Suspense             | Yes                          | Yes                         |
-| SSR support          | Yes                          | Yes                         |
-| Cache granularity    | Route-level                  | Component-level             |
 
 ### Choosing Revalidation Strategy
 
@@ -56,7 +19,7 @@ How fresh does data need to be?
 ├─ Fresh when reconnected?
 │   └─ Use revalidateOnReconnect: true (default)
 ├─ Static/config data?
-│   └─ Disable all revalidation
+│   └─ Use useSWRImmutable or disable all revalidation
 └─ Manual refresh only?
     └─ Disable auto-revalidation, use mutate()
 ```
@@ -66,13 +29,15 @@ How fresh does data need to be?
 ```
 Need to modify server data?
 ├─ Simple POST/PUT/DELETE?
-│   └─ useSWRMutation ✓
+│   └─ useSWRMutation with trigger() ✓
 ├─ Need optimistic UI?
-│   └─ useSWRMutation with optimisticData ✓
-├─ Need to update related cache?
-│   └─ Use mutate() to invalidate related keys
-└─ Complex multi-step mutation?
-    └─ Consider React Query (more mutation control)
+│   └─ useSWRMutation with optimisticData + rollbackOnError ✓
+├─ Need to update related cache after mutation?
+│   └─ Use global mutate() to invalidate related keys
+├─ Want to skip revalidation after mutation?
+│   └─ Use populateCache + revalidate: false
+└─ Need to update list after item mutation?
+    └─ Invalidate list key in onSuccess callback
 ```
 
 ### Key Pattern Selection
@@ -91,35 +56,21 @@ What should the cache key be?
     └─ Return null from key
 ```
 
+### Pagination Pattern Selection
+
+```
+What kind of pagination?
+├─ Infinite scroll / "load more"?
+│   └─ useSWRInfinite with getKey function
+├─ Traditional page numbers?
+│   └─ useSWR with page in key + keepPreviousData: true
+├─ Cursor-based API?
+│   └─ useSWRInfinite with cursor in getKey
+└─ Offset-based API?
+    └─ useSWRInfinite with offset calculation
+```
+
 </decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **Next.js App Router**: Use SWRConfig fallback for SSR data hydration
-- **Next.js Pages Router**: Use getStaticProps/getServerSideProps with fallback
-- **axios**: Create axios fetcher for interceptors and auth
-- **TypeScript**: Full generic support for typed data and errors
-- **Error boundaries**: Throw errors in fetcher to trigger error boundaries
-
-**Replaces / Conflicts with:**
-
-- **React Query (@tanstack/react-query)**: Both solve same problem - pick one
-- **Redux Toolkit Query (RTK Query)**: Another data fetching solution - pick one
-- **Custom useEffect + fetch**: SWR provides caching, deduplication, revalidation
-
-**Framework Integration:**
-
-- **Next.js SSR**: Use fallback prop in SWRConfig for pre-fetched data
-- **Next.js ISR**: SWR revalidation complements ISR for dynamic updates
-- **React Suspense**: Enable suspense: true in options
-
-</integration>
 
 ---
 
@@ -135,7 +86,7 @@ Keys that change on every render cause infinite request loops.
 // BAD: Object creates new reference every render
 const { data } = useSWR({ url: "/api/users", page: 1 }, fetcher);
 
-// BAD: Array without stable reference
+// BAD: Array with object element (unstable reference)
 const { data } = useSWR(["/api/users", { page: 1 }], fetcher);
 
 // GOOD: String key is stable
@@ -151,40 +102,29 @@ Showing loading spinner during background revalidation hides content unnecessari
 
 ```typescript
 // BAD: Shows spinner even with cached data
-function UserProfile({ userId }) {
-  const { data, isValidating } = useSWR(`/api/users/${userId}`, fetcher);
-
-  if (isValidating) return <Spinner />; // Hides existing data!
-
-  return <Profile user={data} />;
-}
+if (isValidating) return <Spinner />; // Hides existing data!
 
 // GOOD: Show data with refresh indicator
-function UserProfile({ userId }) {
-  const { data, isLoading, isValidating } = useSWR(`/api/users/${userId}`, fetcher);
-
-  if (isLoading) return <Spinner />; // Only on initial load
-
-  return (
-    <div>
-      {isValidating && <RefreshIndicator />}
-      <Profile user={data} />
-    </div>
-  );
-}
+if (isLoading) return <Spinner />; // Only on initial load
+return (
+  <div>
+    {isValidating && <RefreshIndicator />}
+    <Profile user={data} />
+  </div>
+);
 ```
 
 ### Using useSWR for Mutations
 
-useSWR is for reads. Mutations should use useSWRMutation.
+useSWR fires on mount. Mutations should use useSWRMutation.
 
 ```typescript
-// BAD: useSWR for POST
+// BAD: useSWR for POST -- fires immediately on mount!
 const { data } = useSWR("/api/posts", () =>
   fetch("/api/posts", { method: "POST", body: JSON.stringify(newPost) }),
 );
 
-// GOOD: useSWRMutation for POST
+// GOOD: useSWRMutation fires on demand
 const { trigger, isMutating } = useSWRMutation("/api/posts", createPost);
 await trigger(newPost);
 ```
@@ -266,13 +206,13 @@ function UserProfile({ userId }) {
 Fetcher that doesn't throw on error returns invalid data.
 
 ```typescript
-// BAD: Doesn't throw on error
+// BAD: Doesn't throw on error -- error body becomes "data"
 const fetcher = async (url) => {
   const response = await fetch(url);
   return response.json(); // Returns error body as "data"!
 };
 
-// GOOD: Throws on error
+// GOOD: Throws on error -- triggers SWR error state
 const fetcher = async (url) => {
   const response = await fetch(url);
   if (!response.ok) {
@@ -294,38 +234,39 @@ const fetcher = async (url) => {
 
 **High Priority Issues:**
 
-- **Unstable key causing infinite requests** - Keys must be stable; use strings or stable array references
-- **isValidating used as loading state** - Shows spinner during background refresh, hiding cached data
-- **useSWR for mutations** - Use useSWRMutation for POST/PUT/DELETE
-- **Magic numbers** - All intervals/timeouts must be named constants
-- **Default exports** - Use named exports per project conventions
+- **Unstable key causing infinite requests** -- Keys must be stable; use strings or stable array references
+- **isValidating used as loading state** -- Shows spinner during background refresh, hiding cached data
+- **useSWR for mutations** -- Use useSWRMutation for POST/PUT/DELETE
+- **Magic numbers** -- All intervals/timeouts must be named constants
+- **Default exports** -- Use named exports per project conventions
 
 **Medium Priority Issues:**
 
-- **Missing null key for conditional fetch** - Leads to conditional hook calls
-- **Not using optimisticData for mutations** - UI feels slow without immediate feedback
-- **Missing error handling in fetcher** - Non-throwing fetcher returns error body as data
-- **Missing error retry configuration** - Default retry may not be appropriate for all APIs
-- **Not using SWRConfig** - Duplicated configuration across components
+- **Missing null key for conditional fetch** -- Leads to conditional hook calls
+- **Not using optimisticData for mutations** -- UI feels slow without immediate feedback
+- **Missing error handling in fetcher** -- Non-throwing fetcher returns error body as data
+- **Missing error retry configuration** -- Default retry may not be appropriate for all APIs
+- **Not using SWRConfig** -- Duplicated configuration across components
 
 **Common Mistakes:**
 
 - Forgetting to include credentials in fetcher for authenticated APIs
-- Using keepPreviousData for search (shows stale results)
+- Using keepPreviousData for search (shows stale results from different query)
 - Not handling error state when data exists (stale data with error)
 - Creating fetcher inside component (creates new function each render)
 - Not using type generics with useSWR
 
 **Gotchas & Edge Cases:**
 
-- `null` key stops fetching, `undefined` key still fetches (undefined becomes string)
-- `mutate()` without arguments revalidates all keys (use specific key)
-- `refreshInterval: 0` disables polling (omit option instead of 0)
-- `revalidateOnFocus` fires on tab focus even if data is fresh
+- `null` key stops fetching, `undefined` key still fetches (coerced to string)
+- `mutate()` without arguments revalidates bound key; global `mutate()` without filter revalidates all
+- `refreshInterval: 0` disables polling (same as omitting it)
+- `revalidateOnFocus` fires on tab focus even if data is fresh (use `focusThrottleInterval`)
 - Multiple useSWR with same key share cache and dedupe requests
 - `fallback` in SWRConfig must use exact key strings
 - useSWRInfinite revalidates all pages by default (can be slow)
-- Error objects don't serialize well - use structured error type
+- Error objects don't serialize well -- use structured error types
+- `useSWRImmutable` in v2.4+ properly overrides global `refreshInterval` (fixed from earlier)
 
 </red_flags>
 
@@ -341,6 +282,7 @@ const fetcher = async (url) => {
 | `revalidateOnFocus`     | `true`  | Revalidate when window gains focus   |
 | `revalidateOnReconnect` | `true`  | Revalidate when network reconnects   |
 | `revalidateIfStale`     | `true`  | Revalidate if data is stale          |
+| `revalidateOnMount`     | -       | Revalidate when component mounts     |
 | `refreshInterval`       | `0`     | Polling interval (0 = disabled)      |
 | `refreshWhenHidden`     | `false` | Poll when tab is hidden              |
 | `refreshWhenOffline`    | `false` | Poll when offline                    |
@@ -349,10 +291,15 @@ const fetcher = async (url) => {
 | `errorRetryInterval`    | `5000`  | Retry interval (ms)                  |
 | `dedupingInterval`      | `2000`  | Deduplication window (ms)            |
 | `focusThrottleInterval` | `5000`  | Focus revalidation throttle (ms)     |
+| `loadingTimeout`        | `3000`  | Timeout before onLoadingSlow (ms)    |
 | `keepPreviousData`      | `false` | Keep data when key changes           |
 | `suspense`              | `false` | Enable Suspense mode                 |
 | `throwOnError`          | `false` | Throw errors to error boundary (v2+) |
 | `fallback`              | `{}`    | Pre-fetched data for SSR             |
+| `fallbackData`          | -       | Per-hook fallback data               |
+| `isPaused()`            | -       | Function to pause revalidation       |
+| `compare`               | -       | Custom comparison function for data  |
+| `use`                   | -       | Middleware array                     |
 
 ### useSWR Return Values
 
@@ -374,48 +321,27 @@ const fetcher = async (url) => {
 | `trigger`    | `function`           | Function to trigger mutation |
 | `reset`      | `function`           | Reset data and error state   |
 
----
+### useSWRMutation Options
 
-## Comparison: SWR vs React Query
+| Option            | Default | Description                              |
+| ----------------- | ------- | ---------------------------------------- |
+| `optimisticData`  | -       | Update cache optimistically before fetch |
+| `revalidate`      | `true`  | Revalidate cache after mutation          |
+| `populateCache`   | `false` | Write mutation result to cache           |
+| `rollbackOnError` | `true`  | Revert optimistic data on error          |
+| `throwOnError`    | `true`  | Whether trigger() throws on error        |
+| `onSuccess`       | -       | Callback on success                      |
+| `onError`         | -       | Callback on error                        |
 
-### Bundle Size
+### useSWRInfinite Options
 
-- **SWR**: 5.3KB (minified + gzipped)
-- **React Query**: 16.2KB (roughly 3x larger)
-
-### DevTools
-
-- **SWR**: SWR DevTools browser extension (zero setup for v2+)
-- **React Query**: Built-in DevTools component with rich debugging UI
-
-### API Philosophy
-
-- **SWR**: Minimal API, convention over configuration
-- **React Query**: Feature-rich, more options for fine-grained control
-
-### Cache Strategy
-
-- **SWR**: Stale-while-revalidate by default, route-level caching
-- **React Query**: Fine-grained control, component-level caching, query invalidation
-
-### Mutations
-
-- **SWR**: useSWRMutation with optimisticData, rollbackOnError
-- **React Query**: useMutation with more lifecycle callbacks, better cancellation
-
-### When SWR Wins
-
-- Smaller bundle requirement
-- Simpler read-heavy applications
-- Next.js projects (same team)
-- Less configuration preferred
-
-### When React Query Wins
-
-- Complex mutation workflows
-- Request cancellation required
-- Component-level cache control needed
-- More lifecycle hooks for mutations needed
+| Option                | Default | Description                              |
+| --------------------- | ------- | ---------------------------------------- |
+| `initialSize`         | `1`     | Number of pages to load initially        |
+| `revalidateAll`       | `false` | Revalidate all pages on trigger          |
+| `revalidateFirstPage` | `true`  | Revalidate first page on focus/reconnect |
+| `persistSize`         | `false` | Persist page count across unmounts       |
+| `parallel`            | `false` | Fetch pages in parallel                  |
 
 ---
 
@@ -425,5 +351,3 @@ const fetcher = async (url) => {
 - [SWR 2.0 Announcement](https://swr.vercel.app/blog/swr-v2)
 - [SWR GitHub Repository](https://github.com/vercel/swr)
 - [SWR DevTools](https://swr-devtools.vercel.app/)
-- [React Query vs SWR Comparison](https://tanstack.com/query/v4/docs/framework/react/comparison)
-- [Data Fetching in Next.js with useSWR](https://blog.logrocket.com/handling-data-fetching-next-js-useswr/)

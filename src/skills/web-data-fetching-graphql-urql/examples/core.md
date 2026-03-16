@@ -17,7 +17,7 @@
 // lib/urql-client.ts
 import { Client, cacheExchange, fetchExchange } from "urql";
 
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
+const GRAPHQL_ENDPOINT = process.env.GRAPHQL_URL || "";
 
 const client = new Client({
   url: GRAPHQL_ENDPOINT,
@@ -479,11 +479,11 @@ function AdminPanel() {
       // Custom fetch options for this query
       fetchOptions: {
         headers: {
-          "X-Admin-Token": "admin-secret",
+          "X-Admin-Token": process.env.ADMIN_TOKEN || "",
         },
       },
       // Override URL for this specific query
-      url: "https://admin-api.example.com/graphql",
+      url: process.env.ADMIN_GRAPHQL_URL || "",
       // Force network request
       requestPolicy: "network-only",
     },

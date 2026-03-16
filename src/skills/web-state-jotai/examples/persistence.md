@@ -84,7 +84,9 @@ export { ResetButton };
 
 ## Pattern 2: selectAtom for Large Objects
 
-### Good Example - Granular Selection
+> **Official guidance:** `selectAtom` is an "escape hatch" per Jotai docs. Prefer derived atoms (`atom((get) => get(base).property)`) for most cases. Use `selectAtom` only when you need `equalityFn` or `prevSlice` -- parameters that derived atoms don't support.
+
+### Good Example - Granular Selection (When equalityFn Is Needed)
 
 ```typescript
 import { atom } from "jotai";
