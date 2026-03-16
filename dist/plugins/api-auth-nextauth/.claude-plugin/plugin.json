@@ -1,0 +1,18 @@
+{
+  "name": "api-auth-nextauth",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Auth.js (NextAuth v5) authentication patterns - configuration, providers, session strategies, middleware, database adapters, role-based access, Edge compatibility",
+  "author": {
+    "name": "@vince"
+  },
+  "keywords": [
+    "auth-js",
+    "nextauth",
+    "oauth",
+    "authentication",
+    "sessions",
+    "jwt",
+    "middleware"
+  ]
+}

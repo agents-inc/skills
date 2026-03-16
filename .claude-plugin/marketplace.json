@@ -61,6 +61,25 @@
       "category": "api"
     },
     {
+      "name": "api-auth-nextauth",
+      "source": "./dist/plugins/api-auth-nextauth",
+      "description": "Auth.js (NextAuth v5) authentication patterns - configuration, providers, session strategies, middleware, database adapters, role-based access, Edge compatibility",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "auth-js",
+        "nextauth",
+        "oauth",
+        "authentication",
+        "sessions",
+        "jwt",
+        "middleware"
+      ],
+      "category": "api"
+    },
+    {
       "name": "api-ci-cd-github-actions",
       "source": "./dist/plugins/api-ci-cd-github-actions",
       "description": "GitHub Actions, pipelines, deployment",
@@ -927,6 +946,25 @@
       "category": "web"
     },
     {
+      "name": "web-framework-astro",
+      "source": "./dist/plugins/web-framework-astro",
+      "description": "Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "astro",
+        "islands",
+        "content-collections",
+        "ssg",
+        "ssr",
+        "view-transitions",
+        "server-islands"
+      ],
+      "category": "web"
+    },
+    {
       "name": "web-framework-nextjs",
       "source": "./dist/plugins/web-framework-nextjs",
       "description": "Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling",
@@ -1079,6 +1117,49 @@
         "create-resource",
         "jsx",
         "suspense"
+      ],
+      "category": "web"
+    },
+    {
+      "name": "web-framework-svelte",
+      "source": "./dist/plugins/web-framework-svelte",
+      "description": "Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "svelte",
+        "runes",
+        "reactivity",
+        "components",
+        "snippets",
+        "state",
+        "derived",
+        "effect",
+        "props"
+      ],
+      "category": "web"
+    },
+    {
+      "name": "web-framework-sveltekit",
+      "source": "./dist/plugins/web-framework-sveltekit",
+      "description": "SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "sveltekit",
+        "routing",
+        "load-functions",
+        "form-actions",
+        "hooks",
+        "ssr",
+        "ssg",
+        "server-routes",
+        "streaming",
+        "progressive-enhancement"
       ],
       "category": "web"
     },
