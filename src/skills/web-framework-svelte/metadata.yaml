@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-framework
+slug: svelte
+domain: web
+author: "@vince"
+displayName: Svelte
+cliDescription: Svelte 5 with Runes reactivity
+usageGuidance: Use when building Svelte 5 apps with Runes ($state, $derived, $effect), components, or snippets.
+tags:
+  - svelte
+  - runes
+  - reactivity
+  - components
+  - snippets
+  - state
+  - derived
+  - effect
+  - props
