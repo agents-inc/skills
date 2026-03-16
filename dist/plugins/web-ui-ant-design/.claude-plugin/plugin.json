@@ -1,0 +1,9 @@
+{
+  "name": "web-ui-ant-design",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Ant Design enterprise UI library for React",
+  "author": {
+    "name": "@vince"
+  }
+}

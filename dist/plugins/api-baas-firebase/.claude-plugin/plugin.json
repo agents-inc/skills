@@ -1,0 +1,9 @@
+{
+  "name": "api-baas-firebase",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Firebase backend-as-a-service — Firestore, Authentication, Cloud Functions v2, Storage, Hosting, Admin SDK, security rules, emulator suite",
+  "author": {
+    "name": "@vince"
+  }
+}

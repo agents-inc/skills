@@ -1,0 +1,9 @@
+{
+  "name": "shared-monorepo-nx",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
+  "author": {
+    "name": "@vince"
+  }
+}

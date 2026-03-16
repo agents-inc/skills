@@ -1,0 +1,9 @@
+{
+  "name": "api-database-redis",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Redis in-memory data store patterns with ioredis and node-redis -- caching, sessions, rate limiting, pub/sub, streams, queues, transactions, cluster",
+  "author": {
+    "name": "@vince"
+  }
+}
