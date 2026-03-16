@@ -15,38 +15,35 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://app.posthog.com";
+const POSTHOG_HOST =
+  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
 // Initialize PostHog
 if (typeof window !== "undefined" && POSTHOG_KEY) {
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
-    defaults: "2025-05-24", // Use versioned config defaults for stability
+    defaults: "2026-01-30", // Use versioned config defaults for stability
     person_profiles: "identified_only", // Only create profiles for identified users
     capture_pageview: false, // Disable automatic pageviews (we handle manually)
     capture_pageleave: true, // Track when users leave pages
   });
 }
 
+// Manual pageview tracking - use your router's pathname hook
 function PostHogPageView() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const pathname = useCurrentPathname(); // Your router's pathname hook
   const posthog = usePostHog();
 
   useEffect(() => {
     if (pathname && posthog) {
       const url = window.origin + pathname;
-      const search = searchParams?.toString();
-      const fullUrl = search ? `${url}?${search}` : url;
-
-      posthog.capture("$pageview", { $current_url: fullUrl });
+      posthog.capture("$pageview", { $current_url: url });
     }
-  }, [pathname, searchParams, posthog]);
+  }, [pathname, posthog]);
 
   return null;
 }
@@ -63,11 +60,9 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     </PHProvider>
   );
 }
-
-export { PostHogProvider };
 ```
 
-**Why good:** `person_profiles: "identified_only"` reduces costs (anonymous events 4x cheaper), manual pageview capture gives control over URL tracking, pageleave helps measure engagement
+**Why good:** `person_profiles: "identified_only"` reduces costs (anonymous events 4x cheaper), manual pageview capture gives control over URL tracking, `defaults` date pins config behavior for stability
 
 ---
 
@@ -91,11 +86,7 @@ export function useAnalytics() {
 
   const track = useCallback(
     (event: PostHogEvent | string, properties?: EventProperties) => {
-      if (!posthog) {
-        console.warn("PostHog not initialized");
-        return;
-      }
-      posthog.capture(event, properties);
+      posthog?.capture(event, properties);
     },
     [posthog],
   );
@@ -110,23 +101,11 @@ export function useAnalytics() {
     [track],
   );
 
-  const trackOnboardingStep = useCallback(
-    (stepNumber: number, stepName: string) => {
-      track("onboarding:step_completed", {
-        step_number: stepNumber,
-        step_name: stepName,
-      });
-    },
-    [track],
-  );
-
-  return { track, trackFeatureUsed, trackOnboardingStep };
+  return { track, trackFeatureUsed };
 }
-
-export { useAnalytics };
 ```
 
-**Why good:** Centralized tracking with type hints, convenience methods for common patterns, null-safe with warning for debugging
+**Why good:** Centralized tracking with type hints, convenience methods for common patterns, null-safe via optional chaining
 
 ---
 
@@ -157,8 +136,6 @@ export function CreateProjectButton() {
     </button>
   );
 }
-
-export { CreateProjectButton };
 ```
 
 **Why good:** Uses constant for event name, includes context (source), clean separation of tracking from business logic

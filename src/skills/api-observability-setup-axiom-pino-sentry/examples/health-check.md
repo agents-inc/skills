@@ -10,7 +10,7 @@
 
 ### Next.js Health Check
 
-**File: `apps/client-next/app/api/health/route.ts`**
+**File: `app/api/health/route.ts`**
 
 ```typescript
 // Good Example - Health check endpoint
@@ -34,7 +34,7 @@ export async function GET() {
 
 ### Hono Health Check with Dependency Checks
 
-**File: `packages/api/src/routes/health.ts`**
+**File: `src/routes/health.ts`**
 
 ```typescript
 // Good Example - Hono health check with dependency checks

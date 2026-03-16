@@ -8,119 +8,51 @@
 
 ## Filtering Patterns
 
-### Good Example - Multiple Values with Case-Insensitive Matching
+### Good Example - Comma-Separated Multi-Value Filters
+
+The Hono route validates and extracts query params. The filter logic shows the pattern for parsing comma-separated values.
 
 ```typescript
-import { sql } from "drizzle-orm";
-
-const SINGLE_VALUE_COUNT = 1;
-
-// Query: ?country=germany,france,spain
-const { country } = c.req.valid("query");
-
-const conditions = [eq(jobs.isActive, true), isNull(jobs.deletedAt)];
-
-if (country) {
-  const countries = country.split(",").map((c) => c.trim().toLowerCase());
-
-  if (countries.length === SINGLE_VALUE_COUNT) {
-    // Single value: use simple equality with case-insensitive comparison
-    conditions.push(sql`LOWER(${jobs.country}) = ${countries[0]}`);
-  } else {
-    // Multiple values: use IN clause with case-insensitive comparison
-    conditions.push(
-      sql`LOWER(${jobs.country}) IN (${sql.join(
-        countries.map((c) => sql`${c}`),
-        sql`, `,
-      )})`,
-    );
-  }
-}
-
-const results = await db
-  .select()
-  .from(jobs)
-  .where(and(...conditions));
-```
-
-**Why good:** LOWER() prevents "Germany" vs "germany" mismatches, sql template prevents SQL injection, handling both single/multiple covers all URL patterns
-
-### Good Example - Multiple Filter Types
-
-```typescript
-import { and, eq, ne, inArray, sql } from "drizzle-orm";
-
-const SINGLE_VALUE_COUNT = 1;
-
 app.openapi(getJobsRoute, async (c) => {
-  const { country, employment_type, seniority_level, visa_sponsorship } =
-    c.req.valid("query");
+  const { country, employment_type } = c.req.valid("query");
 
-  const conditions = [eq(jobs.isActive, true), isNull(jobs.deletedAt)];
+  // Parse comma-separated values and normalize case
+  const filters: Record<string, string[]> = {};
 
-  // Country filter: comma-separated with case-insensitive matching
   if (country) {
-    const countries = country.split(",").map((c) => c.trim().toLowerCase());
-    if (countries.length === SINGLE_VALUE_COUNT) {
-      conditions.push(sql`LOWER(${jobs.country}) = ${countries[0]}`);
-    } else {
-      conditions.push(
-        sql`LOWER(${jobs.country}) IN (${sql.join(
-          countries.map((c) => sql`${c}`),
-          sql`, `,
-        )})`,
-      );
-    }
+    filters.country = country.split(",").map((c) => c.trim().toLowerCase());
   }
 
-  // Single enum value filter
   if (employment_type) {
-    conditions.push(eq(jobs.employmentType, employment_type as any));
+    filters.employment_type = employment_type.split(",").map((e) => e.trim());
   }
 
-  // Multiple enum values filter
-  if (seniority_level) {
-    const seniorities = seniority_level.split(",");
-    if (seniorities.length === SINGLE_VALUE_COUNT) {
-      conditions.push(eq(jobs.seniorityLevel, seniorities[0] as any));
-    } else {
-      conditions.push(inArray(jobs.seniorityLevel, seniorities as any));
-    }
-  }
-
-  // Boolean filter (string to boolean logic)
-  if (visa_sponsorship === "true") {
-    conditions.push(ne(jobs.visaSponsorshipType, "none"));
-  }
-
-  const results = await db
-    .select()
-    .from(jobs)
-    .where(and(...conditions))
-    .limit(DEFAULT_QUERY_LIMIT);
+  // Pass normalized filters to your database query layer
+  // Use case-insensitive matching (LOWER() or ILIKE) for text fields
+  const results = await fetchJobs({ filters, limit: DEFAULT_QUERY_LIMIT });
 
   return c.json({ jobs: results, total: results.length }, 200);
 });
 ```
 
-**Why good:** inArray() for multiple enums is cleaner than chained OR, ne() for visa check handles null correctly, case-insensitive = better UX
+**Why good:** comma-separated values support `?country=germany,france,spain` in one request, case normalization prevents "Germany" vs "germany" mismatches, `c.req.valid()` ensures type-safe extraction
 
 ### Bad Example - No multiple value support
 
 ```typescript
-// BAD Example - No multiple value support
-const { country } = c.req.query();
+// BAD Example
+app.get("/jobs", async (c) => {
+  // BAD: c.req.query() bypasses Zod validation
+  const country = c.req.query("country");
 
-// BAD: Only handles single value
-// BAD: Case-sensitive (won't match "Germany" vs "germany")
-const results = await db
-  .select()
-  .from(jobs)
-  .where(eq(jobs.country, country))
-  .limit(100); // BAD: Magic number
+  // BAD: Only handles single value, case-sensitive
+  const results = await fetchJobs({ country, limit: 100 }); // BAD: Magic number
+
+  return c.json({ jobs: results });
+});
 ```
 
-**Why bad:** Single-value filter forces multiple API calls, case-sensitive breaks when user types "GERMANY", magic 100 can't be easily changed
+**Why bad:** `c.req.query()` bypasses validation, single-value filter forces multiple API calls, case-sensitive breaks user input, magic 100
 
 ---
 
@@ -129,8 +61,6 @@ const results = await db
 ### Good Example - Offset-Based Pagination
 
 ```typescript
-import { sql } from "drizzle-orm";
-
 const DEFAULT_LIMIT = 50;
 const DEFAULT_OFFSET = 0;
 const RADIX_DECIMAL = 10;
@@ -144,37 +74,17 @@ app.openapi(getJobsRoute, async (c) => {
   const query = c.req.valid("query");
   const { limit, offset } = parsePagination(query.limit, query.offset);
 
-  // Apply filters
-  const conditions = [eq(jobs.isActive, true), isNull(jobs.deletedAt)];
+  // Use your database solution with limit/offset
+  const results = await fetchJobs({ limit, offset });
 
-  // Get paginated results
-  const results = await db
-    .select()
-    .from(jobs)
-    .where(and(...conditions))
-    .limit(limit)
-    .offset(offset)
-    .orderBy(desc(jobs.createdAt));
+  // Get total count with same filters for pagination UI
+  const total = await countJobs();
 
-  // Get total count for pagination (with same filters)
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(jobs)
-    .where(and(...conditions));
-
-  return c.json(
-    {
-      jobs: results,
-      total: count,
-      limit,
-      offset,
-    },
-    200,
-  );
+  return c.json({ jobs: results, total, limit, offset }, 200);
 });
 ```
 
-**Why good:** Total count enables "Page X of Y" UI, radix 10 prevents parseInt("08") bugs, same conditions for count = accurate totals
+**Why good:** Total count enables "Page X of Y" UI, radix 10 prevents `parseInt("08")` bugs, returning limit/offset in response lets clients track state
 
 **Pagination response schema:**
 
@@ -196,13 +106,13 @@ export const PaginatedJobsResponseSchema = z
 const limit = parseInt(c.req.query("limit") || "50"); // BAD: Magic numbers, no radix
 const offset = parseInt(c.req.query("offset") || "0"); // BAD: Magic numbers, no radix
 
-const results = await db.select().from(jobs).limit(limit).offset(offset);
+const results = await fetchJobs({ limit, offset });
 
 // BAD: No total count - can't show "Page X of Y"
 return c.json({ jobs: results });
 ```
 
-**Why bad:** No radix causes parseInt("08")=0 in some engines, missing total = can't build pagination UI, limit/offset not in response = client can't track state
+**Why bad:** No radix causes `parseInt("08")=0` in some engines, missing total = can't build pagination UI, limit/offset not in response = client can't track state
 
 ---
 
@@ -253,22 +163,10 @@ export const transformJobRow = (row: any) => {
 
 ```typescript
 app.openapi(getJobsRoute, async (c) => {
-  const rows = await db
-    .select({
-      id: jobs.id,
-      title: jobs.title,
-      // ... all fields
-      showSalary: jobs.showSalary,
-      salaryMin: jobs.salaryMin,
-      salaryMax: jobs.salaryMax,
-      salaryCurrency: jobs.salaryCurrency,
-      companyName: companies.name,
-      companyLogoUrl: companies.logoUrl,
-    })
-    .from(jobs)
-    .leftJoin(companies, eq(jobs.companyId, companies.id));
+  // Fetch raw rows from your database
+  const rows = await fetchJobRows();
 
-  // Transform all rows
+  // Transform all rows using the reusable utility
   const transformedJobs = rows.map(transformJobRow);
 
   return c.json({ jobs: transformedJobs, total: transformedJobs.length }, 200);
@@ -280,10 +178,10 @@ app.openapi(getJobsRoute, async (c) => {
 ```typescript
 // BAD Example - Inline transformations
 app.get("/jobs", async (c) => {
-  const rows = await db.select().from(jobs);
+  const rows = await fetchJobRows();
 
   // BAD: Inline transformation makes code hard to read
-  // BAD: No reusability
+  // BAD: No reusability across routes
   // BAD: Magic string "EUR"
   const jobs = rows.map((r) => ({
     ...r,

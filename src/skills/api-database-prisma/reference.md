@@ -216,7 +216,7 @@ For serverless, use a connection pooler like PgBouncer or Prisma Accelerate.
 - Prisma uses implicit many-to-many tables - you can't add extra fields without explicit join table
 - `@db.Uuid` requires valid UUID format - will error on invalid strings
 - Enum changes require migration - adding/removing values
-- `Json` fields are typed as `JsonValue` - need to cast or use Zod for validation
+- `Json` fields are typed as `JsonValue` - need runtime validation at parse boundary
 - `Decimal` fields return `Prisma.Decimal` type - convert with `.toNumber()` for calculations
 - Transactions have default 5s timeout - increase with `timeout` option for slow operations
 - Interactive transactions hold connections - keep them short

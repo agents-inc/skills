@@ -158,288 +158,108 @@ AUTH_GOOGLE_CLIENT_SECRET="your-google-secret"
 
 ### Pattern 2: Providers
 
-Auth.js supports OAuth, email/magic link, and credentials authentication.
-
-#### OAuth Provider with Custom Profile
+Auth.js supports OAuth, email/magic link, and credentials authentication. 80+ built-in OAuth providers auto-detect `AUTH_*` env vars.
 
 ```typescript
-// auth.ts
-import NextAuth from "next-auth";
-import GitHub from "next-auth/providers/github";
+// OAuth: customize profile mapping
+GitHub({
+  profile(profile) {
+    return {
+      id: String(profile.id),
+      name: profile.name ?? profile.login,
+      role: "user",
+    };
+  },
+});
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
-  providers: [
-    GitHub({
-      // Customize the profile data mapped to the user
-      profile(profile) {
-        return {
-          id: String(profile.id),
-          name: profile.name ?? profile.login,
-          email: profile.email,
-          image: profile.avatar_url,
-          role: "user", // Custom field
-        };
-      },
-    }),
-  ],
+// Credentials: validate input, return null on failure
+Credentials({
+  async authorize(credentials) {
+    const parsed = LoginSchema.safeParse(credentials);
+    if (!parsed.success) return null;
+    const user = await getUserByEmail(parsed.data.email);
+    if (
+      !user ||
+      !(await verifyPassword(parsed.data.password, user.hashedPassword))
+    )
+      return null;
+    return { id: user.id, name: user.name, email: user.email };
+  },
 });
 ```
 
-#### Credentials Provider
-
-```typescript
-// auth.ts
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { z } from "zod";
-
-const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
-
-export const { auth, handlers, signIn, signOut } = NextAuth({
-  providers: [
-    Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const parsed = LoginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const user = await getUserByEmail(parsed.data.email);
-        if (!user) return null;
-
-        const passwordMatch = await verifyPassword(
-          parsed.data.password,
-          user.hashedPassword,
-        );
-        if (!passwordMatch) return null;
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        };
-      },
-    }),
-  ],
-});
-```
-
-**Why good:** Zod validation on credentials, null return signals failed auth, user object returned on success
+**Key rules:** Validate input before DB lookup, always hash passwords, return `null` on failure (never throw - it leaks info). See [examples/core.md](examples/core.md) for complete implementations.
 
 ---
 
 ### Pattern 3: Callbacks
 
-Callbacks customize auth behavior - extending tokens, sessions, controlling sign-in, and redirects.
-
-#### JWT and Session Callbacks for Custom Data
+Four callbacks customize auth behavior. Data flows: **jwt callback** (enrich token) -> **session callback** (expose to client).
 
 ```typescript
-// auth.ts
-import NextAuth from "next-auth";
-import GitHub from "next-auth/providers/github";
-
-export const { auth, handlers, signIn, signOut } = NextAuth({
-  providers: [GitHub],
-  callbacks: {
-    // Called when JWT is created (sign in) or updated (session access)
-    async jwt({ token, user, account }) {
-      // On first sign in, user and account are available
-      if (user) {
-        token.role = user.role ?? "user";
-        token.id = user.id;
-      }
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      return token;
-    },
-
-    // Called whenever session is checked - shapes what client sees
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-      }
-      return session;
-    },
-
-    // Control who can sign in
-    async signIn({ user, account, profile }) {
-      // Example: Only allow users with verified email
-      if (account?.provider === "github") {
-        return profile?.email_verified === true;
-      }
-      return true;
-    },
-
-    // Control redirect after sign in/out
-    async redirect({ url, baseUrl }) {
-      // Allow relative URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Allow same-origin URLs
-      if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
+callbacks: {
+  jwt({ token, user, account }) {
+    // `user` only available on first sign-in — check before accessing
+    if (user) { token.id = user.id; token.role = user.role ?? "user"; }
+    if (account) { token.accessToken = account.access_token; }
+    return token;
   },
-});
+  session({ session, token }) {
+    // Expose only what client needs — NEVER expose accessToken
+    session.user.id = token.id as string;
+    session.user.role = token.role as string;
+    return session;
+  },
+  signIn({ user, account }) {
+    // Return false to deny, true to allow
+    if (account?.provider === "google") return user.email?.endsWith("@company.com") ?? false;
+    return true;
+  },
+  redirect({ url, baseUrl }) {
+    // Prevent open redirects
+    if (url.startsWith("/")) return `${baseUrl}${url}`;
+    if (new URL(url).origin === baseUrl) return url;
+    return baseUrl;
+  },
+}
 ```
 
-**Why good:** JWT callback enriches token with custom data, session callback exposes only what the client needs, signIn callback controls access, redirect callback prevents open redirects
+**Key rules:** JWT callback runs on EVERY `auth()` call (keep lightweight), `user` param is only present at sign-in, never expose OAuth tokens to client. See [examples/core.md](examples/core.md) for complete callback implementations.
 
 ---
 
 ### Pattern 4: Session Access
 
-The unified `auth()` function works in every context.
+The unified `auth()` function replaces `getServerSession`, `getSession`, `getToken`, and `useSession` from v4.
 
-#### Server Component
+| Context          | How to access session                                     |
+| ---------------- | --------------------------------------------------------- |
+| Server Component | `const session = await auth()`                            |
+| Route Handler    | `export const GET = auth(function GET(req) { req.auth })` |
+| Server Action    | `const session = await auth()`                            |
+| Middleware       | `export { auth as middleware }` or `authorized` callback  |
+| Client Component | `useSession()` (requires `SessionProvider` in layout)     |
 
-```typescript
-// app/dashboard/page.tsx
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-
-export default async function DashboardPage() {
-  const session = await auth();
-
-  if (!session) {
-    redirect("/api/auth/signin");
-  }
-
-  return (
-    <div>
-      <h1>Welcome, {session.user.name}</h1>
-      <p>Role: {session.user.role}</p>
-    </div>
-  );
-}
-```
-
-#### Route Handler
-
-```typescript
-// app/api/user/route.ts
-import { auth } from "@/auth";
-import { NextResponse } from "next/server";
-
-export const GET = auth(function GET(req) {
-  if (!req.auth) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return NextResponse.json({ user: req.auth.user });
-});
-```
-
-#### Client Component
-
-```typescript
-// app/providers.tsx
-"use client";
-
-import { SessionProvider } from "next-auth/react";
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
-}
-```
-
-```typescript
-// app/layout.tsx
-import { Providers } from "./providers";
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
-}
-```
-
-```typescript
-// components/user-menu.tsx
-"use client";
-
-import { useSession, signIn, signOut } from "next-auth/react";
-
-export function UserMenu() {
-  const { data: session, status } = useSession();
-
-  if (status === "loading") return <div>Loading...</div>;
-
-  if (!session) {
-    return <button onClick={() => signIn()}>Sign in</button>;
-  }
-
-  return (
-    <div>
-      <span>{session.user.name}</span>
-      <button onClick={() => signOut()}>Sign out</button>
-    </div>
-  );
-}
-```
-
-**Why good:** `auth()` works in Server Components without context, `auth(handler)` wraps Route Handlers, `SessionProvider` enables `useSession` in client components
+**Key rules:** Server-side imports come from `@/auth`, client-side imports from `next-auth/react`. Never call `auth()` in Client Components. See [examples/session.md](examples/session.md) for complete implementations.
 
 ---
 
 ### Pattern 5: Sign In / Sign Out Actions
 
-#### Server-Side Sign In (Recommended)
+Two approaches: Server Actions (recommended, progressive enhancement) or client-side.
 
 ```typescript
-// components/sign-in-button.tsx
-import { signIn } from "@/auth";
+// Server-side (recommended): import from @/auth, use Server Actions in forms
+import { signIn, signOut } from "@/auth";
+// In form action: await signIn("github", { redirectTo: "/dashboard" })
+// In form action: await signOut({ redirectTo: "/" })
 
-export function SignInButton() {
-  return (
-    <form
-      action={async () => {
-        "use server";
-        await signIn("github", { redirectTo: "/dashboard" });
-      }}
-    >
-      <button type="submit">Sign in with GitHub</button>
-    </form>
-  );
-}
+// Client-side: import from next-auth/react, use onClick handlers
+import { signIn, signOut } from "next-auth/react";
+// onClick: signIn("github", { callbackUrl: "/dashboard" })
 ```
 
-#### Server-Side Sign Out
-
-```typescript
-// components/sign-out-button.tsx
-import { signOut } from "@/auth";
-
-export function SignOutButton() {
-  return (
-    <form
-      action={async () => {
-        "use server";
-        await signOut({ redirectTo: "/" });
-      }}
-    >
-      <button type="submit">Sign out</button>
-    </form>
-  );
-}
-```
-
-**Why good:** Server Actions for sign in/out (progressive enhancement), `redirectTo` controls post-auth destination, works without client-side JavaScript
+**Key rules:** Server-side uses `redirectTo`, client-side uses `callbackUrl`. `signIn()` throws a NEXT_REDIRECT exception internally -- don't wrap in try/catch expecting a return value. See [examples/core.md](examples/core.md) for complete implementations.
 
 ---
 
@@ -483,28 +303,39 @@ declare module "next-auth/jwt" {
 
 ## Integration Guide
 
-**Auth.js is the authentication layer.** It handles identity verification, session management, and route protection. It does NOT handle authorization logic (role checks, permission systems) - that is application code.
+**Auth.js is the authentication layer.** It handles identity verification, session management, and route protection. It does NOT handle authorization logic (role checks, permission systems) -- that is application code.
 
-**Works with:**
+**Framework support:** Auth.js works with multiple web frameworks via framework-specific packages (`next-auth`, `@auth/sveltekit`, `@auth/express`).
 
-- **Next.js** - Primary framework, full App Router support with Server Actions
-- **SvelteKit** - Via `@auth/sveltekit` package
-- **Express** - Via `@auth/express` package
-- **Prisma** - Via `@auth/prisma-adapter` for database sessions
-- **Drizzle** - Via `@auth/drizzle-adapter` for database sessions
+**Database adapters:** For database sessions, Auth.js provides adapter packages (`@auth/prisma-adapter`, `@auth/drizzle-adapter`, etc.) that integrate with your ORM. See [examples/database.md](examples/database.md).
 
-**Session strategy depends on stack:**
+**Session strategy depends on your needs:**
 
 - **JWT (default)** - No database needed, works on Edge, stateless
-- **Database** - Requires adapter, server-side session store, supports revocation
+- **Database** - Requires adapter, server-side session store, supports immediate revocation
 
-**Defers to:**
-
-- **Database/ORM** - For user data storage and queries beyond auth
-- **Authorization libraries** - For role/permission systems (CASL, etc.)
-- **Rate limiting** - For brute-force protection on sign-in endpoints
+**Auth.js does NOT handle:** fine-grained authorization/RBAC, rate limiting, or database queries beyond auth -- those are application-level concerns.
 
 </integration>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+- **Using `getServerSession(authOptions)`** -- deprecated in v5; use `auth()` from your `auth.ts`
+- **Using `NEXTAUTH_SECRET` or `NEXTAUTH_URL`** -- deprecated; use `AUTH_SECRET` (URL is auto-detected)
+- **Credentials provider without rate limiting** -- vulnerable to brute-force attacks
+- **Exposing OAuth tokens to client via session callback** -- keep `accessToken`/`refreshToken` server-side only
+- **Middleware as sole authorization** -- middleware runs before rendering but does not replace per-route checks in Server Actions/API routes
+- **Database adapter imported in middleware** -- database ORMs can't run on Edge runtime; split config into `auth.config.ts` + `auth.ts`
+- **Wrapping `signIn()` in try/catch** -- it throws a NEXT_REDIRECT exception internally (this is intentional)
+- **JWT callback querying database on every call** -- runs on EVERY `auth()` invocation; keep it lightweight
+
+See [reference.md](reference.md) for the complete anti-pattern list, gotchas, and migration table.
+
+</red_flags>
 
 ---
 

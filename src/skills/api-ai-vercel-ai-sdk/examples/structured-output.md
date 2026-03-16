@@ -1,6 +1,6 @@
 # Vercel AI SDK Structured Output Examples
 
-> generateObject patterns with Zod schemas, streamObject, enum/union schemas, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
+> Output.object() and Output.array() patterns with Zod schemas, streaming partial objects, classification, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Core patterns:** See [core.md](core.md). **Tool calling:** See [tools.md](tools.md).
 
@@ -12,35 +12,52 @@
 
 ```typescript
 // lib/recipe-generator.ts
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai";
+import { z } from "zod";
 
 const recipeSchema = z.object({
-  name: z.string().describe('The recipe name'),
-  servings: z.number().int().positive().describe('Number of servings'),
-  difficulty: z.enum(['easy', 'medium', 'hard']).describe('Difficulty level'),
-  prepTimeMinutes: z.number().int().positive().describe('Preparation time in minutes'),
-  cookTimeMinutes: z.number().int().positive().describe('Cooking time in minutes'),
-  ingredients: z.array(
-    z.object({
-      name: z.string().describe('Ingredient name'),
-      amount: z.string().describe('Amount with unit, e.g. "200g" or "2 cups"'),
-      optional: z.boolean().default(false).describe('Whether this ingredient is optional'),
-    }),
-  ).describe('List of ingredients'),
-  steps: z.array(z.string()).describe('Step-by-step cooking instructions'),
-  tags: z.array(z.string()).describe('Recipe tags like "vegetarian", "quick", "gluten-free"'),
+  name: z.string().describe("The recipe name"),
+  servings: z.number().int().positive().describe("Number of servings"),
+  difficulty: z.enum(["easy", "medium", "hard"]).describe("Difficulty level"),
+  prepTimeMinutes: z
+    .number()
+    .int()
+    .positive()
+    .describe("Preparation time in minutes"),
+  cookTimeMinutes: z
+    .number()
+    .int()
+    .positive()
+    .describe("Cooking time in minutes"),
+  ingredients: z
+    .array(
+      z.object({
+        name: z.string().describe("Ingredient name"),
+        amount: z
+          .string()
+          .describe('Amount with unit, e.g. "200g" or "2 cups"'),
+        optional: z
+          .boolean()
+          .default(false)
+          .describe("Whether this ingredient is optional"),
+      }),
+    )
+    .describe("List of ingredients"),
+  steps: z.array(z.string()).describe("Step-by-step cooking instructions"),
+  tags: z
+    .array(z.string())
+    .describe('Recipe tags like "vegetarian", "quick", "gluten-free"'),
 });
 
 type Recipe = z.infer<typeof recipeSchema>;
 
 export async function generateRecipe(prompt: string): Promise<Recipe> {
   const { output } = await generateText({
-    model: 'openai/gpt-4o',
+    model: "openai/gpt-4o",
     output: Output.object({
       schema: recipeSchema,
-      name: 'Recipe',
-      description: 'A detailed recipe with ingredients and instructions.',
+      name: "Recipe",
+      description: "A detailed recipe with ingredients and instructions.",
     }),
     prompt,
   });
@@ -49,9 +66,11 @@ export async function generateRecipe(prompt: string): Promise<Recipe> {
 }
 
 // Usage
-const recipe = await generateRecipe('A quick vegetarian pasta for 2 people');
+const recipe = await generateRecipe("A quick vegetarian pasta for 2 people");
 console.log(`${recipe.name} (${recipe.difficulty})`);
-console.log(`Prep: ${recipe.prepTimeMinutes}min, Cook: ${recipe.cookTimeMinutes}min`);
+console.log(
+  `Prep: ${recipe.prepTimeMinutes}min, Cook: ${recipe.cookTimeMinutes}min`,
+);
 recipe.ingredients.forEach((i) => console.log(`  - ${i.amount} ${i.name}`));
 ```
 
@@ -61,19 +80,19 @@ recipe.ingredients.forEach((i) => console.log(`  - ${i.amount} ${i.name}`));
 
 ```typescript
 // BAD
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai";
+import { z } from "zod";
 
 const schema = z.object({
-  n: z.string(),        // What is "n"?
+  n: z.string(), // What is "n"?
   items: z.array(z.string()), // Items of what?
-  v: z.number(),        // What value?
+  v: z.number(), // What value?
 });
 
 const { output } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   output: Output.object({ schema }),
-  prompt: 'Generate something.',
+  prompt: "Generate something.",
 });
 ```
 
@@ -87,32 +106,36 @@ const { output } = await generateText({
 
 ```typescript
 // lib/stream-recipe.ts
-import { streamText, Output } from 'ai';
-import { z } from 'zod';
+import { streamText, Output } from "ai";
+import { z } from "zod";
 
 const articleSchema = z.object({
-  title: z.string().describe('Article title'),
-  summary: z.string().describe('One paragraph summary'),
-  sections: z.array(
-    z.object({
-      heading: z.string().describe('Section heading'),
-      content: z.string().describe('Section content'),
-    }),
-  ).describe('Article sections'),
-  metadata: z.object({
-    readTimeMinutes: z.number().describe('Estimated reading time'),
-    category: z.string().describe('Article category'),
-    tags: z.array(z.string()).describe('Relevant tags'),
-  }).describe('Article metadata'),
+  title: z.string().describe("Article title"),
+  summary: z.string().describe("One paragraph summary"),
+  sections: z
+    .array(
+      z.object({
+        heading: z.string().describe("Section heading"),
+        content: z.string().describe("Section content"),
+      }),
+    )
+    .describe("Article sections"),
+  metadata: z
+    .object({
+      readTimeMinutes: z.number().describe("Estimated reading time"),
+      category: z.string().describe("Article category"),
+      tags: z.array(z.string()).describe("Relevant tags"),
+    })
+    .describe("Article metadata"),
 });
 
 export async function streamArticle(topic: string) {
   const { partialOutputStream } = streamText({
-    model: 'anthropic/claude-sonnet-4.5',
+    model: "anthropic/claude-sonnet-4.5",
     output: Output.object({ schema: articleSchema }),
     prompt: `Write a comprehensive article about: ${topic}`,
     onError({ error }) {
-      console.error('Stream error:', error);
+      console.error("Stream error:", error);
     },
   });
 
@@ -148,15 +171,15 @@ export async function streamArticle(topic: string) {
 
 ```typescript
 // lib/generate-heroes.ts
-import { streamText, Output } from 'ai';
-import { z } from 'zod';
+import { streamText, Output } from "ai";
+import { z } from "zod";
 
 const heroSchema = z.object({
-  name: z.string().describe('Hero character name'),
-  class: z.string().describe('Character class like Warrior, Mage, Rogue'),
-  level: z.number().int().min(1).max(100).describe('Character level 1-100'),
-  abilities: z.array(z.string()).describe('List of special abilities'),
-  backstory: z.string().describe('Brief character backstory (2-3 sentences)'),
+  name: z.string().describe("Hero character name"),
+  class: z.string().describe("Character class like Warrior, Mage, Rogue"),
+  level: z.number().int().min(1).max(100).describe("Character level 1-100"),
+  abilities: z.array(z.string()).describe("List of special abilities"),
+  backstory: z.string().describe("Brief character backstory (2-3 sentences)"),
 });
 
 type Hero = z.infer<typeof heroSchema>;
@@ -167,11 +190,11 @@ export async function generateHeroes(): Promise<Hero[]> {
   const heroes: Hero[] = [];
 
   const { elementStream } = streamText({
-    model: 'openai/gpt-4o',
+    model: "openai/gpt-4o",
     output: Output.array({ element: heroSchema }),
     prompt: `Generate ${TARGET_HERO_COUNT} unique hero characters for a fantasy RPG.`,
     onError({ error }) {
-      console.error('Generation error:', error);
+      console.error("Generation error:", error);
     },
   });
 
@@ -190,20 +213,20 @@ export async function generateHeroes(): Promise<Hero[]> {
 ### Good Example -- Non-Streaming Array
 
 ```typescript
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai";
+import { z } from "zod";
 
 const citySchema = z.object({
-  name: z.string().describe('City name'),
-  country: z.string().describe('Country name'),
-  population: z.number().describe('Approximate population'),
-  knownFor: z.string().describe('What the city is famous for'),
+  name: z.string().describe("City name"),
+  country: z.string().describe("Country name"),
+  population: z.number().describe("Approximate population"),
+  knownFor: z.string().describe("What the city is famous for"),
 });
 
 const TARGET_CITY_COUNT = 10;
 
 const { output } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   output: Output.array({ element: citySchema }),
   prompt: `List the ${TARGET_CITY_COUNT} most visited cities in the world.`,
 });
@@ -224,13 +247,13 @@ output.forEach((city) => {
 
 ```typescript
 // lib/classify.ts
-import { generateText, Output } from 'ai';
+import { generateText, Output } from "ai";
 
-const SENTIMENT_OPTIONS = ['positive', 'negative', 'neutral', 'mixed'] as const;
+const SENTIMENT_OPTIONS = ["positive", "negative", "neutral", "mixed"] as const;
 
 export async function classifySentiment(text: string) {
   const { output } = await generateText({
-    model: 'openai/gpt-4o-mini',
+    model: "openai/gpt-4o-mini",
     output: Output.choice({
       options: [...SENTIMENT_OPTIONS],
     }),
@@ -241,7 +264,9 @@ export async function classifySentiment(text: string) {
 }
 
 // Usage
-const sentiment = await classifySentiment('I love this product! Best purchase ever.');
+const sentiment = await classifySentiment(
+  "I love this product! Best purchase ever.",
+);
 console.log(`Sentiment: ${sentiment}`); // "positive"
 ```
 
@@ -255,44 +280,52 @@ console.log(`Sentiment: ${sentiment}`); // "positive"
 
 ```typescript
 // lib/product-generator.ts
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai";
+import { z } from "zod";
 
 const priceSchema = z.object({
-  amount: z.number().positive().describe('Price amount in dollars'),
-  currency: z.literal('USD').describe('Currency code'),
-  discountPercent: z.number().min(0).max(100).optional().describe('Discount percentage if on sale'),
+  amount: z.number().positive().describe("Price amount in dollars"),
+  currency: z.literal("USD").describe("Currency code"),
+  discountPercent: z
+    .number()
+    .min(0)
+    .max(100)
+    .optional()
+    .describe("Discount percentage if on sale"),
 });
 
 const dimensionsSchema = z.object({
-  width: z.number().positive().describe('Width in centimeters'),
-  height: z.number().positive().describe('Height in centimeters'),
-  depth: z.number().positive().describe('Depth in centimeters'),
-  weightGrams: z.number().positive().describe('Weight in grams'),
+  width: z.number().positive().describe("Width in centimeters"),
+  height: z.number().positive().describe("Height in centimeters"),
+  depth: z.number().positive().describe("Depth in centimeters"),
+  weightGrams: z.number().positive().describe("Weight in grams"),
 });
 
 const productSchema = z.object({
-  name: z.string().describe('Product name'),
-  description: z.string().describe('Marketing description (2-3 sentences)'),
+  name: z.string().describe("Product name"),
+  description: z.string().describe("Marketing description (2-3 sentences)"),
   sku: z.string().describe('Stock keeping unit, e.g. "PROD-001"'),
-  category: z.enum(['electronics', 'clothing', 'home', 'sports', 'books'])
-    .describe('Product category'),
-  price: priceSchema.describe('Pricing information'),
-  dimensions: dimensionsSchema.optional().describe('Physical dimensions if applicable'),
-  features: z.array(z.string()).min(3).max(8).describe('Key product features'),
-  inStock: z.boolean().describe('Whether the product is currently in stock'),
-  rating: z.number().min(1).max(5).describe('Average customer rating 1-5'),
+  category: z
+    .enum(["electronics", "clothing", "home", "sports", "books"])
+    .describe("Product category"),
+  price: priceSchema.describe("Pricing information"),
+  dimensions: dimensionsSchema
+    .optional()
+    .describe("Physical dimensions if applicable"),
+  features: z.array(z.string()).min(3).max(8).describe("Key product features"),
+  inStock: z.boolean().describe("Whether the product is currently in stock"),
+  rating: z.number().min(1).max(5).describe("Average customer rating 1-5"),
 });
 
 type Product = z.infer<typeof productSchema>;
 
 export async function generateProductListing(brief: string): Promise<Product> {
   const { output } = await generateText({
-    model: 'openai/gpt-4o',
+    model: "openai/gpt-4o",
     output: Output.object({
       schema: productSchema,
-      name: 'Product',
-      description: 'An e-commerce product listing.',
+      name: "Product",
+      description: "An e-commerce product listing.",
     }),
     prompt: `Generate a realistic product listing based on this brief: ${brief}`,
   });
@@ -311,21 +344,23 @@ export async function generateProductListing(brief: string): Promise<Product> {
 
 ```typescript
 // lib/research-pipeline.ts
-import { generateText, Output, tool, stepCountIs } from 'ai';
-import { z } from 'zod';
+import { generateText, Output, tool, stepCountIs } from "ai";
+import { z } from "zod";
 
 const summarySchema = z.object({
-  topic: z.string().describe('Research topic'),
-  summary: z.string().describe('Comprehensive summary of findings'),
-  keyFacts: z.array(z.string()).describe('Key facts discovered'),
-  sources: z.array(z.string()).describe('Source URLs used'),
-  confidence: z.enum(['high', 'medium', 'low']).describe('Confidence level in findings'),
+  topic: z.string().describe("Research topic"),
+  summary: z.string().describe("Comprehensive summary of findings"),
+  keyFacts: z.array(z.string()).describe("Key facts discovered"),
+  sources: z.array(z.string()).describe("Source URLs used"),
+  confidence: z
+    .enum(["high", "medium", "low"])
+    .describe("Confidence level in findings"),
 });
 
 const webSearchTool = tool({
-  description: 'Search the web for information about a topic.',
+  description: "Search the web for information about a topic.",
   inputSchema: z.object({
-    query: z.string().describe('Search query'),
+    query: z.string().describe("Search query"),
   }),
   execute: async ({ query }) => {
     return await performWebSearch(query);
@@ -336,8 +371,9 @@ const MAX_RESEARCH_STEPS = 5;
 
 export async function researchTopic(topic: string) {
   const { output, steps } = await generateText({
-    model: 'anthropic/claude-sonnet-4.5',
-    system: 'You are a research assistant. Search for information, then provide a structured summary.',
+    model: "anthropic/claude-sonnet-4.5",
+    system:
+      "You are a research assistant. Search for information, then provide a structured summary.",
     tools: { webSearch: webSearchTool },
     output: Output.object({ schema: summarySchema }),
     stopWhen: stepCountIs(MAX_RESEARCH_STEPS),
@@ -359,14 +395,14 @@ export async function researchTopic(topic: string) {
 
 ```typescript
 // lib/extract.ts
-import { generateText, Output, NoObjectGeneratedError } from 'ai';
-import { z } from 'zod';
+import { generateText, Output, NoObjectGeneratedError } from "ai";
+import { z } from "zod";
 
 const contactSchema = z.object({
-  name: z.string().describe('Person name'),
-  email: z.string().email().describe('Email address'),
-  phone: z.string().optional().describe('Phone number if mentioned'),
-  company: z.string().optional().describe('Company name if mentioned'),
+  name: z.string().describe("Person name"),
+  email: z.string().email().describe("Email address"),
+  phone: z.string().optional().describe("Phone number if mentioned"),
+  company: z.string().optional().describe("Company name if mentioned"),
 });
 
 type Contact = z.infer<typeof contactSchema>;
@@ -374,7 +410,7 @@ type Contact = z.infer<typeof contactSchema>;
 export async function extractContact(text: string): Promise<Contact | null> {
   try {
     const { output } = await generateText({
-      model: 'openai/gpt-4o',
+      model: "openai/gpt-4o",
       output: Output.object({ schema: contactSchema }),
       prompt: `Extract contact information from the following text. If no contact info is present, return a minimal object with "unknown" values.\n\n${text}`,
     });
@@ -382,8 +418,8 @@ export async function extractContact(text: string): Promise<Contact | null> {
     return output;
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      console.error('Failed to extract contact:', error.cause);
-      console.error('Raw model output:', error.text);
+      console.error("Failed to extract contact:", error.cause);
+      console.error("Raw model output:", error.text);
       return null;
     }
     throw error; // Re-throw unexpected errors
@@ -396,8 +432,8 @@ export async function extractContact(text: string): Promise<Contact | null> {
 ### Good Example -- Stream Error Handling
 
 ```typescript
-import { streamText, Output } from 'ai';
-import { z } from 'zod';
+import { streamText, Output } from "ai";
+import { z } from "zod";
 
 const schema = z.object({
   title: z.string(),
@@ -405,12 +441,12 @@ const schema = z.object({
 });
 
 const result = streamText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   output: Output.object({ schema }),
-  prompt: 'Generate an article.',
+  prompt: "Generate an article.",
   onError({ error }) {
     // CRITICAL: Stream errors go here, NOT thrown
-    console.error('Stream error during structured output:', error);
+    console.error("Stream error during structured output:", error);
   },
 });
 
@@ -429,13 +465,13 @@ for await (const partial of result.partialOutputStream) {
 ### Good Example -- When Schema Is Unknown
 
 ```typescript
-import { generateText, Output } from 'ai';
+import { generateText, Output } from "ai";
 
 // Output.json() -- validates JSON syntax only, no schema
 const { output: jsonOutput } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   output: Output.json(),
-  prompt: 'Return the weather for 3 cities as a JSON object.',
+  prompt: "Return the weather for 3 cities as a JSON object.",
 });
 
 console.log(typeof jsonOutput); // 'object' -- parsed JSON
@@ -443,9 +479,9 @@ console.log(jsonOutput); // { "cities": [...] } -- shape unknown
 
 // Output.text() -- plain text (default behavior)
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   output: Output.text(),
-  prompt: 'Write a haiku about programming.',
+  prompt: "Write a haiku about programming.",
 });
 
 console.log(text); // Plain string

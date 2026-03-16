@@ -4,7 +4,7 @@
 >
 > **Return to:** [SKILL.md](../SKILL.md) | **Prerequisites:** [core.md](core.md)
 >
-> **Related:** [group-analytics.md](group-analytics.md) | [type-safety.md](type-safety.md)
+> **Related:** [group-analytics.md](group-analytics.md) | [core.md](core.md)
 
 ---
 
@@ -80,8 +80,6 @@ export function useCookieConsent() {
 
   return { consent, acceptCookies, rejectCookies };
 }
-
-export { useCookieConsent };
 ```
 
 **Why good:** Persists consent choice, `opt_in_capturing()` and `opt_out_capturing()` are PostHog's official consent methods, handles pending state for first-time visitors

@@ -1,6 +1,8 @@
 # Fastify - Lifecycle Hooks Examples
 
-> Request lifecycle, hooks, and cross-cutting concerns. See [SKILL.md](../SKILL.md) for core concepts.
+> Request lifecycle, hooks, and cross-cutting concerns. See [SKILL.md](../SKILL.md) for decision guidance.
+
+**Prerequisites**: Understand [Pattern 5: Lifecycle Hooks](../SKILL.md) from core patterns.
 
 ---
 

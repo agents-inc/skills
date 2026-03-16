@@ -8,7 +8,7 @@
 - [testing.md](testing.md) - Affected detection, quality gates
 - [caching.md](caching.md) - Remote caching, Turborepo
 - [deployment.md](deployment.md) - Multi-env, rollback
-- [monitoring.md](monitoring.md) - Datadog, GitHub Insights
+- [monitoring.md](monitoring.md) - CI metrics, GitHub Insights
 
 ---
 
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -52,9 +52,9 @@ jobs:
           aws-region: us-east-1
           # No AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY needed!
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Build
         run: bun run build
@@ -147,11 +147,11 @@ jobs:
       url: https://example.com
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install Vercel CLI
         run: bun add -g vercel
@@ -205,7 +205,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Import secrets from Vault
         uses: hashicorp/vault-action@v2
@@ -218,9 +218,9 @@ jobs:
             secret/data/production/api API_KEY ;
             secret/data/production/vercel VERCEL_TOKEN
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Build with secrets
         env:
@@ -257,7 +257,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -282,9 +282,9 @@ jobs:
 
           echo "API_KEY=$API_KEY" >> $GITHUB_ENV
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Build
         run: bun run build
@@ -345,11 +345,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -405,7 +405,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Log in to Container registry
         uses: docker/login-action@v3

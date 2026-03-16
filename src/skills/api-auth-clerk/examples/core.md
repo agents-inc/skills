@@ -26,7 +26,7 @@ NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/onboarding
 
 # Optional: Webhook signing secret (from Dashboard > Webhooks > Endpoint)
-CLERK_WEBHOOK_SECRET=whsec_abc123...
+CLERK_WEBHOOK_SIGNING_SECRET=whsec_abc123...
 ```
 
 **Why good:** All keys sourced from environment variables, public keys prefixed with `NEXT_PUBLIC_`, secret keys server-only, webhook secret separate from API keys
@@ -35,9 +35,7 @@ CLERK_WEBHOOK_SECRET=whsec_abc123...
 
 ```tsx
 // BAD: Keys in source code
-<ClerkProvider publishableKey="pk_test_abc123">
-  {children}
-</ClerkProvider>
+<ClerkProvider publishableKey="pk_test_abc123">{children}</ClerkProvider>
 ```
 
 **Why bad:** Secrets in source code get committed to version control, no environment separation between dev/staging/prod
@@ -56,9 +54,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        <ClerkProvider>{children}</ClerkProvider>
       </body>
     </html>
   );
@@ -115,9 +111,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <ClerkProvider dynamic>
-          {children}
-        </ClerkProvider>
+        <ClerkProvider dynamic>{children}</ClerkProvider>
       </body>
     </html>
   );
@@ -213,26 +207,19 @@ export const config = {
 ```ts
 // proxy.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import createIntlMiddleware from "next-intl/middleware";
 
-const intlMiddleware = createIntlMiddleware({
-  locales: ["en", "de", "fr"],
-  defaultLocale: "en",
-});
+// Import your other middleware (i18n, rate limiting, etc.)
+import { otherMiddleware } from "./lib/middleware";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/:locale/sign-in(.*)",
-  "/:locale/sign-up(.*)",
-]);
+const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
 
-  // Return the i18n middleware response
-  return intlMiddleware(req);
+  // Chain other middleware after Clerk auth
+  return otherMiddleware(req);
 });
 
 export const config = {
@@ -243,7 +230,7 @@ export const config = {
 };
 ```
 
-**Why good:** Clerk middleware wraps i18n middleware, auth runs first then i18n, locale-aware public route matching
+**Why good:** Clerk middleware wraps other middleware, auth runs first then additional middleware, return value from clerkMiddleware callback becomes the response
 
 ### Bad Example -- No Route Protection
 

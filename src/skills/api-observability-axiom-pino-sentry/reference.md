@@ -97,6 +97,10 @@ How should I handle this error?
 - **captureReactException vs captureException** - Use `captureReactException` (v9.8.0+) in custom error boundaries for proper React component stacks
 - **Session Replay v8+** - `unblock` and `unmask` options no longer add default DOM selectors; add explicitly if needed
 - **Sentry Metrics API removed** - Completely removed in v9 (was deprecated in v8)
+- **Sentry v10: OTel v2 required** - All OpenTelemetry dependencies bumped to v2; if stuck on OTel v1, stay on Sentry v9
+- **Sentry v10: BaseClient removed** - Use `Client` instead; `hasTracingEnabled()` renamed to `hasSpansEnabled()`
+- **Sentry v10: FID removed** - First Input Delay no longer reported; use Interaction to Next Paint (INP)
+- **Sentry v10: IP inference changed** - IP address collection now gated by `sendDefaultPii` option
 
 ---
 

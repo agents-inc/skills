@@ -38,6 +38,7 @@ async function seedDatabase() {
   await seed(db, schema, {
     count: DEFAULT_SEED_COUNT,
     seed: SEED_VALUE, // Same seed = same data every run
+    version: 2, // Generator version (default: 2) - pin for stability
   });
 
   console.log("Database seeded");

@@ -1,6 +1,6 @@
-# Async Performance Examples
+# Backend Performance - Async Examples
 
-Event loop optimization, worker threads, and CPU-bound task handling.
+> Event loop optimization, worker threads, and CPU-bound task handling. See [core.md](core.md) for database optimization and [caching.md](caching.md) for cache strategies.
 
 ---
 
@@ -376,5 +376,5 @@ setInterval(() => {
 
 ## See Also
 
-- [caching.md](caching.md) - Redis caching patterns
-- [database.md](database.md) - Query optimization and connection pooling
+- [core.md](core.md) - Query optimization, indexing, connection pooling
+- [caching.md](caching.md) - Cache strategies and invalidation

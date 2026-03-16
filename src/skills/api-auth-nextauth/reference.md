@@ -134,6 +134,7 @@ What ORM/database are you using?
 | `NEXTAUTH_URL`                     | Usually auto-detected (optional)                                     |
 | `next-auth/next` import            | Deprecated - import from `next-auth` or `@/auth`                     |
 | `next-auth/middleware` import      | Deprecated - export from `@/auth`                                    |
+| `middleware.ts` (Next.js 16+)      | Renamed to `proxy.ts` - same Auth.js integration pattern             |
 | `@next-auth/prisma-adapter`        | `@auth/prisma-adapter`                                               |
 | `NextAuthOptions` type             | `NextAuthConfig` type                                                |
 

@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Client setup, error handling
+- [core.md](core.md) -- Client setup, error handling
 - [chat.md](chat.md) -- Chat Completions API
 - [streaming.md](streaming.md) -- Streaming responses
 - [structured-output.md](structured-output.md) -- Structured outputs with Zod

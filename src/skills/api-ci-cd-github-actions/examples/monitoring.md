@@ -1,6 +1,6 @@
 # GitHub Actions - Monitoring Examples
 
-> CI monitoring with Datadog and GitHub Insights. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> CI monitoring and metrics tracking. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Additional Examples:**
 
@@ -12,23 +12,13 @@
 
 ---
 
-## Pattern 7: CI Monitoring Examples
+## Pattern 8: CI Monitoring Examples
 
-### Datadog CI Visibility
-
-```typescript
-// datadog-ci-config.ts
-export const DATADOG_CONFIG = {
-  SITE: "datadoghq.com",
-  SERVICE_NAME: "cv-launch-ci",
-  ENV: process.env.GITHUB_REF === "refs/heads/main" ? "production" : "staging",
-  TRACE_SAMPLING_RATE: 1.0, // 100% for CI
-} as const;
-```
+### CI Observability Integration
 
 ```yaml
-# Good Example - Datadog CI Visibility integration
-name: CI with Datadog Monitoring
+# Good Example - CI observability integration (e.g., Datadog CI Visibility)
+name: CI with Monitoring
 
 on:
   pull_request:
@@ -41,53 +31,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run tests with Datadog
+      - name: Run tests with CI observability
         env:
-          DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-          DD_SITE: datadoghq.com
-          DD_SERVICE: cv-launch-ci
-          DD_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-          DD_CIVISIBILITY_AGENTLESS_ENABLED: true
+          # Configure your CI observability tool (Datadog, Buildkite Analytics, etc.)
+          CI_OBSERVABILITY_API_KEY: ${{ secrets.CI_OBSERVABILITY_API_KEY }}
+          CI_SERVICE: my-project-ci
+          CI_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
         run: |
-          # Datadog automatically instruments and tracks:
+          # CI observability tools automatically track:
           # - Test duration, flakiness, failures
           # - Code coverage trends
           # - Branch/commit correlation
           bunx turbo run test --filter=...[origin/main]
 
-      - name: Track deployment metrics
+      - name: Track deployment event
         if: github.ref == 'refs/heads/main'
         run: |
-          # Send custom deployment event to Datadog
-          curl -X POST "https://api.datadoghq.com/api/v1/events" \
-            -H "Content-Type: application/json" \
-            -H "DD-API-KEY: ${{ secrets.DATADOG_API_KEY }}" \
-            -d @- <<EOF
-          {
-            "title": "Deployment to Production",
-            "text": "Deployed commit ${{ github.sha }} to production",
-            "tags": ["env:production", "service:cv-launch", "version:${{ github.sha }}"],
-            "alert_type": "info"
-          }
-          EOF
+          # Send deployment event to your observability platform
+          # Example: POST to your monitoring API with deployment metadata
+          echo "Deployed commit ${{ github.sha }} to production"
 ```
 
-**Why good:** Datadog automatically tracks test performance trends and identifies flaky tests, code coverage tracked over time to prevent regressions, deployment markers correlated with error rates and performance metrics, agentless mode no infrastructure to manage
+**Why good:** CI observability tracks test performance trends and identifies flaky tests, code coverage tracked over time to prevent regressions, deployment markers correlated with error rates and performance metrics
 
-**Datadog dashboards show:**
+**CI observability platforms typically show:**
 
 - CI pipeline duration trends (identify slowdowns)
 - Test flakiness rate (prioritize fixing flaky tests)
-- Cache hit rates (optimize Turborepo caching)
+- Cache hit rates (optimize caching)
 - Deployment frequency and failure rate (DORA metrics)
 
 ---
@@ -107,15 +87,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Start timer
         id: timer
         run: echo "start=$(date +%s)" >> $GITHUB_OUTPUT
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         id: install

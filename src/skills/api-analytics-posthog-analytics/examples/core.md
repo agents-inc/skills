@@ -1,17 +1,15 @@
 # PostHog Analytics - Core Examples
 
-> Essential patterns for PostHog analytics: naming conventions and user identification.
+> Essential patterns for PostHog analytics: naming conventions, user identification, funnel design, and type safety.
 >
 > **Return to:** [SKILL.md](../SKILL.md)
 
 **Extended Examples:**
 
 - [client-tracking.md](client-tracking.md) - React Hooks, Provider Setup
-- [server-tracking.md](server-tracking.md) - posthog-node, Hono Routes
+- [server-tracking.md](server-tracking.md) - posthog-node, Serverless Patterns
 - [group-analytics.md](group-analytics.md) - B2B Organization Tracking
 - [privacy-gdpr.md](privacy-gdpr.md) - GDPR Consent, Cookieless Mode
-- [funnel-analysis.md](funnel-analysis.md) - Funnel Analysis Setup
-- [type-safety.md](type-safety.md) - Type-Safe Event Tracking
 
 ---
 
@@ -47,7 +45,7 @@
 "invite_sent";
 ```
 
-**Why good:** category prefix groups related events in PostHog UI, present-tense verbs are consistent, snake_case is lowercase and readable, structured names enable wildcard queries like `signup_flow:*`
+**Why good:** Category prefix groups related events in PostHog UI, present-tense verbs are consistent, snake_case is lowercase and readable, structured names enable wildcard queries like `signup_flow:*`
 
 ```typescript
 // Bad Example - Inconsistent naming
@@ -87,6 +85,60 @@ const eventProperties = {
 ```
 
 **Why good:** Consistent patterns enable filtering and grouping, boolean prefixes make type obvious, date suffixes clarify format expectations
+
+### Funnel-Ready Event Design
+
+Design events with funnel analysis in mind -- use consistent category prefixes for each step:
+
+```typescript
+// Good Example - Events designed for funnel analysis
+// Signup funnel: Visit -> Start -> Submit -> Verify -> Complete
+
+// Step 1: User visits signup page
+track("signup_flow:page_view", {
+  source: utmSource,
+  referrer: document.referrer,
+});
+
+// Step 2: User starts signup form
+track("signup_flow:form_started", {
+  method: "email", // or "google", "github"
+});
+
+// Step 3: User submits form
+track("signup_flow:form_submitted", {
+  method: "email",
+  has_referral_code: Boolean(referralCode),
+});
+
+// Step 4: User verifies email (server-side)
+posthogServer.capture({
+  distinctId: userId,
+  event: "signup_flow:email_verified",
+  properties: {
+    verification_time_seconds: verificationTimeSeconds,
+  },
+});
+
+// Step 5: User completes onboarding (server-side)
+posthogServer.capture({
+  distinctId: userId,
+  event: "signup_flow:onboarding_completed",
+  properties: {
+    steps_completed: completedSteps.length,
+    total_steps: ONBOARDING_STEPS_COUNT,
+  },
+});
+```
+
+**Why good:** Consistent `signup_flow:` prefix groups funnel events, each step has unique action, properties enable breakdown analysis (by method, source)
+
+**Funnel design tips:**
+
+- Use consistent prefix for all funnel steps (e.g., `signup_flow:`, `checkout:`, `onboarding:`)
+- Include properties that enable segmentation (source, method, plan)
+- Track both client-side (UI interactions) and server-side (business events)
+- Server-side events are more reliable for critical conversion steps
 
 ---
 
@@ -148,9 +200,6 @@ export function useAnalyticsIdentify() {
     }
   }, [posthog, session?.user]);
 }
-
-// Named export
-export { useAnalyticsIdentify };
 ```
 
 **Why good:** `_isIdentified()` prevents duplicate calls, uses database user ID (not email) as distinct_id, only safe properties stored (no PII), runs once on session change
@@ -202,8 +251,67 @@ export function useLogout() {
 
   return { logout: handleLogout };
 }
-
-export { useLogout };
 ```
 
-**Why good:** Captures logout event before reset, reset() unlinks future events from this user, prevents shared computer user mixing
+**Why good:** Captures logout event before reset, `reset()` unlinks future events from this user, prevents shared computer user mixing
+
+---
+
+## Pattern 3: Type-Safe Event Tracking
+
+Use TypeScript to enforce event name and property consistency at compile time:
+
+```typescript
+// lib/analytics/types.ts
+
+// Event-specific property types
+interface UserSignedUpProperties {
+  plan: "free" | "pro" | "enterprise";
+  source?: string;
+}
+
+interface ProjectCreatedProperties {
+  project_id: string;
+  is_first_project: boolean;
+}
+
+interface FeatureUsedProperties {
+  feature_name: string;
+  source?: string;
+}
+
+// Map event names to their required properties
+export interface EventPropertyMap {
+  user_signed_up: UserSignedUpProperties;
+  project_created: ProjectCreatedProperties;
+  "feature:used": FeatureUsedProperties;
+  // Add more as your event catalog grows
+}
+```
+
+```typescript
+// Type-safe track function with overloads
+export function useTypedAnalytics() {
+  const posthog = usePostHog();
+
+  function track<E extends keyof EventPropertyMap>(
+    event: E,
+    properties: EventPropertyMap[E],
+  ): void;
+  function track(event: string, properties?: Record<string, unknown>): void;
+  function track(event: string, properties?: Record<string, unknown>): void {
+    posthog?.capture(event, properties);
+  }
+
+  return { track };
+}
+
+// Usage - TypeScript catches errors at compile time
+const { track } = useTypedAnalytics();
+track("user_signed_up", { plan: "pro" }); // OK
+track("user_signed_up", { source: "google_ads" }); // Error: missing "plan"
+```
+
+**Why good:** Compile-time validation catches typos and missing properties, IDE autocomplete for event names, type definitions serve as living documentation
+
+**When to use:** Teams with multiple developers, products with many events, codebases where analytics accuracy is critical

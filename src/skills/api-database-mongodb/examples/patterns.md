@@ -316,13 +316,19 @@ export { User };
 ### Good Example -- Post-Save for Side Effects
 
 ```typescript
+// Capture isNew before save (isNew is false in post hooks)
+userSchema.pre("save", function () {
+  this.$locals.wasNew = this.isNew;
+});
+
 userSchema.post("save", function (doc) {
-  // Send welcome email for new users
-  if (doc.isNew) {
+  if (doc.$locals.wasNew) {
     emailService.sendWelcome(doc.email, doc.name);
   }
 });
 ```
+
+**Why good:** `isNew` is always `false` in post-save hooks (Mongoose sets it to `false` after successful save), so `$locals.wasNew` captures the pre-save state
 
 ### Good Example -- Error Handling Middleware
 

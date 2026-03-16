@@ -1,18 +1,18 @@
 # Express.js - Middleware Examples
 
-> Middleware chains, error handling, and request processing. See [SKILL.md](../SKILL.md) for core concepts.
+> Request processing, validation, auth guards, and ordering. See [core.md](core.md) for error handling and async patterns.
+
+**Prerequisites**: Understand error handler pattern and async forwarding from [core.md](core.md).
 
 ---
 
-## Basic Middleware Chain
+## Request Logging Middleware
 
-### Good Example - Request Logging Middleware
+### Good Example - Request/Response Logger
 
 ```typescript
 // src/middleware/request-logger.ts
 import type { Request, Response, NextFunction } from "express";
-
-const LOG_REQUEST_BODY_MAX_LENGTH = 500;
 
 interface RequestLogInfo {
   method: string;
@@ -56,7 +56,7 @@ const requestLogger = (
 export { requestLogger };
 ```
 
-**Why good:** Named export, typed parameters, logs both request and response, calculates duration, res.on("finish") for response logging
+**Why good:** Named export, typed parameters, logs both request and response, calculates duration via `res.on("finish")`
 
 ### Bad Example - Blocking Middleware
 
@@ -68,141 +68,7 @@ const middleware = (req, res, next) => {
 };
 ```
 
-**Why bad:** Request hangs until timeout, must always call next() or end response
-
----
-
-## Error Handling Middleware
-
-### Good Example - Centralized Error Handler
-
-```typescript
-// src/middleware/error-handler.ts
-import type { Request, Response, NextFunction } from "express";
-
-const HTTP_BAD_REQUEST = 400;
-const HTTP_UNAUTHORIZED = 401;
-const HTTP_NOT_FOUND = 404;
-const HTTP_INTERNAL_ERROR = 500;
-
-interface AppError extends Error {
-  statusCode?: number;
-  code?: string;
-  isOperational?: boolean;
-}
-
-// CRITICAL: Error handlers MUST have 4 arguments
-const errorHandler = (
-  err: AppError,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void => {
-  // Already sent response - delegate to Express default handler
-  if (res.headersSent) {
-    next(err);
-    return;
-  }
-
-  // Log error details
-  console.error({
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method,
-  });
-
-  const statusCode = err.statusCode || HTTP_INTERNAL_ERROR;
-
-  // Don't expose internal error details in production
-  const message =
-    statusCode === HTTP_INTERNAL_ERROR && process.env.NODE_ENV === "production"
-      ? "Internal server error"
-      : err.message;
-
-  res.status(statusCode).json({
-    error: {
-      message,
-      code: err.code || "INTERNAL_ERROR",
-      ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
-    },
-  });
-};
-
-export { errorHandler };
-```
-
-**Why good:** 4 arguments (critical for Express to recognize as error handler), checks headersSent, hides details in production, logs full error
-
-### Bad Example - Wrong Signature
-
-```typescript
-// WRONG - Only 3 arguments, treated as regular middleware
-const errorHandler = (err, req, res) => {
-  res.status(500).json({ error: err.message }); // Magic number
-};
-
-// err is actually req, req is res, res is next!
-```
-
-**Why bad:** Express calls this as (req, res, next), completely wrong behavior
-
----
-
-## Async Error Handling
-
-### Good Example - Async Handler Wrapper
-
-```typescript
-// src/utils/async-handler.ts
-import type { Request, Response, NextFunction, RequestHandler } from "express";
-
-type AsyncHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => Promise<void>;
-
-const asyncHandler = (fn: AsyncHandler): RequestHandler => {
-  return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-};
-
-export { asyncHandler };
-```
-
-**Usage:**
-
-```typescript
-// src/routes/user-routes.ts
-import { asyncHandler } from "../utils/async-handler";
-
-const HTTP_OK = 200;
-
-router.get(
-  "/:id",
-  asyncHandler(async (req, res) => {
-    const user = await getUserById(req.params.id);
-    // Errors automatically forwarded to error handler
-    res.status(HTTP_OK).json({ data: user });
-  }),
-);
-```
-
-**Why good:** Eliminates try/catch boilerplate, errors automatically forwarded, cleaner route definitions
-
-### Bad Example - Missing Error Forwarding
-
-```typescript
-// WRONG - Unhandled promise rejection
-router.get("/:id", async (req, res) => {
-  const user = await getUserById(req.params.id); // If this throws, request hangs
-  res.json({ data: user });
-});
-```
-
-**Why bad:** In Express 4, async errors don't propagate to error handler automatically
+**Why bad:** Request hangs until timeout. Must always call `next()` or end response.
 
 ---
 
@@ -218,11 +84,6 @@ const HTTP_BAD_REQUEST = 400;
 const MIN_EMAIL_LENGTH = 5;
 const MAX_EMAIL_LENGTH = 100;
 const MIN_PASSWORD_LENGTH = 8;
-
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
 
 const validateEmail = (email: unknown): boolean => {
   if (typeof email !== "string") return false;
@@ -275,7 +136,6 @@ export { validateLoginBody };
 ```typescript
 router.post("/login", validateLoginBody, async (req, res, next) => {
   try {
-    // req.body is now validated
     const result = await loginUser(req.body.email, req.body.password);
     res.json({ data: result });
   } catch (error) {
@@ -284,13 +144,13 @@ router.post("/login", validateLoginBody, async (req, res, next) => {
 });
 ```
 
-**Why good:** Validation logic separated, named constants for limits, early return with validation errors, reusable across routes
+**Why good:** Validation logic separated from business logic, named constants for limits, early return with error details, reusable across routes
 
 ---
 
 ## Authentication Middleware
 
-### Good Example - JWT Auth Guard
+### Good Example - Auth Guard with Role Checking
 
 ```typescript
 // src/middleware/auth-guard.ts
@@ -325,7 +185,6 @@ const requireAuth = (
   const token = authHeader.slice(BEARER_PREFIX.length);
 
   try {
-    // Validate token with your auth solution
     const decoded = verifyToken(token);
     req.user = decoded;
     next();
@@ -376,7 +235,7 @@ router.delete("/:id", requireRole("admin"), async (req, res, next) => {
 });
 ```
 
-**Why good:** AuthenticatedRequest extends Request with user, requireRole is configurable, early returns prevent further processing
+**Why good:** `AuthenticatedRequest` extends Request with user, `requireRole` accepts variadic roles, early returns prevent further processing
 
 ---
 

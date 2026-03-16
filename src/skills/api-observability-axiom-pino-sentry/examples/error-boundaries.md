@@ -13,7 +13,8 @@ Use Sentry's built-in ErrorBoundary component for automatic error capturing.
 ```typescript
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
+// Import from your framework-specific Sentry package (@sentry/react, @sentry/nextjs, etc.)
+import * as Sentry from "@sentry/react";
 
 export function JobsPage() {
   return (
@@ -41,8 +42,6 @@ export function JobsPage() {
 ## Pattern: React 19+ Error Hooks (v8.6.0+)
 
 React 19 exposes error hooks on `createRoot` and `hydrateRoot`. Use `Sentry.reactErrorHandler()` to capture errors at the root level.
-
-**File: `apps/client-next/app/root.tsx`**
 
 ```typescript
 import { createRoot } from "react-dom/client";
@@ -74,13 +73,12 @@ root.render(<App />);
 
 For custom error boundaries, use `Sentry.captureReactException` instead of `captureException` to get proper React component stack traces.
 
-**File: `apps/client-next/components/error-boundary.tsx`**
-
 ```typescript
 "use client";
 
 import React from "react";
-import * as Sentry from "@sentry/nextjs";
+// Import from your framework-specific Sentry package
+import * as Sentry from "@sentry/react";
 
 import type { ReactNode } from "react";
 
@@ -145,16 +143,18 @@ function DefaultErrorFallback({ error, reset }: { error: Error; reset: () => voi
 
 ---
 
-## Pattern: Global Error Handler for App Router
+## Pattern: Global Error Handler (SSR Framework)
 
-**File: `apps/client-next/app/global-error.tsx`**
+Global error pages in SSR frameworks (e.g., `global-error.tsx`) can capture errors to Sentry.
 
 ```typescript
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+// Import from your framework-specific Sentry package
+import * as Sentry from "@sentry/react";
 
+// Note: SSR frameworks like Next.js require default exports for error pages
 export default function GlobalError({
   error,
   reset,
@@ -181,7 +181,7 @@ export default function GlobalError({
 }
 ```
 
-**Why good:** Class component required for error boundaries (hooks can't catch render errors), Sentry receives component stack for debugging, reset capability allows recovery, custom fallback prop enables branded error UI
+**Why good:** Catches root-level errors that escape individual ErrorBoundary components, reports to Sentry automatically, provides user-facing recovery via reset button
 
 ---
 
@@ -214,12 +214,12 @@ export function JobsPage() {
 
 ## Sentry SDK Version Reference
 
-| Feature                   | Minimum Version | Notes                 |
-| ------------------------- | --------------- | --------------------- |
-| `Sentry.ErrorBoundary`    | v7.x            | Built-in component    |
-| `reactErrorHandler()`     | v8.6.0          | For React 19 hooks    |
-| `captureReactException()` | v9.8.0          | For custom boundaries |
-| `onRequestError`          | v8.28.0         | For Next.js 15        |
+| Feature                   | Minimum Version | Notes                          |
+| ------------------------- | --------------- | ------------------------------ |
+| `Sentry.ErrorBoundary`    | v7.x            | Built-in component             |
+| `reactErrorHandler()`     | v8.6.0          | For React 19 hooks             |
+| `captureReactException()` | v9.8.0          | For custom boundaries          |
+| v10 baseline              | v10.0.0         | OTel v2, FID removed, see docs |
 
 ---
 

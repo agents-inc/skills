@@ -5,25 +5,25 @@ description: GitHub Actions, pipelines, deployment
 
 # CI/CD Pipelines
 
-> **Quick Guide:** GitHub Actions with Bun 1.2.2 for CI. Turborepo affected detection for monorepo optimization. Vercel remote cache (free). Quality gates: lint + type-check + test + build + coverage. Multi-environment deployments (preview/staging/prod). Secret scanning and dependency audits.
+> **Quick Guide:** GitHub Actions for CI. Turborepo affected detection (`--affected` or `--filter=...[origin/main]`) for monorepo optimization. Remote cache for shared build artifacts. Quality gates: lint + type-check + test + build + coverage as required status checks. Multi-environment deployments with build promotion. OIDC authentication for cloud providers. Pin all action and runtime versions.
 
 ---
 
 <critical_requirements>
 
-## ⚠️ CRITICAL: Before Using This Skill
+## CRITICAL: Before Using This Skill
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use Turborepo affected detection `--filter=...[origin/main]` for PR builds - NEVER run full test suite on PRs)**
+**(You MUST use Turborepo affected detection for PR builds - NEVER run full test suite on PRs)**
 
-**(You MUST cache Bun dependencies `~/.bun/install/cache/` and Turborepo `.turbo/` - CI without caching wastes 70% of runtime)**
+**(You MUST cache package manager dependencies and Turborepo `.turbo/` - CI without caching wastes 70% of runtime)**
 
-**(You MUST use named constants for all timeouts, retry counts, and thresholds - NO magic numbers in CI configs)**
+**(You MUST pin action versions (`actions/checkout@v6`, `oven-sh/setup-bun@v2`, `actions/cache@v5`) - NEVER use `@main` or unversioned)**
 
 **(You MUST implement quality gates (lint + type-check + test + build) as required status checks - block merge on failures)**
 
-**(You MUST use GitHub Secrets for sensitive data and rotate them quarterly - NEVER commit secrets to repository)**
+**(You MUST use OIDC for cloud provider auth where supported - NEVER use static long-lived credentials)**
 
 </critical_requirements>
 
@@ -31,50 +31,44 @@ description: GitHub Actions, pipelines, deployment
 
 **Detailed Resources:**
 
-- For code examples, see [examples/](examples/) directory:
-  - [core.md](examples/core.md) - Pipeline config, jobs, caching, reusable workflows, composite actions, matrix builds
-  - [testing.md](examples/testing.md) - Affected detection, quality gates
-  - [caching.md](examples/caching.md) - Remote caching, Turborepo
-  - [security.md](examples/security.md) - OIDC auth, secrets rotation
-  - [deployment.md](examples/deployment.md) - Multi-env, rollback
-  - [monitoring.md](monitoring.md) - Datadog, GitHub Insights
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Pipeline config, jobs, caching, reusable workflows, composite actions, matrix builds
+- [examples/testing.md](examples/testing.md) - Affected detection, quality gates
+- [examples/caching.md](examples/caching.md) - Remote caching, Turborepo
+- [examples/security.md](examples/security.md) - OIDC auth, secrets rotation, artifact attestations
+- [examples/deployment.md](examples/deployment.md) - Multi-env, rollback
+- [examples/monitoring.md](examples/monitoring.md) - CI metrics, GitHub Insights
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, constants reference
 
 ---
 
-**Auto-detection:** GitHub Actions, CI/CD pipelines, Turborepo affected detection, Vercel remote cache, deployment automation, quality gates, OIDC authentication, secret rotation, CI monitoring, artifact attestations, SLSA provenance, supply chain security, reusable workflows, composite actions, matrix builds, workflow_call
+**Auto-detection:** GitHub Actions, CI/CD pipelines, `.github/workflows`, Turborepo affected detection, remote cache, deployment automation, quality gates, OIDC authentication, secret rotation, artifact attestations, SLSA provenance, reusable workflows, composite actions, matrix builds, workflow_call
 
 **When to use:**
 
-- Setting up GitHub Actions workflows with Bun and Turborepo
-- Implementing Turborepo affected detection for faster PR builds
-- Configuring Vercel remote cache for team sharing
+- Setting up GitHub Actions workflows for monorepos
+- Implementing affected detection for faster PR builds
+- Configuring remote cache for shared build artifacts
 - Setting up quality gates and branch protection rules
-- Implementing OIDC authentication for AWS/GCP deployments
-- Setting up automated secrets rotation
-- Monitoring CI/CD performance and reliability
-- Adding artifact attestations for supply chain security (SLSA compliance)
+- Implementing OIDC authentication for cloud deployments
+- Adding artifact attestations for supply chain security
 
 **When NOT to use:**
 
-- Single-package projects (simpler CI tools like GitHub Actions without Turborepo may suffice)
-- No monorepo architecture (standard CI pipelines without affected detection)
-- Real-time deployment requirements (use feature flags + trunk-based development instead)
-- Simple static sites with no build step (direct hosting without CI/CD)
+- Single-package projects without monorepo architecture
+- Simple static sites with no build step
+- Projects not using GitHub (use your CI provider's native docs)
 
 **Key patterns covered:**
 
-- GitHub Actions with Bun 1.2.2 and Turborepo caching
-- Affected detection (turbo run test --filter=...[origin/main] for PRs)
-- Vercel remote cache (free, zero-config for Turborepo)
-- Quality gates (lint, type-check, test, build - parallel jobs with dependencies)
-- OIDC authentication (AWS, GCP - no static credentials; Vercel uses project tokens)
-- Automated secrets rotation (HashiCorp Vault, AWS Secrets Manager)
-- CI monitoring (Datadog CI Visibility, GitHub Insights)
-- Artifact attestations (SLSA v1.0 Build Level 2 provenance for supply chain security)
-- Reusable workflows (workflow_call trigger, up to 10 nested levels)
-- Composite actions (using: composite, shared setup logic)
+- Pipeline configuration with parallel jobs and dependency caching
+- Affected detection (Turborepo `--affected` flag or `--filter=...[origin/main]`)
+- Quality gates (lint, type-check, test, build as parallel jobs with dependencies)
+- OIDC authentication (no static credentials for cloud providers)
+- Reusable workflows (`workflow_call`, up to 10 nested levels)
+- Composite actions (`using: composite`, shared setup logic)
 - Matrix builds (include/exclude, fail-fast, dynamic matrices)
+- Artifact attestations (SLSA v1.0 Build Level 2 provenance)
+- Multi-environment deployment with build promotion
 
 ---
 
@@ -82,23 +76,14 @@ description: GitHub Actions, pipelines, deployment
 
 ## Philosophy
 
-CI/CD pipelines automate testing, building, and deployment to ensure code quality and fast feedback loops. In a Turborepo monorepo, intelligent caching and affected detection are critical for maintaining fast CI times as the codebase grows.
+CI/CD pipelines automate testing, building, and deployment. In a monorepo, intelligent caching and affected detection are critical for maintaining fast CI as the codebase grows.
 
-**When to use GitHub Actions with Turborepo:**
+**Core principles:**
 
-- Monorepo architecture with multiple packages/apps
-- Need for shared build cache across team and CI
-- Fast PR feedback (< 5 minutes) with affected detection
-- Multi-environment deployments (preview/staging/production)
-- Team collaboration with automated quality gates
-
-**When NOT to use:**
-
-- Single-package projects (simpler CI tools may suffice)
-- No monorepo (standard CI pipelines without Turborepo)
-- Real-time deployment requirements (use feature flags + trunk-based development)
-
-This document outlines **recommended best practices** for CI/CD pipelines in a Turborepo monorepo using Bun, following CLAUDE.md conventions (kebab-case files, named exports, named constants).
+- **Fast feedback:** PR builds should complete in < 5 minutes via affected detection and caching
+- **Build once, promote everywhere:** Single build artifact deployed through preview/staging/production
+- **No static credentials:** OIDC for cloud providers, secrets managers for rotating credentials
+- **Quality gates block merge:** Lint, type-check, test, and build must all pass before merge
 
 </philosophy>
 
@@ -110,45 +95,21 @@ This document outlines **recommended best practices** for CI/CD pipelines in a T
 
 ### Pattern 1: Pipeline Configuration
 
-GitHub Actions with Bun 1.2.2 is the recommended CI platform for this stack.
+Separate install, parallel quality checks, then build.
 
-#### Constants
-
-```typescript
-// ci-config.ts - Shared CI configuration constants
-export const BUN_VERSION = "1.2.2";
-export const NODE_ENV_PRODUCTION = "production";
-export const CACHE_RETENTION_DAYS = 30;
-export const ARTIFACT_RETENTION_DAYS = 30;
-export const MIN_COVERAGE_THRESHOLD = 80;
-export const DEPLOY_APPROVAL_TIMEOUT_MINUTES = 60;
+```yaml
+# Recommended workflow structure:
+# ci.yml      - lint, test, type-check, build (PR + main)
+# deploy.yml  - production deployment from main
+# preview.yml - preview deployments for PRs
 ```
 
-#### Workflow Structure
+**Key decisions:**
 
-**Recommended workflows:**
-
-- `ci.yml` - Continuous integration (lint, test, type-check, build)
-- `preview.yml` - Preview deployments for pull requests
-- `deploy.yml` - Production deployment from main branch
-- `release.yml` - Semantic versioning and changelog generation
-- `dependabot.yml` - Automated dependency updates (optional)
-- `security.yml` - Secret scanning and vulnerability checks
-
-#### Caching Configuration
-
-**What to cache:**
-
-```typescript
-// ci-cache-config.ts
-export const CACHE_PATHS = {
-  BUN_DEPENDENCIES: "~/.bun/install/cache/",
-  NODE_MODULES: "node_modules",
-  TURBOREPO_CACHE: ".turbo/",
-  NEXT_CACHE: ".next/cache/",
-  TYPESCRIPT_BUILD_INFO: "tsconfig.tsbuildinfo",
-} as const;
-```
+- Pin runtime and action versions (never use `latest`)
+- Separate install job with cached dependencies, then fan out to parallel lint/test/type-check
+- Build only after all quality gates pass
+- Use `concurrency` with `cancel-in-progress: true` to avoid wasting resources
 
 See [examples/core.md](examples/core.md) for complete workflow examples.
 
@@ -156,21 +117,21 @@ See [examples/core.md](examples/core.md) for complete workflow examples.
 
 ### Pattern 2: Affected Detection
 
-Only test and build changed packages in monorepo using Turborepo filters.
+Only test and build changed packages using Turborepo.
 
-#### Filter Syntax
+**Two approaches (choose one):**
 
-```typescript
-// turbo-filter-config.ts - Filter patterns for different scenarios
-export const TURBO_FILTERS = {
-  AFFECTED_SINCE_MAIN: "--filter=...[origin/main]",
-  AFFECTED_APPS_ONLY: "--filter=./apps/*...[origin/main]",
-  SPECIFIC_PACKAGE_WITH_DEPS: "--filter=@repo/ui...",
-  SPECIFIC_PACKAGE_WITH_DEPENDENTS: "--filter=...@repo/api",
-} as const;
+```bash
+# Modern: --affected flag (auto-detects CI environment)
+turbo run test --affected
+
+# Manual: --filter with git comparison
+turbo run test --filter=...[origin/main]
 ```
 
-**Key principle:** PRs use affected detection for fast feedback (< 5 min), main branch runs full test suite for comprehensive validation.
+**Key principle:** PRs use affected detection for fast feedback (< 5 min). Main branch runs full suite.
+
+**Gotcha:** New packages have no git history and get skipped by affected detection. Always check for new `package.json` files and fall back to full suite.
 
 See [examples/testing.md](examples/testing.md) for PR vs main branch workflow examples.
 
@@ -179,20 +140,6 @@ See [examples/testing.md](examples/testing.md) for PR vs main branch workflow ex
 ### Pattern 3: Quality Gates
 
 Automated checks that must pass before merge.
-
-#### Required Checks Configuration
-
-```typescript
-// quality-gate-config.ts
-export const QUALITY_GATES = {
-  COVERAGE_THRESHOLD_STATEMENTS: 80,
-  COVERAGE_THRESHOLD_BRANCHES: 75,
-  COVERAGE_THRESHOLD_FUNCTIONS: 80,
-  COVERAGE_THRESHOLD_LINES: 80,
-  MAX_BUNDLE_SIZE_KB: 500,
-  LINT_MAX_WARNINGS: 0,
-} as const;
-```
 
 **Quality gate order:**
 
@@ -203,7 +150,41 @@ export const QUALITY_GATES = {
 5. Bundle size check (performance regression prevention)
 6. Security audit (dependency vulnerabilities)
 
+Configure as required status checks in branch protection. Use `strict: true` to require branches be up-to-date before merge.
+
 See [examples/testing.md](examples/testing.md) for comprehensive quality gate workflow.
+
+---
+
+### Pattern 4: OIDC Authentication
+
+Eliminate static credentials for cloud deployments.
+
+```yaml
+# Key requirement for OIDC:
+permissions:
+  id-token: write # Required for OIDC token generation
+  contents: read
+```
+
+**OIDC eliminates:** manual key rotation, permanent security risk from leaked keys, and untraceable deployments. Temporary credentials auto-expire (typically 1 hour).
+
+See [examples/security.md](examples/security.md) for AWS OIDC and token-based authentication examples.
+
+---
+
+### Pattern 5: Reusable Workflows vs Composite Actions
+
+Centralize CI/CD logic across repositories.
+
+| Feature | Reusable Workflow         | Composite Action      |
+| ------- | ------------------------- | --------------------- |
+| Scope   | Multiple jobs             | Steps within a job    |
+| Secrets | Native `secrets` context  | Must pass via inputs  |
+| Nesting | Up to 10 levels, 50 total | N/A                   |
+| Use for | Full pipeline templates   | Shared setup/teardown |
+
+See [examples/core.md](examples/core.md) for implementation examples.
 
 </patterns>
 
@@ -215,33 +196,17 @@ See [examples/testing.md](examples/testing.md) for comprehensive quality gate wo
 
 **Goal: CI runtime < 5 minutes for PR builds**
 
-### Parallelization Strategies
-
-Run independent jobs in parallel to minimize total CI time:
-
-```typescript
-// ci-performance-config.ts
-export const CI_PERFORMANCE_CONFIG = {
-  TARGET_PR_DURATION_SECONDS: 300, // 5 minutes
-  TARGET_MAIN_DURATION_SECONDS: 600, // 10 minutes
-  TARGET_CACHE_HIT_RATE: 0.8, // 80%
-  MAX_PARALLEL_JOBS: 10,
-} as const;
-```
-
 **Parallelization techniques:**
 
 - Separate install job, parallel lint/test/type-check jobs (saves 40% time)
 - Matrix builds for multiple OS/versions (only on main, not PRs)
-- Split test suites (unit || integration || e2e)
-- Use GitHub's `concurrency` to cancel outdated runs
+- Split test suites (unit, integration, e2e as parallel jobs)
+- Use `concurrency` with `cancel-in-progress: true` to cancel outdated runs
 
-### Monitoring Targets
-
-Track these metrics to ensure CI stays fast:
+**Monitoring targets:**
 
 - **CI runtime:** < 5 min (PR), < 10 min (main)
-- **Cache hit rate:** > 80% (Turborepo remote cache)
+- **Cache hit rate:** > 80% (remote cache)
 - **Failure rate:** < 5% (excluding flaky tests)
 - **Time to deploy:** < 10 min (commit to production)
 
@@ -249,46 +214,54 @@ Track these metrics to ensure CI stays fast:
 
 ---
 
-<integration>
+<red_flags>
 
-## Integration Guide
+## RED FLAGS
 
-CI/CD pipelines integrate with multiple parts of the stack:
+**High Priority:**
 
-**Works with:**
+- **Running full test suite on every PR** - Use affected detection or CI takes 10+ minutes
+- **No caching configured** - Reinstalling dependencies every run wastes 2-3 minutes
+- **Using `latest` for runtime versions** - Non-deterministic builds break reproducibility
+- **Static cloud credentials in secrets** - Use OIDC authentication, never store long-lived access keys
+- **No quality gates on main branch** - Missing lint/test/type-check allows broken code to merge
 
-- **Turborepo**: Affected detection, remote caching, parallel task execution
-- **Bun**: Fast package installation, test runner, build tool
-- **GitHub Actions**: Workflow orchestration, secret management, environments
-- **Vercel**: Preview deployments, production hosting, remote cache provider
-- **Testing libraries**: Vitest/Jest run via `turbo run test`
+**Medium Priority:**
 
-**Authentication integrations:**
+- **Sequential jobs instead of parallel** - Lint/test/type-check should fan out after install
+- **No `concurrency` limits** - Multiple CI runs on same PR waste resources
+- **Rebuilding for each environment** - Build once, promote artifact through environments
+- **Magic numbers in workflows** - Hardcoded timeouts and thresholds with no documentation of intent
 
-- **AWS**: OIDC for S3, CloudFront, Lambda deployments
-- **Vercel**: Project tokens (OIDC not yet supported for GitHub Actions)
-- **Datadog**: API keys for CI monitoring
-- **HashiCorp Vault**: JWT authentication for secret retrieval
+**Gotchas & Edge Cases:**
 
-</integration>
+- `fetch-depth: 0` required for affected detection (shallow clone breaks git diff)
+- New packages have no git history so affected detection skips them
+- `actions/cache` limit is 10GB free per repo (configurable/pay-as-you-go beyond that)
+- OIDC requires `id-token: write` permission or token generation fails silently
+- Environment secrets override repository secrets with the same name
+- Artifact attestations require `attestations: write` AND `id-token: write` AND `contents: read`
+- Reusable workflows support 10 nested levels (increased from 4) and 50 total per run
+
+</red_flags>
 
 ---
 
 <critical_reminders>
 
-## ⚠️ CRITICAL REMINDERS
+## CRITICAL REMINDERS
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use Turborepo affected detection `--filter=...[origin/main]` for PR builds - NEVER run full test suite on PRs)**
+**(You MUST use Turborepo affected detection for PR builds - NEVER run full test suite on PRs)**
 
-**(You MUST cache Bun dependencies `~/.bun/install/cache/` and Turborepo `.turbo/` - CI without caching wastes 70% of runtime)**
+**(You MUST cache package manager dependencies and Turborepo `.turbo/` - CI without caching wastes 70% of runtime)**
 
-**(You MUST use named constants for all timeouts, retry counts, and thresholds - NO magic numbers in CI configs)**
+**(You MUST pin action versions (`actions/checkout@v6`, `oven-sh/setup-bun@v2`, `actions/cache@v5`) - NEVER use `@main` or unversioned)**
 
 **(You MUST implement quality gates (lint + type-check + test + build) as required status checks - block merge on failures)**
 
-**(You MUST use GitHub Secrets for sensitive data and rotate them quarterly - NEVER commit secrets to repository)**
+**(You MUST use OIDC for cloud provider auth where supported - NEVER use static long-lived credentials)**
 
 **Failure to follow these rules will result in slow CI (10+ min), security vulnerabilities (leaked credentials), and broken builds (missing quality gates).**
 

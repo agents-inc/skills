@@ -54,6 +54,8 @@ bun run drizzle-kit up
 
 **Critical:** Never use `push` in production with existing data without backup
 
+**Note:** `drizzle-kit drop` was removed in v1.0.0-beta.2. Delete migration folders manually if needed.
+
 ---
 
 ## Migration Naming Convention

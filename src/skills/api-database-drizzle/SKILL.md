@@ -46,11 +46,11 @@ description: Drizzle ORM, queries, migrations
 
 - Serverless functions needing type-safe database queries
 - Schema-first development with migrations
-- Building Next.js apps with API routes
+- Building server-rendered apps with API routes
 
 **When NOT to use:**
 
-- Simple apps using Next.js server actions directly (overhead not justified)
+- Simple apps using framework server actions directly (overhead not justified)
 - Apps needing traditional TCP connection pooling only (use standard Postgres clients)
 - Non-TypeScript projects (lose primary benefit of type safety)
 - Edge functions requiring WebSocket connections (not supported in edge runtime)
@@ -81,11 +81,11 @@ description: Drizzle ORM, queries, migrations
 - Serverless functions (Vercel, Cloudflare Workers, Edge)
 - Need type-safe database queries
 - Want schema-first development with migrations
-- Building Next.js apps with API routes
+- Building server-rendered apps with API routes
 
 **When NOT to use:**
 
-- Simple apps using Next.js server actions directly
+- Simple apps using framework server actions directly
 - Apps needing traditional TCP connection pooling only
 - Non-TypeScript projects
 
@@ -165,7 +165,6 @@ import {
   integer,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 
 // Define enums for constrained values
 export const employmentTypeEnum = pgEnum("employment_type", [

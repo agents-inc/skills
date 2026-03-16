@@ -1,6 +1,6 @@
-# Database Performance Examples
+# Backend Performance - Core Examples
 
-Query optimization, indexing, connection pooling, and prepared statements.
+> Core database performance patterns. See [caching.md](caching.md) for cache strategies and [async.md](async.md) for event loop optimization.
 
 ---
 
@@ -33,20 +33,7 @@ async function findJobsByCountry(country: string) {
   return await getActiveJobsByCountry.execute({ country });
 }
 
-// Multiple different queries
-const getJobsByCompany = db
-  .select()
-  .from(jobs)
-  .where(eq(jobs.companyId, sql.placeholder("companyId")))
-  .prepare("get_jobs_by_company");
-
-const getJobById = db
-  .select()
-  .from(jobs)
-  .where(eq(jobs.id, sql.placeholder("id")))
-  .prepare("get_job_by_id");
-
-export { findJobsByCountry, getJobsByCompany, getJobById };
+export { findJobsByCountry };
 ```
 
 **Why good:** Query plan compiled once and reused, faster than building query each execution, parameterized queries prevent SQL injection
@@ -102,29 +89,21 @@ const orders = await db
 
 **Why good:** Range conditions allow index seeks, function-based queries require full table scan
 
-### Batch Operations
+### Batch Inserts
 
 ```typescript
-// Good Example - Batch insert
+// Good Example - Batch insert to avoid long transactions
 const BATCH_SIZE = 1000;
 
 async function bulkInsertProducts(products: NewProduct[]) {
-  // Insert in batches to avoid memory issues and long transactions
   for (let i = 0; i < products.length; i += BATCH_SIZE) {
     const batch = products.slice(i, i + BATCH_SIZE);
     await db.insert(productsTable).values(batch);
   }
 }
-
-// With Neon Batch API - single network round-trip
-const batchResults = await db.batch([
-  db.insert(companies).values({ name: "Acme" }).returning(),
-  db.insert(jobs).values({ title: "Engineer", companyId: "..." }),
-  db.query.jobs.findMany({ where: eq(jobs.isActive, true) }),
-]);
 ```
 
-**Why good:** Neon batch reduces network round-trips, batched inserts prevent transaction timeout, memory-efficient processing
+**Why good:** Batched inserts prevent transaction timeout, memory-efficient processing of large datasets
 
 ---
 
@@ -297,13 +276,13 @@ WHERE country = 'germany' AND employment_type = 'full_time';
 
 ```typescript
 // Pool size = (core_count * 2) + effective_spindle_count
-// For SSDs, effective_spindle_count ≈ 1-2
+// For SSDs, effective_spindle_count ~ 1-2
 
 const CPU_CORES = 4;
 const EFFECTIVE_SPINDLES = 2; // SSD
 const CALCULATED_POOL_SIZE = CPU_CORES * 2 + EFFECTIVE_SPINDLES; // = 10
 
-// But also consider:
+// Also consider:
 // - PostgreSQL max_connections (default 100)
 // - Number of application instances
 // - Leave headroom for admin connections
@@ -316,7 +295,7 @@ const POOL_MAX_CONNECTIONS = Math.min(CALCULATED_POOL_SIZE, 20);
 For high-scale deployments with many application instances:
 
 ```
-Application Instances (10) × Pool Size (20) = 200 connections
+Application Instances (10) x Pool Size (20) = 200 connections
 PostgreSQL max_connections = 100
 
 Solution: PgBouncer in transaction mode
@@ -325,7 +304,7 @@ Solution: PgBouncer in transaction mode
 - Each transaction gets a real connection, returned immediately after
 ```
 
-**When to use PgBouncer:**
+**When to use an external pooler:**
 
 - More than 5 application instances
 - Serverless functions (many short-lived connections)
@@ -336,5 +315,5 @@ Solution: PgBouncer in transaction mode
 
 ## See Also
 
-- [caching.md](caching.md) - Redis caching patterns
+- [caching.md](caching.md) - Cache strategies and invalidation
 - [async.md](async.md) - Event loop and worker threads

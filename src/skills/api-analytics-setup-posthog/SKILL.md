@@ -5,7 +5,7 @@ description: PostHog analytics and feature flags setup
 
 # PostHog Analytics & Feature Flags Setup
 
-> **Quick Guide:** One-time setup for PostHog in Next.js App Router monorepo. Covers `posthog-js` client provider, `posthog-node` server client, environment variables, and Vercel deployment. PostHog handles both analytics AND feature flags with a generous free tier (1M events + 1M flag requests/month).
+> **Quick Guide:** One-time setup for PostHog analytics and feature flags. Covers `posthog-js` client provider, `posthog-node` server client, and environment variables. PostHog handles both analytics AND feature flags with a generous free tier (1M events + 1M flag requests/month).
 
 ---
 
@@ -21,9 +21,7 @@ description: PostHog analytics and feature flags setup
 
 **(You MUST call `posthog.shutdown()` or `posthog.flush()` after server-side event capture to prevent lost events)**
 
-**(You MUST use `defaults: '2025-11-30'` or `capture_pageview: 'history_change'` for automatic SPA page tracking)**
-
-**(You MUST use a single PostHog organization for all monorepo apps - projects are usage-based, not per-project pricing)**
+**(You MUST use `defaults: '2026-01-30'` for automatic SPA page tracking and latest recommended behaviors)**
 
 </critical_requirements>
 
@@ -33,33 +31,30 @@ description: PostHog analytics and feature flags setup
 
 **When to use:**
 
-- Initial PostHog setup in a Next.js App Router project
+- Initial PostHog setup in a project
 - Configuring PostHogProvider for client-side analytics
 - Setting up posthog-node for server-side/API route event capture
-- Deploying to Vercel with PostHog environment variables
+- Configuring environment variables for PostHog
 
 **When NOT to use:**
 
-- Event tracking patterns (use `backend/analytics.md` for that)
-- Feature flag usage patterns (use `backend/feature-flags.md` for that)
+- Event tracking patterns after setup (use analytics event tracking skill)
+- Feature flag usage patterns (use feature flags skill)
 - Complex multi-environment setups with separate staging/production projects
 
 **Key patterns covered:**
 
-- PostHog project creation (single org for monorepo)
-- Client-side setup with PostHogProvider
+- Client-side setup with PostHogProvider or instrumentation-client.js
 - Server-side setup with posthog-node
-- Environment variables configuration
-- Vercel deployment integration
-- Initial dashboard recommendations
+- Environment variables (client vs server prefix)
+- User identification and reset flows
+- Serverless flush patterns (captureImmediate vs flush)
 
 **Detailed Resources:**
 
-- For code examples, see [examples/](examples/):
-  - [core.md](examples/core.md) - Provider setup, layout integration, user identification
-  - [server.md](examples/server.md) - Server client singleton, API routes, Hono middleware
-  - [deployment.md](examples/deployment.md) - Environment variables, Vercel deployment
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Provider setup, layout integration, user identification, env vars
+- [examples/server.md](examples/server.md) - Server client singleton, API routes, serverless patterns
+- [reference.md](reference.md) - Decision frameworks, red flags, good/bad comparisons
 
 ---
 
@@ -67,7 +62,7 @@ description: PostHog analytics and feature flags setup
 
 ## Philosophy
 
-PostHog is a **product analytics + feature flags platform** that consolidates multiple tools into one. It's open-source, can be self-hosted, and has a generous free tier. For solo developers and small teams, PostHog eliminates the need for separate analytics (Mixpanel/Amplitude) and feature flag (LaunchDarkly) services.
+PostHog is a **product analytics + feature flags platform** that consolidates multiple tools into one. It's open-source, can be self-hosted, and has a generous free tier. For solo developers and small teams, PostHog eliminates the need for separate analytics and feature flag services.
 
 **Core principles:**
 
@@ -85,9 +80,8 @@ PostHog is a **product analytics + feature flags platform** that consolidates mu
 
 **When NOT to use PostHog:**
 
-- Need advanced A/B testing with statistical rigor (use Statsig)
-- Require real-time event streaming (use Segment)
-- Need complex user journey mapping (use Amplitude)
+- Need advanced A/B testing with statistical rigor
+- Require real-time event streaming
 - Already have established analytics + flag tools
 
 </philosophy>
@@ -98,11 +92,9 @@ PostHog is a **product analytics + feature flags platform** that consolidates mu
 
 ## Core Patterns
 
-### Pattern 1: PostHog Project Setup
+### Pattern 1: PostHog Project Structure
 
-Create a single PostHog organization for your monorepo. You can either use one project for all apps or create separate projects per app.
-
-#### Organization Structure
+Use a single PostHog organization for your apps. One org pools billing. Use separate projects per app, or one project with custom properties to filter.
 
 ```
 PostHog Organization: "Your Company"
@@ -111,83 +103,34 @@ PostHog Organization: "Your Company"
 │   └── Host: https://us.i.posthog.com (or eu.i.posthog.com)
 ```
 
-#### Getting API Keys
-
-1. Sign up at [posthog.com](https://posthog.com)
-2. Create a new organization (or use existing)
-3. Create a project for your app(s)
-4. Copy the Project API Key from Settings > Project > API Keys
-
-```bash
-# Example API key format
-phc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-**Why good:** Single organization pools billing across all projects, 6 projects included on paid tier, usage-based pricing means you're not penalized for multiple apps
+**Why good:** Single org pools billing across all projects, usage-based pricing, 6 projects included on paid tier
 
 ---
 
 ### Pattern 2: Client-Side Setup
 
-Install dependencies and configure for Next.js App Router.
+Install `posthog-js` and configure a provider or use `instrumentation-client.js` (Next.js 15.3+).
 
-#### Installation
+Key config options: `defaults: "2026-01-30"` enables recommended behaviors, `person_profiles: "identified_only"` reduces costs.
 
-```bash
-# Install client-side SDK
-bun add posthog-js
-```
+See [examples/core.md](examples/core.md) for full implementation of both approaches.
 
-#### Environment Variables
-
-```bash
-# apps/client-next/.env.local
-
-# PostHog Configuration
-NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_api_key_here
-NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
-```
-
-#### Setup Options
-
-**Next.js 15.3+:** Use `instrumentation-client.js` (simpler, recommended)
-**Next.js < 15.3:** Use PostHogProvider component (traditional approach)
-
-See [examples/core.md](examples/core.md) for both approaches with full implementation examples.
-
-**Why good:** `defaults: "2025-11-30"` enables automatic SPA page/leave tracking, `person_profiles: "identified_only"` reduces event costs, debug mode in development aids troubleshooting
+**Why good:** `defaults` date enables automatic SPA page/leave tracking, `person_profiles: "identified_only"` reduces event costs, debug mode in development aids troubleshooting
 
 ---
 
 ### Pattern 3: Server-Side Setup with posthog-node
 
-Install and configure the Node.js SDK for server-side event capture in API routes and Hono middleware.
+Install `posthog-node` and create a singleton for server-side event capture.
 
-#### Installation
+**Serverless flush options:**
 
-```bash
-# Install server-side SDK
-bun add posthog-node
-```
+- `captureImmediate()` - simplest, awaits HTTP request directly (one request per event)
+- `capture()` + `await flush()` - batched, requires explicit flush before response returns
 
-#### Environment Variables
+See [examples/server.md](examples/server.md) for singleton setup, API route usage, and the flush anti-pattern.
 
-```bash
-# apps/client-next/.env.local (or apps/server/.env.local)
-
-# Server-side PostHog (no NEXT_PUBLIC_ prefix needed)
-POSTHOG_API_KEY=phc_your_project_api_key_here
-POSTHOG_HOST=https://us.i.posthog.com
-```
-
-Create a server client singleton for reuse across API routes. See [examples/server.md](examples/server.md) for the full implementation including API route and Hono middleware examples.
-
-#### Serverless Options
-
-**Option 1:** Use `captureImmediate()` - simplest, awaits HTTP request directly
-**Option 2:** Use `capture()` + `await flush()` - batched, requires explicit flush
-
-**Why good:** Singleton prevents multiple client instances, flushInterval/flushAt configure batching, shutdown function for graceful cleanup, captureImmediate for simple serverless usage
+**Why good:** Singleton prevents multiple client instances, flushInterval/flushAt configure batching, captureImmediate simplifies serverless usage
 
 </patterns>
 
@@ -205,9 +148,7 @@ Create a server client singleton for reuse across API routes. See [examples/serv
 
 **(You MUST call `posthog.shutdown()` or `posthog.flush()` after server-side event capture to prevent lost events)**
 
-**(You MUST use `defaults: '2025-11-30'` or `capture_pageview: 'history_change'` for automatic SPA page tracking)**
-
-**(You MUST use a single PostHog organization for all monorepo apps - projects are usage-based, not per-project pricing)**
+**(You MUST use `defaults: '2026-01-30'` for automatic SPA page tracking and latest recommended behaviors)**
 
 **Failure to follow these rules will cause lost analytics events, broken tracking, or security vulnerabilities.**
 
@@ -217,9 +158,7 @@ Create a server client singleton for reuse across API routes. See [examples/serv
 
 ## Sources
 
-- [PostHog Next.js Documentation](https://posthog.com/docs/libraries/next-js)
-- [PostHog Node.js Documentation](https://posthog.com/docs/libraries/node)
-- [PostHog Hono Integration](https://posthog.com/docs/libraries/hono)
-- [Vercel + PostHog Guide](https://vercel.com/kb/guide/posthog-nextjs-vercel-feature-flags-analytics)
+- [PostHog JavaScript SDK](https://posthog.com/docs/libraries/js)
 - [PostHog JavaScript Configuration](https://posthog.com/docs/libraries/js/config)
-- [PostHog SPA Pageview Tracking](https://posthog.com/tutorials/single-page-app-pageviews)
+- [PostHog Node.js SDK](https://posthog.com/docs/libraries/node)
+- [PostHog Next.js Guide](https://posthog.com/docs/libraries/next-js)

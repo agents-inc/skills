@@ -1,12 +1,14 @@
 # Express.js - Routing Examples
 
-> Modular routes with express.Router(), parameters, and response patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Modular routes, parameters, query strings, response helpers, and versioned APIs. See [core.md](core.md) for error handling patterns.
+
+**Prerequisites**: Understand error handling and async forwarding from [core.md](core.md).
 
 ---
 
 ## Modular Routes with Router
 
-### Good Example - User Routes Module
+### Good Example - CRUD User Routes
 
 ```typescript
 // src/routes/user-routes.ts
@@ -20,7 +22,6 @@ const HTTP_CREATED = 201;
 const HTTP_NOT_FOUND = 404;
 const HTTP_NO_CONTENT = 204;
 
-// GET /api/users
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await getUsersFromDatabase();
@@ -30,16 +31,13 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// GET /api/users/:id
 router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const user = await getUserById(id);
 
     if (!user) {
-      res.status(HTTP_NOT_FOUND).json({
-        error: { message: "User not found" },
-      });
+      res.status(HTTP_NOT_FOUND).json({ error: { message: "User not found" } });
       return;
     }
 
@@ -49,28 +47,21 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// POST /api/users
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userData = req.body;
-    const newUser = await createUser(userData);
+    const newUser = await createUser(req.body);
     res.status(HTTP_CREATED).json({ data: newUser });
   } catch (error) {
     next(error);
   }
 });
 
-// PUT /api/users/:id
 router.put("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-    const updatedUser = await updateUser(id, updates);
+    const updatedUser = await updateUser(req.params.id, req.body);
 
     if (!updatedUser) {
-      res.status(HTTP_NOT_FOUND).json({
-        error: { message: "User not found" },
-      });
+      res.status(HTTP_NOT_FOUND).json({ error: { message: "User not found" } });
       return;
     }
 
@@ -80,18 +71,16 @@ router.put("/:id", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// DELETE /api/users/:id
 router.delete(
   "/:id",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
-      const deleted = await deleteUser(id);
+      const deleted = await deleteUser(req.params.id);
 
       if (!deleted) {
-        res.status(HTTP_NOT_FOUND).json({
-          error: { message: "User not found" },
-        });
+        res
+          .status(HTTP_NOT_FOUND)
+          .json({ error: { message: "User not found" } });
         return;
       }
 
@@ -102,7 +91,6 @@ router.delete(
   },
 );
 
-// Named export (project convention)
 export { router as userRoutes };
 ```
 
@@ -111,40 +99,16 @@ export { router as userRoutes };
 ```typescript
 // src/app.ts
 import { userRoutes } from "./routes/user-routes";
-
 app.use("/api/users", userRoutes);
 ```
 
-**Why good:** Modular file per resource, named exports, explicit error forwarding, proper HTTP status codes as constants
-
-### Bad Example - God File
-
-```typescript
-// WRONG - All routes in one file
-const app = express();
-app.get("/api/users", (req, res) => {
-  /* ... */
-});
-app.post("/api/users", (req, res) => {
-  /* ... */
-});
-app.get("/api/products", (req, res) => {
-  /* ... */
-});
-app.post("/api/products", (req, res) => {
-  /* ... */
-});
-// ... 500 more lines
-export default app;
-```
-
-**Why bad:** Unmaintainable, no separation of concerns, default export
+**Why good:** Modular file per resource, named exports, explicit error forwarding, HTTP status codes as constants, 204 No Content for DELETE
 
 ---
 
-## Route Parameters
+## Nested Route Parameters
 
-### Good Example - Multiple Parameters
+### Good Example - Parent/Child Resource Validation
 
 ```typescript
 // src/routes/comment-routes.ts
@@ -155,7 +119,7 @@ const router = Router();
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
 
-// Nested resource: GET /api/posts/:postId/comments/:commentId
+// GET /api/posts/:postId/comments/:commentId
 router.get(
   "/:postId/comments/:commentId",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -164,17 +128,17 @@ router.get(
 
       const post = await getPostById(postId);
       if (!post) {
-        res.status(HTTP_NOT_FOUND).json({
-          error: { message: "Post not found" },
-        });
+        res
+          .status(HTTP_NOT_FOUND)
+          .json({ error: { message: "Post not found" } });
         return;
       }
 
       const comment = await getCommentById(postId, commentId);
       if (!comment) {
-        res.status(HTTP_NOT_FOUND).json({
-          error: { message: "Comment not found" },
-        });
+        res
+          .status(HTTP_NOT_FOUND)
+          .json({ error: { message: "Comment not found" } });
         return;
       }
 
@@ -188,7 +152,7 @@ router.get(
 export { router as postRoutes };
 ```
 
-**Why good:** Nested resource URL structure, validates parent before child, clear parameter extraction
+**Why good:** Validates parent exists before child, clear parameter extraction from `req.params`
 
 ---
 
@@ -257,7 +221,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 export { router as searchRoutes };
 ```
 
-**Why good:** Typed query interface, default values with named constants, limit capped at MAX_LIMIT, pagination metadata in response
+**Why good:** Typed query interface, defaults with named constants, limit capped at `MAX_LIMIT` to prevent abuse, pagination metadata in response, parallel queries with `Promise.all`
 
 ---
 
@@ -340,12 +304,10 @@ import { sendSuccess, sendNotFound, sendCreated } from "../utils/response";
 router.get("/:id", async (req, res, next) => {
   try {
     const user = await getUserById(req.params.id);
-
     if (!user) {
       sendNotFound(res, "User");
       return;
     }
-
     sendSuccess(res, user);
   } catch (error) {
     next(error);
@@ -362,13 +324,13 @@ router.post("/", async (req, res, next) => {
 });
 ```
 
-**Why good:** Consistent response shape, typed helpers, status codes as constants, reduces boilerplate
+**Why good:** Consistent `{ success, data }` / `{ success, error }` shape, typed helpers, status codes as constants, reduces boilerplate
 
 ---
 
-## Route Groups with Sub-Routers
+## Versioned API with Sub-Routers
 
-### Good Example - Versioned API
+### Good Example - API Versioning
 
 ```typescript
 // src/routes/v1/index.ts
@@ -403,7 +365,6 @@ export { router as apiRoutes };
 ```typescript
 // src/app.ts
 import { apiRoutes } from "./routes";
-
 app.use("/api", apiRoutes);
 // Results in: /api/v1/users, /api/v2/users, etc.
 ```
@@ -414,32 +375,7 @@ app.use("/api", apiRoutes);
 
 ## Route-Level Middleware
 
-### Good Example - Protected Routes
-
-```typescript
-// src/routes/admin-routes.ts
-import { Router } from "express";
-import { requireAuth, requireRole } from "../middleware/auth-guard";
-
-const router = Router();
-
-// Apply auth to all admin routes
-router.use(requireAuth);
-router.use(requireRole("admin"));
-
-// All routes below require admin auth
-router.get("/stats", async (req, res, next) => {
-  // Only admins can access
-});
-
-router.post("/config", async (req, res, next) => {
-  // Only admins can access
-});
-
-export { router as adminRoutes };
-```
-
-**Selective middleware:**
+### Good Example - Mixed Public/Protected Routes
 
 ```typescript
 // src/routes/post-routes.ts
@@ -457,7 +393,7 @@ router.get("/", async (req, res, next) => {
 router.get("/:id", optionalAuth, async (req, res, next) => {
   const post = await getPost(req.params.id);
   const isOwner = req.user?.id === post.authorId;
-  // Can show edit button if isOwner
+  // Can show edit controls if isOwner
 });
 
 // Protected: must be logged in
@@ -468,7 +404,7 @@ router.post("/", requireAuth, async (req, res, next) => {
 export { router as postRoutes };
 ```
 
-**Why good:** router.use applies to all routes, specific middleware per route when needed, optionalAuth for hybrid routes
+**Why good:** `router.use(requireAuth)` applies to all routes when needed, per-route middleware for mixed access, `optionalAuth` for hybrid routes
 
 ---
 

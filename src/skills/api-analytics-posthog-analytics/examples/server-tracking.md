@@ -4,7 +4,7 @@
 >
 > **Return to:** [SKILL.md](../SKILL.md) | **Prerequisites:** [core.md](core.md)
 >
-> **Related:** [group-analytics.md](group-analytics.md) | [funnel-analysis.md](funnel-analysis.md)
+> **Related:** [group-analytics.md](group-analytics.md) | [privacy-gdpr.md](privacy-gdpr.md)
 
 ---
 
@@ -15,7 +15,7 @@
 import { PostHog } from "posthog-node";
 
 const POSTHOG_KEY = process.env.POSTHOG_API_KEY!;
-const POSTHOG_HOST = process.env.POSTHOG_HOST ?? "https://app.posthog.com";
+const POSTHOG_HOST = process.env.POSTHOG_HOST ?? "https://us.i.posthog.com";
 
 // Serverless-optimized settings
 const FLUSH_AT = 1; // Flush immediately in serverless
@@ -23,24 +23,21 @@ const FLUSH_INTERVAL_MS = 0; // Don't wait
 
 export const posthogServer = new PostHog(POSTHOG_KEY, {
   host: POSTHOG_HOST,
-  flushAt: FLUSH_AT, // Flush after 1 event (serverless)
-  flushInterval: FLUSH_INTERVAL_MS, // Don't batch (serverless)
+  flushAt: FLUSH_AT,
+  flushInterval: FLUSH_INTERVAL_MS,
 });
-
-// Named export
-export { posthogServer };
 ```
 
 **Why good:** `flushAt: 1` and `flushInterval: 0` ensure events are sent before serverless function terminates, prevents lost events in short-lived functions
 
 ---
 
-## Serverless Best Practices (AWS Lambda, Vercel Functions)
+## Serverless Best Practices
 
 For serverless environments, use `captureImmediate()` instead of `capture()`:
 
 ```typescript
-// ✅ Preferred for serverless - guarantees HTTP request completes
+// Preferred for serverless - guarantees HTTP request completes
 await posthogServer.captureImmediate({
   distinctId: user.id,
   event: "subscription_created",
@@ -65,33 +62,18 @@ await posthogServer.shutdown();
 ## Server-Side Event Tracking
 
 ```typescript
-// ✅ Good Example - Server-side tracking in Hono route
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-
+// Good Example - Server-side tracking in an API route handler
 import { posthogServer } from "@/lib/analytics/posthog-server";
 import { POSTHOG_EVENTS } from "@/lib/analytics/constants";
 
-const app = new OpenAPIHono();
-
-const createProjectRoute = createRoute({
-  method: "post",
-  path: "/projects",
-  operationId: "createProject",
-  tags: ["Projects"],
-  // ... route config
-});
-
-app.openapi(createProjectRoute, async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-
-  // ... create project logic
+// Inside your route handler:
+async function handleCreateProject(user: AuthUser, body: CreateProjectBody) {
   const project = await createProject(body);
 
   // Track server-side event
   posthogServer.capture({
     distinctId: user.id, // REQUIRED: User's database ID
-    event: POSTHOG_EVENTS.PROJECT_CREATED,
+    event: "project_created",
     properties: {
       project_id: project.id,
       project_name: project.name, // OK if not PII
@@ -103,16 +85,14 @@ app.openapi(createProjectRoute, async (c) => {
   // Ensure event is sent before response
   await posthogServer.shutdown();
 
-  return c.json({ project }, 201);
-});
-
-export { app as projectsRoutes };
+  return { project };
+}
 ```
 
-**Why good:** `distinctId` uses database user ID, flush() ensures delivery before function ends, business event captured reliably on server
+**Why good:** `distinctId` uses database user ID, `shutdown()` ensures delivery before function ends, business event captured reliably on server
 
 ```typescript
-// ❌ Bad Example - Missing required fields
+// Bad Example - Missing required fields
 posthogServer.capture({
   // BAD: Missing distinctId - event will fail
   event: "project_created",
@@ -120,10 +100,10 @@ posthogServer.capture({
     email: user.email, // BAD: PII in properties
   },
 });
-// BAD: No flush() - event may be lost in serverless
+// BAD: No shutdown() - event may be lost in serverless
 ```
 
-**Why bad:** Missing distinctId causes event failure, PII in properties violates privacy, no flush() risks losing events in serverless
+**Why bad:** Missing distinctId causes event failure, PII in properties violates privacy, no shutdown() risks losing events in serverless
 
 ---
 
@@ -173,8 +153,6 @@ export async function trackUserLoggedIn(user: AuthEventUser) {
 
   await posthogServer.shutdown();
 }
-
-export { trackUserSignedUp, trackUserLoggedIn };
 ```
 
-**Why good:** Centralized auth event tracking, identify() sets user properties once, flush() ensures delivery
+**Why good:** Centralized auth event tracking, `identify()` sets user properties once, `shutdown()` ensures delivery

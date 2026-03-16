@@ -8,7 +8,7 @@
 - [caching.md](caching.md) - Remote caching, Turborepo
 - [security.md](security.md) - OIDC auth, secrets rotation
 - [deployment.md](deployment.md) - Multi-env, rollback
-- [monitoring.md](monitoring.md) - Datadog, GitHub Insights
+- [monitoring.md](monitoring.md) - CI metrics, GitHub Insights
 
 ---
 
@@ -30,13 +30,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # CRITICAL: Required for git diff
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -59,7 +59,7 @@ jobs:
 jobs:
   test:
     steps:
-      - uses: actions/checkout@v4 # fetch-depth: 1 by default
+      - uses: actions/checkout@v6 # fetch-depth: 1 by default
       - run: bunx turbo run test # Always runs ALL tests
 ```
 
@@ -78,7 +78,7 @@ jobs:
       has-new-packages: ${{ steps.detect.outputs.new-packages }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -136,13 +136,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

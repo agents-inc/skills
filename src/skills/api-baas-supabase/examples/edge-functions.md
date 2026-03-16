@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
         global: {
           headers: { Authorization: req.headers.get("Authorization")! },
         },
-      }
+      },
     );
 
     // This query is filtered by RLS using the user's JWT
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
   // Admin client — bypasses all RLS
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
   const STALE_DAYS = 30;
@@ -169,10 +169,7 @@ export function corsResponse() {
   return new Response("ok", { headers: corsHeaders });
 }
 
-export function jsonResponse(
-  data: unknown,
-  status = 200
-): Response {
+export function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
     status,
@@ -199,14 +196,14 @@ export function createUserClient(req: Request) {
       global: {
         headers: { Authorization: req.headers.get("Authorization")! },
       },
-    }
+    },
   );
 }
 
 export function createAdminClient() {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 }
 ```
@@ -240,50 +237,56 @@ Deno.serve(async (req) => {
 
 ## Pattern 4: Webhook Handler
 
-### Good Example — Stripe Webhook
+### Good Example — Third-Party Webhook
 
 ```typescript
-// supabase/functions/stripe-webhook/index.ts
-import Stripe from "npm:stripe@14";
+// supabase/functions/handle-webhook/index.ts
 import { createAdminClient } from "../_shared/supabase.ts";
 import { jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { createHmac } from "node:crypto";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2024-04-10",
-});
+const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET")!;
 
-const WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
+function verifySignature(body: string, signature: string): boolean {
+  const expected = createHmac("sha256", WEBHOOK_SECRET)
+    .update(body)
+    .digest("hex");
+  return expected === signature;
+}
 
 Deno.serve(async (req) => {
-  const signature = req.headers.get("stripe-signature");
+  const signature = req.headers.get("x-webhook-signature");
 
   if (!signature) {
-    return errorResponse("Missing stripe-signature header", 400);
+    return errorResponse("Missing webhook signature", 400);
   }
 
   try {
     const body = await req.text();
-    const event = stripe.webhooks.constructEvent(body, signature, WEBHOOK_SECRET);
+
+    if (!verifySignature(body, signature)) {
+      return errorResponse("Invalid signature", 401);
+    }
+
+    const event = JSON.parse(body);
     const supabase = createAdminClient();
 
     switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object;
+      case "order.completed": {
         const { error } = await supabase
           .from("orders")
-          .update({ status: "paid", stripe_session_id: session.id })
-          .eq("id", session.metadata?.order_id);
+          .update({ status: "paid" })
+          .eq("external_id", event.data.id);
 
         if (error) throw error;
         break;
       }
 
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object;
+      case "subscription.cancelled": {
         const { error } = await supabase
           .from("subscriptions")
           .update({ status: "cancelled" })
-          .eq("stripe_subscription_id", subscription.id);
+          .eq("external_id", event.data.id);
 
         if (error) throw error;
         break;
@@ -297,63 +300,61 @@ Deno.serve(async (req) => {
 });
 ```
 
-**Why good:** Webhook signature verification for security, `npm:` prefix with pinned version, admin client for webhook (no user JWT), switch on event type, named constant for webhook secret
+**Why good:** Webhook signature verification for security, admin client for webhooks (no user JWT available), switch on event type, named constant for webhook secret, `node:crypto` for HMAC verification
 
 ---
 
-## Pattern 5: Multi-Route Edge Function
+## Pattern 5: Multi-Route Edge Function ("Fat Function")
 
-### Good Example — Fat Function with Hono
+### Good Example — URL-Based Routing
 
 ```typescript
 // supabase/functions/api/index.ts
-import { Hono } from "npm:hono@4";
 import { createUserClient } from "../_shared/supabase.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 
-const app = new Hono();
-
-// CORS middleware
-app.use("*", async (c, next) => {
-  if (c.req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return corsResponse();
   }
-  await next();
-  // Add CORS headers to all responses
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    c.res.headers.set(key, value);
-  });
+
+  const url = new URL(req.url);
+  const path = url.pathname.replace(/^\/api/, "");
+  const supabase = createUserClient(req);
+
+  try {
+    // Route: GET /posts
+    if (req.method === "GET" && path === "/posts") {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id, title")
+        .eq("published", true);
+
+      if (error) throw error;
+      return jsonResponse({ posts: data });
+    }
+
+    // Route: POST /posts
+    if (req.method === "POST" && path === "/posts") {
+      const body = await req.json();
+      const { data, error } = await supabase
+        .from("posts")
+        .insert(body)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return jsonResponse({ post: data }, 201);
+    }
+
+    return errorResponse("Not found", 404);
+  } catch (err) {
+    return errorResponse(err.message, 400);
+  }
 });
-
-app.get("/api/posts", async (c) => {
-  const supabase = createUserClient(c.req.raw);
-  const { data, error } = await supabase
-    .from("posts")
-    .select("id, title")
-    .eq("published", true);
-
-  if (error) return c.json({ error: error.message }, 400);
-  return c.json({ posts: data });
-});
-
-app.post("/api/posts", async (c) => {
-  const supabase = createUserClient(c.req.raw);
-  const body = await c.req.json();
-
-  const { data, error } = await supabase
-    .from("posts")
-    .insert(body)
-    .select()
-    .single();
-
-  if (error) return c.json({ error: error.message }, 400);
-  return c.json({ post: data }, 201);
-});
-
-Deno.serve(app.fetch);
 ```
 
-**Why good:** Single "fat function" reduces cold starts, Hono for clean routing, CORS middleware applies to all routes, per-request user client for RLS, `npm:` prefix with pinned version
+**Why good:** Single "fat function" reduces cold starts, URL-based routing with standard Web APIs, per-request user client for RLS, shared error handling. For complex routing, use a lightweight router library via `npm:` imports.
 
 **When to use:** Multiple related endpoints that share logic. "Fat functions" with fewer, larger functions minimize cold starts compared to many small functions.
 
@@ -399,10 +400,7 @@ async function processFileInBackground(fileId: string) {
   // ...
 
   // Update status when done
-  await supabase
-    .from("files")
-    .update({ status: "completed" })
-    .eq("id", fileId);
+  await supabase.from("files").update({ status: "completed" }).eq("id", fileId);
 }
 ```
 

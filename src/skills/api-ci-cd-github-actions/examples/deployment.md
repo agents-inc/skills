@@ -8,11 +8,11 @@
 - [testing.md](testing.md) - Affected detection, quality gates
 - [caching.md](caching.md) - Remote caching, Turborepo
 - [security.md](security.md) - OIDC auth, secrets rotation
-- [monitoring.md](monitoring.md) - Datadog, GitHub Insights
+- [monitoring.md](monitoring.md) - CI metrics, GitHub Insights
 
 ---
 
-## Pattern 8: Deployment Workflows Examples
+## Pattern 9: Deployment Workflows Examples
 
 ### Multi-Environment Deployment
 
@@ -59,11 +59,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -95,7 +95,7 @@ jobs:
       url: https://pr-${{ github.event.pull_request.number }}.example.com
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -120,7 +120,7 @@ jobs:
       url: https://staging.example.com
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -145,7 +145,7 @@ jobs:
       url: https://example.com
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4

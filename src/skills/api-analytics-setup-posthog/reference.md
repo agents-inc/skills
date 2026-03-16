@@ -23,11 +23,11 @@ Single app or tight monorepo?
 Where is the event triggered?
 ├─ Browser/React component → posthog-js (usePostHog hook)
 ├─ API route/server action → posthog-node (getPostHogServerClient)
-│   └─ Serverless (Vercel/Lambda)?
+│   └─ Serverless environment?
 │       ├─ YES → Use captureImmediate() (simplest)
 │       └─ Or → Use capture() + await flush()
 ├─ React Server Component → posthog-node (but consider if needed)
-└─ Hono middleware → posthog-node with analyticsMiddleware
+└─ API middleware → posthog-node, flush after response
 ```
 
 ### Next.js Setup Approach
@@ -49,25 +49,6 @@ Where are your users?
 
 ---
 
-## Integration Guide
-
-**Works with:**
-
-- **Next.js App Router**: PostHogProvider in layout.tsx, hooks in client components
-- **Hono**: analyticsMiddleware for API routes, getPostHogServerClient in handlers
-- **Better Auth**: Call posthog.identify() after successful authentication
-- **Vercel**: Native support, set env vars in dashboard
-- **React Query**: Wrap PostHog calls in hooks for caching (optional)
-
-**Replaces / Conflicts with:**
-
-- **Google Analytics**: PostHog can replace for product analytics (not marketing attribution)
-- **Mixpanel/Amplitude**: Direct replacement for product analytics
-- **LaunchDarkly/Statsig**: PostHog includes feature flags (simpler use cases)
-- **Plausible/Fathom**: PostHog is more feature-rich, but less privacy-focused
-
----
-
 ## RED FLAGS
 
 **High Priority Issues:**
@@ -79,7 +60,7 @@ Where are your users?
 
 **Medium Priority Issues:**
 
-- Not using `defaults: '2025-11-30'` (manual pageview tracking required)
+- Not using `defaults: '2026-01-30'` (manual pageview tracking required)
 - Missing `posthog.reset()` on sign out (user identity bleeds to next session)
 - No `person_profiles: 'identified_only'` (unnecessary anonymous profiles created)
 - Not calling `posthog.identify()` after authentication (anonymous/auth sessions unlinked)
@@ -87,7 +68,7 @@ Where are your users?
 **Common Mistakes:**
 
 - Initializing posthog-js in a Server Component (requires browser APIs)
-- Forgetting to add environment variables to Vercel dashboard
+- Forgetting to add environment variables to deployment platform
 - Using different PostHog projects for dev/prod without realizing (separate data)
 - Not wrapping app with PostHogProvider (hooks return null)
 
@@ -99,78 +80,6 @@ Where are your users?
 - Free tier resets monthly - 1M events then stops capturing until next month
 - `person_profiles: 'identified_only'` reduces costs but means no anonymous user profiles
 - Next.js 15.3+ `instrumentation-client.js` values remain fixed for the session - bootstrapping only works if flags are evaluated on the server before render
-
----
-
-## Anti-Patterns to Avoid
-
-### Initializing PostHog in Server Component
-
-```typescript
-// ANTI-PATTERN: posthog-js in Server Component
-// app/layout.tsx
-import posthog from "posthog-js";
-
-// BAD: This runs on server where window is undefined
-posthog.init("phc_xxx", { api_host: "https://us.i.posthog.com" });
-```
-
-**Why it's wrong:** posthog-js requires browser APIs (window, localStorage), Server Components run on Node.js.
-
-**What to do instead:** Create a 'use client' provider component.
-
----
-
-### Missing Flush in Serverless
-
-```typescript
-// ANTI-PATTERN: No flush in serverless function
-export async function POST(request: Request) {
-  const posthog = getPostHogServerClient();
-
-  posthog.capture({
-    distinctId: "user-123",
-    event: "purchase_completed",
-    properties: { amount: 99.99 },
-  });
-
-  // BAD: Function terminates before batch is sent
-  return NextResponse.json({ success: true });
-}
-```
-
-**Why it's wrong:** PostHog batches events, serverless functions terminate immediately, events never sent.
-
-**What to do instead:** Call `await posthog.flush()` before returning response.
-
----
-
-### Hardcoded API Keys
-
-```typescript
-// ANTI-PATTERN: Hardcoded secrets
-posthog.init("phc_actual_api_key_here", {
-  api_host: "https://us.i.posthog.com",
-});
-```
-
-**Why it's wrong:** API keys committed to git, visible in build logs, impossible to rotate without code change.
-
-**What to do instead:** Use environment variables (NEXT_PUBLIC_POSTHOG_KEY).
-
----
-
-### Wrong Prefix for Client Variables
-
-```bash
-# ANTI-PATTERN: Missing NEXT_PUBLIC_ prefix
-# .env.local
-POSTHOG_KEY=phc_xxx  # BAD: Won't be available in browser
-```
-
-**Why it's wrong:** Next.js only exposes `NEXT_PUBLIC_*` variables to client-side code.
-
-**What to do instead:** Use `NEXT_PUBLIC_POSTHOG_KEY` for client-side.
 
 ---
 
@@ -190,7 +99,7 @@ export function PostHogProvider({ children }) {
     if (typeof window !== "undefined" && !posthog.__loaded) {
       posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
         api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-        defaults: "2025-11-30",
+        defaults: "2026-01-30",
       });
     }
   }, []);

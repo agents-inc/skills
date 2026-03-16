@@ -1,16 +1,18 @@
 # Fastify - Schema Examples
 
-> TypeBox schemas, validation, and type-safe routes. See [SKILL.md](../SKILL.md) for core concepts.
+> TypeBox schemas, validation, and type-safe routes. See [SKILL.md](../SKILL.md) for decision guidance.
+
+**Prerequisites**: Understand [Pattern 2: Schema Definition](../SKILL.md) from core patterns.
 
 ---
 
-## TypeBox Schema Definition
+## Pattern 3: Complete Schema Set
 
-### Good Example - Complete Schema Set
+### Good Example - Full Domain Schemas
 
 ```typescript
 // src/schemas/user.ts
-import { Type, Static } from "@sinclair/typebox";
+import { Type, Static } from "@fastify/type-provider-typebox";
 
 // Named constants for validation constraints
 const MIN_USERNAME_LENGTH = 3;
@@ -82,7 +84,7 @@ export type UsersQuery = Static<typeof UsersQuerySchema>;
 
 **Why good:** Named constants for constraints, Static<> derives types from schemas, Type.Partial for update schemas, Type.Union for enums
 
-### Bad Example - Separate Types and Validation
+### Bad Example - Separate Types and Validation (DRIFT RISK)
 
 ```typescript
 // WRONG - Types and validation can drift
@@ -110,14 +112,14 @@ interface User {
 
 ---
 
-## Route with Full Schema
+## Pattern 4: Route with Full Schema
 
-### Good Example - Complete Route Definition
+### Good Example - Complete CRUD Routes
 
 ```typescript
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
-import { Type } from "@sinclair/typebox";
+import { Type } from "@fastify/type-provider-typebox";
 
 import {
   UserSchema,
@@ -290,13 +292,13 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 ---
 
-## Reusable Schema Components
+## Pattern 5: Reusable Schema Components
 
 ### Good Example - Shared Error and Pagination Schemas
 
 ```typescript
 // src/schemas/common.ts
-import { Type, TObject, TProperties } from "@sinclair/typebox";
+import { Type, TObject, TProperties } from "@fastify/type-provider-typebox";
 
 // Standard error response
 export const ErrorSchema = Type.Object({
@@ -364,13 +366,13 @@ fastify.get(
 
 ---
 
-## Schema Composition
+## Pattern 6: Schema Composition
 
 ### Good Example - Extending Schemas
 
 ```typescript
 // src/schemas/post.ts
-import { Type, Static } from "@sinclair/typebox";
+import { Type, Static } from "@fastify/type-provider-typebox";
 
 const MIN_TITLE_LENGTH = 1;
 const MAX_TITLE_LENGTH = 200;
@@ -429,7 +431,7 @@ export type PostSummary = Static<typeof PostSummarySchema>;
 
 ---
 
-## Validation Error Handling
+## Pattern 7: Validation Error Handling
 
 ### Good Example - Custom Validation Errors
 

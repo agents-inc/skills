@@ -1,12 +1,12 @@
 # NestJS Database Integration Examples
 
-> Database patterns for NestJS with TypeORM and Prisma. See [SKILL.md](../SKILL.md) for core concepts.
+> NestJS DI integration patterns for database access. These examples show how to wrap your ORM in NestJS modules and services — not the ORM API itself. See [SKILL.md](../SKILL.md) for core concepts.
 
 ---
 
 ## Pattern 1: Prisma Integration
 
-Prisma is the recommended ORM for type-safe database access. NestJS integrates Prisma via a custom service.
+NestJS integrates Prisma via a custom service that wraps `PrismaClient` with lifecycle hooks.
 
 ### PrismaService
 

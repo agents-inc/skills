@@ -65,7 +65,7 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
 );
 ```
 
-**Why good:** Type-safe Variables means c.get("userId") is typed, explicit algorithm prevents algorithm confusion attacks (CVE-2026-22818), payload validation prevents accepting garbage tokens, default role prevents undefined access
+**Why good:** Type-safe Variables means c.get("userId") is typed, explicit algorithm prevents algorithm confusion attacks (CVE-2026-22817), payload validation prevents accepting garbage tokens, default role prevents undefined access
 
 ### Good Example - JWK/JWKS Authentication (Asymmetric Keys)
 
@@ -146,7 +146,7 @@ const authMiddleware = async (c, next) => {
 };
 ```
 
-**Why bad:** Missing algorithm allows attackers to forge tokens via algorithm confusion (CVE-2026-22818), c.userId not typed = any access, no payload validation = trusts malicious tokens, "Unauthorized" gives attackers no info but also no help for debugging
+**Why bad:** Missing algorithm allows attackers to forge tokens via algorithm confusion (CVE-2026-22817), c.userId not typed = any access, no payload validation = trusts malicious tokens, "Unauthorized" gives attackers no info but also no help for debugging
 
 ---
 
@@ -162,7 +162,7 @@ const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 100;
 const RETRY_AFTER_SECONDS = 60;
 
-// Simple in-memory rate limiter (use Redis for production multi-instance)
+// Simple in-memory rate limiter (use a shared store for multi-instance deployments)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 export const rateLimitMiddleware = createMiddleware(async (c, next) => {

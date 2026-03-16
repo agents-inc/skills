@@ -176,8 +176,7 @@ server.get("/users", async (request) => {
 ```typescript
 // CORRECT: Type provider configured
 import Fastify from "fastify";
-import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-import { Type } from "@sinclair/typebox";
+import { Type, TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 
 const server = Fastify().withTypeProvider<TypeBoxTypeProvider>();
 
@@ -533,22 +532,6 @@ const HTTP_SERVICE_UNAVAILABLE = 503;
 - [ ] onClose hooks for cleanup (database, connections)
 - [ ] No sensitive data in error responses
 - [ ] No PII in logs
-
-### TypeScript Configuration
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "declaration": true
-  }
-}
-```
 
 ### Testing Checklist
 

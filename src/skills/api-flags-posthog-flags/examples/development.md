@@ -30,8 +30,8 @@ const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
 // Good Example - Development-only flag overrides
 export function initPostHog() {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  posthog.init(process.env.POSTHOG_PUBLIC_KEY!, {
+    api_host: process.env.POSTHOG_PUBLIC_HOST,
     loaded: (posthog) => {
       if (IS_DEVELOPMENT) {
         // Override specific flags for local development
@@ -58,8 +58,8 @@ export function initPostHogWithBootstrap(
   bootstrapFlags: Record<string, boolean | string>,
   distinctId: string,
 ) {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  posthog.init(process.env.POSTHOG_PUBLIC_KEY!, {
+    api_host: process.env.POSTHOG_PUBLIC_HOST,
     bootstrap: {
       featureFlags: bootstrapFlags,
       distinctID: distinctId, // Match server-side ID
@@ -84,8 +84,8 @@ import posthog from "posthog-js";
 
 // Good Example - Wait for flags to load before using
 export function initPostHogWithCallback() {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  posthog.init(process.env.POSTHOG_PUBLIC_KEY!, {
+    api_host: process.env.POSTHOG_PUBLIC_HOST,
     loaded: (posthog) => {
       // Called when PostHog SDK is loaded
       posthog.onFeatureFlags((flagVariants, { errorsLoading }) => {

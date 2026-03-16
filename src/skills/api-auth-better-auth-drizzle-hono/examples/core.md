@@ -4,10 +4,10 @@
 
 **Additional Examples:**
 
-- [oauth.md](oauth.md) - GitHub, Google OAuth providers
+- [oauth.md](oauth.md) - Social providers, Generic OAuth, OAuth Provider plugin
 - [two-factor.md](two-factor.md) - TOTP setup and verification
 - [organizations.md](organizations.md) - Multi-tenancy and invitations
-- [sessions.md](sessions.md) - Session configuration and revocation
+- [sessions.md](sessions.md) - Session configuration, cookie caching, stateless
 
 ---
 
@@ -58,7 +58,6 @@ export function useSignUp() {
   return { signUp, isPending, error };
 }
 
-// Named export
 export { useSignUp };
 ```
 
@@ -120,7 +119,6 @@ export function useSignIn() {
   return { signIn, isPending, error, requires2FA };
 }
 
-// Named export
 export { useSignIn };
 ```
 
@@ -145,7 +143,6 @@ const pool = new Pool({
 
 export const db = drizzle(pool, { schema });
 
-// Named export
 export { db };
 ```
 
@@ -182,7 +179,7 @@ export { auth };
 # For Drizzle adapter, use this 3-step workflow:
 
 # Step 1: Generate Better Auth schema
-npx @better-auth/cli generate
+npx auth@latest generate
 
 # Step 2: Generate Drizzle migration file
 npx drizzle-kit generate
@@ -190,7 +187,7 @@ npx drizzle-kit generate
 # Step 3: Apply migration to database
 npx drizzle-kit migrate
 
-# NOTE: The `migrate` command only works with Kysely adapter
+# NOTE: Better Auth's own `migrate` command only works with Kysely adapter
 # For Drizzle, always use the 3-step workflow above
 ```
 
@@ -207,10 +204,9 @@ npx drizzle-kit migrate
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.APP_URL || "http://localhost:3000",
 });
 
-// Named export
 export { authClient };
 ```
 
@@ -223,7 +219,7 @@ import { twoFactorClient } from "better-auth/client/plugins";
 import { organizationClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.APP_URL || "http://localhost:3000",
   plugins: [
     twoFactorClient({
       twoFactorPage: "/auth/two-factor",
@@ -232,7 +228,6 @@ export const authClient = createAuthClient({
   ],
 });
 
-// Named export
 export { authClient };
 ```
 
@@ -267,8 +262,100 @@ export function UserMenu() {
   );
 }
 
-// Named export
 export { UserMenu };
 ```
 
-**Why good:** useSession is reactive and updates on auth changes, signOut handles cookie cleanup
+**Why good:** useSession is reactive and updates on auth changes, includes `refetch` method for manual refresh, signOut handles cookie cleanup
+
+---
+
+## Password Reset
+
+Use `authClient.requestPasswordReset` (renamed from `forgotPassword` in v1.4).
+
+```typescript
+// hooks/use-password-reset.ts
+import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
+
+export function usePasswordReset() {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const requestReset = async (email: string) => {
+    setIsPending(true);
+    setError(null);
+
+    try {
+      const result = await authClient.requestPasswordReset({
+        email,
+        redirectTo: "/auth/reset-password",
+      });
+
+      if (result.error) {
+        setError(result.error.message);
+        return;
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setError("Failed to send reset email");
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { requestReset, isPending, error, success };
+}
+
+export { usePasswordReset };
+```
+
+---
+
+## Server-Side Password Verification
+
+Use `auth.api.verifyPassword` to confirm identity before sensitive operations (e.g., email change, account deletion).
+
+```typescript
+// routes/settings.ts
+import { auth } from "@/lib/auth";
+
+const HTTP_STATUS_UNAUTHORIZED = 401;
+
+app.post("/settings/change-email", async (c) => {
+  const session = c.get("session");
+  const { password, newEmail } = await c.req.json();
+
+  const isValid = await auth.api.verifyPassword({
+    body: { email: session.user.email, password },
+  });
+
+  if (!isValid) {
+    return c.json({ error: "Invalid password" }, HTTP_STATUS_UNAUTHORIZED);
+  }
+
+  // Proceed with email change...
+  return c.json({ success: true }, 200);
+});
+```
+
+---
+
+## Bundle Size Optimization
+
+Use `better-auth/minimal` to reduce bundle size when using ORM adapters (excludes Kysely).
+
+```typescript
+// lib/auth.ts - Use minimal entry point for smaller bundles
+import { betterAuth } from "better-auth/minimal";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/lib/db";
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { provider: "pg" }),
+});
+```
+
+**When to use:** Projects using Drizzle, Prisma, or MongoDB adapters (not direct database connections)

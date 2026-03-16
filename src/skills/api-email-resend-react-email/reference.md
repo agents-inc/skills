@@ -1,6 +1,6 @@
 # Email Reference
 
-> Decision frameworks, anti-patterns, red flags, and integration guides for the Email skill. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) folder for code examples.
+> Decision frameworks, anti-patterns, and red flags for the Email skill. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) folder for code examples.
 
 ---
 
@@ -61,7 +61,7 @@ Should email be sent now?
 ├── Campaign with specific launch time
 │   └── Schedule using scheduledAt parameter
 └── Batch notification
-    └── Note: scheduled_at not supported in batch API
+    └── Note: scheduledAt not supported in batch API
 ```
 
 ### Idempotency Key Usage
@@ -79,27 +79,6 @@ Should you use an idempotency key?
 ```
 
 </decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **Authentication systems**: sendVerificationEmail and sendResetPassword callbacks
-- **API routes**: Server-side email sending
-- **Analytics**: Track email events via webhooks
-- **Databases**: Store email preferences and events
-
-**Replaces / Conflicts with:**
-
-- **Nodemailer**: Lower level, Resend is higher abstraction
-- **SendGrid/Mailgun**: Direct alternatives - use one provider
-- **AWS SES directly**: Resend uses SES under the hood with better DX
-
-</integration>
 
 ---
 
@@ -125,8 +104,7 @@ await resend.emails.send({ html }); // Sends "[object Promise]"!
 
 ```typescript
 // ANTI-PATTERN: Exposing API key to client
-"use client";
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY);
+const resend = new Resend(process.env.PUBLIC_RESEND_KEY);
 // API key visible in browser bundle!
 ```
 
@@ -182,7 +160,7 @@ async function sendNewsletter(users: User[]) {
 
 **Why it's wrong:** Spam to users who opted out, damages reputation.
 
-**What to do instead:** Check emailPreferences before sending non-transactional emails.
+**What to do instead:** Check email preferences before sending non-transactional emails.
 
 </anti_patterns>
 
@@ -210,7 +188,7 @@ async function sendNewsletter(users: User[]) {
 
 **Common Mistakes:**
 
-- Using Grid or Flexbox in templates (not supported)
+- Using Grid or Flexbox in templates (not supported by email clients)
 - Expecting shadows or gradients to render
 - Not testing in multiple email clients
 - Forgetting PreviewProps for dev server
@@ -220,16 +198,15 @@ async function sendNewsletter(users: User[]) {
 
 - Resend batch API limited to 100 emails per request
 - Batch API does NOT support `attachments` or `scheduledAt` fields
-- render() is async - must await before send
-- React Email 5.0+ deprecated `renderAsync` - use `render()` instead
-- Webhooks require all three Svix headers: `svix-id`, `svix-timestamp`, `svix-signature`
+- `render()` is async (React Email 5.0+ deprecated `renderAsync`)
+- Webhook SDK verify uses `webhookSecret` parameter (not `secret`)
+- Webhook SDK header keys are short-form: `id`, `timestamp`, `signature`
 - Webhook verification requires raw request body - JSON parsing breaks signature
 - Some email clients strip JavaScript entirely
-- Tailwind in emails requires @react-email/tailwind wrapper (Tailwind 4 supported in React Email 5.0+)
+- Tailwind in emails requires `@react-email/tailwind` wrapper (Tailwind 4 supported in React Email 5.0+)
 - Images must be absolute URLs (no relative paths)
-- Scheduled emails cannot use batch API (but DO support tags in v4+)
-- Idempotency keys expire after 24 hours and have 256 character limit
-- Tags must use ASCII alphanumeric characters, underscores, or dashes only
-- Tags with scheduled emails is a v4+ feature (2025 update)
+- Idempotency keys expire after 24 hours, max 256 characters
+- Tags: ASCII alphanumeric, underscores, dashes only, max 256 chars per key/value
+- Tags supported in batch API and with scheduled emails
 
 </red_flags>

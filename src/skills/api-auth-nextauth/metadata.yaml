@@ -3,6 +3,7 @@ category: api-auth
 slug: nextauth
 domain: api
 author: "@vince"
+version: 1
 displayName: Auth.js
 cliDescription: Auth.js (NextAuth v5) authentication
 usageGuidance: Use when implementing authentication with Auth.js/NextAuth for Next.js, SvelteKit, or other frameworks.

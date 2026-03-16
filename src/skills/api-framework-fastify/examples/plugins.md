@@ -1,6 +1,8 @@
 # Fastify - Plugin Examples
 
-> Plugin system, encapsulation, and decorators. See [SKILL.md](../SKILL.md) for core concepts.
+> Plugin system, encapsulation, and decorators. See [SKILL.md](../SKILL.md) for decision guidance.
+
+**Prerequisites**: Understand [Pattern 4: Plugin Encapsulation](../SKILL.md) from core patterns.
 
 ---
 
@@ -11,7 +13,7 @@
 ```typescript
 // src/plugins/auth-routes.ts
 import type { FastifyPluginAsync } from "fastify";
-import { Type } from "@sinclair/typebox";
+import { Type } from "@fastify/type-provider-typebox";
 
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;

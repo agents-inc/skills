@@ -1,6 +1,6 @@
 # Express.js Reference
 
-> Decision frameworks, anti-patterns, and red flags for Express.js APIs. Referenced from [SKILL.md](SKILL.md).
+> Decision frameworks, anti-patterns, and production checklist. Referenced from [SKILL.md](SKILL.md).
 
 ---
 
@@ -8,43 +8,25 @@
 
 ## Decision Framework
 
-### When to Use Express.js
-
-```
-Need a Node.js HTTP framework?
-├─ Need auto-generated OpenAPI docs?
-│   ├─ YES → Consider Hono + zod-openapi or Fastify + Swagger
-│   └─ NO → Express is viable
-├─ Deploying to edge/serverless?
-│   ├─ YES → Consider Hono (smaller, faster cold start)
-│   └─ NO → Express is viable
-├─ Need mature ecosystem with extensive middleware?
-│   ├─ YES → Express (largest ecosystem)
-│   └─ NO → Any framework works
-└─ Team familiar with Express patterns?
-    ├─ YES → Express reduces learning curve
-    └─ NO → Evaluate all options
-```
-
 ### Middleware vs Route Handler
 
 ```
 Where should this logic live?
 ├─ Is it reusable across multiple routes?
-│   ├─ YES → Middleware
-│   └─ NO → Route handler
+│   ├─ YES -> Middleware
+│   └─ NO -> Route handler
 ├─ Does it modify req/res for downstream handlers?
-│   ├─ YES → Middleware
-│   └─ NO → Route handler
+│   ├─ YES -> Middleware
+│   └─ NO -> Route handler
 ├─ Is it authentication/authorization?
-│   ├─ YES → Middleware (route guard)
-│   └─ NO → Continue evaluation
+│   ├─ YES -> Middleware (route guard)
+│   └─ NO -> Continue evaluation
 ├─ Is it request validation?
-│   ├─ YES → Middleware
-│   └─ NO → Route handler
+│   ├─ YES -> Middleware
+│   └─ NO -> Route handler
 └─ Is it error handling?
-    ├─ YES → Error middleware (4 args)
-    └─ NO → Route handler
+    ├─ YES -> Error middleware (4 args)
+    └─ NO -> Route handler
 ```
 
 ### express.Router() vs app.METHOD()
@@ -72,10 +54,10 @@ How to handle this error?
 ├─ Is it authentication/authorization?
 │   └─ Return 401/403 in auth middleware
 ├─ Is it an unexpected error?
-│   └─ Call next(error) → centralized handler
+│   └─ Call next(error) -> centralized handler
 └─ Is the error in async code?
-    ├─ Express 4 → Wrap in try/catch, call next(error)
-    └─ Express 5 → Automatic (throw works)
+    ├─ Express 5 -> Automatic (errors auto-forwarded)
+    └─ Express 4 -> Wrap in try/catch, call next(error)
 ```
 
 ### Async Handler Approach
@@ -122,14 +104,15 @@ How to handle async route handlers?
 - **Calling `next()` after sending response** - Unpredictable behavior
 - **Using `parseInt()` without radix** - `parseInt("08")` may fail, always use `parseInt(str, 10)`
 - **Not validating route parameters** - Allows injection or invalid data
-- **Logging full request body** - May contain passwords or PII (GDPR violation)
+- **Logging full request body** - May contain passwords or PII
 
 ### Gotchas & Edge Cases
 
 - **Middleware order matters** - helmet first, then cors, then rate limit, then body parsing
 - **`next('route')` vs `next(error)`** - `'route'` skips to next route, anything else triggers error handler
 - **`req.query` values are always strings** - Parse numbers explicitly with `parseInt`
-- **Express 5 async behavior** - Errors auto-forwarded, but Express 5 not yet stable (as of 2025)
+- **Express 5: `req.body` is `undefined` when unparsed** - was `{}` in Express 4, may break existing guards
+- **Express 5: wildcard routes require names** - `/*` must be `/{*splat}`
 - **`express.static` without auth** - Files publicly accessible unless guarded
 - **Router `mergeParams` option** - Required to access parent route params in nested routers
 
@@ -160,7 +143,8 @@ const errorHandler = (req, res, err, next) => {
 **What to do instead:**
 
 ```typescript
-// CORRECT: 4 arguments in correct order
+const HTTP_INTERNAL_ERROR = 500;
+
 const errorHandler = (
   err: Error,
   req: Request,
@@ -177,30 +161,6 @@ const errorHandler = (
 
 ---
 
-### Error Handler Before Routes
-
-```typescript
-// WRONG: Error handler before routes
-const app = express();
-app.use(errorHandler);
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
-```
-
-**Why it's wrong:** Middleware executes in order. Error handler before routes means it runs on every request (as regular middleware since no error yet) and never catches actual errors.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Error handler LAST
-const app = express();
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
-app.use(errorHandler); // After all routes
-```
-
----
-
 ### Missing Async Error Forwarding (Express 4)
 
 ```typescript
@@ -211,12 +171,12 @@ router.get("/:id", async (req, res) => {
 });
 ```
 
-**Why it's wrong:** Express 4 doesn't catch errors from rejected promises. The request hangs and eventually times out.
+**Why it's wrong:** Express 4 doesn't catch errors from rejected promises. The request hangs until timeout.
 
 **What to do instead:**
 
 ```typescript
-// CORRECT: Explicit error forwarding
+// Option A: Explicit error forwarding
 router.get("/:id", async (req, res, next) => {
   try {
     const user = await getUserById(req.params.id);
@@ -226,7 +186,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-// CORRECT: Using wrapper utility
+// Option B: Using wrapper utility
 router.get(
   "/:id",
   asyncHandler(async (req, res) => {
@@ -241,23 +201,12 @@ router.get(
 ### God Route Files
 
 ```typescript
-// WRONG: Everything in one file
-// routes.ts - 2000+ lines
+// WRONG: Everything in one file - 2000+ lines
 const app = express();
-
 app.get("/api/users", (req, res) => {
   /* 50 lines */
 });
 app.post("/api/users", (req, res) => {
-  /* 50 lines */
-});
-app.get("/api/users/:id", (req, res) => {
-  /* 50 lines */
-});
-app.put("/api/users/:id", (req, res) => {
-  /* 50 lines */
-});
-app.delete("/api/users/:id", (req, res) => {
   /* 50 lines */
 });
 app.get("/api/products", (req, res) => {
@@ -271,7 +220,6 @@ app.get("/api/products", (req, res) => {
 **What to do instead:**
 
 ```typescript
-// CORRECT: Modular route files
 // src/routes/user-routes.ts
 const router = Router();
 router.get("/" /* ... */);
@@ -293,25 +241,21 @@ router.get("/:id", async (req, res, next) => {
   try {
     const user = await getUserById(req.params.id);
     if (!user) {
-      res.status(404).json({ error: "Not found" }); // What's 404?
+      res.status(404).json({ error: "Not found" });
       return;
     }
-    res.status(200).json({ data: user }); // What's 200?
+    res.status(200).json({ data: user });
   } catch (error) {
-    res.status(500).json({ error: "Server error" }); // What's 500?
+    res.status(500).json({ error: "Server error" });
   }
 });
 ```
 
-**Why it's wrong:** Numbers without context are unclear, hard to refactor, and error-prone.
-
 **What to do instead:**
 
 ```typescript
-// CORRECT: Named constants
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
-const HTTP_INTERNAL_ERROR = 500;
 
 router.get("/:id", async (req, res, next) => {
   try {
@@ -325,36 +269,6 @@ router.get("/:id", async (req, res, next) => {
     next(error); // Forward to centralized handler
   }
 });
-```
-
----
-
-### Not Checking headersSent
-
-```typescript
-// WRONG: May crash with "headers already sent"
-const errorHandler = (err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ error: err.message }); // Crashes if headers sent
-};
-```
-
-**Why it's wrong:** If a route partially sent a response before erroring, this crashes the server.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Check headersSent first
-const errorHandler = (err, req, res, next) => {
-  console.error(err);
-
-  if (res.headersSent) {
-    next(err); // Delegate to default handler
-    return;
-  }
-
-  res.status(HTTP_INTERNAL_ERROR).json({ error: err.message });
-};
 ```
 
 ---
@@ -386,7 +300,6 @@ app.use(
 **What to do instead:**
 
 ```typescript
-// CORRECT: Explicit allowlist
 const ALLOWED_ORIGINS = [
   "https://app.example.com",
   "https://admin.example.com",
@@ -437,12 +350,12 @@ app.use(
 - [ ] Routes organized with `express.Router()` by resource
 - [ ] Error handler has 4 arguments `(err, req, res, next)`
 - [ ] Error handler registered AFTER all routes
-- [ ] All async handlers forward errors (Express 4)
+- [ ] All async handlers forward errors (Express 4) or use Express 5
 - [ ] No God files (each file < 300 lines)
 
 **Security:**
 
-- [ ] Helmet middleware registered first
+- [ ] Security headers middleware registered first
 - [ ] CORS configured with explicit origin allowlist
 - [ ] Rate limiting enabled for public endpoints
 - [ ] Request body size limited (`express.json({ limit: ... })`)
@@ -466,7 +379,7 @@ app.use(
 
 **Middleware Order:**
 
-- [ ] 1. Security (helmet)
+- [ ] 1. Security headers
 - [ ] 2. CORS
 - [ ] 3. Rate limiting
 - [ ] 4. Body parsing

@@ -52,15 +52,13 @@ Is this a B2B product with multi-user accounts?
 
 **Works with:**
 
-- **Authentication flows**: Call identify() on login/signup, reset() on logout
+- **Authentication flows**: Call `identify()` on login/signup, `reset()` on logout
 - **API routes**: Server-side event tracking with posthog-node
-- **Feature Flags**: Same PostHog instance handles both (separate skill)
+- **Feature flags**: Same PostHog instance handles both (separate concern from analytics)
 
 **Replaces / Conflicts with:**
 
-- **Google Analytics**: Can use alongside, but PostHog is more product-focused
-- **Mixpanel/Amplitude**: Direct competitors - choose one
-- **Segment**: PostHog can be a Segment destination, or replace it
+- Other product analytics platforms -- choose one primary analytics tool to avoid event duplication
 
 </integration>
 
@@ -207,12 +205,12 @@ posthog.capture("action");
 
 ### Standard PostHog Events
 
-| Event                  | Description                             |
-| ---------------------- | --------------------------------------- |
-| `$pageview`            | Page view (capture manually in Next.js) |
-| `$pageleave`           | User leaves page                        |
-| `$autocapture`         | Automatic click/form tracking           |
-| `$feature_flag_called` | Feature flag evaluated                  |
+| Event                  | Description                          |
+| ---------------------- | ------------------------------------ |
+| `$pageview`            | Page view (capture manually in SPAs) |
+| `$pageleave`           | User leaves page                     |
+| `$autocapture`         | Automatic click/form tracking        |
+| `$feature_flag_called` | Feature flag evaluated               |
 
 ---
 
@@ -247,5 +245,5 @@ posthog.capture("action");
 - [PostHog Group Analytics](https://posthog.com/docs/product-analytics/group-analytics)
 - [PostHog GDPR Compliance](https://posthog.com/docs/privacy/gdpr-compliance)
 - [PostHog Node.js SDK](https://posthog.com/docs/libraries/node)
-- [PostHog Next.js Integration](https://posthog.com/docs/libraries/next-js)
-- [PostHog React Integration](https://posthog.com/docs/libraries/react)
+- [PostHog React SDK](https://posthog.com/docs/libraries/react)
+- [PostHog JS Configuration](https://posthog.com/docs/libraries/js/config)

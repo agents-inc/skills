@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Client setup, error handling
+- [core.md](core.md) -- Client setup, error handling
 - [streaming.md](streaming.md) -- Streaming responses
 - [tools.md](tools.md) -- Tool/function calling
 - [structured-output.md](structured-output.md) -- Structured outputs with Zod

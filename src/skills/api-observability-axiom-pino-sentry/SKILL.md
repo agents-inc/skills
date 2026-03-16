@@ -42,9 +42,8 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 
 **When NOT to use:**
 
-- Initial project setup (use `setup/observability.md` instead)
-- Installing dependencies (use `setup/observability.md` instead)
-- Configuring `next.config.js` (use `setup/observability.md` instead)
+- Initial project setup and dependency installation (one-time setup; follow official docs)
+- Framework-specific configuration files (follow framework SDK docs)
 
 **Key patterns covered:**
 
@@ -86,8 +85,6 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 3. **How do I find it?** (Correlation IDs linking related events)
 
 Logging should be **intentional, not defensive**. Every log statement should answer a specific question you might ask when debugging. Avoid logging "just in case" - it creates noise that makes real issues harder to find.
-
-**This skill covers ongoing usage patterns. For initial setup (dependencies, configuration), see `setup/observability.md`.**
 
 </philosophy>
 
@@ -265,27 +262,6 @@ How to trace a request through the system when debugging.
 For detailed APL queries and checklist, see [examples/axiom.md](examples/axiom.md#pattern-debugging-guide---tracing-a-request).
 
 </patterns>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **setup/observability.md**: Initial configuration this skill builds upon
-- **backend/api.md**: Hono middleware for logging and correlation IDs
-- **backend/database.md**: Drizzle query logging patterns
-- **frontend/react.md**: Error boundary patterns
-
-**Related Patterns:**
-
-- Use correlation ID middleware from Pattern 3 in all Hono routes
-- Use error boundaries from Pattern 5 around feature sections
-- Use performance wrappers from Pattern 9 for external calls
-
-</integration>
 
 ---
 

@@ -243,44 +243,32 @@ export const categories = pgTable("categories", {
 
 ### Relations Definition
 
+Use `defineRelations()` (RQB v2) for centralized relation definitions. See [relations-v2.md](relations-v2.md) for full examples.
+
 ```typescript
-// Define relations separately from tables
-export const companiesRelations = relations(companies, ({ many }) => ({
-  jobs: many(jobs),
-  locations: many(companyLocations),
-}));
+// RQB v2 - Centralized relation definitions
+import { defineRelations } from "drizzle-orm";
+import * as schema from "./schema";
 
-export const companyLocationsRelations = relations(
-  companyLocations,
-  ({ one }) => ({
-    company: one(companies, {
-      fields: [companyLocations.companyId],
-      references: [companies.id],
+export const relations = defineRelations(schema, (r) => ({
+  companies: {
+    jobs: r.many.jobs({ from: r.companies.id, to: r.jobs.companyId }),
+    locations: r.many.companyLocations({
+      from: r.companies.id,
+      to: r.companyLocations.companyId,
     }),
-  }),
-);
-
-export const jobsRelations = relations(jobs, ({ one, many }) => ({
-  company: one(companies, {
-    fields: [jobs.companyId],
-    references: [companies.id],
-  }),
-  jobSkills: many(jobSkills),
-}));
-
-export const jobSkillsRelations = relations(jobSkills, ({ one }) => ({
-  job: one(jobs, {
-    fields: [jobSkills.jobId],
-    references: [jobs.id],
-  }),
-  skill: one(skills, {
-    fields: [jobSkills.skillId],
-    references: [skills.id],
-  }),
-}));
-
-export const skillsRelations = relations(skills, ({ many }) => ({
-  jobSkills: many(jobSkills),
+  },
+  jobs: {
+    company: r.one.companies({ from: r.jobs.companyId, to: r.companies.id }),
+    jobSkills: r.many.jobSkills({ from: r.jobs.id, to: r.jobSkills.jobId }),
+  },
+  jobSkills: {
+    job: r.one.jobs({ from: r.jobSkills.jobId, to: r.jobs.id }),
+    skill: r.one.skills({ from: r.jobSkills.skillId, to: r.skills.id }),
+  },
+  skills: {
+    jobSkills: r.many.jobSkills({ from: r.skills.id, to: r.jobSkills.skillId }),
+  },
 }));
 ```
 

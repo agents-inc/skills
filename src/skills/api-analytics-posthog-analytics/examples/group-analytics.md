@@ -4,7 +4,7 @@
 >
 > **Return to:** [SKILL.md](../SKILL.md) | **Prerequisites:** [core.md](core.md), [server-tracking.md](server-tracking.md)
 >
-> **Related:** [funnel-analysis.md](funnel-analysis.md) | [privacy-gdpr.md](privacy-gdpr.md)
+> **Related:** [privacy-gdpr.md](privacy-gdpr.md) | [core.md](core.md)
 
 ---
 
@@ -35,8 +35,6 @@ export function useOrganizationAnalytics() {
     });
   }, [posthog, activeOrg.data]);
 }
-
-export { useOrganizationAnalytics };
 ```
 
 **Why good:** Uses database org ID as group key, sets useful org properties, runs when org context changes
@@ -80,8 +78,6 @@ export async function trackMemberInvited(data: InviteEventData) {
 
   await posthogServer.shutdown();
 }
-
-export { trackMemberInvited };
 ```
 
 **Why good:** Event associated with both user AND organization, groupIdentify updates org properties, PII (email) excluded from properties

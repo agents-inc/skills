@@ -66,45 +66,6 @@ Is the flag security-sensitive?
 
 ---
 
-## Integration Guide
-
-**Works with:**
-
-- **PostHog Analytics**: Flags and analytics share the same PostHog instance
-- **React Query**: Combine flag checks with data fetching for conditional endpoints
-- **Better Auth**: Use session user ID as PostHog distinct_id for targeting
-- **Hono API Routes**: Evaluate flags server-side in API handlers
-
-**Example: React Query + Feature Flags**
-
-```typescript
-// hooks/use-dashboard-data.ts
-import { useQuery } from "@tanstack/react-query";
-import { useFeatureFlagEnabled } from "posthog-js/react";
-
-import { FLAG_BETA_DASHBOARD } from "@/lib/feature-flags";
-
-export function useDashboardData() {
-  const isBetaDashboard = useFeatureFlagEnabled(FLAG_BETA_DASHBOARD);
-
-  return useQuery({
-    queryKey: ["dashboard", isBetaDashboard ? "beta" : "stable"],
-    queryFn: () =>
-      fetch(isBetaDashboard ? "/api/dashboard/beta" : "/api/dashboard").then(
-        (r) => r.json(),
-      ),
-    enabled: isBetaDashboard !== undefined, // Wait for flag to load
-  });
-}
-```
-
-**Conflicts with:**
-
-- Other feature flag services (LaunchDarkly, Split) - use one provider
-- Environment variable flags - migrate to PostHog for consistency
-
----
-
 ## Anti-Patterns
 
 ### Using Payload Without Enabled Check

@@ -8,7 +8,7 @@
 
 ## Pattern 9: Pino Logger Setup
 
-**File: `packages/api/src/lib/logger.ts`**
+**File: `src/lib/logger.ts`**
 
 ```typescript
 // Good Example - Pino logger configuration
@@ -56,7 +56,7 @@ export const createLogger = (context: Record<string, unknown>) => {
 };
 ```
 
-**Why good:** Development gets pretty-printed logs for readability, production gets JSON for Axiom ingestion, base fields provide context in every log, sensitive fields redacted automatically
+**Why good:** Development gets pretty-printed logs for readability, production gets JSON for log aggregator ingestion, base fields provide context in every log, sensitive fields redacted automatically
 
 ---
 

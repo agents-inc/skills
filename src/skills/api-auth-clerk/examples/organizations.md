@@ -108,10 +108,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
 ]);
 
-const isAdminRoute = createRouteMatcher([
-  "/admin(.*)",
-  "/api/admin(.*)",
-]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
 
 const isMemberRoute = createRouteMatcher([
   "/dashboard(.*)",
@@ -297,10 +294,7 @@ export async function deleteInvoice(formData: FormData) {
 
   // Verify invoice belongs to this organization
   const invoice = await db.query.invoices.findFirst({
-    where: and(
-      eq(invoices.id, invoiceId),
-      eq(invoices.orgId, orgId),
-    ),
+    where: and(eq(invoices.id, invoiceId), eq(invoices.orgId, orgId)),
   });
 
   if (!invoice) {
@@ -328,13 +322,12 @@ export async function deleteInvoice(formData: FormData) {
 import { useOrganization } from "@clerk/nextjs";
 
 export function OrgMemberList() {
-  const { isLoaded, organization, membership, memberships } =
-    useOrganization({
-      memberships: {
-        pageSize: 20,
-        keepPreviousData: true,
-      },
-    });
+  const { isLoaded, organization, membership, memberships } = useOrganization({
+    memberships: {
+      pageSize: 20,
+      keepPreviousData: true,
+    },
+  });
 
   if (!isLoaded) return <div>Loading...</div>;
 
@@ -368,9 +361,7 @@ export function OrgMemberList() {
       </ul>
 
       {memberships?.hasNextPage && (
-        <button onClick={() => memberships.fetchNext()}>
-          Load More
-        </button>
+        <button onClick={() => memberships.fetchNext()}>Load More</button>
       )}
     </div>
   );
@@ -437,48 +428,47 @@ export function CreateOrgForm() {
 
 ### Good Example -- Database Schema with Organization Scoping
 
-```ts
-// db/schema.ts
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+```sql
+-- Database schema for Clerk-synced tables (use your ORM of choice)
 
-// Users table -- synced via Clerk webhooks
-export const users = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  clerkId: text("clerk_id").notNull().unique(),
-  email: text("email").notNull(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  imageUrl: text("image_url"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+-- Users table: synced via Clerk webhooks
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_id TEXT NOT NULL UNIQUE,       -- Clerk user ID
+  email TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-// Organizations table -- synced via Clerk webhooks
-export const organizations = pgTable("organizations", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  clerkOrgId: text("clerk_org_id").notNull().unique(),
-  name: text("name").notNull(),
-  slug: text("slug").notNull(),
-  imageUrl: text("image_url"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+-- Organizations table: synced via Clerk webhooks
+CREATE TABLE organizations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_org_id TEXT NOT NULL UNIQUE,   -- Clerk organization ID
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  image_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-// Organization members -- synced via Clerk webhooks
-export const orgMembers = pgTable("org_members", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  orgId: text("org_id").notNull(),
-  userId: text("user_id").notNull(),
-  role: text("role").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+-- Organization members: synced via Clerk webhooks
+CREATE TABLE org_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id TEXT NOT NULL,                -- Clerk organization ID
+  user_id TEXT NOT NULL,               -- Clerk user ID
+  role TEXT NOT NULL,                   -- e.g., "org:admin", "org:member"
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-// Application data -- scoped to organization
-export const projects = pgTable("projects", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  orgId: text("org_id").notNull(), // Clerk organization ID
-  name: text("name").notNull(),
-  createdBy: text("created_by").notNull(), // Clerk user ID
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+-- Application data: scoped to organization
+CREATE TABLE projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id TEXT NOT NULL,                -- Clerk organization ID (foreign key for tenant scoping)
+  name TEXT NOT NULL,
+  created_by TEXT NOT NULL,            -- Clerk user ID
+  created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
 **Why good:** `clerkId`/`clerkOrgId` as foreign keys (synced via webhooks), all app data scoped to `orgId`, `createdBy` tracks user who created resource
@@ -488,14 +478,15 @@ export const projects = pgTable("projects", {
 ```ts
 // lib/data-access.ts
 import { auth } from "@clerk/nextjs/server";
-import { and, eq } from "drizzle-orm";
 
 // Always verify auth at the data access layer
 export async function getProjects() {
   const { userId, orgId } = await auth();
 
   if (!userId || !orgId) {
-    throw new Error("Unauthorized: requires authenticated user with active org");
+    throw new Error(
+      "Unauthorized: requires authenticated user with active org",
+    );
   }
 
   return db.query.projects.findMany({
@@ -536,11 +527,14 @@ export async function createProject(name: string) {
     throw new Error("Insufficient permissions");
   }
 
-  return db.insert(projects).values({
-    name,
-    orgId,
-    createdBy: userId,
-  }).returning();
+  return db
+    .insert(projects)
+    .values({
+      name,
+      orgId,
+      createdBy: userId,
+    })
+    .returning();
 }
 ```
 

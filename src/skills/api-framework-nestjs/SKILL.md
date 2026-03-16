@@ -5,7 +5,7 @@ description: NestJS backend framework - modules, controllers, services, DI, guar
 
 # NestJS Patterns
 
-> **Quick Guide:** NestJS is an opinionated, modular Node.js framework built on TypeScript. Use modules to organize features, controllers for HTTP routing, services for business logic with dependency injection, DTOs with class-validator for validation, guards for auth, and exception filters for error handling. NestJS 11 is the current stable version.
+> **Quick Guide:** NestJS is an opinionated, modular Node.js framework built on TypeScript. Use modules to organize features, controllers for HTTP routing, services for business logic with dependency injection, DTOs with class-validator for validation, guards for auth, and exception filters for error handling. Key gotchas: always register services in module `providers`, always enable `ValidationPipe` globally with `whitelist: true`, never put business logic in controllers, never instantiate services with `new`. NestJS 11 is the current stable version (SWC default compiler, Express v5, reversed termination hooks).
 
 ---
 
@@ -33,50 +33,25 @@ description: NestJS backend framework - modules, controllers, services, DI, guar
 
 **When to use:**
 
-- Building structured backend APIs with TypeScript
-- Applications requiring dependency injection and modular architecture
-- REST APIs with validation, authentication, and role-based access
-- Projects needing guards, interceptors, pipes, or middleware
-- Enterprise-grade applications with clear separation of concerns
-
-**Key patterns covered:**
-
-- Module system (root, feature, dynamic modules)
-- Controllers (routing decorators, params, query, body, response)
-- Services and dependency injection (Injectable, constructor injection, custom providers)
-- DTOs and validation (class-validator, ValidationPipe)
-- Exception handling (built-in exceptions, exception filters)
-- Guards and middleware (auth, roles, request lifecycle)
+- Building structured backend APIs with TypeScript and dependency injection
+- Applications requiring modular architecture with clear separation of concerns
+- REST APIs with declarative validation, authentication, and role-based access
+- Projects needing the guard/interceptor/pipe/filter request lifecycle
 
 **When NOT to use:**
 
 - Simple scripts or serverless functions that don't need a framework
 - Projects where Express/Fastify alone is sufficient (no DI, no modules needed)
-- Frontend code (use React, Svelte, etc.)
+- Frontend code
 
 **Detailed Resources:**
 
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
-
-**Core Patterns:**
-
-- [examples/core.md](examples/core.md) — Detailed module, controller, service, DTO, and exception patterns with code
-
-**Database Integration:**
-
-- [examples/database.md](examples/database.md) — TypeORM and Prisma integration, repository pattern
-
-**Authentication:**
-
-- [examples/auth.md](examples/auth.md) — Passport.js integration, JWT strategy, auth guards
-
-**Testing:**
-
-- [examples/testing.md](examples/testing.md) — Unit testing services with mocks, e2e with supertest
-
-**Advanced:**
-
-- [examples/advanced.md](examples/advanced.md) — Interceptors, pipes, custom decorators, CQRS patterns
+- [examples/core.md](examples/core.md) — Feature modules, CRUD, DTOs, dynamic modules, exception filters, custom providers
+- [examples/database.md](examples/database.md) — NestJS DI patterns for database integration, transactions
+- [examples/auth.md](examples/auth.md) — Passport.js integration, JWT strategy, auth guards, RBAC
+- [examples/testing.md](examples/testing.md) — Unit testing with `Test.createTestingModule`, e2e with supertest
+- [examples/advanced.md](examples/advanced.md) — Interceptors, custom pipes, custom decorators, config, CQRS, Swagger
+- [reference.md](reference.md) — CLI commands, project structure, decorator tables, decision frameworks
 
 ---
 
@@ -94,117 +69,42 @@ NestJS enforces a **modular, decorator-driven architecture** inspired by Angular
 4. **Separation of concerns** — Controllers handle HTTP request/response. Services handle business logic. Guards handle authorization. Pipes handle validation/transformation. Filters handle exceptions.
 5. **Convention over configuration** — Follow NestJS conventions (one module per feature, one controller per resource, DTOs for validation) to get batteries-included functionality.
 
-**When to use NestJS:**
-
-- Enterprise-grade APIs with complex business logic
-- Projects with multiple developers needing enforced structure
-- Applications requiring authentication, authorization, and validation
-- APIs that benefit from dependency injection and testability
-
-**When NOT to use:**
-
-- Small serverless functions or simple CRUD endpoints
-- Projects where framework overhead is unacceptable
-- Teams unfamiliar with decorator-based or Angular-style patterns
-
 </philosophy>
 
 ---
 
 <patterns>
 
-## Core Patterns
+## Key Patterns
 
-### Pattern 1: Module System
+### Module System
 
-Modules are the organizational unit of a NestJS application. Every application has a root `AppModule`, and features are organized into feature modules.
-
-```typescript
-// app.module.ts
-import { Module } from "@nestjs/common";
-import { UsersModule } from "./users/users.module";
-import { AuthModule } from "./auth/auth.module";
-import { ConfigModule } from "@nestjs/config";
-
-@Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UsersModule, AuthModule],
-})
-export class AppModule {}
-```
-
-**Why good:** Root module imports feature modules, `ConfigModule.forRoot()` makes config globally available, no controllers or providers at root level keeps it clean
+Every NestJS app has a root `AppModule` that imports feature modules. Each feature module groups its controller, service, and providers. Export services that other modules need.
 
 ```typescript
-// users/users.module.ts
-import { Module } from "@nestjs/common";
-import { UsersController } from "./users.controller";
-import { UsersService } from "./users.service";
-
+// Feature module — one per resource
 @Module({
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], // Available to other modules that import UsersModule
+  exports: [UsersService], // Available to other modules
 })
 export class UsersModule {}
 ```
 
-**Why good:** Feature module groups related controller and service, exports service for use by other modules (e.g., AuthModule)
+**Why good:** Encapsulation per feature, explicit dependency graph via imports/exports, testable in isolation
 
-```typescript
-// BAD: Everything in one module
-@Module({
-  controllers: [
-    UsersController,
-    AuthController,
-    OrdersController,
-    ProductsController,
-  ],
-  providers: [UsersService, AuthService, OrdersService, ProductsService],
-})
-export class AppModule {}
-```
-
-**Why bad:** Monolithic module defeats the purpose of modular architecture, hard to test features in isolation, no encapsulation
+See [examples/core.md](examples/core.md) for complete CRUD module, dynamic modules, and custom providers.
 
 ---
 
-### Pattern 2: Controllers
+### Controllers — Thin Routing Layer
 
-Controllers handle incoming HTTP requests. Use decorators for routing, parameter extraction, and response configuration.
+Controllers should only extract request data and delegate to services. No business logic.
 
 ```typescript
-// users/users.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  ParseIntPipe,
-  HttpCode,
-  HttpStatus,
-} from "@nestjs/common";
-import { UsersService } from "./users.service";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 20;
-
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Get()
-  findAll(
-    @Query("page", new ParseIntPipe({ optional: true })) page = DEFAULT_PAGE,
-    @Query("limit", new ParseIntPipe({ optional: true })) limit = DEFAULT_LIMIT,
-  ) {
-    return this.usersService.findAll(page, limit);
-  }
 
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
@@ -213,173 +113,24 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Put(":id")
-  update(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return this.usersService.update(id, updateUserDto);
-  }
-
-  @Delete(":id")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
   }
 }
 ```
 
-**Why good:** Named constants for defaults, `ParseIntPipe` validates and transforms params, `HttpCode` for explicit status codes, thin controller delegates to service
+**Why good:** `ParseIntPipe` validates and converts param, `@HttpCode` for explicit status, thin delegation to service
 
-```typescript
-// BAD: Business logic in controller
-@Controller("users")
-export class UsersController {
-  @Post()
-  async create(@Body() body: any) {
-    // BAD: Manual validation in controller
-    if (!body.email || !body.email.includes("@")) {
-      throw new Error("Invalid email");
-    }
-    // BAD: Database access in controller
-    const user = await this.db.query("INSERT INTO users...");
-    return user;
-  }
-}
-```
-
-**Why bad:** Business logic belongs in services, manual validation should use DTOs + ValidationPipe, raw `Error` instead of NestJS exceptions, `any` type loses safety
+**Anti-pattern:** Business logic, manual validation, or database access in controllers — always delegate to services.
 
 ---
 
-### Pattern 3: Services and Dependency Injection
+### DTOs with class-validator
 
-Services contain business logic. Decorate with `@Injectable()` and inject via constructor.
-
-```typescript
-// users/users.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from "@nestjs/common";
-import type { CreateUserDto } from "./dto/create-user.dto";
-import type { UpdateUserDto } from "./dto/update-user.dto";
-
-interface User {
-  id: number;
-  email: string;
-  name: string;
-}
-
-@Injectable()
-export class UsersService {
-  private readonly users: User[] = [];
-  private nextId = 1;
-
-  findAll(page: number, limit: number): User[] {
-    const start = (page - 1) * limit;
-    return this.users.slice(start, start + limit);
-  }
-
-  findOne(id: number): User {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
-    return user;
-  }
-
-  create(dto: CreateUserDto): User {
-    const existing = this.users.find((u) => u.email === dto.email);
-    if (existing) {
-      throw new ConflictException(
-        `User with email ${dto.email} already exists`,
-      );
-    }
-    const user: User = { id: this.nextId++, ...dto };
-    this.users.push(user);
-    return user;
-  }
-
-  update(id: number, dto: UpdateUserDto): User {
-    const user = this.findOne(id);
-    Object.assign(user, dto);
-    return user;
-  }
-
-  remove(id: number): void {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
-    this.users.splice(index, 1);
-  }
-}
-```
-
-**Why good:** `@Injectable()` enables DI, throws NestJS HTTP exceptions (NotFoundException, ConflictException), pure business logic with no HTTP concerns, typed DTO parameters
-
-#### Custom Providers
+Use DTOs with class-validator decorators for all request validation. Enable `ValidationPipe` globally.
 
 ```typescript
-// For token-based injection when you need interfaces or runtime selection
-import { Module } from "@nestjs/common";
-
-const DATABASE_CONNECTION = "DATABASE_CONNECTION";
-
-const databaseProvider = {
-  provide: DATABASE_CONNECTION,
-  useFactory: async (configService: ConfigService) => {
-    const config = configService.get("database");
-    return createConnection(config);
-  },
-  inject: [ConfigService],
-};
-
-@Module({
-  providers: [databaseProvider],
-  exports: [DATABASE_CONNECTION],
-})
-export class DatabaseModule {}
-
-// Inject with @Inject token
-@Injectable()
-export class UsersService {
-  constructor(@Inject(DATABASE_CONNECTION) private readonly db: Connection) {}
-}
-```
-
-**Why good:** Factory providers for complex initialization, token-based injection for non-class providers, explicit dependency declaration
-
----
-
-### Pattern 4: DTOs and Validation
-
-Use class-validator decorators on DTOs and enable `ValidationPipe` globally.
-
-```typescript
-// users/dto/create-user.dto.ts
-import {
-  IsEmail,
-  IsString,
-  MinLength,
-  MaxLength,
-  IsOptional,
-  IsEnum,
-} from "class-validator";
-
 const MIN_PASSWORD_LENGTH = 8;
-const MAX_NAME_LENGTH = 100;
-
-enum UserRole {
-  User = "user",
-  Admin = "admin",
-}
 
 export class CreateUserDto {
   @IsEmail()
@@ -388,298 +139,141 @@ export class CreateUserDto {
   @IsString()
   @MinLength(MIN_PASSWORD_LENGTH)
   password: string;
-
-  @IsString()
-  @MaxLength(MAX_NAME_LENGTH)
-  name: string;
-
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
 }
-```
 
-```typescript
-// users/dto/update-user.dto.ts
-import { PartialType } from "@nestjs/mapped-types";
-import { CreateUserDto } from "./create-user.dto";
-
-// All fields from CreateUserDto become optional
+// Update DTO — reuses validation rules
 export class UpdateUserDto extends PartialType(CreateUserDto) {}
 ```
 
-**Why good:** Named constants for limits, class-validator decorators for declarative validation, `PartialType` reuses create DTO for updates, enum for constrained values
-
 ```typescript
-// main.ts — Enable validation globally
-import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
-import { AppModule } from "./app.module";
-
-const PORT = 3000;
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Strip properties not in DTO
-      forbidNonWhitelisted: true, // Reject requests with unknown properties
-      transform: true, // Auto-transform payloads to DTO instances
-    }),
-  );
-  await app.listen(PORT);
-}
-bootstrap();
+// main.ts — Enable globally
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true, // Strip unknown properties
+    forbidNonWhitelisted: true, // Reject unknown properties
+    transform: true, // Auto-transform to DTO instances
+  }),
+);
 ```
 
-**Why good:** `whitelist` prevents mass-assignment attacks, `forbidNonWhitelisted` catches typos in payloads, `transform` converts plain objects to class instances
+**Why good:** Declarative validation, `whitelist` prevents mass-assignment, `PartialType` avoids duplicating rules
 
-```typescript
-// BAD: Manual validation
-@Post()
-create(@Body() body: any) {
-  if (!body.email) throw new BadRequestException('Email required');
-  if (!body.password || body.password.length < 8) {
-    throw new BadRequestException('Password too short');
-  }
-  // 20 more lines of manual validation...
-}
-```
-
-**Why bad:** Manual validation is verbose, error-prone, inconsistent, and doesn't benefit from class-transformer auto-transformation
+See [examples/core.md](examples/core.md) for nested DTOs, query DTOs with pagination, and validation groups.
 
 ---
 
-### Pattern 5: Exception Handling
+### Services and Dependency Injection
 
-NestJS provides built-in HTTP exceptions and a customizable exception filter layer.
-
-#### Built-in Exceptions
+Services contain business logic. Decorate with `@Injectable()` and inject via constructor.
 
 ```typescript
-import {
-  NotFoundException,
-  BadRequestException,
-  UnauthorizedException,
-  ForbiddenException,
-  ConflictException,
-  InternalServerErrorException,
-} from "@nestjs/common";
+@Injectable()
+export class UsersService {
+  findOne(id: number): User {
+    const user = this.users.find((u) => u.id === id);
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return user;
+  }
+}
+```
 
-// Use in services — NestJS auto-converts to proper HTTP responses
+**Why good:** `@Injectable()` enables DI, throws NestJS HTTP exceptions, pure business logic with no HTTP concerns
+
+#### Custom Providers
+
+Use token-based injection for non-class providers (factory, value, class providers):
+
+```typescript
+const DATABASE_CONNECTION = "DATABASE_CONNECTION";
+
+const databaseProvider = {
+  provide: DATABASE_CONNECTION,
+  useFactory: async (configService: ConfigService) => {
+    return createConnection(configService.get("database"));
+  },
+  inject: [ConfigService],
+};
+
+// Inject with @Inject token
+constructor(@Inject(DATABASE_CONNECTION) private readonly db: Connection) {}
+```
+
+See [examples/core.md](examples/core.md) for complete provider examples.
+
+---
+
+### Exception Handling
+
+Throw NestJS built-in HTTP exceptions from services. Use exception filters for custom error response formatting.
+
+```typescript
+// Service — throw built-in exceptions
 throw new NotFoundException("Resource not found");
+throw new ConflictException("Resource already exists");
 throw new BadRequestException("Invalid input");
 throw new UnauthorizedException("Authentication required");
-throw new ForbiddenException("Insufficient permissions");
-throw new ConflictException("Resource already exists");
 ```
 
-**Why good:** Built-in exceptions produce consistent JSON error responses with correct status codes, no manual response formatting needed
+**Key point:** NestJS auto-converts these to proper HTTP responses with correct status codes. Never send raw status codes.
 
-#### Custom Exception Filter
-
-```typescript
-// filters/http-exception.filter.ts
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from "@nestjs/common";
-import type { Request, Response } from "express";
-
-@Catch()
-export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name);
-
-  catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
-
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : "Internal server error";
-
-    this.logger.error(
-      `${request.method} ${request.url} ${status}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
-
-    response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      ...(typeof message === "object" ? message : { message }),
-    });
-  }
-}
-```
-
-**Why good:** Catches all exceptions (not just HttpException), logs with stack trace, consistent error response shape, separates known HTTP errors from unexpected errors
+For custom error response shapes, use a global `@Catch()` exception filter. See [examples/core.md](examples/core.md).
 
 ---
 
-### Pattern 6: Guards and Middleware
+### Guards and Middleware
 
-Guards decide whether a request can proceed (authorization). Middleware runs before the route handler (logging, CORS, etc.).
-
-#### Auth Guard
+Guards decide whether a request proceeds (authorization). Middleware runs before routing (logging, CORS).
 
 ```typescript
-// auth/guards/jwt-auth.guard.ts
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from "@nestjs/common";
-import type { Request } from "express";
-import { AuthService } from "../auth.service";
-
+// Guard — implements CanActivate
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const authHeader = request.headers.authorization;
-
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new UnauthorizedException(
-        "Missing or invalid authorization header",
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    const user = await this.authService.validateToken(token);
-
-    if (!user) {
-      throw new UnauthorizedException("Invalid token");
-    }
-
-    request["user"] = user;
+    // Validate token, attach user to request
     return true;
   }
 }
-```
 
-#### Role Guard with Custom Decorator
-
-```typescript
-// auth/decorators/roles.decorator.ts
-import { SetMetadata } from "@nestjs/common";
-
-const ROLES_KEY = "roles";
-
-export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
-```
-
-```typescript
-// auth/guards/roles.guard.ts
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-
-const ROLES_KEY = "roles";
-
-@Injectable()
-export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (!requiredRoles) {
-      return true; // No roles required, allow access
-    }
-
-    const { user } = context.switchToHttp().getRequest();
-    const hasRole = requiredRoles.some((role) => user.roles?.includes(role));
-
-    if (!hasRole) {
-      throw new ForbiddenException("Insufficient permissions");
-    }
-
-    return true;
-  }
-}
-```
-
-```typescript
-// Usage in controller
-@Controller("admin")
+// Apply to routes
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class AdminController {
-  @Get("users")
-  @Roles("admin")
-  findAllUsers() {
-    return this.usersService.findAll();
-  }
-
-  @Delete("users/:id")
-  @Roles("admin", "moderator")
-  removeUser(@Param("id", ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
-  }
-}
+@Controller("admin")
+export class AdminController {}
 ```
 
-**Why good:** Guards are injectable (can use services), `Reflector` reads decorator metadata, guards compose (JwtAuthGuard runs before RolesGuard), custom `@Roles()` decorator is clean and reusable
+**Why good:** Guards are injectable (can use services), composable (run in order), use `Reflector` for metadata-driven access control
 
-#### Middleware
+See [examples/auth.md](examples/auth.md) for JWT auth, Passport.js integration, RBAC, and `@Public()` decorator.
+
+---
+
+### Interceptors
+
+Interceptors wrap handler execution for cross-cutting concerns (response wrapping, logging, caching).
 
 ```typescript
-// middleware/logger.middleware.ts
-import { Injectable, NestMiddleware, Logger } from "@nestjs/common";
-import type { Request, Response, NextFunction } from "express";
-
 @Injectable()
-export class LoggerMiddleware implements NestMiddleware {
-  private readonly logger = new Logger("HTTP");
-
-  use(req: Request, _res: Response, next: NextFunction) {
-    const { method, originalUrl } = req;
-    const start = Date.now();
-
-    _res.on("finish", () => {
-      const duration = Date.now() - start;
-      this.logger.log(
-        `${method} ${originalUrl} ${_res.statusCode} - ${duration}ms`,
+export class TransformResponseInterceptor<T> implements NestInterceptor {
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<ApiResponse<T>> {
+    return next
+      .handle()
+      .pipe(
+        map((data) => ({
+          success: true,
+          data,
+          timestamp: new Date().toISOString(),
+        })),
       );
-    });
-
-    next();
-  }
-}
-
-// Register in module
-import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
-
-@Module({ controllers: [UsersController], providers: [UsersService] })
-export class UsersModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes("*");
   }
 }
 ```
 
-**Why good:** Class-based middleware is injectable, `NestModule.configure` registers middleware per module, response timing captured via `finish` event
+See [examples/advanced.md](examples/advanced.md) for logging, caching, and custom pipe patterns.
 
 </patterns>
 
@@ -742,35 +336,40 @@ Is this a cross-cutting concern (auth, config, logging)?
 **High Priority Issues:**
 
 - Putting business logic in controllers instead of services
-- Missing `@Injectable()` on services (DI fails silently)
-- Not enabling `ValidationPipe` globally (DTOs not validated)
+- Missing `@Injectable()` on services (DI fails silently at runtime)
+- Not enabling `ValidationPipe` globally (DTOs are not validated)
 - Using `any` for request body instead of typed DTOs
 - Instantiating services with `new` instead of constructor injection
-- Throwing raw `Error` instead of NestJS HTTP exceptions
+- Throwing raw `Error` instead of NestJS HTTP exceptions (produces 500 instead of proper status)
 
 **Medium Priority Issues:**
 
 - Not exporting services from modules (other modules can't import them)
 - Importing the entire module when you only need one service
 - Missing `whitelist: true` on ValidationPipe (mass-assignment vulnerability)
-- Using `@Res()` decorator (opts out of NestJS response handling — use only when streaming)
+- Using `@Res()` decorator outside streaming scenarios (opts out of NestJS response handling)
 - Not using `PartialType` / `PickType` / `OmitType` for update DTOs (duplicated validation)
 
 **Common Mistakes:**
 
-- Circular module dependencies — restructure to use `forwardRef()` or extract shared logic
+- Circular module dependencies — restructure with `forwardRef()` or extract shared logic
 - Forgetting to register providers in the module — service injection fails at runtime
 - Using synchronous guards for async operations — return `Promise<boolean>` or `Observable<boolean>`
 - Not handling all exception types in custom filters — always have a catch-all for unknown errors
 
 **Gotchas and Edge Cases:**
 
-- `@UseGuards(AuthGuard)` takes a class reference, not an instance — NestJS instantiates it via DI
+- `@UseGuards(AuthGuard)` takes a class reference, not an instance — NestJS instantiates via DI
 - `ValidationPipe` with `transform: true` converts query params to their declared types automatically
 - Guards execute AFTER middleware but BEFORE interceptors and pipes
 - `@Catch()` with no arguments catches ALL exceptions, not just HttpException
-- NestJS 11: Termination lifecycle hooks now execute in reverse order
+- `IntrinsicException` (NestJS 11) throws without framework auto-logging — useful for expected flow control
+- NestJS 11: Termination lifecycle hooks (`OnModuleDestroy`, `OnApplicationShutdown`) now execute in reverse order
 - NestJS 11: Express v5 requires named wildcards (`/*splat` instead of `/*`)
+- NestJS 11: SWC is the default compiler (20x faster builds)
+- NestJS 11: `ParseDatePipe` is now built-in — no need for custom date parsing pipes
+- Request-scoped providers (`Scope.REQUEST`) affect performance — use only when needed
+- `forwardRef()` should be a last resort — circular deps usually signal a design issue
 
 </red_flags>
 

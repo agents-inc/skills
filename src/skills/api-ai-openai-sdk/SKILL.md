@@ -5,7 +5,7 @@ description: Official OpenAI SDK patterns for TypeScript/Node.js — client setu
 
 # OpenAI SDK Patterns
 
-> **Quick Guide:** Use the official `openai` npm package (v6+) to interact with OpenAI's API directly. Use `client.responses.create()` (Responses API) for new projects with built-in tools and server-side state, or `client.chat.completions.create()` (Chat Completions) for stateless chat flows. Use `zodResponseFormat` and `client.chat.completions.parse()` for structured outputs. Use `.stream()` or `stream: true` for streaming. Supports GPT-5, GPT-4o, o3, embeddings, vision, audio, batch processing, and assistants.
+> **Quick Guide:** Use the official `openai` npm package (v6+) to interact with OpenAI's API directly. Use `client.responses.create()` (Responses API) for new projects with built-in tools and server-side state, or `client.chat.completions.create()` (Chat Completions) for stateless chat flows. Use `zodResponseFormat` and `client.chat.completions.parse()` for structured outputs. Use `.stream()` or `stream: true` for streaming. Supports GPT-5.x family, GPT-4o, o4-mini, embeddings, vision, audio, and batch processing.
 
 ---
 
@@ -29,11 +29,11 @@ description: Official OpenAI SDK patterns for TypeScript/Node.js — client setu
 
 ---
 
-**Auto-detection:** OpenAI, openai, client.chat.completions, client.responses.create, client.embeddings, client.audio, zodResponseFormat, zodFunction, runTools, GPT-4o, GPT-5, o3, text-embedding-3, whisper, tts, OPENAI_API_KEY, toFile
+**Auto-detection:** OpenAI, openai, client.chat.completions, client.responses.create, client.embeddings, client.audio, zodResponseFormat, zodTextFormat, zodFunction, runTools, GPT-5, GPT-4o, o4-mini, gpt-5-mini, text-embedding-3, whisper, tts, OPENAI_API_KEY, toFile
 
 **When to use:**
 
-- Building applications that call OpenAI models directly (GPT-5, GPT-4o, o3, etc.)
+- Building applications that call OpenAI models directly (GPT-5.x, GPT-4o, o4-mini, etc.)
 - Implementing chat completions with streaming responses
 - Using the Responses API for agentic workflows with built-in tools (web search, file search, code interpreter)
 - Extracting structured data from LLM responses with Zod schema validation
@@ -55,15 +55,15 @@ description: Official OpenAI SDK patterns for TypeScript/Node.js — client setu
 
 **When NOT to use:**
 
-- Multi-provider applications where you want to switch between OpenAI, Anthropic, Google, etc. -- use Vercel AI SDK instead
-- React chat UI hooks (`useChat`, `useCompletion`) -- use Vercel AI SDK which provides these
-- When you need a unified abstraction over multiple LLM providers
+- Multi-provider applications where you need to switch between OpenAI, Anthropic, Google, etc. -- use a unified provider SDK instead
+- React-specific chat UI hooks (`useChat`, `useCompletion`) -- use a framework-integrated AI SDK
+- When you need a higher-level abstraction over multiple LLM providers
 
 ---
 
 ## Examples Index
 
-- [Setup & Configuration](examples/setup.md) -- Client init, production config, Azure, error handling, request overrides
+- [Core: Setup & Configuration](examples/core.md) -- Client init, production config, Azure, error handling, request overrides
 - [Chat Completions](examples/chat.md) -- Basic chat, multi-turn, token tracking, output length control
 - [Streaming](examples/streaming.md) -- `stream: true`, `.stream()` helper, Responses API streaming, abort
 - [Tool/Function Calling](examples/tools.md) -- Manual tools, `zodFunction`, `runTools` automation, Responses API tools
@@ -90,14 +90,14 @@ The official OpenAI SDK provides **direct, low-level access** to OpenAI's full A
 **When to use the OpenAI SDK directly:**
 
 - You only use OpenAI models and want the simplest, most direct integration
-- You need access to OpenAI-specific features (Responses API, Assistants, Batch, Realtime)
+- You need access to OpenAI-specific features (Responses API, Batch, Realtime)
 - You want minimal dependencies and zero abstraction overhead
 - You need the latest API features on day one
 
 **When NOT to use:**
 
-- You need to switch between providers (OpenAI, Anthropic, Google) -- use Vercel AI SDK
-- You want React chat UI hooks -- use `@ai-sdk/react`
+- You need to switch between providers (OpenAI, Anthropic, Google) -- use a unified provider SDK
+- You want React-specific chat UI hooks -- use a framework-integrated AI SDK
 - You want a higher-level agent framework -- consider OpenAI Agents SDK (`@openai/agents`)
 
 </philosophy>
@@ -128,7 +128,7 @@ const client = new OpenAI({ timeout: TIMEOUT_MS, maxRetries: MAX_RETRIES });
 
 **Why good:** Minimal setup, env var auto-detected, named constants for production settings
 
-**See:** [examples/setup.md](examples/setup.md) for Azure OpenAI, per-request overrides, error handling patterns
+**See:** [examples/core.md](examples/core.md) for Azure OpenAI, per-request overrides, error handling patterns
 
 ---
 
@@ -342,7 +342,7 @@ try {
 
 **Why good:** Specific error types with status codes, request ID for debugging, re-throws unexpected errors
 
-**See:** [examples/setup.md](examples/setup.md) for full production error handling, stream errors, error type hierarchy
+**See:** [examples/core.md](examples/core.md) for full production error handling, stream errors, error type hierarchy
 
 </patterns>
 
@@ -355,12 +355,14 @@ try {
 ### Model Selection for Cost/Speed
 
 ```
-Cost-sensitive batch jobs   -> gpt-4o-mini (cheapest)
-General purpose             -> gpt-4o (good balance)
-Complex reasoning           -> o3 or o3-mini
+General purpose             -> gpt-5.4 (most capable) or gpt-4o (proven, lower cost)
+Cost-sensitive / high-vol   -> gpt-5-mini or gpt-5-nano (cheapest)
+Complex reasoning           -> gpt-5.4 or o4-mini
+Structured output           -> gpt-5.4 or gpt-4o (best schema adherence)
 Embeddings                  -> text-embedding-3-small (cheapest) or text-embedding-3-large (highest quality)
-Transcription               -> whisper-1 or gpt-4o-mini-transcribe (fewer hallucinations)
+Transcription               -> whisper-1 or gpt-4o-transcribe (higher accuracy)
 TTS                         -> tts-1 (fast) or tts-1-hd (quality) or gpt-4o-mini-tts (voice control)
+Batch processing            -> gpt-5-mini at 50% batch discount
 ```
 
 ### Key Optimization Patterns
@@ -397,15 +399,15 @@ Building a new application?
 
 ```
 What is your task?
-+-- General text generation -> gpt-4o (best overall)
-+-- Fast + cheap simple tasks -> gpt-4o-mini
-+-- Complex reasoning / math -> o3 or o3-mini
-+-- Structured output -> gpt-4o (best schema adherence)
-+-- Vision (images) -> gpt-4o or gpt-4o-mini
++-- General text generation -> gpt-5.4 (most capable) or gpt-4o (lower cost)
++-- Fast + cheap simple tasks -> gpt-5-mini or gpt-5-nano
++-- Complex reasoning / math -> gpt-5.4 or o4-mini
++-- Structured output -> gpt-5.4 or gpt-4o (best schema adherence)
++-- Vision (images) -> gpt-5.4 or gpt-4o
 +-- Embeddings -> text-embedding-3-small (default) or text-embedding-3-large
-+-- Transcription -> whisper-1 or gpt-4o-mini-transcribe
++-- Transcription -> whisper-1 or gpt-4o-transcribe
 +-- Text-to-speech -> tts-1 (fast) or gpt-4o-mini-tts (voice instructions)
-+-- Batch processing -> gpt-4o-mini (cheapest at 50% batch discount)
++-- Batch processing -> gpt-5-mini (cheapest at 50% batch discount)
 ```
 
 ### Streaming vs Non-Streaming
@@ -421,49 +423,19 @@ Is the response user-facing?
     +-- High volume -> Batch API
 ```
 
-### OpenAI SDK vs Vercel AI SDK
+### When to Use This SDK vs a Provider-Agnostic SDK
 
 ```
-Do you need multiple providers (OpenAI + Anthropic + Google)?
-+-- YES -> Use Vercel AI SDK (unified provider API)
-+-- NO -> Do you need React hooks (useChat, useCompletion)?
-    +-- YES -> Use Vercel AI SDK + @ai-sdk/react
-    +-- NO -> Do you need OpenAI-specific features?
-        +-- YES -> Use OpenAI SDK directly
-        |   Examples: Responses API, Assistants, Batch API,
-        |   Realtime API, built-in web search/file search
-        +-- NO -> Either works, OpenAI SDK is simpler for OpenAI-only
+Do you need multiple LLM providers (OpenAI + others)?
++-- YES -> Not this skill's scope -- use a unified provider SDK
++-- NO -> Do you need OpenAI-specific features?
+    +-- YES -> Use OpenAI SDK directly
+    |   Examples: Responses API, Batch API,
+    |   Realtime API, built-in web search/file search
+    +-- NO -> OpenAI SDK is simplest for OpenAI-only use
 ```
 
 </decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **Zod**: Schema validation for structured outputs via `zodResponseFormat()` and `zodFunction()`
-- **Next.js**: Route handlers for streaming, edge runtime compatible
-- **Express/Fastify/Hono**: Any Node.js server framework for API routes
-- **Vercel AI SDK**: Can use alongside AI SDK -- AI SDK wraps OpenAI SDK via `@ai-sdk/openai`
-- **Vector databases**: Embeddings integrate with Pinecone, Weaviate, Qdrant, pgvector, etc.
-- **OpenAI Agents SDK**: `@openai/agents` provides higher-level agent primitives built on the OpenAI SDK
-
-**Package ecosystem:**
-
-- `openai` -- Core SDK (always required)
-- `@openai/agents` -- Agents SDK for multi-agent workflows
-- `zod` -- Schema definitions for structured outputs and tool parameters
-
-**Replaces / Conflicts with:**
-
-- Using `fetch` directly against OpenAI REST API -- SDK provides retries, types, streaming helpers
-- `langchain` for simple OpenAI-only use cases -- SDK is lighter weight
-
-</integration>
 
 ---
 
@@ -492,6 +464,7 @@ Do you need multiple providers (OpenAI + Anthropic + Google)?
 - Confusing Responses API (`client.responses.create()`) with Chat Completions (`client.chat.completions.create()`) parameters -- they use different shapes
 - Using `messages` parameter with Responses API (it uses `input` and `instructions`)
 - Using `response_format` with models that don't support structured outputs (need gpt-4o or later)
+- Using `max_tokens` with reasoning models (o4-mini, gpt-5.x) -- use `max_completion_tokens` instead
 - Not handling the case where `completion.choices[0].message.tool_calls` is undefined
 - Forgetting that `runTools()` defaults to max 10 completions -- set `maxChatCompletions` explicitly
 
@@ -507,6 +480,8 @@ Do you need multiple providers (OpenAI + Anthropic + Google)?
 - Batch API has a 24h completion window and 50,000 request limit per batch.
 - Audio transcription has a 25 MB file size limit.
 - Zod schemas with `zodResponseFormat` must use `additionalProperties: false` -- the SDK handles this automatically.
+- `zodTextFormat` and `zodResponseFormat` are NOT compatible with Zod v4 -- use Zod v3.x until the SDK adds v4 support.
+- The Assistants API is deprecated (sunset August 2026) -- use the Responses API for new code.
 
 </red_flags>
 
