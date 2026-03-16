@@ -12,16 +12,20 @@
 
 ```typescript
 // tools/weather-tool.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 export const weatherTool = tool({
-  description: 'Get the current weather in a location. Use this when the user asks about weather conditions.',
+  description:
+    "Get the current weather in a location. Use this when the user asks about weather conditions.",
   inputSchema: z.object({
-    location: z.string().describe('City name, e.g. "San Francisco" or "Tokyo, Japan"'),
-    unit: z.enum(['celsius', 'fahrenheit'])
-      .default('celsius')
-      .describe('Temperature unit preference'),
+    location: z
+      .string()
+      .describe('City name, e.g. "San Francisco" or "Tokyo, Japan"'),
+    unit: z
+      .enum(["celsius", "fahrenheit"])
+      .default("celsius")
+      .describe("Temperature unit preference"),
   }),
   execute: async ({ location, unit }) => {
     const response = await fetch(
@@ -31,7 +35,8 @@ export const weatherTool = tool({
 
     return {
       location,
-      temperature: unit === 'celsius' ? data.current.temp_c : data.current.temp_f,
+      temperature:
+        unit === "celsius" ? data.current.temp_c : data.current.temp_f,
       unit,
       condition: data.current.condition.text,
       humidity: data.current.humidity,
@@ -47,7 +52,7 @@ export const weatherTool = tool({
 ```typescript
 // BAD
 const myTool = tool({
-  description: '', // Model won't know when to use this
+  description: "", // Model won't know when to use this
   inputSchema: z.object({
     q: z.string(), // No description -- model guesses what this means
   }),
@@ -67,29 +72,43 @@ const myTool = tool({
 
 ```typescript
 // tools/assistant-tools.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 const MAX_SEARCH_RESULTS = 5;
 
 export const searchTool = tool({
-  description: 'Search the knowledge base for relevant documents. Use when the user asks questions about products, policies, or documentation.',
+  description:
+    "Search the knowledge base for relevant documents. Use when the user asks questions about products, policies, or documentation.",
   inputSchema: z.object({
-    query: z.string().describe('Search query string'),
-    category: z.enum(['products', 'policies', 'docs', 'faq'])
+    query: z.string().describe("Search query string"),
+    category: z
+      .enum(["products", "policies", "docs", "faq"])
       .optional()
-      .describe('Optional category filter'),
+      .describe("Optional category filter"),
   }),
   execute: async ({ query, category }) => {
-    const results = await searchKnowledgeBase(query, { category, limit: MAX_SEARCH_RESULTS });
-    return results.map((r) => ({ title: r.title, content: r.snippet, url: r.url }));
+    const results = await searchKnowledgeBase(query, {
+      category,
+      limit: MAX_SEARCH_RESULTS,
+    });
+    return results.map((r) => ({
+      title: r.title,
+      content: r.snippet,
+      url: r.url,
+    }));
   },
 });
 
 export const calculatorTool = tool({
-  description: 'Perform mathematical calculations. Use when the user needs arithmetic, percentages, or unit conversions.',
+  description:
+    "Perform mathematical calculations. Use when the user needs arithmetic, percentages, or unit conversions.",
   inputSchema: z.object({
-    expression: z.string().describe('Mathematical expression to evaluate, e.g. "15% of 200" or "32 * 1.8 + 32"'),
+    expression: z
+      .string()
+      .describe(
+        'Mathematical expression to evaluate, e.g. "15% of 200" or "32 * 1.8 + 32"',
+      ),
   }),
   execute: async ({ expression }) => {
     const result = evaluateExpression(expression);
@@ -98,17 +117,23 @@ export const calculatorTool = tool({
 });
 
 export const createTicketTool = tool({
-  description: 'Create a support ticket in the help desk system. Use when the user wants to report an issue or request help that requires human follow-up.',
+  description:
+    "Create a support ticket in the help desk system. Use when the user wants to report an issue or request help that requires human follow-up.",
   inputSchema: z.object({
-    title: z.string().describe('Brief summary of the issue'),
-    description: z.string().describe('Detailed description of the problem'),
-    priority: z.enum(['low', 'medium', 'high', 'urgent'])
-      .default('medium')
-      .describe('Ticket priority level'),
+    title: z.string().describe("Brief summary of the issue"),
+    description: z.string().describe("Detailed description of the problem"),
+    priority: z
+      .enum(["low", "medium", "high", "urgent"])
+      .default("medium")
+      .describe("Ticket priority level"),
   }),
   execute: async ({ title, description, priority }) => {
-    const ticket = await helpdesk.createTicket({ title, description, priority });
-    return { ticketId: ticket.id, status: 'created', url: ticket.url };
+    const ticket = await helpdesk.createTicket({
+      title,
+      description,
+      priority,
+    });
+    return { ticketId: ticket.id, status: "created", url: ticket.url };
   },
 });
 ```
@@ -123,15 +148,15 @@ export const createTicketTool = tool({
 
 ```typescript
 // lib/agent.ts
-import { generateText, tool, stepCountIs } from 'ai';
-import { z } from 'zod';
-import { searchTool, calculatorTool } from '../tools/assistant-tools.js';
+import { generateText, tool, stepCountIs } from "ai";
+import { z } from "zod";
+import { searchTool, calculatorTool } from "../tools/assistant-tools.js";
 
 const MAX_AGENT_STEPS = 10;
 
 export async function runAssistant(userMessage: string) {
   const { text, steps } = await generateText({
-    model: 'anthropic/claude-sonnet-4.5',
+    model: "anthropic/claude-sonnet-4.5",
     system: `You are a helpful assistant with access to tools.
 Use tools when you need external information.
 Chain multiple tool calls if needed to fully answer the question.`,
@@ -151,7 +176,9 @@ Chain multiple tool calls if needed to fully answer the question.`,
 
   // Extract all tool calls across all steps
   const allToolCalls = steps.flatMap((step) => step.toolCalls);
-  console.log(`Total tool calls: ${allToolCalls.length} across ${steps.length} steps`);
+  console.log(
+    `Total tool calls: ${allToolCalls.length} across ${steps.length} steps`,
+  );
 
   return { text, steps, toolCallCount: allToolCalls.length };
 }
@@ -164,10 +191,10 @@ Chain multiple tool calls if needed to fully answer the question.`,
 ```typescript
 // BAD: No stopWhen -- risks infinite tool calling loops
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   tools: { search: searchTool },
   // No stopWhen! Could loop indefinitely
-  prompt: 'Research everything about TypeScript.',
+  prompt: "Research everything about TypeScript.",
 });
 ```
 
@@ -181,20 +208,21 @@ const { text } = await generateText({
 
 ```typescript
 // agents/weather-agent.ts
-import { ToolLoopAgent, Output } from 'ai';
-import { z } from 'zod';
-import { weatherTool } from '../tools/weather-tool.js';
+import { ToolLoopAgent, Output } from "ai";
+import { z } from "zod";
+import { weatherTool } from "../tools/weather-tool.js";
 
 export const weatherAgent = new ToolLoopAgent({
-  model: 'anthropic/claude-sonnet-4.5',
-  instructions: 'You are a weather assistant. Use the weather tool to get current conditions, then provide a helpful summary with recommendations.',
+  model: "anthropic/claude-sonnet-4.5",
+  instructions:
+    "You are a weather assistant. Use the weather tool to get current conditions, then provide a helpful summary with recommendations.",
   tools: { weather: weatherTool },
   // Default stopWhen is stepCountIs(20)
 });
 
 // Usage
 const result = await weatherAgent.generate({
-  prompt: 'What should I wear in San Francisco and Tokyo today?',
+  prompt: "What should I wear in San Francisco and Tokyo today?",
 });
 
 console.log(result.text);
@@ -206,20 +234,22 @@ console.log(result.text);
 
 ```typescript
 // agents/analysis-agent.ts
-import { ToolLoopAgent, Output, tool } from 'ai';
-import { z } from 'zod';
+import { ToolLoopAgent, Output, tool } from "ai";
+import { z } from "zod";
 
 const analysisSchema = z.object({
-  summary: z.string().describe('Brief analysis summary'),
-  sentiment: z.enum(['positive', 'negative', 'neutral']).describe('Overall sentiment'),
-  keyPoints: z.array(z.string()).describe('Key points extracted'),
-  confidence: z.number().min(0).max(1).describe('Confidence score 0-1'),
+  summary: z.string().describe("Brief analysis summary"),
+  sentiment: z
+    .enum(["positive", "negative", "neutral"])
+    .describe("Overall sentiment"),
+  keyPoints: z.array(z.string()).describe("Key points extracted"),
+  confidence: z.number().min(0).max(1).describe("Confidence score 0-1"),
 });
 
 const webSearchTool = tool({
-  description: 'Search the web for current information about a topic.',
+  description: "Search the web for current information about a topic.",
   inputSchema: z.object({
-    query: z.string().describe('Search query'),
+    query: z.string().describe("Search query"),
   }),
   execute: async ({ query }) => {
     return await performWebSearch(query);
@@ -227,15 +257,16 @@ const webSearchTool = tool({
 });
 
 export const analysisAgent = new ToolLoopAgent({
-  model: 'openai/gpt-4o',
-  instructions: 'You are a research analyst. Search for information and provide structured analysis.',
+  model: "openai/gpt-4o",
+  instructions:
+    "You are a research analyst. Search for information and provide structured analysis.",
   tools: { webSearch: webSearchTool },
   output: Output.object({ schema: analysisSchema }),
 });
 
 // Usage -- output is typed as the schema
 const { output } = await analysisAgent.generate({
-  prompt: 'Analyze the current state of TypeScript adoption in enterprise.',
+  prompt: "Analyze the current state of TypeScript adoption in enterprise.",
 });
 
 console.log(`Sentiment: ${output.sentiment}`);
@@ -253,24 +284,25 @@ output.keyPoints.forEach((point) => console.log(`- ${point}`));
 
 ```typescript
 // tools/payment-tool.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 const APPROVAL_THRESHOLD = 100;
 
 export const paymentTool = tool({
-  description: 'Process a payment to a recipient. Amounts over $100 require human approval.',
+  description:
+    "Process a payment to a recipient. Amounts over $100 require human approval.",
   inputSchema: z.object({
-    amount: z.number().positive().describe('Payment amount in USD'),
-    recipient: z.string().describe('Recipient name or account ID'),
-    memo: z.string().optional().describe('Optional payment memo'),
+    amount: z.number().positive().describe("Payment amount in USD"),
+    recipient: z.string().describe("Recipient name or account ID"),
+    memo: z.string().optional().describe("Optional payment memo"),
   }),
   needsApproval: async ({ amount }) => amount > APPROVAL_THRESHOLD,
   execute: async ({ amount, recipient, memo }) => {
     const result = await processPayment({ amount, recipient, memo });
     return {
       transactionId: result.id,
-      status: 'completed',
+      status: "completed",
       amount,
       recipient,
     };
@@ -284,14 +316,15 @@ export const paymentTool = tool({
 
 ```typescript
 // tools/admin-tools.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 export const deleteRecordTool = tool({
-  description: 'Permanently delete a record from the database. This action cannot be undone.',
+  description:
+    "Permanently delete a record from the database. This action cannot be undone.",
   inputSchema: z.object({
-    recordId: z.string().describe('ID of the record to delete'),
-    recordType: z.enum(['user', 'order', 'product']).describe('Type of record'),
+    recordId: z.string().describe("ID of the record to delete"),
+    recordType: z.enum(["user", "order", "product"]).describe("Type of record"),
   }),
   needsApproval: true, // Always require approval for destructive actions
   execute: async ({ recordId, recordType }) => {
@@ -311,16 +344,20 @@ export const deleteRecordTool = tool({
 
 ```typescript
 // tools/long-running-tool.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
 export const researchTool = tool({
-  description: 'Research a topic by querying multiple sources. May take several seconds.',
+  description:
+    "Research a topic by querying multiple sources. May take several seconds.",
   inputSchema: z.object({
-    topic: z.string().describe('Topic to research'),
-    depth: z.enum(['quick', 'thorough']).default('quick').describe('Research depth'),
+    topic: z.string().describe("Topic to research"),
+    depth: z
+      .enum(["quick", "thorough"])
+      .default("quick")
+      .describe("Research depth"),
   }),
   execute: async ({ topic, depth }, { abortSignal, toolCallId, messages }) => {
     console.log(`Tool call ${toolCallId}: Researching "${topic}" (${depth})`);
@@ -362,27 +399,27 @@ export const researchTool = tool({
 
 ```typescript
 // tools/code-tool.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 export const codeGeneratorTool = tool({
-  description: 'Generate code based on a description.',
+  description: "Generate code based on a description.",
   inputSchema: z.object({
-    language: z.string().describe('Programming language'),
-    description: z.string().describe('What the code should do'),
+    language: z.string().describe("Programming language"),
+    description: z.string().describe("What the code should do"),
   }),
   execute: async ({ language, description }) => {
     return await generateCode(language, description);
   },
   onInputStart: () => {
-    console.log('Model starting to generate tool input...');
+    console.log("Model starting to generate tool input...");
   },
   onInputDelta: ({ inputTextDelta }) => {
     // Stream the raw input as it arrives (useful for UI)
     process.stdout.write(inputTextDelta);
   },
   onInputAvailable: ({ input }) => {
-    console.log('\nComplete tool input:', JSON.stringify(input, null, 2));
+    console.log("\nComplete tool input:", JSON.stringify(input, null, 2));
   },
 });
 ```
@@ -397,19 +434,19 @@ export const codeGeneratorTool = tool({
 
 ```typescript
 // tools/data-tool.ts
-import { tool } from 'ai';
-import { z } from 'zod';
+import { tool } from "ai";
+import { z } from "zod";
 
 export const dataAnalysisTool = tool({
-  description: 'Analyze a dataset and return insights.',
+  description: "Analyze a dataset and return insights.",
   inputSchema: z.object({
-    datasetId: z.string().describe('ID of the dataset to analyze'),
-    metrics: z.array(z.string()).describe('Metrics to calculate'),
+    datasetId: z.string().describe("ID of the dataset to analyze"),
+    metrics: z.array(z.string()).describe("Metrics to calculate"),
   }),
   async *execute({ datasetId, metrics }) {
     // Yield preliminary result (shown to user while processing)
     yield {
-      status: 'loading' as const,
+      status: "loading" as const,
       message: `Loading dataset ${datasetId}...`,
       results: undefined,
     };
@@ -417,7 +454,7 @@ export const dataAnalysisTool = tool({
     const dataset = await loadDataset(datasetId);
 
     yield {
-      status: 'processing' as const,
+      status: "processing" as const,
       message: `Analyzing ${dataset.rowCount} rows for ${metrics.length} metrics...`,
       results: undefined,
     };
@@ -426,8 +463,8 @@ export const dataAnalysisTool = tool({
 
     // Final yield is the complete result
     yield {
-      status: 'complete' as const,
-      message: 'Analysis complete',
+      status: "complete" as const,
+      message: "Analysis complete",
       results,
     };
   },
@@ -443,35 +480,35 @@ export const dataAnalysisTool = tool({
 ### Good Example -- Forcing Tool Usage
 
 ```typescript
-import { generateText, stepCountIs } from 'ai';
-import { weatherTool, searchTool } from '../tools/index.js';
+import { generateText, stepCountIs } from "ai";
+import { weatherTool, searchTool } from "../tools/index.js";
 
 const MAX_STEPS = 3;
 
 // Force the model to use a specific tool
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   tools: { weather: weatherTool, search: searchTool },
-  toolChoice: { type: 'tool', toolName: 'weather' },
+  toolChoice: { type: "tool", toolName: "weather" },
   stopWhen: stepCountIs(MAX_STEPS),
-  prompt: 'What is the weather in Paris?',
+  prompt: "What is the weather in Paris?",
 });
 
 // Force the model to use ANY tool (not generate text)
 const { text: text2 } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   tools: { weather: weatherTool, search: searchTool },
-  toolChoice: 'required', // Must use at least one tool
+  toolChoice: "required", // Must use at least one tool
   stopWhen: stepCountIs(MAX_STEPS),
-  prompt: 'Look up information about TypeScript.',
+  prompt: "Look up information about TypeScript.",
 });
 
 // Prevent tool usage
 const { text: text3 } = await generateText({
-  model: 'openai/gpt-4o',
+  model: "openai/gpt-4o",
   tools: { weather: weatherTool },
-  toolChoice: 'none', // Tools available but model cannot use them
-  prompt: 'Just chat with me.',
+  toolChoice: "none", // Tools available but model cannot use them
+  prompt: "Just chat with me.",
 });
 ```
 
@@ -484,33 +521,45 @@ const { text: text3 } = await generateText({
 ### Good Example -- Restricting Available Tools
 
 ```typescript
-import { generateText, stepCountIs } from 'ai';
-import { searchTool, calculatorTool, createTicketTool } from '../tools/index.js';
+import { generateText, stepCountIs } from "ai";
+import {
+  searchTool,
+  calculatorTool,
+  createTicketTool,
+} from "../tools/index.js";
 
 const MAX_STEPS = 5;
 
 // Only expose subset of tools
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
-  tools: { search: searchTool, calculator: calculatorTool, createTicket: createTicketTool },
-  activeTools: ['search', 'calculator'], // createTicket not available
+  model: "openai/gpt-4o",
+  tools: {
+    search: searchTool,
+    calculator: calculatorTool,
+    createTicket: createTicketTool,
+  },
+  activeTools: ["search", "calculator"], // createTicket not available
   stopWhen: stepCountIs(MAX_STEPS),
-  prompt: 'Help me research TypeScript.',
+  prompt: "Help me research TypeScript.",
 });
 
 // Dynamic per-step tool selection with prepareStep
 const { text: text2 } = await generateText({
-  model: 'openai/gpt-4o',
-  tools: { search: searchTool, calculator: calculatorTool, createTicket: createTicketTool },
+  model: "openai/gpt-4o",
+  tools: {
+    search: searchTool,
+    calculator: calculatorTool,
+    createTicket: createTicketTool,
+  },
   stopWhen: stepCountIs(MAX_STEPS),
   prepareStep: async ({ stepNumber }) => {
     // Only allow ticket creation after initial research
     if (stepNumber === 0) {
-      return { activeTools: ['search', 'calculator'] };
+      return { activeTools: ["search", "calculator"] };
     }
-    return { activeTools: ['search', 'calculator', 'createTicket'] };
+    return { activeTools: ["search", "calculator", "createTicket"] };
   },
-  prompt: 'Research and then create a ticket if needed.',
+  prompt: "Research and then create a ticket if needed.",
 });
 ```
 

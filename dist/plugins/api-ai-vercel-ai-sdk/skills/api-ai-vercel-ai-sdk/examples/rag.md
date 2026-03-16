@@ -12,11 +12,11 @@
 
 ```typescript
 // lib/embeddings.ts
-import { embed } from 'ai';
+import { embed } from "ai";
 
 export async function embedQuery(text: string): Promise<number[]> {
   const { embedding, usage } = await embed({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     value: text,
   });
 
@@ -30,13 +30,13 @@ export async function embedQuery(text: string): Promise<number[]> {
 ### Good Example -- With Provider Options (Custom Dimensions)
 
 ```typescript
-import { embed } from 'ai';
+import { embed } from "ai";
 
 const EMBEDDING_DIMENSIONS = 512;
 
 const { embedding } = await embed({
-  model: 'openai/text-embedding-3-small',
-  value: 'sunny day at the beach',
+  model: "openai/text-embedding-3-small",
+  value: "sunny day at the beach",
   providerOptions: {
     openai: {
       dimensions: EMBEDDING_DIMENSIONS, // Reduce dimensions for smaller storage
@@ -57,26 +57,28 @@ console.log(`Vector length: ${embedding.length}`); // 512
 
 ```typescript
 // lib/batch-embed.ts
-import { embedMany } from 'ai';
+import { embedMany } from "ai";
 
 const MAX_PARALLEL_CALLS = 3;
 
 export async function embedDocuments(documents: string[]): Promise<number[][]> {
   const { embeddings, usage } = await embedMany({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     values: documents,
     maxParallelCalls: MAX_PARALLEL_CALLS,
   });
 
-  console.log(`Embedded ${documents.length} documents, tokens: ${usage.tokens}`);
+  console.log(
+    `Embedded ${documents.length} documents, tokens: ${usage.tokens}`,
+  );
   return embeddings; // number[][] -- array of vectors
 }
 
 // Usage
 const docs = [
-  'TypeScript is a typed superset of JavaScript.',
-  'React is a library for building user interfaces.',
-  'Node.js is a JavaScript runtime built on V8.',
+  "TypeScript is a typed superset of JavaScript.",
+  "React is a library for building user interfaces.",
+  "Node.js is a JavaScript runtime built on V8.",
 ];
 
 const vectors = await embedDocuments(docs);
@@ -93,7 +95,7 @@ const embeddings: number[][] = [];
 
 for (const doc of documents) {
   const { embedding } = await embed({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     value: doc,
   });
   embeddings.push(embedding);
@@ -110,7 +112,7 @@ for (const doc of documents) {
 
 ```typescript
 // lib/similarity.ts
-import { cosineSimilarity, embed, embedMany } from 'ai';
+import { cosineSimilarity, embed, embedMany } from "ai";
 
 interface ScoredDocument {
   text: string;
@@ -126,31 +128,32 @@ export async function findSimilar(
 ): Promise<ScoredDocument[]> {
   // Embed query and documents
   const [queryResult, docsResult] = await Promise.all([
-    embed({ model: 'openai/text-embedding-3-small', value: query }),
-    embedMany({ model: 'openai/text-embedding-3-small', values: documents }),
+    embed({ model: "openai/text-embedding-3-small", value: query }),
+    embedMany({ model: "openai/text-embedding-3-small", values: documents }),
   ]);
 
   // Calculate similarity scores
   const scored: ScoredDocument[] = documents.map((text, index) => ({
     text,
-    score: cosineSimilarity(queryResult.embedding, docsResult.embeddings[index]),
+    score: cosineSimilarity(
+      queryResult.embedding,
+      docsResult.embeddings[index],
+    ),
   }));
 
   // Sort by similarity (highest first) and take top N
-  return scored
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topN);
+  return scored.sort((a, b) => b.score - a.score).slice(0, topN);
 }
 
 // Usage
 const results = await findSimilar(
-  'How does TypeScript help with large codebases?',
+  "How does TypeScript help with large codebases?",
   [
-    'TypeScript provides static type checking for JavaScript.',
-    'React hooks simplify state management in components.',
-    'TypeScript interfaces help define contracts between modules.',
-    'CSS-in-JS libraries allow styling React components.',
-    'TypeScript enables better IDE support and refactoring tools.',
+    "TypeScript provides static type checking for JavaScript.",
+    "React hooks simplify state management in components.",
+    "TypeScript interfaces help define contracts between modules.",
+    "CSS-in-JS libraries allow styling React components.",
+    "TypeScript enables better IDE support and refactoring tools.",
   ],
 );
 
@@ -169,7 +172,7 @@ results.forEach((r) => {
 
 ```typescript
 // lib/rag.ts
-import { embed, embedMany, cosineSimilarity, generateText } from 'ai';
+import { embed, embedMany, cosineSimilarity, generateText } from "ai";
 
 // --- Step 1: Document Processing ---
 
@@ -186,17 +189,20 @@ export function chunkDocument(text: string, source: string): string[] {
   // Simple sentence-based chunking
   const sentences = text.split(/(?<=[.!?])\s+/);
   const chunks: string[] = [];
-  let currentChunk = '';
+  let currentChunk = "";
 
   for (const sentence of sentences) {
-    if (currentChunk.length + sentence.length > CHUNK_MAX_LENGTH && currentChunk.length > 0) {
+    if (
+      currentChunk.length + sentence.length > CHUNK_MAX_LENGTH &&
+      currentChunk.length > 0
+    ) {
       chunks.push(currentChunk.trim());
       // Keep last part for overlap
-      const words = currentChunk.split(' ');
+      const words = currentChunk.split(" ");
       const overlapWords = words.slice(-Math.ceil(CHUNK_OVERLAP / 5));
-      currentChunk = overlapWords.join(' ') + ' ' + sentence;
+      currentChunk = overlapWords.join(" ") + " " + sentence;
     } else {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
+      currentChunk += (currentChunk ? " " : "") + sentence;
     }
   }
 
@@ -226,7 +232,7 @@ export async function buildIndex(
 
   // Batch embed all chunks
   const { embeddings } = await embedMany({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     values: allChunks.map((c) => c.text),
     maxParallelCalls: MAX_PARALLEL_EMBEDS,
   });
@@ -250,7 +256,7 @@ export async function retrieve(
   topK: number = DEFAULT_RETRIEVAL_COUNT,
 ): Promise<DocumentChunk[]> {
   const { embedding: queryEmbedding } = await embed({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     value: query,
   });
 
@@ -277,17 +283,17 @@ export async function ragQuery(
   const relevantChunks = await retrieve(question, index);
 
   if (relevantChunks.length === 0) {
-    return 'I could not find relevant information to answer your question.';
+    return "I could not find relevant information to answer your question.";
   }
 
   // Build context from retrieved chunks
   const context = relevantChunks
     .map((chunk, i) => `[Source ${i + 1}: ${chunk.source}]\n${chunk.text}`)
-    .join('\n\n');
+    .join("\n\n");
 
   // Generate answer using context
   const { text } = await generateText({
-    model: 'openai/gpt-4o',
+    model: "openai/gpt-4o",
     system: `You are a helpful assistant that answers questions based on the provided context.
 Only use information from the context to answer. If the context doesn't contain enough information, say so.
 Cite sources using [Source N] notation.`,
@@ -304,24 +310,24 @@ Cite sources using [Source N] notation.`,
 
 ```typescript
 // app.ts
-import { buildIndex, ragQuery } from './lib/rag.js';
+import { buildIndex, ragQuery } from "./lib/rag.js";
 
 // Build the index from your documents
 const index = await buildIndex([
   {
-    text: 'TypeScript 5.0 introduced decorators...',
-    source: 'typescript-5.0-release.md',
+    text: "TypeScript 5.0 introduced decorators...",
+    source: "typescript-5.0-release.md",
   },
   {
-    text: 'React Server Components allow rendering...',
-    source: 'react-server-components.md',
+    text: "React Server Components allow rendering...",
+    source: "react-server-components.md",
   },
   // ... more documents
 ]);
 
 // Query the index
 const answer = await ragQuery(
-  'What new features were introduced in TypeScript 5.0?',
+  "What new features were introduced in TypeScript 5.0?",
   index,
 );
 
@@ -336,18 +342,15 @@ console.log(answer);
 
 ```typescript
 // lib/stream-rag.ts
-import { embed, cosineSimilarity, streamText, smoothStream } from 'ai';
-import type { DocumentChunk } from './rag.js';
+import { embed, cosineSimilarity, streamText, smoothStream } from "ai";
+import type { DocumentChunk } from "./rag.js";
 
 const DEFAULT_RETRIEVAL_COUNT = 3;
 
-export async function streamRagQuery(
-  question: string,
-  index: DocumentChunk[],
-) {
+export async function streamRagQuery(question: string, index: DocumentChunk[]) {
   // Retrieve relevant chunks
   const { embedding: queryEmbedding } = await embed({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     value: question,
   });
 
@@ -361,16 +364,16 @@ export async function streamRagQuery(
 
   const context = relevantChunks
     .map((c, i) => `[Source ${i + 1}]: ${c.text}`)
-    .join('\n\n');
+    .join("\n\n");
 
   // Stream the answer
   const result = streamText({
-    model: 'openai/gpt-4o',
-    system: 'Answer based only on the provided context. Cite sources.',
+    model: "openai/gpt-4o",
+    system: "Answer based only on the provided context. Cite sources.",
     prompt: `Context:\n${context}\n\nQuestion: ${question}`,
     experimental_transform: smoothStream(),
     onError({ error }) {
-      console.error('RAG stream error:', error);
+      console.error("RAG stream error:", error);
     },
   });
 
@@ -394,13 +397,13 @@ export async function POST(request: Request) {
 ### Good Example -- Cancellable Embedding
 
 ```typescript
-import { embed, embedMany } from 'ai';
+import { embed, embedMany } from "ai";
 
 const EMBED_TIMEOUT_MS = 10_000;
 
 export async function embedWithTimeout(text: string): Promise<number[]> {
   const { embedding } = await embed({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     value: text,
     abortSignal: AbortSignal.timeout(EMBED_TIMEOUT_MS),
   });
@@ -408,9 +411,11 @@ export async function embedWithTimeout(text: string): Promise<number[]> {
   return embedding;
 }
 
-export async function embedManyWithTimeout(texts: string[]): Promise<number[][]> {
+export async function embedManyWithTimeout(
+  texts: string[],
+): Promise<number[][]> {
   const { embeddings } = await embedMany({
-    model: 'openai/text-embedding-3-small',
+    model: "openai/text-embedding-3-small",
     values: texts,
     abortSignal: AbortSignal.timeout(EMBED_TIMEOUT_MS),
   });
@@ -429,7 +434,7 @@ export async function embedManyWithTimeout(texts: string[]): Promise<number[][]>
 
 ```typescript
 // lib/vector-store.ts
-import { embed, embedMany, cosineSimilarity } from 'ai';
+import { embed, embedMany, cosineSimilarity } from "ai";
 
 interface VectorRecord {
   id: string;
@@ -444,9 +449,15 @@ const MAX_PARALLEL_EMBEDS = 3;
 export class InMemoryVectorStore {
   private records: VectorRecord[] = [];
 
-  async add(items: Array<{ id: string; text: string; metadata?: Record<string, string> }>) {
+  async add(
+    items: Array<{
+      id: string;
+      text: string;
+      metadata?: Record<string, string>;
+    }>,
+  ) {
     const { embeddings } = await embedMany({
-      model: 'openai/text-embedding-3-small',
+      model: "openai/text-embedding-3-small",
       values: items.map((item) => item.text),
       maxParallelCalls: MAX_PARALLEL_EMBEDS,
     });
@@ -461,9 +472,12 @@ export class InMemoryVectorStore {
     }
   }
 
-  async search(query: string, topK: number): Promise<Array<VectorRecord & { score: number }>> {
+  async search(
+    query: string,
+    topK: number,
+  ): Promise<Array<VectorRecord & { score: number }>> {
     const { embedding } = await embed({
-      model: 'openai/text-embedding-3-small',
+      model: "openai/text-embedding-3-small",
       value: query,
     });
 
@@ -485,11 +499,15 @@ export class InMemoryVectorStore {
 const store = new InMemoryVectorStore();
 
 await store.add([
-  { id: '1', text: 'TypeScript provides static typing.', metadata: { source: 'docs' } },
-  { id: '2', text: 'React uses a virtual DOM.', metadata: { source: 'docs' } },
+  {
+    id: "1",
+    text: "TypeScript provides static typing.",
+    metadata: { source: "docs" },
+  },
+  { id: "2", text: "React uses a virtual DOM.", metadata: { source: "docs" } },
 ]);
 
-const results = await store.search('What is TypeScript?', 3);
+const results = await store.search("What is TypeScript?", 3);
 results.forEach((r) => console.log(`[${r.score.toFixed(3)}] ${r.text}`));
 ```
 

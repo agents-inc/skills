@@ -12,14 +12,14 @@
 
 ```typescript
 // lib/ai.ts
-import { gateway } from 'ai';
-import { generateText } from 'ai';
+import { gateway } from "ai";
+import { generateText } from "ai";
 
 // AI Gateway: just use provider/model strings
 // Requires VERCEL_AI_GATEWAY_API_KEY or provider-specific env vars
 const { text } = await generateText({
-  model: gateway('openai/gpt-4o'),
-  prompt: 'Hello, world!',
+  model: gateway("openai/gpt-4o"),
+  prompt: "Hello, world!",
 });
 ```
 
@@ -29,17 +29,17 @@ const { text } = await generateText({
 
 ```typescript
 // lib/ai.ts
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
-import { generateText } from 'ai';
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+import { generateText } from "ai";
 
 // Each provider auto-reads its env var:
 // OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY
 
 const { text } = await generateText({
-  model: openai('gpt-4o'),
-  prompt: 'Hello!',
+  model: openai("gpt-4o"),
+  prompt: "Hello!",
 });
 ```
 
@@ -49,12 +49,12 @@ const { text } = await generateText({
 
 ```typescript
 // lib/ai.ts
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1',
+  baseURL: process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
 });
 
 const anthropic = createAnthropic({
@@ -71,14 +71,14 @@ export { openai, anthropic };
 
 ```typescript
 // lib/models.ts
-import { customProvider, gateway } from 'ai';
+import { customProvider, gateway } from "ai";
 
 export const models = customProvider({
   languageModels: {
-    fast: gateway('openai/gpt-4o-mini'),
-    smart: gateway('anthropic/claude-sonnet-4.5'),
-    reasoning: gateway('openai/o3'),
-    cheap: gateway('anthropic/claude-haiku-4.5'),
+    fast: gateway("openai/gpt-4o-mini"),
+    smart: gateway("anthropic/claude-sonnet-4.5"),
+    reasoning: gateway("openai/o3"),
+    cheap: gateway("anthropic/claude-haiku-4.5"),
   },
   fallbackProvider: gateway,
 });
@@ -93,10 +93,10 @@ export const models = customProvider({
 ### Bad Example -- Hardcoded Keys
 
 ```typescript
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAI } from "@ai-sdk/openai";
 
 const openai = createOpenAI({
-  apiKey: 'sk-proj-abc123def456', // NEVER do this
+  apiKey: "sk-proj-abc123def456", // NEVER do this
 });
 ```
 
@@ -106,17 +106,17 @@ const openai = createOpenAI({
 
 ```typescript
 // lib/ai.ts
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
 const ollama = createOpenAICompatible({
-  name: 'ollama',
-  baseURL: 'http://localhost:11434/v1',
+  name: "ollama",
+  baseURL: "http://localhost:11434/v1",
 });
 
 const together = createOpenAICompatible({
-  name: 'together',
+  name: "together",
   apiKey: process.env.TOGETHER_API_KEY,
-  baseURL: 'https://api.together.xyz/v1',
+  baseURL: "https://api.together.xyz/v1",
 });
 
 export { ollama, together };
@@ -132,12 +132,12 @@ export { ollama, together };
 
 ```typescript
 // lib/summarize.ts
-import { generateText } from 'ai';
+import { generateText } from "ai";
 
 export async function summarizeArticle(article: string): Promise<string> {
   const { text, usage } = await generateText({
-    model: 'openai/gpt-4o',
-    system: 'You are a professional editor. Write concise, accurate summaries.',
+    model: "openai/gpt-4o",
+    system: "You are a professional editor. Write concise, accurate summaries.",
     prompt: `Summarize the following article in 3-5 sentences:\n\n${article}`,
   });
 
@@ -152,18 +152,22 @@ export async function summarizeArticle(article: string): Promise<string> {
 
 ```typescript
 // lib/conversation.ts
-import { generateText } from 'ai';
-import type { ModelMessage } from 'ai';
+import { generateText } from "ai";
+import type { ModelMessage } from "ai";
 
 const messages: ModelMessage[] = [
-  { role: 'user', content: 'What is TypeScript?' },
-  { role: 'assistant', content: 'TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.' },
-  { role: 'user', content: 'What are generics in TypeScript?' },
+  { role: "user", content: "What is TypeScript?" },
+  {
+    role: "assistant",
+    content:
+      "TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.",
+  },
+  { role: "user", content: "What are generics in TypeScript?" },
 ];
 
 const { text, response } = await generateText({
-  model: 'anthropic/claude-sonnet-4.5',
-  system: 'You are a TypeScript expert. Explain concepts with code examples.',
+  model: "anthropic/claude-sonnet-4.5",
+  system: "You are a TypeScript expert. Explain concepts with code examples.",
   messages,
 });
 
@@ -177,8 +181,8 @@ messages.push(...response.messages);
 
 ```typescript
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
-  prompt: 'write something',
+  model: "openai/gpt-4o",
+  prompt: "write something",
 });
 // No system prompt -- unpredictable output style
 // No try/catch -- unhandled errors crash the app
@@ -190,12 +194,12 @@ const { text } = await generateText({
 ### Good Example -- With onFinish Callback
 
 ```typescript
-import { generateText } from 'ai';
+import { generateText } from "ai";
 
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
-  system: 'You are a helpful assistant.',
-  prompt: 'List 5 TypeScript tips.',
+  model: "openai/gpt-4o",
+  system: "You are a helpful assistant.",
+  prompt: "List 5 TypeScript tips.",
   onFinish({ text, finishReason, usage }) {
     // Log for observability
     console.log(`Finish reason: ${finishReason}`);
@@ -213,15 +217,15 @@ const { text } = await generateText({
 
 ```typescript
 // lib/stream.ts
-import { streamText, smoothStream } from 'ai';
+import { streamText, smoothStream } from "ai";
 
 const result = streamText({
-  model: 'anthropic/claude-sonnet-4.5',
-  system: 'You are a creative writing assistant.',
-  prompt: 'Write a short story about a robot learning to paint.',
+  model: "anthropic/claude-sonnet-4.5",
+  system: "You are a creative writing assistant.",
+  prompt: "Write a short story about a robot learning to paint.",
   experimental_transform: smoothStream(),
   onError({ error }) {
-    console.error('Stream error:', error);
+    console.error("Stream error:", error);
   },
   onFinish({ text, usage, finishReason }) {
     console.log(`Finished (${finishReason}), tokens: ${usage.totalTokens}`);
@@ -239,36 +243,36 @@ for await (const textPart of result.textStream) {
 ### Good Example -- Full Stream with Event Types
 
 ```typescript
-import { streamText } from 'ai';
+import { streamText } from "ai";
 
 const result = streamText({
-  model: 'openai/gpt-4o',
-  prompt: 'Explain quantum computing.',
+  model: "openai/gpt-4o",
+  prompt: "Explain quantum computing.",
   onError({ error }) {
-    console.error('Stream error:', error);
+    console.error("Stream error:", error);
   },
 });
 
 for await (const part of result.fullStream) {
   switch (part.type) {
-    case 'text-delta':
+    case "text-delta":
       process.stdout.write(part.textDelta);
       break;
-    case 'tool-call':
+    case "tool-call":
       console.log(`Tool call: ${part.toolName}(${JSON.stringify(part.args)})`);
       break;
-    case 'tool-result':
+    case "tool-result":
       console.log(`Tool result: ${JSON.stringify(part.result)}`);
       break;
-    case 'source':
-      if (part.sourceType === 'url') {
+    case "source":
+      if (part.sourceType === "url") {
         console.log(`Source: ${part.url}`);
       }
       break;
-    case 'error':
-      console.error('Stream error:', part.error);
+    case "error":
+      console.error("Stream error:", part.error);
       break;
-    case 'finish':
+    case "finish":
       console.log(`Done: ${part.finishReason}`);
       break;
   }
@@ -281,17 +285,17 @@ for await (const part of result.fullStream) {
 
 ```typescript
 // app/api/chat/route.ts
-import { streamText } from 'ai';
+import { streamText } from "ai";
 
 export async function POST(request: Request) {
   const { messages } = await request.json();
 
   const result = streamText({
-    model: 'openai/gpt-4o',
-    system: 'You are a helpful assistant.',
+    model: "openai/gpt-4o",
+    system: "You are a helpful assistant.",
     messages,
     onError({ error }) {
-      console.error('Chat stream error:', error);
+      console.error("Chat stream error:", error);
     },
   });
 
@@ -304,18 +308,18 @@ export async function POST(request: Request) {
 ### Bad Example -- Not Consuming the Stream
 
 ```typescript
-import { streamText } from 'ai';
+import { streamText } from "ai";
 
 function startStream() {
   // BAD: streamText returns immediately -- you MUST consume the stream
   const result = streamText({
-    model: 'openai/gpt-4o',
-    prompt: 'Tell me a story.',
+    model: "openai/gpt-4o",
+    prompt: "Tell me a story.",
   });
 
   // result.textStream is never consumed!
   // The stream runs but nothing happens
-  console.log('Done!'); // Prints immediately, before any tokens arrive
+  console.log("Done!"); // Prints immediately, before any tokens arrive
 }
 ```
 
@@ -328,18 +332,18 @@ function startStream() {
 ### Good Example -- generateText Error Handling
 
 ```typescript
-import { generateText, NoObjectGeneratedError } from 'ai';
+import { generateText, NoObjectGeneratedError } from "ai";
 
 try {
   const { text } = await generateText({
-    model: 'openai/gpt-4o',
-    prompt: 'Generate a summary.',
+    model: "openai/gpt-4o",
+    prompt: "Generate a summary.",
   });
   return text;
 } catch (error) {
   if (NoObjectGeneratedError.isInstance(error)) {
-    console.error('Model failed to generate valid output:', error.cause);
-    console.error('Raw text:', error.text);
+    console.error("Model failed to generate valid output:", error.cause);
+    console.error("Raw text:", error.text);
     return null;
   }
   throw error; // Re-throw unexpected errors
@@ -351,27 +355,27 @@ try {
 ### Good Example -- streamText Error Handling
 
 ```typescript
-import { streamText } from 'ai';
+import { streamText } from "ai";
 
 const result = streamText({
-  model: 'openai/gpt-4o',
-  prompt: 'Hello',
+  model: "openai/gpt-4o",
+  prompt: "Hello",
   onError({ error }) {
     // CRITICAL: This is the only way to catch stream errors
     // streamText does NOT throw -- errors go into the stream
-    console.error('Stream error:', error);
+    console.error("Stream error:", error);
   },
   onFinish({ finishReason }) {
-    if (finishReason === 'length') {
-      console.warn('Output was truncated due to token limit');
+    if (finishReason === "length") {
+      console.warn("Output was truncated due to token limit");
     }
   },
 });
 
 // Also check for errors in fullStream
 for await (const part of result.fullStream) {
-  if (part.type === 'error') {
-    console.error('Error in stream:', part.error);
+  if (part.type === "error") {
+    console.error("Error in stream:", part.error);
   }
 }
 ```
@@ -382,8 +386,8 @@ for await (const part of result.fullStream) {
 
 ```typescript
 const result = streamText({
-  model: 'openai/gpt-4o',
-  prompt: 'Hello',
+  model: "openai/gpt-4o",
+  prompt: "Hello",
   // No onError callback!
 });
 
@@ -398,30 +402,32 @@ for await (const text of result.textStream) {
 ### Good Example -- Tool Error Handling
 
 ```typescript
-import { generateText, NoSuchToolError, InvalidToolInputError } from 'ai';
+import { generateText, NoSuchToolError, InvalidToolInputError } from "ai";
 
 try {
   const { text, steps } = await generateText({
-    model: 'openai/gpt-4o',
-    tools: { /* ... */ },
-    prompt: 'Use the tools to help me.',
+    model: "openai/gpt-4o",
+    tools: {
+      /* ... */
+    },
+    prompt: "Use the tools to help me.",
   });
 
   // Check for tool-level errors in steps
   const toolErrors = steps.flatMap((step) =>
-    step.content.filter((part) => part.type === 'tool-error'),
+    step.content.filter((part) => part.type === "tool-error"),
   );
 
   if (toolErrors.length > 0) {
-    console.error('Tool execution errors:', toolErrors);
+    console.error("Tool execution errors:", toolErrors);
   }
 
   return text;
 } catch (error) {
   if (NoSuchToolError.isInstance(error)) {
-    console.error('Model tried to call unknown tool:', error);
+    console.error("Model tried to call unknown tool:", error);
   } else if (InvalidToolInputError.isInstance(error)) {
-    console.error('Model provided invalid tool input:', error);
+    console.error("Model provided invalid tool input:", error);
   }
   throw error;
 }

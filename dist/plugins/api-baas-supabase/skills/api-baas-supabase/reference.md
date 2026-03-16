@@ -118,69 +118,69 @@ type PostStatus = Enums<"post_status">;
 
 ## Query Builder Quick Reference
 
-| Operation | Code |
-|-----------|------|
-| Select all columns | `.select("*")` |
-| Select specific | `.select("id, title, created_at")` |
-| Select with join | `.select("id, author:profiles(username)")` |
-| Equality filter | `.eq("column", value)` |
-| Not equal | `.neq("column", value)` |
-| Greater than | `.gt("column", value)` |
-| Less than | `.lt("column", value)` |
-| In array | `.in("column", [val1, val2])` |
-| Pattern match | `.like("column", "%pattern%")` |
-| Case-insensitive | `.ilike("column", "%pattern%")` |
-| Is null | `.is("column", null)` |
-| Contains (array) | `.contains("tags", ["supabase"])` |
-| Full-text search | `.textSearch("column", "query")` |
-| Order by | `.order("column", { ascending: false })` |
-| Limit rows | `.limit(10)` |
-| Pagination | `.range(0, 9)` |
-| Single row | `.single()` |
-| Maybe single | `.maybeSingle()` |
-| Return data | `.select()` (after insert/update) |
+| Operation          | Code                                       |
+| ------------------ | ------------------------------------------ |
+| Select all columns | `.select("*")`                             |
+| Select specific    | `.select("id, title, created_at")`         |
+| Select with join   | `.select("id, author:profiles(username)")` |
+| Equality filter    | `.eq("column", value)`                     |
+| Not equal          | `.neq("column", value)`                    |
+| Greater than       | `.gt("column", value)`                     |
+| Less than          | `.lt("column", value)`                     |
+| In array           | `.in("column", [val1, val2])`              |
+| Pattern match      | `.like("column", "%pattern%")`             |
+| Case-insensitive   | `.ilike("column", "%pattern%")`            |
+| Is null            | `.is("column", null)`                      |
+| Contains (array)   | `.contains("tags", ["supabase"])`          |
+| Full-text search   | `.textSearch("column", "query")`           |
+| Order by           | `.order("column", { ascending: false })`   |
+| Limit rows         | `.limit(10)`                               |
+| Pagination         | `.range(0, 9)`                             |
+| Single row         | `.single()`                                |
+| Maybe single       | `.maybeSingle()`                           |
+| Return data        | `.select()` (after insert/update)          |
 
 ---
 
 ## Auth Events Reference
 
-| Event | When Fired |
-|-------|------------|
-| `INITIAL_SESSION` | After client initializes and loads stored session |
-| `SIGNED_IN` | User session confirmed, re-established, or tab focus regained |
-| `SIGNED_OUT` | User signs out or session expires |
-| `TOKEN_REFRESHED` | New access and refresh tokens generated |
-| `USER_UPDATED` | After `supabase.auth.updateUser()` completes |
-| `PASSWORD_RECOVERY` | User lands on a password reset page |
+| Event               | When Fired                                                    |
+| ------------------- | ------------------------------------------------------------- |
+| `INITIAL_SESSION`   | After client initializes and loads stored session             |
+| `SIGNED_IN`         | User session confirmed, re-established, or tab focus regained |
+| `SIGNED_OUT`        | User signs out or session expires                             |
+| `TOKEN_REFRESHED`   | New access and refresh tokens generated                       |
+| `USER_UPDATED`      | After `supabase.auth.updateUser()` completes                  |
+| `PASSWORD_RECOVERY` | User lands on a password reset page                           |
 
 ---
 
 ## RLS Policy Quick Reference
 
-| Clause | Used For | Operations |
-|--------|----------|------------|
-| `USING (condition)` | Filter which rows are visible/affected | SELECT, UPDATE (existing row), DELETE |
-| `WITH CHECK (condition)` | Validate new/modified data | INSERT, UPDATE (new row values) |
+| Clause                   | Used For                               | Operations                            |
+| ------------------------ | -------------------------------------- | ------------------------------------- |
+| `USING (condition)`      | Filter which rows are visible/affected | SELECT, UPDATE (existing row), DELETE |
+| `WITH CHECK (condition)` | Validate new/modified data             | INSERT, UPDATE (new row values)       |
 
-| Role | Description |
-|------|-------------|
-| `anon` | Unauthenticated requests (public API) |
-| `authenticated` | Logged-in users |
-| `service_role` | Server-side admin (bypasses all RLS) |
+| Role            | Description                           |
+| --------------- | ------------------------------------- |
+| `anon`          | Unauthenticated requests (public API) |
+| `authenticated` | Logged-in users                       |
+| `service_role`  | Server-side admin (bypasses all RLS)  |
 
 ---
 
 ## Realtime Filter Operators
 
-| Operator | Example | Description |
-|----------|---------|-------------|
-| `eq` | `id=eq.5` | Equals |
-| `neq` | `status=neq.draft` | Not equals |
-| `gt` | `age=gt.18` | Greater than |
-| `gte` | `age=gte.18` | Greater than or equal |
-| `lt` | `price=lt.100` | Less than |
-| `lte` | `price=lte.100` | Less than or equal |
-| `in` | `status=in.(active,pending)` | In list (max 100 values) |
+| Operator | Example                      | Description              |
+| -------- | ---------------------------- | ------------------------ |
+| `eq`     | `id=eq.5`                    | Equals                   |
+| `neq`    | `status=neq.draft`           | Not equals               |
+| `gt`     | `age=gt.18`                  | Greater than             |
+| `gte`    | `age=gte.18`                 | Greater than or equal    |
+| `lt`     | `price=lt.100`               | Less than                |
+| `lte`    | `price=lte.100`              | Less than or equal       |
+| `in`     | `status=in.(active,pending)` | In list (max 100 values) |
 
 **Note:** DELETE events cannot be filtered.
 
@@ -188,17 +188,17 @@ type PostStatus = Enums<"post_status">;
 
 ## Storage Methods Quick Reference
 
-| Method | Description |
-|--------|-------------|
-| `.upload(path, file, options)` | Upload a file (options: cacheControl, contentType, upsert) |
-| `.download(path)` | Download a file as Blob |
-| `.getPublicUrl(path)` | Get permanent public URL (public buckets only) |
-| `.createSignedUrl(path, expiresIn)` | Get temporary signed URL |
-| `.createSignedUploadUrl(path)` | Get a URL for client-side upload (expires in 2h) |
-| `.remove([path1, path2])` | Delete files |
-| `.list(folder, options)` | List files in a folder |
-| `.move(from, to)` | Move/rename a file |
-| `.copy(from, to)` | Copy a file |
+| Method                              | Description                                                |
+| ----------------------------------- | ---------------------------------------------------------- |
+| `.upload(path, file, options)`      | Upload a file (options: cacheControl, contentType, upsert) |
+| `.download(path)`                   | Download a file as Blob                                    |
+| `.getPublicUrl(path)`               | Get permanent public URL (public buckets only)             |
+| `.createSignedUrl(path, expiresIn)` | Get temporary signed URL                                   |
+| `.createSignedUploadUrl(path)`      | Get a URL for client-side upload (expires in 2h)           |
+| `.remove([path1, path2])`           | Delete files                                               |
+| `.list(folder, options)`            | List files in a folder                                     |
+| `.move(from, to)`                   | Move/rename a file                                         |
+| `.copy(from, to)`                   | Copy a file                                                |
 
 ---
 

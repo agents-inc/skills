@@ -25,7 +25,9 @@ async function getPublishedPosts(page: number): Promise<PostWithAuthor[]> {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("id, title, content, created_at, author:profiles(username, avatar_url)")
+    .select(
+      "id, title, content, created_at, author:profiles(username, avatar_url)",
+    )
     .eq("published", true)
     .order("created_at", { ascending: false })
     .range(start, end);
@@ -114,13 +116,13 @@ async function createPost(post: PostInsert) {
 ```typescript
 async function upsertUserPreferences(
   userId: string,
-  preferences: Record<string, unknown>
+  preferences: Record<string, unknown>,
 ) {
   const { data, error } = await supabase
     .from("user_preferences")
     .upsert(
       { user_id: userId, preferences, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" }
+      { onConflict: "user_id" },
     )
     .select()
     .single();

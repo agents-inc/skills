@@ -260,15 +260,13 @@ export class TransformResponseInterceptor<T> implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ApiResponse<T>> {
-    return next
-      .handle()
-      .pipe(
-        map((data) => ({
-          success: true,
-          data,
-          timestamp: new Date().toISOString(),
-        })),
-      );
+    return next.handle().pipe(
+      map((data) => ({
+        success: true,
+        data,
+        timestamp: new Date().toISOString(),
+      })),
+    );
   }
 }
 ```

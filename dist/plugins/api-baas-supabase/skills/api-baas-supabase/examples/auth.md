@@ -108,7 +108,7 @@ async function handleOAuthCallback() {
   if (!accessToken) {
     // Handle PKCE flow: exchange code for session
     const { data, error } = await supabase.auth.exchangeCodeForSession(
-      new URLSearchParams(window.location.search).get("code") ?? ""
+      new URLSearchParams(window.location.search).get("code") ?? "",
     );
 
     if (error) {

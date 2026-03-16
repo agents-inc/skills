@@ -24,7 +24,7 @@
       "name": "api-ai-vercel-ai-sdk",
       "source": "./dist/plugins/api-ai-vercel-ai-sdk",
       "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -64,7 +64,7 @@
       "name": "api-auth-clerk",
       "source": "./dist/plugins/api-auth-clerk",
       "description": "Clerk managed authentication - ClerkProvider, middleware, pre-built components, hooks, server-side auth, organizations, webhooks",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -94,7 +94,7 @@
       "name": "api-baas-supabase",
       "source": "./dist/plugins/api-baas-supabase",
       "description": "Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -214,7 +214,7 @@
       "name": "api-framework-nestjs",
       "source": "./dist/plugins/api-framework-nestjs",
       "description": "NestJS backend framework - modules, controllers, services, DI, guards, pipes, interceptors, exception filters, middleware, DTOs with class-validator",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
