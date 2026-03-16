@@ -1,6 +1,6 @@
 # Biome Quick Reference
 
-> CLI commands, configuration options, and rule groups for Biome v2.4.x. See [SKILL.md](SKILL.md) for core patterns and [examples/biome.md](examples/biome.md) for practical examples.
+> CLI commands, configuration options, and rule groups for Biome v2.4.x. See [SKILL.md](SKILL.md) for core patterns and [examples/](examples/) for practical examples.
 
 ---
 
@@ -199,7 +199,11 @@
 
 ## See Also
 
-- [examples/biome.md](examples/biome.md) for migration and configuration examples
+- [examples/setup.md](examples/setup.md) for installation, biome.json, editor integration
+- [examples/linting.md](examples/linting.md) for lint rules, suppressions, overrides
+- [examples/formatting.md](examples/formatting.md) for formatter options, Prettier mapping
+- [examples/ci.md](examples/ci.md) for CI pipelines, git hooks, staged files
+- [examples/migration.md](examples/migration.md) for ESLint/Prettier migration
 - [SKILL.md](SKILL.md) for core patterns and philosophy
 
 **Official Documentation:**

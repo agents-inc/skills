@@ -1,6 +1,6 @@
 # pnpm Workspaces Quick Reference
 
-> Quick reference for pnpm workspace commands, protocol syntax, and configuration options. See [SKILL.md](SKILL.md) for detailed patterns and [examples/pnpm-workspaces.md](examples/pnpm-workspaces.md) for practical examples.
+> Quick reference for pnpm workspace commands, protocol syntax, and configuration options. See [SKILL.md](SKILL.md) for detailed patterns and [examples/](examples/) for practical examples.
 
 ---
 

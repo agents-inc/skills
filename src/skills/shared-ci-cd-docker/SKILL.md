@@ -29,11 +29,12 @@ description: Docker containerization patterns for Node.js/TypeScript development
 
 ---
 
-**Detailed Resources:**
+## Examples
 
-- For code examples, see [examples/](examples/) directory:
-  - [docker.md](examples/docker.md) - Dockerfiles, multi-stage builds, compose configs, CI/CD pipelines
-- For decision frameworks and quick reference, see [reference.md](reference.md)
+- [Dockerfile Patterns](examples/dockerfile.md) - Multi-stage builds, Bun, monorepo, layer caching, .dockerignore, signal handling
+- [Docker Compose](examples/compose.md) - Development environments, networking, volumes, healthchecks
+- [Production & CI/CD](examples/production.md) - Security hardening, secrets, CI/CD pipelines, vulnerability scanning
+- [Quick Reference](reference.md) - Dockerfile instructions, CLI commands, base image comparison
 
 ---
 
@@ -47,9 +48,7 @@ description: Docker containerization patterns for Node.js/TypeScript development
 - Optimizing Docker layer caching and BuildKit cache mounts
 - Implementing container security (non-root, secrets, read-only filesystem)
 - Setting up health checks for container orchestration
-- Configuring Docker networking and volume mounts
 - Building CI/CD pipelines that build and push Docker images
-- Scanning images for vulnerabilities with Docker Scout
 
 **When NOT to use:**
 
@@ -69,10 +68,7 @@ description: Docker containerization patterns for Node.js/TypeScript development
 - Volume mounts (named volumes, bind mounts, tmpfs)
 - Docker networking (bridge, host, overlay)
 - CI/CD integration (GitHub Actions build-push)
-- Image selection (Alpine vs Debian slim)
-- Docker Scout vulnerability scanning
-- Docker init scaffolding
-- Signal handling (tini/dumb-init for graceful shutdown)
+- Signal handling (tini for graceful shutdown)
 
 ---
 
@@ -80,7 +76,7 @@ description: Docker containerization patterns for Node.js/TypeScript development
 
 ## Philosophy
 
-Containers provide reproducible, isolated environments that eliminate "works on my machine" problems. Docker is the standard for packaging Node.js/TypeScript applications into portable, lightweight images that run consistently across development, CI, and production.
+Containers provide reproducible, isolated environments that eliminate "works on my machine" problems. Docker is the standard for packaging Node.js/TypeScript applications into portable, lightweight images.
 
 **Core principles:**
 
@@ -93,7 +89,7 @@ Containers provide reproducible, isolated environments that eliminate "works on 
 
 - Applications deploying to container orchestrators (Kubernetes, ECS, Cloud Run)
 - Teams needing consistent development environments across OS platforms
-- Microservice architectures requiring isolated services with dependencies (databases, caches)
+- Microservice architectures requiring isolated services with dependencies
 - CI/CD pipelines building reproducible artifacts
 
 **When NOT to use Docker:**
@@ -115,33 +111,22 @@ Containers provide reproducible, isolated environments that eliminate "works on 
 
 Multi-stage builds compile TypeScript in a builder stage, then copy only compiled JS and production dependencies into a minimal runtime image. This reduces images from 1GB+ to under 100MB.
 
-#### Stage Architecture
-
 A production Dockerfile uses three stages:
 
 1. **deps** - Install production dependencies only
 2. **builder** - Install all dependencies, compile TypeScript
 3. **runner** - Copy compiled output and production deps into minimal image
 
-#### Constants
-
 ```dockerfile
-# Dockerfile constants (pinned versions)
-ARG NODE_VERSION=22
-ARG ALPINE_VERSION=3.21
-```
-
-```dockerfile
-# ---- Good Example ----
-# Stage 1: Dependencies
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS deps
+# Stage 1: Production dependencies
+FROM node:22-alpine3.21 AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --no-audit --no-fund
 
-# Stage 2: Builder
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS builder
+# Stage 2: Build TypeScript
+FROM node:22-alpine3.21 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -150,43 +135,25 @@ COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npm run build
 
-# Stage 3: Runner (production)
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS runner
+# Stage 3: Production runtime
+FROM node:22-alpine3.21 AS runner
 WORKDIR /app
+RUN apk add --no-cache tini
 ENV NODE_ENV=production
-
-# Create non-root user
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser
-
-# Copy only production artifacts
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY package.json ./
-
+COPY --from=deps --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
+COPY --chown=appuser:appgroup package.json ./
 USER appuser
 EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
-    CMD ["node", "-e", "fetch('http://localhost:3000/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
-
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/server.js"]
 ```
 
-**Why good:** Three-stage build separates concerns, BuildKit cache mount speeds up npm ci, non-root user for security, health check for orchestration, exec form CMD for signal handling, only production artifacts in final image
+**Why good:** Three-stage build separates concerns, BuildKit cache mount speeds up npm ci, non-root user, tini for signal handling, only production artifacts in final image
 
-```dockerfile
-# ---- Bad Example ----
-FROM node:22
-WORKDIR /app
-COPY . .
-RUN npm install
-ENV DATABASE_URL=postgres://user:pass@db:5432/mydb
-EXPOSE 3000
-CMD npm start
-```
-
-**Why bad:** Single stage ships 1GB+ image with dev deps and source code, `COPY . .` before install breaks layer cache, `npm install` instead of `npm ci` is non-deterministic, secret in ENV persists in image layers, `npm start` swallows SIGTERM signals, runs as root
+See [examples/dockerfile.md](examples/dockerfile.md) for complete Dockerfiles including Bun and Turborepo monorepo variants.
 
 ---
 
@@ -194,463 +161,145 @@ CMD npm start
 
 Docker Compose v2 defines multi-container development environments. Use `compose.yaml` (not `docker-compose.yml`) with the `docker compose` command (no hyphen).
 
-#### Development Compose Configuration
-
 ```yaml
-# compose.yaml - Good Example
-name: my-app-dev
-
+# compose.yaml
 services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
       target: builder
-    ports:
-      - "3000:3000"
-      - "9229:9229" # Node.js debugger
     volumes:
-      - .:/app:cached # Bind mount for hot reload
-      - /app/node_modules # Anonymous volume prevents overwrite
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgres://dev:dev@db:5432/devdb
+      - .:/app:cached
+      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy
-    command: ["npm", "run", "dev"]
-
   db:
     image: postgres:17-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: dev
-      POSTGRES_DB: devdb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dev"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 volumes:
   pgdata:
 ```
 
-**Why good:** Named project, explicit image tags, health checks on dependencies, `depends_on` with condition, bind mount with `:cached` for macOS perf, anonymous volume protects node_modules, named volume for database persistence, debugger port exposed
+**Why good:** Health checks on dependencies with `condition: service_healthy`, bind mount with `:cached` for macOS perf, anonymous volume protects node_modules, named volume for database persistence
 
-```yaml
-# compose.yaml - Bad Example
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-  db:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: password
-```
-
-**Why bad:** No health check on db (app starts before db is ready), no explicit image tag (`:latest` is unpredictable), no named volume (data lost on `docker compose down`), `depends_on` without condition only waits for container start not readiness, no named project
+See [examples/compose.md](examples/compose.md) for full development environments with Redis, networking, and volume patterns.
 
 ---
 
-### Pattern 3: BuildKit Cache Mounts and Layer Optimization
+### Pattern 3: BuildKit Cache Mounts
 
 BuildKit (default since Docker Engine 23+) provides cache mounts that persist package manager caches across builds, reducing install times by 10x or more.
 
-#### Layer Ordering Rules
-
-1. Pin base image versions (change rarely)
-2. Copy dependency manifests (package.json, lockfile)
-3. Install dependencies (cached when manifests unchanged)
-4. Copy source code (changes frequently)
-5. Build/compile (runs only when source changes)
-
-#### Cache Mount Syntax
-
 ```dockerfile
-# ---- Good Example: BuildKit Cache Mounts ----
-
-# npm cache mount
+# npm
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
-# Bun cache mount
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile
-
-# pnpm cache mount
+# pnpm
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
-
-# apt cache mount (for native dependencies)
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt \
-    apt-get update && apt-get install -y --no-install-recommends \
-    build-essential python3
 ```
 
-**Why good:** Cache mounts persist across builds so only new/changed packages download, `--no-audit --no-fund` skip unnecessary checks, `--frozen-lockfile` ensures deterministic installs
+**Layer ordering rules:** Pin base image versions > Copy dependency manifests > Install dependencies > Copy source code > Build/compile. This maximizes cache hits.
 
-```dockerfile
-# ---- Bad Example ----
-COPY . .
-RUN npm install
-```
-
-**Why bad:** `COPY . .` invalidates cache on ANY file change (even README edits), `npm install` instead of `npm ci` is non-deterministic and slower, no cache mount means full download every build
+See [examples/dockerfile.md](examples/dockerfile.md) for cache mount patterns for npm, Bun, pnpm, and apt.
 
 ---
 
 ### Pattern 4: Container Security
 
-Security hardening for production containers reduces attack surface and limits blast radius of vulnerabilities.
-
 #### Non-Root User
 
 ```dockerfile
-# ---- Good Example: Non-Root User ----
-
-# Create system user with specific UID/GID
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser
-
-# Set ownership of app files
 COPY --chown=appuser:appgroup --from=builder /app/dist ./dist
-
-# Switch to non-root before CMD
 USER appuser
 ```
-
-**Why good:** Explicit UID/GID for Kubernetes pod security policies, `--chown` on COPY avoids separate `chown` layer, `USER` before CMD ensures process runs unprivileged
 
 #### Secret Mounts (Build Time)
 
 ```dockerfile
-# ---- Good Example: Build-Time Secrets ----
-
-# Pass secret at build time (never persisted in image)
+# Secret is ephemeral - never persisted in image layers
 RUN --mount=type=secret,id=npm_token,env=NPM_TOKEN \
     npm ci --no-audit --no-fund
-
-# Build command:
-# docker build --secret id=npm_token,env=NPM_TOKEN .
+# Build: docker build --secret id=npm_token,env=NPM_TOKEN .
 ```
 
-**Why good:** Secret mount is ephemeral (exists only during RUN instruction), never written to image layers, BuildKit guarantees secrets are not persisted
-
-```dockerfile
-# ---- Bad Example: Secrets in Image ----
-ARG NPM_TOKEN
-ENV NPM_TOKEN=${NPM_TOKEN}
-RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-RUN npm ci
-```
-
-**Why bad:** ARG values persist in image history (`docker history`), ENV persists in image metadata (`docker inspect`), .npmrc with token gets baked into layer
-
-#### Runtime Security Hardening
+#### Runtime Hardening
 
 ```yaml
-# compose.yaml - Production security settings
 services:
   app:
-    image: my-app:latest
     read_only: true
-    tmpfs:
-      - /tmp
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
 ```
 
-**Why good:** Read-only filesystem prevents writes, tmpfs for temp files, no-new-privileges prevents privilege escalation, drop all capabilities then add only what's needed
+See [examples/production.md](examples/production.md) for complete production compose, secrets management, and CI/CD pipelines.
 
 ---
 
 ### Pattern 5: Health Checks
 
-Health checks enable orchestrators (Docker Compose, Kubernetes, ECS) to detect unresponsive containers and restart them automatically.
-
-#### Application Health Endpoint
-
-```typescript
-// src/health.ts - Health check endpoint
-const HEALTH_CHECK_PATH = "/health";
-const HEALTH_CHECK_TIMEOUT_MS = 5_000;
-
-export function registerHealthCheck(app: Application): void {
-  app.get(HEALTH_CHECK_PATH, async (_req, res) => {
-    try {
-      // Verify critical dependencies
-      await Promise.race([
-        checkDatabase(),
-        new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Health check timeout")),
-            HEALTH_CHECK_TIMEOUT_MS,
-          ),
-        ),
-      ]);
-      res.status(200).json({ status: "healthy" });
-    } catch {
-      res.status(503).json({ status: "unhealthy" });
-    }
-  });
-}
-```
-
-#### Dockerfile Health Check
+Health checks enable orchestrators to detect unresponsive containers and restart them automatically.
 
 ```dockerfile
-# ---- Good Example: Health Check ----
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
     CMD ["node", "-e", "fetch('http://localhost:3000/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
 ```
 
-**Why good:** Uses Node.js built-in fetch (no curl/wget needed in Alpine), start-period allows app startup time, retries prevent flapping, checks actual app health not just process existence
+**Why good:** Uses Node.js built-in fetch (no curl needed in Alpine), start-period allows app startup, checks dedicated health endpoint not just root path
 
-```dockerfile
-# ---- Bad Example ----
-HEALTHCHECK CMD curl -f http://localhost:3000/ || exit 1
-```
-
-**Why bad:** curl may not exist in Alpine images, checks root path not dedicated health endpoint, no timeout/interval/retries/start-period configuration, does not verify dependencies (db, cache)
+See [examples/production.md](examples/production.md) for health check endpoint implementation and Compose healthcheck patterns.
 
 ---
 
 ### Pattern 6: .dockerignore
 
-The `.dockerignore` file excludes files from the build context, preventing cache invalidation from irrelevant changes and keeping secrets out of images.
-
 ```text
-# .dockerignore - Good Example
-
-# Dependencies (reinstalled in container)
 node_modules
-
-# Build output (rebuilt in container)
 dist
-build
-.next
-
-# Version control
 .git
-.gitignore
-
-# IDE and editor
-.vscode
-.idea
-*.swp
-*.swo
-
-# Environment and secrets
 .env
 .env.*
 !.env.example
-
-# Docker files (prevent recursive context)
 Dockerfile*
 compose.yaml
-docker-compose*.yml
-.dockerignore
-
-# Documentation
-README.md
-LICENSE
-CHANGELOG.md
-docs/
-
-# Tests
 __tests__
 *.test.ts
-*.spec.ts
 coverage
-.nyc_output
-jest.config.*
-vitest.config.*
-
-# CI/CD
 .github
-.gitlab-ci.yml
-
-# OS files
-.DS_Store
-Thumbs.db
 ```
 
-**Why good:** Excludes node_modules (reinstalled deterministically), excludes .env files (prevents secret leaks), excludes .git (large directory that invalidates cache), keeps build context small and focused
+**Why good:** Excludes node_modules (reinstalled deterministically), .env files (prevents secret leaks), .git (invalidates cache), keeps build context small
+
+See [examples/dockerfile.md](examples/dockerfile.md) for a comprehensive .dockerignore file.
 
 ---
 
 ### Pattern 7: Signal Handling and Graceful Shutdown
 
-Node.js running as PID 1 in a container does not handle signals (SIGTERM, SIGINT) correctly by default. Use tini or `--init` flag for proper signal forwarding.
-
-#### Using Tini (Recommended for Production)
+Node.js as PID 1 does not handle SIGTERM/SIGINT correctly. Use tini as init system.
 
 ```dockerfile
-# ---- Good Example: Tini Init System ----
-FROM node:22-alpine AS runner
-# tini is included in node:alpine images
 RUN apk add --no-cache tini
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/server.js"]
 ```
 
-**Why good:** Tini runs as PID 1 and forwards signals to node process, handles zombie process reaping, ensures graceful shutdown on SIGTERM
+**Why good:** Tini forwards signals to node process, handles zombie process reaping, ensures graceful shutdown on `docker stop`
 
-#### Application-Level Graceful Shutdown
-
-```typescript
-// src/shutdown.ts - Graceful shutdown handler
-const SHUTDOWN_TIMEOUT_MS = 10_000;
-
-export function registerGracefulShutdown(server: Server): void {
-  const shutdown = (signal: string) => {
-    console.log(`Received ${signal}, shutting down gracefully...`);
-    server.close(() => {
-      console.log("Server closed");
-      process.exit(0);
-    });
-    setTimeout(() => {
-      console.error("Forced shutdown after timeout");
-      process.exit(1);
-    }, SHUTDOWN_TIMEOUT_MS);
-  };
-
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
-}
-```
-
-**Why good:** Handles both SIGTERM (Docker stop) and SIGINT (Ctrl+C), closes server gracefully allowing in-flight requests to complete, timeout prevents hanging forever
-
-```dockerfile
-# ---- Bad Example ----
-CMD npm start
-```
-
-**Why bad:** npm swallows SIGTERM/SIGINT signals (npm is not a process manager), shell form wraps command in `/bin/sh -c` adding another layer, node process never receives shutdown signal
-
----
-
-### Pattern 8: Docker Networking
-
-Docker provides multiple network drivers for different use cases. Compose creates a default bridge network per project.
-
-#### Bridge Network (Default for Compose)
-
-```yaml
-# compose.yaml - Custom bridge network
-services:
-  app:
-    build: .
-    networks:
-      - backend
-    ports:
-      - "3000:3000"
-
-  api:
-    build: ./api
-    networks:
-      - backend
-      - frontend
-
-  db:
-    image: postgres:17-alpine
-    networks:
-      - backend
-    # No ports exposed to host - only accessible from backend network
-
-networks:
-  backend:
-    driver: bridge
-  frontend:
-    driver: bridge
-```
-
-**Why good:** Services on same network communicate by service name (DNS resolution), db not exposed to host (only reachable from backend network), separate networks isolate frontend from database
-
-**When to use which network driver:**
-
-| Driver  | Use Case                                                                |
-| ------- | ----------------------------------------------------------------------- |
-| bridge  | Default. Containers on same host communicating by service name          |
-| host    | Performance-critical apps needing raw host networking (no NAT overhead) |
-| overlay | Multi-host communication (Docker Swarm)                                 |
-| none    | Complete network isolation                                              |
-
----
-
-### Pattern 9: Volume Mounts
-
-Docker provides three mount types for different data persistence needs.
-
-#### Development: Bind Mounts
-
-```yaml
-# compose.yaml - Development with bind mounts
-services:
-  app:
-    volumes:
-      - .:/app:cached # Source code for hot reload
-      - /app/node_modules # Protect container's node_modules
-      - ./config:/app/config:ro # Read-only config
-```
-
-**Why good:** `:cached` improves macOS file system performance, anonymous volume prevents host node_modules from overwriting container's, `:ro` for config prevents accidental writes
-
-#### Production: Named Volumes
-
-```yaml
-# compose.yaml - Production with named volumes
-services:
-  db:
-    image: postgres:17-alpine
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  app:
-    image: my-app:latest
-    tmpfs:
-      - /tmp # In-memory temp storage
-
-volumes:
-  pgdata:
-    driver: local
-```
-
-**Why good:** Named volume persists across `docker compose down`/`up`, Docker manages the volume lifecycle, tmpfs for temporary files (security + performance)
-
-| Mount Type   | Use Case                | Persistence     | Performance                 |
-| ------------ | ----------------------- | --------------- | --------------------------- |
-| Bind mount   | Dev: source code sync   | Host filesystem | Varies (`:cached` on macOS) |
-| Named volume | Prod: database, uploads | Docker-managed  | Native                      |
-| tmpfs        | Temporary data, secrets | Memory only     | Fastest                     |
+See [examples/dockerfile.md](examples/dockerfile.md) for complete TypeScript graceful shutdown implementation.
 
 </patterns>
 
@@ -662,13 +311,12 @@ volumes:
 
 ### Image Size Reduction
 
-| Technique                 | Impact                                   |
-| ------------------------- | ---------------------------------------- |
-| Multi-stage builds        | 1GB to under 100MB (90%+ reduction)      |
-| Alpine base image         | 135MB vs 1GB (full) vs 200MB (slim)      |
-| `npm ci --omit=dev`       | Removes dev dependencies from production |
-| `.dockerignore`           | Smaller build context, faster sends      |
-| `npm cache clean --force` | Removes npm cache from final layer       |
+| Technique           | Impact                                   |
+| ------------------- | ---------------------------------------- |
+| Multi-stage builds  | 1GB to under 100MB (90%+ reduction)      |
+| Alpine base image   | 135MB vs 1GB (full) vs 200MB (slim)      |
+| `npm ci --omit=dev` | Removes dev dependencies from production |
+| `.dockerignore`     | Smaller build context, faster sends      |
 
 ### Build Speed Optimization
 
@@ -684,20 +332,14 @@ volumes:
 
 ```yaml
 # GitHub Actions - Cache Docker layers
-- name: Set up Docker Buildx
-  uses: docker/setup-buildx-action@v3
-
-- name: Build and push
-  uses: docker/build-push-action@v6
+- uses: docker/setup-buildx-action@v3
+- uses: docker/build-push-action@v6
   with:
-    context: .
-    push: true
-    tags: ghcr.io/org/app:${{ github.sha }}
     cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
 
-**Why good:** GitHub Actions cache (`type=gha`) persists layers across CI runs, `mode=max` caches all layers (not just final), Buildx enables BuildKit features automatically
+**Why good:** GitHub Actions cache (`type=gha`) persists layers across CI runs, `mode=max` caches all layers (not just final)
 
 </performance>
 
@@ -713,19 +355,16 @@ volumes:
 Which base image?
   |
   +-- Need smallest image? --> Alpine (node:22-alpine, ~135MB)
-  |     +-- Native npm packages with C bindings? --> May need build tools
   |     +-- musl libc compatibility issues? --> Use Debian slim instead
   |
   +-- Need maximum compatibility? --> Debian slim (node:22-slim, ~200MB)
   |     +-- Native extensions work out of the box
-  |     +-- Larger but fewer surprises
   |
   +-- Need debugging tools? --> Full image (node:22, ~1GB)
   |     +-- Development only, never for production
   |
   +-- Maximum security? --> Distroless (gcr.io/distroless/nodejs22)
-        +-- No shell, no package manager, no utilities
-        +-- Hardest to debug, smallest attack surface
+        +-- No shell, no package manager, smallest attack surface
 ```
 
 ### Compose vs Dockerfile Targets
@@ -738,10 +377,9 @@ How to manage dev vs prod?
   |     +-- Final stage for production
   |
   +-- Separate compose files
-  |     +-- compose.yaml (base)
-  |     +-- compose.override.yaml (dev - auto-loaded)
-  |     +-- compose.prod.yaml (production)
-  |     +-- `docker compose -f compose.yaml -f compose.prod.yaml up`
+        +-- compose.yaml (base)
+        +-- compose.override.yaml (dev - auto-loaded)
+        +-- compose.prod.yaml (production)
 ```
 
 ### Volume Strategy
@@ -810,18 +448,17 @@ What data needs to persist?
 - Not using `:cached` on bind mounts on macOS (significant performance impact)
 - Installing build tools (gcc, make, python) in the final stage instead of the builder stage
 - Exposing database ports to host in production Compose (only needed for dev)
-- Using shell form `CMD npm start` instead of exec form `CMD ["node", "server.js"]`
 
-**Gotchas and Edge Cases:**
+**Gotchas & Edge Cases:**
 
-- Alpine uses musl libc - some npm packages with native C bindings (bcrypt, sharp, canvas) may fail or need rebuild; use `npm rebuild` or switch to Debian slim
+- Alpine uses musl libc - some npm packages with native C bindings (bcrypt, sharp, canvas) may fail; use `npm rebuild` or switch to Debian slim
 - Node.js `fetch()` is available since Node 18+ (no need for curl in health checks on Alpine)
 - BuildKit cache mounts require `# syntax=docker/dockerfile:1` or Docker Engine 23+ with BuildKit enabled by default
 - `docker compose down -v` removes named volumes (data loss) - use `docker compose down` without `-v` to preserve data
-- Docker Desktop on macOS/Windows has different file system performance characteristics than Linux - bind mounts are slower
+- Docker Desktop on macOS/Windows has different file system performance than Linux - bind mounts are slower
 - `COPY --chown` is more efficient than `COPY` + `RUN chown` (one layer vs two)
-- The `node_modules/.cache` directory can grow large in development - consider adding it to `.dockerignore`
-- `tini` is included in `node:alpine` images but must be installed separately on Debian-based images
+- `tini` must be installed explicitly on Alpine (`apk add --no-cache tini`) - it is NOT included by default in `node:alpine` images
+- The `node_modules/.cache` directory can grow large in development - add it to `.dockerignore`
 
 </red_flags>
 

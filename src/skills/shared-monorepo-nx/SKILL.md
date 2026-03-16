@@ -60,9 +60,15 @@ description: Nx monorepo build system — workspace configuration, project graph
 - Release management (`nx release`)
 - Module federation for micro-frontends
 
-**Detailed Resources:**
+## Examples
 
-- For code examples, see [examples/nx.md](examples/nx.md) (always start here)
+- [Workspace Setup](examples/setup.md) — Creating workspaces, directory structure, nx.json config, TypeScript setup
+- [Task Pipeline & Caching](examples/tasks.md) — dependsOn ordering, namedInputs, cache configuration, affected commands
+- [Generators](examples/generators.md) — Built-in generators, custom generators, schemas, migrations
+- [CI & Release Management](examples/ci.md) — GitHub Actions, Nx Cloud, release configuration, module federation
+
+**Additional resources:**
+
 - For CLI reference and decision frameworks, see [reference.md](reference.md)
 
 ---
@@ -109,22 +115,15 @@ Nx's core value proposition: **never run a task that has already been computed, 
 
 The `nx.json` file is the central configuration for task behavior, caching, plugins, and workspace-wide defaults.
 
-#### Minimal nx.json
-
 ```json
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "defaultBase": "main",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{projectRoot}/**/*.spec.ts",
-      "!{projectRoot}/**/*.test.ts",
-      "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/.eslintrc.json"
-    ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/*"]
+      "!{projectRoot}/**/*.test.ts"
+    ]
   },
   "targetDefaults": {
     "build": {
@@ -132,46 +131,17 @@ The `nx.json` file is the central configuration for task behavior, caching, plug
       "inputs": ["production", "^production"],
       "outputs": ["{projectRoot}/dist"],
       "cache": true
-    },
-    "test": {
-      "inputs": ["default", "^production"],
-      "cache": true
-    },
-    "lint": {
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/eslint.config.js"
-      ],
-      "cache": true
     }
   },
   "plugins": [
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": { "buildTargetName": "build", "testTargetName": "test" }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": { "targetName": "lint" }
-    }
+    { "plugin": "@nx/vite/plugin", "options": { "buildTargetName": "build" } }
   ]
 }
 ```
 
-**Why good:** `namedInputs` define reusable file sets so test files do not invalidate build caches, `targetDefaults` set global task behavior (caching, ordering) without repeating per project, `dependsOn: ["^build"]` enforces topological build ordering, plugins with inferred tasks eliminate per-project `project.json` boilerplate
+**Why good:** `namedInputs` exclude test files from build cache keys, `dependsOn: ["^build"]` enforces topological ordering, plugins auto-detect targets
 
-```json
-{
-  "targetDefaults": {
-    "build": {
-      "outputs": ["dist/**"]
-    }
-  }
-}
-```
-
-**Why bad:** Missing `dependsOn` breaks topological ordering (packages may build before their dependencies), missing `inputs` means Nx cannot properly detect which changes invalidate the cache, missing `cache: true` disables caching entirely for this target, no `namedInputs` to exclude test files from build cache keys
+For complete nx.json examples, see [examples/setup.md](examples/setup.md).
 
 ---
 
@@ -179,49 +149,23 @@ The `nx.json` file is the central configuration for task behavior, caching, plug
 
 Task pipelines define execution order using the `dependsOn` property. The `^` prefix means "run this target on dependencies first" (topological ordering).
 
-#### dependsOn Syntax
-
 ```json
 {
   "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"]
-    },
-    "test": {
-      "dependsOn": ["build"]
-    },
-    "e2e": {
-      "dependsOn": [
-        {
-          "target": "serve",
-          "params": "ignore"
-        }
-      ]
-    },
-    "serve": {
-      "continuous": true,
-      "cache": false
-    }
+    "build": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["build"] },
+    "e2e": { "dependsOn": [{ "target": "serve", "params": "ignore" }] },
+    "serve": { "continuous": true, "cache": false }
   }
 }
 ```
 
-**Why good:** `^build` runs dependency builds first (topological), `"dependsOn": ["build"]` runs same-project build before test, `continuous: true` marks long-running tasks (Nx 21+) so dependents do not wait for exit, `params: "ignore"` prevents parameter forwarding to dependencies
+- `"^build"` — Run `build` on **dependency** projects first (topological)
+- `"build"` — Run `build` on the **same** project first
+- `{ "target": "serve", "params": "ignore" }` — Object form, prevents parameter forwarding
+- `"continuous": true` — Long-running task (Nx 21+), dependents start immediately
 
-```json
-{
-  "targetDefaults": {
-    "build": {},
-    "test": {},
-    "e2e": {
-      "dependsOn": ["serve"]
-    },
-    "serve": {}
-  }
-}
-```
-
-**Why bad:** Build has no `dependsOn: ["^build"]` so dependency packages may not build first, test has no dependency on build so it may run against stale artifacts, serve is not marked `continuous: true` so e2e waits forever for it to exit, no caching configuration
+For pipeline examples and ordering walkthrough, see [examples/tasks.md](examples/tasks.md).
 
 ---
 
@@ -229,125 +173,55 @@ Task pipelines define execution order using the `dependsOn` property. The `^` pr
 
 Nx caches task results locally by default. When inputs have not changed, cached outputs are restored instantly. Nx Cloud extends this with remote caching shared across the team.
 
-#### Cache Configuration
-
 ```json
 {
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "production": [
-      "default",
-      "!{projectRoot}/**/*.spec.ts",
-      "!{projectRoot}/**/*.test.ts"
-    ],
-    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json"]
+    "production": ["default", "!{projectRoot}/**/*.test.ts"]
   },
   "targetDefaults": {
     "build": {
       "inputs": ["production", "^production"],
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/.next/**",
-        "!{projectRoot}/.next/cache/**"
-      ],
+      "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
     "test": {
       "inputs": [
         "default",
         "^production",
-        { "externalDependencies": ["jest", "vitest"] }
+        { "externalDependencies": ["vitest"] }
       ],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "cache": true
     },
-    "serve": {
-      "cache": false,
-      "continuous": true
-    }
-  },
-  "maxCacheSize": "10GB"
+    "serve": { "cache": false, "continuous": true }
+  }
 }
 ```
 
-**Why good:** `production` input excludes test files so test changes do not invalidate build cache, `outputs` include build artifacts and exclude framework caches, `externalDependencies` ensures cache invalidates when test runner version changes, `cache: false` on serve prevents caching long-running dev servers, `maxCacheSize` prevents disk bloat
+**Key concepts:** `production` excludes test files from build cache keys, `externalDependencies` invalidates cache on test runner upgrades, `cache: false` on serve prevents caching dev servers
 
-#### Nx Cloud Remote Caching
-
-```json
-{
-  "nxCloudId": "your-cloud-id"
-}
-```
-
-```bash
-# Connect workspace to Nx Cloud
-npx nx connect
-
-# Verify remote cache is working
-npx nx build my-app --verbose
-# Second run should show "remote cache hit"
-```
-
-**Why good:** One-line setup, entire team shares cached results, CI builds reuse developer cache hits and vice versa
-
-See [examples/nx.md](examples/nx.md) for cache configuration examples and CI integration.
+For cache strategies and namedInputs scenarios, see [examples/tasks.md](examples/tasks.md).
 
 ---
 
 ### Pattern 4: Inferred Tasks (Project Crystal)
 
-Since Nx 18, plugins automatically infer tasks from tool configuration files. For example, `@nx/vite/plugin` detects `vite.config.ts` and creates `build`, `serve`, and `test` targets without any `project.json` configuration.
-
-#### Plugin Configuration
+Since Nx 18, plugins automatically infer tasks from tool configuration files. For example, `@nx/vite/plugin` detects `vite.config.ts` and creates `build`, `serve`, and `test` targets without any `project.json`.
 
 ```json
 {
   "plugins": [
     {
       "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "testTargetName": "test"
-      }
+      "options": { "buildTargetName": "build", "testTargetName": "test" }
     },
     {
       "plugin": "@nx/jest/plugin",
       "include": ["packages/**/*"],
-      "exclude": ["**/*-e2e/**/*"],
-      "options": {
-        "targetName": "test"
-      }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
+      "exclude": ["**/*-e2e/**/*"]
     }
   ]
 }
 ```
-
-**Why good:** Zero-config task detection from existing tool configs, `include`/`exclude` scope plugins to specific projects, inferred caching/inputs/outputs are accurate because plugins understand the tool, consistent target naming across all projects
-
-#### Overriding Inferred Tasks
-
-When you need to customize an inferred target, add a `project.json` with only the overrides:
-
-```json
-{
-  "name": "my-app",
-  "targets": {
-    "build": {
-      "outputs": ["{projectRoot}/custom-dist"]
-    }
-  }
-}
-```
-
-**Why good:** Only overrides specified, all other inferred properties preserved. Nx merges `project.json` targets with inferred targets (project-level takes precedence).
 
 #### Configuration Precedence
 
@@ -357,7 +231,16 @@ When you need to customize an inferred target, add a `project.json` with only th
 3. project.json or package.json targets (highest priority)
 ```
 
-**When to use:** Always prefer inferred tasks as default. Only add `project.json` targets when a project needs configuration that differs from the inferred defaults.
+**When to use:** Always prefer inferred tasks as default. Only add `project.json` targets when overriding:
+
+```json
+{
+  "name": "my-app",
+  "targets": {
+    "build": { "outputs": ["{projectRoot}/custom-dist"] }
+  }
+}
+```
 
 ---
 
@@ -365,62 +248,22 @@ When you need to customize an inferred target, add a `project.json` with only th
 
 `nx affected` uses git diff combined with the project graph to determine which projects need to be rebuilt/tested. This is the primary CI optimization.
 
-#### Affected Commands
-
 ```bash
-# Run tests only for affected projects
-npx nx affected -t test
-
-# Build only affected projects
-npx nx affected -t build
-
-# Run multiple targets on affected projects
-npx nx affected -t build test lint
-
-# Compare against specific base branch
-npx nx affected -t test --base=origin/main --head=HEAD
-
-# Visualize affected project graph
-npx nx affected --graph
+npx nx affected -t test                              # Test affected projects
+npx nx affected -t build test lint                    # Multiple targets
+npx nx affected -t test --base=origin/main --head=HEAD  # Explicit base
+npx nx affected --graph                               # Visualize impact
 ```
 
-**Why good:** Only runs tasks for changed projects and their dependents, uses project graph for accurate dependency analysis, `--graph` flag visualizes impact for debugging
+**Why good:** Only runs tasks for changed projects and their dependents
 
-```bash
-# BAD: Run all tests every time
-npx nx run-many -t test
-```
-
-**Why bad:** Runs tests for every project regardless of changes, wastes CI time and compute on unchanged projects
-
-**When to use:** Always in CI pipelines. Use `nx run-many` only for local development when you want to run everything.
+For CI pipeline examples with affected commands, see [examples/ci.md](examples/ci.md).
 
 ---
 
 ### Pattern 6: Generators (Code Scaffolding)
 
-Generators create and modify code from templates. Official plugins provide generators for apps, libraries, components, and more. Custom generators enforce organizational standards.
-
-#### Using Built-in Generators
-
-```bash
-# Create a new React library
-npx nx generate @nx/react:library my-lib --directory=packages/my-lib
-
-# Create a new Next.js application
-npx nx generate @nx/next:application my-app --directory=apps/my-app
-
-# Create a new Node library
-npx nx generate @nx/node:library my-api --directory=packages/my-api
-
-# Move a project to a new location
-npx nx generate @nx/workspace:move --project=my-lib --destination=packages/shared/my-lib
-
-# Remove a project
-npx nx generate @nx/workspace:remove my-lib
-```
-
-#### Generator Defaults in nx.json
+Generators create and modify code from templates. Use defaults in nx.json to enforce consistency:
 
 ```json
 {
@@ -429,152 +272,66 @@ npx nx generate @nx/workspace:remove my-lib
       "bundler": "vite",
       "unitTestRunner": "vitest",
       "style": "scss"
-    },
-    "@nx/react:component": {
-      "style": "scss"
-    },
-    "@nx/js:library": {
-      "buildable": true,
-      "publishable": false
     }
   }
 }
 ```
 
-**Why good:** Consistent defaults for all generated code, no need to pass flags every time, enforces organizational standards
+```bash
+npx nx g @nx/react:library my-lib --directory=libs/shared/my-lib
+npx nx g @nx/next:application my-app --directory=apps/my-app
+npx nx g @nx/workspace:move --project=my-lib --destination=packages/shared/my-lib
+```
 
-See [examples/nx.md](examples/nx.md) for custom generator examples.
+For built-in and custom generator examples, see [examples/generators.md](examples/generators.md).
 
 ---
 
 ### Pattern 7: Release Management (nx release)
 
-`nx release` orchestrates three phases: versioning, changelog generation, and publishing. Supports fixed (all packages same version) and independent (per-package versioning) strategies.
-
-#### nx.json Release Configuration
+`nx release` orchestrates versioning, changelog generation, and publishing. Supports fixed and independent strategies.
 
 ```json
 {
   "release": {
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
-    "version": {
-      "conventionalCommits": true,
-      "preserveMatchingDependencyRanges": true,
-      "updateDependents": "always"
-    },
+    "version": { "conventionalCommits": true, "updateDependents": "always" },
     "changelog": {
-      "workspaceChangelog": {
-        "createRelease": "github",
-        "file": "{workspaceRoot}/CHANGELOG.md"
-      },
       "projectChangelogs": {
-        "file": "{projectRoot}/CHANGELOG.md"
+        "file": "{projectRoot}/CHANGELOG.md",
+        "createRelease": "github"
       }
     },
-    "releaseTag": {
-      "pattern": "{projectName}-v{version}"
-    },
-    "git": {
-      "commit": true,
-      "tag": true
-    }
-  }
-}
-```
-
-**Why good:** Conventional commits automate version bumps from commit messages, independent releases allow per-package versioning, GitHub releases created automatically, changelogs at both workspace and project level, git tags follow clear naming pattern
-
-#### Release Commands
-
-```bash
-# Full release: version + changelog + publish
-npx nx release
-
-# Dry run to preview changes
-npx nx release --dry-run
-
-# First release (skip changelog diff)
-npx nx release --first-release
-
-# Individual phases
-npx nx release version
-npx nx release changelog
-npx nx release publish
-
-# Version plans (file-based versioning)
-npx nx release plan minor -m "Add new API endpoints"
-```
-
-#### Version Plans (Alternative to Conventional Commits)
-
-```json
-{
-  "release": {
-    "version": {
-      "conventionalCommits": false
-    },
-    "versionPlans": true
+    "releaseTag": { "pattern": "{projectName}-v{version}" },
+    "git": { "commit": true, "tag": true }
   }
 }
 ```
 
 ```bash
-# Create a version plan file
-npx nx release plan patch -m "Fix button hover state"
-# Creates .nx/version-plans/plan-123.md
-# Apply when ready
-npx nx release
+npx nx release              # Full release
+npx nx release --dry-run    # Preview
+npx nx release plan minor -m "Add new API endpoints"  # Version plans
 ```
 
-**When to use:** Use conventional commits for automated CI releases. Use version plans when teams want to decouple "what changed" from "what version bump."
+For release configuration examples, see [examples/ci.md](examples/ci.md).
 
 ---
 
 ### Pattern 8: Module Federation (Micro-Frontends)
 
-Nx provides first-class module federation support for React and Angular, enabling micro-frontend architectures where independent teams deploy separately.
-
-#### Generating Module Federation Setup
+Nx provides first-class module federation support, enabling independent teams to deploy separately.
 
 ```bash
-# Create host application
-npx nx generate @nx/react:host shell --directory=apps/shell
-
-# Create remote application
-npx nx generate @nx/react:remote shop --directory=apps/shop --host=shell
-
-# Add another remote
-npx nx generate @nx/react:remote cart --directory=apps/cart --host=shell
+npx nx g @nx/react:host shell --directory=apps/shell
+npx nx g @nx/react:remote shop --directory=apps/shop --host=shell
+npx nx serve shell --devRemotes=shop,cart
 ```
 
-#### Host Configuration (module-federation.config.ts)
+**When to use:** Large teams with independent deployment cadences. **When to avoid:** Small teams where a single app suffices.
 
-```typescript
-// apps/shell/module-federation.config.ts
-import type { ModuleFederationConfig } from "@nx/module-federation";
-
-const config: ModuleFederationConfig = {
-  name: "shell",
-  remotes: ["shop", "cart"],
-};
-
-export default config;
-```
-
-#### Dynamic Module Federation
-
-```typescript
-// apps/shell/module-federation.manifest.json
-{
-  "shop": "http://localhost:4201",
-  "cart": "http://localhost:4202"
-}
-```
-
-**Why good:** Remotes resolved at runtime (not hardcoded at build time), enables independent deployment, host does not need to rebuild when remotes change
-
-**When to use:** Large teams with independent deployment cadences. When to avoid: small teams where a single app suffices.
+For module federation examples, see [examples/ci.md](examples/ci.md).
 
 </patterns>
 
@@ -594,21 +351,16 @@ export default config;
 
 **Optimization Strategies:**
 
-- **Use `namedInputs`** to exclude test/spec files from build cache keys. A test file change should not invalidate the build cache.
-- **Set `outputs` precisely** to only cache what is needed. Exclude framework caches (e.g., `!{projectRoot}/.next/cache/**`).
-- **Enable Nx Cloud** for remote caching. One developer's cache hit benefits the entire team.
-- **Use `nx affected`** in CI to skip unchanged projects entirely.
-- **Configure `parallel`** in nx.json to control concurrency (default is 3, increase for powerful CI machines).
-- **Use `maxCacheSize`** to prevent unbounded cache growth (default: 10% of disk, max 10GB).
-
-**Force Cache Bypass:**
+- **Use `namedInputs`** to exclude test/spec files from build cache keys
+- **Set `outputs` precisely** to only cache what is needed (exclude framework caches)
+- **Enable Nx Cloud** for remote caching — one developer's cache hit benefits the team
+- **Use `nx affected`** in CI to skip unchanged projects entirely
+- **Configure `parallel`** in nx.json to control concurrency (default: 3)
+- **Use `maxCacheSize`** to prevent unbounded cache growth
 
 ```bash
-# Skip cache for a specific run
-npx nx build my-app --skip-nx-cache
-
-# Clear all cached artifacts
-npx nx reset
+npx nx build my-app --skip-nx-cache  # Skip cache for a specific run
+npx nx reset                          # Clear all cached artifacts
 ```
 
 </performance>
@@ -677,17 +429,15 @@ For comprehensive decision trees and anti-patterns, see [reference.md](reference
 
 **Works with:**
 
-- **Package managers (npm, pnpm, Bun, Yarn)**: Nx works with any package manager's workspace feature for dependency linking
+- **Package managers (npm, pnpm, Bun, Yarn)**: Nx works with any package manager's workspace feature
 - **Vite**: `@nx/vite/plugin` infers build/serve/test targets from vite.config.ts
 - **Jest / Vitest**: `@nx/jest/plugin` and `@nx/vite/plugin` infer test targets
 - **ESLint**: `@nx/eslint/plugin` infers lint targets from eslint.config.js
-- **Next.js**: `@nx/next` provides generators, executors, and module federation support
-- **React**: `@nx/react` provides generators for apps, libraries, components, hooks
-- **Angular**: `@nx/angular` provides full Angular CLI parity within Nx
+- **Next.js**: `@nx/next` provides generators, executors, and module federation
+- **React / Angular**: `@nx/react` and `@nx/angular` provide generators and executors
 - **Storybook**: `@nx/storybook` infers build-storybook and storybook targets
-- **Playwright / Cypress**: `@nx/playwright` and `@nx/cypress` with test atomizer for distributed testing
+- **Playwright / Cypress**: `@nx/playwright` and `@nx/cypress` with test atomizer
 - **Nx Cloud**: Remote caching (Nx Replay) and distributed task execution (Nx Agents)
-- **Module Federation**: `@module-federation/enhanced` for micro-frontend architectures
 
 **Replaces / Conflicts with:**
 

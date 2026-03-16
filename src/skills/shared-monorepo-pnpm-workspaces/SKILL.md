@@ -67,8 +67,12 @@ description: pnpm workspace protocol, filtering, catalogs, shared dependencies, 
 
 **Detailed resources:**
 
-- For practical code examples, see [examples/pnpm-workspaces.md](examples/pnpm-workspaces.md)
-- For quick command reference, see [reference.md](reference.md)
+- [Workspace Setup](examples/setup.md) -- pnpm-workspace.yaml, .npmrc, directory structure, settings
+- [Shared Packages](examples/packages.md) -- workspace protocol, catalogs, TypeScript/ESLint config
+- [Scripts & Filtering](examples/scripts.md) -- --filter, recursive execution, dependency management
+- [Publishing & Versioning](examples/publishing.md) -- changesets, publishConfig, Docker
+- [CI/CD Pipelines](examples/ci.md) -- GitHub Actions, automated release
+- [Quick Command Reference](reference.md) -- condensed lookup table
 
 ---
 
@@ -110,51 +114,29 @@ pnpm workspaces provide strict, efficient monorepo management with content-addre
 
 The `pnpm-workspace.yaml` file at the repository root defines which directories contain workspace packages. Every pnpm workspace MUST have this file.
 
-#### Basic Configuration
-
 ```yaml
 # pnpm-workspace.yaml
 packages:
   - "apps/*"
   - "packages/*"
-  - "tools/*"
 ```
 
-**Why good:** Glob patterns (`apps/*`, `packages/*`) auto-discover all packages in those directories, clean separation between apps, shared packages, and tooling
-
-#### v10 Settings Migration
-
-In pnpm v10, most settings moved from `.npmrc` to `pnpm-workspace.yaml`. Only auth and registry settings remain in `.npmrc`.
+In pnpm v10, settings moved from `.npmrc` to this file:
 
 ```yaml
-# pnpm-workspace.yaml (pnpm v10+)
+# pnpm-workspace.yaml (v10+)
 packages:
   - "apps/*"
   - "packages/*"
 
-# Settings that were previously in .npmrc
 linkWorkspacePackages: true
 saveWorkspaceProtocol: rolling
-shamefullyHoist: false
-strictPeerDependencies: true
+disallowWorkspaceCycles: true
 ```
 
-```ini
-# .npmrc (pnpm v10+ -- ONLY auth and registry settings)
-//registry.npmjs.org/:_authToken=${NPM_TOKEN}
-@myorg:registry=https://npm.pkg.github.com
-```
+**Why good:** Single source of truth for workspace definition and settings
 
-**Why good:** Single source of truth for pnpm configuration, `.npmrc` only contains secrets and registry URLs, settings are version-controlled alongside workspace definition
-
-```yaml
-# BAD: Settings in .npmrc (pnpm v10+)
-# These will be IGNORED by pnpm v10
-# shamefully-hoist=true
-# link-workspace-packages=true
-```
-
-**Why bad:** pnpm v10 no longer reads non-auth settings from `.npmrc`, settings are silently ignored leading to unexpected behavior
+See [examples/setup.md](examples/setup.md) for full workspace setup, directory structure, and all settings.
 
 ---
 
@@ -162,254 +144,116 @@ strictPeerDependencies: true
 
 The workspace protocol ensures internal packages always resolve to the local workspace version, never from the registry.
 
-#### Protocol Variants
-
-```json
-{
-  "dependencies": {
-    "@repo/ui": "workspace:*",
-    "@repo/types": "workspace:^",
-    "@repo/config": "workspace:~"
-  }
-}
-```
-
 | Protocol      | During Development     | After `pnpm publish`                        |
 | ------------- | ---------------------- | ------------------------------------------- |
 | `workspace:*` | Links to local package | Replaced with exact version (e.g., `1.5.0`) |
 | `workspace:^` | Links to local package | Replaced with caret range (e.g., `^1.5.0`)  |
 | `workspace:~` | Links to local package | Replaced with tilde range (e.g., `~1.5.0`)  |
 
-#### Good Example
-
 ```json
 {
-  "name": "@repo/web-app",
   "dependencies": {
     "@repo/ui": "workspace:*",
-    "@repo/types": "workspace:*",
-    "@repo/api-client": "workspace:*"
+    "@repo/types": "workspace:*"
   }
 }
 ```
 
-**Why good:** `workspace:*` guarantees local linking, pnpm refuses to resolve externally, version conversion on publish ensures correct semver for consumers
-
-#### Bad Example
-
-```json
-{
-  "name": "@repo/web-app",
-  "dependencies": {
-    "@repo/ui": "^1.0.0",
-    "@repo/types": "1.2.3"
-  }
-}
-```
-
-**Why bad:** Hardcoded versions may install from npm registry instead of local workspace, version mismatches across packages, manual version bumps required on every change
-
-#### Aliasing
+**Why good:** Guarantees local linking, pnpm refuses to resolve externally, version conversion on publish ensures correct semver
 
 ```json
 {
   "dependencies": {
-    "ui-v2": "workspace:@repo/ui@*"
+    "@repo/ui": "^1.0.0"
   }
 }
 ```
 
-**When to use:** Migrating between package versions in the same workspace, running two versions of an internal package side by side
+**Why bad:** Hardcoded versions may install from npm registry instead of local workspace, version mismatches across packages
+
+See [examples/packages.md](examples/packages.md) for protocol variants, aliasing, and internal package setup.
 
 ---
 
 ### Pattern 3: Catalogs for Version Synchronization
 
-Catalogs let you define dependency versions once in `pnpm-workspace.yaml` and reference them across all packages with `catalog:`. This eliminates version drift and reduces merge conflicts.
-
-#### Defining Catalogs
+Catalogs define dependency versions once in `pnpm-workspace.yaml` and reference them across all packages with `catalog:`.
 
 ```yaml
 # pnpm-workspace.yaml
-packages:
-  - "apps/*"
-  - "packages/*"
-
-# Default catalog (referenced with "catalog:" or "catalog:default")
 catalog:
   react: ^19.0.0
   react-dom: ^19.0.0
   typescript: ^5.7.0
-  vitest: ^3.0.0
-  zod: ^3.24.0
+```
 
-# Named catalogs (referenced with "catalog:<name>")
+```json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}
+```
+
+**Why good:** Single version source of truth, updating one line updates all packages, eliminates merge conflicts
+
+Named catalogs support version migration:
+
+```yaml
 catalogs:
   react18:
     react: ^18.3.1
-    react-dom: ^18.3.1
   react19:
     react: ^19.0.0
-    react-dom: ^19.0.0
 ```
 
-#### Using Catalogs in package.json
-
-```json
-{
-  "name": "@repo/web-app",
-  "dependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "typescript": "catalog:",
-    "vitest": "catalog:"
-  }
-}
-```
-
-**Why good:** Single version source of truth, updating one line in `pnpm-workspace.yaml` updates all packages, eliminates merge conflicts in `package.json` files, `catalog:` resolves to actual versions on publish
-
-#### Named Catalog Usage
-
-```json
-{
-  "name": "@repo/legacy-app",
-  "dependencies": {
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
-  }
-}
-```
-
-**When to use:** Migrating between major versions, different apps need different major versions of the same dependency
-
-#### Bad Example
-
-```json
-{
-  "name": "@repo/app-a",
-  "dependencies": { "react": "^19.0.0" }
-}
-// In another package:
-{
-  "name": "@repo/app-b",
-  "dependencies": { "react": "^18.3.1" }
-}
-```
-
-**Why bad:** Version drift between packages, merge conflicts when updating versions, no single source of truth, easy to have incompatible versions
-
-#### Catalog Settings
-
-```yaml
-# pnpm-workspace.yaml
-# Enforce catalog usage
-catalogMode: strict # Only catalog versions allowed
-# catalogMode: prefer  # Use catalog if available, fallback allowed
-# catalogMode: manual  # Default -- no automatic catalog enforcement
-
-# Auto-remove unused catalog entries on install
-cleanupUnusedCatalogs: true
-```
+See [examples/packages.md](examples/packages.md) for named catalogs, strict enforcement, and full examples.
 
 ---
 
 ### Pattern 4: Filtering Commands
 
-`--filter` (or `-F`) restricts commands to specific packages instead of running across the entire workspace. This is critical for CI performance.
-
-#### Package Name Matching
+`--filter` (or `-F`) restricts commands to specific packages instead of running across the entire workspace.
 
 ```bash
-# Exact package name
+# Exact package
 pnpm --filter @repo/web-app build
 
-# Glob pattern
-pnpm --filter "@repo/*" build
-
-# Short form
-pnpm -F @repo/web-app dev
-```
-
-#### Dependency and Dependent Selection
-
-```bash
-# Package and ALL its dependencies (transitive)
+# Package and ALL its dependencies
 pnpm --filter "web-app..." build
 
-# Only dependencies of a package (excludes the package itself)
-pnpm --filter "web-app^..." build
-
-# Package and ALL its dependents (what depends on it)
-pnpm --filter "...@repo/ui" build
-
-# Only dependents (excludes the package itself)
-pnpm --filter "...^@repo/ui" build
-```
-
-#### Directory and Change-Based Filtering
-
-```bash
-# All packages in a directory
-pnpm --filter "./packages/**" test
-
-# All packages changed since a git ref
+# Changed packages since main
 pnpm --filter "...[origin/main]" test
-
-# Changed packages and their dependents
-pnpm --filter "...[origin/main]..." build
 
 # Exclude a package
 pnpm --filter "!@repo/docs" build
 ```
 
-**Why good:** Targeted execution saves CI time, dependency-aware filtering ensures correct build order, change-based filtering only rebuilds what changed
-
-#### Bad Example
+**Why good:** Targeted execution saves CI time, dependency-aware filtering ensures correct build order
 
 ```bash
-# Running everything when only one package changed
+# BAD: Running everything when only one package changed
 pnpm -r build
 ```
 
-**Why bad:** Wastes CI time rebuilding all packages, no dependency awareness for order, no change detection
+**Why bad:** Wastes CI time rebuilding all packages, no change detection
+
+See [examples/scripts.md](examples/scripts.md) for all filter variants, CI-optimized patterns, and graph exploration.
 
 ---
 
 ### Pattern 5: Running Scripts Across Workspaces
 
-pnpm provides several ways to execute scripts across workspace packages with different ordering and concurrency strategies.
-
-#### Recursive Execution
-
 ```bash
-# Run build in all packages (topological order -- respects dependency graph)
+# Topological order (respects dependency graph) -- use for build
 pnpm -r build
 
-# Run in all packages including the root
-pnpm -r --include-workspace-root build
-
-# Run tests in parallel (ignores dependency graph)
+# Parallel (ignores dependency graph) -- use for test, lint
 pnpm -r --parallel test
 
-# Control concurrency (4 packages at a time, topological order)
+# Controlled concurrency
 pnpm -r --workspace-concurrency 4 build
-```
-
-#### Topological vs Parallel
-
-```bash
-# CORRECT: Build in dependency order (packages build before their dependents)
-pnpm -r build
-
-# CORRECT: Tests can run in parallel (no build artifact dependencies)
-pnpm -r --parallel test
-
-# CORRECT: Lint can run in parallel (no cross-package dependencies)
-pnpm -r --parallel lint
 ```
 
 ```bash
@@ -417,94 +261,15 @@ pnpm -r --parallel lint
 pnpm -r --parallel build
 ```
 
-**Why bad:** Packages that depend on other packages may start building before their dependencies finish, causing build failures with missing modules
+**Why bad:** Packages may build before their dependencies finish, causing missing module failures
 
-#### Adding Dependencies Across Workspaces
-
-```bash
-# Add a dependency to a specific package
-pnpm --filter @repo/web-app add zod
-
-# Add a dev dependency to the workspace root
-pnpm add -Dw vitest
-
-# Add a workspace package as a dependency
-pnpm --filter @repo/web-app add @repo/ui --workspace
-```
+See [examples/scripts.md](examples/scripts.md) for dependency management and adding dependencies.
 
 ---
 
-### Pattern 6: Monorepo Directory Structure
-
-A well-organized pnpm workspace follows consistent conventions for apps, packages, and shared configuration.
-
-#### Recommended Structure
-
-```
-my-monorepo/
-  apps/
-    web/                    # Web application (Next.js, Vite, etc.)
-      package.json
-      tsconfig.json         # Extends shared config
-    api/                    # API server
-      package.json
-      tsconfig.json
-  packages/
-    ui/                     # Shared UI components
-      package.json
-      tsconfig.json
-      src/
-        index.ts            # Barrel file with named exports
-    types/                  # Shared TypeScript types
-      package.json
-      tsconfig.json
-      src/
-        index.ts
-    config-typescript/      # Shared tsconfig base
-      package.json
-      tsconfig.base.json
-      tsconfig.react.json
-    config-eslint/          # Shared ESLint config
-      package.json
-      index.js
-  pnpm-workspace.yaml      # Workspace definition + settings
-  package.json              # Root package.json (workspace scripts)
-  pnpm-lock.yaml            # Single lockfile for all packages
-  .npmrc                    # Auth and registry settings only (v10+)
-```
-
-#### Root package.json
-
-```json
-{
-  "name": "my-monorepo",
-  "private": true,
-  "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm -r --parallel dev",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r --parallel lint",
-    "clean": "pnpm -r exec rm -rf dist node_modules",
-    "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
-  },
-  "devDependencies": {
-    "@changesets/cli": "catalog:",
-    "typescript": "catalog:"
-  }
-}
-```
-
-**Why good:** Root scripts provide workspace-wide commands, `private: true` prevents accidental root publish, shared devDependencies hoisted to root reduce duplication
-
----
-
-### Pattern 7: Shared TypeScript Configuration
+### Pattern 6: Shared TypeScript Configuration
 
 Share TypeScript compiler options across all workspace packages using a configuration package.
-
-#### Configuration Package
 
 ```json
 {
@@ -518,251 +283,67 @@ Share TypeScript compiler options across all workspace packages using a configur
 }
 ```
 
-#### Base tsconfig
-
-```json
-{
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    "strict": true,
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
-  }
-}
-```
-
-#### React tsconfig
-
-```json
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"]
-  }
-}
-```
-
-#### Consumer Package tsconfig
+Consumer usage:
 
 ```json
 {
   "extends": "@repo/config-typescript/react",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }
 ```
 
-**Why good:** Single source of truth for TypeScript settings, changes propagate to all packages, consistent compilation across the monorepo, packages can pick the right config variant (base, react, node)
+**Why good:** Single source of truth for TypeScript settings, changes propagate to all packages
+
+See [examples/packages.md](examples/packages.md) for full base/react/node configs and ESLint sharing.
 
 ---
 
-### Pattern 8: Publishing from Workspaces
+### Pattern 7: Publishing from Workspaces
 
-When publishing packages from a pnpm workspace, use `publishConfig` to control what gets published and changesets to manage versioning.
-
-#### publishConfig
+Use `publishConfig` to control what gets published and changesets for versioning.
 
 ```json
 {
   "name": "@repo/ui",
-  "version": "1.0.0",
-  "private": false,
   "main": "./src/index.ts",
   "publishConfig": {
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      }
-    },
     "access": "public"
-  },
-  "scripts": {
-    "build": "tsup src/index.ts --format esm --dts"
   }
 }
 ```
 
-**Why good:** `main` points to source during development (fast HMR), `publishConfig.main` points to built output on publish, `access: public` required for scoped packages on npm
-
-#### Changesets Workflow
+**Why good:** Source during development (fast HMR), built output on publish
 
 ```bash
-# 1. Install changesets
-pnpm add -Dw @changesets/cli
-
-# 2. Initialize
-pnpm changeset init
-
-# 3. Create a changeset (interactive prompt)
-pnpm changeset
-
-# 4. Version packages (bumps versions + generates changelogs)
-pnpm changeset version
-
-# 5. Update lockfile after version bumps
-pnpm install
-
-# 6. Publish to registry
-pnpm publish -r
+pnpm changeset          # Create changeset
+pnpm changeset version  # Bump versions + changelogs
+pnpm publish -r         # Publish to npm
 ```
 
-**When to use:** Publishing packages to npm, managing versioning across multiple packages, generating changelogs automatically
+See [examples/publishing.md](examples/publishing.md) for changesets config, Docker deployment, and migration.
 
 ---
 
-### Pattern 9: CI/CD with GitHub Actions
-
-Set up efficient CI for pnpm workspaces with caching and frozen lockfile.
-
-#### GitHub Actions Workflow
+### Pattern 8: CI/CD with GitHub Actions
 
 ```yaml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Full history for change detection
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install # --frozen-lockfile is default in CI
-
-      - name: Build affected packages
-        run: pnpm --filter "...[origin/main]" build
-
-      - name: Test affected packages
-        run: pnpm --filter "...[origin/main]" test
-
-      - name: Lint all packages
-        run: pnpm -r --parallel lint
+- uses: pnpm/action-setup@v4
+  with:
+    version: 10
+- uses: actions/setup-node@v4
+  with:
+    node-version: 22
+    cache: "pnpm"
+- run: pnpm install
+- run: pnpm --filter "...[origin/main]" build
+- run: pnpm --filter "...[origin/main]" test
 ```
 
-**Why good:** `pnpm/action-setup@v4` handles pnpm installation, `cache: "pnpm"` in setup-node caches the store, `--frozen-lockfile` is automatic in CI (prevents lockfile mutations), `--filter "...[origin/main]"` only builds/tests changed packages, `fetch-depth: 0` enables git-based change detection
+**Why good:** `pnpm/action-setup@v4` handles installation, `cache: "pnpm"` caches the store, `--frozen-lockfile` is automatic in CI, change-based filtering only builds affected packages
 
-#### Changesets Publish Workflow
-
-```yaml
-name: Release
-
-on:
-  push:
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "pnpm"
-      - run: pnpm install
-
-      - name: Create Release Pull Request or Publish
-        uses: changesets/action@v1
-        with:
-          publish: pnpm run release
-          version: pnpm changeset version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
-
----
-
-### Pattern 10: Workspace Settings Reference
-
-Key settings for `pnpm-workspace.yaml` (pnpm v10+) that control workspace behavior.
-
-#### Dependency Resolution
-
-```yaml
-# pnpm-workspace.yaml
-linkWorkspacePackages: true # Link local packages instead of downloading
-saveWorkspaceProtocol: rolling # Auto-save workspace: protocol ("rolling" | "fixed" | false)
-preferWorkspacePackages: false # Prefer workspace packages over registry
-disallowWorkspaceCycles: true # Fail install if circular dependencies detected
-```
-
-#### Hoisting
-
-```yaml
-# pnpm-workspace.yaml
-shamefullyHoist: false # Do NOT hoist everything to root (strict by default)
-hoistPattern:
-  - "*" # Hoist to .pnpm/node_modules (hidden)
-publicHoistPattern: [] # Nothing hoisted to root node_modules
-hoistWorkspacePackages: true # Symlink workspace packages based on hoist config
-```
-
-#### Injection (Hard Links)
-
-```yaml
-# pnpm-workspace.yaml
-injectWorkspacePackages: true # Hard-link workspace deps (instead of symlink)
-# Required for: pnpm deploy, Docker builds, bundler compatibility
-```
-
-**When to use:** `injectWorkspacePackages: true` is required for `pnpm deploy` and recommended when bundlers have issues with symlinked workspace packages
-
-#### Security (v10 Defaults)
-
-```yaml
-# pnpm-workspace.yaml
-# pnpm v10 blocks lifecycle scripts by default
-onlyBuiltDependencies:
-  - esbuild # Allowlist packages that can run install scripts
-  - sharp
-  - better-sqlite3
-```
-
-**Why good:** Supply chain attack prevention, only explicitly trusted packages can run install scripts
+See [examples/ci.md](examples/ci.md) for complete workflows including automated release with changesets.
 
 </patterns>
 
@@ -788,13 +369,11 @@ onlyBuiltDependencies:
 **Disk Savings:**
 
 - Global store deduplicates across projects (`pnpm store path`)
-- Enable `enableGlobalVirtualStore: true` (v10.12+) to share store across all projects on disk
 - Typical savings: 50-70% less disk space compared to npm
 
 **CI Caching:**
 
 ```yaml
-# Cache pnpm store in GitHub Actions
 - uses: actions/setup-node@v4
   with:
     node-version: 22
@@ -821,10 +400,6 @@ Does 3+ packages use this dependency?
 Will this dependency version be updated frequently?
   YES -> Use catalog: (one-line update)
   NO  -> Direct version is acceptable
-
-Are you publishing packages to npm?
-  YES -> catalog: is auto-replaced on publish (safe)
-  NO  -> catalog: works transparently
 ```
 
 ### workspace:\* vs workspace:^ vs workspace:~
@@ -865,10 +440,6 @@ Need disk efficiency?
 Need zero-config PnP (no node_modules)?
   YES -> Yarn Berry with PnP
   NO  -> pnpm or npm
-
-Need broadest tool compatibility?
-  YES -> npm (always available, widest support)
-  NO  -> pnpm (better DX and performance)
 ```
 
 </decision_framework>

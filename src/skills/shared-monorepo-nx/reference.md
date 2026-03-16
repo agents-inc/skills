@@ -1,6 +1,6 @@
 # Nx Quick Reference
 
-> CLI commands, configuration properties, and decision frameworks for Nx monorepos. See [SKILL.md](SKILL.md) for core concepts and [examples/nx.md](examples/nx.md) for code examples.
+> CLI commands, configuration properties, and decision frameworks for Nx monorepos. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
 
