@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/anthropic-ai/skills/main/src/schemas/metadata.schema.json
+category: api-api
+slug: nestjs
+domain: api
+author: "@vince"
+displayName: NestJS
+cliDescription: NestJS structured backend framework
+usageGuidance: Use when building NestJS apps with modules, controllers, services, or decorators.
+tags:
+  - nestjs
+  - nest
+  - typescript
+  - decorators
+  - dependency-injection
+  - modules
+  - controllers
+  - services
+  - guards
+  - interceptors
+  - pipes
+  - middleware
