@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-meta-framework
+slug: sveltekit
+domain: web
+author: "@vince"
+displayName: SvelteKit
+cliDescription: SvelteKit full-stack framework
+usageGuidance: Use when building SvelteKit apps with load functions, form actions, or server hooks.
+tags:
+  - sveltekit
+  - routing
+  - load-functions
+  - form-actions
+  - hooks
+  - ssr
+  - ssg
+  - server-routes
+  - streaming
+  - progressive-enhancement
