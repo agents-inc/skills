@@ -9,20 +9,9 @@ description: Code review patterns, feedback principles. Use when reviewing PRs, 
 
 ---
 
-**Detailed Resources:**
-
-- For core examples (progress tracking, retrieval), see [examples/core.md](examples/core.md)
-- For feedback pattern examples, see [examples/feedback-patterns.md](examples/feedback-patterns.md)
-- For anti-pattern examples, see [examples/anti-patterns.md](examples/anti-patterns.md)
-- For decision frameworks and red flags, see [reference.md](reference.md)
-
----
-
 <critical_requirements>
 
 ## CRITICAL: Before Any Review
-
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
 **(You MUST read ALL files mentioned in the PR/spec completely before providing feedback)**
 
@@ -52,19 +41,22 @@ description: Code review patterns, feedback principles. Use when reviewing PRs, 
 **When NOT to use:**
 
 - When implementing code (use developer skills instead)
-- For automated linting/type-checking (use tooling, CI/CD)
-- For security audits (use security/security skill for deep security analysis)
-- For high-level architecture decisions (use planning tools instead)
+- For automated linting/type-checking (use CI/CD tooling)
+- For deep security audits (use dedicated security review)
+- For high-level architecture decisions (use planning/PM workflows)
 
 **Key patterns covered:**
 
 - Self-correction checkpoints for reviewers
 - Post-action reflection after reviews
 - Progress tracking for multi-file reviews
-- Retrieval strategy for reviewing unfamiliar code
 - Feedback principles (specific, explain why, suggest solutions, severity, acknowledge good)
 - Decision framework for approval/rejection
 - Review-specific anti-patterns (scope creep, refactoring, not using utilities)
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) - All examples: progress tracking, feedback patterns, anti-patterns
 
 ---
 
@@ -121,8 +113,6 @@ These checkpoints prevent review drift and ensure thorough analysis. Check yours
 | Flagging issues without explaining WHY            | Stop. Add rationale for each issue.        |
 | Reviewing code outside your domain                | Stop. Defer to specialist reviewer.        |
 
-**Why this matters:** Self-correction prevents incomplete reviews, missed issues, and unfair feedback. Checking yourself throughout the review leads to higher quality, more actionable feedback.
-
 ---
 
 ### Pattern 2: Post-Action Reflection
@@ -141,8 +131,6 @@ After completing your review, verify quality before finalizing.
 
 **Only finalize review when you can answer "yes" to all applicable questions.**
 
-**Why this matters:** Reflection catches oversights before they affect the author. A review that misses context or lacks specificity wastes everyone's time.
-
 ---
 
 ### Pattern 3: Progress Tracking
@@ -157,9 +145,7 @@ For multi-file reviews, track your progress to maintain orientation.
 4. **Positive Patterns Noted:** [what was done well]
 5. **Deferred Items:** [what needs specialist review]
 
-**Why this matters:** Multi-file reviews are complex. Tracking progress prevents missed files, forgotten criteria, and lost context.
-
-For detailed tracking examples, see [examples/core.md](examples/core.md).
+For tracking examples, see [examples/core.md](examples/core.md).
 
 ---
 
@@ -193,17 +179,110 @@ Use clear markers to communicate priority:
 
 Always include positive feedback. Positive reinforcement teaches what to repeat. Reviews that only criticize demotivate and miss teaching opportunities.
 
-For detailed examples of each principle, see [examples/feedback-patterns.md](examples/feedback-patterns.md).
+For detailed examples of each principle, see [examples/core.md](examples/core.md).
 
 </patterns>
+
+---
+
+<decision_framework>
+
+## Decision Framework
+
+```
+Is this a blocking issue?
+├─ YES → Does it affect security, functionality, or required criteria?
+│   ├─ Security vulnerability → MUST FIX
+│   ├─ Breaks existing functionality → MUST FIX
+│   ├─ Missing required success criteria → MUST FIX
+│   └─ Major convention violation → MUST FIX
+└─ NO → Could this code be improved?
+    ├─ YES → Is it worth the author's time?
+    │   ├─ Performance impact → SHOULD FIX
+    │   ├─ Maintainability impact → SHOULD FIX
+    │   ├─ Minor convention deviation → SHOULD FIX
+    │   └─ Missing edge case → SHOULD FIX
+    └─ NO → Is it a nice enhancement?
+        ├─ Better documentation → NICE TO HAVE
+        ├─ Additional tests → NICE TO HAVE
+        ├─ Future improvement → NICE TO HAVE
+        └─ Style preference → DON'T MENTION
+```
+
+### Approval Decisions
+
+**APPROVE when:**
+
+- All success criteria are met with evidence
+- Code follows existing conventions
+- No critical security or performance issues
+- Tests are adequate and passing
+- Changes are within scope
+
+**REQUEST CHANGES when:**
+
+- Success criteria not fully met
+- Convention violations exist
+- Quality issues need addressing
+- Test coverage inadequate
+
+**MAJOR REVISIONS NEEDED when:**
+
+- Critical security vulnerabilities
+- Breaks existing functionality
+- Major convention violations
+- Fundamental approach issues
+
+**When uncertain:** Request changes with specific questions rather than blocking indefinitely.
+
+</decision_framework>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Providing feedback without reading the full file
+- No file:line references in issue descriptions
+- Approving without verifying success criteria
+- Only negative feedback, no acknowledgment of good work
+- Reviewing code outside your domain expertise
+- Blocking PRs for personal style preferences
+
+**Medium Priority Issues:**
+
+- Missing severity distinctions (all issues look equal)
+- No suggested solutions for identified issues
+- Vague feedback ("this needs improvement")
+- Not checking for existing patterns before flagging "new code"
+- Incomplete review (not all files examined)
+
+**Common Mistakes:**
+
+- Assuming code behavior without reading implementation
+- Flagging valid patterns as "wrong" because unfamiliar
+- Missing obvious issues while focusing on minor ones
+- Not acknowledging improvement over previous versions
+- Providing contradictory feedback (fix X, but also don't change Y)
+
+**Gotchas & Edge Cases:**
+
+- Some "duplication" is intentional for clarity - verify before flagging
+- Performance optimizations may not be needed for low-traffic code
+- "Convention violations" may be new patterns not yet documented
+- Test coverage percentages don't guarantee quality tests
+- "Out of scope" changes may be necessary dependencies
+
+</red_flags>
 
 ---
 
 <critical_reminders>
 
 ## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
 
 **(You MUST read ALL files mentioned in the PR/spec completely before providing feedback)**
 

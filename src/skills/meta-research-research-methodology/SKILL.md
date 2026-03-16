@@ -11,9 +11,8 @@ description: Investigation flow (Glob -> Grep -> Read), evidence-based research 
 
 **Detailed Resources:**
 
-- For code examples and templates, see [examples/core.md](examples/core.md)
-- For practical examples and progress tracking, see [examples/practical.md](examples/practical.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Investigation templates, output formats, progress tracking
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, quality checklist
 
 ---
 
@@ -31,7 +30,7 @@ description: Investigation flow (Glob -> Grep -> Read), evidence-based research 
 
 **(You MUST NOT attempt to write or edit any files - you are read-only)**
 
-**(You MUST produce structured, AI-consumable findings that developer agents can act on)**
+**(You MUST produce structured, AI-consumable findings that downstream agents can act on)**
 
 </critical_requirements>
 
@@ -56,10 +55,9 @@ description: Investigation flow (Glob -> Grep -> Read), evidence-based research 
 
 **When NOT to use:**
 
-- When you need to implement code -> use developer agent
-- When you need comprehensive pattern extraction -> use pattern-scout
-- When you need to create specifications -> use pm agent
-- When you need to review existing code -> use reviewer agent
+- When you need to implement code (research informs, doesn't replace implementation)
+- When you need to create specifications (research feeds into specs, but doesn't produce them)
+- When you need to review existing code for quality (research discovers patterns, doesn't judge them)
 
 ---
 
@@ -132,13 +130,11 @@ Every claim in research findings must have supporting evidence with file paths a
 // From /path/to/file.tsx:15-25
 [Actual code from the file]
 ```
-````
 
 **Verification:** Read file confirmed pattern exists at stated location
-
 ````
 
-**Why this matters:** Developer agents will use your research to implement features. Inaccurate or unverified claims will lead them astray.
+**Why this matters:** Downstream agents will use your research to implement features. Inaccurate or unverified claims will lead them astray.
 
 For good/bad comparison examples, see [examples/core.md](examples/core.md#pattern-2-evidence-based-claims).
 
@@ -152,34 +148,40 @@ Research findings follow a consistent structure for AI consumption.
 
 ```markdown
 ## Research Summary
+
 - Topic: [What was researched]
 - Type: [Pattern Discovery | Inventory | Implementation Research]
 - Files Examined: [count]
 - Paths Verified: [Yes/No]
 
 ## Patterns Found
+
 ### Pattern 1: [Name]
+
 - File: [path:lines]
 - Description: [Brief explanation]
 - Usage Count: [X instances]
 - Code Example: [Actual code block]
 
 ## Files to Reference
-| Priority | File | Lines | Why Reference |
-|----------|------|-------|---------------|
-| 1 | [/path/to/best.tsx] | [12-45] | Best example |
-| 2 | [/path/to/alt.tsx] | [8-30] | Alternative approach |
+
+| Priority | File                | Lines   | Why Reference        |
+| -------- | ------------------- | ------- | -------------------- |
+| 1        | [/path/to/best.tsx] | [12-45] | Best example         |
+| 2        | [/path/to/alt.tsx]  | [8-30]  | Alternative approach |
 
 ## Recommended Approach
+
 1. [Step 1 with file reference]
 2. [Step 2 with file reference]
 3. [Step 3 with file reference]
 
 ## Verification Checklist
-| Finding | Verification | Status |
-|---------|--------------|--------|
+
+| Finding | Verification   | Status          |
+| ------- | -------------- | --------------- |
 | [Claim] | [How verified] | Verified/Failed |
-````
+```
 
 **Why structured:** Other AI agents parse this output. Consistent structure enables reliable extraction of relevant information.
 
@@ -215,7 +217,7 @@ Research findings follow a consistent structure for AI consumption.
 1. Did I verify all file paths exist before including them?
 2. Are my pattern claims backed by specific code examples?
 3. Have I included line numbers for key references?
-4. Is this research actionable for a developer agent?
+4. Is this research actionable for the consuming agent?
 5. Did I stay within the scope of the research question?
 6. Did I miss any obvious related patterns?
 
@@ -229,36 +231,9 @@ Only report findings when you have verified evidence for all claims.
 
 ## Progress Tracking
 
-**For complex research spanning multiple areas:**
+For complex research spanning multiple areas, use the progress tracking template to maintain orientation. Track files examined, patterns found, and gaps identified.
 
-```markdown
-## Research Progress
-
-**Topic:** [area being researched]
-**Status:** [In Progress | Complete]
-
-**Files Examined:**
-
-- [x] /path/to/file1.tsx - Pattern X found
-- [x] /path/to/file2.tsx - No relevant patterns
-- [ ] /path/to/file3.tsx - Not yet examined
-
-**Patterns Found:**
-
-1. [Pattern A] - 12 instances
-2. [Pattern B] - 3 instances
-
-**Gaps Identified:**
-
-- Could not find [expected pattern]
-- [Area] has inconsistent patterns
-```
-
-**Use progress tracking when:**
-
-- Research spans multiple packages/directories
-- Investigation reveals unexpected complexity
-- You need to pause and resume research
+See [examples/core.md - Pattern 6](examples/core.md#pattern-6-progress-tracking-for-complex-research) for the full template.
 
 </progress_tracking>
 
@@ -268,24 +243,9 @@ Only report findings when you have verified evidence for all claims.
 
 ## Integration Guide
 
-**Works with:**
+**Research is read-only.** Never write or edit files during research. Produce structured findings that other agents can act on.
 
-- **Glob tool**: Find files by pattern (*.tsx, *store*, *auth\*)
-- **Grep tool**: Search file contents for patterns
-- **Read tool**: Examine files completely
-- **Bash tool**: Run read-only commands (ls, find, wc for counts)
-
-**Produces output for:**
-
-- **Developer agents**: Files to reference, patterns to follow
-- **PM agents**: Architecture understanding for specifications
-- **Orchestrator**: Information to make delegation decisions
-
-**Does NOT use:**
-
-- Write tool (read-only research)
-- Edit tool (read-only research)
-- WebSearch/WebFetch (internal codebase research only)
+**Output consumers:** Any agent that needs to understand codebase patterns before implementing, specifying, or reviewing code.
 
 </integration>
 
@@ -305,8 +265,8 @@ Only report findings when you have verified evidence for all claims.
 
 **(You MUST NOT attempt to write or edit any files - you are read-only)**
 
-**(You MUST produce structured, AI-consumable findings that developer agents can act on)**
+**(You MUST produce structured, AI-consumable findings that downstream agents can act on)**
 
-**Failure to follow these rules will produce inaccurate research that misleads developer agents.**
+**Failure to follow these rules will produce inaccurate research that misleads downstream agents.**
 
 </critical_reminders>
