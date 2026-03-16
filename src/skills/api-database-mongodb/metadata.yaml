@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: mongodb
+domain: api
+author: "@vince"
+displayName: MongoDB
+cliDescription: MongoDB with Mongoose ODM
+usageGuidance: Use when building with MongoDB, Mongoose schemas, or document-based data models.
+tags:
+  - mongodb
+  - mongoose
+  - nosql
+  - document-database
+  - schemas
+  - models
+  - aggregation
+  - indexes
+  - atlas
