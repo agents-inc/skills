@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-monorepo
+slug: pnpm-workspaces
+domain: shared
+author: "@vince"
+displayName: pnpm Workspaces
+cliDescription: pnpm workspace protocol for monorepo management
+usageGuidance: Use when managing monorepos with pnpm — workspace protocol, filtering, shared dependencies, publishConfig, and catalog for version synchronization.

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-ci-cd
+slug: docker
+domain: shared
+author: "@vince"
+displayName: Docker
+cliDescription: Docker containerization for development and deployment
+usageGuidance: Use when creating Dockerfiles, docker-compose configs, multi-stage builds, or containerized development environments for Node.js/TypeScript applications.

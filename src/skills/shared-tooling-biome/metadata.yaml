@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-tooling
+slug: biome
+domain: shared
+author: "@vince"
+displayName: Biome
+cliDescription: Biome unified linter and formatter
+usageGuidance: Use when configuring Biome as an all-in-one linter, formatter, and import organizer — replacing ESLint and Prettier with a single fast tool.

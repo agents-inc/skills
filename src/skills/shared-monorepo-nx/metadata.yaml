@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-monorepo
+slug: nx
+domain: shared
+author: "@vince"
+displayName: Nx
+cliDescription: Nx monorepo build system and task orchestration
+usageGuidance: Use when setting up or working with Nx monorepos — workspace configuration, project graph, task pipelines, caching, generators, and plugins.

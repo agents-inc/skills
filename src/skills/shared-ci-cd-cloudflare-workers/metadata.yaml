@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-ci-cd
+slug: cloudflare-workers
+domain: shared
+author: "@vince"
+displayName: Cloudflare Workers
+cliDescription: Cloudflare Workers edge compute platform
+usageGuidance: Use when deploying to Cloudflare Workers — Wrangler CLI, KV storage, D1 databases, R2 object storage, Durable Objects, Queues, and edge-first TypeScript patterns.
