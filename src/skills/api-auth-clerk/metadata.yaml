@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-auth
+slug: clerk
+domain: api
+author: "@vince"
+displayName: Clerk
+cliDescription: Clerk managed authentication and user management
+usageGuidance: >-
+  Use when building with Clerk for auth, user management, organizations,
+  or pre-built UI components.
+tags:
+  - clerk
+  - auth
+  - authentication
+  - user-management
+  - organizations
+  - sso
+  - mfa
+  - webhooks
+  - session
