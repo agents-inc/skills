@@ -5,7 +5,7 @@ description: Vue 3 Composition API patterns, reactivity primitives, composables,
 
 # Vue 3 Composition API
 
-> **Quick Guide:** Use `<script setup>` for cleaner components. `ref()` for primitives, `reactive()` for objects. Extract reusable logic into composables (`use*` functions). Clean up side effects in `onUnmounted`. Use `defineProps`, `defineEmits`, `defineExpose` for component interfaces.
+> **Quick Guide:** Use `<script setup>` for all components. `ref()` for primitives, `reactive()` for objects. Extract reusable logic into composables (`use*` functions). Clean up side effects in `onUnmounted`. Use `defineModel()` for v-model (3.4+), `useTemplateRef()` for DOM refs (3.5+), `onWatcherCleanup()` to cancel stale async work (3.5+). Destructured props require getter wrappers in `watch()`.
 
 ---
 
@@ -23,7 +23,7 @@ description: Vue 3 Composition API patterns, reactivity primitives, composables,
 
 **(You MUST prefix all composable functions with `use` following Vue conventions)**
 
-**(You MUST use `defineExpose()` to expose methods/properties to parent components)**
+**(You MUST wrap destructured props in a getter for `watch()` - `watch(() => count, ...)` not `watch(count, ...)`)**
 
 </critical_requirements>
 
@@ -41,26 +41,19 @@ description: Vue 3 Composition API patterns, reactivity primitives, composables,
 
 **Key patterns covered:**
 
-- Script setup syntax and compiler macros
+- Script setup syntax and compiler macros (defineProps, defineEmits, defineExpose)
 - Reactivity primitives (ref, reactive, computed, watch, watchEffect)
-- Lifecycle hooks (onMounted, onUnmounted, onUpdated)
 - Composables pattern for logic reuse
-- Template refs with useTemplateRef() (Vue 3.5+)
 - defineModel() for v-model binding (Vue 3.4+)
-- useId() for SSR-safe unique IDs (Vue 3.5+)
+- useTemplateRef(), useId(), onWatcherCleanup() (Vue 3.5+)
+- Reactive props destructure with getter requirement (Vue 3.5+)
 - Provide/Inject for dependency injection
 - Async components and Suspense
 
 **When NOT to use:**
 
-- Simple components where Options API is cleaner
 - Components that don't benefit from logic extraction
 - When team has no Composition API experience (consider gradual adoption)
-
-**Detailed Resources:**
-
-- For code examples, see [examples/](examples/) folder
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -68,7 +61,7 @@ description: Vue 3 Composition API patterns, reactivity primitives, composables,
 
 ## Philosophy
 
-The Composition API enables organizing code by **logical concern** rather than by option type (data, methods, computed). This makes complex components more maintainable and enables powerful logic reuse through composables. Code is naturally TypeScript-friendly with minimal type annotations needed.
+The Composition API enables organizing code by **logical concern** rather than by option type (data, methods, computed). This makes complex components more maintainable and enables powerful logic reuse through composables.
 
 **Core principles:**
 
@@ -85,18 +78,14 @@ The Composition API enables organizing code by **logical concern** rather than b
 
 ## Core Patterns
 
-### Pattern 1: Script Setup Syntax
+### Pattern 1: Script Setup with Props and Emits
 
-Use `<script setup>` for cleaner, more concise components. Variables and imports are automatically exposed to the template.
-
-#### Basic Structure
+All variables/functions in `<script setup>` are automatically available in the template. Use TypeScript generics with `defineProps` and `defineEmits` for type-safe interfaces.
 
 ```vue
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { User } from "@/types";
 
-// Props and emits
 const props = defineProps<{
   userId: string;
   initialCount?: number;
@@ -107,921 +96,302 @@ const emit = defineEmits<{
   submit: [];
 }>();
 
-// Reactive state
 const count = ref(props.initialCount ?? 0);
-const user = ref<User | null>(null);
-
-// Computed values
 const doubleCount = computed(() => count.value * 2);
 
-// Methods
 function increment() {
   count.value++;
   emit("update", count.value);
 }
 </script>
-
-<template>
-  <div>
-    <p>Count: {{ count }} (Double: {{ doubleCount }})</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
 ```
 
-**Why good:** All variables/functions automatically available in template, no explicit return needed, cleaner syntax with less boilerplate, TypeScript types flow naturally, named exports from imports work directly
+**Why good:** No explicit return needed, TypeScript types flow naturally, named tuple emit syntax (Vue 3.3+) self-documents payloads
+
+See [examples/core.md](examples/core.md) for a complete component with loading/error handling.
 
 ---
 
-### Pattern 2: Reactivity Primitives
+### Pattern 2: Reactivity - ref vs reactive
 
-Use `ref()` for primitives and `reactive()` for objects. Access ref values via `.value` in script, automatic unwrapping in templates.
-
-#### ref() for Primitives
+`ref()` for primitives and reassignable values, `reactive()` for objects with nested properties. Access ref values via `.value` in script; templates unwrap automatically.
 
 ```typescript
-import { ref } from "vue";
+const count = ref(0); // Primitive -> ref
+count.value++; // .value in script
 
-const MAX_COUNT = 100;
-
-// ✅ Good Example - ref for primitives
-const count = ref(0);
-const name = ref("");
-const isLoading = ref(false);
-
-// Access/modify via .value
-count.value++;
-console.log(count.value); // 1
-
-// Compare against named constants
-if (count.value >= MAX_COUNT) {
-  count.value = MAX_COUNT;
-}
-```
-
-**Why good:** Reactivity is explicit and trackable, primitives can be passed by reference, `.value` makes reactive access obvious, template unwraps automatically
-
-#### reactive() for Objects
-
-```typescript
-import { reactive } from "vue";
-
-// ✅ Good Example - reactive for objects
 const state = reactive({
+  // Nested object -> reactive
   user: null as User | null,
-  settings: {
-    theme: "light",
-    notifications: true,
-  },
+  settings: { theme: "light" },
 });
-
-// Direct property access (no .value)
-state.user = fetchedUser;
-state.settings.theme = "dark";
+state.settings.theme = "dark"; // Direct access, no .value
 ```
 
-**Why good:** Deep reactivity by default, no `.value` needed for property access, intuitive object manipulation, nested properties are reactive
+**Gotcha:** Destructuring `reactive()` loses reactivity - use `toRefs(state)` if you need to destructure.
 
-#### computed() for Derived State
-
-```typescript
-import { ref, computed } from "vue";
-
-const firstName = ref("John");
-const lastName = ref("Doe");
-
-// ✅ Read-only computed
-const fullName = computed(() => `${firstName.value} ${lastName.value}`);
-
-// ✅ Writable computed
-const fullNameWritable = computed({
-  get: () => `${firstName.value} ${lastName.value}`,
-  set: (value: string) => {
-    const [first, last] = value.split(" ");
-    firstName.value = first;
-    lastName.value = last ?? "";
-  },
-});
-```
-
-**Why good:** Cached until dependencies change, clearly expresses derived state, supports both read-only and writable patterns
+See [examples/reactivity.md](examples/reactivity.md) for ref/reactive/computed patterns and anti-patterns.
 
 ---
 
 ### Pattern 3: Watch and WatchEffect
 
-Use `watch()` when you need access to previous values or explicit sources. Use `watchEffect()` for automatic dependency tracking.
-
-#### watch() Pattern
+`watch()` for explicit sources with access to old values. `watchEffect()` for automatic dependency tracking that runs immediately. Use `onWatcherCleanup()` (Vue 3.5+) to cancel stale async work.
 
 ```typescript
-import { ref, watch } from "vue";
-
-const searchQuery = ref("");
-const results = ref<SearchResult[]>([]);
-
-const DEBOUNCE_DELAY_MS = 300;
-
-// ✅ Watch specific source with old/new values
-watch(
-  searchQuery,
-  async (newQuery, oldQuery) => {
-    if (newQuery !== oldQuery && newQuery.length > 0) {
-      results.value = await searchApi(newQuery);
-    }
-  },
-  {
-    immediate: false, // Don't run on mount (default)
-  },
-);
-
-// ✅ Watch multiple sources
-watch([firstName, lastName], ([newFirst, newLast], [oldFirst, oldLast]) => {
-  console.log(
-    `Name changed from ${oldFirst} ${oldLast} to ${newFirst} ${newLast}`,
-  );
+// watch: explicit source, access to old value
+watch(searchQuery, async (newQuery, oldQuery) => {
+  /* ... */
 });
 
-// ✅ Watch reactive object property (use getter)
-const state = reactive({ count: 0 });
-watch(
-  () => state.count, // Getter required for reactive properties
-  (newCount) => console.log(`Count is now ${newCount}`),
-);
-```
-
-**Why good:** Explicit about what's being watched, access to old values for comparison, lazy by default (runs on change, not mount)
-
-#### watchEffect() Pattern
-
-```typescript
-import { ref, watchEffect } from "vue";
-
-const userId = ref<string | null>(null);
-const userData = ref<User | null>(null);
-
-// ✅ Automatic dependency tracking
+// watchEffect: auto-tracks dependencies, runs immediately
 watchEffect(async () => {
-  if (userId.value) {
-    userData.value = await fetchUser(userId.value);
-  }
+  if (userId.value) userData.value = await fetchUser(userId.value);
 });
-// Runs immediately, re-runs when userId changes
-```
 
-**Why good:** Automatically tracks reactive dependencies, runs immediately, simpler when you don't need old values
-
-#### Cleanup in Watchers
-
-```typescript
-import { watch, onWatcherCleanup } from "vue";
-
-const searchQuery = ref("");
-
+// Cleanup: cancel stale requests (Vue 3.5+)
 watch(searchQuery, async (query) => {
   const controller = new AbortController();
-
-  // ✅ Vue 3.5+ cleanup pattern
   onWatcherCleanup(() => controller.abort());
-
-  try {
-    const results = await fetch(`/api/search?q=${query}`, {
-      signal: controller.signal,
-    });
-    // handle results
-  } catch (e) {
-    if (e.name !== "AbortError") throw e;
-  }
+  const res = await fetch(`/api/search?q=${query}`, {
+    signal: controller.signal,
+  });
 });
 ```
 
-**Why good:** Prevents race conditions, cancels in-flight requests when source changes, clean async handling
+**Gotcha:** Watch reactive object properties with a getter: `watch(() => state.count, ...)` not `watch(state.count, ...)`.
+
+See [examples/vue-3-5-features.md](examples/vue-3-5-features.md) for complete onWatcherCleanup patterns.
 
 ---
 
-### Pattern 4: Lifecycle Hooks
+### Pattern 4: Lifecycle and Cleanup
 
-Register lifecycle callbacks with `onMounted`, `onUnmounted`, etc. Always clean up side effects.
-
-#### Basic Lifecycle Pattern
+Always pair `onMounted` setup with `onUnmounted` cleanup. Timers, listeners, observers, WebSockets - anything opened must be closed.
 
 ```typescript
-import { ref, onMounted, onUnmounted } from "vue";
-
 const POLL_INTERVAL_MS = 5000;
+let intervalId: ReturnType<typeof setInterval> | null = null;
 
-export function useDataPolling(fetchFn: () => Promise<void>) {
-  const isPolling = ref(false);
-  let intervalId: ReturnType<typeof setInterval> | null = null;
+onMounted(() => {
+  intervalId = setInterval(fetchData, POLL_INTERVAL_MS);
+});
 
-  onMounted(() => {
-    isPolling.value = true;
-    // Initial fetch
-    fetchFn();
-    // Start polling
-    intervalId = setInterval(fetchFn, POLL_INTERVAL_MS);
-  });
-
-  onUnmounted(() => {
-    // ✅ Always clean up
-    isPolling.value = false;
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
-  });
-
-  return { isPolling };
-}
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+});
 ```
 
-**Why good:** Clear setup/teardown pairing, prevents memory leaks, cleanup always runs on unmount
-
-#### Event Listener Pattern
-
-```typescript
-import { onMounted, onUnmounted } from "vue";
-
-// ✅ Good Example - Reusable event listener composable
-export function useEventListener<K extends keyof WindowEventMap>(
-  target: Window,
-  event: K,
-  callback: (e: WindowEventMap[K]) => void,
-) {
-  onMounted(() => target.addEventListener(event, callback));
-  onUnmounted(() => target.removeEventListener(event, callback));
-}
-
-// Usage
-const { width, height } = useWindowSize();
-
-export function useWindowSize() {
-  const width = ref(window.innerWidth);
-  const height = ref(window.innerHeight);
-
-  useEventListener(window, "resize", () => {
-    width.value = window.innerWidth;
-    height.value = window.innerHeight;
-  });
-
-  return { width, height };
-}
-```
-
-**Why good:** Encapsulates setup/cleanup logic, reusable across components, prevents listener leaks
+See [examples/lifecycle.md](examples/lifecycle.md) for WebSocket reconnection and event listener cleanup patterns.
 
 ---
 
 ### Pattern 5: Composables
 
-Extract reusable stateful logic into composable functions prefixed with `use`.
-
-#### Composable Structure
+Extract reusable stateful logic into `use*` functions. Return objects with refs (not bare values) so destructuring preserves reactivity.
 
 ```typescript
-// composables/use-counter.ts
-import { ref, computed } from "vue";
-
-const DEFAULT_INITIAL_VALUE = 0;
-const DEFAULT_STEP = 1;
-
-interface UseCounterOptions {
-  initialValue?: number;
-  step?: number;
-  min?: number;
-  max?: number;
-}
-
 export function useCounter(options: UseCounterOptions = {}) {
-  const {
-    initialValue = DEFAULT_INITIAL_VALUE,
-    step = DEFAULT_STEP,
-    min = -Infinity,
-    max = Infinity,
-  } = options;
-
+  const { initialValue = 0, min = -Infinity, max = Infinity } = options;
   const count = ref(initialValue);
-
-  const isAtMin = computed(() => count.value <= min);
   const isAtMax = computed(() => count.value >= max);
 
   function increment() {
-    if (count.value + step <= max) {
-      count.value += step;
-    }
+    if (count.value < max) count.value++;
   }
-
-  function decrement() {
-    if (count.value - step >= min) {
-      count.value -= step;
-    }
-  }
-
   function reset() {
     count.value = initialValue;
   }
 
-  // ✅ Return object with refs (enables destructuring while keeping reactivity)
-  return {
-    count,
-    isAtMin,
-    isAtMax,
-    increment,
-    decrement,
-    reset,
-  };
+  return { count, isAtMax, increment, reset }; // Return object with refs
 }
 ```
 
-**Why good:** Encapsulates related state and logic, returns refs for reactivity preservation, configurable via options object, named constants for defaults
+**Async composables** should accept `MaybeRefOrGetter<T>` inputs (use `toValue()` to normalize) and return `{ data, error, isLoading }` refs.
 
-#### Composable Usage
-
-```vue
-<script setup lang="ts">
-import { useCounter } from "@/composables/use-counter";
-
-const MAX_QUANTITY = 99;
-const MIN_QUANTITY = 1;
-
-const {
-  count: quantity,
-  increment,
-  decrement,
-  isAtMax,
-} = useCounter({
-  initialValue: 1,
-  min: MIN_QUANTITY,
-  max: MAX_QUANTITY,
-  step: 1,
-});
-</script>
-
-<template>
-  <div>
-    <button @click="decrement">-</button>
-    <span>{{ quantity }}</span>
-    <button @click="increment" :disabled="isAtMax">+</button>
-  </div>
-</template>
-```
-
-**Why good:** Destructuring renames avoid conflicts, reactivity preserved through refs, logic completely encapsulated
-
-#### Async Composable Pattern
-
-```typescript
-// composables/use-fetch.ts
-import {
-  ref,
-  toValue,
-  watchEffect,
-  type MaybeRefOrGetter,
-  type Ref,
-} from "vue";
-
-interface UseFetchReturn<T> {
-  data: Ref<T | null>;
-  error: Ref<Error | null>;
-  isLoading: Ref<boolean>;
-  refetch: () => Promise<void>;
-}
-
-export function useFetch<T>(url: MaybeRefOrGetter<string>): UseFetchReturn<T> {
-  const data = ref<T | null>(null) as Ref<T | null>;
-  const error = ref<Error | null>(null);
-  const isLoading = ref(false);
-
-  async function fetchData() {
-    isLoading.value = true;
-    error.value = null;
-
-    try {
-      const response = await fetch(toValue(url));
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      data.value = await response.json();
-    } catch (e) {
-      error.value = e instanceof Error ? e : new Error(String(e));
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  // Re-fetch when URL changes
-  watchEffect(() => {
-    fetchData();
-  });
-
-  return {
-    data,
-    error,
-    isLoading,
-    refetch: fetchData,
-  };
-}
-```
-
-**Why good:** Accepts refs/getters for reactive URLs, automatic refetch on dependency change, complete loading/error state, explicit refetch capability
+See [examples/composables.md](examples/composables.md) for useFetch, useLocalStorage, useDebounce, and useIntersectionObserver implementations.
 
 ---
 
 ### Pattern 6: defineModel for v-model (Vue 3.4+)
 
-Use `defineModel()` macro to simplify two-way binding on custom components. Replaces manual `defineProps` + `defineEmits` pattern.
-
-#### Basic defineModel
-
-```vue
-<!-- ✅ Good Example - Child component with defineModel -->
-<script setup lang="ts">
-// defineModel creates both the prop and emit automatically
-const model = defineModel<string>();
-</script>
-
-<template>
-  <input v-model="model" type="text" />
-</template>
-```
-
-```vue
-<!-- Parent component -->
-<script setup lang="ts">
-import { ref } from "vue";
-import TextInput from "./TextInput.vue";
-
-const text = ref("");
-</script>
-
-<template>
-  <TextInput v-model="text" />
-</template>
-```
-
-**Why good:** Single line replaces defineProps + defineEmits + manual emit, ref-like API for direct mutation, works directly with native v-model
-
-#### Named Models (Multiple v-models)
-
-```vue
-<!-- ✅ Good Example - Multiple v-model bindings -->
-<script setup lang="ts">
-const firstName = defineModel<string>("firstName");
-const lastName = defineModel<string>("lastName");
-</script>
-
-<template>
-  <input v-model="firstName" placeholder="First name" />
-  <input v-model="lastName" placeholder="Last name" />
-</template>
-```
-
-```vue
-<!-- Parent usage -->
-<template>
-  <UserName v-model:first-name="first" v-model:last-name="last" />
-</template>
-```
-
-**Why good:** Cleaner than manual prop/emit for multiple bindings, kebab-case in template maps to camelCase in script
-
-#### defineModel with Options
+Replaces the `defineProps` + `defineEmits` boilerplate for two-way binding. Returns a ref-like value that syncs with the parent.
 
 ```vue
 <script setup lang="ts">
-// Required model
-const title = defineModel<string>("title", { required: true });
-
-// Model with default
-const count = defineModel<number>({ default: 0 });
-</script>
-```
-
-#### defineModel with Modifiers
-
-```vue
-<!-- ✅ Good Example - Handling v-model modifiers -->
-<script setup lang="ts">
+const model = defineModel<string>(); // Single v-model
+const firstName = defineModel<string>("firstName"); // Named v-model
 const [model, modifiers] = defineModel<string>({
+  // With modifiers
   set(value) {
-    // Transform value on set based on modifiers
-    if (modifiers.capitalize && value) {
-      return value.charAt(0).toUpperCase() + value.slice(1);
-    }
-    return value;
+    return modifiers.capitalize
+      ? value.charAt(0).toUpperCase() + value.slice(1)
+      : value;
   },
 });
 </script>
-
-<template>
-  <input v-model="model" type="text" />
-</template>
 ```
 
-```vue
-<!-- Parent with modifier -->
-<template>
-  <TextInput v-model.capitalize="text" />
-</template>
-```
-
-**Why good:** Access to modifiers via destructure, setter transforms value before emit, clean handling of custom modifiers
+See [examples/vue-3-5-features.md](examples/vue-3-5-features.md) for complete defineModel examples with named models and modifiers.
 
 ---
 
-### Pattern 7: Template Refs with useTemplateRef (Vue 3.5+)
+### Pattern 7: Template Refs (Vue 3.5+)
 
-Use `useTemplateRef()` for template references, especially for dynamic refs. Falls back to `ref()` pattern for simple static refs.
-
-#### useTemplateRef (Vue 3.5+)
+`useTemplateRef()` separates template refs from reactive refs. Use for dynamic ref names and in composables. Traditional `ref()` still works for simple static refs.
 
 ```vue
 <script setup lang="ts">
-import { useTemplateRef, onMounted } from "vue";
-
-// ✅ Good Example - useTemplateRef for template refs
-const inputRef = useTemplateRef<HTMLInputElement>("input");
-
-onMounted(() => {
-  inputRef.value?.focus();
-});
+const inputRef = useTemplateRef<HTMLInputElement>("myInput");
+onMounted(() => inputRef.value?.focus());
 </script>
-
 <template>
-  <input ref="input" type="text" />
+  <input ref="myInput" type="text" />
 </template>
 ```
 
-**Why good:** String-based ref binding, works with dynamic ref IDs, clearer separation between reactive refs and template refs
+**For child component refs:** Use `defineExpose()` to declare the public API, then `ref<InstanceType<typeof Child>>()` in the parent.
 
-#### Traditional ref() Pattern (All Vue 3 versions)
-
-```vue
-<script setup lang="ts">
-import { ref, onMounted } from "vue";
-
-// ✅ Still valid - ref name matches template ref attribute
-const inputRef = ref<HTMLInputElement | null>(null);
-
-onMounted(() => {
-  // Focus input on mount
-  inputRef.value?.focus();
-});
-
-function selectAll() {
-  inputRef.value?.select();
-}
-</script>
-
-<template>
-  <input ref="inputRef" type="text" />
-  <button @click="selectAll">Select All</button>
-</template>
-```
-
-**Why good:** Type-safe DOM access, null safety with optional chaining, ref name matches template attribute
-
-#### Component Refs with defineExpose
-
-```vue
-<!-- ChildComponent.vue -->
-<script setup lang="ts">
-import { ref } from "vue";
-
-const count = ref(0);
-
-function increment() {
-  count.value++;
-}
-
-function reset() {
-  count.value = 0;
-}
-
-// ✅ Explicitly expose what parent can access
-defineExpose({
-  count,
-  increment,
-  reset,
-});
-</script>
-```
-
-```vue
-<!-- ParentComponent.vue -->
-<script setup lang="ts">
-import { ref } from "vue";
-import ChildComponent from "./ChildComponent.vue";
-
-const childRef = ref<InstanceType<typeof ChildComponent> | null>(null);
-
-function resetChild() {
-  childRef.value?.reset();
-}
-</script>
-
-<template>
-  <ChildComponent ref="childRef" />
-  <button @click="resetChild">Reset Child</button>
-</template>
-```
-
-**Why good:** Script setup components are private by default, explicit public API via defineExpose, type-safe parent access with InstanceType
+See [examples/define-expose.md](examples/define-expose.md) for form validation with exposed methods and [examples/vue-3-5-features.md](examples/vue-3-5-features.md) for useTemplateRef in composables.
 
 ---
 
 ### Pattern 8: useId for Accessible IDs (Vue 3.5+)
 
-Use `useId()` to generate unique IDs for form elements and ARIA attributes. IDs are stable across SSR and client renders.
+Generates SSR-safe unique IDs for form labels and ARIA attributes. Each call produces a different ID. Must be called in setup (not in computed).
 
 ```vue
 <script setup lang="ts">
-import { useId } from "vue";
-
-// ✅ Good Example - SSR-safe unique ID for form accessibility
 const id = useId();
 </script>
-
 <template>
-  <div>
-    <label :for="id">Email address</label>
-    <input :id="id" type="email" />
-  </div>
+  <label :for="id">Email</label>
+  <input :id="id" type="email" />
 </template>
 ```
 
-**Why good:** SSR-safe (no hydration mismatch), unique per component instance, multiple calls generate different IDs, replaces manual ID generation
-
-#### Multiple IDs in One Component
-
-```vue
-<script setup lang="ts">
-import { useId } from "vue";
-
-// Each call generates a different ID
-const nameId = useId();
-const emailId = useId();
-const passwordId = useId();
-</script>
-
-<template>
-  <form>
-    <div>
-      <label :for="nameId">Name</label>
-      <input :id="nameId" type="text" />
-    </div>
-    <div>
-      <label :for="emailId">Email</label>
-      <input :id="emailId" type="email" />
-    </div>
-    <div>
-      <label :for="passwordId">Password</label>
-      <input :id="passwordId" type="password" />
-    </div>
-  </form>
-</template>
-```
-
-**Why good:** Each call produces unique ID, stable across server/client, no need for uuid libraries
+See [examples/vue-3-5-features.md](examples/vue-3-5-features.md) for multi-field forms and ARIA patterns.
 
 ---
 
-### Pattern 10: Provide/Inject Dependency Injection
+### Pattern 9: Reactive Props Destructure (Vue 3.5+)
 
-Share data between ancestor and descendant components without prop drilling.
-
-#### Type-Safe Provide/Inject
-
-```typescript
-// injection-keys.ts
-import type { InjectionKey, Ref } from "vue";
-
-export interface ThemeContext {
-  theme: Ref<"light" | "dark">;
-  toggleTheme: () => void;
-}
-
-// ✅ Symbol key with type information
-export const THEME_KEY: InjectionKey<ThemeContext> = Symbol("theme");
-```
-
-```vue
-<!-- ThemeProvider.vue -->
-<script setup lang="ts">
-import { ref, provide } from "vue";
-import { THEME_KEY, type ThemeContext } from "@/injection-keys";
-
-const theme = ref<"light" | "dark">("light");
-
-function toggleTheme() {
-  theme.value = theme.value === "light" ? "dark" : "light";
-}
-
-// ✅ Provide with typed key
-provide(THEME_KEY, {
-  theme,
-  toggleTheme,
-});
-</script>
-
-<template>
-  <div :data-theme="theme">
-    <slot />
-  </div>
-</template>
-```
-
-```vue
-<!-- ConsumerComponent.vue -->
-<script setup lang="ts">
-import { inject } from "vue";
-import { THEME_KEY } from "@/injection-keys";
-
-// ✅ Type-safe injection with fallback
-const themeContext = inject(THEME_KEY);
-
-if (!themeContext) {
-  throw new Error("ConsumerComponent must be used within ThemeProvider");
-}
-
-const { theme, toggleTheme } = themeContext;
-</script>
-
-<template>
-  <button @click="toggleTheme">Current: {{ theme }}</button>
-</template>
-```
-
-**Why good:** InjectionKey provides type safety, Symbol prevents key collisions, explicit error handling for missing providers
-
----
-
-### Pattern 11: Props and Emits with TypeScript
-
-Use defineProps and defineEmits with TypeScript for type-safe component interfaces.
-
-#### Props with Reactive Destructure (Vue 3.5+) - Recommended
+Destructured props are automatically reactive. Use JavaScript default syntax instead of `withDefaults()`. The critical gotcha: destructured props require a getter wrapper in `watch()`.
 
 ```vue
 <script setup lang="ts">
-// ✅ Reactive destructure with defaults (Vue 3.5+)
-// Props are automatically reactive - no .value needed
 const {
   title,
   count = 0,
-  items = () => [], // Factory for non-primitive defaults
+  items = () => [],
 } = defineProps<{
   title: string;
   count?: number;
   items?: string[];
 }>();
 
-// ⚠️ IMPORTANT: Wrap destructured props in getter for watch/composables
+// CORRECT: getter wrapper
 watch(
   () => count,
   (newCount) => {
-    console.log("Count changed:", newCount);
+    /* ... */
   },
 );
+
+// WRONG: passes value, not reactive source
+// watch(count, ...) // Never triggers!
 </script>
 ```
 
-**Why good:** Native JavaScript default syntax, cleaner than withDefaults, automatically reactive in Vue 3.5+
-
-#### Props with withDefaults (Vue 3.4 and below)
-
-```vue
-<script setup lang="ts">
-interface Props {
-  title: string;
-  count?: number;
-  items?: string[];
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  count: 0,
-  items: () => [], // Factory function for non-primitives
-});
-</script>
-```
-
-**Why good:** Still works in Vue 3.5+, explicit about defaults, familiar pattern
-
-#### Emits with Validation
-
-```vue
-<script setup lang="ts">
-// ✅ Named tuple syntax (Vue 3.3+)
-const emit = defineEmits<{
-  update: [id: string, value: number];
-  delete: [id: string];
-  submit: [];
-}>();
-
-function handleUpdate(id: string, value: number) {
-  emit("update", id, value);
-}
-
-function handleDelete(id: string) {
-  emit("delete", id);
-}
-</script>
-```
-
-**Why good:** Type-safe props and emits, autocomplete in consumers, compile-time validation, self-documenting component API
+See [examples/vue-3-5-features.md](examples/vue-3-5-features.md) for complete reactive destructure examples.
 
 ---
 
-### Pattern 12: Async Components and Suspense
+### Pattern 10: Provide/Inject
 
-Lazy-load components and handle async operations gracefully.
-
-#### defineAsyncComponent
+Type-safe dependency injection to avoid prop drilling. Define `InjectionKey<T>` symbols in a separate file, provide in ancestor, inject in descendant with an explicit error for missing providers.
 
 ```typescript
-import { defineAsyncComponent } from "vue";
-import LoadingSpinner from "@/components/LoadingSpinner.vue";
-import ErrorDisplay from "@/components/ErrorDisplay.vue";
+// injection-keys.ts
+export const THEME_KEY: InjectionKey<ThemeContext> = Symbol("theme");
 
+// Provider: provide(THEME_KEY, { theme, toggleTheme });
+// Consumer: const ctx = inject(THEME_KEY);
+//           if (!ctx) throw new Error("Must be used within ThemeProvider");
+```
+
+See [examples/provide-inject.md](examples/provide-inject.md) for a complete theme provider/consumer pattern.
+
+---
+
+### Pattern 11: Async Components and Suspense
+
+`defineAsyncComponent` for code-splitting. Top-level `await` in `<script setup>` makes a component async (requires `<Suspense>` in parent). Use `onErrorCaptured` at the Suspense boundary for error handling.
+
+```typescript
 const LOADING_DELAY_MS = 200;
 const LOAD_TIMEOUT_MS = 10000;
 
-// ✅ Async component with loading/error handling
 const HeavyChart = defineAsyncComponent({
   loader: () => import("@/components/HeavyChart.vue"),
   loadingComponent: LoadingSpinner,
-  errorComponent: ErrorDisplay,
-  delay: LOADING_DELAY_MS, // Delay before showing loading
-  timeout: LOAD_TIMEOUT_MS, // Timeout before showing error
+  delay: LOADING_DELAY_MS,
+  timeout: LOAD_TIMEOUT_MS,
 });
 ```
 
-**Why good:** Code splitting for better initial load, graceful loading states, error handling built-in, prevents loading flicker with delay
-
-#### Suspense with Async Setup
-
-```vue
-<!-- AsyncUserProfile.vue -->
-<script setup lang="ts">
-// Top-level await makes this an async component
-const user = await fetchUser(props.userId);
-const posts = await fetchUserPosts(props.userId);
-</script>
-
-<template>
-  <div>
-    <h1>{{ user.name }}</h1>
-    <PostList :posts="posts" />
-  </div>
-</template>
-```
-
-```vue
-<!-- ParentComponent.vue -->
-<script setup lang="ts">
-import { ref } from "vue";
-import AsyncUserProfile from "./AsyncUserProfile.vue";
-
-const userId = ref("123");
-</script>
-
-<template>
-  <Suspense>
-    <template #default>
-      <AsyncUserProfile :user-id="userId" />
-    </template>
-    <template #fallback>
-      <LoadingSpinner />
-    </template>
-  </Suspense>
-</template>
-```
-
-**Why good:** Declarative loading states, coordinates multiple async dependencies, cleaner than manual loading state management
+See [examples/async.md](examples/async.md) for Suspense boundaries with error handling.
 
 </patterns>
 
 ---
 
-<integration>
+**Detailed Resources:**
 
-## Integration Guide
+- [examples/core.md](examples/core.md) - Complete component, template refs, focus management
+- [examples/reactivity.md](examples/reactivity.md) - ref, reactive, computed patterns and anti-patterns
+- [examples/composables.md](examples/composables.md) - useFetch, useLocalStorage, useDebounce, useIntersectionObserver
+- [examples/lifecycle.md](examples/lifecycle.md) - WebSocket, timers, event listeners, cleanup patterns
+- [examples/provide-inject.md](examples/provide-inject.md) - Theme provider, typed injection keys
+- [examples/define-expose.md](examples/define-expose.md) - Form field validation, parent-child coordination
+- [examples/vue-3-5-features.md](examples/vue-3-5-features.md) - defineModel, useTemplateRef, useId, onWatcherCleanup, reactive destructure, deferred Teleport
+- [examples/async.md](examples/async.md) - Lazy loading, Suspense, async setup
+- [reference.md](reference.md) - Decision frameworks, TypeScript patterns, anti-patterns, checklists
 
-**Vue Composition API is state and styling agnostic.** Components should accept props for data and emit events for communication. Use `class` attribute for styling.
+---
 
-**Works with:**
+<red_flags>
 
-- **Vue Router**: Composables like `useRoute()`, `useRouter()` follow same patterns
-- **Any CSS solution** via class binding and scoped styles
-- **Any HTTP client** via composables wrapping fetch logic
+## RED FLAGS
 
-**Component Communication:**
+**High Priority Issues:**
 
-- Props down, events up for parent-child
-- Provide/Inject for deep nesting
-- External state management decisions are separate from component architecture
+- Missing cleanup in `onUnmounted` - timers, listeners, subscriptions, WebSockets cause memory leaks
+- Accessing `ref.value` in template - templates auto-unwrap refs, writing `.value` in templates is wrong
+- Destructuring `reactive()` without `toRefs()` - loses reactivity silently
+- Watching destructured prop directly - `watch(count, ...)` never triggers, use `watch(() => count, ...)`
 
-</integration>
+**Medium Priority Issues:**
+
+- Watch without async cleanup - causes race conditions; use `onWatcherCleanup()` (3.5+) or the cleanup callback
+- Using `provide()` with string keys instead of typed `InjectionKey<T>` symbols - loses type safety
+- Returning bare values from composables instead of an object with refs - breaks destructuring reactivity
+
+**Gotchas & Edge Cases:**
+
+- Refs in reactive objects are auto-unwrapped at root level, but NOT in arrays or Map/Set
+- `watchEffect` runs immediately; `watch` is lazy by default
+- Computed values are read-only by default; use getter/setter object for writable computed
+- Top-level `await` makes a component async and requires `<Suspense>` in parent
+- Provide values are not reactive by default - wrap in `ref()` or `reactive()` if consumers need reactivity
+- `onUnmounted` won't run if component errors during setup - use error boundaries for critical cleanup
+- `useId()` must not be called in computed - it generates a new ID each call
+- `defineModel` returns a ref - use `.value` in script, auto-unwrapped in template
+
+</red_flags>
 
 ---
 
@@ -1039,7 +409,7 @@ const userId = ref("123");
 
 **(You MUST prefix all composable functions with `use` following Vue conventions)**
 
-**(You MUST use `defineExpose()` to expose methods/properties to parent components)**
+**(You MUST wrap destructured props in a getter for `watch()` - `watch(() => count, ...)` not `watch(count, ...)`)**
 
 **Failure to follow these rules will cause memory leaks, broken reactivity, and unmaintainable component APIs.**
 

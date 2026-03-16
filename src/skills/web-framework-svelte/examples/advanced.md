@@ -464,4 +464,37 @@ Use `$state.snapshot()` to get a plain (non-proxy) copy of reactive state.
 
 ---
 
+## Pattern 7: $state.eager — Immediate UI Updates (5.41+)
+
+`$state.eager()` updates the UI immediately instead of waiting for dependent `await` expressions to resolve. Use sparingly — only for providing visual feedback during async operations.
+
+### Good Example — Active Link Highlighting During Navigation
+
+```svelte
+<script lang="ts">
+  import type { Snippet } from 'svelte';
+
+  interface Props {
+    href: string;
+    pathname: string;
+    children: Snippet;
+  }
+
+  let { href, pathname, children }: Props = $props();
+</script>
+
+<!-- Updates aria-current immediately, even while page content is loading -->
+<a {href} aria-current={$state.eager(pathname) === href ? 'page' : null}>
+  {@render children()}
+</a>
+```
+
+**Why good:** Provides instant visual feedback during navigation, `$state.eager` bypasses Svelte's batched update coordination for this specific value
+
+**When to use:** Loading indicators, active state highlighting, progress feedback — only where delayed UI creates poor UX
+
+**When not to use:** Critical state that must stay in sync with async results — let Svelte coordinate those updates normally
+
+---
+
 _For snippet patterns, see [snippets.md](snippets.md). For event patterns, see [events.md](events.md)._

@@ -6,7 +6,7 @@
 
 - [Data Loading](data-loading.md) -- loaders that may throw errors
 - [Routes & Layouts](routes.md) -- route definitions with error/pending components
-- [Setup & Configuration](setup.md) -- router-level defaults, devtools
+- [Core Setup & Configuration](core.md) -- router-level defaults, devtools
 
 ---
 

@@ -12,16 +12,9 @@
 // src/routes/posts/new/+page.server.ts
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
-import { z } from "zod";
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_CONTENT_LENGTH = 50_000;
-
-const CreatePostSchema = z.object({
-  title: z.string().min(1, "Title is required").max(MAX_TITLE_LENGTH),
-  content: z.string().min(1, "Content is required").max(MAX_CONTENT_LENGTH),
-  published: z.enum(["true", "false"]).transform((v) => v === "true"),
-});
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) {
@@ -40,35 +33,45 @@ export const actions: Actions = {
 
     // 2. Parse form data
     const formData = await request.formData();
-    const rawData = {
-      title: formData.get("title")?.toString() ?? "",
-      content: formData.get("content")?.toString() ?? "",
-      published: formData.get("published")?.toString() ?? "false",
-    };
+    const title = formData.get("title")?.toString() ?? "";
+    const content = formData.get("content")?.toString() ?? "";
+    const published = formData.get("published")?.toString() === "true";
 
-    // 3. Validate
-    const result = CreatePostSchema.safeParse(rawData);
+    // 3. Validate (use your validation library of choice)
+    const errors: Record<string, string[]> = {};
 
-    if (!result.success) {
-      return fail(400, {
-        ...rawData,
-        errors: result.error.flatten().fieldErrors,
-      });
+    if (!title) {
+      errors.title = ["Title is required"];
+    } else if (title.length > MAX_TITLE_LENGTH) {
+      errors.title = [`Title must be at most ${MAX_TITLE_LENGTH} characters`];
+    }
+
+    if (!content) {
+      errors.content = ["Content is required"];
+    } else if (content.length > MAX_CONTENT_LENGTH) {
+      errors.content = [
+        `Content must be at most ${MAX_CONTENT_LENGTH} characters`,
+      ];
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return fail(400, { title, content, errors });
     }
 
     // 4. Mutation (inside try/catch)
     try {
       await db.post.create({
         data: {
-          title: result.data.title,
-          content: result.data.content,
-          published: result.data.published,
+          title,
+          content,
+          published,
           authorId: locals.user.id,
         },
       });
     } catch (err) {
       return fail(500, {
-        ...rawData,
+        title,
+        content,
         message: "Failed to create post. Please try again.",
       });
     }
@@ -140,7 +143,7 @@ export const actions: Actions = {
 </form>
 ```
 
-**Why good:** Full validation with Zod, `fail()` preserves form input, auth check before mutation, redirect OUTSIDE try/catch, `use:enhance` for progressive enhancement, aria attributes for accessibility, named constants for limits
+**Why good:** Server-side validation with `fail()` preserves form input, auth check before mutation, redirect OUTSIDE try/catch, `use:enhance` for progressive enhancement, aria attributes for accessibility, named constants for limits
 
 ---
 
@@ -150,7 +153,7 @@ export const actions: Actions = {
 
 ```typescript
 // src/routes/settings/+page.server.ts
-import { fail } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

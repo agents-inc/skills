@@ -167,8 +167,8 @@ import PersonalizedBanner from "../components/PersonalizedBanner.astro";
 
 <!-- Server island - rendered per-request -->
 <PersonalizedBanner server:defer>
-  <div slot="fallback" class="animate-pulse">
-    <div class="h-8 w-64 bg-gray-200 rounded"></div>
+  <div slot="fallback" class="loading-placeholder">
+    <p>Loading personalized content...</p>
   </div>
 </PersonalizedBanner>
 ```

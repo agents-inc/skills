@@ -4,5 +4,5 @@ slug: nuxt
 domain: web
 author: "@vince"
 displayName: Nuxt
-cliDescription: Nuxt 3 full-stack framework
-usageGuidance: Use when building Nuxt 3 apps with useFetch, useState, or server routes.
+cliDescription: Nuxt full-stack framework
+usageGuidance: Use when building Nuxt apps with useFetch, useState, or server routes.

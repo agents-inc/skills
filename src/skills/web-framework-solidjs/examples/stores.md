@@ -290,7 +290,7 @@ export { SettingsForm };
 
 ```typescript
 import { createStore, produce } from 'solid-js/store';
-import { For, type Component } from 'solid-js';
+import { For, Show, type Component } from 'solid-js';
 
 interface CartItem {
   id: string;
@@ -379,9 +379,9 @@ const Cart: Component = () => {
 
       <div class="summary">
         <div>Subtotal: ${subtotal().toFixed(2)}</div>
-        {cart.discount > 0 && (
+        <Show when={cart.discount > 0}>
           <div>Discount ({cart.discount}%): -${discountAmount().toFixed(2)}</div>
-        )}
+        </Show>
         <div class="total">Total: ${total().toFixed(2)}</div>
       </div>
 
@@ -476,7 +476,7 @@ export { UserList };
 
 ```typescript
 import { createStore } from 'solid-js/store';
-import { createContext, useContext, type ParentComponent } from 'solid-js';
+import { createContext, useContext, Show, type ParentComponent } from 'solid-js';
 
 // Types
 interface AppState {
@@ -543,16 +543,19 @@ const Header = () => {
         {state.sidebarOpen ? 'Close' : 'Open'} Menu
       </button>
 
-      {state.user ? (
+      <Show
+        when={state.user}
+        fallback={
+          <button onClick={() => actions.login({ id: '1', name: 'John', role: 'user' })}>
+            Login
+          </button>
+        }
+      >
         <div class="user-menu">
-          <span>{state.user.name}</span>
+          <span>{state.user!.name}</span>
           <button onClick={actions.logout}>Logout</button>
         </div>
-      ) : (
-        <button onClick={() => actions.login({ id: '1', name: 'John', role: 'user' })}>
-          Login
-        </button>
-      )}
+      </Show>
 
       <select
         value={state.theme}

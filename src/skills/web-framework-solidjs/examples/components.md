@@ -9,7 +9,7 @@
 ### Good Example - Button with HTML attribute passthrough
 
 ```typescript
-import { splitProps, mergeProps, type Component, type JSX } from 'solid-js';
+import { splitProps, mergeProps, Show, type Component, type JSX } from 'solid-js';
 
 interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger';
@@ -39,9 +39,9 @@ const Button: Component<ButtonProps> = (rawProps) => {
       disabled={local.loading || buttonProps.disabled}
       aria-busy={local.loading}
     >
-      {local.loading ? (
+      <Show when={local.loading}>
         <span class="spinner" aria-hidden="true" />
-      ) : null}
+      </Show>
       {local.children}
     </button>
   );

@@ -75,7 +75,9 @@ export function ImportForm() {
 }
 ```
 
-**Why good:** Real-time progress for long-running operations. Uses streamable values from ai/rsc package. User sees progress instead of just a spinner.
+**Why good:** Real-time progress for long-running operations. Uses streamable values for server-to-client updates. User sees progress instead of just a spinner.
+
+**Note:** This example uses `ai/rsc` (Vercel AI SDK) for streamable values. Use your streaming solution's equivalent API if different.
 
 ---
 

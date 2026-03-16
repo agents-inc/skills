@@ -50,6 +50,19 @@ Does this need client-side interactivity?
         └─ NO → Use .astro + <script> tag
 ```
 
+### Build-Time vs Live Collections
+
+```
+Does the data change between requests?
+├─ NO → defineCollection (build-time, static, fast)
+│   Best for: blog posts, docs, changelogs, author bios
+└─ YES → Does it need to be fresh on every request?
+    ├─ YES → defineLiveCollection (runtime, requires SSR)
+    │   Best for: inventory, pricing, user-specific data
+    └─ NO → defineCollection + periodic rebuilds
+        Best for: content that changes hourly/daily
+```
+
 ### Content Collection vs Manual Files
 
 ```
@@ -114,6 +127,8 @@ How many pages need on-demand rendering?
 - **`transition:persist` requires matching `transition:name`** - Elements must have the same name on both pages to persist
 - **Astro 6 requires Node.js 22.12.0+** - Earlier Node versions are not supported
 - **Live collections (`defineLiveCollection`) have no MDX support** - MDX cannot be rendered at runtime
+- **`Astro.glob()` is removed in Astro 6** - Use `import.meta.glob()` instead
+- **`z` from `astro:content` is deprecated in Astro 6** - Import `z` from `astro/zod` instead
 - **Rest parameter routes (`[...slug]`) can match the root** - Pass `undefined` as param to match the base path
 
 ---

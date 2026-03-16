@@ -1,10 +1,10 @@
 # TanStack Router -- Data Loading Examples
 
-> Route loaders, beforeLoad middleware, TanStack Query integration, prefetching, and SWR caching. See [SKILL.md](../SKILL.md) for core patterns and [reference.md](../reference.md) for API reference.
+> Route loaders, beforeLoad middleware, external data fetching integration, prefetching, and SWR caching. See [SKILL.md](../SKILL.md) for core patterns and [reference.md](../reference.md) for API reference.
 
 **Related examples:**
 
-- [Setup & Configuration](setup.md) -- router context setup for queryClient
+- [Core Setup & Configuration](core.md) -- router context setup
 - [Auth & Context](auth-and-context.md) -- beforeLoad for auth guards, context enrichment
 - [Error Handling](error-handling.md) -- errorComponent, pendingComponent, notFoundComponent
 
@@ -112,59 +112,31 @@ What does the logic do?
   |   -> beforeLoad (return value merges into context)
   +-- Fetch data for the component?
   |   -> loader (runs in parallel with siblings)
-  +-- Prefetch TanStack Query data?
-  |   -> loader (ensureQueryData in parallel)
+  +-- Prefetch data for an external cache?
+  |   -> loader (e.g. ensureQueryData in parallel)
 ```
 
 ---
 
-## TanStack Query Integration: Shared Query Options
+## External Data Fetching Integration: Prefetch in Loader
 
-```typescript
-// src/queries/post-queries.ts
-import { queryOptions } from "@tanstack/react-query";
-import type { Post } from "../types";
-
-export const postsQueryOptions = queryOptions({
-  queryKey: ["posts"] as const,
-  queryFn: async (): Promise<Post[]> => {
-    const response = await fetch("/api/posts");
-    if (!response.ok) throw new Error("Failed to fetch posts");
-    return response.json();
-  },
-});
-
-export const postQueryOptions = (postId: string) =>
-  queryOptions({
-    queryKey: ["posts", postId] as const,
-    queryFn: async (): Promise<Post> => {
-      const response = await fetch(`/api/posts/${postId}`);
-      if (!response.ok) throw new Error("Failed to fetch post");
-      return response.json();
-    },
-  });
-```
-
----
-
-## TanStack Query: Prefetch in Loader
+When using an external data fetching library with a cache (e.g. a query client), prefetch in the loader so data is cached before the component renders.
 
 ```typescript
 // src/routes/posts/index.tsx
 import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { postsQueryOptions } from "../../queries/post-queries";
 
 export const Route = createFileRoute("/posts/")({
   loader: async ({ context }) => {
     // Prefetch ensures data is in cache before component renders
+    // Use your data fetching library's prefetch method via context
     await context.queryClient.ensureQueryData(postsQueryOptions);
   },
   component: PostsPage,
 });
 
 function PostsPage() {
-  // Reads from cache instantly (prefetched in loader)
+  // Component reads from cache (prefetched in loader)
   // Also subscribes to background refetches and cache updates
   const { data: posts } = useSuspenseQuery(postsQueryOptions);
 
@@ -178,22 +150,14 @@ function PostsPage() {
 }
 ```
 
-**Why:** `ensureQueryData` in loader prefetches data before component renders. `useSuspenseQuery` in component reads from cache (no loading state needed). TanStack Query handles background refetching, cache invalidation, and optimistic updates. Query options are shared between loader and component ensuring cache key consistency.
+**Why:** Prefetching in loaders ensures data is available before the component mounts. Shared query options between loader and component ensure cache key consistency. The loader uses context-injected clients (not direct imports) for testability.
 
 ---
 
-## TanStack Query: Non-Blocking Prefetch (Critical + Non-Critical Data)
+## Non-Blocking Prefetch (Critical + Non-Critical Data)
 
 ```typescript
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { postQueryOptions } from "../../../queries/post-queries";
-
-const commentsQueryOptions = (postId: string) =>
-  queryOptions({
-    queryKey: ["posts", postId, "comments"] as const,
-    queryFn: () => fetchComments(postId),
-  });
 
 export const Route = createFileRoute("/posts/$postId/")({
   loader: async ({ context, params }) => {
@@ -211,9 +175,10 @@ export const Route = createFileRoute("/posts/$postId/")({
 
 function PostDetailPage() {
   const { postId } = Route.useParams();
+  // Critical data - available immediately from cache
   const { data: post } = useSuspenseQuery(postQueryOptions(postId));
 
-  // Comments may still be loading (not awaited in loader)
+  // Non-critical data - may still be loading
   const { data: comments, isLoading } = useQuery(
     commentsQueryOptions(postId),
   );
@@ -250,12 +215,12 @@ function PostDetailPage() {
 How to load data?
   +-- Simple app, no shared cache needs?
   |   -> Built-in route loaders with staleTime
-  +-- Complex app with shared server state?
-  |   -> TanStack Query + ensureQueryData in loaders
+  +-- Complex app with shared server state cache?
+  |   -> External data fetching library + prefetch in loaders
   +-- Data needed only for this component?
   |   -> Route loader (useLoaderData)
   +-- Data shared across many components?
-  |   -> TanStack Query (queryClient in context)
+  |   -> External data fetching library (client in context)
 ```
 
 ---

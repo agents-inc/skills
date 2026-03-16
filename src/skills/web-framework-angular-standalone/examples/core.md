@@ -420,78 +420,59 @@ export class TaskListComponent {
 ### Good Example - Parent-child communication with signals
 
 ```typescript
-// todo-item.component.ts
-import { Component, input, output } from "@angular/core";
-
-export type Todo = {
-  id: string;
-  text: string;
-  completed: boolean;
-};
-
+// child: todo-item.component.ts
 @Component({
   selector: "app-todo-item",
   standalone: true,
   template: `
-    <div class="todo-item" [class.completed]="todo().completed">
+    <div [class.completed]="todo().completed">
       <input
         type="checkbox"
         [checked]="todo().completed"
         (change)="toggle.emit(todo().id)"
       />
       <span>{{ todo().text }}</span>
-      <button (click)="delete.emit(todo().id)">Delete</button>
+      <button (click)="remove.emit(todo().id)">Delete</button>
     </div>
   `,
 })
 export class TodoItemComponent {
   todo = input.required<Todo>();
   toggle = output<string>();
-  delete = output<string>();
+  remove = output<string>();
 }
-```
 
-```typescript
-// todo-list.component.ts
-import { Component, signal } from "@angular/core";
-import { TodoItemComponent, type Todo } from "./todo-item.component";
-
+// parent: todo-list.component.ts
 @Component({
   selector: "app-todo-list",
   standalone: true,
   imports: [TodoItemComponent],
   template: `
-    <div class="todo-list">
-      <input
-        #newTodo
-        type="text"
-        placeholder="Add todo..."
-        (keyup.enter)="addTodo(newTodo.value); newTodo.value = ''"
+    <input
+      #newTodo
+      type="text"
+      placeholder="Add todo..."
+      (keyup.enter)="addTodo(newTodo.value); newTodo.value = ''"
+    />
+    @for (todo of todos(); track todo.id) {
+      <app-todo-item
+        [todo]="todo"
+        (toggle)="toggleTodo($event)"
+        (remove)="removeTodo($event)"
       />
-
-      @for (todo of todos(); track todo.id) {
-        <app-todo-item
-          [todo]="todo"
-          (toggle)="toggleTodo($event)"
-          (delete)="deleteTodo($event)"
-        />
-      } @empty {
-        <p>No todos yet!</p>
-      }
-    </div>
+    } @empty {
+      <p>No todos yet!</p>
+    }
   `,
 })
 export class TodoListComponent {
-  private nextId = 0;
-
   todos = signal<Todo[]>([]);
 
   addTodo(text: string): void {
     if (!text.trim()) return;
-
     this.todos.update((todos) => [
       ...todos,
-      { id: `todo-${this.nextId++}`, text: text.trim(), completed: false },
+      { id: crypto.randomUUID(), text: text.trim(), completed: false },
     ]);
   }
 
@@ -501,7 +482,7 @@ export class TodoListComponent {
     );
   }
 
-  deleteTodo(id: string): void {
+  removeTodo(id: string): void {
     this.todos.update((todos) => todos.filter((t) => t.id !== id));
   }
 }

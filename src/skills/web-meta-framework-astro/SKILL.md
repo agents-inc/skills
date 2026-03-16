@@ -31,7 +31,7 @@ description: Astro content-first framework - islands architecture, content colle
 
 ---
 
-**Auto-detection:** Astro, .astro files, astro.config, islands architecture, client:load, client:visible, client:idle, client:only, client:media, server:defer, content collections, defineCollection, getCollection, getEntry, astro:content, astro:transitions, ClientRouter, getStaticPaths, Astro.props, Astro.params, Astro.cookies, Astro.redirect, prerender, astro add, @astrojs/react, @astrojs/vue, @astrojs/svelte, Starlight
+**Auto-detection:** Astro, .astro files, astro.config, islands architecture, client:load, client:visible, client:idle, client:only, client:media, server:defer, content collections, defineCollection, defineLiveCollection, getCollection, getLiveCollection, getEntry, getLiveEntry, render, astro:content, astro:transitions, ClientRouter, getStaticPaths, Astro.props, Astro.params, Astro.cookies, Astro.redirect, prerender, astro add, @astrojs/react, @astrojs/vue, @astrojs/svelte, Starlight
 
 **When to use:**
 
@@ -43,15 +43,15 @@ description: Astro content-first framework - islands architecture, content colle
 
 **When NOT to use:**
 
-- Highly interactive web applications (dashboards, real-time collaboration) - use Next.js or SPA frameworks
-- Apps where every page requires user authentication and dynamic data - consider Next.js App Router
-- Projects that need React Server Components or Server Actions - use Next.js
+- Highly interactive web applications (dashboards, real-time collaboration) - use a full-stack SSR framework or SPA
+- Apps where every page requires user authentication and dynamic data - use a full-stack SSR framework
+- Projects that need React Server Components or Server Actions - use a React SSR framework
 
 **Key patterns covered:**
 
 - Astro component syntax (.astro files, frontmatter, template expressions, slots)
 - Islands architecture (client directives, server islands, selective hydration)
-- Content collections (schemas, querying, rendering, references)
+- Content collections (schemas, querying, rendering, references, live collections)
 - File-based routing (static routes, dynamic routes, rest parameters, pagination)
 - Rendering modes (static, on-demand/SSR, hybrid with prerender control)
 - View Transitions (ClientRouter, transition directives, persist state)
@@ -97,9 +97,9 @@ Astro is a **content-first web framework** that ships zero JavaScript by default
 
 **When NOT to use Astro:**
 
-- Fully interactive web applications (use Next.js, Remix, or SPA frameworks)
-- Real-time collaborative apps (use dedicated SPA with WebSocket support)
-- Projects requiring React Server Components or Server Actions (use Next.js)
+- Fully interactive web applications (use a full-stack SSR framework or SPA)
+- Real-time collaborative apps (use a dedicated SPA with WebSocket support)
+- Projects requiring React Server Components or Server Actions (use a React SSR framework)
 
 </philosophy>
 
@@ -443,6 +443,10 @@ const { Content } = await render(post);
 
 **Why good:** Zod schemas validate frontmatter at build time, TypeScript types are auto-generated, querying with filters is type-safe, `render()` converts Markdown to a component
 
+#### Live Collections (Astro 6+)
+
+For data that changes frequently and needs to be fresh on every request, use `defineLiveCollection` instead of `defineCollection`. Query with `getLiveCollection()` and `getLiveEntry()` instead of `getCollection()`. Requires SSR (`prerender = false`). See [examples/content.md](examples/content.md) for full examples.
+
 ---
 
 ### Pattern 6: File-Based Routing
@@ -651,20 +655,17 @@ import { ClientRouter } from "astro:transitions";
 **Adding framework support:**
 
 ```bash
-# Add React support
+# Add framework support via CLI
 npx astro add react
-
-# Add Vue support
 npx astro add vue
 
-# Add multiple at once
-npx astro add react tailwind sitemap
+# Add multiple integrations at once
+npx astro add react sitemap
 ```
 
-**Works with:**
+**Key integrations:**
 
-- **React/Vue/Svelte/Solid** - Used as interactive islands within Astro pages
-- **Tailwind CSS** - Via `@astrojs/tailwind` integration
+- **UI Frameworks** - React, Vue, Svelte, Solid used as interactive islands within Astro pages
 - **MDX** - Via `@astrojs/mdx` for components in Markdown
 - **Starlight** - Astro's documentation theme, built on content collections
 
@@ -677,8 +678,8 @@ npx astro add react tailwind sitemap
 
 **Does NOT replace:**
 
-- **Next.js** - For highly interactive, full-stack React applications
-- **SPA frameworks** - For real-time, fully client-rendered apps
+- Full-stack SSR frameworks for highly interactive, full-stack React applications
+- SPA frameworks for real-time, fully client-rendered apps
 
 </integration>
 

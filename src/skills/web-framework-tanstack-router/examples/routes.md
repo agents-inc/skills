@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [Setup & Configuration](setup.md) -- project setup, Vite plugin, root route
+- [Core Setup & Configuration](core.md) -- Vite plugin, root route, entry point
 - [Navigation](navigation.md) -- Link, useNavigate, redirect
 - [Auth & Context](auth-and-context.md) -- auth guards, route context, dependency injection
 

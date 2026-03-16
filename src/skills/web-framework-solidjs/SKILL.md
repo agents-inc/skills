@@ -59,8 +59,11 @@ description: SolidJS fine-grained reactivity patterns - signals, effects, memos,
 
 **Detailed Resources:**
 
-- For code examples, see [examples/](examples/) folder
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Signals, effects, memos, batch
+- [examples/components.md](examples/components.md) - Props handling, control flow, refs, component types
+- [examples/stores.md](examples/stores.md) - createStore, produce, reconcile, Context
+- [examples/resources.md](examples/resources.md) - createResource, createAsync, query/action (SolidStart)
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, checklists
 
 ---
 
@@ -287,30 +290,14 @@ export { Button };
 
 #### Component Types
 
+Use `VoidComponent` (no children), `ParentComponent` (children required), or `Component` (children optional) for type-safe children handling.
+
 ```typescript
-import {
-  Component,        // Standard component with optional children
-  ParentComponent,  // Component that MUST have children
-  VoidComponent,    // Component that should NOT have children
-} from 'solid-js';
-
-// No children expected
-const Icon: VoidComponent<{ name: string }> = (props) => (
-  <svg><use href={`#${props.name}`} /></svg>
-);
-
-// Children required
-const Card: ParentComponent<{ title: string }> = (props) => (
-  <div class="card">
-    <h2>{props.title}</h2>
-    {props.children}
-  </div>
-);
-
-export { Icon, Card };
+const Icon: VoidComponent<{ name: string }> = (props) => (/* ... */);
+const Card: ParentComponent<{ title: string }> = (props) => (/* ... */);
 ```
 
-**Why good:** Type-safe children handling, explicit about component's API
+See [examples/components.md](examples/components.md) for full component type examples.
 
 ---
 
@@ -410,61 +397,27 @@ export { Form };
 
 ### Pattern 7: Context
 
-Share data across component tree without prop drilling.
-
-#### Type-Safe Context
+Share data across component tree without prop drilling. Create a typed context, wrap in Provider with a Store, and expose a hook with error handling.
 
 ```typescript
-import { createContext, useContext, type ParentComponent } from 'solid-js';
-import { createStore } from 'solid-js/store';
-
-// 1. Define context type
-interface AuthContextValue {
-  user: User | null;
-  login: (credentials: Credentials) => Promise<void>;
-  logout: () => void;
-}
-
-// 2. Create context (undefined = no default)
 const AuthContext = createContext<AuthContextValue>();
 
-// 3. Provider component
 const AuthProvider: ParentComponent = (props) => {
-  const [store, setStore] = createStore<{ user: User | null }>({
-    user: null
-  });
-
-  const value: AuthContextValue = {
-    get user() { return store.user; },
-    async login(credentials) {
-      const user = await api.login(credentials);
-      setStore('user', user);
-    },
-    logout() {
-      setStore('user', null);
-    }
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {props.children}
-    </AuthContext.Provider>
-  );
+  const [store, setStore] = createStore<{ user: User | null }>({ user: null });
+  const value = { get user() { return store.user; }, /* actions */ };
+  return <AuthContext.Provider value={value}>{props.children}</AuthContext.Provider>;
 };
 
-// 4. Hook with error handling
 function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }
-
-export { AuthProvider, useAuth };
 ```
 
-**Why good:** Type-safe with TypeScript, getter preserves reactivity, error handling for missing provider
+**Why good:** Getter on store field preserves reactivity in context, throws on missing provider
+
+See [examples/stores.md](examples/stores.md) for complete Store + Context implementation.
 
 </patterns>
 
@@ -476,13 +429,12 @@ export { AuthProvider, useAuth };
 
 **SolidJS is framework-agnostic for styling and tooling.** Components receive props and emit events, fitting any styling or state management approach.
 
-**Works with:**
+**Ecosystem:**
 
-- **Any CSS solution** via class attribute binding
 - **SolidStart** for full-stack applications with file-based routing
 - **@solidjs/router** for client-side routing
 - **solid-primitives** community library for common utilities
-- **Vite** as the recommended build tool
+- Any CSS solution via `class` attribute binding
 
 **State decisions:**
 

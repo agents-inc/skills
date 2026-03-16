@@ -21,7 +21,7 @@ description: Type-safe client-side routing for React with file-based routes, sea
 
 **(You MUST use `beforeLoad` for auth guards and redirects - NEVER check auth inside component render)**
 
-**(You MUST pass `queryClient` via router context for TanStack Query integration - NEVER import it directly in loaders)**
+**(You MUST pass services via router context - NEVER import them directly in loaders (breaks testability))**
 
 **(You MUST use `<Outlet />` in layout routes to render child content - forgetting it renders nothing)**
 
@@ -53,23 +53,23 @@ description: Type-safe client-side routing for React with file-based routes, sea
 - Authentication guards and protected routes
 - Code splitting with `autoCodeSplitting`
 - Error, pending, and not-found handling
-- TanStack Query integration
+- External data fetching library integration in loaders
 - Devtools setup
 
 **When NOT to use:**
 
-- Server-rendered apps with SSR needs (consider TanStack Start or Next.js)
-- Simple apps with 1-2 pages (plain React Router or no router)
+- Server-rendered apps with SSR needs (use an SSR framework instead)
+- Simple apps with 1-2 pages (a lightweight router or no router)
 - Static sites without client-side navigation
 
 ---
 
 ## Examples
 
-- [Setup & Configuration](examples/setup.md) -- installation, Vite plugin, root route, entry point, devtools
+- [Core Setup & Configuration](examples/core.md) -- Vite plugin, root route, entry point, devtools
 - [Routes & Layouts](examples/routes.md) -- file-based routing conventions, nested layouts, pathless routes, catch-all
 - [Navigation](examples/navigation.md) -- Link component, useNavigate, redirect, active states
-- [Data Loading](examples/data-loading.md) -- loaders, beforeLoad, TanStack Query, SWR caching
+- [Data Loading](examples/data-loading.md) -- loaders, beforeLoad, external data fetching integration, SWR caching
 - [Search Params](examples/search-params.md) -- Zod validation, updating params, search middleware
 - [Auth & Context](examples/auth-and-context.md) -- auth guards, route context, dependency injection, getRouteApi
 - [Error Handling & Code Splitting](examples/error-handling.md) -- error/pending/not-found components, code splitting
@@ -102,7 +102,7 @@ TanStack Router treats the URL as a first-class, fully-typed state manager. Ever
 
 **When NOT to use:**
 
-- Full-stack SSR apps (use TanStack Start, Next.js, or Remix instead)
+- Full-stack SSR apps (use an SSR/full-stack framework instead)
 - Micro-frontends or embedded widgets with no routing needs
 - Static marketing sites with no client-side navigation
 
@@ -134,7 +134,7 @@ declare module "@tanstack/react-router" {
 }
 ```
 
-See [examples/setup.md](examples/setup.md) for complete setup with TanStack Query context and devtools.
+See [examples/core.md](examples/core.md) for complete setup with context and devtools.
 
 ---
 
@@ -235,7 +235,7 @@ const { post } = Route.useLoaderData();
 
 **beforeLoad** runs first (sequentially) for auth checks and context enrichment. **loader** runs after (in parallel with siblings) for data fetching.
 
-See [examples/data-loading.md](examples/data-loading.md) for TanStack Query integration, non-blocking prefetch, and SWR caching.
+See [examples/data-loading.md](examples/data-loading.md) for external data fetching integration, non-blocking prefetch, and SWR caching.
 
 ---
 
@@ -273,7 +273,7 @@ See [examples/routes.md](examples/routes.md) for nested pathless layouts, non-ne
 
 ### Pattern 7: Route Context and Dependency Injection
 
-Use `createRootRouteWithContext` to inject dependencies (queryClient, auth) into all routes via typed context.
+Use `createRootRouteWithContext` to inject dependencies (auth, data clients, services) into all routes via typed context.
 
 ```typescript
 // Root: define context shape
@@ -284,12 +284,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 // Entry: provide context
 const router = createRouter({
   routeTree,
-  context: { queryClient, auth: authService },
+  context: { auth: authService, apiClient },
 });
 
-// Routes: access typed context
+// Routes: access typed context in loaders
 loader: async ({ context }) => {
-  await context.queryClient.ensureQueryData(postsQueryOptions);
+  const posts = await context.apiClient.getPosts();
+  return { posts };
 };
 ```
 
@@ -356,8 +357,8 @@ What does the logic do?
   |   -> beforeLoad (return value merges into context)
   +-- Fetch data for the component?
   |   -> loader (runs in parallel with siblings)
-  +-- Prefetch TanStack Query data?
-  |   -> loader (ensureQueryData in parallel)
+  +-- Prefetch data for an external cache?
+  |   -> loader (e.g. ensureQueryData in parallel)
 ```
 
 ### Data Loading Strategy
@@ -366,12 +367,12 @@ What does the logic do?
 How to load data?
   +-- Simple app, no shared cache needs?
   |   -> Built-in route loaders with staleTime
-  +-- Complex app with shared server state?
-  |   -> TanStack Query + ensureQueryData in loaders
+  +-- Complex app with shared server state cache?
+  |   -> External data fetching library + prefetch in loaders
   +-- Data needed only for this component?
   |   -> Route loader (useLoaderData)
   +-- Data shared across many components?
-  |   -> TanStack Query (queryClient in context)
+  |   -> External data fetching library (client in context)
 ```
 
 ### Search Params: Zod Adapter vs Plain Function
@@ -410,30 +411,21 @@ Need shared UI across routes?
 
 ## Integration Guide
 
-**Works with:**
-
-- **TanStack Query**: Prefetch in loaders via `context.queryClient.ensureQueryData()`, consume with `useSuspenseQuery` in components
-- **TanStack Start**: Full-stack framework built on TanStack Router for SSR/SSG (use when you need server rendering)
-- **Zod**: Search params validation via `@tanstack/zod-adapter` or Standard Schema (Zod 3.24.0+)
-- **Valibot**: Alternative schema validation via `@tanstack/valibot-adapter`
-- **React 19**: Compatible with React 19 features (Suspense, use(), transitions)
-
-**Replaces / Conflicts with:**
-
-- **React Router**: Both are client-side routers - use one or the other, not both
-- **Next.js App Router**: Next.js has its own file-based routing - do not combine
-- **Wouter**: Lightweight alternative - TanStack Router is the type-safe choice for larger apps
-
 **Package ecosystem:**
 
-| Package                           | Purpose                                      |
-| --------------------------------- | -------------------------------------------- |
-| `@tanstack/react-router`          | Core router for React                        |
-| `@tanstack/router-plugin`         | Vite/Webpack plugin for file-based routing   |
-| `@tanstack/react-router-devtools` | Development tools                            |
-| `@tanstack/zod-adapter`           | Zod integration for search params            |
-| `@tanstack/valibot-adapter`       | Valibot integration for search params        |
-| `@tanstack/start`                 | Full-stack SSR framework built on the router |
+| Package                           | Purpose                                    |
+| --------------------------------- | ------------------------------------------ |
+| `@tanstack/react-router`          | Core router for React                      |
+| `@tanstack/router-plugin`         | Vite/Webpack plugin for file-based routing |
+| `@tanstack/react-router-devtools` | Development tools                          |
+| `@tanstack/zod-adapter`           | Zod integration for search params          |
+| `@tanstack/valibot-adapter`       | Valibot integration for search params      |
+
+**Schema validation adapters:** Use `@tanstack/zod-adapter` or `@tanstack/valibot-adapter` for search params. Zod 3.24.0+ supports Standard Schema and can be used directly without an adapter.
+
+**External data fetching:** The router context system (`createRootRouteWithContext`) enables injecting any data fetching client. Loaders can prefetch data via `context`, and components consume cached data. See [examples/data-loading.md](examples/data-loading.md).
+
+**Conflicts with other client routers:** TanStack Router replaces any other client-side routing solution. Do not combine with another router library.
 
 </integration>
 
@@ -449,15 +441,15 @@ Need shared UI across routes?
 - Reading `window.location.search` directly instead of `useSearch()` (bypasses validation, breaks SSR, loses reactivity)
 - Checking auth inside component render instead of `beforeLoad` (component flashes before redirect, race conditions)
 - Forgetting `<Outlet />` in layout routes (child routes render nothing)
-- Importing `queryClient` directly in loaders instead of using router context (breaks testability, couples to global state)
+- Importing services/clients directly in loaders instead of using router context (breaks testability, couples to global state)
 
 **Medium Priority Issues:**
 
-- Awaiting non-critical data in loaders (blocks render unnecessarily - use `prefetchQuery` for non-critical data)
+- Awaiting non-critical data in loaders (blocks render unnecessarily - fire-and-forget prefetch for non-critical data)
 - Not using `fallback()` with Zod adapter (invalid search params throw errors instead of falling back to defaults)
 - Missing `declare module "@tanstack/react-router"` registration (Link, navigate lose type safety across the app)
 - Duplicating auth checks in every route instead of using a pathless layout guard
-- Using `staleTime: 0` when TanStack Query handles caching (double-fetching on every navigation)
+- Using `staleTime: 0` when an external data cache handles freshness (double-fetching on every navigation)
 
 **Common Mistakes:**
 
@@ -493,7 +485,7 @@ Need shared UI across routes?
 
 **(You MUST use `beforeLoad` for auth guards and redirects - NEVER check auth inside component render)**
 
-**(You MUST pass `queryClient` via router context for TanStack Query integration - NEVER import it directly in loaders)**
+**(You MUST pass services via router context - NEVER import them directly in loaders (breaks testability))**
 
 **(You MUST use `<Outlet />` in layout routes to render child content - forgetting it renders nothing)**
 

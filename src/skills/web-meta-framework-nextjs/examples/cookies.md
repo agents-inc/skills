@@ -1,6 +1,6 @@
 # Cookie Manipulation
 
-> Server-side preference storage via Server Actions. For client state, see the Zustand skill.
+> Server-side preference storage via Server Actions.
 
 ---
 

@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [Setup & Configuration](setup.md) -- root route with context, entry point
+- [Core Setup & Configuration](core.md) -- root route with context, entry point
 - [Routes & Layouts](routes.md) -- pathless layout routes for auth guards
 - [Data Loading](data-loading.md) -- beforeLoad vs loader
 
@@ -18,12 +18,13 @@ import {
   createRootRouteWithContext,
   Outlet,
 } from "@tanstack/react-router";
-import type { QueryClient } from "@tanstack/react-query";
 
 // Define the shape of your router context
+// Include any services or clients you need in loaders/beforeLoad
 export interface RouterContext {
-  queryClient: QueryClient;
   auth: AuthService;
+  apiClient: ApiClient;
+  // Add other services as needed
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -38,17 +39,15 @@ function RootLayout() {
 ```typescript
 // src/main.tsx - Provide context when creating the router
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import { authService } from "./services/auth";
-
-const queryClient = new QueryClient();
+import { apiClient } from "./services/api";
 
 const router = createRouter({
   routeTree,
   context: {
-    queryClient,
     auth: authService,
+    apiClient,
   },
 });
 
@@ -59,11 +58,7 @@ declare module "@tanstack/react-router" {
 }
 
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 ```
 
@@ -79,11 +74,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/posts/$postId/")({
   loader: async ({ context, params }) => {
-    // context.queryClient is typed from RouterContext
-    const post = await context.queryClient.ensureQueryData({
-      queryKey: ["posts", params.postId],
-      queryFn: () => fetchPost(params.postId),
-    });
+    // context.apiClient is typed from RouterContext
+    const post = await context.apiClient.getPost(params.postId);
     return { post };
   },
   component: PostDetail,

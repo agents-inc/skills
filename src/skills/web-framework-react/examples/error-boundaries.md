@@ -5,8 +5,8 @@
 **Additional Examples:**
 
 - [core.md](core.md) - Component architecture, variants, event handlers
-- [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
+- [react-19-hooks.md](react-19-hooks.md) - useActionState, useFormStatus, useOptimistic, use()
 
 ---
 

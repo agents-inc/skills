@@ -309,4 +309,93 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ---
 
+## Pattern 7: init Hook
+
+### Good Example — Server Startup Initialization
+
+```typescript
+// src/hooks.server.ts
+import type { ServerInit } from "@sveltejs/kit";
+
+export const init: ServerInit = async () => {
+  // Runs once when the server starts — NOT on each request
+  // Use for database connections, config validation, etc.
+  await db.connect();
+
+  // Validate required environment variables early
+  const requiredVars = ["DATABASE_URL", "SESSION_SECRET"];
+  for (const envVar of requiredVars) {
+    if (!process.env[envVar]) {
+      throw new Error(`Missing required environment variable: ${envVar}`);
+    }
+  }
+
+  console.log("Server initialized");
+};
+```
+
+**Why good:** Fails fast on startup if database or env vars are misconfigured, runs once (not per-request), introduced in SvelteKit 2.10
+
+---
+
+## Pattern 8: reroute Hook
+
+### Good Example — i18n URL Rewriting
+
+```typescript
+// src/hooks.ts (universal hooks file)
+import type { Reroute } from "@sveltejs/kit";
+
+const SUPPORTED_LOCALES = ["en", "fr", "de", "es"];
+
+export const reroute: Reroute = ({ url }) => {
+  const segments = url.pathname.split("/").filter(Boolean);
+  const maybeLocale = segments[0];
+
+  // Strip locale prefix and serve the same route
+  // /fr/about → renders /about (with locale available via url)
+  if (SUPPORTED_LOCALES.includes(maybeLocale)) {
+    return "/" + segments.slice(1).join("/");
+  }
+};
+```
+
+**Why good:** Runs before `handle`, rewrites URL before route matching, locale prefix removed without duplicating route files, returns `void` to skip rewriting
+
+---
+
+## Pattern 9: transport Hook
+
+### Good Example — Custom Type Serialization
+
+```typescript
+// src/hooks.ts (universal hooks file)
+import type { Transport } from "@sveltejs/kit";
+
+class Money {
+  constructor(
+    public amount: number,
+    public currency: string,
+  ) {}
+
+  format() {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency: this.currency,
+    }).format(this.amount);
+  }
+}
+
+export const transport: Transport = {
+  Money: {
+    encode: (value) => value instanceof Money && [value.amount, value.currency],
+    decode: ([amount, currency]) => new Money(amount, currency),
+  },
+};
+```
+
+**Why good:** Custom classes survive the server-to-client boundary, `encode` returns `false` for non-matching values, `decode` reconstructs the instance on the client, methods are preserved
+
+---
+
 _For API route patterns, see [api-routes.md](api-routes.md). For form actions, see [form-actions.md](form-actions.md)._

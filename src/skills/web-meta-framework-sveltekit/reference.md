@@ -137,7 +137,7 @@ Does the load function fetch multiple data sources?
 - **Layout data merges, not replaces** — If layout and page return same key, page wins
 - **`redirect()` uses 303 for form actions** — Always use 303 (See Other) after POST to prevent resubmission
 - **`error()` renders `+error.svelte`, not the page** — The page component doesn't render at all
-- **Server load must return serializable data** — No classes, functions, or component instances
+- **Server load must return serializable data** — No classes, functions, or component instances (unless you define a `transport` hook)
 - **Universal load can return anything** — Classes, component constructors, non-serializable data
 - **`fetch` in load functions is special** — Auto-deduplicates, inherits cookies, works server-side
 - **Forms without `use:enhance` cause full-page reload** — This is intentional (progressive enhancement)
@@ -145,6 +145,9 @@ Does the load function fetch multiple data sources?
 - **Content negotiation** — `+page.server.ts` and `+server.ts` in the same directory: forms go to actions, API calls go to server routes
 - **SvelteKit uses `$app/state` in Svelte 5** — Replace `$app/stores` (`$page`, `$navigating`) with `$app/state` (`page`, `navigating`)
 - **`depends()` creates custom invalidation keys** — Use `app:` prefix for custom keys
+- **`init` hook runs once at server startup** — Use for database connections, env validation; errors here prevent the server from starting
+- **`reroute` runs before `handle`** — Rewrites URL before route matching; useful for i18n locale prefixes
+- **`transport` hook enables custom type serialization** — Classes returned from server loads survive the server-to-client boundary
 
 ---
 
@@ -173,6 +176,7 @@ Does the load function fetch multiple data sources?
 | `parent`        |     Yes     |      Yes       | Parent load data       |
 | `untrack`       |     Yes     |      Yes       | Exclude from tracking  |
 | `setHeaders`    |     Yes     |      Yes       | Set response headers   |
+| `data`          |     No      |      Yes       | Server load output     |
 | `cookies`       |     Yes     |       No       | Cookie access          |
 | `locals`        |     Yes     |       No       | Request-local data     |
 | `request`       |     Yes     |       No       | Raw Request object     |
@@ -195,6 +199,9 @@ Does the load function fetch multiple data sources?
 // Kit utilities
 import { error, fail, redirect, json, text } from "@sveltejs/kit";
 
+// Hook composition
+import { sequence } from "@sveltejs/kit/hooks";
+
 // Client navigation
 import {
   goto,
@@ -202,6 +209,8 @@ import {
   invalidateAll,
   beforeNavigate,
   afterNavigate,
+  pushState,
+  replaceState,
 } from "$app/navigation";
 
 // Forms
@@ -216,12 +225,18 @@ import { env } from "$env/dynamic/public"; // Both
 import { SECRET_KEY } from "$env/static/private"; // Server only, build-time
 import { PUBLIC_API_URL } from "$env/static/public"; // Both, build-time
 
-// Auto-generated types
+// Auto-generated types (page/layout)
 import type { PageServerLoad, Actions } from "./$types";
 import type { PageLoad } from "./$types";
 import type { LayoutServerLoad } from "./$types";
 import type { RequestHandler } from "./$types";
 import type { PageProps, LayoutProps } from "./$types";
+
+// Hook types
+import type { Handle, HandleFetch, HandleServerError } from "@sveltejs/kit";
+import type { HandleClientError } from "@sveltejs/kit";
+import type { ServerInit } from "@sveltejs/kit";
+import type { Reroute, Transport } from "@sveltejs/kit";
 ```
 
 ### Page Options

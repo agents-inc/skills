@@ -15,7 +15,7 @@ description: Angular 17-19 standalone components, signals, control flow, depende
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `standalone: true` on ALL components, directives, and pipes - it's the default in Angular 19 but be explicit for clarity)**
+**(You MUST write standalone components (the default in Angular 19) - only specify `standalone: false` when intentionally using NgModules)**
 
 **(You MUST use `input()`, `output()`, `model()` functions instead of `@Input()`, `@Output()` decorators)**
 
@@ -31,7 +31,7 @@ description: Angular 17-19 standalone components, signals, control flow, depende
 
 ---
 
-**Auto-detection:** Angular component, standalone component, signal, computed, effect, linkedSignal, resource, rxResource, input(), output(), model(), @if, @for, @switch, @defer, inject(), provideRouter, afterRenderEffect
+**Auto-detection:** Angular component, standalone component, signal, computed, effect, linkedSignal, resource, rxResource, httpResource, input(), output(), model(), @if, @for, @switch, @defer, inject(), provideRouter, afterRenderEffect
 
 **When to use:**
 
@@ -40,13 +40,13 @@ description: Angular 17-19 standalone components, signals, control flow, depende
 - Creating component communication with signal-based inputs/outputs
 - Setting up routing with standalone components
 - Lazy loading components with `@defer` or `loadComponent`
-- Fetching async data with `resource()` or `rxResource()`
+- Fetching async data with `resource()`, `rxResource()`, or `httpResource()`
 
 **Key patterns covered:**
 
 - Standalone component architecture (default in Angular 19)
 - Signals for reactive state (signal, computed, effect, linkedSignal)
-- Resource API for async data (resource, rxResource) [experimental]
+- Resource API for async data (resource, rxResource, httpResource) [experimental]
 - Signal-based inputs and outputs (input, output, model)
 - Control flow blocks (@if, @for, @switch, @defer)
 - Dependency injection with inject()
@@ -77,7 +77,7 @@ Angular 17-19 embraces a standalone-first architecture that eliminates NgModule 
 1. **Standalone by Default** - Components, directives, and pipes are standalone by default in v19
 2. **Signal-Based Reactivity** - Synchronous, memoized, fine-grained change detection with `signal()`, `computed()`, `linkedSignal()`
 3. **Built-In Control Flow** - Template syntax that requires no imports and optimizes at build time
-4. **Resource API** - Experimental async data fetching that integrates with signals (`resource()`, `rxResource()`)
+4. **Resource API** - Experimental async data fetching that integrates with signals (`resource()`, `rxResource()`, `httpResource()` in 19.2)
 
 </philosophy>
 
@@ -131,7 +131,6 @@ export class UserCardComponent {
 // BAD - Legacy patterns
 @Component({
   selector: "app-user-card",
-  // Missing standalone: true
   template: `...`,
 })
 export class UserCardComponent {
@@ -140,77 +139,45 @@ export class UserCardComponent {
 }
 ```
 
-**Why bad:** requires NgModule declaration which adds boilerplate, @Input decorator lacks signal reactivity, EventEmitter is less type-safe than output(), non-null assertion (!) hides potential undefined errors
+**Why bad:** @Input decorator lacks signal reactivity, EventEmitter is less type-safe than output(), non-null assertion (!) hides potential undefined errors, no imports array means dependencies aren't explicit
 
 ---
 
 ### Pattern 2: Signals for Reactive State
 
-Use `signal()` for writable state, `computed()` for derived values, and `effect()` for side effects.
+Use `signal()` for writable state, `computed()` for derived values, and `effect()` for side effects. Key rules: always use `.set()` or `.update()` for mutations (never mutate the value directly), use `computed()` for derived values (not methods), and reserve `effect()` for true side effects (logging, analytics, localStorage).
 
 ```typescript
-// counter.component.ts
-import { Component, signal, computed, effect } from "@angular/core";
+// Writable signal
+count = signal(0);
 
-const INCREMENT_STEP = 1;
-const DOUBLE_MULTIPLIER = 2;
+// Computed signal (read-only, memoized, recalculates only when deps change)
+doubleCount = computed(() => this.count() * 2);
 
-@Component({
-  selector: "app-counter",
-  standalone: true,
-  template: `
-    <div>
-      <p>Count: {{ count() }}</p>
-      <p>Double: {{ doubleCount() }}</p>
-      <button (click)="increment()">+</button>
-      <button (click)="decrement()">-</button>
-      <button (click)="reset()">Reset</button>
-    </div>
-  `,
-})
-export class CounterComponent {
-  // Writable signal with initial value
-  count = signal(0);
+// Updating signals - always immutable
+this.count.set(5); // Replace value
+this.count.update((value) => value + 1); // Update from previous
 
-  // Computed signal (read-only, memoized)
-  doubleCount = computed(() => this.count() * DOUBLE_MULTIPLIER);
+// For arrays/objects: return new references
+items = signal<Item[]>([]);
+this.items.update((items) => [...items, newItem]); // Spread, don't push
 
-  constructor() {
-    // Effect runs when dependencies change
-    effect(() => {
-      console.log(`Count changed to: ${this.count()}`);
-    });
-  }
-
-  increment(): void {
-    this.count.update((value) => value + INCREMENT_STEP);
-  }
-
-  decrement(): void {
-    this.count.update((value) => value - INCREMENT_STEP);
-  }
-
-  reset(): void {
-    this.count.set(0);
-  }
-}
+// Effect for side effects only (not derived state)
+effect(() => console.log(`Count: ${this.count()}`));
 ```
 
-**Why good:** signal() provides fine-grained reactivity with automatic change detection, computed() memoizes derived values and only recalculates when dependencies change, effect() handles side effects declaratively, named constants prevent magic numbers
+See [examples/core.md](examples/core.md) for a full shopping cart example with signals.
 
 ```typescript
-// BAD - Manual change detection
-export class CounterComponent {
-  count = 0;
+// BAD - Direct mutation doesn't trigger reactivity
+this.items().push(newItem);              // signal won't notify consumers
+this.items.update(items => { items.push(newItem); return items; }); // same reference, no update
 
-  increment(): void {
-    this.count++;
-    this.cdr.detectChanges(); // Manual change detection
-  }
-}
+// BAD - Method instead of computed (recalculates every call, not memoized)
+getTotal(): number { return this.items().reduce(...); }
 ```
 
-**Why bad:** manual change detection is error-prone and inefficient, no automatic dependency tracking, computed values must be recalculated manually
+**Why bad:** direct mutation doesn't trigger change detection, returning same reference skips equality check, methods lack memoization that computed() provides
 
 ---
 
@@ -468,51 +435,51 @@ export class UserService {
 
 ```typescript
 // user-profile.component.ts
-import { Component, inject, signal, computed, effect } from "@angular/core";
+import { Component, inject, resource } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { toSignal } from "@angular/core/rxjs-interop";
-import { UserService } from "./user.service";
 import type { User } from "./user.types";
+
+const API_BASE_URL = "/api";
 
 @Component({
   selector: "app-user-profile",
   standalone: true,
   template: `
-    @if (user(); as user) {
-      <h1>{{ user.name }}</h1>
-      <p>{{ user.email }}</p>
-    } @else {
+    @if (userResource.isLoading()) {
       <p>Loading user...</p>
+    }
+    @if (userResource.hasValue()) {
+      <h1>{{ userResource.value().name }}</h1>
+      <p>{{ userResource.value().email }}</p>
+    }
+    @if (userResource.error(); as error) {
+      <p>Error: {{ error }}</p>
+      <button (click)="userResource.reload()">Retry</button>
     }
   `,
 })
 export class UserProfileComponent {
   private route = inject(ActivatedRoute);
-  private userService = inject(UserService);
 
   // Convert route params to signal
-  private userId = toSignal(this.route.params, { initialValue: { id: "" } });
+  private params = toSignal(this.route.params, { initialValue: { id: "" } });
 
-  // Derived signal for user ID
-  private currentUserId = computed(() => this.userId()["id"]);
-
-  user = signal<User | null>(null);
-
-  constructor() {
-    // Effect to fetch user when ID changes
-    effect(() => {
-      const id = this.currentUserId();
-      if (id) {
-        this.userService.getUser(id).subscribe((user) => {
-          this.user.set(user);
-        });
-      }
-    });
-  }
+  // resource() auto-refetches when userId changes
+  userResource = resource({
+    params: () => ({ id: this.params()["id"] }),
+    loader: async ({ params, abortSignal }) => {
+      const response = await fetch(`${API_BASE_URL}/users/${params.id}`, {
+        signal: abortSignal,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json() as Promise<User>;
+    },
+  });
 }
 ```
 
-**Why good:** inject() provides cleaner syntax without constructor boilerplate, works in field initializers for simpler code, supports injection flags via options object, enables DI in standalone functions
+**Why good:** inject() provides cleaner syntax without constructor boilerplate, resource() handles loading/error states and race conditions automatically, no manual signal + effect combo needed
 
 ```typescript
 // BAD - Constructor injection (legacy)
@@ -704,13 +671,14 @@ export class ResizeObserverComponent {
 
 **Lifecycle hook mapping:**
 
-| Legacy Hook        | Signal-Based Alternative          |
-| ------------------ | --------------------------------- |
-| ngOnInit           | constructor + effect()            |
-| ngOnChanges        | effect() watching input() signals |
-| ngAfterViewInit    | afterNextRender()                 |
-| ngAfterViewChecked | afterRender()                     |
-| ngOnDestroy        | DestroyRef.onDestroy()            |
+| Legacy Hook        | Signal-Based Alternative                   |
+| ------------------ | ------------------------------------------ |
+| ngOnInit           | constructor + effect()                     |
+| ngOnChanges        | effect() watching input() signals          |
+| ngAfterViewInit    | afterNextRender()                          |
+| ngAfterViewChecked | afterRender() (afterEveryRender() in v20+) |
+| ngOnDestroy        | DestroyRef.onDestroy()                     |
+| DOM side effects   | afterRenderEffect() with phases (v19+)     |
 
 </patterns>
 
@@ -764,7 +732,7 @@ const count$ = toObservable(this.count);
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use `standalone: true` on ALL components, directives, and pipes - it's the default in Angular 19 but be explicit for clarity)**
+**(You MUST write standalone components (the default in Angular 19) - only specify `standalone: false` when intentionally using NgModules)**
 
 **(You MUST use `input()`, `output()`, `model()` functions instead of `@Input()`, `@Output()` decorators)**
 

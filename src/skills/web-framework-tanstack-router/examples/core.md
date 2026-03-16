@@ -1,27 +1,12 @@
-# TanStack Router -- Setup & Configuration Examples
+# TanStack Router -- Core Setup & Configuration
 
-> Project setup, Vite plugin configuration, root route, entry point, and router creation. See [SKILL.md](../SKILL.md) for core patterns and [reference.md](../reference.md) for API reference.
+> Vite plugin configuration, root route, entry point, router creation, and devtools. See [SKILL.md](../SKILL.md) for core patterns and [reference.md](../reference.md) for API reference.
 
 **Related examples:**
 
 - [Routes & Layouts](routes.md) -- defining routes, nested layouts, pathless routes
 - [Navigation](navigation.md) -- Link, useNavigate, redirect
-- [Data Loading](data-loading.md) -- loaders, TanStack Query integration
-
----
-
-## Installation
-
-```bash
-# Runtime dependencies
-npm install @tanstack/react-router @tanstack/react-router-devtools
-
-# Build tool plugin (dev dependency)
-npm install -D @tanstack/router-plugin
-
-# Optional: Zod adapter for search param validation
-npm install @tanstack/zod-adapter zod
-```
+- [Data Loading](data-loading.md) -- loaders, data fetching integration
 
 ---
 
@@ -92,15 +77,16 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import type { QueryClient } from "@tanstack/react-query";
 
+// Define the shape of your router context
+// Include any services or clients you need in loaders/beforeLoad
 export interface RouterContext {
-  queryClient: QueryClient;
   auth: {
     isAuthenticated: boolean;
     user: User | null;
     getUser: () => Promise<User | null>;
   };
+  // Add other services: apiClient, queryClient, etc.
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -145,7 +131,7 @@ function NotFound() {
 
 ---
 
-## Entry Point (Minimal)
+## Entry Point with Router Registration
 
 ```typescript
 // src/main.tsx
@@ -154,9 +140,23 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-const router = createRouter({ routeTree });
+const STALE_TIME_MS = 30_000;
 
-// Register router for type safety
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: {
+      isAuthenticated: false,
+      user: null,
+      getUser: async () => null,
+    },
+    // Pass services here - they become available in all loaders/beforeLoad
+  },
+  defaultPreload: "intent",
+  defaultStaleTime: STALE_TIME_MS,
+});
+
+// Register router for app-wide type safety
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
@@ -164,7 +164,6 @@ declare module "@tanstack/react-router" {
 }
 
 const ROOT_ELEMENT_ID = "root";
-
 const rootElement = document.getElementById(ROOT_ELEMENT_ID);
 if (!rootElement) throw new Error(`Missing #${ROOT_ELEMENT_ID} element`);
 
@@ -175,56 +174,7 @@ createRoot(rootElement).render(
 );
 ```
 
----
-
-## Entry Point with TanStack Query + Auth Context
-
-```typescript
-// src/main.tsx
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { routeTree } from "./routeTree.gen";
-
-const queryClient = new QueryClient();
-
-const STALE_TIME_MS = 30_000;
-
-const router = createRouter({
-  routeTree,
-  context: {
-    queryClient,
-    auth: {
-      isAuthenticated: false,
-      user: null,
-      getUser: async () => null,
-    },
-  },
-  defaultPreload: "intent",
-  defaultStaleTime: STALE_TIME_MS,
-});
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
-
-const ROOT_ELEMENT_ID = "root";
-const rootElement = document.getElementById(ROOT_ELEMENT_ID);
-if (!rootElement) throw new Error(`Missing #${ROOT_ELEMENT_ID} element`);
-
-createRoot(rootElement).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
-);
-```
-
-**Why:** `declare module` registration enables type-safe `Link` and `useNavigate` across the entire app. Passing `queryClient` via router context makes it available to all loaders without global imports.
+**Why:** `declare module` registration enables type-safe `Link` and `useNavigate` across the entire app. Passing services via router context makes them available to all loaders without global imports, improving testability.
 
 ---
 
