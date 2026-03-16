@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-ui-components
+slug: mui
+domain: web
+author: "@vince"
+displayName: MUI (Material UI)
+cliDescription: Material UI component library for React
+usageGuidance: Use when building React UIs with MUI — theming, component customization, sx prop, styled API, data grids, date pickers, and Material Design patterns.

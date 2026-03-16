@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-ui-components
+slug: headless-ui
+domain: web
+author: "@vince"
+displayName: Headless UI
+cliDescription: Unstyled accessible UI components by Tailwind Labs
+usageGuidance: Use when building accessible UI with Headless UI — Dialog, Menu, Listbox, Combobox, Popover, Tabs, Disclosure, and other unstyled primitives designed for Tailwind CSS.

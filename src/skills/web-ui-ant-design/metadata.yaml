@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-ui-components
+slug: ant-design
+domain: web
+author: "@vince"
+displayName: Ant Design
+cliDescription: Ant Design enterprise UI library for React
+usageGuidance: Use when building React UIs with Ant Design — ConfigProvider theming, Table, Form, Layout, data entry components, and enterprise design patterns.
