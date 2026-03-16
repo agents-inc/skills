@@ -6,7 +6,7 @@
 
 - [Navigation Components](navigation.md)
 - [Data Display Components](data-display.md)
-- [Setup & Theme Configuration](setup.md)
+- [Core Setup & Theming](core.md)
 
 ---
 

@@ -102,7 +102,6 @@ import {
   Switch,
   Checkbox,
 } from "@headlessui/react";
-import { CheckIcon } from "@heroicons/react/20/solid";
 
 export function ProfileForm() {
   const [marketingEnabled, setMarketingEnabled] = useState(false);
@@ -197,7 +196,13 @@ export function ProfileForm() {
             name="terms"
             className="group size-5 cursor-pointer rounded border border-gray-300 bg-white data-[checked]:border-blue-500 data-[checked]:bg-blue-500 data-[focus]:ring-2 data-[focus]:ring-blue-500 data-[focus]:ring-offset-2"
           >
-            <CheckIcon className="size-4 text-white opacity-0 group-data-[checked]:opacity-100" />
+            <svg
+              className="size-4 text-white opacity-0 group-data-[checked]:opacity-100"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+            </svg>
           </Checkbox>
           <Label className="text-sm text-gray-700">
             I agree to the terms and conditions

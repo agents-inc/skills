@@ -2,7 +2,7 @@
 
 This monolithic examples file has been replaced by the following topic-specific files:
 
-- [setup.md](setup.md) -- ConfigProvider, App wrapper, theme, design tokens, dark mode
+- [core.md](core.md) -- ConfigProvider, App wrapper, theme, design tokens, dark mode
 - [form.md](form.md) -- Form, Form.Item, validation, useForm, Form.List, Form.useWatch
 - [table.md](table.md) -- Table, columns, sorting, filtering, pagination, virtual scrolling
 - [layout.md](layout.md) -- Layout, Sider, Header, Content, Grid, Space, Flex

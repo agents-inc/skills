@@ -248,7 +248,7 @@ Button.displayName = "Button";
   <a href="/page">Navigate</a>
 </Button>
 
-// Renders as Next.js Link
+// Renders as framework link component
 <Button asChild>
   <Link href="/dashboard">Dashboard</Link>
 </Button>

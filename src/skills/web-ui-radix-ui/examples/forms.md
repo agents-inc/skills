@@ -95,7 +95,7 @@ For sites with Content Security Policy, use the `nonce` prop for inline styles.
 ```typescript
 import { Select } from "radix-ui";
 
-// Nonce provided by your server framework (Next.js, etc.)
+// Nonce provided by your server framework
 type SelectWithCSPProps = {
   nonce?: string;
   options: Array<{ value: string; label: string }>;

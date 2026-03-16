@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [Setup & Theme Configuration](setup.md)
+- [Core Setup & Theming](core.md)
 - [Feedback Components](feedback.md)
 - [Tables & Data Display](table.md)
 

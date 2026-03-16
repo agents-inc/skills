@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Theme config, component overrides, dark mode
+- [core.md](core.md) -- Theme config, component overrides, dark mode
 - [layout.md](layout.md) -- sx prop for responsive layout
 - [form-inputs.md](form-inputs.md) -- slotProps for input customization
 

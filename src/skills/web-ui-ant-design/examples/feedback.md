@@ -5,7 +5,7 @@
 **Related examples:**
 
 - [Forms & Validation](form.md)
-- [Setup & Theme Configuration](setup.md)
+- [Core Setup & Theming](core.md)
 - [Tables & Data Display](table.md)
 
 ---

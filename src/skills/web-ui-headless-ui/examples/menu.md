@@ -130,12 +130,6 @@ import {
   MenuHeading,
   MenuSeparator,
 } from "@headlessui/react";
-import {
-  PencilIcon,
-  Square2StackIcon,
-  ArchiveBoxIcon,
-  TrashIcon,
-} from "@heroicons/react/16/solid";
 
 export function ActionMenu() {
   return (
@@ -155,14 +149,26 @@ export function ActionMenu() {
         <MenuSection>
           <MenuItem>
             <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100">
-              <PencilIcon className="size-4 text-gray-400 group-data-[focus]:text-gray-500" />
+              <svg
+                className="size-4 text-gray-400 group-data-[focus]:text-gray-500"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61z" />
+              </svg>
               Edit
               <kbd className="ml-auto text-xs text-gray-400">Ctrl+E</kbd>
             </button>
           </MenuItem>
           <MenuItem>
             <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100">
-              <Square2StackIcon className="size-4 text-gray-400 group-data-[focus]:text-gray-500" />
+              <svg
+                className="size-4 text-gray-400 group-data-[focus]:text-gray-500"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M5.75 2a.75.75 0 00-.75.75v3.5c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3.5a.75.75 0 00-.75-.75h-4.5zm-2.5 4a.75.75 0 00-.75.75v6.5c0 .414.336.75.75.75h9.5a.75.75 0 00.75-.75v-6.5a.75.75 0 00-.75-.75h-9.5z" />
+              </svg>
               Duplicate
               <kbd className="ml-auto text-xs text-gray-400">Ctrl+D</kbd>
             </button>
@@ -174,14 +180,30 @@ export function ActionMenu() {
         <MenuSection>
           <MenuItem>
             <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100">
-              <ArchiveBoxIcon className="size-4 text-gray-400 group-data-[focus]:text-gray-500" />
+              <svg
+                className="size-4 text-gray-400 group-data-[focus]:text-gray-500"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v1a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm0 4.5h12v5a2 2 0 01-2 2H4a2 2 0 01-2-2v-5z" />
+              </svg>
               Archive
               <kbd className="ml-auto text-xs text-gray-400">Ctrl+A</kbd>
             </button>
           </MenuItem>
           <MenuItem disabled>
             <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[disabled]:opacity-50">
-              <TrashIcon className="size-4 text-gray-400" />
+              <svg
+                className="size-4 text-gray-400"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5 3.25V4H2.75a.75.75 0 000 1.5h.3l.815 8.15A1.5 1.5 0 005.357 15h5.285a1.5 1.5 0 001.493-1.35l.815-8.15h.3a.75.75 0 000-1.5H11v-.75A2.25 2.25 0 008.75 1h-1.5A2.25 2.25 0 005 3.25z"
+                  clipRule="evenodd"
+                />
+              </svg>
               Delete
               <kbd className="ml-auto text-xs text-gray-400">Ctrl+Del</kbd>
             </button>

@@ -5,7 +5,7 @@ description: Unstyled accessible UI components by Tailwind Labs
 
 # Headless UI Patterns
 
-> **Quick Guide:** Headless UI provides completely unstyled, fully accessible UI components designed for Tailwind CSS. Use compound component patterns (Menu/MenuButton/MenuItems/MenuItem), `data-*` attributes for styling states, built-in anchor positioning for floating elements, and the `transition` prop for CSS-powered animations. All components handle ARIA, keyboard navigation, and focus management automatically. **Current: v2.2.x (React only)** - Built-in anchor positioning via Floating UI, data-attribute transitions, form components, and virtual scrolling.
+> **Quick Guide:** Headless UI provides completely unstyled, fully accessible UI components designed for Tailwind CSS. Use compound component patterns (Menu/MenuButton/MenuItems/MenuItem), `data-*` attributes for styling states, built-in anchor positioning for floating elements, and the `transition` prop for CSS-powered animations. All components handle ARIA, keyboard navigation, and focus management automatically. **Current: v2.2.9 (React only).**
 
 ---
 
@@ -31,17 +31,17 @@ description: Unstyled accessible UI components by Tailwind Labs
 
 **When to use:**
 
-- Building accessible overlay components (dialogs, popovers, dropdowns, menus) with Tailwind CSS
+- Building accessible overlay components (dialogs, popovers, dropdowns, menus) with utility-class styling
 - Creating fully custom select/combobox/listbox controls with keyboard navigation
 - Implementing tabs, disclosure/accordion, switch, radio group, or checkbox with custom styling
 - Needing automatic ARIA attributes, focus trapping, and keyboard handling without visual opinions
 
 **When NOT to use:**
 
-- Pre-styled component library desired (use shadcn/ui, Catalyst, or a design system built on Headless UI)
+- Pre-styled component library desired (use a design system or pre-built component kit)
 - Simple native HTML elements suffice (plain `<select>`, `<input type="checkbox">`, `<details>`)
 - Non-React projects (v2 is React-only; Vue version remains at v1)
-- Complex compound component API with `asChild` polymorphism needed (use Radix UI instead)
+- Need `asChild` polymorphism or more granular primitive control (consider alternative headless libraries)
 
 **Package Installation:**
 
@@ -51,6 +51,7 @@ npm install @headlessui/react
 
 **Examples:**
 
+- [Core Patterns](examples/core.md) - Data-attribute styling, anchor positioning, transitions, `as` prop, `useClose`
 - [Dialog & Modal](examples/dialog.md) - Modal overlays, form dialogs, slide-over panels, transitions
 - [Menu & Dropdowns](examples/menu.md) - Dropdown action menus, sections, icons, keyboard shortcuts
 - [Listbox & Combobox](examples/listbox-combobox.md) - Custom select, autocomplete, virtual scrolling
@@ -67,27 +68,16 @@ npm install @headlessui/react
 
 ## Philosophy
 
-Headless UI provides **behavior-only** components: accessibility, keyboard navigation, focus management, and state handling are built in, while **all visual styling is your responsibility**. This makes it the ideal companion for Tailwind CSS.
+Headless UI provides **behavior-only** components: accessibility, keyboard navigation, focus management, and state handling are built in, while **all visual styling is your responsibility**. Style entirely via `className` using utility classes or any CSS approach.
 
 **Core Design Principles:**
 
-- **Unstyled by default**: No CSS shipped. Style entirely with Tailwind utility classes via `className`.
+- **Unstyled by default**: No CSS shipped. Style entirely via `className`.
 - **Accessible out of the box**: ARIA roles, attributes, and keyboard interactions are automatic.
 - **Compound components**: Each UI pattern is composed of multiple coordinated parts (e.g., `Menu` + `MenuButton` + `MenuItems` + `MenuItem`).
 - **Data attributes for state**: Components expose `data-open`, `data-focus`, `data-selected`, `data-hover`, `data-active`, `data-disabled`, `data-checked` for CSS-based state styling.
 - **Built-in anchor positioning**: Floating panels (menus, listboxes, comboboxes, popovers) use Floating UI internally for automatic viewport-aware positioning.
 - **Transition support**: The `transition` prop enables CSS transitions using `data-closed`, `data-enter`, `data-leave` attributes.
-
-**v2 Key Changes from v1:**
-
-- Anchor positioning built in (no separate Floating UI setup needed)
-- Data-attribute-based transitions replace complex render props
-- New form components (Field, Input, Label, Description, Fieldset, Legend, Select, Textarea)
-- New Checkbox component
-- Improved hover/focus/active detection (based on React Aria research)
-- Combobox virtual scrolling via TanStack Virtual
-- Better React Server Component compatibility
-- `useClose` hook and `CloseButton` component for imperative close
 
 </philosophy>
 
@@ -102,14 +92,6 @@ Headless UI provides **behavior-only** components: accessibility, keyboard navig
 Dialogs are always controlled components. You manage `open` state and pass `onClose`. Focus is automatically trapped within the dialog panel.
 
 ```tsx
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-  Description,
-} from "@headlessui/react";
-
 <Dialog
   open={isOpen}
   onClose={() => setIsOpen(false)}
@@ -128,7 +110,7 @@ import {
       <Description>Description text</Description>
     </DialogPanel>
   </div>
-</Dialog>;
+</Dialog>
 ```
 
 **Key points:** `open`/`onClose` are required, `DialogTitle` sets aria-labelledby, `transition` enables CSS animations via `data-[closed]`
@@ -142,8 +124,6 @@ Full examples: [examples/dialog.md](examples/dialog.md)
 Menus provide dropdown behavior: arrow key navigation, type-ahead search, auto-close on selection.
 
 ```tsx
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-
 <Menu>
   <MenuButton className="rounded-md bg-gray-800 px-4 py-2 text-white">
     Options
@@ -159,7 +139,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
       </button>
     </MenuItem>
   </MenuItems>
-</Menu>;
+</Menu>
 ```
 
 **Key points:** `anchor` handles positioning, `data-[focus]` styles keyboard/mouse focus, items auto-close menu on click, use `MenuSection`/`MenuSeparator` for grouped menus
@@ -173,13 +153,6 @@ Full examples: [examples/menu.md](examples/menu.md)
 Listbox replaces the native `<select>` with full styling control and keyboard navigation.
 
 ```tsx
-import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "@headlessui/react";
-
 <Listbox value={selected} onChange={setSelected}>
   <ListboxButton className="w-full rounded-lg py-2 pl-3 pr-10 text-left shadow-md">
     {selected.name}
@@ -195,7 +168,7 @@ import {
       {item.name}
     </ListboxOption>
   </ListboxOptions>
-</Listbox>;
+</Listbox>
 ```
 
 **Key points:** Objects compared by `id` field by default (use `by` prop for custom), `multiple` prop for multi-select, `name` for form submission, `--button-width` matches dropdown to trigger width
@@ -209,14 +182,6 @@ Full examples: [examples/listbox-combobox.md](examples/listbox-combobox.md)
 Combobox combines a text input with a filterable dropdown. Filtering logic is your responsibility.
 
 ```tsx
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxButton,
-  ComboboxOption,
-  ComboboxOptions,
-} from "@headlessui/react";
-
 <Combobox value={selected} onChange={setSelected} onClose={() => setQuery("")}>
   <ComboboxInput
     displayValue={(item: Item | null) => item?.name ?? ""}
@@ -233,10 +198,10 @@ import {
       {item.name}
     </ComboboxOption>
   </ComboboxOptions>
-</Combobox>;
+</Combobox>
 ```
 
-**Key points:** `onClose` resets query state, `displayValue` formats selected item in input, `virtual={{ options }}` for 1000+ items (TanStack Virtual), `--input-width` matches dropdown to input
+**Key points:** `onClose` resets query state, `displayValue` formats selected item in input, `virtual={{ options }}` for 1000+ items (built-in virtualization), `--input-width` matches dropdown to input
 
 Full examples: [examples/listbox-combobox.md](examples/listbox-combobox.md)
 
@@ -247,13 +212,6 @@ Full examples: [examples/listbox-combobox.md](examples/listbox-combobox.md)
 Popovers display floating non-modal content. They close on outside click, Escape, or tab-away.
 
 ```tsx
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  CloseButton,
-} from "@headlessui/react";
-
 <Popover>
   <PopoverButton className="text-sm font-semibold data-[open]:text-blue-600">
     Solutions
@@ -267,7 +225,7 @@ import {
       Analytics
     </CloseButton>
   </PopoverPanel>
-</Popover>;
+</Popover>
 ```
 
 **Key points:** `CloseButton` closes popover on click (useful for nav links), `PopoverGroup` manages sibling popover focus, `modal` prop for focus trapping
@@ -281,8 +239,6 @@ Full examples: [examples/popover-disclosure.md](examples/popover-disclosure.md)
 Tab components manage tabbed content with keyboard navigation (arrow keys, Home/End).
 
 ```tsx
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
-
 <TabGroup>
   <TabList className="flex gap-4 border-b">
     <Tab className="px-3 py-2 text-sm data-[selected]:border-blue-500 data-[selected]:text-blue-600">
@@ -292,7 +248,7 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
   <TabPanels>
     <TabPanel>Content</TabPanel>
   </TabPanels>
-</TabGroup>;
+</TabGroup>
 ```
 
 **Key points:** `vertical` prop switches to Up/Down arrows, `selectedIndex`/`onChange` for controlled mode, `manual` requires Enter/Space to activate, Tab/TabPanel order matches automatically
@@ -306,16 +262,12 @@ Full examples: [examples/tabs.md](examples/tabs.md)
 Disclosure provides show/hide toggle for accordion-style content.
 
 ```tsx
-import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-} from "@headlessui/react";
-
 <Disclosure>
   <DisclosureButton className="flex w-full items-center justify-between rounded-lg bg-gray-100 px-4 py-2">
     Question text
-    <ChevronDownIcon className="size-5 data-[open]:rotate-180" />
+    <span className="size-5 data-[open]:rotate-180" aria-hidden="true">
+      &#9662;
+    </span>
   </DisclosureButton>
   <DisclosurePanel
     transition
@@ -323,7 +275,7 @@ import {
   >
     Answer text
   </DisclosurePanel>
-</Disclosure>;
+</Disclosure>
 ```
 
 **Key points:** Each Disclosure manages its own state independently, `defaultOpen` for initial state, `data-[open]` on button for icon rotation
@@ -356,7 +308,9 @@ Toggle, option selection, and checkbox controls with form integration.
 // Checkbox
 <Checkbox checked={agreed} onChange={setAgreed} name="terms"
   className="group size-5 rounded border data-[checked]:bg-blue-500">
-  <CheckIcon className="size-4 text-white opacity-0 group-data-[checked]:opacity-100" />
+  <svg className="size-4 text-white opacity-0 group-data-[checked]:opacity-100" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+  </svg>
 </Checkbox>
 ```
 
@@ -371,17 +325,6 @@ Full examples: [examples/switch-radio.md](examples/switch-radio.md)
 Headless UI v2 form primitives auto-generate IDs and wire ARIA attributes.
 
 ```tsx
-import {
-  Field,
-  Fieldset,
-  Input,
-  Label,
-  Legend,
-  Description,
-  Select,
-  Textarea,
-} from "@headlessui/react";
-
 <Fieldset className="space-y-6">
   <Legend className="text-lg font-semibold">Shipping Details</Legend>
   <Field>
@@ -396,7 +339,7 @@ import {
     <Label className="data-[disabled]:opacity-50">Promo code</Label>
     <Input className="data-[disabled]:bg-gray-100" />
   </Field>
-</Fieldset>;
+</Fieldset>
 ```
 
 **Key points:** Field auto-generates `id`/`aria-labelledby`/`aria-describedby` (no manual `htmlFor`), disabled Field cascades to all children, Fieldset+Legend group related fields
@@ -407,7 +350,7 @@ Full examples: [examples/forms.md](examples/forms.md)
 
 ### Pattern 10: Anchor Positioning
 
-Floating panels accept an `anchor` prop powered by Floating UI for viewport-aware positioning.
+Floating panels accept an `anchor` prop for viewport-aware positioning.
 
 ```tsx
 // Position values: "top", "top start", "top end", "bottom", "bottom start", "bottom end",
@@ -503,32 +446,6 @@ Form field with auto ARIA?
   -> Field + Label + Description + Input/Select/Textarea
 ```
 
-### Headless UI vs Radix UI
-
-```
-Which headless library?
-
-Want Tailwind-first data-attribute styling?
-  -> Headless UI (designed for Tailwind CSS)
-
-Need asChild polymorphism (render as different element)?
-  -> Radix UI (Slot/asChild pattern)
-
-Need Portal control for overlays?
-  -> Radix UI (explicit Portal component)
-  -> Headless UI handles portals internally for Dialog
-
-Need AlertDialog (no-dismiss confirmation)?
-  -> Radix UI (has AlertDialog primitive)
-  -> Headless UI: use Dialog with role="alertdialog"
-
-Building a design system?
-  -> Radix UI (more granular control, more primitives)
-
-Building a product UI with Tailwind?
-  -> Headless UI (tighter Tailwind integration)
-```
-
 ### Transition Approach
 
 ```
@@ -543,37 +460,12 @@ Different enter/leave animations?
 Coordinated multi-element animations?
   -> Transition + TransitionChild components
 
-JavaScript animation library (Framer Motion)?
+JavaScript animation library?
   -> Use static prop to disable internal state management
-  -> Wrap in AnimatePresence, conditionally render
+  -> Conditionally render based on your animation library's presence detection
 ```
 
 </decision_framework>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Headless UI is designed for Tailwind CSS** but works with any styling approach via `className`.
-
-**Works with:**
-
-- **Tailwind CSS**: Primary styling approach. Use `data-[state]:` modifiers for state-based styling and `group-data-[state]:` for parent state styling on children.
-- **Heroicons**: Common pairing for icons (`@heroicons/react`). Used in Combobox buttons, Menu indicators, etc.
-- **Framer Motion**: Use `static` prop on panels to disable internal state management, then wrap in `AnimatePresence` for JavaScript-powered animations.
-- **React Hook Form / Formik**: Form components (Field, Input, Label) work alongside form libraries. Use Listbox/Combobox `onChange` to update form state.
-- **Next.js**: Works with App Router. Data-attribute styling is RSC-compatible (no render props needed).
-- **TanStack Virtual**: Built-in via Combobox's `virtual` prop for large lists.
-
-**Replaces / Conflicts with:**
-
-- **Radix UI**: Both provide unstyled accessible components. Choose one per component type (don't mix Menu from Headless UI with DropdownMenu from Radix for the same pattern).
-- **React Aria / React Spectrum**: Overlapping accessibility primitives. Headless UI is higher-level with compound components.
-- **Native HTML**: Replaces `<select>` (Listbox), `<input type="checkbox">` (Checkbox), `<details>` (Disclosure), `<dialog>` (Dialog).
-
-</integration>
 
 ---
 

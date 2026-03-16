@@ -1,6 +1,6 @@
 # TanStack Table Reference
 
-> Decision frameworks, anti-patterns, and red flags for TanStack Table development. See [SKILL.md](SKILL.md) for core concepts and [examples.md](examples.md) for code examples.
+> Decision frameworks, anti-patterns, and red flags for TanStack Table development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 **Version:** TanStack Table v8.21.3 (latest as of April 2025)
 

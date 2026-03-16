@@ -22,7 +22,6 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 type Person = { id: number; name: string; unavailable: boolean };
 
@@ -39,7 +38,12 @@ export function PersonSelect() {
     <Listbox value={selected} onChange={setSelected}>
       <ListboxButton className="relative w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md">
         {selected.name}
-        <ChevronUpDownIcon className="absolute right-2 top-2.5 size-5 text-gray-400" />
+        <span
+          className="pointer-events-none absolute right-2 top-2.5 size-5 text-gray-400"
+          aria-hidden="true"
+        >
+          &#8645;
+        </span>
       </ListboxButton>
       <ListboxOptions
         anchor="bottom"
@@ -52,7 +56,13 @@ export function PersonSelect() {
             disabled={person.unavailable}
             className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 data-[focus]:bg-blue-100 data-[disabled]:opacity-50"
           >
-            <CheckIcon className="invisible size-4 text-blue-600 data-[selected]:visible" />
+            <svg
+              className="invisible size-4 text-blue-600 data-[selected]:visible"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+            </svg>
             {person.name}
           </ListboxOption>
         ))}
@@ -136,7 +146,6 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 type Country = { code: string; name: string };
 
@@ -178,10 +187,9 @@ export function CountryCombobox() {
             placeholder="Search countries..."
           />
           <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
-            <ChevronUpDownIcon
-              className="size-5 text-gray-400"
-              aria-hidden="true"
-            />
+            <span className="size-5 text-gray-400" aria-hidden="true">
+              &#8645;
+            </span>
           </ComboboxButton>
         </div>
 
@@ -201,7 +209,13 @@ export function CountryCombobox() {
                 value={country}
                 className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm data-[focus]:bg-blue-50"
               >
-                <CheckIcon className="invisible size-4 text-blue-600 data-[selected]:visible" />
+                <svg
+                  className="invisible size-4 text-blue-600 data-[selected]:visible"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+                </svg>
                 <span className="data-[selected]:font-medium">
                   {country.name}
                 </span>
@@ -218,7 +232,7 @@ export function CountryCombobox() {
 }
 ```
 
-**Why good:** `onClose` resets query, `displayValue` shows selected country name in input, `empty:invisible` hides dropdown when no content (Tailwind), `--input-width` matches dropdown width to input, `data-[selected]` shows checkmark and bolds text, `name` enables form submission
+**Why good:** `onClose` resets query, `displayValue` shows selected country name in input, `empty:invisible` hides dropdown when no content, `--input-width` matches dropdown width to input, `data-[selected]` shows checkmark and bolds text, `name` enables form submission
 
 ---
 
@@ -235,7 +249,6 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import { CheckIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 
 type Person = { id: number; name: string };
 
@@ -271,7 +284,9 @@ export function PeopleCombobox() {
           placeholder="Search people..."
         />
         <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronDownIcon className="size-5 text-gray-400" />
+          <span className="size-5 text-gray-400" aria-hidden="true">
+            &#9662;
+          </span>
         </ComboboxButton>
       </div>
       <ComboboxOptions
@@ -290,7 +305,13 @@ export function PeopleCombobox() {
               value={person}
               className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 data-[focus]:bg-blue-100"
             >
-              <CheckIcon className="invisible size-4 text-blue-600 data-[selected]:visible" />
+              <svg
+                className="invisible size-4 text-blue-600 data-[selected]:visible"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+              </svg>
               {person.name}
             </ComboboxOption>
           ))
@@ -367,4 +388,4 @@ export function VirtualCombobox() {
 }
 ```
 
-**Why good:** `virtual` prop enables TanStack Virtual for 10k+ items, render function on ComboboxOptions receives each visible option, only visible items are in the DOM
+**Why good:** `virtual` prop enables built-in virtualization for 10k+ items, render function on ComboboxOptions receives each visible option, only visible items are in the DOM

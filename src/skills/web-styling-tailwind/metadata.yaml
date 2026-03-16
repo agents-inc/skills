@@ -8,4 +8,4 @@ cliDescription: Utility-first CSS framework v4
 usageGuidance: >-
   Use when styling with Tailwind CSS v4 utility classes, configuring themes with
   @theme directive, implementing dark mode, responsive design, custom utilities
-  with @utility, or integrating Tailwind with React components.
+  with @utility, or composing component classes with cn() and tailwind-merge.

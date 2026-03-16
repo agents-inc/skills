@@ -5,7 +5,7 @@ description: Ant Design enterprise UI library for React
 
 # Ant Design Patterns
 
-> **Quick Guide:** Ant Design is an enterprise-grade React UI library providing a complete set of high-quality components. Use ConfigProvider with design tokens for theming, the three-layer token system (Seed, Map, Alias) for customization, and the App component for context-aware feedback methods. **Current: v5.x (latest 5.29.x)** - CSS-in-JS engine with design tokens, CSS variables mode, tree-shaking support. Note: v6 has been released but v5 remains widely deployed.
+> **Quick Guide:** Ant Design is an enterprise-grade React UI library providing a complete set of high-quality components. Use ConfigProvider with design tokens for theming, the three-layer token system (Seed, Map, Alias) for customization, and the App component for context-aware feedback methods. **Current: v6.x** (pure CSS variables by default, zero-runtime mode, React 18+ required). v5.x is in maintenance. All patterns in this skill apply to both v5 and v6 unless noted.
 
 ---
 
@@ -58,7 +58,7 @@ description: Ant Design enterprise UI library for React
 
 ## Examples
 
-- [Setup & Theme Configuration](examples/setup.md) -- ConfigProvider, App wrapper, design tokens, dark mode, nested themes, useToken
+- [Core Setup & Theming](examples/core.md) -- ConfigProvider, App wrapper, design tokens, dark mode, nested themes, useToken
 - [Forms & Validation](examples/form.md) -- Form, Form.Item, validation rules, useForm, Form.List, Form.useWatch, modal form
 - [Tables](examples/table.md) -- Table, columns, sorting, filtering, pagination, row selection, virtual scrolling, expandable rows
 - [Layout](examples/layout.md) -- Layout, Sider, Header, Content, Grid (Row/Col), Space, Flex
@@ -83,7 +83,7 @@ Ant Design follows the principles of **Natural**, **Certain**, **Meaningful**, a
 - **Design token system**: Three-layer architecture (Seed > Map > Alias) enabling systematic customization without CSS overrides
 - **Enterprise patterns**: Built-in pagination, filtering, form validation, internationalization, and accessibility
 
-**v5 Architecture (CSS-in-JS):** Ant Design v5 replaced Less variables with a CSS-in-JS engine (`@ant-design/cssinjs`) and design tokens. Styles are generated at runtime and cached, with tree-shaking support eliminating the need for `babel-plugin-import`. CSS variables mode reduces runtime cost for theme switching.
+**Architecture (CSS-in-JS with CSS Variables):** Ant Design uses a CSS-in-JS engine (`@ant-design/cssinjs`) with design tokens. v6 defaults to pure CSS Variables mode for reduced bundle size and instant theme switching. v6 also supports zero-runtime mode (`zeroRuntime: true`) where styles are pre-extracted to static CSS. Tree-shaking is built-in -- no `babel-plugin-import` needed.
 
 **When to use Ant Design:**
 
@@ -96,7 +96,7 @@ Ant Design follows the principles of **Natural**, **Certain**, **Meaningful**, a
 
 - Consumer-facing products needing distinctive brand design (too opinionated)
 - Performance-critical SPAs where bundle size must be minimal
-- Projects using a different styling paradigm (Tailwind-first, etc.)
+- Projects using a utility-class-first styling paradigm
 
 </philosophy>
 
@@ -106,21 +106,7 @@ Ant Design follows the principles of **Natural**, **Certain**, **Meaningful**, a
 
 ## Core Patterns
 
-### Pattern 1: Installation and Setup
-
-```bash
-# Core library
-npm install antd
-
-# Icons (import individually for tree-shaking)
-npm install @ant-design/icons
-
-# Pro components (optional - enterprise patterns)
-npm install @ant-design/pro-components
-
-# Next.js SSR support (optional)
-npm install @ant-design/nextjs-registry
-```
+### Pattern 1: App Root Setup
 
 The minimal app setup wraps everything in ConfigProvider + App:
 
@@ -148,13 +134,13 @@ export { App };
 
 **Why this structure:** ConfigProvider provides theme tokens and locale to all children. App component enables context-aware message/notification/modal APIs. cssVar mode optimizes theme switching performance.
 
-See [examples/setup.md](examples/setup.md) for enterprise theme, dark mode toggle, nested themes, and useToken patterns.
+See [examples/core.md](examples/core.md) for enterprise theme, dark mode toggle, nested themes, and useToken patterns.
 
 ---
 
 ### Pattern 2: Design Tokens and Theming
 
-Ant Design v5 uses a three-layer token system:
+Ant Design uses a three-layer token system:
 
 - **Seed Tokens**: Foundational values (`colorPrimary`, `fontSize`, `borderRadius`) that derive all other tokens
 - **Map Tokens**: Derived from seed tokens via algorithms (`colorPrimaryBg`, `colorPrimaryHover`)
@@ -178,7 +164,7 @@ function CustomCard() {
 }
 ```
 
-See [examples/setup.md](examples/setup.md) for full theme configuration, nested themes, and StatusCard using useToken.
+See [examples/core.md](examples/core.md) for full theme configuration, nested themes, and StatusCard using useToken.
 
 ---
 
@@ -200,7 +186,7 @@ const combined = {
 };
 ```
 
-See [examples/setup.md](examples/setup.md) for dark mode toggle with persistence and algorithm combining.
+See [examples/core.md](examples/core.md) for dark mode toggle with persistence and algorithm combining.
 
 ---
 
@@ -375,17 +361,24 @@ See [examples/pro-components.md](examples/pro-components.md) for ProLayout, ProT
 ### CSS Variables Mode
 
 ```tsx
+// v6: CSS variables are default. v5: opt in with cssVar: true
 const THEME: ThemeConfig = {
-  cssVar: true, // Converts tokens to CSS custom properties
+  cssVar: true,
   hashed: false, // Disable hash when only one antd version in the app
+};
+
+// v6 zero-runtime mode: pre-extract styles to static CSS
+// Requires importing 'antd/dist/antd.css' separately
+const ZERO_RUNTIME_THEME: ThemeConfig = {
+  zeroRuntime: true,
 };
 ```
 
-CSS variables mode eliminates runtime style recalculation when switching themes. Combined with `hashed: false` (safe when only one antd version exists), this reduces total style output size.
+CSS variables mode eliminates runtime style recalculation when switching themes. `hashed: false` is safe when only one antd version exists. Zero-runtime mode (v6) completely removes runtime style generation for maximum performance.
 
 ### Tree-Shaking
 
-v5 supports tree-shaking natively -- no `babel-plugin-import` needed. Icons must always be imported individually (`import { UserOutlined } from "@ant-design/icons"`) or via path imports.
+Tree-shaking works natively -- no `babel-plugin-import` needed. Icons must always be imported individually (`import { UserOutlined } from "@ant-design/icons"`) or via path imports.
 
 ### Virtual Scrolling
 
@@ -399,10 +392,6 @@ v5 supports tree-shaking natively -- no `babel-plugin-import` needed. Icons must
 // Tree/TreeSelect: virtual prop
 <Tree virtual treeData={largeTreeData} />
 ```
-
-### Date Library
-
-dayjs (2KB) is the default in v5, replacing moment.js (300KB+). No configuration needed unless migrating from v4.
 
 </performance>
 
@@ -479,20 +468,19 @@ How to customize appearance?
 
 ## Integration Guide
 
-**Works with:**
+**Routing:** Layout, Menu, and Breadcrumb components accept `onClick` / `href` handlers -- wire them to your router's navigation. Menu `items` array maps naturally to route definitions.
 
-- **React Router / Next.js**: Layout, Menu, Breadcrumb integrate with routing
-- **React Query / SWR**: Use with Table/ProTable for server state management
-- **dayjs**: Default date library in v5 (replaces moment.js)
-- **@ant-design/pro-components**: Enterprise patterns (ProTable, ProForm, ProLayout)
-- **@ant-design/nextjs-registry**: SSR style extraction for Next.js
+**Data fetching:** Table and ProTable work with any data source. Pass fetched data via `dataSource` prop or use ProTable's `request` callback which expects `{ data, success, total }`.
 
-**Conflicts with / Considerations:**
+**Date library:** dayjs is the default date library (replaces moment.js from v4). Date components use it internally -- set dayjs locale separately from ConfigProvider locale.
 
-- **Tailwind CSS**: Can coexist but requires careful CSS specificity management; avoid styling antd components with Tailwind utility classes directly
-- **Other UI libraries** (MUI, Chakra): Should not mix component libraries in the same project
-- **CSS Modules / global CSS**: Avoid overriding antd styles with global CSS; use design tokens and component tokens instead
-- **moment.js**: v5 uses dayjs by default; remove moment.js dependency if migrating from v4
+**Ant Design ecosystem packages:**
+
+- `@ant-design/pro-components` -- enterprise patterns (ProTable, ProForm, ProLayout)
+- `@ant-design/nextjs-registry` -- SSR style extraction for SSR frameworks
+- `@ant-design/icons` -- icon library (import individually for tree-shaking)
+
+**Styling coexistence:** Avoid overriding antd styles with global CSS -- use design tokens and component tokens instead. Antd's CSS-in-JS styles have their own specificity; mixing with utility-class frameworks requires careful management.
 
 </integration>
 

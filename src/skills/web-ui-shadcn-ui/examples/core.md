@@ -4,26 +4,27 @@
 
 ---
 
-## Project Setup Examples
+## Project Setup
 
-### Complete Initialization
+### Initialization
 
 ```bash
 # Initialize a new shadcn/ui project
 npx shadcn@latest init
 
 # When prompted, select:
-# - TypeScript: Yes
 # - Style: New York (recommended; "default" style is deprecated)
-# - Base color: Slate
-# - Global CSS file: app/globals.css
+# - Base color: Slate, Gray, Zinc, Neutral, Stone, Mauve, Olive, Mist, Taupe
 # - CSS variables: Yes
 # - Tailwind config: (leave blank for Tailwind v4)
-# - Components alias: @/components
-# - Utils alias: @/lib/utils
+
+# With options (CLI v4)
+npx shadcn@latest init --base radix      # Specify primitive library
+npx shadcn@latest init --preset a1Dg5eFl # Use shared design system preset
+npx shadcn@latest init --monorepo        # Monorepo setup
 ```
 
-### components.json for Monorepo
+### components.json
 
 ```json
 {
@@ -33,7 +34,7 @@ npx shadcn@latest init
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/styles/globals.css",
+    "css": "app/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
@@ -49,13 +50,13 @@ npx shadcn@latest init
 }
 ```
 
-**Why good:** Explicit aliases make imports consistent, CSS variables enable theming, TypeScript ensures type safety, iconLibrary configures default icon set
+**Why good:** Explicit aliases for consistent imports, CSS variables enable theming, iconLibrary configures default icon set
 
 ---
 
 ## cn() Utility Examples
 
-### Basic Class Merging
+### Conditional Classes
 
 ```tsx
 import { cn } from "@/lib/utils";
@@ -74,13 +75,13 @@ import { cn } from "@/lib/utils";
   )}
 />
 
-// Merging with consumer className
+// Component with consumer className override
 function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
         "rounded-lg border bg-card text-card-foreground shadow-sm",
-        className
+        className  // Consumer's classes always last - overrides work
       )}
       {...props}
     />
@@ -88,7 +89,7 @@ function Card({ className, ...props }: CardProps) {
 }
 ```
 
-### Tailwind Merge in Action
+### Tailwind Merge Behavior
 
 ```tsx
 // Without tailwind-merge (broken)
@@ -97,66 +98,16 @@ clsx("px-4", "px-6"); // "px-4 px-6" - both applied, unpredictable
 // With cn() (correct)
 cn("px-4", "px-6"); // "px-6" - later class wins
 
-// Real example: consumer override
+// Real example: consumer override works correctly
 <Button className="px-8">Wide Button</Button>;
-// Results in "px-8" not "px-4 px-8"
+// Internal "px-4" replaced by "px-8", not both applied
 ```
 
-**Why good:** `cn()` handles Tailwind class conflicts intelligently, consumer overrides work as expected, no duplicate utility classes in output
+**Why good:** `cn()` resolves Tailwind class conflicts intelligently, consumer overrides work as expected
 
 ---
 
-## Essential CSS Structure (Tailwind v4)
-
-```css
-/* globals.css - Tailwind v4 minimal setup */
-@import "tailwindcss";
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --radius: 0.625rem;
-  /* ... see theming.md for complete list */
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  /* ... dark mode overrides */
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  /* ... see theming.md for complete list */
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-```
-
-**Why good:** OKLCH format provides better perceptual uniformity, `@theme inline` maps CSS variables to Tailwind utilities, CSS variables enable theming
-
----
-
-## Skeleton Loading Examples
+## Skeleton Loading
 
 ### Card and List Skeletons
 
@@ -193,4 +144,4 @@ export function UserListSkeleton() {
 }
 ```
 
-**Why good:** Skeleton matches actual content layout, smooth loading transition
+**Why good:** Skeleton matches actual content layout dimensions, provides smooth loading transition

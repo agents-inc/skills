@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- ThemeProvider, createTheme, CssBaseline
+- [core.md](core.md) -- ThemeProvider, createTheme, CssBaseline
 - [feedback.md](feedback.md) -- Dialog, Snackbar, Alert
 - [layout.md](layout.md) -- Grid, Stack for form layout
 

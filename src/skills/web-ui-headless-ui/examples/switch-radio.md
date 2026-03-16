@@ -61,7 +61,6 @@ import {
   Description,
   Field,
 } from "@headlessui/react";
-import { CheckCircleIcon } from "@heroicons/react/20/solid";
 
 type Plan = {
   name: string;
@@ -117,7 +116,17 @@ export function PlanSelector() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">{plan.price}</span>
-              <CheckCircleIcon className="size-5 text-blue-600 opacity-0 group-data-[checked]:opacity-100" />
+              <svg
+                className="size-5 text-blue-600 opacity-0 group-data-[checked]:opacity-100"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </div>
           </div>
         </Radio>
@@ -138,7 +147,6 @@ An accessible checkbox with label, description, and indeterminate state support.
 ```tsx
 import { useState } from "react";
 import { Checkbox, Field, Label, Description } from "@headlessui/react";
-import { CheckIcon } from "@heroicons/react/20/solid";
 
 export function TermsCheckbox() {
   const [agreed, setAgreed] = useState(false);
@@ -151,7 +159,13 @@ export function TermsCheckbox() {
         name="terms"
         className="group size-5 cursor-pointer rounded border bg-white data-[checked]:border-blue-500 data-[checked]:bg-blue-500 data-[focus]:ring-2 data-[focus]:ring-blue-500 data-[focus]:ring-offset-2"
       >
-        <CheckIcon className="size-4 text-white opacity-0 group-data-[checked]:opacity-100" />
+        <svg
+          className="size-4 text-white opacity-0 group-data-[checked]:opacity-100"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+        >
+          <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z" />
+        </svg>
       </Checkbox>
       <div>
         <Label className="text-sm font-medium">Accept terms</Label>

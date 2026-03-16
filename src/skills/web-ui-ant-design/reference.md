@@ -1,6 +1,6 @@
 # Ant Design Quick Reference
 
-> Decision frameworks, component checklists, and ConfigProvider options for Ant Design v5. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for full code examples.
+> Decision frameworks, component checklists, and ConfigProvider options for Ant Design. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for full code examples.
 
 ---
 
@@ -239,7 +239,7 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 2. **CSS Variables**: Enable `cssVar: true` to reduce runtime style generation
 3. **Hashed**: Set `hashed: false` when only one antd version exists
 4. **Dynamic imports**: Lazy-load heavy page components
-5. **dayjs**: Default in v5 (2KB), no action needed unless using moment.js plugins
+5. **dayjs**: Default date library (2KB), no action needed
 6. **Pro Components**: Import only what you use from `@ant-design/pro-components`
 
 ---
@@ -269,11 +269,18 @@ Import from `antd/locale/{locale_code}`:
 
 ## v5 to v6 Migration Notes
 
-Ant Design v6 was released November 2025. Key changes:
+Ant Design v6 was released November 2025 and is the current major version (6.3.x as of March 2026). v5 is in a 1-year maintenance period.
 
-- `@ant-design/cssinjs` defaults to pure CSS Variables mode
-- Zero-runtime style generation with `@ant-design/static-style-extract`
-- Some deprecated APIs removed
-- React 19 fully supported without patches
+**Key v6 changes:**
 
-If staying on v5, the latest version is **5.29.x**. All patterns in this skill apply to v5.
+- CSS Variables mode is now the default (was opt-in with `cssVar: true` in v5)
+- Zero-runtime mode available via `zeroRuntime: true` in theme config (use with `@ant-design/static-style-extract`)
+- React 18+ required (React 17 dropped); React 19 fully supported without patches
+- IE support completely removed
+- DOM structure changes for better semantics -- some component tokens from the v4-to-v5 migration were cleaned up
+- `findDOMNode` compatibility logic removed
+- New components: Masonry, resizable Drawer, InputNumber spinner mode
+
+**Upgrade path:** v6 is designed as a smooth upgrade from v5. Most component APIs remain compatible. Remove `@ant-design/v5-patch-for-react-19` if previously used. Check console for deprecation warnings on v5 before upgrading.
+
+All patterns in this skill apply to both v5 and v6 unless noted.

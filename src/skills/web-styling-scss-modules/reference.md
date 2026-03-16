@@ -213,7 +213,7 @@ Never use hardcoded pixel values, hex colors, or raw numbers. All design values 
 - **Component variables timing:** Only create component-specific CSS variables when you need variant logic or runtime modification. Most components should use design tokens directly.
 - **Dark mode token overrides:** Only override Tier 2 semantic tokens in `.dark` class, never override Tier 1 core tokens
 - **Data-attribute syntax:** Use string values (`data-state="open"`) not boolean attributes, works better with CSS selectors
-- **:has() browser support:** Modern CSS feature, ensure you have fallbacks for older browsers if needed
+- **:has() selector:** Baseline widely available (all modern browsers since December 2023). No fallbacks needed for current browser targets.
 - **Layer precedence:** Within a layer, normal specificity rules apply. Layers only affect inter-layer precedence.
 - **@use configuration is one-time:** A module configured with `with` keeps that configuration even if loaded elsewhere without config. First load wins.
 - **@use must be at top:** `@use` rules must come before any rules except `@forward` and `@charset`. Variable declarations for config can precede `@use`.

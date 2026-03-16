@@ -5,7 +5,7 @@
 **Related examples:**
 
 - [layout.md](layout.md) -- Grid, Container for page structure
-- [setup.md](setup.md) -- Dark mode toggle in AppBar
+- [core.md](core.md) -- Dark mode toggle in AppBar
 - [feedback.md](feedback.md) -- Dialog, Snackbar for user actions
 
 ---

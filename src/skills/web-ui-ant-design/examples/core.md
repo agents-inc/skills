@@ -1,6 +1,6 @@
-# Ant Design -- Setup & Theme Configuration Examples
+# Ant Design -- Core Setup & Theming Examples
 
-> Theme configuration, design tokens, dark mode, and ConfigProvider setup. See [SKILL.md](../SKILL.md) for core concepts.
+> Core setup, theme configuration, design tokens, dark mode, and ConfigProvider patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Related examples:**
 

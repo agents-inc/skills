@@ -38,7 +38,7 @@ description: Material UI component library patterns for React
 
 **When NOT to use:**
 
-- Headless/unstyled components needed (use Radix UI or Base UI)
+- Headless/unstyled components needed (use a headless component library instead)
 - Minimal bundle size is critical (MUI adds significant weight)
 - Non-Material Design aesthetic required without heavy theme customization
 - Server Components needed as primary rendering strategy (MUI components are client-only)
@@ -54,17 +54,16 @@ description: Material UI component library patterns for React
 
 ---
 
-## Examples
+**Detailed Resources:**
 
-- [Setup & Theming](examples/setup.md) -- ThemeProvider, createTheme, CssBaseline, color schemes, dark mode toggle, TypeScript augmentation, Next.js integration, CSS layers
-- [Form Inputs](examples/form-inputs.md) -- TextField, Select, Autocomplete, slots/slotProps customization
-- [Layout](examples/layout.md) -- Grid, Stack, Box, Container, responsive card grid
-- [DataGrid](examples/data-grid.md) -- @mui/x-data-grid columns, pagination, custom rendering
-- [Feedback](examples/feedback.md) -- Dialog, Snackbar, Alert, Skeleton, CircularProgress
-- [Navigation](examples/navigation.md) -- AppBar, Drawer, Tabs, responsive dashboard layout
-- [Styling](examples/styling.md) -- styled() API, sx prop patterns, dark mode styling, custom props
-
-For decision frameworks, anti-patterns, and quick reference tables, see [reference.md](reference.md).
+- [examples/core.md](examples/core.md) -- ThemeProvider, createTheme, CssBaseline, color schemes, dark mode toggle, TypeScript augmentation, Next.js integration, CSS layers
+- [examples/form-inputs.md](examples/form-inputs.md) -- TextField, Select, Autocomplete, slots/slotProps customization
+- [examples/layout.md](examples/layout.md) -- Grid, Stack, Box, Container, responsive card grid
+- [examples/data-grid.md](examples/data-grid.md) -- @mui/x-data-grid columns, pagination, custom rendering
+- [examples/feedback.md](examples/feedback.md) -- Dialog, Snackbar, Alert, Skeleton, CircularProgress
+- [examples/navigation.md](examples/navigation.md) -- AppBar, Drawer, Tabs, responsive dashboard layout
+- [examples/styling.md](examples/styling.md) -- styled() API, sx prop patterns, dark mode styling, custom props
+- [reference.md](reference.md) -- Decision frameworks, anti-patterns, quick reference tables
 
 ---
 
@@ -83,7 +82,7 @@ MUI implements Material Design as a comprehensive React component library. It pr
 
 **MUI v7 Key Changes (March 2025):**
 
-- CSS layers support via `enableCssLayer` (integrates with Tailwind CSS v4)
+- CSS layers support via `enableCssLayer` (integrates with utility-first CSS frameworks)
 - Standardized `slots`/`slotProps` across all components (replaces `components`/`componentsProps`)
 - Grid v2 promoted to `Grid` (old Grid renamed to `GridLegacy`)
 - Lab components graduated to `@mui/material` (Alert, Skeleton, Autocomplete, etc.)
@@ -134,7 +133,7 @@ export { App };
 
 **Why good:** Centralized design tokens, CssBaseline normalizes cross-browser styles, all children inherit theme
 
-For production-ready theme with color schemes, dark mode, component overrides, and TypeScript augmentation, see [examples/setup.md](examples/setup.md).
+For production-ready theme with color schemes, dark mode, component overrides, and TypeScript augmentation, see [examples/core.md](examples/core.md).
 
 ---
 
@@ -169,7 +168,7 @@ backgroundColor: theme.palette.mode === "dark" ? "#333" : "#fff";
 ...theme.applyStyles("dark", { backgroundColor: "#1a1a2e" });
 ```
 
-For full dark mode toggle component, see [examples/setup.md](examples/setup.md).
+For full dark mode toggle component, see [examples/core.md](examples/core.md).
 
 ---
 
@@ -319,7 +318,7 @@ const theme = createTheme({
 
 **Why good:** Full type safety, IDE autocomplete for custom colors/variants
 
-For complete augmentation with typography variants, see [examples/setup.md](examples/setup.md).
+For complete augmentation with typography variants, see [examples/core.md](examples/core.md).
 
 ---
 
@@ -351,9 +350,9 @@ function RootLayout({ children }: { children: React.ReactNode }) {
 export default RootLayout; // Next.js requires default export for layouts
 ```
 
-**Why good:** Prevents style hydration mismatches, CSS layers enable predictable specificity with Tailwind
+**Why good:** Prevents style hydration mismatches, CSS layers enable predictable specificity with utility-first CSS
 
-For CSS layers integration (Tailwind v4) and Vite setup, see [examples/setup.md](examples/setup.md).
+For CSS layers integration and Vite setup, see [examples/core.md](examples/core.md).
 
 </patterns>
 
@@ -463,7 +462,7 @@ Does MUI have this component?
 |   +-- Completely different behavior --> Build custom
 +-- NO --> Build custom
     +-- Simple interaction --> Base HTML + sx
-    +-- Complex interaction --> Consider Radix UI primitives
+    +-- Complex interaction --> Consider a headless component library
 ```
 
 ### Color Scheme Strategy
@@ -496,24 +495,17 @@ What data display do you need?
 
 <integration>
 
-## Integration Guide
+## Integration Notes
 
-**Works with:**
+**React 19:** Full compatibility in MUI v7.
 
-- **React 19**: Full compatibility in MUI v7
-- **Next.js App Router**: Via `@mui/material-nextjs` with `AppRouterCacheProvider`
-- **Tailwind CSS v4**: Via CSS layers (`enableCssLayer`)
-- **React Hook Form**: TextField with `Controller`, or `register` with `inputRef`
-- **React Query / TanStack Query**: Fetch data, pass to DataGrid rows
-- **Zod**: Validate forms, map errors to TextField `helperText`
-- **Emotion**: Default styling engine (included with `@mui/material`)
+**SSR Frameworks:** Use `@mui/material-nextjs` with `AppRouterCacheProvider` for Next.js App Router. See [examples/core.md](examples/core.md) for setup.
 
-**Replaces / Conflicts with:**
+**CSS Layers:** Enable with `enableCssLayer` to integrate with utility-first CSS frameworks. Allows predictable specificity ordering.
 
-- **Radix UI + custom styles**: MUI is pre-styled, Radix is headless -- use one or the other
-- **Chakra UI**: Similar scope and philosophy, pick one
-- **Ant Design**: Competing component library
-- **styled-components**: MUI uses Emotion by default; requires `@mui/styled-engine-sc` adapter
+**Form Libraries:** MUI `TextField` works with any form library via `inputRef` for registration or controlled `value`/`onChange` props. Map validation errors to `helperText` and `error` props.
+
+**Styling Engine:** Emotion is the default and only production-ready engine. `@emotion/react` and `@emotion/styled` are required peer dependencies.
 
 **Package Ecosystem:**
 

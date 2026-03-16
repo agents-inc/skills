@@ -117,7 +117,7 @@ Before shipping a CVA definition:
 **Common Mistakes:**
 
 - Forgetting to import `type VariantProps` with `import type`
-- Using `className` instead of `class` in compoundVariants configuration
+- Both `class` and `className` work in compoundVariants -- `class` is the canonical property in official docs
 - Not handling the `null` possibility in VariantProps types
 - Defining variants that could be CSS variables (use CSS for truly dynamic values)
 

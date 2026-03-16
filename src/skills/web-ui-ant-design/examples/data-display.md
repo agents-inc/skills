@@ -6,7 +6,7 @@
 
 - [Tables & Data Display](table.md)
 - [Layout](layout.md)
-- [Setup & Theme Configuration](setup.md)
+- [Core Setup & Theming](core.md)
 
 ---
 

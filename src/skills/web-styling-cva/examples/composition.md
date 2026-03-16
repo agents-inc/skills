@@ -138,7 +138,7 @@ getCardClasses({ elevation: "flat", className: "my-custom-class" });
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
 // Hypothetical utility that merges and dedupes classes
-// (e.g., clsx + tailwind-merge combination)
+// (e.g., a utility that concatenates and dedupes class names)
 import { cn } from "./utils";
 
 const buttonVariants = cva(["px-4", "py-2", "rounded", "font-semibold"], {

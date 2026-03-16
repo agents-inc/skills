@@ -1,10 +1,12 @@
-# CVA - Variant Definition Examples
+# CVA - Core Variant Examples
 
-> Basic variants, boolean states, and default values. See [SKILL.md](../SKILL.md) for core concepts.
+> Essential variant patterns: basic definitions, boolean states, multiple groups, required variants. See [SKILL.md](../SKILL.md) for decision guidance.
+
+**Prerequisites**: None - these are the foundational CVA patterns.
 
 ---
 
-## Basic Variant Structure
+## Pattern 1: Basic Variant Structure
 
 ### Good Example - Button Variants
 
@@ -100,7 +102,7 @@ buttonVariants({ size: "lg" }); // Error: size doesn't exist
 
 ---
 
-## Boolean Variants
+## Pattern 2: Boolean Variants
 
 ### Good Example - Disabled and Loading States
 
@@ -173,7 +175,7 @@ inputVariants({ disabled: false }); // No enabled styles applied
 
 ---
 
-## Multiple Variant Groups
+## Pattern 3: Multiple Variant Groups
 
 ### Good Example - Badge Component
 
@@ -222,9 +224,7 @@ type BadgeVariants = VariantProps<typeof badgeVariants>;
 
 ---
 
-## Icon + Text Pattern
-
-### Good Example - Button with Icon Sizes
+## Pattern 4: Icon Button with Compound Size Adjustment
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
@@ -280,9 +280,7 @@ type IconButtonVariants = VariantProps<typeof iconButtonVariants>;
 
 ---
 
-## Required Variants (No Defaults)
-
-### Good Example - Status Indicator
+## Pattern 5: Required Variants (No Defaults)
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";

@@ -1,117 +1,151 @@
 # shadcn/ui - Form Examples
 
-> Complete form patterns with validation using React Hook Form and Zod.
+> Field component patterns for form-library-agnostic field layout. See [core.md](core.md) for setup basics.
 
 ---
 
-## Complete Form with Validation
+## Field Component Basics
+
+The `Field` component provides accessible form field layout (labels, descriptions, errors) without coupling to any specific form library.
 
 ```tsx
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-const formSchema = z.object({
-  username: z.string().min(2, "Username must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  role: z.enum(["admin", "user", "guest"]),
-});
+// Basic field - works with any form library or server actions
+<Field>
+  <FieldLabel htmlFor="name">Name</FieldLabel>
+  <Input id="name" />
+  <FieldDescription>Your public display name.</FieldDescription>
+</Field>
 
-type FormData = z.infer<typeof formSchema>;
-
-export function ProfileForm() {
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      role: "user",
-    },
-  });
-
-  function onSubmit(values: FormData) {
-    console.log(values);
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="johndoe" {...field} />
-              </FormControl>
-              <FormDescription>Your public display name.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="john@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="guest">Guest</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
-  );
-}
+// Field with error state
+<Field data-invalid={!!error}>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" aria-invalid={!!error} />
+  {error && <FieldError errors={[error]} />}
+</Field>
 ```
 
-**Why good:** Consistent FormField structure, validation errors display automatically, accessible labels, works with any validation library
+**Why good:** Form-library-agnostic, consistent accessibility attributes, replaces the old tightly-coupled Form/FormField/FormItem pattern
+
+---
+
+## Field with Form Library Integration
+
+The Field component works with any form library via its Controller or equivalent. The key pattern: pass `data-invalid` to Field, `aria-invalid` to the control, and render `FieldError` conditionally.
+
+```tsx
+// Generic pattern - adapt to your form library's controller
+<Controller
+  name="email"
+  control={form.control}
+  render={({ field, fieldState }) => (
+    <Field data-invalid={fieldState.invalid}>
+      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+      <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+      <FieldDescription>We will never share your email.</FieldDescription>
+      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+    </Field>
+  )}
+/>
+```
+
+---
+
+## Field with Select
+
+```tsx
+<Controller
+  name="role"
+  control={form.control}
+  render={({ field, fieldState }) => (
+    <Field data-invalid={fieldState.invalid}>
+      <FieldLabel htmlFor={field.name}>Role</FieldLabel>
+      <Select value={field.value} onValueChange={field.onChange}>
+        <SelectTrigger id={field.name} aria-invalid={fieldState.invalid}>
+          <SelectValue placeholder="Select a role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="admin">Admin</SelectItem>
+          <SelectItem value="user">User</SelectItem>
+          <SelectItem value="guest">Guest</SelectItem>
+        </SelectContent>
+      </Select>
+      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+    </Field>
+  )}
+/>
+```
+
+**Why good:** Select binds via `value` + `onValueChange` (not spread), Field handles error display
+
+---
+
+## FieldGroup and FieldSet
+
+Group related fields for visual and semantic coherence.
+
+```tsx
+import { FieldSet, FieldLegend, FieldGroup } from "@/components/ui/field";
+
+// FieldSet for semantic grouping (renders <fieldset>)
+<FieldSet>
+  <FieldLegend>Contact Information</FieldLegend>
+  <FieldGroup>
+    <Field>
+      <FieldLabel htmlFor="email">Email</FieldLabel>
+      <Input id="email" type="email" />
+    </Field>
+    <Field>
+      <FieldLabel htmlFor="phone">Phone</FieldLabel>
+      <Input id="phone" type="tel" />
+    </Field>
+  </FieldGroup>
+</FieldSet>
+
+// FieldGroup for visual grouping without semantics
+<FieldGroup orientation="horizontal">
+  <Field>
+    <FieldLabel htmlFor="first">First Name</FieldLabel>
+    <Input id="first" />
+  </Field>
+  <Field>
+    <FieldLabel htmlFor="last">Last Name</FieldLabel>
+    <Input id="last" />
+  </Field>
+</FieldGroup>
+```
+
+**Why good:** Semantic HTML via fieldset/legend for accessibility, responsive orientation support, no coupling to form state
+
+---
+
+## Legacy Form Pattern (Pre-October 2025)
+
+> **Note:** The `Form/FormField/FormItem/FormControl/FormMessage` components are still available but are tightly coupled to React Hook Form. Prefer the Field component for new code.
+
+```tsx
+// Legacy pattern - still works but coupled to specific form library
+<FormField
+  control={form.control}
+  name="email"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl>
+        <Input {...field} />
+      </FormControl>
+      <FormDescription>Your email address.</FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
+
+**Why legacy:** Tightly coupled to one form library, harder to switch form solutions, Field component provides same layout with any form library

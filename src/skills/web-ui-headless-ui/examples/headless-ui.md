@@ -1,9 +1,10 @@
 # Headless UI Examples - Index
 
-> This file has been split into topic-specific example files for progressive disclosure.
+> This file has been split into topic-specific example files for progressive disclosure. Start with [core.md](core.md) for cross-cutting patterns.
 
 **Example files:**
 
+- [Core Patterns](core.md) - Data-attribute styling, anchor positioning, transitions, `as` prop, `useClose`
 - [Dialog & Modal](dialog.md) - Modal overlays, form dialogs, slide-over panels, transitions
 - [Menu & Dropdowns](menu.md) - Dropdown action menus, sections, icons, keyboard shortcuts
 - [Listbox & Combobox](listbox-combobox.md) - Custom select, autocomplete, virtual scrolling

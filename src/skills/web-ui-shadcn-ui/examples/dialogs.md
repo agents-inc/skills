@@ -1,10 +1,12 @@
 # shadcn/ui - Dialog Examples
 
-> Patterns for dialogs, sheets, and toast notifications.
+> Patterns for dialogs, sheets, and toast notifications. See [core.md](core.md) for setup basics.
 
 ---
 
-## Confirmation Dialog
+## Confirmation Dialog (AlertDialog)
+
+Use AlertDialog for destructive actions that need explicit confirmation. It blocks interaction until the user responds.
 
 ```tsx
 import {
@@ -54,9 +56,13 @@ export function ConfirmDelete({ onConfirm, itemName }: ConfirmDeleteProps) {
 }
 ```
 
+**Why good:** AlertDialog blocks interaction for destructive actions, destructive styling on confirm button reinforces severity, `asChild` on trigger prevents nested buttons
+
 ---
 
 ## Sheet (Side Panel)
+
+Use Sheet for contextual editing without leaving the current page (settings, user details, filters).
 
 ```tsx
 import {
@@ -113,28 +119,50 @@ export function EditUserSheet({ user }: { user: User }) {
 }
 ```
 
-**Why good:** AlertDialog for destructive actions, Sheet for editing without leaving context, consistent header/footer structure
+**Why good:** Sheet keeps context visible, consistent header/footer pattern, SheetClose auto-closes on action
 
 ---
 
-## Toast Examples
+## Toast Examples (Sonner)
 
-### Toast with Actions
+Toasts provide non-blocking feedback. shadcn/ui uses Sonner for its toast system.
+
+### Setup
+
+```tsx
+// Add sonner: npx shadcn@latest add sonner
+
+// In your layout - add Toaster component once
+import { Toaster } from "@/components/ui/sonner";
+
+export function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  );
+}
+```
+
+### Usage Patterns
 
 ```tsx
 import { toast } from "sonner";
 
-// Success toast
+// Success
 toast.success("Profile updated", {
   description: "Your changes have been saved.",
 });
 
-// Error toast
+// Error
 toast.error("Something went wrong", {
   description: "Please try again later.",
 });
 
-// Toast with action
+// Toast with undo action
 toast("Event created", {
   description: "Your event has been scheduled.",
   action: {
@@ -143,7 +171,7 @@ toast("Event created", {
   },
 });
 
-// Promise toast (loading -> success/error)
+// Promise toast (loading → success/error)
 toast.promise(saveSettings(), {
   loading: "Saving...",
   success: "Settings saved!",
@@ -151,47 +179,4 @@ toast.promise(saveSettings(), {
 });
 ```
 
-**Why good:** Promise toast handles async elegantly, action button enables undo patterns
-
----
-
-## Dark Mode Provider
-
-```tsx
-// providers.tsx
-"use client";
-
-import { ThemeProvider } from "next-themes";
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {children}
-    </ThemeProvider>
-  );
-}
-
-// layout.tsx
-import { Providers } from "./providers";
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
-}
-```
-
-**Why good:** `suppressHydrationWarning` prevents flash, system theme respects user preference
+**Why good:** Promise toast handles loading/success/error in one call, action button enables undo patterns, non-blocking feedback

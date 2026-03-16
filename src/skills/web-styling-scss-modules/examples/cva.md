@@ -104,7 +104,7 @@ const dynamicClasses = cx([styles.base, condition && styles.conditional]);
   border: 1px solid transparent;
 
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-default);
 
   &:disabled {
     opacity: 0.5;
@@ -362,13 +362,12 @@ v1 introduces `defineConfig` for configuring cva behavior, including hooks for c
 ```typescript
 // lib/cva.ts
 import { defineConfig } from "cva";
-import { twMerge } from "tailwind-merge";
 
-// Create configured cva instance with tailwind-merge
+// Create configured cva instance with custom class processing
 export const { cva, cx, compose } = defineConfig({
   hooks: {
-    // onComplete runs after class generation
-    onComplete: (className) => twMerge(className),
+    // onComplete runs after class generation - use your class merging solution
+    onComplete: (className) => processClasses(className),
   },
 });
 ```
@@ -379,7 +378,7 @@ export const { cva, cx, compose } = defineConfig({
 import { cva, type VariantProps } from "@/lib/cva";
 import styles from "./button.module.scss";
 
-// Now all cva classes automatically go through twMerge
+// All cva classes automatically go through your configured hook
 const buttonVariants = cva(styles.btn, {
   variants: {
     intent: { primary: styles.btnPrimary },
@@ -387,7 +386,7 @@ const buttonVariants = cva(styles.btn, {
 });
 ```
 
-**Why defineConfig:** Centralized configuration, automatic tailwind-merge integration, no manual twMerge calls
+**Why defineConfig:** Centralized configuration, automatic class processing via hooks, consistent behavior across all cva instances
 
 #### compose Function
 
