@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-tooling
+slug: typescript-config
+domain: shared
+author: "@vince"
+displayName: TypeScript Config
+cliDescription: Shared TypeScript strict configs
+usageGuidance: Use when configuring TypeScript strict mode, shared tsconfig patterns, path aliases, or TS 5.x module settings.

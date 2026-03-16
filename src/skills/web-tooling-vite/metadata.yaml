@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-tooling
+slug: vite
+domain: web
+author: "@vince"
+displayName: Vite
+cliDescription: Vite build tool configuration
+usageGuidance: Use when configuring Vite build tool, path aliases, vendor chunk splitting, environment-specific builds, or migrating to Rolldown.

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-tooling
+slug: git-hooks
+domain: shared
+author: "@vince"
+displayName: Git Hooks
+cliDescription: Husky, lint-staged, commitlint
+usageGuidance: Use when setting up pre-commit hooks with Husky, configuring lint-staged for staged file linting, or adding commitlint for conventional commits.

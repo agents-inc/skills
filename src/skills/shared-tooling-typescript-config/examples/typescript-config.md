@@ -1,6 +1,6 @@
-# Tooling - TypeScript Configuration
+# TypeScript Configuration Examples
 
-> Shared TypeScript configuration with strict mode for monorepo consistency. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Complete examples for TypeScript configuration patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 ---
 
@@ -64,11 +64,11 @@
 **Why good:** Shared strict mode prevents any types across entire monorepo, centralized config ensures all packages have same safety guarantees, path aliases eliminate relative import hell, noUncheckedIndexedAccess prevents undefined access bugs
 
 ```json
-// BAD: Loose TypeScript config per package
+// ❌ BAD: Loose TypeScript config per package
 // apps/client-react/tsconfig.json
 {
   "compilerOptions": {
-    "strict": false, // Allows implicit any
+    "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
     "skipLibCheck": true
@@ -160,17 +160,32 @@ Enables portable shared configs with relative paths.
   "compilerOptions": {
     "outDir": "${configDir}/dist",
     "rootDir": "${configDir}/src"
-  }
+  },
+  "include": ["${configDir}/src"]
 }
 ```
 
-**Why good:** Shared configs can use paths relative to the extending config, not the base config
+**Why good:** Shared configs can use paths relative to the extending config, not the base config. Eliminates need for each package to override `outDir`, `rootDir`, and `include`.
+
+```json
+// ❌ Bad - hardcoded relative paths in shared config
+// packages/typescript-config/base.json
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["./src"]
+}
+```
+
+**Why bad:** Relative paths resolve from the base config location (`packages/typescript-config/`), not the extending package
 
 ---
 
-### isolatedDeclarations (TS 5.5+, Optional)
+### isolatedDeclarations (TS 5.5+)
 
-Requires explicit type annotations on exports for faster parallel declaration emit.
+Requires explicit type annotations on exports for faster parallel declaration emit. Stable for basic use.
 
 ```json
 {
@@ -197,6 +212,91 @@ export function getUser(id: string) {
 
 **When to use:** Large monorepos wanting faster builds with tools like oxc or swc
 **Trade-off:** More verbose code, but enables external tools to generate .d.ts files in parallel
+
+---
+
+### erasableSyntaxOnly (TS 5.8+)
+
+Prohibits TypeScript-specific constructs that have runtime behavior. Designed for compatibility with Node.js `--experimental-strip-types` for direct TypeScript execution without a build step.
+
+```json
+{
+  "compilerOptions": {
+    "erasableSyntaxOnly": true
+  }
+}
+```
+
+```typescript
+// With erasableSyntaxOnly: true
+
+// ✅ Good - type-only constructs (safely erasable)
+type Status = "active" | "inactive";
+interface User {
+  id: string;
+  name: string;
+}
+const enum Direction {
+  Up,
+  Down,
+} // const enum is erasable
+
+// ❌ Bad - constructs with runtime behavior (will error)
+enum Direction {
+  Up,
+  Down,
+} // runtime enum object
+namespace Utils {
+  export function parse() {}
+} // runtime namespace
+class User {
+  constructor(public name: string) {}
+} // parameter property
+```
+
+**When to use:** Projects using Node.js `--experimental-strip-types` for direct TS execution, or targeting the types-only TypeScript philosophy
+
+---
+
+### rewriteRelativeImportExtensions (TS 5.8+)
+
+Automatically rewrites TypeScript file extensions to JavaScript extensions in emitted output.
+
+```typescript
+// Source file
+import { helper } from "./utils.ts";
+// Emitted as: import { helper } from "./utils.js";
+```
+
+**When to use:** Projects that want to use `.ts` extensions in imports while still emitting valid `.js` imports. Particularly useful with Node.js direct TypeScript execution.
+
+---
+
+### module: "node18" and "node20" (TS 5.8+ / 5.9+)
+
+Stable module options for specific Node.js versions, unlike `nodenext` which floats with the latest Node.js behavior.
+
+```json
+// For Node.js 18+ projects
+{
+  "compilerOptions": {
+    "module": "node18",
+    "moduleResolution": "node18"
+  }
+}
+```
+
+```json
+// For Node.js 20+ projects (TS 5.9+)
+{
+  "compilerOptions": {
+    "module": "node20",
+    "moduleResolution": "node20"
+  }
+}
+```
+
+**Why use over `nodenext`:** `nodenext` implies `target: esnext` and its behavior may change with new TypeScript releases. `node18`/`node20` provide stable, predictable behavior tied to a specific Node.js version.
 
 ---
 
@@ -260,7 +360,7 @@ resolve: {
 }
 ```
 
-**Gotcha:** Forgetting to sync causes import resolution failures at build time.
+**Gotcha:** Forgetting to sync causes import resolution failures at build time. TypeScript resolves fine but the bundler fails (or vice versa). Always update both files when adding a new alias.
 
 ---
 
@@ -285,10 +385,106 @@ packages/typescript-config/
 }
 ```
 
+```json
+// packages/typescript-config/node.json
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "node18",
+    "moduleResolution": "node18",
+    "lib": ["ES2022"],
+    "verbatimModuleSyntax": true
+  }
+}
+```
+
+```json
+// packages/typescript-config/library.json
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": false
+  }
+}
+```
+
+---
+
+## TypeScript 6.0 New Defaults
+
+TypeScript 6.0 RC changes several defaults. New projects on TS 6.0+ get these automatically:
+
+| Option                         | Old Default   | TS 6.0 Default       |
+| ------------------------------ | ------------- | -------------------- |
+| `strict`                       | `false`       | `true`               |
+| `module`                       | `commonjs`    | `esnext`             |
+| `target`                       | `es5`         | `es2025`             |
+| `noUncheckedSideEffectImports` | `false`       | `true`               |
+| `types`                        | auto-discover | `[]` (explicit only) |
+
+**Deprecated in TS 6.0** (removed in TS 7.0):
+
+- `target: "es5"` - use `"ES2022"` or higher
+- `moduleResolution: "node"` (node10) - use `"bundler"` or `"node18"`
+- `module: "amd"` / `"umd"` / `"systemjs"` / `"none"` - use `"preserve"` or `"nodenext"`
+- `esModuleInterop: false` - always enabled in 6.0+
+- `--baseUrl` as module resolution root - use `paths` instead
+- `--outFile` - use bundlers for concatenation
+
+Use `"ignoreDeprecations": "6.0"` during migration to suppress warnings.
+
+---
+
+## Standalone Project (Non-Monorepo)
+
+For standalone projects without a monorepo, the same strict settings apply but without the shared config package:
+
+```json
+// tsconfig.json (standalone project)
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}
+```
+
+**Why good:** Same strict safety as monorepo config, all modern module settings, path aliases ready
+
 ---
 
 ## See Also
 
-- [vite.md](vite.md) for path alias configuration in Vite
-- [eslint.md](eslint.md) for consistent-type-imports rule
-- [reference.md](../reference.md) for TypeScript strict mode requirements
+- For Vite path alias configuration, see `web-tooling-vite`
+- For `consistent-type-imports` ESLint rule, see `shared-tooling-eslint-prettier`
+- For TypeScript strict mode decision framework, see [reference.md](../reference.md)
