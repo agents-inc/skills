@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-baas
+slug: supabase
+domain: api
+author: "@vince"
+displayName: Supabase
+cliDescription: Supabase backend-as-a-service platform
+usageGuidance: >-
+  Use when building with Supabase Auth, Database, Realtime, Storage, or Edge Functions.
+  Covers client setup, typed queries, RLS policies, realtime subscriptions, file storage,
+  and Deno edge functions.
+tags:
+  - supabase
+  - postgres
+  - auth
+  - realtime
+  - storage
+  - edge-functions
+  - rls
+  - row-level-security
+  - baas
