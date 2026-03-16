@@ -25,7 +25,7 @@ function UserData({ userId }: { userId: string }) {
     suspense: true,
   });
 
-  // No need for loading check - Suspense handles it
+  // No need for loading check -- Suspense handles it
   // data is guaranteed to be available here
   return (
     <div>
@@ -215,29 +215,14 @@ export { Dashboard };
 
 ---
 
-## SSR with Next.js
+## SSR Data Hydration
 
-### Next.js App Router (Server Components)
+SWR supports server-side data hydration through `fallbackData` (per-hook) and `SWRConfig fallback` (global). This works with any SSR framework.
 
-```typescript
-// app/users/[id]/page.tsx (Server Component)
-import { UserProfile } from "@/components/user-profile";
-
-// Server Component - fetch data on server
-async function UserPage({ params }: { params: { id: string } }) {
-  // Server-side fetch
-  const user = await fetch(`${process.env.API_URL}/users/${params.id}`).then(
-    (res) => res.json()
-  );
-
-  return <UserProfile initialData={user} userId={params.id} />;
-}
-
-export default UserPage;
-```
+### Per-Hook Fallback
 
 ```typescript
-// components/user-profile.tsx (Client Component)
+// components/user-profile.tsx
 "use client";
 
 import useSWR from "swr";
@@ -270,39 +255,7 @@ function UserProfile({ initialData, userId }: UserProfileProps) {
 export { UserProfile };
 ```
 
-### SWRConfig Fallback for SSR
-
-```typescript
-// app/layout.tsx
-import { SWRProvider } from "@/providers/swr-provider";
-
-async function getInitialData() {
-  // Fetch data needed for multiple components
-  const [user, config] = await Promise.all([
-    fetch(`${process.env.API_URL}/user`).then((r) => r.json()),
-    fetch(`${process.env.API_URL}/config`).then((r) => r.json()),
-  ]);
-
-  return {
-    "/api/user": user,
-    "/api/config": config,
-  };
-}
-
-async function RootLayout({ children }: { children: React.ReactNode }) {
-  const fallback = await getInitialData();
-
-  return (
-    <html>
-      <body>
-        <SWRProvider fallback={fallback}>{children}</SWRProvider>
-      </body>
-    </html>
-  );
-}
-
-export default RootLayout;
-```
+### Global Fallback via SWRConfig
 
 ```typescript
 // providers/swr-provider.tsx
@@ -333,137 +286,7 @@ function SWRProvider({ children, fallback = {} }: SWRProviderProps) {
 export { SWRProvider };
 ```
 
-**Why good:** Server-fetched data hydrates client, fallbackData prevents loading flash, SWRConfig fallback enables multiple key hydration
-
----
-
-## Next.js Pages Router
-
-### getStaticProps with SWR
-
-```typescript
-// pages/posts/[slug].tsx
-import useSWR from "swr";
-import type { GetStaticProps, GetStaticPaths } from "next";
-
-interface Post {
-  slug: string;
-  title: string;
-  content: string;
-}
-
-interface PostPageProps {
-  fallback: Record<string, Post>;
-  slug: string;
-}
-
-function PostPage({ fallback, slug }: PostPageProps) {
-  return (
-    <SWRConfig value={{ fallback }}>
-      <PostContent slug={slug} />
-    </SWRConfig>
-  );
-}
-
-function PostContent({ slug }: { slug: string }) {
-  // Data from fallback is used initially, then revalidated
-  const { data } = useSWR<Post>(`/api/posts/${slug}`, fetcher);
-
-  return (
-    <article>
-      <h1>{data?.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: data?.content ?? "" }} />
-    </article>
-  );
-}
-
-export const getStaticProps: GetStaticProps<PostPageProps> = async ({ params }) => {
-  const slug = params?.slug as string;
-  const post = await fetch(`${process.env.API_URL}/posts/${slug}`).then((r) =>
-    r.json()
-  );
-
-  return {
-    props: {
-      fallback: {
-        [`/api/posts/${slug}`]: post,
-      },
-      slug,
-    },
-    revalidate: 60, // ISR: revalidate every 60 seconds
-  };
-};
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const posts = await fetch(`${process.env.API_URL}/posts`).then((r) => r.json());
-
-  return {
-    paths: posts.map((post: Post) => ({ params: { slug: post.slug } })),
-    fallback: "blocking",
-  };
-};
-
-export default PostPage;
-```
-
-### getServerSideProps with SWR
-
-```typescript
-// pages/dashboard.tsx
-import useSWR from "swr";
-import type { GetServerSideProps } from "next";
-
-interface DashboardData {
-  stats: unknown;
-  recentActivity: unknown;
-}
-
-interface DashboardPageProps {
-  fallback: Record<string, DashboardData>;
-}
-
-function DashboardPage({ fallback }: DashboardPageProps) {
-  return (
-    <SWRConfig value={{ fallback }}>
-      <Dashboard />
-    </SWRConfig>
-  );
-}
-
-function Dashboard() {
-  const { data } = useSWR<DashboardData>("/api/dashboard", fetcher);
-
-  return (
-    <div>
-      <Stats data={data?.stats} />
-      <Activity items={data?.recentActivity} />
-    </div>
-  );
-}
-
-export const getServerSideProps: GetServerSideProps<DashboardPageProps> = async (
-  context
-) => {
-  // Include auth cookie in server-side fetch
-  const cookie = context.req.headers.cookie || "";
-
-  const dashboard = await fetch(`${process.env.API_URL}/dashboard`, {
-    headers: { cookie },
-  }).then((r) => r.json());
-
-  return {
-    props: {
-      fallback: {
-        "/api/dashboard": dashboard,
-      },
-    },
-  };
-};
-
-export default DashboardPage;
-```
-
-**Why good:** SSR data passed through fallback prop, client revalidates after hydration, ISR combines static generation with freshness
+**Why good:** Server-fetched data hydrates client (no loading flash), `fallbackData` is per-hook, `fallback` in SWRConfig enables multi-key hydration, framework-agnostic approach
 
 ---
 
@@ -473,7 +296,6 @@ export default DashboardPage;
 
 ```typescript
 // components/prefetch-link.tsx
-import Link from "next/link";
 import { preload } from "swr";
 import { fetcher } from "@/lib/fetcher";
 
@@ -490,9 +312,9 @@ function PrefetchLink({ href, dataKey, children }: PrefetchLinkProps) {
   };
 
   return (
-    <Link href={href} onMouseEnter={handleMouseEnter}>
+    <a href={href} onMouseEnter={handleMouseEnter}>
       {children}
-    </Link>
+    </a>
   );
 }
 
@@ -508,56 +330,29 @@ function UserListItem({ user }: { user: { id: string; name: string } }) {
 export { PrefetchLink, UserListItem };
 ```
 
-### Prefetch on Route Change
+### Prefetch on Mount
 
 ```typescript
-// hooks/use-prefetch-route.ts
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+// components/prefetch-list.tsx
 import { preload } from "swr";
+import { useEffect } from "react";
 import { fetcher } from "@/lib/fetcher";
 
-interface RouteDataMap {
-  [route: string]: string | ((params: Record<string, string>) => string);
-}
-
-const ROUTE_DATA_MAP: RouteDataMap = {
-  "/dashboard": "/api/dashboard",
-  "/users/[id]": (params) => `/api/users/${params.id}`,
-  "/settings": "/api/settings",
-};
-
-function usePrefetchRoute() {
-  const router = useRouter();
-
+function PrefetchList({ userIds }: { userIds: string[] }) {
   useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      // Find matching route pattern
-      const matchingRoute = Object.keys(ROUTE_DATA_MAP).find((pattern) => {
-        const regex = new RegExp(pattern.replace(/\[(\w+)\]/g, "(\\w+)"));
-        return regex.test(url);
-      });
+    // Prefetch all user data on mount using official preload API
+    userIds.forEach((id) => {
+      preload(`/api/users/${id}`, fetcher);
+    });
+  }, [userIds]);
 
-      if (matchingRoute) {
-        const dataKeyOrFn = ROUTE_DATA_MAP[matchingRoute];
-        const dataKey =
-          typeof dataKeyOrFn === "function"
-            ? dataKeyOrFn(router.query as Record<string, string>)
-            : dataKeyOrFn;
-
-        preload(dataKey, fetcher);
-      }
-    };
-
-    router.events.on("routeChangeStart", handleRouteChange);
-    return () => router.events.off("routeChangeStart", handleRouteChange);
-  }, [router]);
+  return <UserList userIds={userIds} />;
 }
 
-export { usePrefetchRoute };
+export { PrefetchList };
 ```
 
-**Why good:** preload is the official SWR 2.0 prefetch API, hover prefetch provides instant navigation feel, route-based prefetch covers common patterns
+**Why good:** `preload` is the official SWR 2.0 prefetch API, hover prefetch makes navigation feel instant, batch prefetch prepares data before it's needed
 
 ---
 

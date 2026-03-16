@@ -1,6 +1,6 @@
 {
   "name": "web-realtime-socket-io",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Socket.IO v4.x client patterns, connection lifecycle, reconnection, authentication, rooms, namespaces, acknowledgments, binary data, TypeScript integration",
   "author": {

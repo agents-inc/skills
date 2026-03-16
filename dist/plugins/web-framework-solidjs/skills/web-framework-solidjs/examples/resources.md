@@ -10,7 +10,7 @@
 
 ```typescript
 // routes/users/[id].tsx - SolidStart file-based routing
-import { createAsync, query, type RouteDefinition } from '@solidjs/router';
+import { createAsync, query, useParams, type RouteDefinition } from '@solidjs/router';
 import { Suspense, ErrorBoundary, Show, type Component } from 'solid-js';
 
 interface User {
@@ -61,7 +61,7 @@ const UserPage: Component = () => {
   );
 };
 
-export default UserPage;
+export default UserPage; // SolidStart file-based routing requires default export for pages
 ```
 
 **Why good:** `query` provides caching and deduplication, `createAsync` is recommended for Solid 2.0, preload enables SSR data fetching, `'use server'` runs on server only
@@ -69,7 +69,7 @@ export default UserPage;
 ### Good Example - Multiple queries with actions
 
 ```typescript
-import { createAsync, query, action, useAction, revalidate } from '@solidjs/router';
+import { createAsync, query, action, useAction } from '@solidjs/router';
 import { Show, For, type Component } from 'solid-js';
 
 interface Todo {
@@ -564,7 +564,7 @@ export { SearchPage };
 ### Good Example - Dashboard with multiple data sources
 
 ```typescript
-import { createResource, Suspense, type Component } from 'solid-js';
+import { createResource, For, Suspense, type Component } from 'solid-js';
 
 interface DashboardData {
   stats: { revenue: number; users: number; orders: number };
@@ -617,9 +617,9 @@ const RecentOrdersSection: Component = () => {
     <div class="recent-orders">
       <h3>Recent Orders</h3>
       <ul>
-        {orders()?.map(order => (
-          <li>Order #{order.id}: ${order.total.toFixed(2)}</li>
-        ))}
+        <For each={orders()}>
+          {(order) => <li>Order #{order.id}: ${order.total.toFixed(2)}</li>}
+        </For>
       </ul>
     </div>
   );
@@ -632,9 +632,9 @@ const TopProductsSection: Component = () => {
     <div class="top-products">
       <h3>Top Products</h3>
       <ul>
-        {products()?.map(product => (
-          <li>{product.name}: {product.sales} sales</li>
-        ))}
+        <For each={products()}>
+          {(product) => <li>{product.name}: {product.sales} sales</li>}
+        </For>
       </ul>
     </div>
   );
@@ -676,7 +676,7 @@ export { Dashboard };
 ### Good Example - Cancellable fetch
 
 ```typescript
-import { createSignal, createResource, onCleanup, type Component } from 'solid-js';
+import { createSignal, createResource, onCleanup, For, Show, type Component } from 'solid-js';
 
 interface Article {
   id: string;
@@ -710,25 +710,33 @@ const ArticleViewer: Component = () => {
   return (
     <div class="article-viewer">
       <nav class="article-nav">
-        {articles.map(id => (
-          <button
-            classList={{ active: articleId() === id }}
-            onClick={() => setArticleId(id)}
-          >
-            Article {id}
-          </button>
-        ))}
+        <For each={articles}>
+          {(id) => (
+            <button
+              classList={{ active: articleId() === id }}
+              onClick={() => setArticleId(id)}
+            >
+              Article {id}
+            </button>
+          )}
+        </For>
       </nav>
 
       <article class="article-content">
-        {article.loading && <div class="loading">Loading article...</div>}
-        {article.error && <div class="error">Error: {article.error.message}</div>}
-        {article() && (
-          <>
-            <h1>{article()!.title}</h1>
-            <div>{article()!.content}</div>
-          </>
-        )}
+        <Show when={article.loading}>
+          <div class="loading">Loading article...</div>
+        </Show>
+        <Show when={article.error}>
+          <div class="error">Error: {article.error.message}</div>
+        </Show>
+        <Show when={article()}>
+          {(data) => (
+            <>
+              <h1>{data().title}</h1>
+              <div>{data().content}</div>
+            </>
+          )}
+        </Show>
       </article>
     </div>
   );

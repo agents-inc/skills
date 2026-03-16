@@ -4,7 +4,7 @@
 
 ---
 
-## Pattern 13: Presence Detection
+## Pattern 14: Presence Detection
 
 Track online users and their activity status.
 

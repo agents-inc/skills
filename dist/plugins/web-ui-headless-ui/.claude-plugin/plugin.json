@@ -1,6 +1,6 @@
 {
   "name": "web-ui-headless-ui",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Unstyled accessible UI components by Tailwind Labs",
   "author": {

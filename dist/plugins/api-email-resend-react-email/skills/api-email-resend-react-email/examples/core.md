@@ -1,16 +1,14 @@
 # Email - Core Examples
 
-> Essential email patterns - template structure and basic sending. See [SKILL.md](../SKILL.md) for core concepts.
+> Essential email patterns - template structure, sending, and retry. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Extended Examples:**
 
 - [templates.md](templates.md) - Password Reset, Notification Templates
-- [retry.md](retry.md) - Retry Logic with Exponential Backoff
 - [async-batch.md](async-batch.md) - Async Sending, Batch API
-- [auth-integration.md](auth-integration.md) - Auth System Integration
 - [webhooks.md](webhooks.md) - Webhook Handler for Tracking
 - [preferences.md](preferences.md) - Unsubscribe, Email Preferences
-- [testing.md](testing.md) - Template Testing Patterns
+- [advanced-features.md](advanced-features.md) - Scheduled Sending, Idempotency Keys, Tags
 
 ---
 
@@ -19,7 +17,7 @@
 Create well-structured email templates with proper typing.
 
 ```typescript
-// packages/emails/src/templates/welcome-email.tsx
+// templates/welcome-email.tsx
 import { Button, Heading, Link, Text } from "@react-email/components";
 
 import { BaseLayout } from "../layouts/base-layout";
@@ -89,7 +87,6 @@ WelcomeEmail.PreviewProps = {
   features: ["Create projects", "Invite team members", "Track progress"],
 } satisfies WelcomeEmailProps;
 
-// Named export with type
 export { WelcomeEmail };
 export type { WelcomeEmailProps };
 ```
@@ -104,13 +101,13 @@ Send emails with proper error handling and logging.
 
 ```typescript
 // lib/email/send-email.ts
+import { Resend } from "resend";
 import { render } from "@react-email/components";
 
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const DEFAULT_FROM_NAME = "Your App";
+const DEFAULT_FROM_ADDRESS = "noreply@yourdomain.com";
 
 interface SendEmailOptions {
   to: string | string[];
@@ -130,8 +127,6 @@ interface SendEmailResult {
 export async function sendEmail(
   options: SendEmailOptions,
 ): Promise<SendEmailResult> {
-  const resend = getResendClient();
-
   try {
     // CRITICAL: Always await render()
     const html = await render(options.react);
@@ -148,33 +143,130 @@ export async function sendEmail(
 
     if (error) {
       console.error("[Email] Send failed:", error);
-      return {
-        success: false,
-        error: error.message,
-      };
+      return { success: false, error: error.message };
     }
 
     console.log("[Email] Sent successfully:", data?.id);
-    return {
-      success: true,
-      id: data?.id,
-    };
+    return { success: true, id: data?.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[Email] Unexpected error:", message);
-    return {
-      success: false,
-      error: message,
-    };
+    return { success: false, error: message };
   }
 }
 
-// Named export
 export { sendEmail };
 export type { SendEmailOptions, SendEmailResult };
 ```
 
 **Why good:** Wraps Resend client with consistent interface, always awaits render(), returns typed result, logs for debugging
+
+---
+
+## Pattern 3: Retry with Exponential Backoff
+
+Implement retry logic for temporary API failures.
+
+```typescript
+// lib/email/constants.ts
+export const MAX_RETRY_ATTEMPTS = 3;
+export const INITIAL_RETRY_DELAY_MS = 1000;
+export const RETRY_BACKOFF_MULTIPLIER = 2;
+
+// Errors that are safe to retry
+const RETRYABLE_ERRORS = [
+  "rate_limit_exceeded",
+  "internal_server_error",
+  "service_unavailable",
+];
+```
+
+```typescript
+// lib/email/send-with-retry.ts
+import { Resend } from "resend";
+import { render } from "@react-email/components";
+
+import {
+  MAX_RETRY_ATTEMPTS,
+  INITIAL_RETRY_DELAY_MS,
+  RETRY_BACKOFF_MULTIPLIER,
+} from "./constants";
+
+interface SendWithRetryOptions {
+  to: string | string[];
+  subject: string;
+  react: React.ReactElement;
+  maxRetries?: number;
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function sendEmailWithRetry(
+  options: SendWithRetryOptions,
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS;
+
+  let lastError: string | undefined;
+  let attempt = 0;
+
+  while (attempt < maxRetries) {
+    attempt++;
+
+    try {
+      const html = await render(options.react);
+
+      const { data, error } = await resend.emails.send({
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+        to: options.to,
+        subject: options.subject,
+        html,
+      });
+
+      if (error) {
+        lastError = error.message;
+
+        const isRetryable = RETRYABLE_ERRORS.some((e) =>
+          error.name?.toLowerCase().includes(e),
+        );
+
+        if (isRetryable && attempt < maxRetries) {
+          const delay =
+            INITIAL_RETRY_DELAY_MS *
+            Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+          console.log(
+            `[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`,
+          );
+          await sleep(delay);
+          continue;
+        }
+
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, id: data?.id };
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : "Unknown error";
+
+      if (attempt < maxRetries) {
+        const delay =
+          INITIAL_RETRY_DELAY_MS *
+          Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+        await sleep(delay);
+        continue;
+      }
+    }
+  }
+
+  return { success: false, error: lastError ?? "Max retries exceeded" };
+}
+
+export { sendEmailWithRetry };
+```
+
+**Why good:** Exponential backoff prevents overwhelming the API, only retries transient errors, configurable retry count, logs retry attempts
 
 ---
 
@@ -187,7 +279,7 @@ async function sendEmailBad(
   subject: string,
   react: React.ReactElement,
 ) {
-  const resend = getResendClient();
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   // BAD: Not awaiting render - sends "[object Promise]"
   const html = render(react);

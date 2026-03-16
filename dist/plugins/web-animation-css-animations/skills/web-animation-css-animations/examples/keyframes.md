@@ -38,7 +38,7 @@ Modern CSS allows animations tied to scroll position without JavaScript.
 
 **Why good:** No JavaScript needed, uses scaleX (GPU-accelerated), linear is correct for progress representation
 
-**Browser support:** Chrome 115+, Edge 115+, Safari 26 beta
+**Browser support:** Chrome/Edge 115+, Safari 18+, Firefox behind flag
 
 ---
 
@@ -456,7 +456,7 @@ document.startViewTransition(() => {
 
 **Why good:** Native browser-level transitions, smooth between DOM updates, named transitions for shared elements
 
-**Browser support:** Chrome 111+, Edge 111+, Safari 18+
+**Browser support:** Chrome/Edge 111+, Firefox 144+, Safari 18+
 
 ---
 

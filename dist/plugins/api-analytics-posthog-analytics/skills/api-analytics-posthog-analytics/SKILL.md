@@ -5,12 +5,16 @@ description: PostHog event tracking, user identification, group analytics for B2
 
 # PostHog Analytics Patterns
 
-> **Quick Guide:** Use PostHog for product analytics with structured event naming (category:object_action), server-side tracking for reliability, and proper user identification integrated with your authentication flow. Client-side for UI interactions, server-side for business events.
+> **Quick Guide:** Use PostHog for product analytics with structured event naming (`category:object_action`), server-side tracking for reliability, and proper user identification integrated with your authentication flow. Client-side for UI interactions, server-side for business events. Always call `reset()` on logout, never store PII in event properties, and use `captureImmediate()` or `await shutdown()` in serverless environments.
 
 **Detailed Resources:**
 
-- For code examples, see [examples/core.md](examples/core.md) (start here)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Event naming, user identification, property conventions
+- [examples/client-tracking.md](examples/client-tracking.md) - React hooks, provider setup, component tracking
+- [examples/server-tracking.md](examples/server-tracking.md) - posthog-node, serverless patterns, auth events
+- [examples/group-analytics.md](examples/group-analytics.md) - B2B organization tracking
+- [examples/privacy-gdpr.md](examples/privacy-gdpr.md) - GDPR consent, cookieless mode, PII filtering
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, event taxonomy
 
 ---
 
@@ -46,21 +50,19 @@ description: PostHog event tracking, user identification, group analytics for B2
 
 **When NOT to use:**
 
-- Feature flag implementation (use `backend/feature-flags.md` skill)
-- PostHog setup and installation (use `setup/posthog.md` skill)
+- Feature flag implementation (separate concern)
 - Error tracking and logging (use dedicated error tracking tools)
 - Infrastructure monitoring (use observability tools)
 
 **Key patterns covered:**
 
-- Event naming conventions (category:object_action)
-- Property naming patterns (object*adjective, is*/has\_ booleans)
+- Event naming conventions (`category:object_action`)
+- Property naming patterns (`object_adjective`, `is_`/`has_` booleans)
 - User identification with authentication flow integration
 - Client-side tracking with React hooks
 - Server-side tracking with posthog-node
 - Group analytics for B2B organizations
 - Privacy and GDPR consent patterns
-- Funnel and cohort setup
 - TypeScript patterns for type-safe events
 
 ---
@@ -78,19 +80,6 @@ PostHog analytics follows a **structured taxonomy** approach: consistent naming 
 3. **Identify once per session** - Not on every page load
 4. **Structured naming** - Makes querying and analysis possible at scale
 
-**When to use PostHog analytics:**
-
-- Product decisions need data (feature adoption, conversion funnels)
-- B2B apps needing organization-level metrics
-- User journey analysis and retention tracking
-- A/B test result analysis
-
-**When NOT to use analytics:**
-
-- Debug logging (use structured logs instead)
-- Error tracking (use Sentry or similar)
-- Infrastructure metrics (use observability tools)
-
 </philosophy>
 
 ---
@@ -101,58 +90,40 @@ PostHog analytics follows a **structured taxonomy** approach: consistent naming 
 
 ### Pattern 1: Event Naming Conventions
 
-Use the **category:object_action** framework for consistent, queryable event names.
-
-**Format:** `category:object_action`
-
-- **category**: Context (signup_flow, settings, dashboard)
-- **object**: Component/location (password_button, pricing_page)
-- **action**: Present-tense verb (click, submit, view)
-
-**Examples:**
+Use the **`category:object_action`** framework for consistent, queryable event names.
 
 ```typescript
-// Signup flow events
+// category: Context (signup_flow, settings, dashboard)
+// object: Component/location (password_button, pricing_page)
+// action: Present-tense verb (click, submit, view)
+
 "signup_flow:email_form_submit";
-"signup_flow:google_oauth_click";
-"signup_flow:verification_email_sent";
-
-// Dashboard events
 "dashboard:project_create";
-"dashboard:invite_member_click";
+"settings:billing_plan_upgrade";
 
-// Alternative format: object_verb (simpler, still good)
+// Simpler alternative: object_verb
 "project_created";
 "user_signed_up";
 ```
 
 **Why good:** Category prefix groups related events in PostHog UI, enables wildcard queries like `signup_flow:*`, consistent naming makes analysis possible at scale.
 
-**Property Naming Conventions:**
+**Property naming rules:**
 
 - `object_adjective`: `project_id`, `plan_name`, `item_count`
-- `is_` or `has_` for booleans: `is_first_purchase`, `has_completed_onboarding`
-- `_date` or `_timestamp` suffix: `trial_end_date`, `last_login_timestamp`
+- `is_` / `has_` for booleans: `is_first_purchase`, `has_completed_onboarding`
+- `_date` / `_timestamp` suffix: `trial_end_date`, `last_login_timestamp`
 
-For complete code examples, see [examples/core.md](examples/core.md#pattern-1-event-naming-conventions).
+See [examples/core.md](examples/core.md) for complete naming examples.
 
 ---
 
 ### Pattern 2: User Identification with Authentication
 
-Integrate PostHog identification with your authentication flow.
-
-**Key Rules:**
-
-1. Call `identify()` only on auth state change (not every render)
-2. Check `_isIdentified()` to prevent duplicate calls
-3. Use database user ID as `distinct_id` (not email)
-4. Call `reset()` on logout to unlink future events
-
-**Client-Side Flow:**
+Call `identify()` only on auth state change (not every render). Use database user ID as `distinct_id`. Call `reset()` on logout.
 
 ```typescript
-// In useAnalyticsIdentify hook
+// Check _isIdentified() to prevent duplicate calls
 useEffect(() => {
   if (session?.user && !posthog._isIdentified()) {
     posthog.identify(session.user.id, {
@@ -164,17 +135,13 @@ useEffect(() => {
 }, [session?.user]);
 ```
 
-**Logout Reset:**
-
 ```typescript
-const handleLogout = async () => {
-  posthog?.capture("user_logged_out");
-  posthog?.reset(); // Unlink future events
-  await authClient.signOut();
-};
+// Always reset on logout
+posthog?.capture("user_logged_out");
+posthog?.reset(); // Unlink future events from this user
 ```
 
-For complete implementation with constants and hooks, see [examples/core.md](examples/core.md#pattern-2-user-identification-with-authentication).
+See [examples/core.md](examples/core.md) for full identification hook and logout handler.
 
 ---
 
@@ -182,38 +149,75 @@ For complete implementation with constants and hooks, see [examples/core.md](exa
 
 Track business events reliably from your backend with posthog-node.
 
-**Key Rules:**
+```typescript
+// Serverless: use captureImmediate (guarantees HTTP completion)
+await posthogServer.captureImmediate({
+  distinctId: user.id,
+  event: "subscription_created",
+  properties: { plan: "pro", is_annual: true },
+});
+
+// Always call shutdown before returning in serverless
+await posthogServer.shutdown();
+```
+
+**Key rules:**
 
 1. Always include `distinctId` (user's database ID)
 2. Use `captureImmediate()` for serverless (guarantees HTTP completion)
 3. Always call `shutdown()` before returning in serverless
 4. Configure `flushAt: 1` and `flushInterval: 0` for serverless
 
-**Server Client Setup:**
+See [examples/server-tracking.md](examples/server-tracking.md) for complete server setup and route examples.
+
+---
+
+### Pattern 4: Group Analytics (B2B)
+
+Associate events with organizations using PostHog groups for B2B metrics.
 
 ```typescript
-export const posthogServer = new PostHog(POSTHOG_KEY, {
-  host: POSTHOG_HOST,
-  flushAt: 1, // Flush after 1 event (serverless)
-  flushInterval: 0, // Don't batch (serverless)
+// Client-side: identify organization
+posthog.group("company", org.id, {
+  name: org.name,
+  plan: org.plan ?? "free",
+  member_count: org.memberCount,
 });
-```
 
-**Tracking in API Routes:**
-
-```typescript
+// Server-side: include groups in event
 posthogServer.capture({
-  distinctId: user.id, // REQUIRED
-  event: "project_created",
-  properties: {
-    project_id: project.id,
-    is_first_project: user.projectCount === 0,
-  },
+  distinctId: user.id,
+  event: "organization:member_invited",
+  properties: { role: data.role },
+  groups: { company: data.organizationId },
 });
-await posthogServer.shutdown(); // REQUIRED for serverless
 ```
 
-For complete Hono route examples, see [examples/server-tracking.md](examples/server-tracking.md).
+**Limitations:** Maximum 5 group types per project. One group per type per event.
+
+See [examples/group-analytics.md](examples/group-analytics.md) for complete group patterns.
+
+---
+
+### Pattern 5: Privacy and GDPR Consent
+
+PostHog supports cookieless tracking and consent management.
+
+```typescript
+// Cookieless mode: "always" (no consent needed) or "on_reject" (with banner)
+posthog.init(POSTHOG_KEY, {
+  cookieless_mode: "on_reject",
+  person_profiles: "identified_only",
+});
+
+// Consent methods
+posthog.opt_in_capturing(); // User accepts
+posthog.opt_out_capturing(); // User rejects
+```
+
+**Key rule:** Never store PII (email, name, phone, IP, address) in event properties. Use pseudonymized IDs only.
+
+See [examples/privacy-gdpr.md](examples/privacy-gdpr.md) for consent banner integration and `before_send` filtering.
 
 </patterns>
 
@@ -223,14 +227,7 @@ For complete Hono route examples, see [examples/server-tracking.md](examples/ser
 
 ## Performance Optimization
 
-**Web Apps (default batching):**
-
-```typescript
-posthog.init(POSTHOG_KEY, {
-  api_host: "/ingest",
-  // Default batching is efficient - don't override
-});
-```
+**Web Apps (default batching):** Use default settings -- PostHog batches efficiently out of the box.
 
 **Serverless (immediate delivery):**
 
@@ -239,13 +236,7 @@ const posthogServer = new PostHog(POSTHOG_KEY, {
   flushAt: 1, // Flush after 1 event
   flushInterval: 0, // No interval batching
 });
-
-// Option 1: Use captureImmediate (preferred - guarantees completion)
-await posthogServer.captureImmediate({ distinctId, event, properties });
-
-// Option 2: Use capture + shutdown
-posthogServer.capture({ distinctId, event, properties });
-await posthogServer.shutdown(); // Ensures all events sent before termination
+// Use captureImmediate() or capture() + await shutdown()
 ```
 
 **Reducing Costs:**
@@ -253,11 +244,44 @@ await posthogServer.shutdown(); // Ensures all events sent before termination
 ```typescript
 posthog.init(POSTHOG_KEY, {
   person_profiles: "identified_only", // Anonymous events 4x cheaper
-  autocapture: false, // Optional: disable for high-traffic
+  autocapture: false, // Disable for high-traffic sites
 });
 ```
 
 </performance>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Using email as `distinct_id` -- PII should not be the identifier
+- Missing `posthog.reset()` on logout -- users get mixed together
+- No `await shutdown()` in serverless -- events are lost
+- PII in event properties -- GDPR violation risk
+- Calling `identify()` on every render -- performance degradation
+
+**Common Mistakes:**
+
+- Importing `posthog` directly instead of using `usePostHog` hook in React
+- Not setting up reverse proxy (`api_host: "/ingest"`) -- events blocked by ad blockers
+- Different event names for same action on frontend vs backend
+- Not using `person_profiles: "identified_only"` -- 4x higher costs on anonymous events
+- Using `capture()` instead of `captureImmediate()` in serverless -- events may not complete
+
+**Gotchas & Edge Cases:**
+
+- `distinct_id` is required for ALL server-side events (unlike client-side which auto-generates one)
+- `group()` must include group ID with every event (not persisted like `identify()`)
+- Maximum 5 group types per project
+- `cookieless_mode: "always"` disables `identify()` entirely -- privacy trade-off
+- PostHog web SDK is client-side only -- will not work in server components
+- Session IDs must be manually passed to server-side events for session linking
+
+</red_flags>
 
 ---
 
@@ -280,16 +304,3 @@ posthog.init(POSTHOG_KEY, {
 **Failure to follow these rules will cause analytics data quality issues, privacy violations, or lost events.**
 
 </critical_reminders>
-
----
-
-## Sources
-
-- [PostHog Event Tracking Guide](https://posthog.com/tutorials/event-tracking-guide)
-- [PostHog Best Practices](https://posthog.com/docs/product-analytics/best-practices)
-- [PostHog User Identification](https://posthog.com/docs/getting-started/identify-users)
-- [PostHog Group Analytics](https://posthog.com/docs/product-analytics/group-analytics)
-- [PostHog GDPR Compliance](https://posthog.com/docs/privacy/gdpr-compliance)
-- [PostHog Node.js SDK](https://posthog.com/docs/libraries/node)
-- [PostHog Next.js Integration](https://posthog.com/docs/libraries/next-js)
-- [PostHog React Integration](https://posthog.com/docs/libraries/react)

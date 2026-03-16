@@ -1,6 +1,6 @@
 # Accessibility Reference
 
-> Decision frameworks, anti-patterns, and red flags for the Accessibility skill. For core patterns, see [skill.md](skill.md). For code examples, see [examples.md](examples.md).
+> Decision frameworks, anti-patterns, and WCAG quick reference for the Accessibility skill. For core patterns, see [SKILL.md](SKILL.md). For code examples, see [examples/](examples/).
 
 ---
 
@@ -16,7 +16,7 @@ Need to make content accessible?
 │   │        Ensure visible focus indicator (:focus-visible)
 │   │        Add ARIA if needed (aria-label for icon-only)
 │   └─ NO → Is it complex (modal, dropdown, table)?
-│       ├─ YES → Use Radix UI component (built-in a11y)
+│       ├─ YES → Use your headless component library (built-in a11y)
 │       └─ NO → Is it informational (status, error)?
 │           ├─ YES → Add role="alert" or role="status"
 │           │        Use aria-live for dynamic updates
@@ -69,7 +69,7 @@ Need to make content accessible?
 - **`:focus` vs `:focus-visible`** - Use `:focus-visible` to avoid showing focus rings on mouse clicks
 - **Empty `alt=""` is correct for decorative images** - Don't skip the alt attribute entirely
 - **`aria-hidden="true"` also hides from keyboard** - Don't use on focusable elements
-- **Radix UI handles most ARIA automatically** - Don't add redundant ARIA attributes
+- **Headless component libraries handle most ARIA automatically** - Don't add redundant ARIA attributes
 - **Live regions announce ALL content** - Keep messages concise to avoid spam
 - **`role="button"` on `<div>` doesn't add keyboard support** - Still need to handle Enter/Space keys manually
 - **`prefers-reduced-motion: reduce` means minimize, not eliminate** - Essential animations can remain; replace motion effects with non-motion alternatives (fade, dissolve)
@@ -125,7 +125,7 @@ Never convey information using color alone. Color-blind users cannot distinguish
 
 // CORRECT - Color + icon
 <span className={isError ? "text-red" : "text-green"}>
-  {isError ? <XIcon /> : <CheckIcon />} Status
+  {isError ? "X" : "✓"} Status
 </span>
 ```
 
@@ -146,15 +146,16 @@ Placeholders disappear on input and are not reliably announced by screen readers
 
 ---
 
-### Manual ARIA Instead of Radix UI
+### Manual ARIA Instead of Headless Components
 
-Don't manually implement complex ARIA patterns when Radix UI provides tested, accessible alternatives.
+Don't manually implement complex ARIA patterns when headless component libraries provide tested, accessible alternatives.
 
 ```tsx
-// WRONG - Manual ARIA implementation
+// WRONG - Manual ARIA implementation (error-prone, incomplete)
 <div role="dialog" aria-modal="true" aria-labelledby="title">...</div>
 
-// CORRECT - Radix handles ARIA automatically
+// CORRECT - Let your component library handle ARIA
+// Radix UI, Headless UI, React Aria, or Ariakit
 <Dialog.Root>
   <Dialog.Content>...</Dialog.Content>
 </Dialog.Root>
@@ -172,11 +173,7 @@ Never force animations on users who have requested reduced motion.
   animation: slide-in 300ms ease-out;
 }
 
-/* CORRECT - Respects user preference */
-.card {
-  animation: none;
-}
-
+/* CORRECT - Only animate when user has no preference */
 @media (prefers-reduced-motion: no-preference) {
   .card {
     animation: slide-in 300ms ease-out;
@@ -261,33 +258,3 @@ Never force animations on users who have requested reduced motion.
 2. **Safari** - macOS/iOS accessibility
 3. **Firefox** - Strong accessibility support
 4. **Edge** - Enterprise users
-
----
-
-## Resources
-
-**Official guidelines:**
-
-- WCAG 2.2 Guidelines: https://www.w3.org/WAI/WCAG22/quickref/
-- What's New in WCAG 2.2: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
-- WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
-- WAI-ARIA 1.3 Draft: https://w3c.github.io/aria/
-- prefers-reduced-motion Technique: https://www.w3.org/WAI/WCAG21/Techniques/css/C39
-
-**Tools:**
-
-- axe DevTools: https://www.deque.com/axe/devtools/
-- axe-core API: https://github.com/dequelabs/axe-core/blob/develop/doc/API.md
-- WAVE: https://wave.webaim.org/
-- WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
-
-**Testing libraries:**
-
-- jest-axe: https://github.com/nickcolley/jest-axe
-- vitest-axe: https://github.com/chaance/vitest-axe
-- cypress-axe: https://github.com/component-driven/cypress-axe
-
-**Screen readers:**
-
-- NVDA Screen Reader: https://www.nvaccess.org/
-- Keyboard Navigation Guide: https://webaim.org/articles/keyboard/

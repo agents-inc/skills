@@ -15,8 +15,8 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_URL = process.env.SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 ```
@@ -31,7 +31,7 @@ import { createClient } from "@supabase/supabase-js";
 // BAD: No Database generic, hardcoded secrets
 const supabase = createClient(
   "https://abc.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
 );
 ```
 
@@ -78,7 +78,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 // ONLY use on the server — bypasses all RLS policies
 export const supabaseAdmin = createClient<Database>(
   SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY
+  SUPABASE_SERVICE_ROLE_KEY,
 );
 ```
 
@@ -114,7 +114,11 @@ async function getPostById(postId: string) {
   return data;
 }
 
-async function createPost(post: { title: string; content: string; author_id: string }) {
+async function createPost(post: {
+  title: string;
+  content: string;
+  author_id: string;
+}) {
   const { data, error } = await supabase
     .from("posts")
     .insert(post)
@@ -231,7 +235,9 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.from("posts").select("id, title");
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+    });
   }
 
   return new Response(JSON.stringify(data));

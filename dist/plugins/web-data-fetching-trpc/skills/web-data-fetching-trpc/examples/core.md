@@ -41,9 +41,6 @@ const t = initTRPC.context<Context>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 export const middleware = t.middleware;
-
-// Named exports
-export { router, publicProcedure, middleware };
 ```
 
 ### Context Factory
@@ -51,24 +48,19 @@ export { router, publicProcedure, middleware };
 ```typescript
 // packages/api/src/trpc/context.ts
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { db } from "@repo/db";
-import { auth } from "@repo/auth";
 
 export async function createContext(opts: FetchCreateContextFnOptions) {
-  const session = await auth.validateRequest(opts.req);
+  // Use your auth solution to validate the request
+  const session = await validateSession(opts.req);
 
   return {
-    db,
+    db, // Your database client
     session,
     user: session?.user ?? null,
   };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
-
-// Named exports
-export { createContext };
-export type { Context };
 ```
 
 ### Bad Example - Missing Type Export
@@ -244,7 +236,7 @@ const userRouter = router({
 ```typescript
 // apps/client/lib/trpc.ts
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "@repo/api";
+import type { AppRouter } from "../../api"; // Your shared API package
 
 // v11: Create typed context providers and hooks
 export const { TRPCProvider, useTRPC, useTRPCClient } =
@@ -262,7 +254,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import superjson from "superjson";
 import { TRPCProvider } from "./trpc";
-import type { AppRouter } from "@repo/api";
+import type { AppRouter } from "../../api"; // Your shared API package
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const DEFAULT_RETRY_ATTEMPTS = 3;
@@ -389,7 +381,7 @@ export type { RouterInputs, RouterOutputs };
 
 ```typescript
 // apps/client/components/user-card.tsx
-import type { RouterOutputs } from "@repo/api";
+import type { RouterOutputs } from "../../api"; // Your shared API package
 
 // Extract specific procedure output type
 type User = RouterOutputs["user"]["getById"];

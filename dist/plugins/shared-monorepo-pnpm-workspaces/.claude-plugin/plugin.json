@@ -1,6 +1,6 @@
 {
   "name": "shared-monorepo-pnpm-workspaces",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "pnpm workspace protocol, filtering, catalogs, shared dependencies, publishing, and CI/CD for monorepo management",
   "author": {

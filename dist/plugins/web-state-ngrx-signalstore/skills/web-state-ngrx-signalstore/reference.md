@@ -75,18 +75,19 @@ Do I need RxJS operators (debounce, switchMap, retry)?
 
 ### Quick Reference Table
 
-| Use Case             | Solution               | Why                                 |
-| -------------------- | ---------------------- | ----------------------------------- |
-| Entity collections   | `withEntities()`       | Normalized state, CRUD operations   |
-| Derived data         | `withComputed()`       | Memoized, reactive                  |
-| State updates        | `patchState()`         | Immutable, type-safe                |
-| RxJS side effects    | `rxMethod()`           | Operators, cancellation             |
-| Reusable logic       | `signalStoreFeature()` | Composition, DRY                    |
-| Loading states       | `withCallState()`      | Consistent patterns                 |
-| DevTools             | `withDevtools()`       | Debugging, inspection               |
-| Signal-only effects  | `signalMethod()`       | No RxJS dependency (v19+)           |
-| Non-reactive props   | `withProps()`          | Mutable objects, observables (v19+) |
-| Derived linked state | `withLinkedState()`    | Auto-computed reactive state (v20+) |
+| Use Case              | Solution               | Why                                  |
+| --------------------- | ---------------------- | ------------------------------------ |
+| Entity collections    | `withEntities()`       | Normalized state, CRUD operations    |
+| Derived data          | `withComputed()`       | Memoized, reactive                   |
+| State updates         | `patchState()`         | Immutable, type-safe                 |
+| RxJS side effects     | `rxMethod()`           | Operators, cancellation              |
+| Reusable logic        | `signalStoreFeature()` | Composition, DRY                     |
+| Loading states        | `withCallState()`      | Consistent patterns                  |
+| DevTools              | `withDevtools()`       | Debugging, inspection                |
+| Signal-only effects   | `signalMethod()`       | No RxJS dependency (v19+)            |
+| Non-reactive props    | `withProps()`          | Mutable objects, observables (v19+)  |
+| Context-aware feature | `withFeature()`        | Feature needing store methods (v20+) |
+| Derived linked state  | `withLinkedState()`    | Auto-computed reactive state (v20+)  |
 
 ---
 
@@ -112,7 +113,7 @@ Do I need RxJS operators (debounce, switchMap, retry)?
 
 - Forgetting feature ordering (withState must come first)
 - Not returning state/computed/methods from signalStoreFeature
-- Using `resource()` API in stores (experimental, incomplete)
+- Using `resource()` API in stores without understanding its lifecycle implications
 - Circular dependencies between stores
 - Mutating entity objects instead of using updateEntity
 
@@ -373,23 +374,8 @@ For detailed migration examples, see [examples/migration.md](examples/migration.
 
 ## DevTools Usage
 
-Redux DevTools integration via ngrx-toolkit provides:
+Redux DevTools integration via `@angular-architects/ngrx-toolkit` provides state inspection, action tracking, time-travel debugging, and state diffs. Add `withDevtools('name')` before `withState` in your store definition.
 
-- **State inspection** - View current store state
-- **Action tracking** - See state changes over time
-- **Time-travel** - Jump to previous states
-- **State diff** - Compare state before/after updates
+Note: DevTools don't activate until you open the browser extension and select the "NgRx Signal Store" tab.
 
-```typescript
-import { withDevtools } from "@angular-architects/ngrx-toolkit";
-
-export const Store = signalStore(
-  { providedIn: "root" },
-  withDevtools("store-name"),
-  withState({
-    /* ... */
-  }),
-);
-```
-
-Note: DevTools don't activate until you open the extension and select "NgRx Signal Store" tab.
+See [examples/features.md](../examples/features.md) Pattern 5 for full implementation.

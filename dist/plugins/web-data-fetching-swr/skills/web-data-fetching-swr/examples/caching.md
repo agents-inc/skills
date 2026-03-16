@@ -382,23 +382,19 @@ export { SWRProvider };
 
 ```typescript
 // components/prefetch-link.tsx
-import Link from "next/link";
 import { preload } from "swr";
 import { fetcher } from "@/lib/fetcher";
 
-function PrefetchLink({ userId }: { userId: string }) {
+function PrefetchLink({ userId, href }: { userId: string; href: string }) {
   const handleMouseEnter = () => {
     // Prefetch user data on hover
     preload(`/api/users/${userId}`, fetcher);
   };
 
   return (
-    <Link
-      href={`/users/${userId}`}
-      onMouseEnter={handleMouseEnter}
-    >
+    <a href={href} onMouseEnter={handleMouseEnter}>
       View Profile
-    </Link>
+    </a>
   );
 }
 

@@ -11,24 +11,22 @@
 ### Good Example -- API Response
 
 ```typescript
-import type { Request, Response } from "express";
-
 const PAGE_SIZE = 20;
 
-async function getUsers(req: Request, res: Response): Promise<void> {
-  const page = Math.max(1, Number(req.query.page) || 1);
+async function getUsers(page: number = 1) {
   const skip = (page - 1) * PAGE_SIZE;
 
-  const users = await User.find({ isActive: true })
-    .select("name email role createdAt")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(PAGE_SIZE)
-    .lean();
+  const [users, total] = await Promise.all([
+    User.find({ isActive: true })
+      .select("name email role createdAt")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(PAGE_SIZE)
+      .lean(),
+    User.countDocuments({ isActive: true }),
+  ]);
 
-  const total = await User.countDocuments({ isActive: true });
-
-  res.json({
+  return {
     data: users,
     pagination: {
       page,
@@ -36,13 +34,13 @@ async function getUsers(req: Request, res: Response): Promise<void> {
       total,
       totalPages: Math.ceil(total / PAGE_SIZE),
     },
-  });
+  };
 }
 
 export { getUsers };
 ```
 
-**Why good:** `.lean()` for read-only response (3x memory savings), `.select()` for minimal projection, named constant for page size, paginated with total count
+**Why good:** `.lean()` for read-only response (3x memory savings), `.select()` for minimal projection, named constant for page size, parallel count query, paginated response
 
 ### Bad Example -- Lean Misuse
 

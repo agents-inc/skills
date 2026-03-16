@@ -9,12 +9,8 @@
 Process Resend webhook events with the built-in SDK verification method.
 
 ```typescript
-// app/api/webhooks/resend/route.ts
-import { NextRequest, NextResponse } from "next/server";
+// api/webhooks/resend/route.ts
 import { Resend } from "resend";
-
-import { db } from "@/lib/db";
-import { emailEvents } from "@/lib/db/schema";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -35,24 +31,26 @@ interface ResendWebhookPayload {
   };
 }
 
-export async function POST(request: NextRequest) {
+// Adapt to your web framework's request/response API
+export async function handleWebhook(request: Request) {
   try {
     // CRITICAL: Use raw text payload - JSON parsing breaks signature verification
     const payload = await request.text();
 
     // Use Resend SDK's built-in verification (recommended approach)
+    // Note: header keys are short-form: id, timestamp, signature
     const event = resend.webhooks.verify({
       payload,
       headers: {
-        "svix-id": request.headers.get("svix-id") ?? "",
-        "svix-timestamp": request.headers.get("svix-timestamp") ?? "",
-        "svix-signature": request.headers.get("svix-signature") ?? "",
+        id: request.headers.get("svix-id") ?? "",
+        timestamp: request.headers.get("svix-timestamp") ?? "",
+        signature: request.headers.get("svix-signature") ?? "",
       },
-      secret: process.env.RESEND_WEBHOOK_SECRET!,
+      webhookSecret: process.env.RESEND_WEBHOOK_SECRET!,
     }) as ResendWebhookPayload;
 
-    // Store event in database
-    await db.insert(emailEvents).values({
+    // Store event in your database
+    await saveEmailEvent({
       emailId: event.data.email_id,
       type: event.type,
       recipient: event.data.to[0],
@@ -61,25 +59,18 @@ export async function POST(request: NextRequest) {
       occurredAt: new Date(event.data.created_at),
     });
 
-    // Track in analytics (optional - see analytics skill)
-    // posthogServer.capture({
-    //   distinctId: event.data.to[0],
-    //   event: `email:${event.type.replace("email.", "")}`,
-    //   properties: { emailId: event.data.email_id },
-    // });
-
-    return NextResponse.json({ received: true });
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (err) {
     console.error("[Webhook] Verification failed:", err);
-    return NextResponse.json(
-      { error: "Invalid webhook signature" },
+    return new Response(
+      JSON.stringify({ error: "Invalid webhook signature" }),
       { status: 400 },
     );
   }
 }
 ```
 
-**Why good:** Uses SDK's built-in verification (handles cryptographic operations), uses all three Svix headers, returns 400 on invalid signatures, logs verification failures
+**Why good:** Uses SDK's built-in verification, uses correct `webhookSecret` parameter and short-form header keys (`id`, `timestamp`, `signature`), returns 400 on invalid signatures
 
 ---
 
@@ -88,33 +79,13 @@ export async function POST(request: NextRequest) {
 For environments where Resend SDK isn't suitable, use Svix library directly.
 
 ```typescript
-// app/api/webhooks/resend/route.ts
-import { NextRequest, NextResponse } from "next/server";
+// api/webhooks/resend/route.ts
 import { Webhook } from "svix";
-
-import { db } from "@/lib/db";
-import { emailEvents } from "@/lib/db/schema";
 
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET!;
 
-interface ResendWebhookPayload {
-  type:
-    | "email.sent"
-    | "email.delivered"
-    | "email.opened"
-    | "email.clicked"
-    | "email.bounced"
-    | "email.complained";
-  data: {
-    email_id: string;
-    to: string[];
-    subject: string;
-    created_at: string;
-    click?: { link: string };
-  };
-}
-
-export async function POST(request: NextRequest) {
+// Adapt to your web framework's request/response API
+export async function handleWebhook(request: Request) {
   try {
     // CRITICAL: Use raw text payload - JSON parsing breaks signature verification
     const payload = await request.text();
@@ -128,23 +99,15 @@ export async function POST(request: NextRequest) {
 
     // Verify using Svix library
     const wh = new Webhook(WEBHOOK_SECRET);
-    const event = wh.verify(payload, headers) as ResendWebhookPayload;
+    const event = wh.verify(payload, headers);
 
-    // Store event in database
-    await db.insert(emailEvents).values({
-      emailId: event.data.email_id,
-      type: event.type,
-      recipient: event.data.to[0],
-      subject: event.data.subject,
-      clickedLink: event.data.click?.link,
-      occurredAt: new Date(event.data.created_at),
-    });
+    // Process the verified event...
 
-    return NextResponse.json({ received: true });
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (err) {
     console.error("[Webhook] Verification failed:", err);
-    return NextResponse.json(
-      { error: "Invalid webhook signature" },
+    return new Response(
+      JSON.stringify({ error: "Invalid webhook signature" }),
       { status: 400 },
     );
   }
@@ -182,8 +145,10 @@ Steps to configure webhooks in Resend Dashboard:
 ## Security Notes
 
 - **Always verify webhook signatures** - prevents spoofed and replay attacks
-- **Use all three Svix headers:** `svix-id`, `svix-timestamp`, `svix-signature`
-- **Use raw request body** - JSON parsing/stringifying breaks signature verification
+- **Use raw request body** (`request.text()`) - JSON parsing/stringifying breaks signature verification
+- **SDK method uses `webhookSecret`** parameter (not `secret`)
+- **SDK header keys are short-form:** `id`, `timestamp`, `signature` (mapped from `svix-id`, `svix-timestamp`, `svix-signature`)
+- **Svix method uses full header names:** `svix-id`, `svix-timestamp`, `svix-signature`
 - Store `RESEND_WEBHOOK_SECRET` in environment variables
 - Return 400 for invalid signatures, 200 for valid events
-- Prefer `resend.webhooks.verify()` SDK method over manual verification
+- Prefer `resend.webhooks.verify()` SDK method over manual Svix verification

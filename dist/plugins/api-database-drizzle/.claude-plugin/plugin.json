@@ -1,6 +1,6 @@
 {
   "name": "api-database-drizzle",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Drizzle ORM, queries, migrations",
   "author": {

@@ -1,6 +1,6 @@
 # Expo Router Patterns
 
-File-based routing for React Native applications.
+> File-based routing for React Native applications. See [SKILL.md](../SKILL.md) for decisions and philosophy.
 
 ---
 
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
 ```typescript
 // app/users/[id].tsx
 import { useLocalSearchParams, Stack } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 
 export default function UserScreen() {
   // Type-safe params
@@ -288,30 +288,14 @@ export default function UserScreen() {
 
   return (
     <>
+      {/* Dynamically set screen title */}
       <Stack.Screen options={{ title: `User ${id}` }} />
-      <View style={styles.container}>
-        <Text style={styles.heading}>User Profile</Text>
-        <Text style={styles.id}>ID: {id}</Text>
+      <View style={{ flex: 1, padding: 16 }}>
+        <Text>User ID: {id}</Text>
       </View>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  id: {
-    fontSize: 16,
-    color: "#666",
-  },
-});
 ```
 
 ---
@@ -321,37 +305,13 @@ const styles = StyleSheet.create({
 ```typescript
 // app/docs/[...slug].tsx
 import { useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
 
 export default function DocsScreen() {
   // slug is an array: /docs/api/auth/login -> ["api", "auth", "login"]
   const { slug } = useLocalSearchParams<{ slug: string[] }>();
-
   const path = Array.isArray(slug) ? slug.join("/") : slug;
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Documentation</Text>
-      <Text style={styles.path}>Path: {path}</Text>
-    </View>
-  );
+  // Render based on path segments...
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  path: {
-    fontSize: 16,
-    color: "#666",
-  },
-});
 ```
 
 ---
@@ -605,60 +565,6 @@ const styles = StyleSheet.create({
 
 ---
 
-## Not Found Screen
-
-```typescript
-// app/+not-found.tsx
-import { Link, Stack } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
-
-export default function NotFoundScreen() {
-  return (
-    <>
-      <Stack.Screen options={{ title: "Page Not Found" }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>404</Text>
-        <Text style={styles.message}>This page does not exist.</Text>
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to Home</Text>
-        </Link>
-      </View>
-    </>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: "bold",
-    color: "#666",
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 16,
-    color: "#888",
-    marginBottom: 24,
-  },
-  link: {
-    padding: 12,
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
-  },
-  linkText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-});
-```
-
----
-
 ## TypeScript Route Types
 
 ```typescript
@@ -810,13 +716,13 @@ const styles = StyleSheet.create({
 
 ### TabTrigger Props
 
-| Prop        | Type                                 | Description                             |
-| ----------- | ------------------------------------ | --------------------------------------- |
-| `name`      | string                               | Required identifier for the tab         |
-| `href`      | string                               | Required route destination (in TabList) |
-| `reset`     | "always" \| "onLongPress" \| "never" | Navigation state reset behavior         |
-| `asChild`   | boolean                              | Pass navigation to child component      |
-| `isFocused` | boolean                              | Forwarded prop indicating active state  |
+| Prop           | Type                                 | Description                                                         |
+| -------------- | ------------------------------------ | ------------------------------------------------------------------- |
+| `name`         | string                               | Required identifier for the tab                                     |
+| `href`         | string                               | Required route destination (in TabList)                             |
+| `resetOnFocus` | "always" \| "onLongPress" \| "never" | Navigation state reset behavior (renamed from `reset` in Router v7) |
+| `asChild`      | boolean                              | Pass navigation to child component                                  |
+| `isFocused`    | boolean                              | Forwarded prop indicating active state                              |
 
 ### Native Tabs (SDK 54+ Alpha)
 

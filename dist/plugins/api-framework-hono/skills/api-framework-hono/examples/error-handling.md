@@ -11,7 +11,7 @@
 ### Good Example - Standardized Error Handling
 
 ```typescript
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 
 const HTTP_STATUS_UNPROCESSABLE_ENTITY = 422;

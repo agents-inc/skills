@@ -70,6 +70,8 @@ export async function DynamicStats() {
 
 **When NOT to use:** Fully static pages (no benefit), fully dynamic pages (use SSR), small projects (adds complexity)
 
+**Note:** In Next.js 16, `experimental.ppr` and `experimental_ppr` are removed. Use `cacheComponents: true` with `"use cache"` directive instead. See the v16 migration section below.
+
 ---
 
 ## Feature: Enhanced Form Component (`next/form`)
@@ -310,18 +312,7 @@ export async function onRequestError(
 
 ## Feature: `after()` API (Stable - 15.1+)
 
-Execute code after response finishes streaming. Useful for logging, analytics, cleanup.
-
-### Configuration (15.0 only - stable in 15.1+)
-
-```typescript
-// next.config.ts (only needed in 15.0)
-const nextConfig = {
-  experimental: {
-    after: true,
-  },
-};
-```
+Execute code after response finishes streaming. Useful for logging, analytics, cleanup. Stable since 15.1 - no experimental config needed.
 
 ### Good Example - Analytics After Response
 
@@ -410,41 +401,47 @@ export async function middleware(request: NextRequest) {
 
 ---
 
-## Next.js 16 Preview: Migration Notes
+## Next.js 16 Migration Notes (Released October 2025)
 
-Prepare for upcoming Next.js 16 changes:
+### Removals (v16)
 
-### Deprecation Warnings (15.5+)
-
-| Feature                    | Deprecated | Replacement               |
-| -------------------------- | ---------- | ------------------------- |
-| `legacyBehavior` on `Link` | 15.5       | Remove wrapper `<a>` tag  |
-| AMP support                | 15.5       | Remove AMP code           |
-| `next lint` command        | 15.5       | Use ESLint/Biome directly |
-| `devIndicators` options    | 15.5       | Remove from config        |
+| Feature                                                     | Replacement                        |
+| ----------------------------------------------------------- | ---------------------------------- |
+| AMP support                                                 | All AMP APIs and configs removed   |
+| `next lint` command                                         | Use ESLint or Biome directly       |
+| `serverRuntimeConfig`, `publicRuntimeConfig`                | Use environment variables          |
+| `devIndicators` options                                     | Options removed, indicator remains |
+| Synchronous `params`/`searchParams`/`cookies()`/`headers()` | Must await (sync compat removed)   |
+| `experimental.ppr` and `experimental_ppr`                   | Use `cacheComponents: true`        |
+| `experimental.dynamicIO`                                    | Use `cacheComponents: true`        |
 
 ### Breaking Changes (Next.js 16)
 
 ```typescript
 // middleware.ts -> proxy.ts (v16)
 // Before (v15)
-export default function middleware(request) {}
+// middleware.ts
+export function middleware(request: NextRequest) {}
 
 // After (v16)
-export default function proxy(request) {}
+// proxy.ts
+export function proxy(request: NextRequest) {}
+// Note: edge runtime NOT supported in proxy.ts, use nodejs runtime
 ```
 
 ```typescript
-// revalidateTag requires cacheLife (v16)
-// Before (v15 - deprecated)
+// revalidateTag requires cacheLife profile (v16)
+// Before (v15 - deprecated single argument)
 revalidateTag("blog-posts");
 
-// After (v16)
+// After (v16) - requires cacheLife profile as second argument
 revalidateTag("blog-posts", "max");
+// Built-in profiles: 'max', 'hours', 'days'
+revalidateTag("news-feed", "hours");
 
-// Or for Server Actions use updateTag()
+// For Server Actions, use updateTag() for read-your-writes semantics
 import { updateTag } from "next/cache";
-updateTag("user-123"); // For read-your-writes
+updateTag("user-123"); // Expire + immediate refresh
 ```
 
 ```typescript
@@ -460,7 +457,7 @@ export async function markAsRead(id: string) {
 
 ### Cache Components (Next.js 16)
 
-Cache Components replace `experimental.ppr` flag. Enable with `cacheComponents: true`:
+Cache Components replace `experimental.ppr`. All caching is opt-in via `"use cache"` directive:
 
 ```typescript
 // next.config.ts (v16)
@@ -469,24 +466,7 @@ const nextConfig = {
 };
 ```
 
-The `"use cache"` directive provides explicit, opt-in caching:
-
 ```tsx
-// app/dashboard/page.tsx (v16 pattern)
-import { Suspense } from "react";
-
-// Static shell is prerendered, dynamic content streams in
-export default function Dashboard() {
-  return (
-    <>
-      <StaticHeader />
-      <Suspense fallback={<Loading />}>
-        <DynamicUserData />
-      </Suspense>
-    </>
-  );
-}
-
 // Explicitly cached component
 async function CachedStats() {
   "use cache";
@@ -496,12 +476,43 @@ async function CachedStats() {
 }
 ```
 
+### Turbopack Config Changes (v16)
+
+```typescript
+// next.config.ts
+// Before (v15) - under experimental
+const nextConfig = {
+  experimental: {
+    turbopack: {
+      /* options */
+    },
+  },
+};
+
+// After (v16) - top-level
+const nextConfig = {
+  turbopack: {
+    /* options */
+  },
+};
+```
+
+### New Features (v16)
+
+- **React 19.2**: View Transitions, `useEffectEvent`, `<Activity>`
+- **React Compiler** support stable (`reactCompiler: true` at config root)
+- **`cacheLife` and `cacheTag`**: Stable (no `unstable_` prefix)
+- **Enhanced routing**: Layout deduplication, incremental prefetching
+- **Build Adapters API** (alpha): Custom build integrations
+- **Next.js DevTools MCP**: AI-assisted debugging
+
 ### Version Requirements (v16)
 
 - Node.js 20.9+ required (18 no longer supported)
 - TypeScript 5.1.0+ required
-- Turbopack becomes default bundler (opt out: `next build --webpack`)
-- Parallel routes require explicit `default.js` in all slots
+- Turbopack is default bundler (opt out: `next build --webpack`)
+- Parallel routes require explicit `default.js` in all slots (builds fail without them)
+- Chrome 111+, Edge 111+, Firefox 111+, Safari 16.4+
 
 ### Migration Codemod
 

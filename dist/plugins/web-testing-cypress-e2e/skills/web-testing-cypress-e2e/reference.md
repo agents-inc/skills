@@ -317,9 +317,9 @@ cy.getBySel("email-input")
 
 ---
 
-## Cypress 14+ Requirements
+## Cypress 14/15 Changes
 
-### cy.origin() for Multi-Origin Tests
+### cy.origin() for Multi-Origin Tests (Cypress 14+)
 
 Cypress 14 requires `cy.origin()` for any test that navigates across different origins (scheme + hostname + port).
 
@@ -344,20 +344,34 @@ cy.url().should("include", "/dashboard");
 
 **Why required:** Chrome deprecated `document.domain`, which Cypress previously used for cross-origin testing.
 
-### Deprecated in Cypress 14
+### Removed in Cypress 14
 
-| Deprecated                                 | Replacement                              | Notes                                                                    |
-| ------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------ |
-| `resourceType` on `cy.intercept()`         | Use route matching instead               | Deprecated in v14.0.0, may be removed in future                          |
-| `injectDocumentDomain` config              | Use `cy.origin()` for multi-origin tests | Chrome deprecated document.domain                                        |
-| `Cypress.Commands.overwrite()` for queries | Use `Cypress.Commands.overwriteQuery()`  | Queries include .get(), .find(), .contains(), cy.location(), cy.window() |
-| Vue 2 support                              | Use `@cypress/vue2` package              | Component testing only                                                   |
-| React < 18 support                         | Use `@cypress/react@8.x.x` package       | Component testing only                                                   |
-| Angular < 17.2.0 support                   | Use `@cypress/angular@2.x.x` package     | Component testing only                                                   |
+| Removed                          | Replacement            | Notes                                 |
+| -------------------------------- | ---------------------- | ------------------------------------- |
+| `delayMs` on `cy.intercept()`    | Use `delay` instead    | Deprecated since 6.4.0, removed in 14 |
+| 3-argument `cy.stub()` signature | Use 2-argument form    | Removed in 15                         |
+| `cypress open-ct` / `run-ct`     | Use `--component` flag | `npx cypress run --component`         |
 
-### Minimum Requirements (Cypress 14)
+### Deprecated (Still Functional)
 
-- Node.js 18+
+| Deprecated                                 | Replacement                             | Notes                                                                    |
+| ------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------ |
+| `resourceType` on `cy.intercept()`         | Use route matching instead              | Deprecated in v14.0.0, may be removed in future                          |
+| `Cypress.env()`                            | Use `cy.env()` command                  | Deprecated in Cypress 15, `cy.env()` is async and secure                 |
+| `Cypress.Commands.overwrite()` for queries | Use `Cypress.Commands.overwriteQuery()` | Queries include .get(), .find(), .contains(), cy.location(), cy.window() |
+
+### New in Cypress 15
+
+| Feature                | Description                                                          |
+| ---------------------- | -------------------------------------------------------------------- |
+| `cy.env()`             | Async, secure environment variable access (replaces `Cypress.env()`) |
+| `Cypress.expose()`     | Public configuration API for non-sensitive values                    |
+| `--pass-with-no-tests` | CLI flag to pass when no test files match                            |
+| Angular 21 support     | Including zoneless mode for component testing                        |
+
+### Minimum Requirements (Cypress 15)
+
+- Node.js 20+ (18 and 23 removed in 15)
 - macOS 11 (Big Sur)+
 - React 18.0.0+ (for component testing)
 - Angular 17.2.0+ (for component testing)

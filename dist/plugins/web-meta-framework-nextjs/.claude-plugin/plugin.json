@@ -1,8 +1,8 @@
 {
   "name": "web-meta-framework-nextjs",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
-  "description": "Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling",
+  "description": "Next.js App Router patterns (15-16) - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, Cache Components",
   "author": {
     "name": "@vince"
   }

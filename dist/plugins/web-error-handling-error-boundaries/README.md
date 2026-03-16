@@ -1,6 +1,6 @@
 # web-error-handling-error-boundaries
 
-Error boundary patterns, fallback UI, reset/retry functionality, react-error-boundary library
+Error boundary patterns, fallback UI, reset/retry, react-error-boundary library, React 19 createRoot error hooks
 
 ## Installation
 

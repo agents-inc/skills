@@ -1,6 +1,6 @@
 {
   "name": "web-meta-framework-sveltekit",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement",
   "author": {

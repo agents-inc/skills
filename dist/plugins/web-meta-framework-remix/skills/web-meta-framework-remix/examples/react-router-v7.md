@@ -29,7 +29,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 // Route.ActionArgs replaces ActionFunctionArgs
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ params, request }: Route.ActionArgs) {
   const formData = await request.formData();
   const title = formData.get("title") as string;
 

@@ -1,8 +1,8 @@
 {
   "name": "web-error-handling-error-boundaries",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
-  "description": "Error boundary patterns, fallback UI, reset/retry functionality, react-error-boundary library",
+  "description": "Error boundary patterns, fallback UI, reset/retry, react-error-boundary library, React 19 createRoot error hooks",
   "author": {
     "name": "@vince"
   }

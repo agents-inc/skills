@@ -141,8 +141,7 @@ How to navigate?
 - **Storing secrets in EXPO*PUBLIC* variables** - these are embedded in JavaScript bundle, visible to anyone
 - **Manually editing android/ios in managed workflow** - changes lost on `prebuild --clean`; use config plugins instead
 - **Mixing version numbers incorrectly** - iOS buildNumber must be string, Android versionCode must be integer
-- **Using expo-av Video API** - deprecated in SDK 52+; migrate to `expo-video` (expo-av removed in SDK 55)
-- **Using expo-av Audio API** - deprecated in SDK 53+; migrate to `expo-audio` (expo-av removed in SDK 55)
+- **Using expo-av** - fully removed in SDK 55; migrate to `expo-video` and `expo-audio`
 - **Not handling edge-to-edge display (Android)** - mandatory in SDK 54, cannot be disabled; use react-native-safe-area-context (React Native's SafeAreaView is deprecated)
 - **Using expo-file-system without updating imports (SDK 54+)** - default imports changed; legacy API moved to `expo-file-system/legacy`
 
@@ -176,8 +175,10 @@ How to navigate?
 - **AppDelegate is Swift in SDK 53+** - config plugins must use Swift modifications, not Objective-C
 - **package.json exports enforced in SDK 53** - Metro enforces ES Module resolution; some libraries may break
 - **expo-av completely removed in SDK 55** - must migrate to expo-video/expo-audio before upgrading
-- **Legacy Architecture removed after SDK 54** - React Native 0.82+ won't permit opting out
+- **`removeSubscription` deprecated across SDK 55 packages** - use `subscription.remove()` instead
+- **Legacy Architecture removed in SDK 55** - `newArchEnabled` flag no longer exists; New Architecture is mandatory
 - **Native tabs are alpha (SDK 54+)** - import from `expo-router/unstable-native-tabs`, API may change
+- **`eas update --channel` replaced by `--environment` in SDK 55** - old flag no longer works
 - **Android limited to 5 native tabs** - Material Design constraint, cannot be overridden
 
 ---
@@ -391,7 +392,7 @@ eas build --profile preview --platform all
 - AppDelegate migrated to Swift (iOS)
 - Push notifications removed from Expo Go (Android)
 
-### SDK 54 (Latest)
+### SDK 54
 
 - React Native 0.81 with React 19.1
 - Expo Router v6 with Native Tabs (alpha via `expo-router/unstable-native-tabs`)
@@ -403,6 +404,21 @@ eas build --profile preview --platform all
 - Deprecated expo-notifications function exports removed
 - Minimum Node.js bumped to 20.19.4
 - Minimum Xcode bumped to 16.1 (Xcode 26 recommended)
+
+### SDK 55 (Latest)
+
+- React Native 0.83 with React 19.2
+- Expo Router v7 with Stack.Toolbar, Apple Zoom transitions, SplitView (experimental)
+- **Legacy Architecture support removed** - New Architecture is the only option, `newArchEnabled` flag removed
+- `expo-av` completely removed from Expo Go and SDK - use `expo-video` and `expo-audio`
+- 75% smaller OTA update downloads with Hermes bytecode diffing
+- `eas update` now requires `--environment` flag (replaces `--channel`)
+- `expo-server` package (renamed from `@expo/server`) ships as part of SDK
+- `expo-widgets` for iOS home screen widgets and Live Activities
+- `expo-brownfield` for adding Expo to existing native apps
+- New default template uses native tabs and `/src/app` directory structure
+- `removeSubscription` function exports deprecated across packages (use `subscription.remove()`)
+- `expo-video-thumbnails` deprecated (use `expo-video` instead)
 
 ### Migration Checklist
 
@@ -453,7 +469,8 @@ eas build:run --platform [platform]  # Run built app
 ### EAS Update
 
 ```bash
-eas update --channel [channel] --message "description"
+eas update --environment [preview|production] --message "description"  # SDK 55+
+eas update --channel [channel] --message "description"                 # SDK 54 and earlier
 eas update:list             # List updates
 eas update:rollback --channel [channel]
 ```

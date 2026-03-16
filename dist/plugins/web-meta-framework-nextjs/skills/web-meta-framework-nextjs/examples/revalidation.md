@@ -51,9 +51,14 @@ export async function updatePost(
 
 ```typescript
 // app/posts/[id]/page.tsx
-export default async function PostPage({ params }: { params: { id: string } }) {
-  const post = await fetch(`/api/posts/${params.id}`, {
-    next: { tags: [`post-${params.id}`, "posts"] },
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function PostPage({ params }: PageProps) {
+  const { id } = await params;
+  const post = await fetch(`/api/posts/${id}`, {
+    next: { tags: [`post-${id}`, "posts"] },
   });
   // ...
 }

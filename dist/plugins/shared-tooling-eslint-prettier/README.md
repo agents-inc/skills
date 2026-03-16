@@ -1,6 +1,6 @@
 # shared-tooling-eslint-prettier
 
-ESLint 9 flat config with defineConfig(), Prettier v3.0+ shared config, eslint-config-prettier integration, typescript-eslint v8+ projectService
+ESLint 9/10 flat config with defineConfig(), Prettier v3.0+ shared config, eslint-config-prettier integration, typescript-eslint v8+ projectService
 
 ## Installation
 

@@ -115,9 +115,8 @@ export default async function ProfilePage() {
     firstName: user.firstName,
     lastName: user.lastName,
     imageUrl: user.imageUrl,
-    email: user.emailAddresses.find(
-      (e) => e.id === user.primaryEmailAddressId,
-    )?.emailAddress,
+    email: user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)
+      ?.emailAddress,
     createdAt: user.createdAt,
   };
 
@@ -128,7 +127,9 @@ export default async function ProfilePage() {
       </h1>
       <img src={safeProfile.imageUrl} alt="Profile" />
       <p>{safeProfile.email}</p>
-      <p>Member since: {new Date(safeProfile.createdAt).toLocaleDateString()}</p>
+      <p>
+        Member since: {new Date(safeProfile.createdAt).toLocaleDateString()}
+      </p>
 
       {/* Safe to pass filtered data to client components */}
       <ProfileActions user={safeProfile} />
@@ -263,10 +264,7 @@ export async function updateProfile(formData: FormData) {
   const bio = formData.get("bio") as string;
 
   // Update in your database
-  await db
-    .update(users)
-    .set({ name, bio })
-    .where(eq(users.clerkId, userId));
+  await db.update(users).set({ name, bio }).where(eq(users.clerkId, userId));
 
   // Optionally update Clerk user metadata
   const user = await currentUser();
@@ -328,7 +326,7 @@ export async function createProject(formData: FormData) {
 ```ts
 // app/api/webhooks/clerk/route.ts
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
-import type { UserJSON, OrganizationJSON } from "@clerk/types";
+import type { UserJSON, OrganizationJSON } from "@clerk/shared/types";
 
 export async function POST(req: Request) {
   let evt;

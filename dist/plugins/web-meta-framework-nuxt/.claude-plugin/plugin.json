@@ -1,8 +1,8 @@
 {
   "name": "web-meta-framework-nuxt",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
-  "description": "Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO",
+  "description": "Nuxt patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO",
   "author": {
     "name": "@vince"
   }

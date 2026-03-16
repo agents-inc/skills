@@ -9,14 +9,13 @@ description: NgRx SignalStore patterns for Angular state management. Use when ma
 
 **Detailed Resources:**
 
-- For code examples, see [examples/](examples/) folder:
-  - [core.md](examples/core.md) - signalStore, withState, withComputed, withMethods
-  - [entities.md](examples/entities.md) - withEntities, CRUD operations
-  - [effects.md](examples/effects.md) - rxMethod, side effects
-  - [features.md](examples/features.md) - signalStoreFeature, custom features
-  - [testing.md](examples/testing.md) - Unit tests, mocking strategies
-  - [migration.md](examples/migration.md) - Migration from traditional NgRx
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - signalStore, withState, withComputed, withMethods, withProps
+- [examples/entities.md](examples/entities.md) - withEntities, CRUD operations, prependEntity/upsertEntity (v20+)
+- [examples/effects.md](examples/effects.md) - rxMethod, signalMethod (v19+), side effects
+- [examples/features.md](examples/features.md) - signalStoreFeature, custom features, DevTools
+- [examples/testing.md](examples/testing.md) - Unit tests, unprotected(), mocking strategies
+- [examples/migration.md](examples/migration.md) - Migration from traditional NgRx
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, red flags
 
 ---
 
@@ -54,9 +53,9 @@ description: NgRx SignalStore patterns for Angular state management. Use when ma
 - State, computed, and methods composition
 - Entity management with `withEntities`
 - RxJS integration with `rxMethod` and signal-only `signalMethod`
-- Custom features with `signalStoreFeature`
+- Custom features with `signalStoreFeature` and context-aware `withFeature` (v20+)
+- Derived reactive state with `withLinkedState` (v20+)
 - Call state patterns (loading, loaded, error)
-- DevTools integration with ngrx-toolkit
 
 **When NOT to use:**
 
@@ -84,7 +83,7 @@ NgRx SignalStore is a lightweight, functional state management solution built on
 
 1. **`signalStore()`** creates a fully typed store as an injectable Angular service
 2. **`patchState()`** ensures immutable updates without Immer dependency
-3. **`withEntities()`** provides standardized entity management (similar to Redux Toolkit's `createEntityAdapter`)
+3. **`withEntities()`** provides standardized entity management (normalized `ids`/`entityMap` structure with built-in CRUD updaters)
 4. **`rxMethod()`** bridges Angular Signals with RxJS for complex async flows
 5. **Protected state** (v18+) prevents external mutations by default; v19+ applies deep freeze recursively
 
@@ -280,6 +279,57 @@ Track loading, loaded, and error states for async operations using `withCallStat
 
 For implementation examples, see [examples/features.md](examples/features.md).
 
+---
+
+### Pattern 8: Context-Aware Features with withFeature (v20+)
+
+Use `withFeature()` to create features that have access to the current store's methods and properties. Unlike `signalStoreFeature()`, `withFeature` receives the store instance, enabling reusable features that can call store-specific methods.
+
+#### When to Use
+
+- Features that need to call existing store methods
+- Generic patterns like entity loaders that need store-specific fetch logic
+- When `signalStoreFeature()` is insufficient because the feature needs store context
+
+```typescript
+import { withFeature } from "@ngrx/signals";
+
+// withFeature receives the store instance
+export const ProductStore = signalStore(
+  { providedIn: "root" },
+  withMethods((store) => ({
+    load: rxMethod<string>(/* fetch logic */),
+  })),
+  withFeature((store) =>
+    withEntityLoader((id) => firstValueFrom(store.load(id))),
+  ),
+);
+```
+
+---
+
+### Pattern 9: Derived Reactive State with withLinkedState (v20+)
+
+Use `withLinkedState()` to create state signals that are automatically recomputed when their source signals change. Unlike `withComputed()`, linked state is writable and can be overridden.
+
+#### When to Use
+
+- Derived state that also needs to be independently settable
+- Maintaining selection state across data changes
+- State that has a default derived value but can be overridden by user action
+
+```typescript
+import { withLinkedState } from "@ngrx/signals";
+
+export const FilterStore = signalStore(
+  withState({ items: [] as Item[] }),
+  withLinkedState(({ items }) => ({
+    // Recomputes when items change, but can also be set independently
+    selectedId: () => items()[0]?.id ?? null,
+  })),
+);
+```
+
 </patterns>
 
 ---
@@ -290,45 +340,23 @@ For implementation examples, see [examples/features.md](examples/features.md).
 
 **Angular DI Integration:**
 
-SignalStore is an Angular service. Use `providedIn: 'root'` for singletons or component-level providers for scoped stores:
+SignalStore is an Angular service. Use `{ providedIn: 'root' }` for singletons or component-level `providers: [Store]` for scoped instances that are destroyed with the component.
 
-```typescript
-// Root-level singleton
-export const GlobalStore = signalStore(
-  { providedIn: "root" },
-  withState({
-    /* ... */
-  }),
-);
-
-// Component-scoped
-@Component({
-  providers: [LocalStore],
-})
-export class MyComponent {
-  readonly store = inject(LocalStore);
-}
-```
+See [examples/core.md](examples/core.md) Pattern 5 and Component-Level Stores for DI patterns.
 
 **DevTools Integration:**
 
-Use `@angular-architects/ngrx-toolkit` for Redux DevTools support:
+Use `withDevtools('name')` from `@angular-architects/ngrx-toolkit` for Redux DevTools support. Place it before `withState` in the feature chain.
 
-```typescript
-import { withDevtools } from "@angular-architects/ngrx-toolkit";
-
-export const FlightStore = signalStore(
-  { providedIn: "root" },
-  withDevtools("flights"),
-  withState({ flights: [] as Flight[] }),
-);
-```
+See [examples/features.md](examples/features.md) Pattern 5 for setup.
 
 **Testing Integration:**
 
-- Use `unprotected()` from `@ngrx/signals/testing` to bypass state protection
+- Use `unprotected()` from `@ngrx/signals/testing` to bypass state protection for test setup
 - Use `TestBed.configureTestingModule()` with mocked services
 - Test store methods directly or through component integration
+
+See [examples/testing.md](examples/testing.md) for patterns.
 
 </integration>
 

@@ -433,7 +433,7 @@ test("renders component", () => {
 });
 ```
 
-**Why it's wrong:** Modern test frameworks (Vitest with @testing-library/react, Jest with @testing-library/jest-dom) handle cleanup automatically.
+**Why it's wrong:** Modern test runners handle cleanup automatically when configured with @testing-library/react.
 
 **What to do instead:** Remove manual cleanup unless you're using a framework that doesn't auto-cleanup.
 
@@ -537,12 +537,7 @@ test("clicks button", async () => {
 
 ## ESLint Rules Reference
 
-Install these ESLint plugins to catch mistakes automatically:
-
-```bash
-# Install plugins
-npm install -D eslint-plugin-testing-library eslint-plugin-jest-dom
-```
+Use `eslint-plugin-testing-library` and `eslint-plugin-jest-dom` to catch mistakes automatically.
 
 ### Key Rules
 

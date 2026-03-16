@@ -27,11 +27,19 @@ description: Redis in-memory data store patterns with ioredis and node-redis -- 
 
 ---
 
-**Detailed Resources:**
+## Examples
 
-- For code examples, see [examples/](examples/) folder:
-  - [redis.md](examples/redis.md) - Caching patterns, session storage, rate limiting, pub/sub, job queues
-- For decision frameworks, quick reference, and anti-patterns, see [reference.md](reference.md)
+- [Setup & Connection](examples/setup.md) -- ioredis/node-redis connection, error handling, reconnection, cluster, sentinel
+- [Caching Patterns](examples/caching.md) -- Cache-aside, write-through, invalidation, stampede prevention, multi-key pipeline
+- [Data Structures](examples/data-structures.md) -- Strings, hashes, lists, sets, sorted sets with typed helpers
+- [Sessions](examples/sessions.md) -- Express connect-redis, Hono manual middleware, token blacklisting
+- [Pub/Sub](examples/pub-sub.md) -- Publish/subscribe, event broadcasting, pattern subscriptions
+- [Rate Limiting](examples/rate-limiting.md) -- Sliding window (Lua), token bucket (Lua), middleware integration
+- [Queues & Locks](examples/queues.md) -- BullMQ job queues, Redis Streams with consumer groups, distributed locks
+
+**Additional resources:**
+
+- [reference.md](reference.md) -- Command cheat sheet, connection options, anti-patterns, production checklist
 
 ---
 
@@ -60,7 +68,6 @@ description: Redis in-memory data store patterns with ioredis and node-redis -- 
 - Pipelining and transactions (MULTI/EXEC)
 - Lua scripting for atomic operations
 - Cluster mode and Sentinel for high availability
-- Production connection management and reconnection strategies
 
 **When NOT to use:**
 
@@ -85,22 +92,6 @@ Redis is an **in-memory data store** used as a cache, message broker, and stream
 4. **Set TTLs on everything** -- Memory is finite. Every cached key should expire. Use `EX` (seconds) or `PX` (milliseconds) on SET commands.
 5. **Fail gracefully** -- Redis is a cache, not a database. If Redis is down, the application should degrade gracefully (bypass cache, use database directly).
 
-**When to use Redis:**
-
-- High-frequency reads that benefit from in-memory speed
-- Session data shared across multiple application instances
-- Rate limiting in distributed environments
-- Real-time features (chat, notifications, live updates)
-- Background job processing and task scheduling
-- Leaderboards, counters, and analytics requiring atomic increments
-
-**When NOT to use:**
-
-- As a primary database (data loss risk on restart without persistence)
-- Complex queries with JOINs or aggregations (use a relational database)
-- Storing data larger than available memory
-- Long-term data archival
-
 </philosophy>
 
 ---
@@ -111,9 +102,7 @@ Redis is an **in-memory data store** used as a cache, message broker, and stream
 
 ### Pattern 1: ioredis Connection Setup
 
-Configure ioredis with proper error handling, reconnection strategy, and TypeScript types.
-
-#### Basic Connection
+Configure ioredis with proper error handling and reconnection strategy. See [examples/setup.md](examples/setup.md) for full examples including node-redis and cluster configuration.
 
 ```typescript
 // ✅ Good Example - Proper ioredis setup with error handling
@@ -131,8 +120,7 @@ function createRedisClient(): Redis {
   const client = new Redis(url, {
     maxRetriesPerRequest: 3,
     retryStrategy(times) {
-      const delay = Math.min(times * RETRY_DELAY_BASE_MS, RETRY_DELAY_MAX_MS);
-      return delay;
+      return Math.min(times * RETRY_DELAY_BASE_MS, RETRY_DELAY_MAX_MS);
     },
     lazyConnect: true,
   });
@@ -141,456 +129,101 @@ function createRedisClient(): Redis {
     console.error("Redis connection error:", err.message);
   });
 
-  client.on("connect", () => {
-    console.log("Redis connected");
-  });
-
   return client;
 }
 
 export { createRedisClient };
 ```
 
-**Why good:** Environment variable validation, named constants for retry delays, `lazyConnect` prevents connection before ready, error event handler prevents process crash, reconnection strategy with exponential backoff capped at max delay
+**Why good:** Environment variable validation, named constants for retry delays, `lazyConnect` prevents connection before ready, error event handler prevents process crash
 
 ```typescript
 // ❌ Bad Example - No error handling, hardcoded config
 import Redis from "ioredis";
-
 const redis = new Redis("redis://localhost:6379");
-// No error handler -- unhandled errors crash the process
-// No retry strategy -- uses default which may not suit your needs
-// Hardcoded connection string -- leaks in version control
+// No error handler, no retry strategy, hardcoded URL
 ```
 
-**Why bad:** Missing error event handler crashes Node.js process on connection failure, hardcoded URL prevents environment-specific configuration, no retry strategy customization
-
-#### node-redis Connection (Alternative)
-
-```typescript
-// ✅ Good Example - node-redis when you need Redis Stack modules
-import { createClient } from "redis";
-
-async function createNodeRedisClient() {
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    throw new Error("REDIS_URL environment variable is required");
-  }
-
-  const client = createClient({ url });
-
-  client.on("error", (err) => {
-    console.error("Redis client error:", err.message);
-  });
-
-  await client.connect();
-  return client;
-}
-
-export { createNodeRedisClient };
-```
-
-**When to use:** Only when you need Redis Stack modules (JSON, Search, TimeSeries) -- ioredis does not support Redis Stack modules natively.
+**Why bad:** Missing error event handler crashes Node.js process on connection failure, hardcoded URL prevents environment-specific configuration
 
 ---
 
-### Pattern 2: Data Structures and Basic Operations
+### Pattern 2: Cache-Aside
 
-Redis provides multiple data structures, each optimized for specific use cases.
-
-#### Strings (Key-Value)
+Check cache first, fall back to database on miss, populate cache. See [examples/caching.md](examples/caching.md) for write-through, invalidation, stampede prevention, and multi-key cache patterns.
 
 ```typescript
-import type Redis from "ioredis";
-
-const DEFAULT_TTL_SECONDS = 3600; // 1 hour
-
-async function setWithTTL(
-  redis: Redis,
-  key: string,
-  value: string,
-  ttlSeconds: number = DEFAULT_TTL_SECONDS,
-): Promise<void> {
-  await redis.set(key, value, "EX", ttlSeconds);
-}
-
-async function getOrNull(redis: Redis, key: string): Promise<string | null> {
-  return redis.get(key);
-}
-
-export { setWithTTL, getOrNull };
-```
-
-#### Hashes (Object-like)
-
-```typescript
-import type Redis from "ioredis";
-
-interface UserProfile {
-  name: string;
-  email: string;
-  role: string;
-}
-
-const USER_KEY_PREFIX = "user:";
-const USER_TTL_SECONDS = 1800; // 30 minutes
-
-async function setUserProfile(
-  redis: Redis,
-  userId: string,
-  profile: UserProfile,
-): Promise<void> {
-  const key = `${USER_KEY_PREFIX}${userId}`;
-  await redis.hset(key, profile);
-  await redis.expire(key, USER_TTL_SECONDS);
-}
-
-async function getUserProfile(
-  redis: Redis,
-  userId: string,
-): Promise<UserProfile | null> {
-  const key = `${USER_KEY_PREFIX}${userId}`;
-  const data = await redis.hgetall(key);
-  if (!data || Object.keys(data).length === 0) {
-    return null;
-  }
-  return data as UserProfile;
-}
-
-export { setUserProfile, getUserProfile };
-```
-
-**Why good:** Key prefix separates concerns, TTL prevents stale data, null check on empty hash response, typed return
-
-#### Sorted Sets (Leaderboards, Rankings)
-
-```typescript
-import type Redis from "ioredis";
-
-const LEADERBOARD_KEY = "leaderboard:global";
-const TOP_PLAYERS_COUNT = 10;
-
-async function updateScore(
-  redis: Redis,
-  playerId: string,
-  score: number,
-): Promise<void> {
-  await redis.zadd(LEADERBOARD_KEY, score, playerId);
-}
-
-async function getTopPlayers(
-  redis: Redis,
-): Promise<Array<{ playerId: string; score: number }>> {
-  // ZREVRANGE returns highest scores first
-  const results = await redis.zrevrange(
-    LEADERBOARD_KEY,
-    0,
-    TOP_PLAYERS_COUNT - 1,
-    "WITHSCORES",
-  );
-
-  const players: Array<{ playerId: string; score: number }> = [];
-  for (let i = 0; i < results.length; i += 2) {
-    players.push({
-      playerId: results[i],
-      score: parseFloat(results[i + 1]),
-    });
-  }
-  return players;
-}
-
-async function getPlayerRank(
-  redis: Redis,
-  playerId: string,
-): Promise<number | null> {
-  // ZREVRANK returns 0-based rank (highest score = rank 0)
-  const rank = await redis.zrevrank(LEADERBOARD_KEY, playerId);
-  return rank !== null ? rank + 1 : null; // Convert to 1-based
-}
-
-export { updateScore, getTopPlayers, getPlayerRank };
-```
-
-**Why good:** Named constants for key and count, ZREVRANGE for descending order, WITHSCORES returns scores alongside members, 1-based rank conversion for user display
-
-#### Lists (Queues, Recent Items)
-
-```typescript
-import type Redis from "ioredis";
-
-const RECENT_ITEMS_KEY = "recent:items";
-const MAX_RECENT_ITEMS = 50;
-
-async function addRecentItem(redis: Redis, item: string): Promise<void> {
-  await redis
-    .pipeline()
-    .lpush(RECENT_ITEMS_KEY, item)
-    .ltrim(RECENT_ITEMS_KEY, 0, MAX_RECENT_ITEMS - 1)
-    .exec();
-}
-
-async function getRecentItems(redis: Redis): Promise<string[]> {
-  return redis.lrange(RECENT_ITEMS_KEY, 0, MAX_RECENT_ITEMS - 1);
-}
-
-export { addRecentItem, getRecentItems };
-```
-
-**Why good:** Pipeline groups push and trim into single round-trip, LTRIM caps list size preventing unbounded growth, named constants for key and limit
-
----
-
-### Pattern 3: Cache-Aside Pattern
-
-The most common caching strategy: check cache first, fall back to database on miss, populate cache for next time.
-
-```typescript
-import type Redis from "ioredis";
-
-const CACHE_TTL_SECONDS = 300; // 5 minutes
-const CACHE_KEY_PREFIX = "cache:";
-
-interface CacheOptions {
-  ttlSeconds?: number;
-  keyPrefix?: string;
-}
+// ✅ Good Example - Generic cache-aside helper
+const CACHE_TTL_SECONDS = 300;
 
 async function cacheAside<T>(
   redis: Redis,
   key: string,
   fetcher: () => Promise<T>,
-  options: CacheOptions = {},
+  ttlSeconds: number = CACHE_TTL_SECONDS,
 ): Promise<T> {
-  const { ttlSeconds = CACHE_TTL_SECONDS, keyPrefix = CACHE_KEY_PREFIX } =
-    options;
-  const cacheKey = `${keyPrefix}${key}`;
-
-  // 1. Check cache
-  const cached = await redis.get(cacheKey);
+  const cached = await redis.get(key);
   if (cached !== null) {
     return JSON.parse(cached) as T;
   }
 
-  // 2. Cache miss -- fetch from source
   const data = await fetcher();
 
-  // 3. Populate cache (don't await -- fire and forget is fine for cache writes)
-  redis.set(cacheKey, JSON.stringify(data), "EX", ttlSeconds).catch((err) => {
-    console.error(`Cache write failed for ${cacheKey}:`, err.message);
+  // Fire-and-forget cache write
+  redis.set(key, JSON.stringify(data), "EX", ttlSeconds).catch((err) => {
+    console.error(`Cache write failed for ${key}:`, err.message);
   });
 
   return data;
 }
-
-export { cacheAside };
 ```
 
-#### Usage
-
-```typescript
-// ✅ Good Example - Cache-aside with database fetcher
-import { cacheAside } from "./cache";
-
-const PRODUCT_CACHE_TTL = 600; // 10 minutes
-
-async function getProduct(productId: string): Promise<Product> {
-  return cacheAside(
-    redis,
-    `product:${productId}`,
-    () => db.query.products.findFirst({ where: eq(products.id, productId) }),
-    { ttlSeconds: PRODUCT_CACHE_TTL },
-  );
-}
-
-export { getProduct };
-```
-
-**Why good:** Generic `cacheAside<T>` works with any data type, fire-and-forget cache write prevents cache failure from blocking response, configurable TTL per use case, key prefix separates cache keys from other Redis data
-
-```typescript
-// ❌ Bad Example - Manual cache-aside with no error handling
-const data = await redis.get("product:123");
-if (data) {
-  return JSON.parse(data);
-}
-const product = await db.getProduct("123");
-await redis.set("product:123", JSON.stringify(product));
-// Missing TTL -- data never expires
-// Missing error handling -- cache failure blocks response
-// Hardcoded key -- no prefix separation
-return product;
-```
-
-**Why bad:** No TTL causes stale data forever, cache write failure blocks the response, no key prefix risks collisions, not reusable
+**Why good:** Generic `cacheAside<T>` works with any data type, fire-and-forget cache write prevents cache failure from blocking response, configurable TTL
 
 ---
 
-### Pattern 4: Cache Invalidation
+### Pattern 3: Pipelining and Transactions
 
-Invalidating cache when data changes.
-
-#### Write-Through with Invalidation
+Batch commands for network efficiency (pipeline) or atomicity (MULTI/EXEC). See [examples/setup.md](examples/setup.md) for full examples.
 
 ```typescript
-import type Redis from "ioredis";
+// ✅ Pipeline - batch for network efficiency (NOT atomic)
+const pipeline = redis.pipeline();
+pipeline.hset(key, { name: user.name, email: user.email });
+pipeline.expire(key, TTL_SECONDS);
+await pipeline.exec();
 
-const PRODUCT_CACHE_PREFIX = "cache:product:";
-const PRODUCT_LIST_CACHE_KEY = "cache:products:list";
-const PRODUCT_CACHE_TTL = 600; // 10 minutes
-
-async function updateProduct(
-  redis: Redis,
-  productId: string,
-  updates: Partial<Product>,
-): Promise<Product> {
-  // 1. Update database (source of truth)
-  const updated = await db
-    .update(products)
-    .set(updates)
-    .where(eq(products.id, productId))
-    .returning();
-
-  // 2. Invalidate specific cache entry
-  await redis.del(`${PRODUCT_CACHE_PREFIX}${productId}`);
-
-  // 3. Invalidate list cache (stale after update)
-  await redis.del(PRODUCT_LIST_CACHE_KEY);
-
-  return updated[0];
+// ✅ Transaction - atomic execution with optimistic locking
+await redis.watch(fromKey);
+const results = await redis
+  .multi()
+  .decrby(fromKey, amount)
+  .incrby(toKey, amount)
+  .exec();
+if (!results) {
+  /* WATCH detected change, retry */
 }
-
-async function deleteProduct(redis: Redis, productId: string): Promise<void> {
-  await db.delete(products).where(eq(products.id, productId));
-
-  // Invalidate all related cache keys using pattern
-  const keys = await redis.keys(`${PRODUCT_CACHE_PREFIX}${productId}*`);
-  if (keys.length > 0) {
-    await redis.del(...keys);
-  }
-}
-
-export { updateProduct, deleteProduct };
 ```
 
-**Why good:** Database is always updated first (source of truth), both specific and list caches invalidated, pattern-based deletion for related keys
-
-**When to use:** Write-heavy applications where consistency matters more than cache hit rate.
-
-**When not to use:** Read-heavy applications with rare writes -- cache-aside with TTL is simpler and sufficient.
-
----
-
-### Pattern 5: Pipelining and Transactions
-
-Batch multiple commands to reduce network round-trips.
-
-#### Pipelining (Non-Atomic Batching)
-
-```typescript
-import type Redis from "ioredis";
-
-const USER_KEY_PREFIX = "user:";
-const USER_TTL_SECONDS = 3600;
-
-async function cacheMultipleUsers(
-  redis: Redis,
-  users: Array<{ id: string; name: string; email: string }>,
-): Promise<void> {
-  const pipeline = redis.pipeline();
-
-  for (const user of users) {
-    const key = `${USER_KEY_PREFIX}${user.id}`;
-    pipeline.hset(key, { name: user.name, email: user.email });
-    pipeline.expire(key, USER_TTL_SECONDS);
-  }
-
-  const results = await pipeline.exec();
-  if (!results) {
-    throw new Error("Pipeline execution returned null");
-  }
-
-  // Check for errors in pipeline results
-  for (const [err] of results) {
-    if (err) {
-      throw new Error(`Pipeline command failed: ${err.message}`);
-    }
-  }
-}
-
-export { cacheMultipleUsers };
-```
-
-**Why good:** Single network round-trip for all commands, error checking on each result, named constants for prefix and TTL
-
-#### Transactions (MULTI/EXEC -- Atomic)
-
-```typescript
-import type Redis from "ioredis";
-
-const BALANCE_KEY_PREFIX = "balance:";
-
-async function transferBalance(
-  redis: Redis,
-  fromUserId: string,
-  toUserId: string,
-  amount: number,
-): Promise<boolean> {
-  const fromKey = `${BALANCE_KEY_PREFIX}${fromUserId}`;
-  const toKey = `${BALANCE_KEY_PREFIX}${toUserId}`;
-
-  // WATCH for optimistic locking
-  await redis.watch(fromKey);
-
-  const currentBalance = await redis.get(fromKey);
-  if (!currentBalance || parseFloat(currentBalance) < amount) {
-    await redis.unwatch();
-    return false; // Insufficient balance
-  }
-
-  // MULTI/EXEC -- atomic execution
-  const results = await redis
-    .multi()
-    .decrby(fromKey, amount)
-    .incrby(toKey, amount)
-    .exec();
-
-  // results is null if WATCH detected a change (optimistic lock failure)
-  if (!results) {
-    return false; // Retry needed -- another client modified the key
-  }
-
-  return true;
-}
-
-export { transferBalance };
-```
-
-**Why good:** WATCH provides optimistic locking, MULTI/EXEC ensures atomicity, null check handles concurrent modification, clear return value for retry logic
+**Why good:** Pipeline reduces round-trips, MULTI/EXEC provides atomicity, WATCH enables optimistic locking
 
 ```typescript
 // ❌ Bad Example - Non-atomic balance transfer
 await redis.decrby("balance:user1", 100);
 await redis.incrby("balance:user2", 100);
-// If the process crashes between these two commands,
-// money disappears from user1 but never reaches user2
+// Crash between commands causes data loss
 ```
 
-**Why bad:** Two separate commands are not atomic, crash between them causes data inconsistency, no optimistic locking for concurrent access
+**Why bad:** Two separate commands are not atomic, crash between them causes data inconsistency
 
 ---
 
-### Pattern 6: Lua Scripting for Atomic Operations
+### Pattern 4: Lua Scripting for Atomicity
 
-Lua scripts execute atomically on the Redis server -- no other command can run between script steps.
-
-#### Defining Custom Commands
+Lua scripts execute atomically on the Redis server. See [examples/rate-limiting.md](examples/rate-limiting.md) for complete Lua-based rate limiters.
 
 ```typescript
-import Redis from "ioredis";
-
-const redis = new Redis(process.env.REDIS_URL!);
-
-// Define a rate limiter as a custom command
+// ✅ Define custom atomic command
 redis.defineCommand("rateLimit", {
   numberOfKeys: 1,
   lua: `
@@ -598,423 +231,125 @@ redis.defineCommand("rateLimit", {
     local limit = tonumber(ARGV[1])
     local window = tonumber(ARGV[2])
     local now = tonumber(ARGV[3])
-
-    -- Remove expired entries
     redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
-
-    -- Count current requests
     local count = redis.call('ZCARD', key)
-
     if count < limit then
-      -- Add current request
       redis.call('ZADD', key, now, now .. '-' .. math.random(1000000))
       redis.call('EXPIRE', key, window)
-      return 1 -- Allowed
-    else
-      return 0 -- Rate limited
+      return 1
     end
+    return 0
   `,
 });
-
-// TypeScript declaration for the custom command
-declare module "ioredis" {
-  interface RedisCommander<Context> {
-    rateLimit(
-      key: string,
-      limit: string,
-      windowMs: string,
-      nowMs: string,
-    ): Promise<number>;
-  }
-}
-
-export { redis };
 ```
 
-**Why good:** `defineCommand` uses EVALSHA internally for performance (sends script hash instead of full script on subsequent calls), declare module extends TypeScript types for custom commands, Lua script is atomic -- no race conditions between ZREMRANGEBYSCORE and ZADD
-
-#### Using the Custom Command
-
-```typescript
-const MAX_REQUESTS = 100;
-const WINDOW_SECONDS = 60;
-
-async function checkRateLimit(
-  redis: Redis,
-  identifier: string,
-): Promise<boolean> {
-  const key = `ratelimit:${identifier}`;
-  const now = Date.now();
-
-  const allowed = await redis.rateLimit(
-    key,
-    String(MAX_REQUESTS),
-    String(WINDOW_SECONDS * 1000),
-    String(now),
-  );
-
-  return allowed === 1;
-}
-
-export { checkRateLimit };
-```
+**Why good:** `defineCommand` uses EVALSHA internally for performance, Lua script is atomic -- no race conditions
 
 ---
 
-### Pattern 7: Pub/Sub Messaging
+### Pattern 5: Pub/Sub Messaging
 
-Redis Pub/Sub requires **separate connections** for subscribing and publishing.
+Requires **separate connections** for subscribing and publishing. See [examples/pub-sub.md](examples/pub-sub.md) for event broadcasting system.
 
 ```typescript
-// ✅ Good Example - Separate connections for pub/sub
-import Redis from "ioredis";
+// ✅ Good Example - Separate connections
+const publisher = new Redis(url);
+const subscriber = new Redis(url); // MUST be separate
 
-const NOTIFICATION_CHANNEL = "notifications";
+await subscriber.subscribe("notifications");
+subscriber.on("message", (channel, message) => {
+  handleNotification(JSON.parse(message));
+});
 
-function createPubSubClients() {
-  const url = process.env.REDIS_URL!;
-
-  // Publisher can be your regular Redis client
-  const publisher = new Redis(url);
-  publisher.on("error", (err) => {
-    console.error("Publisher error:", err.message);
-  });
-
-  // Subscriber MUST be a separate connection
-  const subscriber = new Redis(url);
-  subscriber.on("error", (err) => {
-    console.error("Subscriber error:", err.message);
-  });
-
-  return { publisher, subscriber };
-}
-
-// Subscribe to channels
-async function setupSubscriber(subscriber: Redis): Promise<void> {
-  await subscriber.subscribe(NOTIFICATION_CHANNEL);
-
-  subscriber.on("message", (channel, message) => {
-    const data = JSON.parse(message);
-    console.log(`Received on ${channel}:`, data);
-    handleNotification(data);
-  });
-}
-
-// Publish messages
-async function publishNotification(
-  publisher: Redis,
-  notification: { userId: string; type: string; message: string },
-): Promise<number> {
-  // Returns number of subscribers that received the message
-  return publisher.publish(NOTIFICATION_CHANNEL, JSON.stringify(notification));
-}
-
-export { createPubSubClients, setupSubscriber, publishNotification };
+await publisher.publish("notifications", JSON.stringify(data));
 ```
 
-**Why good:** Separate connections for pub and sub (required by Redis protocol), error handlers on both, typed notification payload, publish returns subscriber count for observability
+**Why good:** Separate connections for pub and sub (required by Redis protocol), error handlers on both
 
 ```typescript
-// ❌ Bad Example - Using same connection for pub and sub
+// ❌ Bad Example - Same connection
 const redis = new Redis();
 await redis.subscribe("channel");
-await redis.set("key", "value"); // ERROR: connection is in subscriber mode
+await redis.set("key", "value"); // THROWS: connection is in subscriber mode
 ```
 
-**Why bad:** A subscribed connection enters a special mode and cannot execute non-pub/sub commands -- `set` will throw an error
-
-#### Pattern Subscriptions
-
-```typescript
-// Subscribe to all channels matching a pattern
-await subscriber.psubscribe("notifications:*");
-
-subscriber.on("pmessage", (pattern, channel, message) => {
-  // pattern: "notifications:*"
-  // channel: "notifications:user:123" (actual channel)
-  // message: the published data
-  console.log(`Pattern ${pattern} matched channel ${channel}`);
-});
-```
+**Why bad:** A subscribed connection cannot execute non-pub/sub commands
 
 ---
 
-### Pattern 8: Redis Streams
+### Pattern 6: BullMQ Job Queues
 
-Streams provide persistent, ordered message logs with consumer groups for reliable processing.
-
-```typescript
-import Redis from "ioredis";
-
-const STREAM_KEY = "events:orders";
-const CONSUMER_GROUP = "order-processors";
-const BLOCK_TIMEOUT_MS = 5000;
-const BATCH_SIZE = 10;
-
-// Producer: add events to stream
-async function publishOrderEvent(
-  redis: Redis,
-  event: { orderId: string; action: string; data: string },
-): Promise<string> {
-  // '*' auto-generates the entry ID (timestamp-based)
-  const entryId = await redis.xadd(
-    STREAM_KEY,
-    "*",
-    "orderId",
-    event.orderId,
-    "action",
-    event.action,
-    "data",
-    event.data,
-  );
-  return entryId;
-}
-
-// Create consumer group (run once at startup)
-async function createConsumerGroup(redis: Redis): Promise<void> {
-  try {
-    await redis.xgroup("CREATE", STREAM_KEY, CONSUMER_GROUP, "0", "MKSTREAM");
-  } catch (err) {
-    // Group already exists -- safe to ignore
-    if (!(err instanceof Error) || !err.message.includes("BUSYGROUP")) {
-      throw err;
-    }
-  }
-}
-
-// Consumer: read and acknowledge events
-async function consumeOrderEvents(
-  redis: Redis,
-  consumerName: string,
-): Promise<void> {
-  while (true) {
-    const results = await redis.xreadgroup(
-      "GROUP",
-      CONSUMER_GROUP,
-      consumerName,
-      "COUNT",
-      String(BATCH_SIZE),
-      "BLOCK",
-      String(BLOCK_TIMEOUT_MS),
-      "STREAMS",
-      STREAM_KEY,
-      ">", // Read only new messages
-    );
-
-    if (!results) continue; // Timeout, no new messages
-
-    for (const [, messages] of results) {
-      for (const [id, fields] of messages) {
-        try {
-          // Process the event
-          await processOrderEvent(fields);
-
-          // Acknowledge successful processing
-          await redis.xack(STREAM_KEY, CONSUMER_GROUP, id);
-        } catch (err) {
-          console.error(`Failed to process event ${id}:`, err);
-          // Message remains pending -- will be redelivered
-        }
-      }
-    }
-  }
-}
-
-export { publishOrderEvent, createConsumerGroup, consumeOrderEvents };
-```
-
-**Why good:** MKSTREAM creates the stream if it doesn't exist, BUSYGROUP error handling for idempotent group creation, XACK confirms processing (unacked messages redeliver), BLOCK prevents busy-waiting, named constants for all configuration
-
----
-
-### Pattern 9: BullMQ Job Queues
-
-BullMQ provides robust job queuing built on Redis with retries, scheduling, and priorities.
-
-#### Queue and Worker Setup
+Robust job queuing with retries, scheduling, and priorities. See [examples/queues.md](examples/queues.md) for complete examples with workers, events, and graceful shutdown.
 
 ```typescript
-// ✅ Good Example - BullMQ with proper connection config
-import { Queue, Worker, type Job } from "bullmq";
-import Redis from "ioredis";
-
-const QUEUE_NAME = "email-queue";
-const MAX_RETRY_ATTEMPTS = 3;
-const BACKOFF_DELAY_MS = 1000;
-const CONCURRENCY = 5;
-
-interface EmailJobData {
-  to: string;
-  subject: string;
-  body: string;
-}
-
-// Shared connection config
+// ✅ Good Example - BullMQ connection factory
 function createBullMQConnection(): Redis {
   return new Redis(process.env.REDIS_URL!, {
     maxRetriesPerRequest: null, // REQUIRED for BullMQ
   });
 }
 
-// Queue: add jobs
 const emailQueue = new Queue<EmailJobData>(QUEUE_NAME, {
   connection: createBullMQConnection(),
   defaultJobOptions: {
     attempts: MAX_RETRY_ATTEMPTS,
-    backoff: {
-      type: "exponential",
-      delay: BACKOFF_DELAY_MS,
-    },
-    removeOnComplete: { count: 1000 }, // Keep last 1000 completed
-    removeOnFail: { count: 5000 }, // Keep last 5000 failed
+    backoff: { type: "exponential", delay: BACKOFF_DELAY_MS },
   },
 });
-
-// Worker: process jobs
-const emailWorker = new Worker<EmailJobData>(
-  QUEUE_NAME,
-  async (job: Job<EmailJobData>) => {
-    const { to, subject, body } = job.data;
-    await sendEmail(to, subject, body);
-    return { sent: true, to };
-  },
-  {
-    connection: createBullMQConnection(),
-    concurrency: CONCURRENCY,
-  },
-);
-
-emailWorker.on("completed", (job) => {
-  console.log(`Job ${job.id} completed: email sent to ${job.data.to}`);
-});
-
-emailWorker.on("failed", (job, err) => {
-  console.error(`Job ${job?.id} failed:`, err.message);
-});
-
-export { emailQueue, emailWorker };
 ```
 
-**Why good:** `maxRetriesPerRequest: null` is required for BullMQ (it retries internally), typed job data with `Queue<EmailJobData>`, exponential backoff for retries, cleanup policies prevent unbounded Redis memory growth, separate connection per Queue/Worker (BullMQ requirement)
+**Why good:** `maxRetriesPerRequest: null` is required for BullMQ, separate connection per Queue/Worker
 
 ```typescript
-// ❌ Bad Example - BullMQ without required config
-import { Queue, Worker } from "bullmq";
-import Redis from "ioredis";
-
+// ❌ Bad Example - Missing required config
 const connection = new Redis(); // Missing maxRetriesPerRequest: null
 const queue = new Queue("emails", { connection });
 // BullMQ will throw: "maxRetriesPerRequest must be null"
 ```
 
-**Why bad:** BullMQ requires `maxRetriesPerRequest: null` -- without it, ioredis gives up retrying after a set number of attempts, but BullMQ expects to retry forever
-
-#### Adding Jobs with Scheduling
-
-```typescript
-const REPORT_DELAY_MS = 60000; // 1 minute
-const HIGH_PRIORITY = 1;
-const LOW_PRIORITY = 10;
-
-// Immediate job
-await emailQueue.add("welcome-email", {
-  to: "user@example.com",
-  subject: "Welcome!",
-  body: "Thanks for signing up.",
-});
-
-// Delayed job
-await emailQueue.add(
-  "reminder-email",
-  { to: "user@example.com", subject: "Reminder", body: "Don't forget!" },
-  { delay: REPORT_DELAY_MS },
-);
-
-// Priority job (lower number = higher priority)
-await emailQueue.add(
-  "urgent-email",
-  { to: "admin@example.com", subject: "Alert!", body: "System alert." },
-  { priority: HIGH_PRIORITY },
-);
-
-// Repeatable job (cron schedule)
-await emailQueue.add(
-  "daily-digest",
-  { to: "user@example.com", subject: "Daily Digest", body: "..." },
-  { repeat: { pattern: "0 9 * * *" } }, // Every day at 9 AM
-);
-```
+**Why bad:** BullMQ requires infinite retries -- without `null`, ioredis gives up after a set number of attempts
 
 ---
 
-### Pattern 10: Cluster Mode
+### Pattern 7: Redis Streams
 
-ioredis supports Redis Cluster for horizontal scaling and high availability.
+Persistent, ordered message logs with consumer groups. See [examples/queues.md](examples/queues.md) for full producer/consumer implementation with pending message recovery.
 
 ```typescript
-import Redis from "ioredis";
-
-const CLUSTER_RETRY_BASE_MS = 100;
-const CLUSTER_RETRY_MAX_MS = 2000;
-const MAX_REDIRECTIONS = 16;
-
-const cluster = new Redis.Cluster(
-  [
-    { host: "redis-node-1", port: 6379 },
-    { host: "redis-node-2", port: 6379 },
-    { host: "redis-node-3", port: 6379 },
-  ],
-  {
-    clusterRetryStrategy(times) {
-      return Math.min(times * CLUSTER_RETRY_BASE_MS, CLUSTER_RETRY_MAX_MS);
-    },
-    maxRedirections: MAX_REDIRECTIONS,
-    scaleReads: "slave", // Read from replicas, write to master
-    redisOptions: {
-      password: process.env.REDIS_PASSWORD,
-    },
-  },
+// Producer
+const entryId = await redis.xadd(
+  STREAM_KEY,
+  "*",
+  "orderId",
+  id,
+  "action",
+  action,
 );
 
-cluster.on("error", (err) => {
-  console.error("Cluster error:", err.message);
-});
+// Consumer group setup (idempotent)
+try {
+  await redis.xgroup("CREATE", STREAM_KEY, GROUP_NAME, "0", "MKSTREAM");
+} catch (err) {
+  if (!(err instanceof Error) || !err.message.includes("BUSYGROUP")) throw err;
+}
 
-// Use cluster exactly like a regular Redis client
-await cluster.set("key", "value");
-const value = await cluster.get("key");
-
-export { cluster };
+// Consumer read + acknowledge
+const results = await redis.xreadgroup(
+  "GROUP",
+  GROUP_NAME,
+  consumerName,
+  "COUNT",
+  "10",
+  "BLOCK",
+  "5000",
+  "STREAMS",
+  STREAM_KEY,
+  ">",
+);
+await redis.xack(STREAM_KEY, GROUP_NAME, messageId);
 ```
 
-**Why good:** Multiple seed nodes for discovery, `scaleReads: "slave"` offloads reads to replicas, retry strategy with backoff, password from environment variable
-
-#### Sentinel Setup
-
-```typescript
-import Redis from "ioredis";
-
-const sentinel = new Redis({
-  sentinels: [
-    { host: "sentinel-1", port: 26379 },
-    { host: "sentinel-2", port: 26379 },
-    { host: "sentinel-3", port: 26379 },
-  ],
-  name: "mymaster", // Sentinel group name
-  sentinelRetryStrategy(times) {
-    return Math.min(times * 10, 1000);
-  },
-  failoverDetector: true, // Detect failover and reconnect automatically
-});
-
-sentinel.on("error", (err) => {
-  console.error("Sentinel error:", err.message);
-});
-
-export { sentinel };
-```
-
-**Why good:** Multiple sentinel nodes for redundancy, `failoverDetector: true` for automatic master failover handling, retry strategy for sentinel connectivity
+**Why good:** MKSTREAM creates stream if absent, BUSYGROUP handling for idempotent setup, XACK confirms processing
 
 </patterns>
 
@@ -1029,8 +364,6 @@ export { sentinel };
 ioredis can automatically batch commands issued during the same event loop tick:
 
 ```typescript
-import Redis from "ioredis";
-
 const redis = new Redis(process.env.REDIS_URL!, {
   enableAutoPipelining: true,
 });
@@ -1041,73 +374,31 @@ const [name, email, role] = await Promise.all([
   redis.get("user:email"),
   redis.get("user:role"),
 ]);
-
-export { redis };
 ```
 
-**When to use:** High-throughput applications issuing many independent commands per request. Auto-pipelining reduces network round-trips without changing application code.
+**When to use:** High-throughput applications issuing many independent commands per request.
 
-**When NOT to use:** When commands depend on each other's results (sequential logic), or when using WATCH/MULTI for transactions.
+**When NOT to use:** When commands depend on each other's results, or when using WATCH/MULTI for transactions.
 
----
-
-### Key Expiration Strategies
+### Key Expiration Strategy
 
 ```typescript
 const TTL_SHORT_SECONDS = 60; // 1 minute -- volatile data
 const TTL_MEDIUM_SECONDS = 300; // 5 minutes -- API response cache
 const TTL_LONG_SECONDS = 3600; // 1 hour -- user profiles
 const TTL_SESSION_SECONDS = 86400; // 24 hours -- sessions
-
-// SET with TTL (preferred -- atomic)
-await redis.set("key", "value", "EX", TTL_MEDIUM_SECONDS);
-
-// SET with millisecond TTL
-await redis.set("key", "value", "PX", 500);
-
-// SET only if key doesn't exist (distributed lock pattern)
-const acquired = await redis.set("lock:resource", "owner-id", "EX", 30, "NX");
-// Returns "OK" if lock acquired, null if already locked
-
-// Update TTL on existing key
-await redis.expire("key", TTL_LONG_SECONDS);
 ```
-
----
 
 ### Scanning Instead of KEYS
 
-Never use `KEYS` in production -- it blocks the Redis server while scanning all keys.
+Never use `KEYS` in production -- it blocks the Redis server. Use `scanStream`:
 
 ```typescript
-import type Redis from "ioredis";
-
-const SCAN_BATCH_SIZE = 100;
-
-async function findKeysByPattern(
-  redis: Redis,
-  pattern: string,
-): Promise<string[]> {
-  const allKeys: string[] = [];
-
-  const stream = redis.scanStream({
-    match: pattern,
-    count: SCAN_BATCH_SIZE,
-  });
-
-  return new Promise((resolve, reject) => {
-    stream.on("data", (keys: string[]) => {
-      allKeys.push(...keys);
-    });
-    stream.on("end", () => resolve(allKeys));
-    stream.on("error", (err) => reject(err));
-  });
-}
-
-export { findKeysByPattern };
+const stream = redis.scanStream({ match: "user:*", count: 100 });
+stream.on("data", (keys: string[]) => {
+  /* process batch */
+});
 ```
-
-**Why good:** `scanStream` iterates incrementally without blocking Redis, `count` is a hint for batch size (not a guarantee), stream-based API handles large keyspaces
 
 </performance>
 
@@ -1121,55 +412,55 @@ export { findKeysByPattern };
 
 ```
 Which Redis client should I use?
-├─ Need Redis Stack modules (JSON, Search, TimeSeries)? → node-redis (v5.x)
-├─ Using BullMQ for job queues? → ioredis (BullMQ requires it)
-├─ Need Cluster or Sentinel support? → ioredis (built-in, battle-tested)
-├─ Need auto-pipelining? → ioredis (enableAutoPipelining option)
-└─ General caching/sessions/pub-sub? → ioredis (recommended default)
+├─ Need Redis Stack modules (JSON, Search, TimeSeries)? -> node-redis (v5.x)
+├─ Using BullMQ for job queues? -> ioredis (BullMQ requires it)
+├─ Need Cluster or Sentinel support? -> ioredis (built-in, battle-tested)
+├─ Need auto-pipelining? -> ioredis (enableAutoPipelining option)
+└─ General caching/sessions/pub-sub? -> ioredis (recommended default)
 ```
 
 ### Which Caching Strategy?
 
 ```
 How should I cache this data?
-├─ Read-heavy, tolerates brief staleness? → Cache-aside with TTL
-├─ Needs strong consistency after writes? → Write-through (update DB + invalidate cache)
-├─ Write-heavy, can tolerate brief data loss? → Write-behind (async cache update)
-└─ Data changes rarely? → Cache-aside with long TTL + manual invalidation
+├─ Read-heavy, tolerates brief staleness? -> Cache-aside with TTL
+├─ Needs strong consistency after writes? -> Write-through (update DB + invalidate cache)
+├─ Write-heavy, can tolerate brief data loss? -> Write-behind (async cache update)
+└─ Data changes rarely? -> Cache-aside with long TTL + manual invalidation
 ```
 
 ### Which Data Structure?
 
 ```
 What Redis data structure should I use?
-├─ Simple key-value (cache, sessions)? → Strings (GET/SET)
-├─ Object with multiple fields? → Hashes (HSET/HGET)
-├─ Ordered ranking/leaderboard? → Sorted Sets (ZADD/ZRANGE)
-├─ Queue (FIFO/LIFO)? → Lists (LPUSH/RPOP)
-├─ Unique collection (tags, categories)? → Sets (SADD/SMEMBERS)
-├─ Persistent message log with consumers? → Streams (XADD/XREAD)
-└─ Rate limiting (sliding window)? → Sorted Sets + Lua script
+├─ Simple key-value (cache, sessions)? -> Strings (GET/SET)
+├─ Object with multiple fields? -> Hashes (HSET/HGET)
+├─ Ordered ranking/leaderboard? -> Sorted Sets (ZADD/ZRANGE)
+├─ Queue (FIFO/LIFO)? -> Lists (LPUSH/RPOP)
+├─ Unique collection (tags, categories)? -> Sets (SADD/SMEMBERS)
+├─ Persistent message log with consumers? -> Streams (XADD/XREAD)
+└─ Rate limiting (sliding window)? -> Sorted Sets + Lua script
 ```
 
 ### Which Messaging Pattern?
 
 ```
 How should I implement real-time messaging?
-├─ Fire-and-forget broadcast? → Pub/Sub (no persistence)
-├─ Need message persistence and replay? → Streams with consumer groups
-├─ Need reliable job processing with retries? → BullMQ (built on Redis)
-└─ Need request-reply pattern? → Pub/Sub with correlation IDs
+├─ Fire-and-forget broadcast? -> Pub/Sub (no persistence)
+├─ Need message persistence and replay? -> Streams with consumer groups
+├─ Need reliable job processing with retries? -> BullMQ (built on Redis)
+└─ Need request-reply pattern? -> Pub/Sub with correlation IDs
 ```
 
 ### Atomicity Decision
 
 ```
 Do I need atomicity across multiple commands?
-├─ YES → Are the commands on the same key?
-│   ├─ YES → Use a single atomic command (INCR, SETNX, etc.)
-│   └─ NO → Use Lua script (defineCommand)
-├─ NO, but I want batching → Use pipeline (non-atomic, single round-trip)
-└─ Need optimistic locking? → Use WATCH + MULTI/EXEC
+├─ YES -> Are the commands on the same key?
+│   ├─ YES -> Use a single atomic command (INCR, SETNX, etc.)
+│   └─ NO -> Use Lua script (defineCommand)
+├─ NO, but I want batching -> Use pipeline (non-atomic, single round-trip)
+└─ Need optimistic locking? -> Use WATCH + MULTI/EXEC
 ```
 
 </decision_framework>
@@ -1190,7 +481,7 @@ Do I need atomicity across multiple commands?
 
 **Replaces / Conflicts with:**
 
-- **In-memory caches (node-cache, lru-cache)** -- Redis provides distributed caching across multiple app instances; in-memory caches are per-process only
+- **In-memory caches (node-cache, lru-cache)** -- Redis provides distributed caching across multiple app instances
 - **Database-backed sessions** -- Redis sessions are faster and reduce database load
 - **RabbitMQ/Kafka** (partially) -- Redis Streams and BullMQ cover most queue use cases; use dedicated message brokers for complex routing or massive throughput
 

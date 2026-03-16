@@ -1,6 +1,6 @@
 {
   "name": "meta-reviewing-cli-reviewing",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.",
   "author": {

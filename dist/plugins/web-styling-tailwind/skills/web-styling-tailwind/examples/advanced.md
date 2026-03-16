@@ -561,7 +561,7 @@ export { ModernFeatures };
 
 ---
 
-## Pattern 10: Component Extraction
+## Pattern 10: Component Class Composition
 
 ### cn() Utility Setup
 
@@ -580,17 +580,19 @@ export { cn };
 
 **Why good:** `clsx` handles conditional class logic, `twMerge` resolves Tailwind class conflicts, composable and reusable across all components, named export
 
-### React Component with cn()
+### Component with cn() and Variant Objects
 
 ```tsx
 // components/button.tsx
 // ✅ Good Example - reusable component with className forwarding
-import type { ButtonHTMLAttributes } from "react";
 import { cn } from "../lib/utils";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+// Extend your framework's native button props for full forwarding
+interface ButtonProps {
   variant?: "primary" | "secondary" | "destructive";
   size?: "sm" | "md" | "lg";
+  className?: string;
+  children?: React.ReactNode;
 }
 
 const VARIANT_CLASSES = {
@@ -661,11 +663,11 @@ export { Page };
 
 **Why good:** `className` is last in `cn()` so caller can override any style, variant/size as named constant objects (not inline strings), `twMerge` resolves `bg-purple-600` overriding `bg-blue-600`, named exports, `import type` for type-only imports
 
-### Component with CVA + cn()
+### Component with Declarative Variants (CVA + cn())
 
 ```tsx
 // components/badge.tsx
-// ✅ Good Example - CVA + cn() for complex variants
+// ✅ Good Example - declarative variants with class composition
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 

@@ -1,6 +1,6 @@
 # web-tooling-storybook
 
-Storybook 8 patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration
+Storybook patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration
 
 ## Installation
 

@@ -8,7 +8,7 @@
 
 ## Decision Framework
 
-### Session Storage Strategy (v1.4+)
+### Session Storage Strategy
 
 ```
 Need to revoke individual sessions?
@@ -16,7 +16,7 @@ Need to revoke individual sessions?
 |   +-- Need reduced DB load?
 |       +-- YES -> Enable cookieCache with maxAge
 |       +-- NO -> Default database sessions
-+-- NO -> Stateless sessions (v1.4+)
++-- NO -> Stateless sessions
     +-- Full stateless (no database)?
         +-- YES -> Omit database option entirely
         +-- NO -> cookieCache only
@@ -43,7 +43,7 @@ User authentication method?
     +-- YES -> Add organization() plugin
 ```
 
-### Plugin Selection (v1.4+)
+### Plugin Selection
 
 ```
 Which plugins do you need?
@@ -52,12 +52,12 @@ Which plugins do you need?
 +-- Custom session data? -> customSession()
 +-- Passkeys/WebAuthn? -> @better-auth/passkey (separate package!)
 +-- Magic links? -> magicLink()
-+-- API keys? -> apiKey()
++-- API keys? -> @better-auth/api-key (separate package)
 +-- Generic OAuth provider? -> genericOAuth()
 +-- Act as OAuth provider? -> oAuthProvider() (replaces deprecated oidcProvider)
 +-- Anonymous users? -> anonymous()
-+-- Admin impersonation? -> admin() (must explicitly enable in v1.4.9+)
-+-- Enterprise SSO? -> SCIM support (v1.4+)
++-- Admin impersonation? -> admin() (must explicitly enable)
++-- Enterprise SSO? -> SCIM support
 ```
 
 </decision_framework>
@@ -66,25 +66,19 @@ Which plugins do you need?
 
 <integration>
 
-## Integration Guide
+## Integration Notes
 
-**Works with:**
+Better Auth is framework-agnostic - it works with any framework that provides a Web Standard `Request` object. Mount `auth.handler(request)` on your catch-all auth route.
 
-- **Hono**: Mount auth.handler on `/api/auth/*`, use authMiddleware for session access
-- **Drizzle ORM**: drizzleAdapter connects to existing database, schema generation via CLI
-- **React**: createAuthClient with useSession hook (v1.4+: includes `refetch` method) for reactive auth state
-- **Next.js**: Works with App Router and Pages Router via Hono adapter
-- **React Query**: Wrap authClient calls in custom hooks for caching/invalidation
-- **Cloudflare Workers**: Requires `nodejs_compat` flag (v1.4+ requirement)
-- **TanStack Start**: Supports React and Solid flavors (v1.4.13+)
+- **Database adapter**: `drizzleAdapter(db, { provider })` connects to your existing Drizzle setup
+- **Client**: `createAuthClient()` provides reactive `useSession` hook with `refetch` method
+- **Schema generation**: CLI generates ORM-specific schema files; run your ORM migration tool after
 
-**Replaces / Conflicts with:**
+**Replaces:**
 
-- **Auth.js/NextAuth**: Better Auth team now maintains Auth.js - use Better Auth for new projects
-- **Clerk/Auth0**: Better Auth is self-hosted alternative - choose one
-- **Custom JWT auth**: Better Auth handles sessions - don't roll your own
-- **Firebase Auth**: Different approach - choose based on hosting needs
-- **OIDC Provider plugin**: Deprecated in favor of OAuth Provider plugin (oAuthProvider)
+- Other auth libraries - choose one auth solution per project
+- Custom JWT session handling - Better Auth manages sessions end-to-end
+- OIDC Provider plugin (deprecated) - use `oAuthProvider()` instead
 
 </integration>
 
@@ -189,11 +183,11 @@ export const auth = betterAuth({
 
 **What to do instead (Drizzle adapter):** Run the 3-step workflow:
 
-1. `npx @better-auth/cli generate` (generate Better Auth schema)
+1. `npx auth@latest generate` (generate Better Auth schema)
 2. `npx drizzle-kit generate` (generate migration file)
 3. `npx drizzle-kit migrate` (apply migration)
 
-**Note:** The `migrate` command only works with Kysely adapter, not Drizzle.
+**Note:** Better Auth's `migrate` command only works with Kysely adapter. For Drizzle, always use `generate` + Drizzle Kit.
 
 </anti_patterns>
 
@@ -216,14 +210,14 @@ export const auth = betterAuth({
 - **No session cookie caching** - every request hits database
 - **Magic numbers for timeouts** - use named constants for session config
 - **No type annotations on middleware** - loses TypeScript benefits
-- **Hardcoded URLs** - use NEXT_PUBLIC_APP_URL environment variable
+- **Hardcoded URLs** - use environment variables for app URL
 - **Missing error handling** - authClient calls should handle errors
 
 **Common Mistakes:**
 
 - Forgetting `c.req.raw` when calling `auth.handler()` (must pass raw Request)
 - Using `migrate` command with Drizzle (only works with Kysely - use `generate` + Drizzle Kit)
-- Not running migrations after `@better-auth/cli generate`
+- Not running ORM migrations after `npx auth@latest generate`
 - Using `signIn.email` without handling `twoFactorRedirect` response
 - Not configuring `trustedOrigins` for production deployment
 - Missing `credentials: true` in CORS config for cookie authentication
@@ -237,30 +231,35 @@ export const auth = betterAuth({
 - Stateless sessions can't be revoked individually - increment `version` to invalidate all
 - Organization plugin requires invitation email callback for member invites
 
-**Better Auth v1.4+ Breaking Changes:**
+**Better Auth v1.5 Breaking Changes (from v1.4):**
+
+- CLI changed: `npx @better-auth/cli` replaced by `npx auth@latest`
+- Database adapters extracted to separate packages (e.g. `@better-auth/drizzle-adapter`) - old import paths still work via re-exports
+- API key plugin extracted to `@better-auth/api-key` (separate install)
+- `InferUser` and `InferSession` types removed - use generic `User` and `Session` types
+- All previously deprecated APIs removed (e.g. `createAdapter` -> `createAdapterFactory`)
+- `$ERROR_CODES` field on plugins now expects `Record<string, RawError>` not `Record<string, string>`
+- After hooks execute post-transaction instead of during
+- `/forget-password/email-otp` endpoint removed - use standard password reset flow
+
+**Better Auth v1.4 Breaking Changes (still relevant):**
 
 - `authClient.forgotPassword` renamed to `authClient.requestPasswordReset`
 - Account info endpoint changed from POST to GET `/account-info`
 - Passkey plugin moved to separate package: `@better-auth/passkey`
-- Plugin callbacks now receive `ctx` instead of `request` (access via `ctx.request`)
-- Use `better-auth/minimal` instead of `better-auth` to reduce bundle size when using custom adapters (excludes Kysely)
-- **v1.4.9+**: Admin impersonation disabled by default - must explicitly enable
-- CLI workflow for Drizzle: Use `generate` (NOT `migrate` which only works with Kysely)
-- Cloudflare Workers require `nodejs_compat` flag
+- Plugin callbacks receive `ctx` instead of `request` (access via `ctx.request`)
+- Admin impersonation disabled by default (v1.4.9+) - must explicitly enable
 
-**Better Auth v1.4+ New Features:**
+**Notable Features (v1.4-v1.5):**
 
 - Stateless auth (omit `database` option for full stateless)
-- SCIM provisioning for enterprise identity management
+- Experimental database joins (2-3x faster) via `experimental: { joins: true }`
 - Generic OAuth plugin for any OAuth2/OIDC provider
-- OAuth 2.1 compliant oAuthProvider plugin (replaces oidcProvider)
-- Experimental database joins (2-3x faster queries) via `experimental: { joins: true }`
-- `useSession()` now includes `refetch` method on all clients
-- `additionalData` in OAuth flows for custom data passthrough
-- JWT key rotation with grace periods
-- UUID support as primary ID field type
-- `backgroundTasks` config for deferred actions
-- Device Authorization Plugin (RFC 8628 - Smart TVs, gaming consoles)
-- New Patreon social provider
+- OAuth 2.1 Provider plugin (replaces deprecated oidcProvider)
+- SCIM provisioning, Device Authorization (RFC 8628)
+- Non-destructive secret key rotation (multiple BETTER_AUTH_SECRET versions)
+- Electron desktop authentication support
+- i18n plugin with type-safe error translations
+- Seat-based Stripe billing for organizations
 
 </red_flags>

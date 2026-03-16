@@ -31,7 +31,7 @@ const CERT_EXPIRY_WARNING_DAYS = 30; // 30 days notice before expiry
 // Frontend: Don't store token at all
 // Backend sets: Set-Cookie: token=xxx; HttpOnly; Secure; SameSite=Strict
 
-// In-memory access token
+// In-memory access token - cleared on tab close
 let accessToken: string | null = null;
 
 export function setAccessToken(token: string) {
@@ -42,18 +42,13 @@ export function getAccessToken() {
   return accessToken;
 }
 
-// Auto-refresh from HttpOnly cookie
-axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      const newToken = await refreshAccessToken(); // Uses HttpOnly cookie
-      setAccessToken(newToken);
-      return axios.request(error.config);
-    }
-    return Promise.reject(error);
-  },
-);
+// Auto-refresh pattern: intercept 401 responses to transparently refresh tokens
+// Implementation depends on your HTTP client (fetch wrapper, interceptors, etc.)
+async function handleUnauthorized(failedRequest: Request): Promise<Response> {
+  const newToken = await refreshAccessToken(); // Uses HttpOnly cookie
+  setAccessToken(newToken);
+  return fetch(failedRequest); // Retry with new token
+}
 ```
 
 **Why good:** HttpOnly cookies inaccessible to JavaScript prevents XSS token theft, in-memory tokens cleared on tab close, automatic refresh maintains user session without exposing credentials
@@ -80,40 +75,43 @@ const API_KEY = "sk_live_1234567890abcdef"; // NEVER do this
 
 ## Pattern 2: CSRF Protection
 
-### Good Example - CSRF Token with Axios Interceptor
+### Good Example - CSRF Token with Request Interceptor
 
 ```typescript
 const CSRF_TOKEN_META_NAME = "csrf-token";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
 
-import axios from "axios";
-
-const apiClient = axios.create({
-  baseURL: "/api",
-  withCredentials: true,
-});
-
-apiClient.interceptors.request.use((config) => {
-  const token = document.querySelector<HTMLMetaElement>(
+// Centralized CSRF token injection - apply via your HTTP client's interceptor/middleware
+function getCsrfToken(): string | undefined {
+  return document.querySelector<HTMLMetaElement>(
     `meta[name="${CSRF_TOKEN_META_NAME}"]`,
   )?.content;
+}
+
+// Wrap fetch (or use your HTTP client's interceptor) to auto-inject CSRF token
+async function secureFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  const token = getCsrfToken();
+  const headers = new Headers(options.headers);
 
   if (token) {
-    config.headers[CSRF_HEADER_NAME] = token;
+    headers.set(CSRF_HEADER_NAME, token);
   }
 
-  return config;
-});
+  return fetch(url, { ...options, headers, credentials: "include" });
+}
 
-export { apiClient };
+export { secureFetch };
 ```
 
-**Why good:** Axios interceptor automatically adds CSRF token to all requests preventing manual errors, withCredentials enables cookie-based authentication, named constants make token source and header name auditable, centralized configuration ensures consistency across the application
+**Why good:** Centralized interceptor automatically adds CSRF token to all requests preventing manual errors, credentials: "include" enables cookie-based authentication, named constants make token source and header name auditable, single wrapper ensures consistency across the application
 
 ### Bad Example - No CSRF Protection
 
 ```typescript
-// BAD: No CSRF protection
+// BAD: No CSRF protection on state-changing request
 async function updateProfile(data: ProfileData) {
   return fetch("/api/profile", {
     method: "PUT",
@@ -121,12 +119,12 @@ async function updateProfile(data: ProfileData) {
   });
 }
 
-// BAD: Manual token per request
+// BAD: Manual token per request - easy to forget
 async function badUpdate(data: ProfileData) {
   const token = document.querySelector('meta[name="csrf-token"]')?.content;
   return fetch("/api/profile", {
     method: "PUT",
-    headers: { "X-CSRF-Token": token! }, // Easy to forget
+    headers: { "X-CSRF-Token": token! }, // Easy to forget, non-null assertion unsafe
     body: JSON.stringify(data),
   });
 }

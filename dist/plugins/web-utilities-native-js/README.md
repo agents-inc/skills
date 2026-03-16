@@ -1,6 +1,6 @@
 # web-utilities-native-js
 
-Modern native JavaScript (ES2022-ES2025) utility patterns - array methods, object manipulation, set operations, deep cloning, and function utilities that replace lodash
+Modern native JavaScript (ES2022-ES2025) utility patterns that replace lodash
 
 ## Installation
 

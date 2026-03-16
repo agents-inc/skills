@@ -2,15 +2,13 @@
 
 > Core React performance optimization patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
-**React Compiler (React 19+):** The React Compiler automatically memoizes components, values, and functions. With the compiler enabled, you typically don't need manual `useMemo`, `useCallback`, or `React.memo`. The patterns below are still useful for projects without the compiler or for edge cases (third-party library interop, React Native, non-pure computations).
+**React Compiler (v1.0, Oct 2025):** Automatically memoizes components, values, and functions at build time. With the compiler enabled, you typically don't need manual `useMemo`, `useCallback`, or `React.memo`. The patterns below are still useful for projects without the compiler or for edge cases (third-party interop, non-pure computations).
 
 **For advanced patterns**: See topic-specific files in this folder:
 
-- [turborepo.md](turborepo.md) - Build system caching, TypeScript optimization
 - [code-splitting.md](code-splitting.md) - Lazy loading, tree shaking, bundle budgets
 - [web-vitals.md](web-vitals.md) - LCP, INP, CLS patterns and monitoring
-- [image-optimization.md](image-optimization.md) - Image formats, lazy loading, Next.js Image
-- [ci-tooling.md](ci-tooling.md) - Lighthouse CI, React DevTools Profiler
+- [image-optimization.md](image-optimization.md) - Image formats, lazy loading, responsive images
 
 ---
 

@@ -114,16 +114,16 @@ export const useBrokenAuthStore = defineStore("auth", {
 
 ---
 
-## Nuxt Integration
+## Client-Only Guards in Setup Stores
 
-### Nuxt Integration Example
+### Good Example - Client-Only Logic in Setup Store
 
 ```typescript
-// stores/nuxt-store.ts
+// stores/persisted-counter-store.ts
 import { ref, computed, watch } from "vue";
 import { defineStore } from "pinia";
 
-export const useNuxtStore = defineStore("nuxt", () => {
+export const usePersistedCounterStore = defineStore("persisted-counter", () => {
   const count = ref(0);
   const doubled = computed(() => count.value * 2);
 
@@ -131,8 +131,8 @@ export const useNuxtStore = defineStore("nuxt", () => {
     count.value++;
   }
 
-  // Client-only logic
-  if (import.meta.client) {
+  // Client-only logic - guard against SSR
+  if (typeof window !== "undefined") {
     // Safe to use browser APIs here
     const savedCount = localStorage.getItem("count");
     if (savedCount) {
@@ -152,4 +152,6 @@ export const useNuxtStore = defineStore("nuxt", () => {
 });
 ```
 
-**Why good:** Uses `import.meta.client` guard for browser-only code, watch persists changes only on client
+**Why good:** Guards browser APIs with `typeof window` check, watch persists changes only on client, all state returned
+
+> **Note:** Some SSR frameworks provide their own client-only guards (e.g. `import.meta.client`). Use your framework's idiom when available.

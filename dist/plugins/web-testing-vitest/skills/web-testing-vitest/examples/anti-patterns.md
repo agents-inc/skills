@@ -71,4 +71,3 @@ _For more patterns, see:_
 
 - [core.md](core.md) - E2E and Unit testing essentials
 - [integration.md](integration.md) - Integration tests with network mocking
-- [ladle-stories.md](ladle-stories.md) - Component documentation stories

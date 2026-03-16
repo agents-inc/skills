@@ -14,7 +14,7 @@ Testing patterns for NgRx SignalStore including unit tests, mocking strategies, 
 
 ## Pattern 1: Basic Store Unit Tests
 
-### Good Example - Testing Store Methods with Vitest
+### Good Example - Testing Store Methods
 
 ```typescript
 // stores/counter.store.ts
@@ -42,7 +42,8 @@ export const CounterStore = signalStore(
 );
 
 // stores/counter.store.spec.ts
-import { describe, it, expect, beforeEach } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach
+import { Injector } from "@angular/core";
 import { TestBed, runInInjectionContext } from "@angular/core/testing";
 import { CounterStore } from "./counter.store";
 
@@ -93,9 +94,6 @@ describe("CounterStore", () => {
     expect(store.count()).toBe(TEST_COUNT);
   });
 });
-
-// Add missing import
-import { Injector } from "@angular/core";
 ```
 
 **Why good:** TestBed for Angular DI, runInInjectionContext for store instantiation, named constants for test values, clean test structure
@@ -163,7 +161,7 @@ export const UserStore = signalStore(
 );
 
 // stores/user.store.spec.ts
-import { describe, it, expect, beforeEach, vi } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach, mock utilities
 import { TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { HttpClient } from "@angular/common/http";
 import { of, throwError } from "rxjs";
@@ -176,11 +174,11 @@ const MOCK_USERS = [
 
 describe("UserStore", () => {
   let store: InstanceType<typeof UserStore>;
-  let httpMock: { get: ReturnType<typeof vi.fn> };
+  let httpMock: { get: (...args: unknown[]) => unknown };
 
   beforeEach(() => {
     httpMock = {
-      get: vi.fn(),
+      get: createMockFn(), // Use your test runner's mock function creator
     };
 
     TestBed.configureTestingModule({
@@ -232,7 +230,7 @@ describe("UserStore", () => {
 });
 ```
 
-**Why good:** Mock HttpClient with vi.fn(), fakeAsync/tick for async tests, tests loading, success, and error states, named constants for mock data
+**Why good:** Mock HttpClient with mock functions, fakeAsync/tick for async tests, tests loading, success, and error states, named constants for mock data
 
 ---
 
@@ -286,7 +284,7 @@ export const CartStore = signalStore(
 );
 
 // stores/cart.store.spec.ts
-import { describe, it, expect, beforeEach } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach
 import { TestBed } from "@angular/core/testing";
 import { unprotected } from "@ngrx/signals/testing";
 import { patchState } from "@ngrx/signals";
@@ -375,7 +373,7 @@ describe("CartStore", () => {
 
 ```typescript
 // stores/todo.store.spec.ts
-import { describe, it, expect, beforeEach } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach
 import { TestBed } from "@angular/core/testing";
 import { unprotected } from "@ngrx/signals/testing";
 import { patchState } from "@ngrx/signals";
@@ -499,7 +497,7 @@ export class CounterComponent {
 }
 
 // components/counter.component.spec.ts
-import { describe, it, expect, beforeEach } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { CounterComponent } from "./counter.component";
@@ -580,7 +578,7 @@ describe("CounterComponent", () => {
 
 ```typescript
 // stores/search.store.spec.ts
-import { describe, it, expect, beforeEach, vi } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach, mock utilities
 import { TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { HttpClient } from "@angular/common/http";
 import { of, delay } from "rxjs";
@@ -594,11 +592,11 @@ const MOCK_RESULTS = [
 
 describe("SearchStore", () => {
   let store: InstanceType<typeof SearchStore>;
-  let httpMock: { get: ReturnType<typeof vi.fn> };
+  let httpMock: { get: (...args: unknown[]) => unknown };
 
   beforeEach(() => {
     httpMock = {
-      get: vi.fn().mockReturnValue(of(MOCK_RESULTS)),
+      get: createMockFn().mockReturnValue(of(MOCK_RESULTS)), // Use your test runner's mock
     };
 
     TestBed.configureTestingModule({
@@ -701,7 +699,7 @@ export const DataStore = signalStore(
 
 // Test approach 1: Override the store
 // stores/data.store.spec.ts
-import { describe, it, expect, beforeEach } from "vitest";
+// Use your test runner's describe, it, expect, beforeEach
 import { TestBed } from "@angular/core/testing";
 import { signalStore, withState, withMethods, patchState } from "@ngrx/signals";
 

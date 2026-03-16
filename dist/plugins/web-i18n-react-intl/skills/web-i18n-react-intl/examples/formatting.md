@@ -57,7 +57,6 @@ export function EventCard({ event }: Props) {
 // Output (en-US): "Monday, January 15, 2024"
 // Output (de-DE): "Montag, 15. Januar 2024"
 
-export { EventCard };
 ```
 
 **Why good:** time element with dateTime attribute improves semantics and SEO, explicit format options ensure consistent display, locale-aware formatting automatic
@@ -90,8 +89,6 @@ export function useFormattedDate(
 
   return formatted;
 }
-
-export { useFormattedDate };
 ```
 
 **Why good:** memoized to prevent unnecessary reformatting, style presets for consistency, returns string for use in any context
@@ -135,7 +132,6 @@ export function MeetingTime({ startTime, endTime, showTimezone = false }: Props)
 // Output (en-US): "3:30 PM - 4:30 PM" or "3:30 PM EST - 4:30 PM EST"
 // Output (de-DE): "15:30 - 16:30" or "15:30 MEZ - 16:30 MEZ"
 
-export { MeetingTime };
 ```
 
 **Why good:** optional timezone display, locale-aware time format (12h vs 24h), clean range formatting
@@ -177,7 +173,6 @@ export function Timestamp({ date, showTime = true }: Props) {
 // Output (en-US): "Jan 15, 2024 at 3:30 PM"
 // Output (de-DE): "15. Jan. 2024 um 15:30"
 
-export { Timestamp };
 ```
 
 **Why good:** semantic time element, optional time display, combines date and time formatting
@@ -210,7 +205,6 @@ export function EventDateRange({ startDate, endDate }: Props) {
 // Output (en-US): "Jan 15 - 20, 2024" (same month) or "Jan 15 - Feb 3, 2024"
 // Output (de-DE): "15. - 20. Jan. 2024" or "15. Jan. - 3. Feb. 2024"
 
-export { EventDateRange };
 ```
 
 **Why good:** built-in range formatting handles same-month vs cross-month cases intelligently, locale-aware separators and format
@@ -267,7 +261,6 @@ export function StatsCard({ visitors, conversionRate, revenue, currency }: Props
 // Output (en-US): "1,234,567" | "12.5%" | "$45,678.90"
 // Output (de-DE): "1.234.567" | "12,5 %" | "45.678,90 $"
 
-export { StatsCard };
 ```
 
 **Why good:** named constant for decimal places, locale-aware thousand separators, currency symbol position varies by locale
@@ -320,8 +313,6 @@ export function useFormatFileSize() {
 }
 
 // Usage: formatFileSize(1536000) -> "1.5 MB" (en-US) | "1,5 MB" (de-DE)
-
-export { useFormatFileSize };
 ```
 
 **Why good:** named constants for byte conversions, unit style for proper localization, returns hook for reusable formatting
@@ -379,7 +370,6 @@ export function PriceDisplay({
 // Output (en-US): "$99.99" or "$149.99 $99.99"
 // Output (de-DE): "99,99 EUR" or "149,99 EUR 99,99 EUR"
 
-export { PriceDisplay };
 ```
 
 **Why good:** named constant for decimal places, accessible strikethrough for original price, currency code determines symbol and position
@@ -419,7 +409,6 @@ export function PriceRange({ min, max, currency }: Props) {
 // Output (en-US): "$50.00 - $100.00"
 // Output (ja-JP): "5,000 - 10,000"
 
-export { PriceRange };
 ```
 
 **Why good:** useIntl for string manipulation, consistent formatting for both values
@@ -489,7 +478,6 @@ export function TimeAgo({ timestamp, autoUpdate = true }: Props) {
 
 // Output: "5 minutes ago", "in 2 hours", "3 days ago"
 
-export { TimeAgo };
 ```
 
 **Why good:** named constants for time conversions, automatic unit selection, optional auto-update, semantic time element
@@ -535,8 +523,6 @@ export function useRelativeTime() {
 }
 
 // Usage: formatRelativeTime(pastDate) -> "5 minutes ago" | "yesterday"
-
-export { useRelativeTime };
 ```
 
 **Why good:** numeric: "auto" uses words like "yesterday" when appropriate, reusable hook pattern, string return for any context
@@ -573,7 +559,6 @@ export function AuthorList({ authors, type = "conjunction" }: Props) {
 // Conjunction (es): "Alice, Bob y Charlie"
 // Disjunction (en): "Alice, Bob, or Charlie"
 
-export { AuthorList };
 ```
 
 **Why good:** supports different list types, locale-aware conjunctions, handles empty array
@@ -597,8 +582,6 @@ export function useFormatList() {
 // Usage:
 // formatList.and(["Red", "Blue", "Green"]) -> "Red, Blue, and Green"
 // formatList.or(["Red", "Blue", "Green"]) -> "Red, Blue, or Green"
-
-export { useFormatList };
 ```
 
 **Why good:** returns object with named methods, consistent API, string return for any context
@@ -630,7 +613,6 @@ export function LocaleName({ localeCode, type = "language" }: Props) {
 // Output (en): "German"
 // Output (de): "Deutsch"
 
-export { LocaleName };
 ```
 
 **Why good:** formats language/region codes as localized names, supports multiple display types

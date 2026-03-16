@@ -67,7 +67,7 @@ Need a feature flag?
 - Next.js embeds NEXT*PUBLIC*\* variables at build time (not runtime) - requires rebuild to change
 - Vite embeds VITE\_\* variables at build time - same limitation as Next.js
 - Environment variables are strings - use `z.coerce.number()` for numbers
-- **CRITICAL: `z.coerce.boolean()` converts "false" to `true`** - JavaScript's `Boolean("false")` is `true` (non-empty string is truthy). Use `z.stringbool()` (Zod 4+) instead which correctly handles "true"/"false"/"1"/"0"/"yes"/"no"
+- **CRITICAL: `z.coerce.boolean()` converts "false" to `true`** - JavaScript's `Boolean("false")` is `true` (non-empty string is truthy). Use `z.stringbool()` (Zod 4+) instead which correctly handles "true"/"false"/"1"/"0"/"yes"/"no"/"on"/"off"/"enabled"/"disabled"
 - Empty string env vars (`PORT=`) are NOT `undefined` - use T3 Env's `emptyStringAsUndefined: true` or handle explicitly
 - .env.local takes precedence over .env - can cause confusion when local overrides exist
 - Turborepo cache is NOT invalidated by env changes unless declared in turbo.json env array
@@ -122,7 +122,7 @@ const envSchema = z.object({
 
 **Why it's wrong:** `z.coerce.boolean()` converts ANY non-empty string to `true`, including "false", "0", "no". This breaks environment variable semantics.
 
-**What to do instead:** Use `z.stringbool()` (Zod 4+) which correctly parses "true"/"false"/"1"/"0"/"yes"/"no"/"on"/"off".
+**What to do instead:** Use `z.stringbool()` (Zod 4+) which correctly parses "true"/"false"/"1"/"0"/"yes"/"no"/"on"/"off"/"enabled"/"disabled".
 
 ---
 

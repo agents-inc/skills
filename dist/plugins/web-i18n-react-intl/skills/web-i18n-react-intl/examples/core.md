@@ -58,7 +58,6 @@ export function AppIntlProvider({ children, locale, messages }: Props) {
   );
 }
 
-export { AppIntlProvider };
 ```
 
 ```typescript
@@ -100,7 +99,6 @@ export function App() {
   );
 }
 
-export { App };
 ```
 
 **Why good:** modular configuration with named constants, locale validation function prevents invalid locales, error handler distinguishes missing translations from errors, default rich text elements provide consistent markup handling, lazy loading prevents loading all locales upfront
@@ -159,7 +157,6 @@ export function WelcomeBanner({ userName, lastLoginDate }: Props) {
   );
 }
 
-export { WelcomeBanner };
 ```
 
 ```json
@@ -194,7 +191,6 @@ export function LegalNotice() {
   );
 }
 
-export { LegalNotice };
 ```
 
 **Why good:** complete sentence stays in one translation unit, translators can reorder tags per language grammar, each tag maps to a React component
@@ -253,7 +249,6 @@ export function SearchForm({ onSearch }: { onSearch: (query: string) => void }) 
   );
 }
 
-export { SearchForm };
 ```
 
 **Why good:** useIntl returns strings for HTML attributes, named constant for min length, accessible with aria-label and role, separate message for each translatable string
@@ -293,7 +288,6 @@ export function StatusBadge({ status }: { status: Status }) {
   );
 }
 
-export { StatusBadge };
 ```
 
 **Why good:** defineMessages enables CLI extraction, status maps directly to message descriptor, data-status attribute for styling, role="status" for accessibility
@@ -399,7 +393,6 @@ export function CheckoutPage({ cart }: { cart: Cart }) {
   );
 }
 
-export { CheckoutPage };
 ```
 
 **Why good:** spreads message descriptor with values, useIntl for document.title (string context), FormattedMessage for JSX content, semantic sections with aria-labelledby
@@ -433,7 +426,6 @@ export function OptimizedIntlProvider({ locale, messages, children }: Props) {
   return <RawIntlProvider value={intl}>{children}</RawIntlProvider>;
 }
 
-export { OptimizedIntlProvider };
 ```
 
 **Why good:** createIntlCache prevents recreating formatter caches, useMemo prevents unnecessary intl object recreation, RawIntlProvider accepts pre-created intl object
@@ -488,7 +480,6 @@ export function LocaleSwitcher({ currentLocale, onLocaleChange }: Props) {
   );
 }
 
-export { LocaleSwitcher };
 ```
 
 **Why good:** uses SUPPORTED_LOCALES constant, type-safe locale handling, accessible with aria-label, native language names for each locale
@@ -574,8 +565,6 @@ export async function loadMessages(
   messageCache.set(locale, messages);
   return messages;
 }
-
-export { loadMessages };
 ```
 
 **Why good:** dynamic imports for code splitting, in-memory cache prevents duplicate loads, fallback to default locale, type-safe locale parameter

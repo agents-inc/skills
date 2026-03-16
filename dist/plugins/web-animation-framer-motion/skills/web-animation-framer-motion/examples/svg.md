@@ -1,8 +1,6 @@
-# SVG Animations
+# Motion - SVG Animation Examples
 
 > SVG path animations and drawing effects. See [core.md](core.md) for basic patterns.
-
-> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
 
 ---
 
@@ -11,7 +9,7 @@
 ### Good Example - Drawing Effect with pathLength
 
 ```typescript
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const DRAW_DURATION_S = 0.3;
 const CIRCLE_DURATION_S = 0.2;

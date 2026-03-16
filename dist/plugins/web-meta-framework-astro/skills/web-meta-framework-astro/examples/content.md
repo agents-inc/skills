@@ -307,4 +307,75 @@ export const collections = { products };
 
 ---
 
+## Pattern 6: Live Collections (Astro 6+)
+
+### Good Example - Runtime Data Fetching
+
+```typescript
+// src/content.config.ts
+import { defineCollection, defineLiveCollection } from "astro:content";
+import { glob } from "astro/loaders";
+import { z } from "astro/zod";
+
+// Build-time collection (standard)
+const blog = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
+  schema: z.object({ title: z.string(), pubDate: z.coerce.date() }),
+});
+
+// Live collection - fetched at runtime per-request
+const products = defineLiveCollection({
+  loader: myStoreLoader({ apiKey: import.meta.env.STORE_API_KEY }),
+  schema: z.object({
+    name: z.string(),
+    price: z.number(),
+    inStock: z.boolean(),
+  }),
+});
+
+export const collections = { blog, products };
+```
+
+```astro
+---
+// src/pages/products.astro - must be SSR
+export const prerender = false;
+
+import { getLiveCollection, getLiveEntry } from "astro:content";
+
+// Get all products (fresh on every request)
+const { entries, error } = await getLiveCollection("products");
+
+if (error) {
+  return new Response("Failed to load products", { status: 500 });
+}
+---
+
+<h1>Products</h1>
+<ul>
+  {entries.map((product) => (
+    <li>
+      {product.data.name} - ${product.data.price}
+      {!product.data.inStock && <span>(Out of stock)</span>}
+    </li>
+  ))}
+</ul>
+```
+
+**Why good:** Fresh data on every request without rebuilds, explicit error handling, same familiar collection API, requires SSR (`prerender = false`)
+
+### Bad Example - Using Live Collections for Static Content
+
+```typescript
+// BAD: Blog posts don't change between requests - use defineCollection instead
+const blog = defineLiveCollection({
+  loader: myBlogLoader(),
+  schema: z.object({ title: z.string() }),
+});
+```
+
+**Why bad:** Static content should use build-time collections for better performance - live collections add per-request overhead that isn't needed for content that rarely changes
+
+---
+
 _See [routing.md](routing.md) for dynamic route generation from collections and [islands.md](islands.md) for interactive component patterns._

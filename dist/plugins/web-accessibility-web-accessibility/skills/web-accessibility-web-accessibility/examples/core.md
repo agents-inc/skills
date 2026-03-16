@@ -94,8 +94,10 @@ export function Feature({ id, title, description, status, className }: FeaturePr
       data-expanded={isExpanded}
     >
       <div>
-        {/* Radix UI Switch has built-in role="switch" and ARIA */}
-        <Switch
+        {/* Use your component library's switch/toggle - it handles role="switch" and ARIA */}
+        <input
+          type="checkbox"
+          role="switch"
           id={`${id}-switch`}
           checked={status === "done"}
         />
@@ -163,28 +165,21 @@ export function Feature({ id, title, description, status, className }: FeaturePr
 ### Example: Semantic HTML Landmarks
 
 ```html
-<header>
-  <!-- role="banner" -->
-  <nav>
-    <!-- role="navigation" -->
-    <main>
-      <!-- role="main" -->
-      <aside>
-        <!-- role="complementary" -->
-        <footer>
-          <!-- role="contentinfo" -->
-          <section><!-- role="region" with aria-label --></section>
-        </footer>
-      </aside>
-    </main>
-  </nav>
-</header>
+<body>
+  <header><!-- role="banner" --></header>
+  <nav><!-- role="navigation" --></nav>
+  <main>
+    <!-- role="main" -->
+    <section aria-label="Features"><!-- role="region" --></section>
+  </main>
+  <aside><!-- role="complementary" --></aside>
+  <footer><!-- role="contentinfo" --></footer>
+</body>
 ```
 
 **Multiple landmarks of same type need labels:**
 
 ```html
-<nav aria-label="Main navigation">
-  <nav aria-label="Footer navigation"></nav>
-</nav>
+<nav aria-label="Main navigation">...</nav>
+<nav aria-label="Footer navigation">...</nav>
 ```

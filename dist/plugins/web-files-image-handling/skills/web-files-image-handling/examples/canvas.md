@@ -1,15 +1,19 @@
-# Canvas API Examples
+# Image Handling - Canvas API Examples
 
-> Canvas manipulation patterns for image processing. Reference from [SKILL.md](../SKILL.md).
+> Canvas manipulation patterns for image processing. See [core.md](core.md) for shared `loadImage` utility.
+
+**Prerequisites:** Understand Pattern 2-3 from [SKILL.md](../SKILL.md) (resize and step-down concepts).
 
 ---
 
 ## Pattern 1: Complete Resize Pipeline
 
-### With Quality Options
+### With Automatic Step-Down Detection
 
 ```typescript
 // resize-pipeline.ts
+import { loadImage } from "./load-image";
+
 const MAX_CANVAS_DIMENSION = 4096;
 const DEFAULT_QUALITY = 0.85;
 const STEP_DOWN_THRESHOLD = 0.5;
@@ -46,12 +50,10 @@ export async function resizeImagePipeline(
     maintainAspectRatio = true,
   } = options;
 
-  // Load original image
   const img = await loadImage(file);
   const originalWidth = img.width;
   const originalHeight = img.height;
 
-  // Calculate target dimensions
   const targetDims = calculateTargetDimensions(
     originalWidth,
     originalHeight,
@@ -60,7 +62,6 @@ export async function resizeImagePipeline(
     maintainAspectRatio,
   );
 
-  // Decide on resize strategy
   const reductionRatio = Math.min(
     targetDims.width / originalWidth,
     targetDims.height / originalHeight,
@@ -69,7 +70,6 @@ export async function resizeImagePipeline(
   let blob: Blob;
 
   if (useStepDown && reductionRatio < STEP_DOWN_THRESHOLD) {
-    // Large reduction - use step-down scaling
     blob = await stepDownResize(
       img,
       targetDims.width,
@@ -78,7 +78,6 @@ export async function resizeImagePipeline(
       quality,
     );
   } else {
-    // Small reduction or enlargement - single pass
     blob = await singlePassResize(
       img,
       targetDims.width,
@@ -98,25 +97,6 @@ export async function resizeImagePipeline(
   };
 }
 
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-
-    img.src = url;
-  });
-}
-
 function calculateTargetDimensions(
   originalWidth: number,
   originalHeight: number,
@@ -124,7 +104,6 @@ function calculateTargetDimensions(
   maxHeight: number,
   maintainAspectRatio: boolean,
 ): { width: number; height: number } {
-  // Clamp to browser limits
   const safeMaxWidth = Math.min(maxWidth, MAX_CANVAS_DIMENSION);
   const safeMaxHeight = Math.min(maxHeight, MAX_CANVAS_DIMENSION);
 
@@ -139,10 +118,7 @@ function calculateTargetDimensions(
   let height = originalHeight;
 
   if (width > safeMaxWidth || height > safeMaxHeight) {
-    const widthRatio = safeMaxWidth / width;
-    const heightRatio = safeMaxHeight / height;
-    const ratio = Math.min(widthRatio, heightRatio);
-
+    const ratio = Math.min(safeMaxWidth / width, safeMaxHeight / height);
     width = Math.round(width * ratio);
     height = Math.round(height * ratio);
   }
@@ -167,7 +143,6 @@ function singlePassResize(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // White background for JPEG
   if (mimeType === "image/jpeg") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, width, height);
@@ -220,14 +195,12 @@ async function stepDownResize(
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    // White background for JPEG on final step only
     if (isLastStep && mimeType === "image/jpeg") {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, currentWidth, currentHeight);
     }
 
     ctx.drawImage(source, 0, 0, currentWidth, currentHeight);
-
     source = canvas;
   }
 
@@ -244,7 +217,7 @@ async function stepDownResize(
 }
 ```
 
-**Why good:** Automatic step-down detection, returns compression stats, handles aspect ratio preservation, proper JPEG background handling
+**Why good:** Automatic step-down detection, returns compression stats, handles aspect ratio preservation, proper JPEG background handling on final step
 
 ---
 
@@ -254,6 +227,8 @@ async function stepDownResize(
 
 ```typescript
 // target-size-compression.ts
+import { loadImage } from "./load-image";
+
 const MAX_ITERATIONS = 10;
 const SIZE_TOLERANCE = 0.05; // 5%
 const MIN_QUALITY = 0.1;
@@ -267,7 +242,8 @@ interface CompressionResult {
 }
 
 /**
- * Compress image to hit a target file size using binary search
+ * Compress image to hit a target file size using binary search on quality.
+ * Converges in ~7-8 iterations (log2 of quality range).
  */
 export async function compressToTargetSize(
   file: File,
@@ -283,7 +259,6 @@ export async function compressToTargetSize(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas context unavailable");
 
-  // White background for JPEG
   if (mimeType === "image/jpeg") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -312,21 +287,14 @@ export async function compressToTargetSize(
       maxQuality = quality; // Try lower quality
     }
 
-    // Close enough - within tolerance
+    // Close enough
     const sizeDiff = Math.abs(blob.size - targetBytes) / targetBytes;
     if (sizeDiff < SIZE_TOLERANCE) {
-      return {
-        blob,
-        quality,
-        iterations,
-        targetHit: true,
-      };
+      return { blob, quality, iterations, targetHit: true };
     }
   }
 
-  // Return best result after max iterations
   if (!bestBlob) {
-    // Even minimum quality exceeded target - return it anyway
     bestBlob = await canvasToBlob(canvas, mimeType, MIN_QUALITY);
     bestQuality = MIN_QUALITY;
   }
@@ -361,10 +329,12 @@ function canvasToBlob(
 
 ## Pattern 3: Canvas Crop
 
-### Extract Region from Image
+### Region Extraction with Aspect Ratio Helper
 
 ```typescript
 // canvas-crop.ts
+import { loadImage } from "./load-image";
+
 interface CropRegion {
   x: number;
   y: number;
@@ -381,9 +351,6 @@ interface CropOptions {
 
 const DEFAULT_CROP_QUALITY = 0.92;
 
-/**
- * Crop a region from an image
- */
 export async function cropImage(
   file: File,
   region: CropRegion,
@@ -398,7 +365,7 @@ export async function cropImage(
 
   const img = await loadImage(file);
 
-  // Validate crop region is within bounds
+  // Clamp crop region to image bounds
   const safeRegion = {
     x: Math.max(0, Math.min(region.x, img.width)),
     y: Math.max(0, Math.min(region.y, img.height)),
@@ -406,7 +373,6 @@ export async function cropImage(
     height: Math.min(region.height, img.height - region.y),
   };
 
-  // Determine output dimensions
   const finalWidth = outputWidth ?? safeRegion.width;
   const finalHeight = outputHeight ?? safeRegion.height;
 
@@ -420,7 +386,6 @@ export async function cropImage(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // White background for JPEG
   if (mimeType === "image/jpeg") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, finalWidth, finalHeight);
@@ -448,9 +413,7 @@ export async function cropImage(
   });
 }
 
-/**
- * Crop to specific aspect ratio from center
- */
+/** Crop to specific aspect ratio from center of image */
 export async function cropToAspectRatio(
   file: File,
   aspectRatio: number,
@@ -463,16 +426,13 @@ export async function cropToAspectRatio(
   let cropHeight: number;
 
   if (currentRatio > aspectRatio) {
-    // Image is wider - crop width
     cropHeight = img.height;
     cropWidth = cropHeight * aspectRatio;
   } else {
-    // Image is taller - crop height
     cropWidth = img.width;
     cropHeight = cropWidth / aspectRatio;
   }
 
-  // Center the crop
   const x = (img.width - cropWidth) / 2;
   const y = (img.height - cropHeight) / 2;
 
@@ -484,16 +444,18 @@ export async function cropToAspectRatio(
 }
 ```
 
-**Why good:** Validates crop region is in bounds, supports resize during crop, center-crop helper for aspect ratios
+**Why good:** Validates crop region is in bounds, supports resize during crop, center-crop helper for common aspect ratio use case
 
 ---
 
 ## Pattern 4: Image Watermark
 
-### Overlay Text or Image
+### Text and Image Overlay
 
 ```typescript
 // watermark.ts
+import { loadImage } from "./load-image";
+
 interface TextWatermarkOptions {
   text: string;
   position:
@@ -528,6 +490,7 @@ const DEFAULT_COLOR = "#ffffff";
 const DEFAULT_OPACITY = 0.7;
 const DEFAULT_PADDING = 20;
 const DEFAULT_SCALE = 0.2;
+const WATERMARK_QUALITY = 0.92;
 
 export async function addTextWatermark(
   file: File,
@@ -551,20 +514,16 @@ export async function addTextWatermark(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas context unavailable");
 
-  // Draw original image
   ctx.drawImage(img, 0, 0);
 
-  // Configure text style
   ctx.globalAlpha = opacity;
   ctx.font = `${fontSize}px ${fontFamily}`;
   ctx.fillStyle = color;
 
-  // Measure text
   const metrics = ctx.measureText(text);
   const textWidth = metrics.width;
   const textHeight = fontSize;
 
-  // Calculate position
   const { x, y } = calculateWatermarkPosition(
     canvas.width,
     canvas.height,
@@ -574,21 +533,20 @@ export async function addTextWatermark(
     padding,
   );
 
-  // Add shadow for readability
+  // Shadow improves readability on varied backgrounds
   ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
   ctx.shadowBlur = 4;
   ctx.shadowOffsetX = 2;
   ctx.shadowOffsetY = 2;
 
-  ctx.fillText(text, x, y + textHeight); // +textHeight because fillText uses baseline
-
+  ctx.fillText(text, x, y + textHeight); // +textHeight: fillText uses baseline
   ctx.globalAlpha = 1;
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Watermark failed"))),
       "image/jpeg",
-      DEFAULT_CROP_QUALITY,
+      WATERMARK_QUALITY,
     );
   });
 }
@@ -617,14 +575,11 @@ export async function addImageWatermark(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas context unavailable");
 
-  // Draw original image
   ctx.drawImage(img, 0, 0);
 
-  // Calculate watermark size (scaled relative to image)
   const wmWidth = img.width * scale;
   const wmHeight = (wmWidth / watermark.width) * watermark.height;
 
-  // Calculate position
   const { x, y } = calculateWatermarkPosition(
     canvas.width,
     canvas.height,
@@ -634,7 +589,6 @@ export async function addImageWatermark(
     padding,
   );
 
-  // Draw watermark with opacity
   ctx.globalAlpha = opacity;
   ctx.drawImage(watermark, x, y, wmWidth, wmHeight);
   ctx.globalAlpha = 1;
@@ -643,7 +597,7 @@ export async function addImageWatermark(
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Watermark failed"))),
       "image/jpeg",
-      DEFAULT_CROP_QUALITY,
+      WATERMARK_QUALITY,
     );
   });
 }
@@ -679,16 +633,18 @@ function calculateWatermarkPosition(
 }
 ```
 
-**Why good:** Supports both text and image watermarks, configurable position, opacity, and scale, text shadow improves readability
+**Why good:** Supports both text and image watermarks, configurable position/opacity/scale, text shadow for readability, parallel loading of source and watermark images
 
 ---
 
 ## Pattern 5: Canvas Filters
 
-### Apply Visual Effects
+### CSS-Like Visual Effects
 
 ```typescript
 // canvas-filters.ts
+import { loadImage } from "./load-image";
+
 type FilterType =
   | "grayscale"
   | "sepia"
@@ -700,53 +656,18 @@ type FilterType =
 
 interface FilterOptions {
   type: FilterType;
-  value: number; // 0-100 for most, 0-20 for blur
+  value: number; // 0-100 for most, 0-20 for blur (px)
 }
 
 const DEFAULT_FILTER_QUALITY = 0.92;
 
-/**
- * Apply CSS-like filters using canvas filter property
- * Modern browsers only (filter property support)
- */
-export async function applyFilter(
-  file: File,
-  options: FilterOptions,
-): Promise<Blob> {
-  const { type, value } = options;
-
-  const img = await loadImage(file);
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas context unavailable");
-
-  // Build filter string
-  ctx.filter = buildFilterString(type, value);
-
-  ctx.drawImage(img, 0, 0);
-
-  // Reset filter for any subsequent operations
-  ctx.filter = "none";
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Filter failed"))),
-      "image/jpeg",
-      DEFAULT_FILTER_QUALITY,
-    );
-  });
-}
-
-/**
- * Apply multiple filters at once
- */
+/** Apply single or multiple CSS-like filters using canvas filter property */
 export async function applyFilters(
   file: File,
-  filters: FilterOptions[],
+  filters: FilterOptions | FilterOptions[],
 ): Promise<Blob> {
+  const filterList = Array.isArray(filters) ? filters : [filters];
+
   const img = await loadImage(file);
   const canvas = document.createElement("canvas");
   canvas.width = img.width;
@@ -755,8 +676,9 @@ export async function applyFilters(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas context unavailable");
 
-  // Combine all filters
-  const filterStrings = filters.map((f) => buildFilterString(f.type, f.value));
+  const filterStrings = filterList.map((f) =>
+    buildFilterString(f.type, f.value),
+  );
   ctx.filter = filterStrings.join(" ");
 
   ctx.drawImage(img, 0, 0);
@@ -793,7 +715,7 @@ function buildFilterString(type: FilterType, value: number): string {
 }
 ```
 
-**Why good:** Uses native canvas filter (hardware accelerated), supports combining multiple filters, simple value-based API
+**Why good:** Uses native canvas filter property (hardware accelerated), supports single or combined filters, simple value-based API
 
 ---
 

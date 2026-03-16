@@ -81,8 +81,9 @@ import { TRPCError } from "@trpc/server";
 import { middleware, protectedProcedure } from "../index";
 
 // Middleware that validates org membership
-const withOrgAccess = middleware(async ({ ctx, rawInput, next }) => {
-  const input = rawInput as { orgId: string };
+// v11: rawInput changed to getRawInput() (async function)
+const withOrgAccess = middleware(async ({ ctx, getRawInput, next }) => {
+  const input = (await getRawInput()) as { orgId: string };
 
   if (!input.orgId) {
     throw new TRPCError({

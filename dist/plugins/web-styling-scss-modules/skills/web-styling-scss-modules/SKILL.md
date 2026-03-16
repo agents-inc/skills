@@ -59,8 +59,14 @@ description: SCSS Modules, cva, design tokens
 
 **Detailed Resources:**
 
-- For code examples, see [examples/core.md](examples/core.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- [examples/core.md](examples/core.md) - Token system, HSL colors, cascade layers
+- [examples/tokens.md](examples/tokens.md) - Spacing and typography systems
+- [examples/theming.md](examples/theming.md) - Dark mode implementation
+- [examples/patterns.md](examples/patterns.md) - Module structure, data-attributes, mixins, global styles, icons
+- [examples/cva.md](examples/cva.md) - cva integration with SCSS Modules
+- [examples/advanced.md](examples/advanced.md) - :has(), :global(), nesting patterns
+- [examples/modules.md](examples/modules.md) - Sass module system (@use and @forward)
+- [reference.md](reference.md) - Decision frameworks and anti-patterns
 
 ---
 

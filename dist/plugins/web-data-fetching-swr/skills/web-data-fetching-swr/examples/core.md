@@ -95,7 +95,7 @@ export type { FetchError };
 // lib/axios-fetcher.ts
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const API_BASE_URL = process.env.API_BASE_URL || "";
 const API_TIMEOUT_MS = 10000;
 
 const apiClient = axios.create({
@@ -362,27 +362,6 @@ function SWRProvider({ children, fallback = {} }: SWRProviderProps) {
 }
 
 export { SWRProvider };
-```
-
-### Usage in App
-
-```typescript
-// app/layout.tsx (Next.js App Router)
-import { SWRProvider } from "@/providers/swr-provider";
-
-function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html>
-      <body>
-        <SWRProvider>
-          {children}
-        </SWRProvider>
-      </body>
-    </html>
-  );
-}
-
-export { RootLayout as default };
 ```
 
 ### Nested Config Override

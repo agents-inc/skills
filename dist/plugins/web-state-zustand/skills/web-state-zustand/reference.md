@@ -1,8 +1,6 @@
 # Client State - Reference
 
-Extended anti-patterns with code examples for client state management.
-
-**Note:** Core decision frameworks and RED FLAGS are in [SKILL.md](SKILL.md). This file provides detailed code examples for anti-patterns.
+> Quick-reference anti-patterns with code examples. See [SKILL.md](SKILL.md) for decision frameworks and full red flags.
 
 ---
 
@@ -10,20 +8,24 @@ Extended anti-patterns with code examples for client state management.
 
 ### Context for State Management
 
-Using React Context with useState/useReducer for state management causes every consumer to re-render when ANY value changes. This creates a performance nightmare at scale with no way to select specific values.
+Using React Context with useState/useReducer for state management causes every consumer to re-render when ANY value changes.
 
 ```typescript
 // WRONG - Context causes full re-renders
 const AppContext = createContext({ user: null, theme: "light", cart: [] });
 
 // CORRECT - Zustand with selectors
-const useStore = create((set) => ({ user: null, theme: "light", cart: [] }));
+const useStore = create<AppState>()((set) => ({
+  user: null,
+  theme: "light",
+  cart: [],
+}));
 const theme = useStore((s) => s.theme); // Only re-renders when theme changes
 ```
 
 ### Server Data in Client State
 
-Storing API/server data in useState, Zustand, or Context causes stale data, no caching, and manual synchronization complexity.
+Storing API/server data in useState, Zustand, or Context causes stale data, no caching, and manual synchronization.
 
 ```typescript
 // WRONG - Server data in useState
@@ -33,12 +35,11 @@ useEffect(() => {
 }, []);
 
 // CORRECT - Use a data fetching solution with caching, refetch, sync
-// Your data fetching layer handles loading states and caching
 ```
 
 ### Prop Drilling for Shared State
 
-Using useState and passing props through 3+ levels creates tight coupling and refactoring difficulty.
+Passing state through 3+ levels creates tight coupling and refactoring difficulty.
 
 ```typescript
 // WRONG - Prop drilling
@@ -50,16 +51,13 @@ Using useState and passing props through 3+ levels creates tight coupling and re
 const isOpen = useUIStore((s) => s.isOpen);
 ```
 
-### Magic Numbers in State Logic
-
-Using raw numbers for validation thresholds, timeouts, or initial values.
+### Destructuring Entire Store
 
 ```typescript
-// WRONG - Magic numbers
-if (password.length < 8) { ... }
-setTimeout(save, 300);
+// WRONG - Subscribes to everything, re-renders on any change
+const { bears, fish } = useBearStore();
 
-// CORRECT - Named constants
-const MIN_PASSWORD_LENGTH = 8;
-const DEBOUNCE_DELAY_MS = 300;
+// CORRECT - Atomic selectors
+const bears = useBearStore((s) => s.bears);
+const fish = useBearStore((s) => s.fish);
 ```

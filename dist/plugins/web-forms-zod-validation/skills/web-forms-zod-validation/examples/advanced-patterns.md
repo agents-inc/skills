@@ -1,49 +1,14 @@
-# Zod Advanced Pattern Examples
+# Zod Validation - Advanced Pattern Examples
 
-> Advanced patterns including pipes, catch fallbacks, branded types, readonly, and ISO validators. See [SKILL.md](../SKILL.md) for core concepts.
+> Advanced patterns including branded types, catch fallbacks, readonly, recursive schemas, and ISO validators. See [core.md](core.md) for fundamental patterns.
 
----
-
-## Pipe - Schema Chaining
-
-### Good Example - Transform Then Validate
-
-```typescript
-import { z } from "zod";
-
-const MIN_TRIMMED_LENGTH = 1;
-const MAX_TRIMMED_LENGTH = 100;
-
-// Parse string, trim it, then validate trimmed length
-const TrimmedStringSchema = z
-  .string()
-  .transform((s) => s.trim())
-  .pipe(
-    z
-      .string()
-      .min(MIN_TRIMMED_LENGTH, "Field cannot be empty")
-      .max(
-        MAX_TRIMMED_LENGTH,
-        `Field cannot exceed ${MAX_TRIMMED_LENGTH} characters`,
-      ),
-  );
-
-// Usage
-TrimmedStringSchema.parse("  hello  "); // => "hello"
-TrimmedStringSchema.parse("   "); // ❌ Error: Field cannot be empty
-
-// Type inference
-type TrimmedInput = z.input<typeof TrimmedStringSchema>; // string
-type TrimmedOutput = z.output<typeof TrimmedStringSchema>; // string
-```
-
-**Why good:** pipe separates transformation from validation, makes each step clear and testable, error messages reference the validated (trimmed) value
+**Prerequisites**: Understand schema definition, transforms, and refinements from core examples first.
 
 ---
 
-## Catch - Fallback Values
+## Pattern 10: Catch - Fallback Values
 
-### Good Example - Graceful Degradation for Config
+Use `.catch()` to recover from validation errors with fallback values. Ideal for user preferences, localStorage, cookies where data may be corrupted.
 
 ```typescript
 import { z } from "zod";
@@ -52,7 +17,6 @@ const DEFAULT_THEME = "light";
 const DEFAULT_LOCALE = "en";
 const DEFAULT_PAGE_SIZE = 20;
 
-// User preferences with fallbacks for invalid/missing values
 const UserPreferencesSchema = z.object({
   theme: z.enum(["light", "dark", "system"]).catch(DEFAULT_THEME),
   locale: z.string().min(2).max(5).catch(DEFAULT_LOCALE),
@@ -67,22 +31,22 @@ const prefs = UserPreferencesSchema.parse({
   locale: "", // Falls back to "en"
   pageSize: -5, // Falls back to 20
 });
-
 // prefs: { theme: "light", locale: "en", pageSize: 20 }
 ```
 
-**Why good:** catch provides graceful degradation for corrupted data (localStorage, cookies), application doesn't crash on invalid user preferences
+**Why good:** catch provides graceful degradation for corrupted data, application doesn't crash on invalid preferences
+
+**When to use:** Parsing data from localStorage, cookies, or other sources where corruption is possible but you want sensible defaults rather than errors.
 
 ---
 
-## Brand - Nominal Types
+## Pattern 11: Brand - Nominal Types
 
-### Good Example - Type-Safe ID Handling
+Use `.brand<T>()` to create nominal types that prevent accidental mixing of structurally identical types.
 
 ```typescript
 import { z } from "zod";
 
-// Branded ID schemas prevent mixing different ID types
 const UserIdSchema = z.string().uuid().brand<"UserId">();
 const OrganizationIdSchema = z.string().uuid().brand<"OrganizationId">();
 const InvoiceIdSchema = z.string().uuid().brand<"InvoiceId">();
@@ -91,32 +55,22 @@ type UserId = z.infer<typeof UserIdSchema>;
 type OrganizationId = z.infer<typeof OrganizationIdSchema>;
 type InvoiceId = z.infer<typeof InvoiceIdSchema>;
 
-// API functions with type-safe IDs
 async function getUser(userId: UserId): Promise<User> {
   return fetch(`/api/users/${userId}`).then((r) => r.json());
 }
 
-async function getInvoice(invoiceId: InvoiceId): Promise<Invoice> {
-  return fetch(`/api/invoices/${invoiceId}`).then((r) => r.json());
-}
-
-// Usage - TypeScript prevents accidental ID swapping
 const userId = UserIdSchema.parse("550e8400-e29b-41d4-a716-446655440000");
 const invoiceId = InvoiceIdSchema.parse("660e8400-e29b-41d4-a716-446655440000");
 
-getUser(userId); // ✅ OK
-// getUser(invoiceId); // ❌ TypeScript error: InvoiceId not assignable to UserId
-
-// Note: Branded types are compile-time only - runtime parsing is unchanged
+getUser(userId); // OK
+// getUser(invoiceId); // TypeScript error: InvoiceId not assignable to UserId
 ```
 
-**Why good:** branded types catch ID mixing bugs at compile time, no runtime overhead, prevents common bugs in large codebases with many entity types
+**Why good:** branded types catch ID mixing bugs at compile time, no runtime overhead, prevents common bugs in codebases with many entity types
 
 ---
 
-## Readonly - Immutable Output
-
-### Good Example - Configuration Object
+## Pattern 12: Readonly - Immutable Output
 
 ```typescript
 import { z } from "zod";
@@ -136,26 +90,78 @@ const AppConfigSchema = z
   .readonly();
 
 type AppConfig = z.infer<typeof AppConfigSchema>;
-// Readonly<{ api: { baseUrl: string; timeout: number; retries: number }; features: { darkMode: boolean; analytics: boolean } }>
+// Readonly<{ api: { baseUrl: string; ... }; features: { ... } }>
 
 const config = AppConfigSchema.parse({
   api: { baseUrl: "https://api.example.com", timeout: 5000, retries: 3 },
   features: { darkMode: true, analytics: false },
 });
-
-// TypeScript prevents mutation
-// config.api.timeout = 10000; // ❌ Error: Cannot assign to 'timeout'
-
-// Note: Object.freeze() is applied at runtime
+// config.api.timeout = 10000; // TypeScript error: Cannot assign to 'timeout'
 ```
 
-**Why good:** readonly prevents accidental config mutation, enforced at both compile-time (TypeScript) and runtime (Object.freeze)
+**Why good:** readonly prevents accidental config mutation at both compile-time and runtime
 
 ---
 
-## ISO Date/Time Validators (Zod 3.23+)
+## Pattern 13: Recursive Schemas
 
-### Good Example - Event Scheduling
+### Getter Syntax (Preferred, Zod 3.22+)
+
+```typescript
+import { z } from "zod";
+
+interface Category {
+  id: string;
+  name: string;
+  subcategories?: Category[];
+}
+
+const CategorySchema: z.ZodType<Category> = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  get subcategories() {
+    return z.array(CategorySchema).optional();
+  },
+});
+
+const category = CategorySchema.parse({
+  id: "550e8400-e29b-41d4-a716-446655440000",
+  name: "Electronics",
+  subcategories: [
+    {
+      id: "660e8400-e29b-41d4-a716-446655440000",
+      name: "Phones",
+      subcategories: [
+        { id: "770e8400-e29b-41d4-a716-446655440000", name: "Smartphones" },
+      ],
+    },
+  ],
+});
+```
+
+**Why good:** getter syntax is cleaner than z.lazy(), type annotation ensures correct recursive inference
+
+### z.lazy() for Mutual Recursion
+
+```typescript
+import { z } from "zod";
+
+interface TreeNode {
+  value: string;
+  children?: TreeNode[];
+}
+
+const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
+  value: z.string(),
+  children: z.lazy(() => z.array(TreeNodeSchema)).optional(),
+});
+```
+
+**When to use z.lazy():** Mutual recursion between two schemas, or backward compatibility with older Zod versions.
+
+---
+
+## Pattern 14: ISO Date/Time Validators (Zod 3.23+)
 
 ```typescript
 import { z } from "zod";
@@ -172,7 +178,6 @@ const DateTimeSchema = z.string().datetime();
 // ISO 8601 duration (P[n]Y[n]M[n]DT[n]H[n]M[n]S)
 const DurationSchema = z.string().duration();
 
-// Complete event schema
 const EventSchema = z.object({
   title: z.string().min(1),
   date: DateOnlySchema, // "2024-06-15"
@@ -181,85 +186,11 @@ const EventSchema = z.object({
   reminderBefore: DurationSchema.optional(), // "PT30M" (30 minutes)
 });
 
-type Event = z.infer<typeof EventSchema>;
-
-// Usage
-const event = EventSchema.parse({
-  title: "Team Meeting",
-  date: "2024-06-15",
-  startTime: "09:00:00",
-  endTime: "10:30:00",
-  reminderBefore: "PT15M",
-});
-
-// Invalid formats rejected
-// DateOnlySchema.parse("06/15/2024");    // ❌ Error: not ISO format
-// TimeOnlySchema.parse("9:00 AM");       // ❌ Error: not 24-hour ISO format
+// Invalid formats rejected:
+// DateOnlySchema.parse("06/15/2024");  // Error: not ISO format
+// TimeOnlySchema.parse("9:00 AM");     // Error: not 24-hour ISO format
 ```
 
-**Why good:** native ISO validators are more precise than regex patterns, better error messages, specifically designed for date interchange formats
+**Why good:** native ISO validators are more precise than regex, better error messages than custom patterns
 
----
-
-## Recursive Schemas
-
-### Good Example - Category Tree
-
-```typescript
-import { z } from "zod";
-
-// Define the type first for recursive reference
-interface Category {
-  id: string;
-  name: string;
-  subcategories?: Category[];
-}
-
-// Use getter syntax for recursive schema (Zod 3.22+)
-const CategorySchema: z.ZodType<Category> = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1),
-  get subcategories() {
-    return z.array(CategorySchema).optional();
-  },
-});
-
-// Usage
-const category = CategorySchema.parse({
-  id: "550e8400-e29b-41d4-a716-446655440000",
-  name: "Electronics",
-  subcategories: [
-    {
-      id: "660e8400-e29b-41d4-a716-446655440000",
-      name: "Phones",
-      subcategories: [
-        {
-          id: "770e8400-e29b-41d4-a716-446655440000",
-          name: "Smartphones",
-        },
-      ],
-    },
-  ],
-});
-```
-
-**Why good:** getter syntax is cleaner than z.lazy() for most cases, type annotation ensures correct recursive inference, handles arbitrarily deep nesting
-
-### Alternative - z.lazy() for Mutual Recursion
-
-```typescript
-import { z } from "zod";
-
-// For mutually recursive types, use z.lazy()
-interface TreeNode {
-  value: string;
-  children?: TreeNode[];
-}
-
-const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
-  value: z.string(),
-  children: z.lazy(() => z.array(TreeNodeSchema)).optional(),
-});
-```
-
-**When to use z.lazy():** When you need mutual recursion between two schemas, or for backward compatibility with older Zod versions.
+**Zod v4 note:** In v4, these moved to `z.iso.date()`, `z.iso.time()`, `z.iso.datetime()`, `z.iso.duration()` as top-level functions.

@@ -4,10 +4,10 @@
 
 **Additional Examples:**
 
-- [core.md](core.md) - Sign up, sign in, client setup
-- [oauth.md](oauth.md) - GitHub, Google OAuth providers
+- [core.md](core.md) - Sign up, sign in, client setup, database adapter
+- [oauth.md](oauth.md) - Social providers, Generic OAuth
 - [two-factor.md](two-factor.md) - TOTP setup and verification
-- [sessions.md](sessions.md) - Session configuration and revocation
+- [sessions.md](sessions.md) - Session configuration, cookie caching, stateless
 
 ---
 
@@ -32,7 +32,7 @@ export const auth = betterAuth({
       organizationLimit: ORG_LIMIT_PER_USER,
       invitationExpiresIn: INVITATION_EXPIRY_SECONDS,
       sendInvitationEmail: async ({ email, invitationId, organization }) => {
-        const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invite?id=${invitationId}`;
+        const inviteUrl = `${process.env.APP_URL}/accept-invite?id=${invitationId}`;
         await sendEmail({
           to: email,
           subject: `Join ${organization.name}`,
@@ -56,7 +56,7 @@ import { createAuthClient } from "better-auth/react";
 import { organizationClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.APP_URL || "http://localhost:3000",
   plugins: [organizationClient()],
 });
 
@@ -114,7 +114,6 @@ export function useCreateOrg() {
   return { createOrg, isPending, error };
 }
 
-// Named export
 export { useCreateOrg };
 ```
 
@@ -168,7 +167,6 @@ export function useInviteMember() {
   return { inviteMember, isPending, error };
 }
 
-// Named export
 export { useInviteMember };
 ```
 

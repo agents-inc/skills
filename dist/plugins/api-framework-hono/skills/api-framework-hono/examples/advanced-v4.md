@@ -13,9 +13,7 @@
 ### Server Setup
 
 ```typescript
-// /app/api/[[...route]]/route.ts
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { handle } from "hono/vercel";
 
 const app = new OpenAPIHono().basePath("/api");
 
@@ -77,10 +75,9 @@ const routes = app
 // REQUIRED: Export app type for RPC client
 export type AppType = typeof routes;
 
-// Named exports for Next.js
+// Named export for spec generation
 export { app };
-export const GET = handle(app);
-export const POST = handle(app);
+// Export HTTP handlers via your framework adapter (hono/vercel, hono/bun, etc.)
 ```
 
 **Why good:** Chained route definitions enable full type inference, AppType export shares types without code generation
@@ -95,12 +92,12 @@ import { hc } from "hono/client";
 import type { AppType } from "@/app/api/[[...route]]/route";
 import type { InferRequestType, InferResponseType } from "hono/client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000";
 
 // Create type-safe client
 export const apiClient = hc<AppType>(API_BASE_URL);
 
-// Type-safe request/response types (for use with React Query, etc.)
+// Type-safe request/response types (for use with data fetching libraries)
 type GetUserRequest = InferRequestType<
   (typeof apiClient.api.users)[":id"]["$get"]
 >;
@@ -137,7 +134,7 @@ async function createUser(name: string) {
 }
 ```
 
-**Why good:** Full type safety without code generation, InferRequestType/InferResponseType enable type extraction for React Query
+**Why good:** Full type safety without code generation, `InferRequestType`/`InferResponseType` enable type extraction for your data fetching library
 
 ### Typed URL Feature (v4.11.0+)
 
@@ -150,12 +147,12 @@ const API_BASE_URL = "http://localhost:3000";
 // Pass base URL as second type parameter for precise URL types
 const client = hc<AppType, typeof API_BASE_URL>(API_BASE_URL);
 
-// URL is now precisely typed for SWR keys
+// URL is now precisely typed for use as cache keys
 const url = client.api.users[":id"].$url({ param: { id: "123" } });
 // Type: URL with precise path type for caching libraries
 ```
 
-**Why good:** Enables type-safe URL keys for caching libraries like SWR
+**Why good:** Enables type-safe URL keys for caching and data fetching libraries
 
 ---
 
@@ -418,27 +415,24 @@ if (res.status === 404) {
 
 ## Pattern 5: Timing Utility (wrapTime - v4.11.0+)
 
-**Simplified timing measurement** - Wrap async operations with automatic timing.
+**Simplified timing measurement** - Wrap a Promise with automatic timing.
 
 ```typescript
 import { timing, wrapTime } from "hono/timing";
 
+const DEFAULT_QUERY_LIMIT = 100;
 const app = new OpenAPIHono();
 
 // Enable timing headers
 app.use(timing());
 
 app.openapi(getJobsRoute, async (c) => {
-  // wrapTime wraps an async function with timing measurement
-  const fetchJobs = wrapTime(
-    "db", // metric name
-    async () => {
-      return db.select().from(jobs).limit(100);
-    },
-    "Database query", // optional description
+  // wrapTime(context, metricName, promise) - wraps a Promise with timing
+  const jobs = await wrapTime(
+    c,
+    "db",
+    fetchJobs({ limit: DEFAULT_QUERY_LIMIT }),
   );
-
-  const jobs = await fetchJobs(c);
 
   return c.json({ jobs }, 200);
 });
@@ -447,10 +441,10 @@ app.openapi(getJobsRoute, async (c) => {
 Response headers will include:
 
 ```
-Server-Timing: db;dur=45.2;desc="Database query"
+Server-Timing: db;dur=45.2
 ```
 
-**Why good:** Cleaner syntax than manual startTime/setMetric pattern, automatic header generation
+**Why good:** Cleaner syntax than manual `startTime`/`endTime` pattern, automatic `Server-Timing` header generation
 
 ---
 
@@ -488,10 +482,10 @@ app.use("/api/*", async (c, next) => {
   }
 });
 
-// BAD: Accessing context with props drilling
+// BAD: Props drilling context to every utility function
 app.get("/users", async (c) => {
   // BAD: Have to pass c to every utility function
-  const users = await fetchUsers(c.env.DATABASE, c.get("requestId"));
+  const users = await fetchUsers(c.get("requestId"));
   return c.json(users);
 });
 

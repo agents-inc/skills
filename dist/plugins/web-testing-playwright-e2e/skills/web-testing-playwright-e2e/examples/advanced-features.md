@@ -1,6 +1,6 @@
-# Playwright E2E Testing - Advanced Features (v1.45+)
+# Playwright E2E Testing - Advanced Features
 
-> Modern Playwright features including Clock API (v1.45+), ARIA snapshots (v1.49+), and worker fixtures. See [core.md](core.md) for foundational patterns.
+> Clock API (v1.45+), ARIA snapshots (v1.49+), worker fixtures, polling assertions, and accessibility assertions. See [core.md](core.md) for foundational patterns.
 
 **Prerequisites**: Understand Complete User Flow and Basic Fixtures from core examples first.
 

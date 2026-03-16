@@ -1,6 +1,6 @@
 # shared-tooling-git-hooks
 
-Husky v9 setup + migration from v8, lint-staged patterns, commitlint + conventional commits, VS Code integration, CI/production handling
+Husky v9 setup, lint-staged v16 patterns, commitlint with conventional commits, CI/production handling, monorepo setup, migration from v8
 
 ## Installation
 

@@ -295,7 +295,7 @@ export {
 
 ## Pattern 14: idb Library Alternative (v8.x)
 
-Using the lighter-weight idb library (~1.2KB brotli) instead of Dexie. Version 8.x is current as of 2024.
+Using the lighter-weight idb library (~1.2KB brotli) instead of Dexie. Version 8.0.3 is current stable.
 
 **CRITICAL:** Do not await non-IndexedDB operations (like `fetch()`) mid-transaction. Transactions auto-close when control returns to the event loop without pending requests.
 
@@ -435,7 +435,7 @@ export type { AppDBSchema };
 
 **Version Notes:**
 
-- idb 8.x: Current version (2024), CDN available at `https://cdn.jsdelivr.net/npm/idb@8/+esm`
+- idb 8.0.3: Current stable version, CDN available at `https://cdn.jsdelivr.net/npm/idb@8/+esm`
 - For simple key-value storage: Use `idb-keyval` (~295 bytes) instead
 
 ---
@@ -779,7 +779,7 @@ function estimateObjectSize(obj: unknown): number {
   return new Blob([JSON.stringify(obj)]).size;
 }
 
-// Hook for React components
+// Hook for React components (import useState, useEffect from 'react')
 function useStorageInfo() {
   const [info, setInfo] = useState<StorageInfo | null>(null);
 

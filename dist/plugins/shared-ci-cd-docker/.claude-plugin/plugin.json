@@ -1,6 +1,6 @@
 {
   "name": "shared-ci-cd-docker",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Docker containerization patterns for Node.js/TypeScript development and production",
   "author": {

@@ -71,7 +71,7 @@ function updatePage(content: string): void {
 }
 ```
 
-**Why bad:** No feature detection causes runtime errors in Firefox < 144, Safari < 18, older browsers
+**Why bad:** No feature detection causes runtime errors in Firefox < 133, Safari < 18, older browsers
 
 ---
 
@@ -80,8 +80,6 @@ function updatePage(content: string): void {
 ### Good Example - Toggle with Transition
 
 ```typescript
-const TRANSITION_TIMEOUT_MS = 4000;
-
 type ViewState = "list" | "detail";
 
 let currentView: ViewState = "list";
@@ -123,7 +121,7 @@ document.getElementById("back-to-list")?.addEventListener("click", () => {
 });
 ```
 
-**Why good:** Feature detection with fallback, clear separation of state and render, named constant for timeout
+**Why good:** Feature detection with fallback, clear separation of state and render
 
 ---
 
@@ -132,8 +130,6 @@ document.getElementById("back-to-list")?.addEventListener("click", () => {
 ### Good Example - Fetch with Transition
 
 ```typescript
-const API_TIMEOUT_MS = 5000;
-
 interface User {
   id: string;
   name: string;
@@ -315,7 +311,6 @@ function skipTransition(transition: ViewTransition | null): void {
 
 // Usage - skip on rapid interactions
 let pendingTransition: ViewTransition | null = null;
-const DEBOUNCE_MS = 100;
 
 function handleRapidNavigation(page: string): void {
   // Skip previous transition if still running

@@ -213,11 +213,12 @@ onMounted(() => {
 });
 
 // CORRECT - Proper cleanup
+const POLL_INTERVAL_MS = 5000;
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   window.addEventListener("resize", handleResize);
-  intervalId = setInterval(pollData, 5000);
+  intervalId = setInterval(pollData, POLL_INTERVAL_MS);
 });
 
 onUnmounted(() => {

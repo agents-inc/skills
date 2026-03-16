@@ -31,7 +31,7 @@ description: Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bin
 
 ---
 
-**Auto-detection:** Svelte 5, Runes, $state, $derived, $effect, $props, $bindable, $inspect, .svelte, snippet, @render, createContext, getContext, setContext, $state.raw, $derived.by, $effect.pre
+**Auto-detection:** Svelte 5, Runes, $state, $derived, $effect, $props, $bindable, $inspect, .svelte, snippet, @render, createContext, getContext, setContext, $state.raw, $state.eager, $derived.by, $effect.pre, ClassValue
 
 **When to use:**
 
@@ -53,9 +53,9 @@ description: Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bin
 
 **When NOT to use:**
 
-- SvelteKit-specific patterns (routing, load functions, form actions) — use web-framework-sveltekit
+- Meta-framework-specific patterns (routing, load functions, form actions) — use the corresponding meta-framework skill
 - Svelte 4 patterns (`export let`, `$:` reactive statements, `<slot>`, `createEventDispatcher`)
-- Server-side logic (use SvelteKit hooks and server routes)
+- Server-side logic (use your meta-framework's server hooks and routes)
 
 **Detailed Resources:**
 
@@ -72,7 +72,7 @@ description: Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bin
 
 **Advanced:**
 
-- [examples/advanced.md](examples/advanced.md) - `$inspect`, context API, `$state.raw`, class-based state, shared state modules
+- [examples/advanced.md](examples/advanced.md) - `$inspect`, context API, `$state.raw`, `$state.eager`, class-based state, shared state modules
 
 ---
 
@@ -102,6 +102,7 @@ Svelte 5 introduces **Runes** — a set of primitives that bring explicit, fine-
 
 - Non-reactive constants (use plain `const` or `let`)
 - Server-side code that doesn't need reactivity
+- Meta-framework concerns (routing, load functions, server hooks) — use the corresponding meta-framework skill
 - Svelte 4 patterns — `export let`, `$:`, stores for component state, `<slot>`, `createEventDispatcher`
 
 </philosophy>
@@ -528,33 +529,25 @@ Svelte 5 uses native event attributes (`onclick`, `onsubmit`) instead of Svelte 
 
 ## Integration Guide
 
-**Svelte 5 is the component framework.** SvelteKit builds on top of it for routing, server rendering, and data loading.
-
-**SvelteKit integration:**
-
-- Svelte 5 components render in SvelteKit pages and layouts
-- Props flow from SvelteKit load functions to page components via `data` prop
-- Form actions work with native HTML forms enhanced by `use:enhance`
-
 **Styling integration:**
 
 - Scoped `<style>` blocks are the default — styles don't leak to other components
 - Use `:global()` for global styles or CSS custom properties for parent-to-child styling
-- CSS Modules, Tailwind, and SCSS all work with Svelte preprocessors
+- Any CSS approach (CSS Modules, utility-first, preprocessors) works with Svelte
 
 **State management:**
 
 - `$state` for component-local state
 - Context API (`createContext`) for subtree-scoped state
 - Reactive classes with `$state` fields for shared state modules (`.svelte.ts`)
-- SvelteKit load functions for server state
+- Meta-framework load functions for server state
 
 **TypeScript integration:**
 
 - Full TypeScript support in `<script lang="ts">` blocks
-- Auto-generated `$types` for SvelteKit load functions and page props
 - `Snippet<[ParamType]>` for typed snippet props
 - Interface-based prop typing with `$props()`
+- `ClassValue` type from `svelte/elements` for type-safe class props (Svelte 5.19+)
 
 </integration>
 

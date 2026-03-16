@@ -1,11 +1,11 @@
 ---
 name: web-meta-framework-nuxt
-description: Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO
+description: Nuxt patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO
 ---
 
-# Nuxt 3 Framework Patterns
+# Nuxt Framework Patterns
 
-> **Quick Guide:** Use `useFetch` for API calls in components (SSR-safe), `useAsyncData` for custom data sources. Create server routes in `server/api/`. Auto-imports handle composables and components automatically. Use `useState` for SSR-friendly shared state.
+> **Quick Guide:** Use `useFetch` for API calls in components (SSR-safe), `useAsyncData` for custom data sources or parallel fetches. Create server routes in `server/api/`. Auto-imports handle composables and components automatically. Use `useState` for SSR-friendly shared state. Data is a `shallowRef` by default -- use `deep: true` if you need deep reactivity.
 
 ---
 
@@ -15,21 +15,21 @@ description: Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAs
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `useFetch` or `useAsyncData` for data fetching in components - NEVER raw `$fetch` in setup which causes double-fetching)**
+**(You MUST use `useFetch` or `useAsyncData` for data fetching in components -- NEVER raw `$fetch` in setup which causes double-fetching)**
 
-**(You MUST use `server/api/` for API routes - handlers export default with `defineEventHandler()`)**
+**(You MUST use `server/api/` for API routes -- handlers export default with `defineEventHandler()`)**
 
-**(You MUST use `definePageMeta` to attach middleware and configure page behavior)**
+**(You MUST use `definePageMeta` to attach middleware and configure page behavior -- it is a macro, values must be statically analyzable)**
 
-**(You MUST use `useHead` or `useSeoMeta` for SEO metadata - never manual `<head>` tags)**
+**(You MUST use `useHead` or `useSeoMeta` for SEO metadata -- never manual `<head>` tags)**
 
-**(You MUST ensure `useState` values are JSON-serializable for SSR hydration)**
+**(You MUST ensure `useState` values are JSON-serializable for SSR hydration -- no functions, classes, or Symbols)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Nuxt 3, nuxt.config.ts, useFetch, useAsyncData, useState, defineEventHandler, definePageMeta, defineNuxtRouteMiddleware, NuxtLayout, NuxtPage, NuxtLink, navigateTo, server/api, pages/, layouts/, middleware/, composables/, useHead, useSeoMeta
+**Auto-detection:** Nuxt, nuxt.config.ts, useFetch, useAsyncData, useState, defineEventHandler, definePageMeta, defineNuxtRouteMiddleware, NuxtLayout, NuxtPage, NuxtLink, navigateTo, server/api, pages/, layouts/, middleware/, composables/, useHead, useSeoMeta, app/ directory
 
 **When to use:**
 
@@ -55,17 +55,7 @@ description: Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAs
 **When NOT to use:**
 
 - Simple SPAs without SSR needs (consider Vue + Vite directly)
-- Static sites without server-side logic (consider VitePress)
-- Projects already committed to Next.js patterns (React ecosystem)
-
-**Detailed Resources:**
-
-- For code examples:
-  - [data-fetching.md](examples/data-fetching.md) - useFetch, useAsyncData, $fetch patterns
-  - [server-routes.md](examples/server-routes.md) - API routes with defineEventHandler
-  - [middleware.md](examples/middleware.md) - Route middleware for auth and guards
-  - [state-management.md](examples/state-management.md) - useState composables
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Static documentation sites without server logic (consider a static-site generator)
 
 ---
 
@@ -73,15 +63,16 @@ description: Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAs
 
 ## Philosophy
 
-Nuxt 3 is a **meta-framework for Vue 3** that provides file-based routing, automatic code splitting, server-side rendering, and a powerful data-fetching system. Built on Nitro server engine, it enables full-stack development with API routes colocated with your frontend.
+Nuxt is a **meta-framework for Vue 3** that provides file-based routing, automatic code splitting, server-side rendering, and a powerful data-fetching system. Built on Nitro server engine, it enables full-stack development with API routes colocated with your frontend.
 
 **Core Principles:**
 
-1. **Universal rendering by default** - Pages render on server first, then hydrate on client
-2. **Auto-imports everywhere** - Composables, components, and utilities are automatically available
-3. **File-based conventions** - Directories define behavior (pages/, server/, layouts/, middleware/)
-4. **SSR-safe data fetching** - Composables prevent double-fetching between server and client
-5. **Zero-config TypeScript** - Full type safety with automatic type generation
+1. **Universal rendering by default** -- Pages render on server first, then hydrate on client
+2. **Auto-imports everywhere** -- Composables, components, and utilities are automatically available
+3. **File-based conventions** -- Directories define behavior (pages/, server/, layouts/, middleware/)
+4. **SSR-safe data fetching** -- Composables prevent double-fetching between server and client
+5. **Zero-config TypeScript** -- Full type safety with automatic type generation
+6. **Shallow reactivity for performance** -- `data` from `useFetch`/`useAsyncData` is a `shallowRef` by default
 
 </philosophy>
 
@@ -93,9 +84,7 @@ Nuxt 3 is a **meta-framework for Vue 3** that provides file-based routing, autom
 
 ### Pattern 1: File-Based Routing
 
-Nuxt uses the `pages/` directory for file-based routing. File names become URL paths.
-
-#### Routing Conventions
+File names in `pages/` become URL paths. Dynamic segments use bracket syntax.
 
 | File                        | URL                      | Description        |
 | --------------------------- | ------------------------ | ------------------ |
@@ -105,681 +94,179 @@ Nuxt uses the `pages/` directory for file-based routing. File names become URL p
 | `pages/users/[...slug].vue` | `/users/*`               | Catch-all route    |
 | `pages/posts/[[id]].vue`    | `/posts` or `/posts/:id` | Optional parameter |
 
-#### Basic Page Structure
-
-```vue
-<!-- pages/index.vue -->
-<script setup lang="ts">
-// Auto-imported: no explicit imports needed for Nuxt composables
-
-definePageMeta({
-  title: "Home Page",
-});
-
-const { data: posts } = await useFetch("/api/posts");
-</script>
-
-<template>
-  <div>
-    <h1>Welcome</h1>
-    <NuxtLink to="/about">About</NuxtLink>
-    <ul>
-      <li v-for="post in posts" :key="post.id">
-        <NuxtLink :to="`/blog/${post.slug}`">{{ post.title }}</NuxtLink>
-      </li>
-    </ul>
-  </div>
-</template>
-```
-
-**Why good:** File names map directly to URLs, NuxtLink provides prefetching, auto-imports eliminate boilerplate, definePageMeta configures page behavior
-
-#### Dynamic Routes
-
 ```vue
 <!-- pages/blog/[slug].vue -->
 <script setup lang="ts">
 const route = useRoute();
 const slug = route.params.slug as string;
-
 const { data: post, error } = await useFetch(`/api/posts/${slug}`);
 
 if (error.value) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: "Post not found",
-  });
+  throw createError({ statusCode: 404, statusMessage: "Post not found" });
 }
 </script>
-
-<template>
-  <article v-if="post">
-    <h1>{{ post.title }}</h1>
-    <div v-html="post.content" />
-  </article>
-</template>
 ```
 
-**Why good:** Dynamic segments use bracket syntax, route params typed via useRoute, createError triggers error page
+**Why good:** File names map to URLs, bracket syntax for dynamic params, createError triggers error page
 
-#### Catch-All Routes
-
-```vue
-<!-- pages/docs/[...slug].vue -->
-<script setup lang="ts">
-const route = useRoute();
-// slug is an array: ['guide', 'getting-started'] for /docs/guide/getting-started
-const slugArray = route.params.slug as string[];
-const path = slugArray.join("/");
-
-const { data: doc } = await useFetch(`/api/docs/${path}`);
-</script>
-
-<template>
-  <div v-if="doc">
-    <h1>{{ doc.title }}</h1>
-    <div v-html="doc.content" />
-  </div>
-</template>
-```
-
-**Why good:** Catch-all routes handle nested paths, slug is array of segments, enables documentation-style hierarchies
+See [examples/core.md](examples/core.md) for complete page examples with layouts and middleware.
 
 ---
 
-### Pattern 2: Data Fetching with useFetch
+### Pattern 2: Data Fetching (useFetch / useAsyncData)
 
-`useFetch` is the primary composable for API calls. It prevents double-fetching by transferring server data to client during hydration.
-
-#### Basic useFetch
+`useFetch` wraps `useAsyncData` + `$fetch`. It prevents double-fetching by transferring server data to client during hydration. Data is a `shallowRef` -- replace the whole object to trigger reactivity, or use `deep: true`.
 
 ```typescript
-// In <script setup>
-const API_ENDPOINT = "/api/users";
+// Simple fetch -- URL is cache key
+const { data, error, status, refresh, clear } = await useFetch("/api/users");
 
-// Simple fetch - URL as cache key
-const { data, error, status, refresh } = await useFetch(API_ENDPOINT);
-
-// With query parameters
+// With reactive query params and auto-refetch
 const page = ref(1);
-const { data: users } = await useFetch(API_ENDPOINT, {
+const { data: users } = await useFetch("/api/users", {
   query: { page, limit: 20 },
+  watch: [page],
 });
 
-// Watch option - refetch when reactive values change
-const { data: searchResults } = await useFetch("/api/search", {
-  query: { q: searchQuery },
-  watch: [searchQuery],
-});
-```
-
-**Why good:** Automatic SSR hydration prevents double-fetch, reactive query params, watch option for auto-refetch
-
-#### useFetch with Options
-
-```vue
-<script setup lang="ts">
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-const USERS_ENDPOINT = "/api/users";
-
-const {
-  data: users,
-  pending,
-  error,
-  refresh,
-} = await useFetch<User[]>(USERS_ENDPOINT, {
-  // Pick specific fields to reduce payload
-  pick: ["id", "name"],
-
-  // Transform response before returning
-  transform: (response) => response.filter((user) => user.active),
-
-  // Lazy loading - don't block navigation
-  lazy: true,
-
-  // Custom cache key
-  key: "active-users",
-
-  // Default value while loading
-  default: () => [],
-});
-</script>
-
-<template>
-  <div>
-    <div v-if="pending">Loading...</div>
-    <div v-else-if="error">Error: {{ error.message }}</div>
-    <ul v-else>
-      <li v-for="user in users" :key="user.id">{{ user.name }}</li>
-    </ul>
-    <button @click="refresh()">Refresh</button>
-  </div>
-</template>
-```
-
-**Why good:** Type-safe with generics, pick reduces payload size, transform shapes data, lazy prevents navigation blocking, default provides fallback
-
-#### POST Requests with useFetch
-
-```vue
-<script setup lang="ts">
-interface CreateUserPayload {
-  name: string;
-  email: string;
-}
-
-const form = reactive<CreateUserPayload>({
-  name: "",
-  email: "",
-});
-
-const { execute, status, error } = useFetch("/api/users", {
+// POST with immediate: false for user-triggered actions
+const { execute, status } = useFetch("/api/users", {
   method: "POST",
   body: form,
-  immediate: false, // Don't execute on mount
+  immediate: false,
+  watch: false,
 });
-
-async function handleSubmit() {
-  await execute();
-  if (!error.value) {
-    navigateTo("/users");
-  }
-}
-</script>
-
-<template>
-  <form @submit.prevent="handleSubmit">
-    <input v-model="form.name" placeholder="Name" />
-    <input v-model="form.email" type="email" placeholder="Email" />
-    <button type="submit" :disabled="status === 'pending'">
-      {{ status === "pending" ? "Creating..." : "Create User" }}
-    </button>
-    <p v-if="error" class="error">{{ error.message }}</p>
-  </form>
-</template>
 ```
 
-**Why good:** immediate: false for user-triggered actions, reactive body auto-serializes, status for loading state, navigateTo for redirect
+Use `useAsyncData` when combining multiple fetches or using non-HTTP sources:
 
----
-
-### Pattern 3: useAsyncData for Custom Data Sources
-
-`useAsyncData` provides more control than `useFetch` - use it for non-HTTP data sources or when you need to combine multiple fetches.
-
-#### Basic useAsyncData
-
-```vue
-<script setup lang="ts">
-// For custom data sources or complex logic
-const { data: user, pending } = await useAsyncData("user", async () => {
-  // Can use any async operation
-  const response = await $fetch("/api/user");
-  return response;
-});
-
-// Multiple parallel requests
+```typescript
 const { data } = await useAsyncData("dashboard", async () => {
-  const [users, posts, stats] = await Promise.all([
+  const [users, stats] = await Promise.all([
     $fetch("/api/users"),
-    $fetch("/api/posts"),
     $fetch("/api/stats"),
   ]);
-  return { users, posts, stats };
+  return { users, stats };
 });
-</script>
-
-<template>
-  <div v-if="data">
-    <UserList :users="data.users" />
-    <PostList :posts="data.posts" />
-    <StatsCard :stats="data.stats" />
-  </div>
-</template>
 ```
 
-**Why good:** First argument is cache key (required for deduplication), Promise.all for parallel requests, $fetch inside useAsyncData is SSR-safe
+**Critical:** `$fetch` in `<script setup>` (outside useFetch/useAsyncData) runs on **both** server and client, causing double-fetching. Always wrap in a composable.
 
-#### Reactive useAsyncData
-
-```vue
-<script setup lang="ts">
-const userId = ref("1");
-
-// Re-fetches when userId changes
-const { data: user } = await useAsyncData(
-  () => `user-${userId.value}`, // Dynamic key
-  () => $fetch(`/api/users/${userId.value}`),
-  { watch: [userId] },
-);
-</script>
-```
-
-**Why good:** Dynamic key function, watch option for reactive dependencies, automatic refetch on change
+See [examples/data-fetching.md](examples/data-fetching.md) for typed responses, transforms, lazy loading, and server-only fetch patterns.
 
 ---
 
-### Pattern 4: Server Routes with defineEventHandler
+### Pattern 3: Server Routes
 
-Nuxt server routes live in `server/api/` (prefixed with `/api`) or `server/routes/` (no prefix).
-
-#### Basic API Route
+Server routes live in `server/api/` (prefixed with `/api`) or `server/routes/` (no prefix). File suffix restricts HTTP method.
 
 ```typescript
 // server/api/users.get.ts
-import type { User } from "~/types";
-
-export default defineEventHandler(async (event): Promise<User[]> => {
-  // Access query parameters
+export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 20;
-
-  // Fetch from database or external API
-  const users = await db.users.findMany({
-    skip: (page - 1) * limit,
-    take: limit,
-  });
-
-  return users;
+  return db.users.findMany({ skip: (page - 1) * 20, take: 20 });
 });
-```
 
-**Why good:** File suffix `.get.ts` restricts to GET method, getQuery extracts query params, typed return value
-
-#### POST Route with Body
-
-```typescript
 // server/api/users.post.ts
-import { z } from "zod";
-
-const CreateUserSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-});
-
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-
-  // Validate request body
-  const result = CreateUserSchema.safeParse(body);
-  if (!result.success) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Validation failed",
-      data: result.error.flatten(),
-    });
-  }
-
-  const user = await db.users.create({
-    data: result.data,
-  });
-
+  // Validate body with Zod or similar
   setResponseStatus(event, 201);
-  return user;
+  return db.users.create({ data: body });
 });
 ```
 
-**Why good:** readBody parses request body, Zod validation for type safety, createError for typed errors, setResponseStatus for custom status codes
+| Pattern   | File                       | URL               |
+| --------- | -------------------------- | ----------------- |
+| GET       | `server/api/users.get.ts`  | `GET /api/users`  |
+| POST      | `server/api/users.post.ts` | `POST /api/users` |
+| Dynamic   | `server/api/users/[id].ts` | `/api/users/:id`  |
+| Catch-all | `server/api/[...path].ts`  | `/api/*`          |
+| No prefix | `server/routes/health.ts`  | `/health`         |
 
-#### Dynamic Route Parameters
-
-```typescript
-// server/api/users/[id].ts
-export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "User ID required",
-    });
-  }
-
-  const user = await db.users.findUnique({ where: { id } });
-
-  if (!user) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "User not found",
-    });
-  }
-
-  return user;
-});
-```
-
-**Why good:** getRouterParam extracts dynamic segments, early returns for validation, createError for HTTP errors
-
-#### Catch-All Server Route
-
-```typescript
-// server/api/proxy/[...path].ts
-export default defineEventHandler(async (event) => {
-  const path = event.context.params?.path || "";
-
-  // Forward request to external API
-  const response = await $fetch(`https://external-api.com/${path}`, {
-    method: event.method,
-    headers: {
-      Authorization: `Bearer ${process.env.API_KEY}`,
-    },
-  });
-
-  return response;
-});
-```
-
-**Why good:** Catch-all for proxying, context.params for path segments, server-side secrets safe
+See [examples/server-routes.md](examples/server-routes.md) for validation, error handling, server middleware, and CRUD patterns.
 
 ---
 
-### Pattern 5: useState for Shared State
+### Pattern 4: useState for Shared State
 
-`useState` is an SSR-friendly composable for shared reactive state. Values transfer from server to client during hydration.
-
-#### Basic useState
-
-```vue
-<script setup lang="ts">
-// Shared state across components - key-based
-const counter = useState("counter", () => 0);
-
-function increment() {
-  counter.value++;
-}
-</script>
-
-<template>
-  <div>
-    <p>Count: {{ counter }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
-```
-
-**Why good:** Key ensures state sharing across components, initializer function runs once, SSR-safe hydration
-
-#### Composable with useState
+`useState` is an SSR-friendly composable for shared reactive state. Values transfer from server to client during hydration and **must be JSON-serializable**.
 
 ```typescript
 // composables/use-user.ts
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
 export function useUser() {
   const user = useState<User | null>("user", () => null);
   const isLoggedIn = computed(() => user.value !== null);
 
   async function login(credentials: { email: string; password: string }) {
-    const response = await $fetch<User>("/api/auth/login", {
+    user.value = await $fetch<User>("/api/auth/login", {
       method: "POST",
       body: credentials,
     });
-    user.value = response;
   }
 
-  async function logout() {
-    await $fetch("/api/auth/logout", { method: "POST" });
-    user.value = null;
-  }
-
-  return {
-    user: readonly(user),
-    isLoggedIn,
-    login,
-    logout,
-  };
+  return { user: readonly(user), isLoggedIn, login };
 }
 ```
 
-```vue
-<!-- Using the composable -->
-<script setup lang="ts">
-const { user, isLoggedIn, logout } = useUser();
-</script>
+**Key constraints:** Values must be JSON-serializable (no functions, classes). Key ensures singleton sharing across components. Wrap mutations in composable functions.
 
-<template>
-  <div v-if="isLoggedIn">
-    <p>Welcome, {{ user?.name }}</p>
-    <button @click="logout">Logout</button>
-  </div>
-</template>
-```
-
-**Why good:** Composable encapsulates state logic, useState key ensures singleton, readonly prevents external mutation, computed for derived state
-
-#### useState Limitations
-
-```typescript
-// CRITICAL: useState values must be JSON-serializable
-
-// WRONG - Functions not serializable
-const state = useState("fn", () => ({
-  callback: () => console.log("hi"), // Error during hydration
-}));
-
-// WRONG - Classes not serializable
-const state = useState("class", () => new MyClass());
-
-// CORRECT - Plain objects and primitives
-const state = useState("data", () => ({
-  count: 0,
-  items: [],
-  settings: { theme: "dark" },
-}));
-```
-
-**Why good:** Clear constraint - JSON-serializable only, prevents hydration mismatches
+See [examples/state-management.md](examples/state-management.md) for cart state, UI state, cookie persistence, and server-initialized patterns.
 
 ---
 
-### Pattern 6: Route Middleware
+### Pattern 5: Route Middleware
 
-Middleware runs before navigating to a route. Use for authentication, authorization, and redirects.
-
-#### Named Middleware
+Middleware runs before navigation. Use for auth, authorization, and redirects.
 
 ```typescript
 // middleware/auth.ts
 export default defineNuxtRouteMiddleware((to, from) => {
   const { isLoggedIn } = useUser();
-
   if (!isLoggedIn.value) {
-    return navigateTo("/login");
+    return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
   }
 });
 ```
 
-```vue
-<!-- pages/dashboard.vue -->
-<script setup lang="ts">
-definePageMeta({
-  middleware: "auth",
-});
-</script>
+| Type   | File Pattern                | Behavior                  |
+| ------ | --------------------------- | ------------------------- |
+| Named  | `middleware/auth.ts`        | Opt-in via definePageMeta |
+| Global | `middleware/auth.global.ts` | Runs on every navigation  |
+| Inline | Function in definePageMeta  | Page-specific logic       |
 
-<template>
-  <div>Dashboard content (protected)</div>
-</template>
-```
+Attach via `definePageMeta({ middleware: "auth" })` or `definePageMeta({ middleware: ["auth", "admin"] })`.
 
-**Why good:** Named middleware reusable across pages, navigateTo for redirects, definePageMeta attaches middleware
+**Critical:** Use `to` and `from` parameters -- never `useRoute()` in middleware (may have stale values).
 
-#### Global Middleware
-
-```typescript
-// middleware/analytics.global.ts
-export default defineNuxtRouteMiddleware((to, from) => {
-  // .global suffix runs on every route
-  if (import.meta.client) {
-    // Track page view (client-side only)
-    trackPageView(to.fullPath);
-  }
-});
-```
-
-**Why good:** .global suffix for automatic execution, import.meta.client for client-only code
-
-#### Inline Middleware
-
-```vue
-<script setup lang="ts">
-definePageMeta({
-  middleware: [
-    // Inline middleware for page-specific logic
-    function (to, from) {
-      const hasPermission = checkPermission(to.params.id as string);
-      if (!hasPermission) {
-        return abortNavigation();
-      }
-    },
-    "auth", // Can mix with named middleware
-  ],
-});
-</script>
-```
-
-**Why good:** Inline for one-off logic, array for multiple middleware, abortNavigation cancels navigation
+See [examples/middleware.md](examples/middleware.md) for role-based auth, feature flags, guest guards, and global middleware patterns.
 
 ---
 
-### Pattern 7: Layouts
+### Pattern 6: Layouts
 
-Layouts wrap pages with shared UI. Use for navigation, footers, and page structure.
-
-#### Default Layout
+Layouts wrap pages with shared UI (navigation, footers). Default layout applies automatically.
 
 ```vue
 <!-- layouts/default.vue -->
-<script setup lang="ts">
-const { isLoggedIn, user } = useUser();
-</script>
-
 <template>
   <div class="layout">
     <header>
-      <nav>
-        <NuxtLink to="/">Home</NuxtLink>
-        <NuxtLink to="/about">About</NuxtLink>
-        <template v-if="isLoggedIn">
-          <span>{{ user?.name }}</span>
-          <NuxtLink to="/dashboard">Dashboard</NuxtLink>
-        </template>
-        <NuxtLink v-else to="/login">Login</NuxtLink>
-      </nav>
+      <nav><!-- Navigation --></nav>
     </header>
-
-    <main>
-      <slot />
-      <!-- Page content renders here -->
-    </main>
-
-    <footer>
-      <p>&copy; 2024 My App</p>
-    </footer>
+    <main><slot /></main>
+    <footer><!-- Footer --></footer>
   </div>
 </template>
 ```
 
-**Why good:** slot for page content, composables work in layouts, NuxtLink for navigation
+Select layout per page: `definePageMeta({ layout: "admin" })`. Dynamic layout: `<NuxtLayout :name="computedLayout">`.
 
-#### Custom Layouts
-
-```vue
-<!-- layouts/admin.vue -->
-<template>
-  <div class="admin-layout">
-    <aside class="sidebar">
-      <NuxtLink to="/admin">Dashboard</NuxtLink>
-      <NuxtLink to="/admin/users">Users</NuxtLink>
-      <NuxtLink to="/admin/settings">Settings</NuxtLink>
-    </aside>
-    <main class="content">
-      <slot />
-    </main>
-  </div>
-</template>
-```
-
-```vue
-<!-- pages/admin/index.vue -->
-<script setup lang="ts">
-definePageMeta({
-  layout: "admin",
-  middleware: "auth",
-});
-</script>
-
-<template>
-  <div>Admin Dashboard</div>
-</template>
-```
-
-**Why good:** definePageMeta selects layout, layouts can be combined with middleware
-
-#### Dynamic Layout
-
-```vue
-<script setup lang="ts">
-const route = useRoute();
-
-// Change layout based on condition
-const layout = computed(() => {
-  return route.query.print ? "print" : "default";
-});
-</script>
-
-<template>
-  <NuxtLayout :name="layout">
-    <NuxtPage />
-  </NuxtLayout>
-</template>
-```
-
-**Why good:** NuxtLayout with dynamic name, reactive layout switching
+See [examples/core.md](examples/core.md) for layout examples with auth-aware navigation.
 
 ---
 
-### Pattern 8: SEO with useHead and useSeoMeta
-
-Nuxt provides composables for managing document head and SEO metadata.
-
-#### useHead for Page Metadata
-
-```vue
-<script setup lang="ts">
-const SITE_NAME = "My Awesome Site";
-
-useHead({
-  title: "About Us",
-  titleTemplate: (title) => `${title} | ${SITE_NAME}`,
-  meta: [
-    { name: "description", content: "Learn about our company and mission" },
-  ],
-  link: [{ rel: "canonical", href: "https://example.com/about" }],
-});
-</script>
-
-<template>
-  <div>
-    <h1>About Us</h1>
-    <!-- Page content -->
-  </div>
-</template>
-```
-
-**Why good:** titleTemplate for consistent formatting, composable API, SSR-rendered
-
-#### useSeoMeta for SEO
+### Pattern 7: SEO with useHead and useSeoMeta
 
 ```vue
 <script setup lang="ts">
@@ -789,201 +276,29 @@ useSeoMeta({
   title: () => post.value?.title ?? "Blog Post",
   description: () => post.value?.excerpt ?? "",
   ogTitle: () => post.value?.title ?? "Blog Post",
-  ogDescription: () => post.value?.excerpt ?? "",
   ogImage: () => post.value?.coverImage ?? "/default-og.png",
-  ogType: "article",
   twitterCard: "summary_large_image",
 });
 </script>
-
-<template>
-  <article v-if="post">
-    <h1>{{ post.title }}</h1>
-    <img :src="post.coverImage" :alt="post.title" />
-    <div v-html="post.content" />
-  </article>
-</template>
 ```
 
-**Why good:** Reactive values with functions, type-safe property names, automatic Open Graph and Twitter cards
+**Why good:** Reactive values with getter functions, type-safe property names, automatic Open Graph and Twitter cards, SSR-rendered
 
-#### Global Head Configuration
-
-```typescript
-// nuxt.config.ts
-export default defineNuxtConfig({
-  app: {
-    head: {
-      charset: "utf-8",
-      viewport: "width=device-width, initial-scale=1",
-      title: "My App",
-      meta: [{ name: "theme-color", content: "#ffffff" }],
-      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
-    },
-  },
-});
-```
-
-**Why good:** Global defaults in config, page-level overrides with composables
+Global defaults in `nuxt.config.ts` via `app.head`. Page-level overrides via composables.
 
 ---
 
-### Pattern 9: Error Handling
+### Pattern 8: Plugins
 
-Nuxt provides error boundaries and utilities for graceful error handling.
-
-#### Creating Errors
+Plugins run before Vue app creation. Use for registering global utilities or external libraries.
 
 ```typescript
-// In server routes
-export default defineEventHandler(async (event) => {
-  const user = await getUser(event);
-
-  if (!user) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "User not found",
-      message: "The requested user does not exist",
-      data: { userId: getRouterParam(event, "id") },
-    });
-  }
-
-  return user;
-});
-```
-
-```vue
-<!-- In pages -->
-<script setup lang="ts">
-const { data, error } = await useFetch("/api/protected");
-
-if (error.value) {
-  throw createError({
-    statusCode: error.value.statusCode,
-    statusMessage: error.value.statusMessage,
-  });
-}
-</script>
-```
-
-**Why good:** createError works in both server and client, typed error structure, data for additional context
-
-#### Error Page
-
-```vue
-<!-- error.vue (root level, not in pages/) -->
-<script setup lang="ts">
-import type { NuxtError } from "#app";
-
-const props = defineProps<{
-  error: NuxtError;
-}>();
-
-const handleError = () => clearError({ redirect: "/" });
-
-const HTTP_NOT_FOUND = 404;
-</script>
-
-<template>
-  <div class="error-page">
-    <h1>
-      {{ error.statusCode === HTTP_NOT_FOUND ? "Page Not Found" : "Error" }}
-    </h1>
-    <p>{{ error.message }}</p>
-    <button @click="handleError">Go Home</button>
-  </div>
-</template>
-```
-
-**Why good:** Root-level error.vue catches all errors, clearError for recovery, typed error props
-
-#### NuxtErrorBoundary for Component Errors
-
-```vue
-<template>
-  <NuxtErrorBoundary @error="handleError">
-    <!-- Content that might error -->
-    <RiskyComponent />
-
-    <template #error="{ error, clearError }">
-      <div class="error-boundary">
-        <p>Component failed: {{ error.message }}</p>
-        <button @click="clearError">Retry</button>
-      </div>
-    </template>
-  </NuxtErrorBoundary>
-</template>
-
-<script setup lang="ts">
-function handleError(error: Error) {
-  console.error("Caught error:", error);
-  // Report to error tracking service
-}
-</script>
-```
-
-**Why good:** Component-level isolation, clearError for retry, @error event for logging
-
----
-
-### Pattern 10: Plugins
-
-Plugins run before Vue app creation. Use for registering global components, directives, or external libraries.
-
-#### Basic Plugin
-
-```typescript
-// plugins/my-plugin.ts
-export default defineNuxtPlugin((nuxtApp) => {
-  // Available everywhere via useNuxtApp()
-  return {
-    provide: {
-      hello: (name: string) => `Hello, ${name}!`,
-    },
-  };
-});
-```
-
-```vue
-<script setup lang="ts">
-const { $hello } = useNuxtApp();
-const greeting = $hello("World"); // "Hello, World!"
-</script>
-```
-
-**Why good:** provide for global utilities, useNuxtApp for access, auto-loaded from plugins/
-
-#### Client-Only Plugin
-
-```typescript
-// plugins/analytics.client.ts
+// plugins/api.client.ts  -- .client suffix = browser only
 export default defineNuxtPlugin(() => {
-  // .client suffix = runs only in browser
-
-  // Initialize analytics
-  const analytics = initializeAnalytics();
-
-  return {
-    provide: {
-      analytics,
-    },
-  };
-});
-```
-
-**Why good:** .client suffix for browser-only code, server-only with .server suffix
-
-#### Plugin with Dependencies
-
-```typescript
-// plugins/api.ts
-export default defineNuxtPlugin(async (nuxtApp) => {
   const config = useRuntimeConfig();
-
   const api = $fetch.create({
     baseURL: config.public.apiBase,
     onRequest({ options }) {
-      // Add auth header
       const token = useCookie("token");
       if (token.value) {
         options.headers = {
@@ -993,57 +308,81 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       }
     },
   });
-
-  return {
-    provide: { api },
-  };
+  return { provide: { api } };
 });
 ```
 
-```vue
-<script setup lang="ts">
-const { $api } = useNuxtApp();
+Access via `useNuxtApp().$api`. Suffixes: `.client.ts` (browser), `.server.ts` (server), no suffix (both).
 
-// Uses configured $fetch instance
-const { data } = await useAsyncData("users", () => $api("/users"));
-</script>
+---
+
+### Pattern 9: Error Handling
+
+```typescript
+// Server route errors
+throw createError({
+  statusCode: 404,
+  statusMessage: "Not found",
+  data: { id },
+});
+
+// Page-level: check useFetch error, throw createError
+// Component-level: NuxtErrorBoundary with #error slot
+// Global: error.vue at root level with clearError({ redirect: "/" })
 ```
 
-**Why good:** $fetch.create for configured client, useRuntimeConfig for environment values, useCookie for auth tokens
+`createError` works in both server and client. `NuxtErrorBoundary` isolates component failures. Root `error.vue` catches unhandled errors.
+
+See [examples/core.md](examples/core.md) for error page and boundary examples.
 
 </patterns>
 
 ---
 
-<integration>
+**Detailed Resources:**
 
-## Integration Guide
+- [examples/core.md](examples/core.md) - Routing, layouts, error handling, auto-imports
+- [examples/data-fetching.md](examples/data-fetching.md) - useFetch, useAsyncData, $fetch patterns
+- [examples/server-routes.md](examples/server-routes.md) - API routes, validation, server middleware
+- [examples/middleware.md](examples/middleware.md) - Auth guards, role-based access, global middleware
+- [examples/state-management.md](examples/state-management.md) - useState composables, persistence
+- [reference.md](reference.md) - Decision frameworks, checklists, anti-patterns
 
-**Nuxt 3 is a full-stack Vue framework.** It handles routing, rendering, data fetching, and server-side logic. Other tools integrate through composables and plugins.
+---
 
-**Styling integration:**
+<red_flags>
 
-- Apply styles via `class` attribute on components
-- Supports CSS, SCSS, CSS Modules, or any PostCSS-compatible solution
-- Global styles in `assets/` directory
-- Scoped styles in component `<style scoped>` blocks
+## RED FLAGS
 
-**Data fetching integration:**
+**High Priority Issues:**
 
-- Server data: `useFetch` and `useAsyncData` (built-in SSR support)
-- Real-time: WebSocket connections via client-only plugins
+- Using `$fetch` directly in `<script setup>` for initial data -- causes double-fetching (server + client)
+- Non-serializable values in `useState` -- functions, classes, Symbols cause hydration errors
+- Missing `key` in `useAsyncData` for dynamic data -- leads to stale data and caching issues
+- `useRoute()` in middleware -- use `to` and `from` parameters instead; useRoute may have stale values
+- Secrets in client-side code -- use `runtimeConfig` private keys for server-only secrets
 
-**State management:**
+**Medium Priority Issues:**
 
-- Simple state: `useState` composable (SSR-safe)
-- Complex state: External state libraries via plugins with SSR considerations
+- Blocking data fetches without `lazy: true` -- slows navigation; use lazy for non-critical data
+- Not handling error state from useFetch -- always check and display `error.value`
+- Using `onMounted` for data that should be in useFetch -- misses SSR benefits
+- Forgetting `await` before `useFetch` in setup -- component renders before data is ready
 
-**Form handling:**
+**Gotchas & Edge Cases:**
 
-- Native form submission with server routes
-- Client-side validation via composables
+- `useFetch` URL is the cache key -- same URL = same cached data; use `key` option to differentiate
+- `useState` runs initializer only once per key -- subsequent calls return existing state
+- Middleware runs on both server and client -- use `import.meta.server`/`import.meta.client` to split
+- `server/api/` routes auto-prefix with `/api` -- `server/api/users.ts` becomes `/api/users`
+- `definePageMeta` is a macro, not runtime -- values must be statically analyzable
+- `NuxtLink` with external URLs needs `external` prop or use `<a>` instead
+- Composables must be called synchronously in setup -- no `await` before first composable call
+- `watch` in `useFetch` requires reactive values -- plain variables won't trigger refetch
+- `data` from `useFetch`/`useAsyncData` is a `shallowRef` -- mutating nested properties won't trigger reactivity; replace the whole object or use `deep: true`
+- `data` and `error` default to `undefined` (not `null`) -- adjust null checks accordingly
 
-</integration>
+</red_flags>
 
 ---
 
@@ -1053,15 +392,15 @@ const { data } = await useAsyncData("users", () => $api("/users"));
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use `useFetch` or `useAsyncData` for data fetching in components - NEVER raw `$fetch` in setup which causes double-fetching)**
+**(You MUST use `useFetch` or `useAsyncData` for data fetching in components -- NEVER raw `$fetch` in setup which causes double-fetching)**
 
-**(You MUST use `server/api/` for API routes - handlers export default with `defineEventHandler()`)**
+**(You MUST use `server/api/` for API routes -- handlers export default with `defineEventHandler()`)**
 
-**(You MUST use `definePageMeta` to attach middleware and configure page behavior)**
+**(You MUST use `definePageMeta` to attach middleware and configure page behavior -- it is a macro, values must be statically analyzable)**
 
-**(You MUST use `useHead` or `useSeoMeta` for SEO metadata - never manual `<head>` tags)**
+**(You MUST use `useHead` or `useSeoMeta` for SEO metadata -- never manual `<head>` tags)**
 
-**(You MUST ensure `useState` values are JSON-serializable for SSR hydration)**
+**(You MUST ensure `useState` values are JSON-serializable for SSR hydration -- no functions, classes, or Symbols)**
 
 **Failure to follow these rules will cause SSR hydration mismatches, double-fetching, and broken page metadata.**
 

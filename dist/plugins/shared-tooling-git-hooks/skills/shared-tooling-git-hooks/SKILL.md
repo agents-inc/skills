@@ -1,6 +1,6 @@
 ---
 name: shared-tooling-git-hooks
-description: Husky v9 setup + migration from v8, lint-staged patterns, commitlint + conventional commits, VS Code integration, CI/production handling
+description: Husky v9 setup, lint-staged v16 patterns, commitlint with conventional commits, CI/production handling, monorepo setup, migration from v8
 ---
 
 # Git Hooks
@@ -29,44 +29,35 @@ description: Husky v9 setup + migration from v8, lint-staged patterns, commitlin
 
 ---
 
-**Auto-detection:** Husky, husky init, .husky/, pre-commit hook, lint-staged, commitlint, conventional commits, commit-msg hook, git hooks
+**Auto-detection:** Husky, husky init, .husky/, pre-commit hook, lint-staged, commitlint, conventional commits, commit-msg hook, git hooks, prepare script
 
 **When to use:**
 
 - Setting up pre-commit hooks with Husky + lint-staged
 - Configuring commit message validation with commitlint
 - Migrating from Husky v8 to v9
-- Adding VS Code editor integration for format-on-save
 - Configuring git hooks in monorepo setups
 - Disabling hooks in CI/production environments
 
 **When NOT to use:**
 
-- ESLint or Prettier configuration itself (see `shared-tooling-eslint-prettier`)
-- CI/CD pipeline configuration (see CI/CD skill)
-- Runtime code (this is developer workflow tooling only)
+- Linter/formatter configuration itself (separate concern)
+- CI/CD pipeline configuration (separate concern)
+- Runtime application code (this is developer workflow tooling only)
 
 **Key patterns covered:**
 
 - Husky v9 setup and hook creation
 - lint-staged v16 configuration patterns
 - commitlint with conventional commits
-- VS Code integration (format on save, auto-fix)
 - CI/production hook disabling
 - Monorepo setup
 - Migration from Husky v8 to v9
-- Pre-commit timing guidelines
 
 **Detailed Resources:**
 
-- For code examples, see [examples/git-hooks.md](examples/git-hooks.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
-
-**Related skills:**
-
-- For ESLint and Prettier configuration (what lint-staged runs), see `shared-tooling-eslint-prettier`
-- For monorepo workspace configuration, see `setup/monorepo`
-- For daily coding conventions (naming, imports, constants), see CLAUDE.md
+- [examples/core.md](examples/core.md) - Setup, lint-staged config, commitlint, CI handling, monorepo, migration
+- [reference.md](reference.md) - Decision frameworks, tool comparison, anti-patterns
 
 ---
 
@@ -100,250 +91,99 @@ Git hooks are a **developer workflow tool** - they catch issues early while stay
 
 ### Pattern 1: Husky v9 Setup
 
-Husky v9 uses plain shell scripts in `.husky/` directory. No shebang lines needed. The `prepare` script ensures hooks install automatically for all team members.
-
-#### Setup Steps
+Husky v9 uses plain shell scripts in `.husky/` directory. No shebang lines needed. The `prepare` script auto-installs hooks for all team members.
 
 ```bash
-# 1. Install Husky
+# Full setup in 4 commands
 bun add -D husky
-
-# 2. Initialize Husky (creates .husky/ and adds prepare script to package.json)
-bunx husky init
-
-# 3. Install lint-staged
+bunx husky init       # Creates .husky/ and adds "prepare": "husky" to package.json
 bun add -D lint-staged
-
-# 4. Create pre-commit hook
 echo "bunx lint-staged" > .husky/pre-commit
 ```
 
-**What `husky init` does:**
+**Key points:**
 
-- Creates `.husky/` directory with a default `pre-commit` hook
-- Adds `"prepare": "husky"` to your `package.json` scripts
+- `"prepare": "husky"` (NOT `"husky install"` - deprecated, will break in v10)
+- Hook files are plain shell scripts (no shebang required in v9)
+- `HUSKY=0` disables hooks (CI/production); `HUSKY=2` enables debug mode
+- v9.1.1+ allows running package commands directly without npx/bunx
 
-```json
-// package.json - This is added automatically by husky init
-{
-  "scripts": {
-    "prepare": "husky"
-  }
-}
-```
-
-**Why good:** The `prepare` script ensures hooks are installed automatically when team members run `npm/bun install`, so everyone gets the same setup without manual steps
-
-#### Husky v9 Key Points
-
-- **Prepare script**: Must be `"prepare": "husky"` (NOT `"husky install"` which is deprecated)
-- **Hook files**: Plain shell scripts in `.husky/` directory (no shebang required in v9)
-- **Disable hooks**: Set `HUSKY=0` environment variable (for CI/production)
-- **Debug mode**: Set `HUSKY=2` (replaces deprecated `HUSKY_DEBUG=1`)
-- **Direct commands**: v9.1.1+ allows running package commands directly without npx/bunx
-- **Pre-merge-commit**: v9.1.5+ supports the `pre-merge-commit` hook type
+See [examples/core.md](examples/core.md) for full setup and package.json configuration.
 
 ---
 
 ### Pattern 2: Pre-commit Hook with lint-staged
 
-lint-staged runs commands only on staged files, keeping commits fast. v16 removed the `--shell` flag and uses `picomatch` for glob matching.
-
-```bash
-# .husky/pre-commit
-bunx lint-staged
-```
+lint-staged v16 runs commands only on staged files. Uses `picomatch` for glob matching (replaced `micromatch`).
 
 ```javascript
-// apps/client-react/lint-staged.config.mjs
+// lint-staged.config.mjs
 export default {
-  "*.{ts,tsx,scss}": "eslint --fix",
-};
-```
-
-**Why good:** Only lints staged files keeping commits fast, auto-fix applies corrections automatically reducing manual work, blocking bad code before commit prevents build failures in CI, running on pre-commit catches issues immediately while context is fresh
-
-```bash
-// BAD: Full lint on every commit
-# .husky/pre-commit
-cd apps/client-react && bun run lint
-```
-
-**Why bad:** Linting entire codebase on every commit is slow reducing developer productivity, unrelated files failing lint blocks unrelated commits, long-running hooks encourage using --no-verify defeating the purpose, no auto-fix means developers manually fix issues
-
-#### lint-staged Multiple File Type Patterns
-
-```javascript
-// lint-staged.config.mjs - Multiple patterns
-export default {
-  // TypeScript and React files
   "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-
-  // Stylesheets
   "*.{css,scss}": ["prettier --write"],
-
-  // JSON files
-  "*.json": ["prettier --write"],
-
-  // Run type check on all TS files when any TS file changes
-  "*.{ts,tsx}": () => "tsc --noEmit",
+  "*.{ts,tsx}": () => "tsc --noEmit", // Function syntax runs on ALL files
 };
 ```
 
-**Why good:** Different file types get appropriate tooling, array syntax runs multiple commands sequentially, function syntax allows running commands on all files (not just staged)
+**Why good:** Only staged files, auto-fix reduces manual work, fast feedback
 
-#### lint-staged v16 Changes
+**v16 breaking changes:** `--shell` flag removed (use shell scripts instead), requires Node.js 20.18+
 
-- `--shell` flag removed - create shell scripts instead of inline shell commands
-- Switched to `picomatch` for glob matching (from `micromatch`)
-- Better subprocess management with `tinyexec`
-- Improved error handling - backup stash restored on spawn failures
+See [examples/core.md](examples/core.md) for multiple file type patterns and v16 migration details.
 
 ---
 
-### Pattern 3: VS Code Integration
+### Pattern 3: Commitlint with Conventional Commits
 
-Editor integration catches issues at save time, before they even reach the commit hook.
-
-```json
-// .vscode/settings.json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ]
-}
-```
-
-```json
-// .vscode/extensions.json
-{
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "dbaeumer.vscode-eslint",
-    "editorconfig.editorconfig"
-  ]
-}
-```
-
-**Why good:** Format on save prevents unformatted code from being committed, auto-fix on save applies ESLint corrections automatically, per-language formatters ensure consistent tooling, recommended extensions help team setup
-
-```json
-// BAD: No editor integration
-// No .vscode/settings.json
-
-// Developers manually run:
-// bun run lint:fix
-// bun run format
-```
-
-**Why bad:** Manual formatting is forgotten leading to inconsistent code, lint errors discovered late instead of immediately on save, new team members don't know which extensions to install, each developer configures editor differently
-
----
-
-### Pattern 4: Commitlint with Conventional Commits
-
-commitlint validates commit messages against conventional commit format. v20+ is ESM-native.
-
-#### Installation
+commitlint v20+ validates commit messages. ESM-native - use `.mjs` config extension.
 
 ```bash
-# Install commitlint
 bun add -D @commitlint/cli @commitlint/config-conventional
 ```
-
-#### Configuration
-
-```javascript
-// commitlint.config.mjs
-export default {
-  extends: ["@commitlint/config-conventional"],
-};
-```
-
-**Note:** Use `.mjs` extension for the config file. Node v24 may fail to load `.js` config files due to module loading changes.
-
-#### Husky Integration
 
 ```bash
 # .husky/commit-msg
 bunx commitlint --edit $1
 ```
 
-**Why good:** Enforces consistent commit message format across the team, conventional commits enable automatic changelog generation, machine-readable commit history aids automation
-
-**Note:** In v9, use `$1` instead of the deprecated `HUSKY_GIT_PARAMS` environment variable.
-
-#### Conventional Commit Format
-
-```
-type(scope): description
-
-[optional body]
-
-[optional footer(s)]
+```javascript
+// commitlint.config.mjs (MUST be .mjs for Node v24 compatibility)
+export default {
+  extends: ["@commitlint/config-conventional"],
+};
 ```
 
-Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
+Format: `type(scope): description` - types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, etc.
 
-#### commitlint v20 Changes
-
-- CLI migrated to pure ESM
-- New `breaking-change-exclamation-mark` rule
-- `body-max-line-length` now ignores lines containing URLs
-- Use `.mjs` config extension for Node v24 compatibility
+See [examples/core.md](examples/core.md) for v20 changes and advanced configuration.
 
 ---
 
-### Pattern 5: CI/Production Environment Handling
+### Pattern 4: CI/Production Environment Handling
 
-Disable Husky in environments where hooks should not run.
+Disable Husky where hooks should not run.
 
 ```bash
-# In CI/CD pipelines - disable Husky to avoid running hooks
+# CI pipelines
 HUSKY=0 npm install
 
-# Or in GitHub Actions:
+# GitHub Actions
 env:
   HUSKY: 0
 ```
 
-```javascript
-// Alternative: Conditional prepare script for production installs
-// package.json
-{
-  "scripts": {
-    "prepare": "node -e \"if (process.env.CI !== 'true') require('husky')\""
-  }
-}
-```
+**Why:** Prevents hook installation failures when `devDependencies` not installed in production.
 
-**Why good:** Prevents hook installation failures when `devDependencies` are not installed in production builds
+See [examples/core.md](examples/core.md) for conditional prepare script alternatives.
 
 ---
 
-### Pattern 6: Monorepo Setup
+### Pattern 5: Monorepo Setup
 
-For monorepos where the package.json running hooks is not at the repository root.
+For monorepos where package.json is not at the repository root.
 
-```bash
-# For monorepos where package.json is not at the root
-# Modify the prepare script to navigate to the correct directory
-
-# In apps/frontend/package.json:
+```json
+// apps/frontend/package.json
 {
   "scripts": {
     "prepare": "cd ../.. && husky apps/frontend/.husky"
@@ -351,43 +191,17 @@ For monorepos where the package.json running hooks is not at the repository root
 }
 ```
 
-**Why good:** Allows Husky to work in nested project structures where the `.husky/` directory may not be at the repository root
+**Key:** Navigate to repo root, then pass the `.husky/` directory path to Husky.
 
 ---
 
-### Pattern 7: Migration from Husky v8 to v9
+### Pattern 6: Migration from Husky v8 to v9
 
-Step-by-step migration guide for existing v8 installations.
+Step-by-step: update prepare script, remove shebangs/husky.sh sourcing from hook files, delete `.husky/.gitignore`, remove `pinst` if used.
 
-```bash
-# 1. Update prepare script (replace "husky install" with "husky")
-# package.json
-{
-  "scripts": {
--    "prepare": "husky install"
-+    "prepare": "husky"
-  }
-}
+**Important:** Hooks with deprecated shebang `#!/usr/bin/env sh` and husky.sh sourcing will **fail in v10.0.0**. Migrate now.
 
-# 2. Remove shebang and husky.sh sourcing from hook files
-# .husky/pre-commit (BEFORE - v8 style)
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-bunx lint-staged
-
-# .husky/pre-commit (AFTER - v9 style)
-bunx lint-staged
-
-# 3. Delete .husky/.gitignore (no longer needed)
-rm .husky/.gitignore
-
-# 4. If using pinst, remove it entirely
-bun remove pinst
-```
-
-**Why good:** v9 simplifies hook files to plain scripts, removes boilerplate, and the prepare script is shorter
-
-**Important:** Hooks containing deprecated shebang `#!/usr/bin/env sh` and husky.sh sourcing will **fail in v10.0.0**. Migrate now to avoid breakage.
+See [examples/core.md](examples/core.md) for the full migration walkthrough.
 
 </patterns>
 
@@ -397,39 +211,30 @@ bun remove pinst
 
 ## Decision Framework
 
-### When to Use Git Hooks
+### What to Run Pre-commit
 
 ```
 What to run pre-commit?
 ├─ Fast (< 10 seconds)?
 │   ├─ Lint with auto-fix → YES (lint-staged)
-│   ├─ Format with Prettier → YES (lint-staged)
+│   ├─ Format → YES (lint-staged)
 │   └─ Type check (--noEmit) → YES (lint-staged)
 └─ Slow (> 10 seconds)?
-    ├─ Full test suite → NO (run in pre-push or CI)
-    ├─ Full build → NO (run in CI)
-    ├─ E2E tests → NO (run in CI)
-    └─ Bundle analysis → NO (run in CI)
+    ├─ Full test suite → NO (pre-push or CI)
+    ├─ Full build → NO (CI)
+    └─ E2E tests → NO (CI)
 ```
 
-**Rule of thumb:** Pre-commit should take < 10 seconds. Anything slower goes to pre-push or CI.
-
-### Husky vs Alternatives
+### Which Hook for Which Task
 
 ```
-Choosing a git hooks tool?
-├─ JavaScript/TypeScript project?
-│   ├─ Need mature ecosystem + community? → Husky ✓
-│   └─ Need parallel hook execution? → Consider Lefthook
-├─ Polyglot project (Go, Python, JS)?
-│   └─ YES → Lefthook (no Node.js dependency)
-├─ Minimal needs (one simple hook)?
-│   └─ YES → simple-git-hooks (zero config)
-└─ Large monorepo with slow hooks?
-    └─ YES → Lefthook (Go binary, parallel execution, caching)
+Which Git hook?
+├─ Before committing? → pre-commit (lint-staged)
+├─ Validating commit message? → commit-msg (commitlint)
+├─ Before pushing? → pre-push (type check, unit tests)
+├─ Before merging? → pre-merge-commit (v9.1.5+)
+└─ After checkout/merge? → post-checkout / post-merge (install deps)
 ```
-
-**Current recommendation:** Husky for JavaScript/TypeScript projects (7M+ weekly downloads, mature ecosystem). Consider Lefthook for polyglot or performance-critical setups.
 
 ### Pre-commit Timing Guidelines
 
@@ -442,7 +247,7 @@ Choosing a git hooks tool?
 | E2E tests                       | > 60s | No (CI)     |
 | Full build                      | > 30s | No (CI)     |
 
-See [reference.md](reference.md) for additional decision frameworks and anti-patterns.
+See [reference.md](reference.md) for Husky vs alternatives comparison.
 
 </decision_framework>
 
@@ -454,37 +259,29 @@ See [reference.md](reference.md) for additional decision frameworks and anti-pat
 
 **High Priority Issues:**
 
-- ❌ Using deprecated `"prepare": "husky install"` instead of `"prepare": "husky"` (shows deprecation warning, will break in v10)
-- ❌ Running full lint on entire codebase in pre-commit hook (too slow, defeats purpose of staged-only linting)
-- ❌ Using v4-style `"husky": { "hooks": {} }` config in package.json (not supported in v9)
-- ❌ Using `HUSKY_GIT_PARAMS` environment variable (deprecated, use `$1` instead)
+- Using deprecated `"prepare": "husky install"` instead of `"prepare": "husky"` (will break in v10)
+- Running full lint on entire codebase in pre-commit hook (too slow, defeats staged-only purpose)
+- Using v4-style `"husky": { "hooks": {} }` config in package.json (not supported in v9)
+- Using `HUSKY_GIT_PARAMS` environment variable (deprecated, use `$1` instead)
 
 **Medium Priority Issues:**
 
-- ⚠️ Pre-commit hooks taking > 10 seconds (encourages --no-verify, move slow tasks to CI)
-- ⚠️ No editor integration for Prettier/ESLint (manual formatting is forgotten)
-- ⚠️ Missing `HUSKY=0` in CI/production (hooks may fail when devDependencies not installed)
-- ⚠️ Using deprecated shebang `#!/usr/bin/env sh` and husky.sh sourcing in hook files (will fail in v10)
-- ⚠️ Using commitlint config with `.js` extension on Node v24 (use `.mjs` instead)
-
-**Common Mistakes:**
-
-- Running lint-staged on all files instead of staged only (defeats the purpose)
-- Using incorrect hook file names (`precommit` instead of `pre-commit`, or `pre-commit.sh`)
-- Not adding `.husky/` directory to git (hooks won't be shared with team)
-- Forgetting to set `HUSKY=0` in Docker builds (causes install failures)
+- Pre-commit hooks taking > 10 seconds (encourages `--no-verify` abuse)
+- Missing `HUSKY=0` in CI/production (hooks may fail when devDependencies not installed)
+- Using deprecated shebang `#!/usr/bin/env sh` and husky.sh sourcing in hook files (will fail in v10)
+- Using commitlint config with `.js` extension on Node v24 (use `.mjs` instead)
 
 **Gotchas & Edge Cases:**
 
-- Hooks don't run with `git commit --no-verify` (emergency escape hatch, not for regular use)
-- lint-staged glob patterns differ slightly from .gitignore syntax (uses picomatch in v16)
-- lint-staged function syntax `() => "tsc --noEmit"` runs command on ALL files, not just staged
-- Hook file names must match Git's exact hook names (e.g., `pre-commit`, `commit-msg`, `pre-push`)
+- `git commit --no-verify` bypasses hooks entirely - emergency escape hatch, not for regular use
+- lint-staged function syntax `() => "tsc --noEmit"` runs on ALL files, not just staged
+- Hook file names must match Git's exact names (`pre-commit`, `commit-msg`) - no extensions, case-sensitive
 - `HUSKY=2` enables debug mode (replaces deprecated `HUSKY_DEBUG=1`)
-- v9.1.1+ allows running package commands directly without npx/bunx in hooks
-- commitlint v20+ is ESM-native - use `.mjs` config extension for compatibility
-- Windows users need to escape `$1` in commit-msg hook: `` `$1` ``
-- In monorepos, the `prepare` script must navigate to the repo root before running husky
+- commitlint v20+ is ESM-native - `.mjs` config extension avoids module loading issues
+- Windows users need to escape `$1` in commit-msg hook
+- In monorepos, `prepare` script must navigate to repo root before running husky
+- `~/.huskyrc` support will be removed in v10 - migrate to `.config/husky/init.sh`
+- lint-staged v16 uses `picomatch` (not `micromatch`) - glob patterns may differ slightly
 
 </red_flags>
 

@@ -334,6 +334,7 @@ export class UserProfileComponent {
 import {
   Component,
   ElementRef,
+  Signal,
   signal,
   afterRenderEffect,
   viewChild,
@@ -372,17 +373,16 @@ export class AutoResizeTextareaComponent {
   constructor() {
     // afterRenderEffect runs after DOM updates
     afterRenderEffect({
-      // Read phase: measure DOM
-      read: () => {
+      // earlyRead phase: measure DOM before writes
+      earlyRead: () => {
         const textarea = this.textareaRef().nativeElement;
         // Reset height to measure scrollHeight accurately
         textarea.style.height = "auto";
-        const scrollHeight = textarea.scrollHeight;
-        return scrollHeight;
+        return textarea.scrollHeight;
       },
-      // Write phase: apply measurement
-      write: (scrollHeight: number) => {
-        const newHeight = Math.max(MIN_HEIGHT_PX, scrollHeight + PADDING_PX);
+      // write phase: apply measurement (receives Signal from earlyRead)
+      write: (scrollHeight: Signal<number>) => {
+        const newHeight = Math.max(MIN_HEIGHT_PX, scrollHeight() + PADDING_PX);
         this.height.set(newHeight);
       },
     });
@@ -395,7 +395,7 @@ export class AutoResizeTextareaComponent {
 }
 ```
 
-**Why good:** Uses read/write phases to avoid layout thrashing, afterRenderEffect runs after Angular finishes DOM updates, proper separation of measurement and mutation
+**Why good:** Uses earlyRead/write phases to avoid layout thrashing, afterRenderEffect runs after Angular finishes DOM updates, write phase receives prior phase return as Signal for dependency tracking
 
 ### Good Example - Third-party library integration
 
@@ -410,6 +410,12 @@ import {
   inject,
   DestroyRef,
 } from "@angular/core";
+
+// Assume Chart is provided by your charting library
+declare class Chart {
+  constructor(canvas: HTMLCanvasElement, config: unknown);
+  destroy(): void;
+}
 
 type ChartData = {
   labels: string[];
@@ -440,7 +446,7 @@ export class ChartComponent {
         this.chartInstance.destroy();
       }
 
-      // Create new chart (Chart.js or similar)
+      // Create new chart instance
       this.chartInstance = new Chart(canvas, {
         type: "bar",
         data: {

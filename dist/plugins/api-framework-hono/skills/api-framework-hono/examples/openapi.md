@@ -16,37 +16,31 @@
 import { writeFileSync } from "fs";
 import { app } from "../app/api/[[...route]]/route";
 
-const OPENAPI_VERSION = "3.1.0";
 const API_VERSION = "1.0.0";
 const INDENT_SPACES = 2;
 
-const spec = app.getOpenAPI31Document();
-
-if (!spec) {
-  console.error("Could not generate OpenAPI spec");
-  process.exit(1);
-}
-
-const fullSpec = {
-  openapi: OPENAPI_VERSION,
+// getOpenAPI31Document requires a config object with openapi version and info
+const spec = app.getOpenAPI31Document({
+  openapi: "3.1.0",
   info: {
-    version: API_VERSION,
     title: "Jobs API",
+    version: API_VERSION,
     description: "API for managing job postings",
   },
   servers: [
     { url: "http://localhost:3000/api", description: "Local development" },
     { url: "https://api.example.com/api", description: "Production" },
   ],
-  ...spec,
-};
+});
 
 const outputPath = "./public/openapi.json";
-writeFileSync(outputPath, JSON.stringify(fullSpec, null, INDENT_SPACES));
+writeFileSync(outputPath, JSON.stringify(spec, null, INDENT_SPACES));
 console.log(`OpenAPI spec written to ${outputPath}`);
 ```
 
-**Why good:** Build-time = spec generated once (fast), env-specific servers = proper URLs in docs, exit(1) fails CI if spec broken
+**Why good:** Build-time = spec generated once (fast), env-specific servers = proper URLs in docs, config object provides required OpenAPI metadata
+
+You can also use `app.doc31("/doc", config)` to serve the spec at a route endpoint, but build-time generation is preferred for client code generators.
 
 **Package.json:**
 
@@ -62,11 +56,16 @@ console.log(`OpenAPI spec written to ${outputPath}`);
 // BAD Example - Runtime spec generation
 app.get("/openapi.json", (c) => {
   // BAD: Generates spec on every request (slow)
-  // BAD: No version info, no servers
-  return c.json(app.getOpenAPI31Document());
+  // BAD: No servers config for client generators
+  return c.json(
+    app.getOpenAPI31Document({
+      openapi: "3.1.0",
+      info: { title: "API", version: "1.0.0" },
+    }),
+  );
 });
 ```
 
-**Why bad:** Runtime = regenerates on every request (CPU), no version info breaks client caching, can't use client generators at build time
+**Why bad:** Runtime = regenerates on every request (CPU cost), no servers config = no proper URLs for clients, can't use client generators at build time
 
 ---

@@ -5,7 +5,7 @@ description: Resend + React Email templates
 
 # Email Patterns with Resend and React Email
 
-> **Quick Guide:** Use Resend for transactional emails with React Email templates. Server-side sending for reliability, async for non-blocking requests, typed templates for safety. Always await render() before send, handle errors with retry logic, and include unsubscribe links for marketing emails.
+> **Quick Guide:** Use Resend for transactional emails with React Email templates. Always `await render()` before sending (it returns a Promise). Server-side only - never expose API keys to clients. Implement retry with exponential backoff for transient failures. Include unsubscribe links in non-transactional emails (CAN-SPAM). Use `resend.batch.send()` for 2-100 recipients (no attachments or scheduling support in batch). React Email 5.0+ deprecated `renderAsync` - use `render()` instead. Webhook verification requires raw request body and `webhookSecret` parameter.
 
 ---
 
@@ -29,51 +29,21 @@ description: Resend + React Email templates
 
 ---
 
-**Auto-detection:** Resend, React Email, @react-email/components, resend.emails.send, email template, transactional email, verification email, password reset email, notification email, email rendering
+**Auto-detection:** Resend, React Email, @react-email/components, resend.emails.send, email template, transactional email, verification email, password reset email, notification email, email rendering, resend.batch.send, resend.webhooks.verify
 
 **When to use:**
 
 - Sending transactional emails (verification, password reset, receipts)
 - Creating React Email templates with Tailwind styling
-- Integrating email sending with authentication flows
 - Building notification systems with email delivery
-- Implementing email tracking and analytics
+- Implementing email tracking via webhooks
+- Batch sending to multiple recipients
 
 **When NOT to use:**
 
-- Initial Resend setup (use `setup/resend.md` skill)
 - Marketing campaign management (use dedicated marketing tools)
 - SMS or push notifications (different services)
 - Email list management (use Resend Audiences or marketing tools)
-
-**Key patterns covered:**
-
-- React Email template patterns with Tailwind
-- Sending with error handling and retry
-- Authentication integration (verification, password reset)
-- Async email sending patterns
-- Email tracking (opens, clicks)
-- Batch sending for notifications
-- Type-safe email props
-- Testing templates locally
-- Unsubscribe and preferences handling
-- Scheduled email sending (up to 30 days in advance)
-- Idempotency keys for duplicate prevention
-- Tags for analytics and campaign tracking
-
-**Detailed Resources:**
-
-- For code examples, see [examples/](examples/) folder:
-  - [core.md](examples/core.md) - Template structure, basic sending (start here)
-  - [templates.md](examples/templates.md) - Password Reset, Notification templates
-  - [retry.md](examples/retry.md) - Retry logic with exponential backoff
-  - [async-batch.md](examples/async-batch.md) - Async sending, batch API
-  - [auth-integration.md](examples/auth-integration.md) - Auth system integration
-  - [webhooks.md](examples/webhooks.md) - Webhook handler for tracking
-  - [preferences.md](examples/preferences.md) - Unsubscribe, email preferences
-  - [testing.md](examples/testing.md) - Template testing patterns
-  - [advanced-features.md](examples/advanced-features.md) - Scheduled sending, idempotency keys, tags
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -87,8 +57,8 @@ Email in modern applications follows a **server-side, template-driven** approach
 
 1. **Server-side only** - Never expose API keys to clients
 2. **Typed templates** - Props interfaces catch errors at compile time
-3. **Reliable delivery** - Error handling with retry logic
-4. **Non-blocking** - Async sending for request-response patterns
+3. **Reliable delivery** - Error handling with retry logic for transient failures
+4. **Non-blocking** - Fire-and-forget for non-critical emails
 
 **When to send emails:**
 
@@ -114,293 +84,206 @@ Email in modern applications follows a **server-side, template-driven** approach
 
 ### Pattern 1: Email Template Structure
 
-Create well-structured email templates with proper typing.
+Define typed props, use React Email components, add PreviewProps for the dev server.
 
 ```typescript
-// packages/emails/src/templates/welcome-email.tsx
-import { Button, Heading, Link, Text } from "@react-email/components";
-
-import { BaseLayout } from "../layouts/base-layout";
-
-const CTA_PADDING_X = 24;
-const CTA_PADDING_Y = 12;
-
-// Always define props interface
 interface WelcomeEmailProps {
   userName: string;
   loginUrl: string;
   features?: string[];
 }
 
-export function WelcomeEmail({
-  userName,
-  loginUrl,
-  features = [],
-}: WelcomeEmailProps) {
+export function WelcomeEmail({ userName, loginUrl, features = [] }: WelcomeEmailProps) {
   return (
-    <BaseLayout preview={`Welcome to Your App, ${userName}!`}>
-      <Heading className="text-2xl font-bold text-gray-900 mb-4">
-        Welcome to Your App!
-      </Heading>
-
-      <Text className="text-gray-600 mb-4">Hi {userName},</Text>
-
-      <Text className="text-gray-600 mb-6">
-        Thanks for joining! We&apos;re excited to have you on board.
-      </Text>
-
-      {features.length > 0 && (
-        <>
-          <Text className="text-gray-600 mb-2 font-semibold">
-            Here&apos;s what you can do:
-          </Text>
-          <ul className="text-gray-600 mb-6 pl-4">
-            {features.map((feature) => (
-              <li key={feature} className="mb-1">
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      <Button
-        href={loginUrl}
-        className="bg-blue-600 text-white font-semibold rounded-md"
-        style={{
-          paddingLeft: CTA_PADDING_X,
-          paddingRight: CTA_PADDING_X,
-          paddingTop: CTA_PADDING_Y,
-          paddingBottom: CTA_PADDING_Y,
-        }}
-      >
-        Get Started
-      </Button>
+    <BaseLayout preview={`Welcome, ${userName}!`}>
+      <Heading>Welcome!</Heading>
+      <Text>Hi {userName},</Text>
+      <Button href={loginUrl}>Get Started</Button>
     </BaseLayout>
   );
 }
 
-// Preview props for development server
-WelcomeEmail.PreviewProps = {
-  userName: "John",
-  loginUrl: "https://example.com/login",
-  features: ["Create projects", "Invite team members", "Track progress"],
-} satisfies WelcomeEmailProps;
-
-// Named export with type
-export { WelcomeEmail };
-export type { WelcomeEmailProps };
+WelcomeEmail.PreviewProps = { userName: "John", loginUrl: "..." } satisfies WelcomeEmailProps;
 ```
 
-**Why good:** Typed props catch errors at compile time, PreviewProps enable dev server preview, optional props have defaults, BaseLayout ensures consistency
+See [examples/core.md](examples/core.md) Pattern 1 for complete template with layout and styling.
 
 ---
 
-### Pattern 2: Sending Emails with Error Handling
+### Pattern 2: Sending with Error Handling
 
-Send emails with proper error handling and logging.
+Always await `render()`, check the `{ data, error }` response, return typed results.
 
 ```typescript
-// lib/email/send-email.ts
-import { render } from "@react-email/components";
+const html = await render(options.react); // CRITICAL: must await
 
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
+const { data, error } = await resend.emails.send({
+  from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
+  to: options.to,
+  subject: options.subject,
+  html,
+});
 
-interface SendEmailOptions {
-  to: string | string[];
-  subject: string;
-  react: React.ReactElement;
-  replyTo?: string;
-  cc?: string[];
-  bcc?: string[];
+if (error) {
+  return { success: false, error: error.message };
 }
-
-interface SendEmailResult {
-  success: boolean;
-  id?: string;
-  error?: string;
-}
-
-export async function sendEmail(
-  options: SendEmailOptions,
-): Promise<SendEmailResult> {
-  const resend = getResendClient();
-
-  try {
-    // CRITICAL: Always await render()
-    const html = await render(options.react);
-
-    const { data, error } = await resend.emails.send({
-      from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
-      to: options.to,
-      subject: options.subject,
-      html,
-      replyTo: options.replyTo,
-      cc: options.cc,
-      bcc: options.bcc,
-    });
-
-    if (error) {
-      console.error("[Email] Send failed:", error);
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-
-    console.log("[Email] Sent successfully:", data?.id);
-    return {
-      success: true,
-      id: data?.id,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Email] Unexpected error:", message);
-    return {
-      success: false,
-      error: message,
-    };
-  }
-}
-
-// Named export
-export { sendEmail };
-export type { SendEmailOptions, SendEmailResult };
+return { success: true, id: data?.id };
 ```
 
-**Why good:** Wraps Resend client with consistent interface, always awaits render(), returns typed result, logs for debugging
+See [examples/core.md](examples/core.md) Pattern 2-3 for complete send wrapper and retry with exponential backoff.
 
 ---
 
-### Pattern 3: Retry Logic for Transient Failures
+### Pattern 3: Async (Fire-and-Forget) Sending
 
-Implement retry logic for temporary API failures.
-
-```typescript
-// lib/email/constants.ts
-export const MAX_RETRY_ATTEMPTS = 3;
-export const INITIAL_RETRY_DELAY_MS = 1000;
-export const RETRY_BACKOFF_MULTIPLIER = 2;
-
-// Errors that are safe to retry
-const RETRYABLE_ERRORS = [
-  "rate_limit_exceeded",
-  "internal_server_error",
-  "service_unavailable",
-];
-```
+For non-critical emails (welcome, notifications), don't block the response.
 
 ```typescript
-// lib/email/send-with-retry.ts
-export async function sendEmailWithRetry(
-  options: SendWithRetryOptions,
-): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResendClient();
-  const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS;
-
-  let lastError: string | undefined;
-  let attempt = 0;
-
-  while (attempt < maxRetries) {
-    attempt++;
-
-    try {
-      const html = await render(options.react);
-
-      const { data, error } = await resend.emails.send({
-        from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
-        to: options.to,
-        subject: options.subject,
-        html,
-      });
-
-      if (error) {
-        lastError = error.message;
-
-        // Check if error is retryable
-        const isRetryable = RETRYABLE_ERRORS.some((e) =>
-          error.name?.toLowerCase().includes(e),
-        );
-
-        if (isRetryable && attempt < maxRetries) {
-          const delay =
-            INITIAL_RETRY_DELAY_MS *
-            Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
-          console.log(
-            `[Email] Retry ${attempt}/${maxRetries} after ${delay}ms`,
-          );
-          await sleep(delay);
-          continue;
-        }
-
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, id: data?.id };
-    } catch (err) {
-      lastError = err instanceof Error ? err.message : "Unknown error";
-
-      if (attempt < maxRetries) {
-        const delay =
-          INITIAL_RETRY_DELAY_MS *
-          Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt - 1);
-        await sleep(delay);
-        continue;
-      }
-    }
-  }
-
-  return { success: false, error: lastError ?? "Max retries exceeded" };
-}
+// Non-blocking - catches errors internally
+sendEmailAsync(options);
+return Response.json({ success: true }); // Returns immediately
 ```
 
-**Why good:** Exponential backoff prevents overwhelming the API, only retries transient errors, configurable retry count, logs retry attempts
+Track in-flight promises for graceful shutdown. See [examples/async-batch.md](examples/async-batch.md) Pattern 1-2.
+
+---
+
+### Pattern 4: Batch API
+
+Use `resend.batch.send()` for 2-100 recipients. Render all templates in parallel.
+
+```typescript
+const rendered = await Promise.all(
+  emails.map(async (e) => ({
+    from,
+    to: e.to,
+    subject: e.subject,
+    html: await render(e.react),
+  })),
+);
+const { data, error } = await resend.batch.send(rendered);
+```
+
+**Batch limitations:** No `attachments`, no `scheduledAt`. Tags and idempotency keys are supported. See [examples/async-batch.md](examples/async-batch.md) Pattern 3-4.
+
+---
+
+### Pattern 5: Webhook Verification
+
+Use `resend.webhooks.verify()` with the raw request body. JSON parsing breaks signature verification.
+
+```typescript
+const payload = await request.text(); // Raw body, NOT .json()
+
+const event = resend.webhooks.verify({
+  payload,
+  headers: {
+    id: request.headers.get("svix-id") ?? "",
+    timestamp: request.headers.get("svix-timestamp") ?? "",
+    signature: request.headers.get("svix-signature") ?? "",
+  },
+  webhookSecret: process.env.RESEND_WEBHOOK_SECRET!,
+});
+```
+
+See [examples/webhooks.md](examples/webhooks.md) for full handler with event processing and Svix alternative.
+
+---
+
+### Pattern 6: Scheduled Sending, Idempotency Keys, Tags
+
+```typescript
+// Scheduled (up to 30 days, NOT supported in batch)
+await resend.emails.send({ ...payload, scheduledAt: futureDate.toISOString() });
+
+// Idempotency (256 char limit, expires 24h)
+await resend.emails.send({
+  ...payload,
+  headers: { "Idempotency-Key": orderId },
+});
+
+// Tags (ASCII alphanumeric, underscores, dashes only)
+await resend.emails.send({
+  ...payload,
+  tags: [{ name: "campaign", value: "launch" }],
+});
+```
+
+See [examples/advanced-features.md](examples/advanced-features.md) for complete implementations with validation.
+
+---
+
+### Pattern 7: Unsubscribe and Preferences
+
+Non-transactional emails MUST include unsubscribe links (CAN-SPAM). Use signed tokens for security.
+
+```typescript
+// In every notification/marketing template:
+<Link href={unsubscribeUrl}>Unsubscribe from these notifications</Link>
+
+// Generate signed unsubscribe URLs
+const token = jwt.sign({ userId, category }, UNSUBSCRIBE_SECRET, { expiresIn: "30d" });
+const url = `${APP_URL}/api/email/unsubscribe?token=${token}`;
+```
+
+See [examples/preferences.md](examples/preferences.md) for preference schema, checking before send, and unsubscribe endpoint.
 
 </patterns>
 
 ---
 
-<performance>
+**Detailed Resources:**
 
-## Performance Optimization
+- [examples/core.md](examples/core.md) - Template structure, sending with error handling, retry logic
+- [examples/async-batch.md](examples/async-batch.md) - Async sending, batch API
+- [examples/webhooks.md](examples/webhooks.md) - Webhook handler with signature verification
+- [examples/templates.md](examples/templates.md) - Password Reset, Notification templates
+- [examples/preferences.md](examples/preferences.md) - Unsubscribe, email preferences
+- [examples/advanced-features.md](examples/advanced-features.md) - Scheduled sending, idempotency keys, tags
+- [reference.md](reference.md) - Decision frameworks, anti-patterns
 
-### Parallel Template Rendering
+---
 
-```typescript
-// Render multiple templates in parallel
-const [verificationHtml, welcomeHtml] = await Promise.all([
-  render(VerificationEmail({ userName, verificationUrl })),
-  render(WelcomeEmail({ userName, loginUrl })),
-]);
-```
+<red_flags>
 
-### Async Sending for Fast Responses
+## RED FLAGS
 
-```typescript
-// Don't await non-critical emails
-sendEmailAsync({ to, subject, react });
-return NextResponse.json({ success: true }); // Returns immediately
-```
+**High Priority Issues:**
 
-### Batch API for Multiple Recipients
+- Not awaiting `render()` - sends `"[object Promise]"` as email body
+- API key exposed on client - security vulnerability
+- No error handling - silent failures
+- Missing unsubscribe links in non-transactional emails - CAN-SPAM violation
+- Sending without checking user preferences - spam
 
-```typescript
-// Use batch API instead of loop
-await resend.batch.send(emails); // Single API call for up to 100 emails
-```
+**Medium Priority Issues:**
 
-### Connection Reuse
+- No retry logic for transient failures (rate limits, 5xx errors)
+- Sync sending blocking request handlers for non-critical emails
+- Hardcoded from address instead of environment variable
+- No webhook verification signature check
+- Not logging email send results
 
-```typescript
-// Singleton client reuses connections
-const resend = getResendClient(); // Same instance across requests
-```
+**Common Mistakes:**
 
-</performance>
+- Using `Grid` or `Flexbox` in email templates (not supported by email clients)
+- Expecting shadows or gradients to render in emails
+- Using `rem` units (email clients handle differently)
+- Forgetting `PreviewProps` for dev server
+
+**Gotchas & Edge Cases:**
+
+- `render()` is async in React Email 5.0+ (`renderAsync` deprecated)
+- Batch API limited to 100 emails, does NOT support `attachments` or `scheduledAt`
+- Webhooks require raw request body - JSON parsing breaks signature verification
+- Webhook verify uses `webhookSecret` parameter (not `secret`)
+- Webhook headers object uses short keys: `id`, `timestamp`, `signature`
+- Idempotency keys expire after 24 hours, max 256 characters
+- Tags: ASCII alphanumeric, underscores, dashes only, max 256 chars per key/value
+- Tailwind in emails requires `@react-email/tailwind` wrapper (Tailwind 4 supported in React Email 5.0+)
+- Images must use absolute URLs (no relative paths)
+
+</red_flags>
 
 ---
 
@@ -433,9 +316,6 @@ const resend = getResendClient(); // Same instance across requests
 - [Resend Batch API](https://resend.com/docs/api-reference/emails/send-batch-emails)
 - [Resend Webhooks Verification](https://resend.com/docs/dashboard/webhooks/verify-webhooks-requests)
 - [Resend Idempotency Keys](https://resend.com/blog/engineering-idempotency-keys)
-- [Resend Extended Scheduling](https://resend.com/changelog/extended-email-scheduling)
 - [Resend Error Handling](https://resend.com/docs/api-reference/errors)
 - [React Email Components](https://react.email/docs/components)
 - [React Email 5.0 Release](https://resend.com/blog/react-email-5)
-- [React Email Changelog](https://react.email/docs/changelog)
-- [CAN-SPAM Compliance](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business)

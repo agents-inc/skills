@@ -130,15 +130,19 @@ What recovery?
 
 ### Gotchas & Edge Cases
 
+- **`data` is a `shallowRef`** - Mutating nested properties won't trigger reactivity; replace the entire object or use `deep: true`
+- **`data` and `error` default to `undefined`** - Not `null`; adjust your null checks accordingly
 - **`useFetch` URL is the cache key** - Same URL = same cached data; use `key` option to differentiate
+- **Shared key = shared state** - Multiple `useFetch`/`useAsyncData` calls with the same key share data, error, and status refs
 - **`useState` runs initializer only once per key** - Subsequent calls return existing state
 - **Middleware runs on both server and client** - Use `import.meta.server/client` to conditionally execute
-- **`server/api/` routes are auto-prefixed with `/api`** - `server/api/users.ts` → `/api/users`
-- **`definePageMeta` is macro - not runtime** - Values must be statically analyzable
+- **`server/api/` routes are auto-prefixed with `/api`** - `server/api/users.ts` becomes `/api/users`
+- **`definePageMeta` is macro, not runtime** - Values must be statically analyzable
 - **`NuxtLink` with external URLs** - Use `external` prop or regular `<a>` for external links
 - **Layout changes don't trigger transitions by default** - Add `<NuxtLayout>` with transition props
 - **Composables must be called synchronously in setup** - No `await` before first composable call
 - **`watch` in `useFetch` requires reactive values** - Plain variables won't trigger refetch
+- **`dedupe` only accepts `'cancel'` or `'defer'`** - Boolean values are not supported
 
 ---
 
@@ -230,40 +234,41 @@ const { data: analytics, pending: analyticsLoading } = useFetch("/api/stats", {
 
 ### Exposing Secrets in Client Code
 
-Environment variables without `private` are exposed.
+Top-level `runtimeConfig` keys are server-only. Keys under `public` are exposed to client.
 
 ```typescript
 // nuxt.config.ts
 export default defineNuxtConfig({
   runtimeConfig: {
-    // WRONG - apiKey exposed to client
-    // apiKey: process.env.API_KEY, // Don't do this at root level
-
-    // CORRECT - Private (server-only)
+    // Server-only (never sent to client)
     apiKey: process.env.API_KEY,
 
-    // Public (available in client)
+    // Client-accessible
     public: {
       apiBase: process.env.API_BASE_URL,
     },
   },
 });
+```
 
-// server/api/data.ts - CORRECT usage
+```typescript
+// CORRECT - Access private keys in server routes only
+// server/api/data.ts
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
-
-  // Safe - server-only
-  const response = await $fetch("https://api.example.com", {
+  // config.apiKey is available here (server-side)
+  return await $fetch("https://api.example.com", {
     headers: { Authorization: `Bearer ${config.apiKey}` },
   });
-
-  return response;
 });
+```
 
-// components/Example.vue - WRONG usage
+```vue
+<!-- WRONG - Private keys are undefined in client -->
+<script setup lang="ts">
 const config = useRuntimeConfig();
-// config.apiKey is undefined in client (correct behavior, but don't try to use it)
+// config.apiKey is undefined here - only config.public.* is available
+</script>
 ```
 
 ### Using useRoute in Middleware

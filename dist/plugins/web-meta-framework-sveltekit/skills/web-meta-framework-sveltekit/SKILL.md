@@ -33,7 +33,7 @@ description: SvelteKit full-stack framework - file-based routing, load functions
 
 ---
 
-**Auto-detection:** SvelteKit, +page.svelte, +page.ts, +page.server.ts, +layout.svelte, +layout.ts, +layout.server.ts, +error.svelte, +server.ts, load function, form actions, use:enhance, hooks.server.ts, hooks.client.ts, handle hook, handleFetch, handleError, $app/navigation, $app/forms, $app/state, PageLoad, PageServerLoad, LayoutLoad, LayoutServerLoad, RequestHandler, fail, redirect, error
+**Auto-detection:** SvelteKit, +page.svelte, +page.ts, +page.server.ts, +layout.svelte, +layout.ts, +layout.server.ts, +error.svelte, +server.ts, load function, form actions, use:enhance, hooks.server.ts, hooks.client.ts, hooks.ts, handle hook, handleFetch, handleError, init hook, reroute, transport hook, $app/navigation, $app/forms, $app/state, PageLoad, PageServerLoad, LayoutLoad, LayoutServerLoad, RequestHandler, fail, redirect, error, .remote.ts
 
 **When to use:**
 
@@ -50,7 +50,7 @@ description: SvelteKit full-stack framework - file-based routing, load functions
 - Server load functions (`+page.server.ts`, `+layout.server.ts`)
 - Universal load functions (`+page.ts`, `+layout.ts`)
 - Form actions with validation and progressive enhancement
-- Server hooks (`handle`, `handleFetch`, `handleError`)
+- Server hooks (`handle`, `handleFetch`, `handleError`, `init`), universal hooks (`reroute`, `transport`)
 - API routes (`+server.ts`) and streaming responses
 - Page options (`prerender`, `ssr`, `csr`)
 - Data invalidation and rerunning load functions
@@ -59,7 +59,7 @@ description: SvelteKit full-stack framework - file-based routing, load functions
 
 - Svelte 5 component patterns (Runes, snippets, events) — use web-framework-svelte
 - Pure client-side Svelte without SvelteKit routing
-- General React/Next.js patterns — use web-framework-react or web-framework-nextjs
+- General React/Next.js patterns — use the appropriate framework skill
 
 **Detailed Resources:**
 
@@ -76,7 +76,7 @@ description: SvelteKit full-stack framework - file-based routing, load functions
 
 **Server:**
 
-- [examples/hooks.md](examples/hooks.md) - `handle`, `handleFetch`, `handleError`, `sequence`, auth patterns
+- [examples/hooks.md](examples/hooks.md) - `handle`, `handleFetch`, `handleError`, `init`, `reroute`, `transport`, `sequence`, auth patterns
 - [examples/api-routes.md](examples/api-routes.md) - `+server.ts` API routes, streaming, content negotiation
 
 ---
@@ -114,7 +114,7 @@ Request → hooks.server.ts (handle) → +layout.server.ts (load) → +page.serv
 **When NOT to use:**
 
 - Client-only single-page apps without routing (use Svelte directly)
-- Pure API servers (use Hono, Express, or similar)
+- Pure API servers (use a dedicated API framework)
 - Micro-frontends embedded in other frameworks
 
 </philosophy>

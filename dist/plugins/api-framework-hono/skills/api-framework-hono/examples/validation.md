@@ -13,11 +13,9 @@
 **File: `/app/api/schemas.ts`**
 
 ```typescript
-import { z } from "zod";
-import { extendZodWithOpenApi } from "@hono/zod-openapi";
-
-// REQUIRED: Extend Zod with OpenAPI methods BEFORE defining schemas
-extendZodWithOpenApi(z);
+// Import z from @hono/zod-openapi — NOT from "zod"
+// This re-export already has .openapi() available on all Zod types
+import { z } from "@hono/zod-openapi";
 
 const MIN_SALARY = 0;
 const CURRENCY_CODE_LENGTH = 3;
@@ -111,7 +109,7 @@ export type JobsQuery = z.infer<typeof JobsQuerySchema>;
 export type JobsResponse = z.infer<typeof JobsResponseSchema>;
 ```
 
-**Why good:** extendZodWithOpenApi first (required for .openapi() to exist), named constants prevent magic number bugs, reusable sub-schemas reduce duplication, .openapi() enables auto-docs
+**Why good:** `z` from `@hono/zod-openapi` provides `.openapi()` automatically, named constants prevent magic number bugs, reusable sub-schemas reduce duplication, `.openapi("Name")` registers as `#/components/schemas/Name`
 
 ### Bad Example - Missing best practices
 
@@ -132,11 +130,11 @@ const JobSchema = z.object({
 
 // BAD: No .openapi() registration
 // BAD: No examples for documentation
-// BAD: extendZodWithOpenApi() not called
+// BAD: z imported from "zod" instead of "@hono/zod-openapi"
 
 export default JobSchema; // BAD: Default export
 ```
 
-**Why bad:** Magic numbers cause silent bugs when changed, missing extendZodWithOpenApi crashes at runtime, no .openapi() = no docs, duplicated schemas diverge over time
+**Why bad:** Magic numbers cause silent bugs when changed, importing `z` from `"zod"` means `.openapi()` is not available, no `.openapi()` = no docs, duplicated schemas diverge over time
 
 ---

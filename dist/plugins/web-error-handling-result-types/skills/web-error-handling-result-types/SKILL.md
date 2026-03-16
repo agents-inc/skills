@@ -29,7 +29,7 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 
 ---
 
-**Auto-detection:** Result type, Either type, ok err, railway-oriented programming, error as value, flatMap andThen, tryCatch, neverthrow, fp-ts Either, discriminated union error, typed errors
+**Auto-detection:** Result type, Either type, ok err, railway-oriented programming, error as value, flatMap andThen, tryCatch, neverthrow, Effect Either, discriminated union error, typed errors, error handling Result
 
 **When to use:**
 
@@ -55,7 +55,7 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 - Unrecoverable errors (configuration missing at startup)
 - Optional values without error info (use `T | null` or Option type)
 - Simple boolean checks (use plain boolean)
-- Framework boundaries that expect exceptions (Express error handlers)
+- Framework boundaries that expect exceptions (framework error handlers)
 
 **Detailed Resources:**
 
@@ -420,8 +420,8 @@ if (!result.ok) {
     case "NOT_FOUND":
       console.log(`User ${result.error.id} not found`);
       break;
-    case "UNAUTHORIZED":
-      redirectToLogin();
+    case "VALIDATION_ERROR":
+      showFieldError(result.error.field);
       break;
     case "NETWORK_ERROR":
       showRetryButton();
@@ -478,12 +478,12 @@ Is this an expected, recoverable error?
 
 ```
 What are your requirements?
-├─ Zero dependencies → Custom implementation
-├─ Simple needs + small bundle → neverthrow (~2KB)
-├─ Full FP ecosystem → fp-ts (~30KB)
-├─ Production app with async → neverthrow (ResultAsync)
-└─ Just learning → Custom implementation (understand the pattern)
+├─ Zero dependencies, full control → Custom implementation (recommended default)
+├─ Full effect system + error channel → Effect (active ecosystem, steeper learning curve)
+└─ Just learning → Custom implementation (understand the pattern first)
 ```
+
+> **Note:** neverthrow and fp-ts are no longer actively maintained. Custom implementations cover most needs. Effect is the modern choice for complex error handling ecosystems.
 
 ### Result vs Nullable
 
@@ -520,7 +520,7 @@ What information does failure carry?
 
 **Results do NOT replace:**
 
-- **React Error Boundaries**: Boundaries catch render errors; Results handle business logic errors
+- **UI error boundaries**: Framework error boundaries catch render errors; Results handle business logic errors
 - **HTTP error handling**: Convert Results to appropriate status codes at API boundary
 - **Form validation**: Use Results internally, display errors via your form library
 

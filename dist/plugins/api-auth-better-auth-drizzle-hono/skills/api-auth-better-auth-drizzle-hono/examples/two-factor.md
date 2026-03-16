@@ -4,10 +4,10 @@
 
 **Additional Examples:**
 
-- [core.md](core.md) - Sign up, sign in, client setup
-- [oauth.md](oauth.md) - GitHub, Google OAuth providers
+- [core.md](core.md) - Sign up, sign in, client setup, database adapter
+- [oauth.md](oauth.md) - Social providers, Generic OAuth
 - [organizations.md](organizations.md) - Multi-tenancy and invitations
-- [sessions.md](sessions.md) - Session configuration and revocation
+- [sessions.md](sessions.md) - Session configuration, cookie caching, stateless
 
 ---
 
@@ -40,12 +40,12 @@ After adding the plugin, run:
 
 ```bash
 # Step 1: Generate Better Auth schema
-npx @better-auth/cli generate
+npx auth@latest generate
 
 # Step 2: Generate Drizzle migration
 npx drizzle-kit generate
 
-# Step 3: Apply migration to database
+# Step 3: Apply migration
 npx drizzle-kit migrate
 ```
 
@@ -59,7 +59,7 @@ import { createAuthClient } from "better-auth/react";
 import { twoFactorClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.APP_URL || "http://localhost:3000",
   plugins: [
     twoFactorClient({
       twoFactorPage: "/auth/two-factor", // Redirect for 2FA verification
@@ -112,7 +112,6 @@ export function Enable2FA() {
   );
 }
 
-// Named export
 export { Enable2FA };
 ```
 
@@ -166,7 +165,6 @@ export function Verify2FA() {
   );
 }
 
-// Named export
 export { Verify2FA };
 ```
 

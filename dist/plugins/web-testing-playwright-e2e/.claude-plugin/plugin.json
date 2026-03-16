@@ -1,6 +1,6 @@
 {
   "name": "web-testing-playwright-e2e",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Playwright E2E testing patterns - test structure, Page Object Model, locator strategies, assertions, network mocking, visual regression, parallel execution, fixtures, and configuration",
   "author": {

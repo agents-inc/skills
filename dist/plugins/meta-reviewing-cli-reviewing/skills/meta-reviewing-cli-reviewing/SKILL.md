@@ -9,13 +9,6 @@ description: CLI code review patterns. Use when reviewing CLI applications built
 
 ---
 
-**Detailed Resources:**
-
-- For CLI implementation patterns, see the cli-commander skill
-- For general reviewing patterns, see the reviewing skill
-
----
-
 <critical_requirements>
 
 ## CRITICAL: Before Reviewing CLI Code
@@ -49,9 +42,9 @@ description: CLI code review patterns. Use when reviewing CLI applications built
 
 **When NOT to use:**
 
-- When implementing CLI code (use cli-commander skill instead)
-- For general code review (use reviewing skill)
-- For backend API review (use backend-specific reviewing skills)
+- When implementing CLI code (use the relevant CLI implementation skill)
+- For general code review not specific to CLI concerns
+- For backend API review
 
 **Key patterns covered:**
 
@@ -63,6 +56,10 @@ description: CLI code review patterns. Use when reviewing CLI applications built
 - Configuration hierarchy review
 - Command structure and organization review
 - Severity classification for CLI issues
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) - Example review output format, CLI test review patterns
 
 ---
 
@@ -148,7 +145,7 @@ Verify all exit paths use named constants.
 
 **Named Constants:**
 
-- [ ] EXIT_CODES constant file exists (src/cli/lib/exit-codes.ts)
+- [ ] Exit codes defined as named constants (e.g., EXIT_CODES object)
 - [ ] All exit codes have JSDoc descriptions
 - [ ] Uses `as const` for type inference
 
@@ -371,16 +368,18 @@ Verify CLI tests cover critical paths.
 
 **File System Testing:**
 
-- [ ] memfs or vol.reset() used for isolated tests
+- [ ] In-memory filesystem used for isolated tests
 - [ ] Config loading tested (missing, invalid, valid)
 - [ ] File write operations tested
 
 **Exit Code Testing:**
 
 - [ ] Success exits with 0
-- [ ] Errors exit with correct non-zero codes
+- [ ] Each error type returns correct non-zero code
 - [ ] Cancellation exits with CANCELLED code
 ```
+
+See [examples/core.md](examples/core.md) for test code patterns to look for during review.
 
 ---
 
@@ -546,189 +545,6 @@ Is this a safety/correctness issue?
 
 ---
 
-<testing>
-
-## Testing CLI Reviews
-
-### What to Look For in CLI Tests
-
-```typescript
-// Good: Tests use exitOverride to catch exits
-describe("init command", () => {
-  beforeEach(() => {
-    program.exitOverride();
-  });
-
-  it("exits with INVALID_ARGS for missing required option", async () => {
-    await expect(
-      program.parseAsync(["node", "test", "init"]),
-    ).rejects.toThrow();
-    // Verify error handling without actually exiting
-  });
-});
-
-// Good: Prompts are properly mocked
-vi.mock("@clack/prompts", () => ({
-  select: vi.fn(),
-  confirm: vi.fn(),
-  text: vi.fn(),
-  spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
-  isCancel: vi.fn((val) => val === Symbol.for("cancel")),
-  cancel: vi.fn(),
-  intro: vi.fn(),
-  outro: vi.fn(),
-  log: { info: vi.fn(), error: vi.fn(), success: vi.fn() },
-}));
-
-// Good: File system isolated
-vi.mock("fs-extra", async () => {
-  const memfs = await import("memfs");
-  return memfs.fs.promises;
-});
-
-beforeEach(() => {
-  vol.reset();
-});
-```
-
-### Test Coverage Expectations
-
-```markdown
-## Minimum Test Coverage for CLI
-
-**Each Command:**
-
-- [ ] Success path with valid arguments
-- [ ] Failure path with invalid arguments
-- [ ] Help output accessible
-
-**Each Prompt Flow:**
-
-- [ ] Successful completion
-- [ ] User cancellation (Ctrl+C)
-- [ ] Validation rejection
-
-**Configuration:**
-
-- [ ] Loads from each source (flag, env, project, global)
-- [ ] Precedence is correct
-- [ ] Missing files handled gracefully
-
-**Exit Codes:**
-
-- [ ] Success returns 0
-- [ ] Each error type returns correct code
-```
-
-</testing>
-
----
-
-<example_review_output>
-
-## Example Review Output
-
-````markdown
-# CLI Code Review: init command
-
-## Summary
-
-The init command implementation has good structure but is missing critical
-cancellation handling that would leave users stuck if they press Ctrl+C.
-
----
-
-## Must Fix (3 issues)
-
-### 1. Missing p.isCancel() check
-
-**File:** src/cli/commands/init.ts:45
-**Issue:** p.select() result not checked for cancellation
-**Impact:** If user presses Ctrl+C, code continues with Symbol value causing crash
-**Fix:** Add isCancel check:
-
-```typescript
-const framework = await p.select({ ... });
-if (p.isCancel(framework)) {
-  p.cancel("Setup cancelled");
-  process.exit(EXIT_CODES.CANCELLED);
-}
-```
-````
-
-### 2. Magic number exit code
-
-**File:** src/cli/commands/init.ts:78
-**Issue:** `process.exit(1)` uses magic number
-**Impact:** Exit codes become undocumented and unmaintainable
-**Fix:** Use `process.exit(EXIT_CODES.ERROR)`
-
-### 3. Using parse() instead of parseAsync()
-
-**File:** src/cli/index.ts:42
-**Issue:** `program.parse()` used with async action handlers
-**Impact:** Errors in async actions are silently swallowed
-**Fix:** Change to `await program.parseAsync(process.argv)`
-
----
-
-## Should Fix (2 issues)
-
-### 1. Missing spinner for network call
-
-**File:** src/cli/commands/init.ts:52
-**Issue:** `fetchTemplates()` has no visual feedback
-**Impact:** Users see no progress during network operation
-**Fix:** Wrap in spinner:
-
-```typescript
-const s = p.spinner();
-s.start("Fetching templates...");
-const templates = await fetchTemplates();
-s.stop(`Found ${templates.length} templates`);
-```
-
-### 2. Error message not actionable
-
-**File:** src/cli/commands/init.ts:67
-**Issue:** Error says "Config invalid" but not how to fix
-**Impact:** Users don't know what's wrong with their config
-**Fix:** Include specific validation error and example of correct format
-
----
-
-## Nice to Have (1 item)
-
-### 1. Add --json output option
-
-**File:** src/cli/commands/init.ts
-**Suggestion:** Add `--json` flag for CI/script integration
-**Benefit:** Enables automation and tooling integration
-
----
-
-## What Was Done Well
-
-- Clean command structure with separate files per command
-- Good use of picocolors for consistent styling
-- SIGINT handler present in entry point
-- Config hierarchy follows correct precedence
-- Tests cover happy path scenarios
-
----
-
-## Verdict: REQUEST CHANGES
-
-The Must Fix issues (cancellation handling, magic exit codes, parseAsync)
-must be addressed before approval. These are safety issues that affect
-all users of the CLI.
-
-```
-
-</example_review_output>
-
----
-
 <critical_reminders>
 
 ## CRITICAL REMINDERS
@@ -748,4 +564,3 @@ all users of the CLI.
 **Failure to catch these issues will result in CLIs that crash on Ctrl+C, have undocumented exit codes, and silently swallow errors.**
 
 </critical_reminders>
-```

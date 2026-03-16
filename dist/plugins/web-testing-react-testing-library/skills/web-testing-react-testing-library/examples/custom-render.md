@@ -10,40 +10,25 @@
 // Good Example - Full custom render with providers
 // test-utils.tsx
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement, ReactNode } from "react";
 // Import your app providers
-import { ThemeProvider } from "../contexts/theme-context";
-import { AuthProvider } from "../contexts/auth-context";
-
-// Create a fresh QueryClient for each test
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false, // Don't retry failed queries in tests
-        gcTime: 0,    // Don't cache between tests
-      },
-    },
-  });
-}
+// import { ThemeProvider } from "../contexts/theme-context";
+// import { AuthProvider } from "../contexts/auth-context";
 
 interface AllProvidersProps {
   children: ReactNode;
 }
 
 function AllProviders({ children }: AllProvidersProps) {
-  const queryClient = createTestQueryClient();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="light">
-          {children}
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+  // Wrap with your app's providers in the correct nesting order
+  // return (
+  //   <AuthProvider>
+  //     <ThemeProvider defaultTheme="light">
+  //       {children}
+  //     </ThemeProvider>
+  //   </AuthProvider>
+  // );
+  return <>{children}</>;
 }
 
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
@@ -61,11 +46,9 @@ function customRender(
 export * from "@testing-library/react";
 // Override render with custom render
 export { customRender as render };
-// Export for cases needing fresh client
-export { createTestQueryClient };
 ```
 
-**Why good:** Creates fresh QueryClient per test preventing cross-test pollution, disables retries for faster test failures, wraps all app providers in correct order
+**Why good:** Centralizes provider wrapping so tests don't repeat boilerplate, creates consistent test environment matching your app structure
 
 ---
 

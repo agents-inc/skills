@@ -14,7 +14,7 @@
 
 ```typescript
 // stores/__tests__/counter-store.test.ts
-import { describe, it, expect, beforeEach } from "vitest";
+// Use your test runner's describe/it/expect
 import { setActivePinia, createPinia } from "pinia";
 import { useCounterStore } from "../counter-store";
 
@@ -72,8 +72,8 @@ describe("Counter Store", () => {
 
 ```typescript
 // components/__tests__/counter.test.ts
-import { describe, it, expect, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+// Use your test runner's describe/it/expect/vi
+// Use your component mounting utility (e.g. mount from Vue Test Utils)
 import { createTestingPinia } from "@pinia/testing";
 import Counter from "../Counter.vue";
 import { useCounterStore } from "@/stores/counter-store";

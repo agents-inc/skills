@@ -1,8 +1,8 @@
 {
   "name": "web-utilities-native-js",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
-  "description": "Modern native JavaScript (ES2022-ES2025) utility patterns - array methods, object manipulation, set operations, deep cloning, and function utilities that replace lodash",
+  "description": "Modern native JavaScript (ES2022-ES2025) utility patterns that replace lodash",
   "author": {
     "name": "@vince"
   }

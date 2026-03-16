@@ -1,6 +1,6 @@
 # cli-framework-cli-commander
 
-Node.js CLI development with Commander.js, @clack/prompts, and picocolors. Command structure, interactive prompts, state machines, error handling, exit codes, configuration hierarchies.
+Node.js CLI development with Commander.js and @clack/prompts - command structure, interactive prompts, wizard state machines, config hierarchies, exit codes, cancellation handling
 
 ## Installation
 

@@ -41,7 +41,7 @@ Is the default element appropriate?
     ├─ YES → Use asChild with correct element
     │   ├─ Link instead of button → <a> with asChild
     │   ├─ Custom component → forwardRef + spread props
-    │   └─ Next.js Link → <Link> with asChild
+    │   └─ Framework link component → wrap with asChild
     └─ NO → Skip asChild
 ```
 
@@ -51,7 +51,7 @@ Is the default element appropriate?
 How complex are your animations?
 ├─ Simple fade/slide → CSS keyframes + data-state
 ├─ Height animation → CSS + --radix-*-content-height variables
-├─ Complex orchestrated → JavaScript library (Framer Motion, React Spring)
+├─ Complex orchestrated → JavaScript animation library + forceMount
 │   └─ Use forceMount on Portal, Overlay, Content
 └─ No animation → Skip (Radix handles mount/unmount)
 ```

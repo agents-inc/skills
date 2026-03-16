@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
-// Schema defined elsewhere - import from validation module
+// Schema defined separately - import from your schemas directory
 import { registrationSchema } from "./schemas/registration";
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -91,10 +91,10 @@ export function RegistrationForm() {
 
 **Why good:** zodResolver integrates schema validation seamlessly, z.infer generates types from schema automatically, all validation logic is in the schema (testable and reusable), cross-field validation (confirmPassword) handled by schema, error messages come from schema
 
-### Schema Example (defined in validation skill)
+### Schema Example (defined separately from form code)
 
 ```typescript
-// schemas/registration.ts - This is validation skill territory
+// schemas/registration.ts - Schema defined separately from form logic
 import { z } from "zod";
 
 const MIN_USERNAME_LENGTH = 3;
@@ -123,6 +123,6 @@ export const registrationSchema = z
   });
 ```
 
-**Note:** Schema creation is covered in the Zod validation skill. This example shows the integration point.
+**Note:** Schema creation patterns are separate from form code. This example shows how to wire a schema to React Hook Form via resolver.
 
 ---

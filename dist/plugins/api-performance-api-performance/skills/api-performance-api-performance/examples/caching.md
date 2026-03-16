@@ -1,62 +1,15 @@
-# Caching Examples
+# Backend Performance - Caching Examples
 
-Redis caching patterns for backend performance optimization.
-
----
-
-## Redis Connection Setup
-
-```typescript
-// Good Example - Redis client with reconnection
-import { createClient } from "redis";
-
-const REDIS_RETRY_DELAY_MS = 1000;
-const REDIS_MAX_RETRIES = 10;
-
-const redisClient = createClient({
-  url: process.env.REDIS_URL,
-  socket: {
-    reconnectStrategy: (retries) => {
-      if (retries > REDIS_MAX_RETRIES) {
-        console.error("Redis max retries reached, stopping reconnection");
-        return new Error("Max retries reached");
-      }
-      return REDIS_RETRY_DELAY_MS * Math.pow(2, retries); // Exponential backoff
-    },
-  },
-});
-
-redisClient.on("error", (err) => console.error("Redis Client Error:", err));
-redisClient.on("connect", () => console.log("Redis connected"));
-redisClient.on("reconnecting", () => console.log("Redis reconnecting..."));
-
-async function initializeRedis() {
-  if (redisClient.isOpen) return redisClient;
-  await redisClient.connect();
-  return redisClient;
-}
-
-async function shutdownRedis() {
-  await redisClient.quit();
-}
-
-export { redisClient, initializeRedis, shutdownRedis };
-```
-
-**Why good:** Exponential backoff prevents hammering Redis during outages, named constants for configuration, error/connect events enable observability, graceful shutdown support
+> Caching strategies and invalidation patterns. See [core.md](core.md) for database optimization and [async.md](async.md) for event loop patterns.
 
 ---
 
 ## Cache-Aside Pattern
 
-The most common caching pattern. Check cache first, fetch from database on miss, store in cache.
+The most common caching pattern. Check cache first, fetch from database on miss, store with TTL.
 
 ```typescript
 // Good Example - Cache-aside with TTL
-import { redisClient } from "./redis";
-import { db, users } from "./database";
-import { eq } from "drizzle-orm";
-
 const CACHE_TTL_SECONDS = 300; // 5 minutes
 const CACHE_PREFIX = "app:user";
 
@@ -70,7 +23,7 @@ async function getUserById(userId: string): Promise<User | null> {
   const cacheKey = `${CACHE_PREFIX}:${userId}`;
 
   // Check cache first
-  const cached = await redisClient.get(cacheKey);
+  const cached = await cacheClient.get(cacheKey);
   if (cached) {
     return JSON.parse(cached) as User;
   }
@@ -83,7 +36,7 @@ async function getUserById(userId: string): Promise<User | null> {
   if (!user) return null;
 
   // Store in cache with TTL
-  await redisClient.set(cacheKey, JSON.stringify(user), {
+  await cacheClient.set(cacheKey, JSON.stringify(user), {
     EX: CACHE_TTL_SECONDS,
   });
 
@@ -98,11 +51,11 @@ export { getUserById };
 ```typescript
 // Bad Example - No TTL, generic keys
 async function getUser(id: string) {
-  const cached = await redis.get(id); // Generic key
+  const cached = await cacheClient.get(id); // Generic key -- no prefix
   if (cached) return JSON.parse(cached);
 
   const user = await db.query.users.findFirst({ where: eq(users.id, id) });
-  await redis.set(id, JSON.stringify(user)); // No TTL!
+  await cacheClient.set(id, JSON.stringify(user)); // No TTL!
   return user;
 }
 ```
@@ -132,7 +85,7 @@ async function updateUserProfile(
 
   // Immediately update cache (write-through)
   const cacheKey = `${CACHE_PREFIX}:${userId}`;
-  await redisClient.set(cacheKey, JSON.stringify(updatedUser), {
+  await cacheClient.set(cacheKey, JSON.stringify(updatedUser), {
     EX: CACHE_TTL_SECONDS,
   });
 
@@ -145,73 +98,11 @@ async function deleteUser(userId: string): Promise<void> {
 
   // Invalidate cache
   const cacheKey = `${CACHE_PREFIX}:${userId}`;
-  await redisClient.del(cacheKey);
+  await cacheClient.del(cacheKey);
 }
 ```
 
 **Why good:** Cache always reflects database state, no stale reads after updates, explicit invalidation on delete
-
----
-
-## Caching Middleware
-
-Reusable middleware for Express/Hono route caching.
-
-```typescript
-// Good Example - Caching middleware
-import type { Context, Next } from "hono";
-
-interface CacheOptions {
-  ttlSeconds: number;
-  keyPrefix: string;
-}
-
-const DEFAULT_CACHE_TTL = 300;
-
-function createCacheMiddleware(options: CacheOptions) {
-  return async (c: Context, next: Next) => {
-    const cacheKey = `${options.keyPrefix}:${c.req.url}`;
-
-    // Check cache
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      const { body, headers } = JSON.parse(cached);
-      // Set cached headers
-      Object.entries(headers).forEach(([key, value]) => {
-        c.header(key, value as string);
-      });
-      c.header("X-Cache", "HIT");
-      return c.json(body);
-    }
-
-    // Cache miss - continue to handler
-    await next();
-
-    // Only cache successful responses
-    if (c.res.status >= 200 && c.res.status < 300) {
-      const body = await c.res.clone().json();
-      const headers = Object.fromEntries(c.res.headers.entries());
-
-      await redisClient.set(cacheKey, JSON.stringify({ body, headers }), {
-        EX: options.ttlSeconds || DEFAULT_CACHE_TTL,
-      });
-      c.header("X-Cache", "MISS");
-    }
-  };
-}
-
-// Usage
-app.get(
-  "/api/products",
-  createCacheMiddleware({ ttlSeconds: 600, keyPrefix: "api" }),
-  async (c) => {
-    const products = await db.query.products.findMany();
-    return c.json(products);
-  },
-);
-```
-
-**Why good:** Reusable across routes, only caches successful responses, X-Cache header for debugging, configurable TTL per route
 
 ---
 
@@ -257,13 +148,13 @@ const userPattern = (userId: string) => `${CACHE_PREFIX}:user:${userId}:*`;
 // Delete specific key on update
 async function updateProduct(id: string, data: ProductUpdate) {
   await db.update(products).set(data).where(eq(products.id, id));
-  await redisClient.del(productKey(id));
+  await cacheClient.del(productKey(id));
 
   // Also invalidate list caches that might contain this product
   const listPattern = `${CACHE_PREFIX}:products:list:*`;
-  const keys = await redisClient.keys(listPattern);
+  const keys = await cacheClient.keys(listPattern);
   if (keys.length > 0) {
-    await redisClient.del(keys);
+    await cacheClient.del(keys);
   }
 }
 ```
@@ -279,8 +170,10 @@ const LONG_TTL = 3600; // 1 hour for static content
 
 ### 3. Tag-Based Invalidation
 
+Uses cache set operations to group keys by tag for bulk invalidation.
+
 ```typescript
-// Good Example - Tag-based cache invalidation
+// Good Example - Tag-based cache invalidation using set data structures
 async function setWithTags(
   key: string,
   value: string,
@@ -288,20 +181,20 @@ async function setWithTags(
   tags: string[],
 ) {
   // Store the value
-  await redisClient.set(key, value, { EX: ttl });
+  await cacheClient.set(key, value, { EX: ttl });
 
-  // Add key to each tag set
+  // Add key to each tag set (uses set-add operation)
   for (const tag of tags) {
-    await redisClient.sAdd(`tag:${tag}`, key);
-    await redisClient.expire(`tag:${tag}`, ttl);
+    await cacheClient.sAdd(`tag:${tag}`, key);
+    await cacheClient.expire(`tag:${tag}`, ttl);
   }
 }
 
 async function invalidateByTag(tag: string) {
-  const keys = await redisClient.sMembers(`tag:${tag}`);
+  const keys = await cacheClient.sMembers(`tag:${tag}`);
   if (keys.length > 0) {
-    await redisClient.del(keys);
-    await redisClient.del(`tag:${tag}`);
+    await cacheClient.del(keys);
+    await cacheClient.del(`tag:${tag}`);
   }
 }
 
@@ -319,6 +212,54 @@ await invalidateByTag("category:electronics");
 
 ---
 
+## Caching Middleware
+
+Reusable middleware pattern for route-level caching. Adapt to your framework's middleware signature.
+
+```typescript
+// Good Example - Caching middleware (adapt types to your framework)
+interface CacheOptions {
+  ttlSeconds: number;
+  keyPrefix: string;
+}
+
+const DEFAULT_CACHE_TTL = 300;
+
+function createCacheMiddleware(options: CacheOptions) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const cacheKey = `${options.keyPrefix}:${req.url}`;
+
+    // Check cache
+    const cached = await cacheClient.get(cacheKey);
+    if (cached) {
+      const { body, headers } = JSON.parse(cached);
+      Object.entries(headers).forEach(([key, value]) => {
+        res.setHeader(key, value as string);
+      });
+      res.setHeader("X-Cache", "HIT");
+      return res.json(body);
+    }
+
+    // Cache miss - continue to handler, cache response after
+    const originalJson = res.json.bind(res);
+    res.json = (body: unknown) => {
+      // Only cache successful responses
+      cacheClient.set(cacheKey, JSON.stringify({ body }), {
+        EX: options.ttlSeconds || DEFAULT_CACHE_TTL,
+      });
+      res.setHeader("X-Cache", "MISS");
+      return originalJson(body);
+    };
+
+    next();
+  };
+}
+```
+
+**Why good:** Reusable across routes, only caches successful responses, X-Cache header for debugging, configurable TTL per route
+
+---
+
 ## TTL Best Practices
 
 | Data Type       | Recommended TTL | Rationale                        |
@@ -332,13 +273,13 @@ await invalidateByTag("category:electronics");
 
 **TTL Anti-Patterns:**
 
-- ❌ No TTL (infinite cache) - Memory exhaustion, infinite staleness
-- ❌ Very short TTL everywhere (< 10s) - Defeats caching purpose
-- ❌ Same TTL for all data - Different data has different freshness needs
+- No TTL (infinite cache) - Memory exhaustion, infinite staleness
+- Very short TTL everywhere (< 10s) - Defeats caching purpose
+- Same TTL for all data - Different data has different freshness needs
 
 ---
 
 ## See Also
 
-- [database.md](database.md) - Query optimization and connection pooling
+- [core.md](core.md) - Query optimization, indexing, connection pooling
 - [async.md](async.md) - Event loop and worker threads

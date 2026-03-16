@@ -1,79 +1,17 @@
 # Core Expo Patterns
 
-Essential project setup, configuration, and development patterns.
+> Essential configuration, environment, and asset patterns. See [SKILL.md](../SKILL.md) for decisions and philosophy.
 
 ---
 
-## Project Initialization
+## Dynamic Configuration (app.config.ts)
 
-```bash
-# Create new Expo project with TypeScript
-npx create-expo-app my-app --template blank-typescript
-
-# Create with Expo Router template
-npx create-expo-app my-app --template tabs
-
-# Generate native directories (when needed)
-npx expo prebuild
-
-# Clean regeneration (resets native directories)
-npx expo prebuild --clean
-```
-
----
-
-## App Configuration
-
-### Static Configuration (app.json)
-
-```json
-{
-  "expo": {
-    "name": "MyApp",
-    "slug": "my-app",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.example.myapp"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.example.myapp"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": ["expo-router"],
-    "experiments": {
-      "typedRoutes": true
-    }
-  }
-}
-```
-
----
-
-### Dynamic Configuration (app.config.ts)
+Use `app.config.ts` for environment-aware builds with TypeScript support. Use named constants for SDK versions and build numbers -- never hardcode them.
 
 ```typescript
 // app.config.ts
 import type { ExpoConfig, ConfigContext } from "expo/config";
 
-// Named constants for all configuration values
 const APP_NAME = "MyApp";
 const APP_SLUG = "my-app";
 const APP_VERSION = "1.0.0";
@@ -108,7 +46,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
@@ -161,14 +98,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 });
 ```
 
+**Why good:** Named constants, environment-specific bundle identifiers prevent app store conflicts, `usesNonExemptEncryption: false` avoids iOS compliance review delay, `runtimeVersion` policy enables safe OTA updates
+
 ---
 
 ## Config Plugins
 
+Config plugins modify native code declaratively. Changes survive `expo prebuild --clean`.
+
 ### Camera and Permissions
 
 ```typescript
-// app.config.ts - Camera plugin configuration
+// app.config.ts plugins array
 plugins: [
   [
     "expo-camera",
@@ -184,7 +125,6 @@ plugins: [
 ### Location Services
 
 ```typescript
-// app.config.ts - Location plugin configuration
 plugins: [
   [
     "expo-location",
@@ -205,7 +145,6 @@ plugins: [
 ### Notifications
 
 ```typescript
-// app.config.ts - Notifications plugin configuration
 plugins: [
   [
     "expo-notifications",
@@ -222,7 +161,6 @@ plugins: [
 ### Build Properties
 
 ```typescript
-// app.config.ts - Build properties for SDK versions
 const IOS_DEPLOYMENT_TARGET = "15.1";
 const ANDROID_COMPILE_SDK = 35;
 const ANDROID_TARGET_SDK = 35;
@@ -277,9 +215,9 @@ const APP_ENV = process.env.EXPO_PUBLIC_APP_ENV;
 
 // IMPORTANT: Metro requires direct property access
 // These patterns DON'T work:
-// const { EXPO_PUBLIC_API_URL } = process.env;  // BAD
-// process.env['EXPO_PUBLIC_API_URL'];           // BAD
-// Object.keys(process.env).filter(...)          // BAD
+// const { EXPO_PUBLIC_API_URL } = process.env;  // BAD - undefined
+// process.env['EXPO_PUBLIC_API_URL'];           // BAD - undefined
+// Object.keys(process.env).filter(...)          // BAD - won't include EXPO_PUBLIC_*
 
 if (!API_URL) {
   throw new Error("EXPO_PUBLIC_API_URL environment variable is required");
@@ -322,7 +260,7 @@ export function useConfig(): AppConfig {
 
 ## Font Loading
 
-### Basic Font Loading
+### Basic Font Loading with Splash Screen
 
 ```typescript
 // app/_layout.tsx
@@ -356,44 +294,11 @@ export default function RootLayout() {
 }
 ```
 
-### Google Fonts
-
-```typescript
-// Install: npx expo install @expo-google-fonts/inter
-import {
-  useFonts,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from "@expo-google-fonts/inter";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-
-SplashScreen.preventAutoHideAsync();
-
-export function useAppFonts() {
-  const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
-  return { fontsLoaded, fontError };
-}
-```
-
 ### Config Plugin Font Loading (Recommended for Production)
 
+Pre-bundle fonts at build time to avoid runtime loading delay:
+
 ```json
-// app.json - Pre-bundle fonts at build time
 {
   "expo": {
     "plugins": [
@@ -421,7 +326,6 @@ export function useAppFonts() {
 ```typescript
 // components/optimized-image.tsx
 import { Image, type ImageProps } from "expo-image";
-import { StyleSheet } from "react-native";
 
 const BLUR_HASH = "L6PZfSi_.AyE_3t7t7R**0o#DgR4";
 const IMAGE_TRANSITION_MS = 200;
@@ -453,19 +357,13 @@ export function OptimizedImage({
     />
   );
 }
-
-// Usage
-<OptimizedImage
-  uri="https://example.com/image.jpg"
-  width={200}
-  height={200}
-/>
 ```
+
+**Why good:** Blur hash placeholder prevents layout shift, `memory-disk` caching avoids re-downloads, transition provides smooth loading UX
 
 ### Local Images
 
 ```typescript
-// components/local-image.tsx
 import { Image } from "expo-image";
 
 // Static import - bundled at build time
@@ -480,116 +378,4 @@ export function Logo() {
     />
   );
 }
-```
-
-### Asset Bundling Configuration
-
-```json
-// app.json - Configure asset bundling
-{
-  "expo": {
-    "assetBundlePatterns": [
-      "assets/images/*",
-      "assets/fonts/*",
-      "assets/animations/*"
-    ],
-    "plugins": [
-      [
-        "expo-asset",
-        {
-          "assets": [
-            "./assets/data/config.json",
-            "./assets/animations/loading.json"
-          ]
-        }
-      ]
-    ]
-  }
-}
-```
-
----
-
-## Development Commands
-
-```bash
-# Start development server
-npx expo start
-
-# Start with cache clear
-npx expo start --clear
-
-# Platform-specific
-npx expo start --ios
-npx expo start --android
-
-# Run on device/simulator (requires prebuild or development build)
-npx expo run:ios
-npx expo run:android
-
-# Generate native directories
-npx expo prebuild
-npx expo prebuild --clean  # Clean regeneration
-
-# Validate dependencies
-npx expo-doctor
-
-# Install dependencies (uses correct package manager)
-npx expo install react-native-reanimated
-
-# Fix peer dependencies
-npx expo install --fix
-```
-
----
-
-## SDK Upgrades
-
-```bash
-# Upgrade to latest SDK
-npx expo install expo@latest
-
-# Upgrade to specific SDK version
-npx expo install expo@^52.0.0
-
-# Fix all peer dependencies after upgrade
-npx expo install --fix
-
-# Validate upgrade
-npx expo-doctor
-
-# Clean prebuild after major upgrade
-npx expo prebuild --clean
-```
-
----
-
-## Directory Structure
-
-```
-my-app/
-├── app/                      # Expo Router routes
-│   ├── _layout.tsx           # Root layout
-│   ├── index.tsx             # Home screen (/)
-│   ├── +not-found.tsx        # 404 screen
-│   └── (tabs)/               # Tab navigator group
-│       ├── _layout.tsx       # Tab layout
-│       ├── index.tsx         # First tab
-│       └── settings.tsx      # Settings tab
-├── assets/
-│   ├── fonts/                # Custom fonts
-│   ├── images/               # Static images
-│   └── animations/           # Lottie animations
-├── components/               # Shared components
-│   ├── ui/                   # Base UI components
-│   └── features/             # Feature components
-├── hooks/                    # Custom hooks
-├── services/                 # API services
-├── stores/                   # State management
-├── constants/                # App constants
-├── types/                    # TypeScript types
-├── app.config.ts             # Dynamic Expo config
-├── eas.json                  # EAS Build config
-├── metro.config.js           # Metro bundler config
-└── tsconfig.json             # TypeScript config
 ```

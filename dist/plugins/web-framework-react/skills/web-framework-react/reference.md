@@ -11,7 +11,7 @@
 ```
 Does component need ref access?
 ├─ YES → Does it expose a DOM element?
-│   ├─ YES → Add ref to props and pass to element (no forwardRef needed) ✓
+│   ├─ YES → Add ref to props and pass to element (no forwardRef needed)
 │   └─ NO → Use useImperativeHandle to expose custom methods
 └─ NO → Don't accept ref prop (unnecessary)
 ```
@@ -33,7 +33,7 @@ Does component have visual variants?
 ```
 Are you passing handler to child?
 ├─ YES → Is child memoized with React.memo?
-│   ├─ YES → Use useCallback ✓
+│   ├─ YES → Use useCallback
 │   └─ NO → Don't use useCallback (no benefit)
 └─ NO → Don't use useCallback (unnecessary overhead)
 ```
@@ -45,7 +45,7 @@ Is this reusable logic?
 ├─ YES → Does it render UI?
 │   ├─ YES → Component
 │   └─ NO → Does it use React hooks?
-│       ├─ YES → Custom hook ✓
+│       ├─ YES → Custom hook
 │       └─ NO → Utility function
 └─ NO → Keep inline in component
 ```
@@ -55,57 +55,15 @@ Is this reusable logic?
 ```
 Handling form submission?
 ├─ YES → Need pending/error state?
-│   ├─ YES → Use useActionState ✓
+│   ├─ YES → Use useActionState
 │   └─ NO → Simple form action on <form action={fn}>
 ├─ Need form status in child components?
-│   └─ YES → Use useFormStatus in child component ✓
+│   └─ YES → Use useFormStatus in child component
 ├─ Need optimistic UI updates?
-│   └─ YES → Use useOptimistic ✓
+│   └─ YES → Use useOptimistic
 └─ Need to read promise/context conditionally?
-    └─ YES → Use use() API ✓
+    └─ YES → Use use() API
 ```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Using `forwardRef` in React 19** - deprecated; pass `ref` as a regular prop instead
-- Not exposing `className` prop on reusable components (prevents customization and composition)
-- Using default exports in component libraries (prevents tree-shaking and violates project conventions)
-- Magic numbers in code (use named constants: `const MAX_ITEMS = 100`)
-- Using `useState` for form pending/error when `useActionState` exists (unnecessary boilerplate)
-- Calling `useFormStatus` in the same component as `<form>` (won't work - must be child component)
-
-### Medium Priority Issues
-
-- Adding variant abstractions for components without variants (over-engineering)
-- Using useCallback on every handler regardless of child memoization (premature optimization)
-- Inline event handlers in JSX when passing to memoized children (causes unnecessary re-renders)
-- Generic event handler names (`click`, `change`) instead of descriptive names
-- Not exposing style prop alongside className for runtime values
-
-### Common Mistakes
-
-- Not typing event handlers explicitly (leads to runtime errors)
-- Using string interpolation for class names (error-prone)
-- Missing accessibility attributes on icon-only buttons (`title`, `aria-label`)
-- Hardcoding icon colors instead of using `currentColor` inheritance
-- No error boundaries around features (one error crashes entire app)
-
-### Gotchas & Edge Cases
-
-- **React 19**: `forwardRef` is deprecated - pass `ref` as a regular prop directly
-- **React 19**: `use()` cannot be called in try-catch blocks - use Error Boundaries instead
-- **React 19**: `useFormStatus` must be called from a child component inside `<form>`, not the form component itself
-- **React 19**: Ref cleanup functions - return a cleanup function from ref callbacks instead of using `useEffect`
-- Error boundaries don't catch errors in event handlers or async code (use try/catch for those)
-- `useCallback` without memoized children adds overhead without benefit
-- Icons inherit `currentColor` by default - explicitly setting color breaks theming
-- Data-attributes (`data-active="true"`) are useful for styling based on state
-- SSR requires checking `typeof window !== "undefined"` before accessing browser APIs
-- Styles must be applied via `className` prop, not spread into component
 
 ---
 
@@ -128,18 +86,6 @@ export function Input({ ref, ...props }: InputProps & { ref?: React.Ref<HTMLInpu
 }
 ```
 
-### Default Exports in Component Libraries
-
-Default exports prevent tree-shaking and violate project conventions. They also make imports inconsistent across the codebase.
-
-```typescript
-// WRONG - Default export
-export default function Button() { ... }
-
-// CORRECT - Named export
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(...);
-```
-
 ### Magic Numbers Without Named Constants
 
 All numeric values must be named constants. Magic numbers are unmaintainable, undocumented, and error-prone.
@@ -159,14 +105,14 @@ All reusable components must expose a className prop. Without it, consumers cann
 
 ```typescript
 // WRONG - No className prop
-export const Card = ({ children }: { children: React.ReactNode }) => (
-  <div>{children}</div>
-);
+export function Card({ children }: { children: React.ReactNode }) {
+  return <div>{children}</div>;
+}
 
 // CORRECT - className prop exposed
-export const Card = ({ children, className }: CardProps) => (
-  <div className={className}>{children}</div>
-);
+export function Card({ children, className }: CardProps) {
+  return <div className={className}>{children}</div>;
+}
 ```
 
 ### Adding Variant Abstractions for Simple Components
@@ -176,12 +122,30 @@ Variant props add unnecessary complexity for simple components. Only use when yo
 ```typescript
 // WRONG - Variant system for single-style component
 type CardVariant = "default";
-export const Card = ({ variant = "default" }: { variant?: CardVariant }) => ...
+export function Card({ variant = "default" }: { variant?: CardVariant }) { ... }
 
 // CORRECT - Simple component without variant props
-export const Card = ({ className, children }: CardProps) => (
-  <div className={className}>{children}</div>
-);
+export function Card({ className, children }: CardProps) {
+  return <div className={className}>{children}</div>;
+}
+```
+
+### useFormStatus in the Form Component
+
+`useFormStatus` must be called from a child component rendered inside `<form>`, not the component that renders it.
+
+```typescript
+// WRONG - useFormStatus in form component (pending always false)
+export function ContactForm({ action }) {
+  const { pending } = useFormStatus(); // Will always be false!
+  return <form action={action}><button disabled={pending}>Send</button></form>;
+}
+
+// CORRECT - useFormStatus in child component
+function SubmitButton() {
+  const { pending } = useFormStatus(); // Works correctly
+  return <button type="submit" disabled={pending}>{pending ? "Sending..." : "Send"}</button>;
+}
 ```
 
 ---
@@ -192,7 +156,6 @@ export const Card = ({ className, children }: CardProps) => (
 
 - [ ] Accepts `ref` as a regular prop if exposing DOM elements (no forwardRef)
 - [ ] Exposes `className` prop for customization
-- [ ] Exposes `style` prop for runtime values
 - [ ] Uses named exports (no default exports)
 - [ ] Uses named constants for all numbers
 - [ ] Uses typed variant props only when 2+ variant dimensions exist
@@ -210,7 +173,7 @@ export const Card = ({ className, children }: CardProps) => (
 - [ ] Follows `use` prefix naming convention
 - [ ] Has proper TypeScript types
 - [ ] Has proper dependency arrays
-- [ ] Cleans up side effects (timers, subscriptions)
+- [ ] Cleans up side effects (timers, subscriptions, observers)
 - [ ] Is SSR-safe when accessing browser APIs
 
 ### Event Handler Checklist

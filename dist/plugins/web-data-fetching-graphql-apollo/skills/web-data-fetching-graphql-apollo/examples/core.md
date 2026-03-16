@@ -42,6 +42,7 @@ const config: CodegenConfig = {
   hooks: { afterAllFileWrite: ["prettier --write"] },
 };
 
+// codegen CLI requires default export
 export { config as default };
 ```
 
@@ -49,14 +50,12 @@ export { config as default };
 
 ```typescript
 // providers/apollo-provider.tsx
-"use client";
-
 import { ApolloClient, ApolloProvider, InMemoryCache, HttpLink, from } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 import { setContext } from "@apollo/client/link/context";
 import type { ReactNode } from "react";
 
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
+const GRAPHQL_ENDPOINT = process.env.GRAPHQL_URL || "";
 const TOKEN_STORAGE_KEY = "auth_token";
 
 const authLink = setContext((_, { headers }) => {

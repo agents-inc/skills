@@ -1,6 +1,6 @@
 # web-state-zustand
 
-Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.
+Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, or avoiding Context misuse.
 
 ## Installation
 

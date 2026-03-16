@@ -1,6 +1,6 @@
 {
   "name": "api-framework-nestjs",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "NestJS backend framework - modules, controllers, services, DI, guards, pipes, interceptors, exception filters, middleware, DTOs with class-validator",
   "author": {

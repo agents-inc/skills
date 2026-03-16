@@ -1,6 +1,6 @@
 # api-performance-api-performance
 
-Query optimization, caching, indexing
+Query optimization, caching, indexing, connection pooling, async patterns
 
 ## Installation
 

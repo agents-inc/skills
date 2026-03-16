@@ -43,37 +43,6 @@ Starting a new React Native project?
 └─ Default → Expo (95% of cases)
 ```
 
-### State Management Choice
-
-```
-Is it server data (from API)?
-├─ YES → React Query / TanStack Query
-└─ NO → Is it needed across multiple unrelated components?
-    ├─ YES → Is app enterprise-scale with complex state?
-    │   ├─ YES → Redux Toolkit
-    │   └─ NO → Zustand
-    └─ NO → Is it form data?
-        ├─ YES → React Hook Form
-        └─ NO → useState/useReducer in component
-```
-
-### Styling Approach
-
-```
-Does component have variants (primary/secondary, sm/md/lg)?
-├─ YES → CVA (class-variance-authority) + NativeWind
-│   OR → StyleSheet with computed styles
-└─ NO → StyleSheet.create for static styles
-
-Are values dynamic (runtime values like theme colors)?
-├─ YES → Inline styles or style arrays
-└─ NO → StyleSheet.create (better performance)
-
-Is the team familiar with Tailwind?
-├─ YES → NativeWind
-└─ NO → StyleSheet.create
-```
-
 ### List Component Choice
 
 ```
@@ -104,6 +73,19 @@ FlashList v2 vs FlatList Decision:
 ├─ Need masonry layout → FlashList v2 (built-in support)
 ├─ Need maintainVisibleContentPosition → FlashList v2 (enabled by default)
 └─ Default recommendation → FlashList v2 (better performance)
+```
+
+### Styling Approach
+
+```
+Does component have variants (primary/secondary, sm/md/lg)?
+├─ YES → StyleSheet with computed styles or style arrays
+│   OR → Use your variant styling solution
+└─ NO → StyleSheet.create for static styles
+
+Are values dynamic (runtime values like theme colors)?
+├─ YES → Inline styles or style arrays
+└─ NO → StyleSheet.create (better performance)
 ```
 
 ### Navigation Pattern
@@ -169,7 +151,7 @@ src/
 │   ├── auth-navigator.tsx
 │   └── types.ts            # Navigation type definitions
 ├── hooks/                  # Custom hooks
-├── stores/                 # Zustand stores
+├── stores/                 # State management stores
 ├── services/               # API services
 ├── utils/                  # Utility functions
 ├── constants/              # App constants, design tokens
@@ -237,6 +219,7 @@ Platform files:   name.ios.tsx, name.android.tsx
 - **Reanimated 4 requires react-native-worklets** - Reanimated 3 will not work with it installed
 - **boxShadow and filter props are New Architecture only** - not available on legacy architecture
 - **forwardRef no longer required in React 19** - ref can be passed as regular prop
+- **Reanimated 4: withSpring uses energyThreshold** - restDisplacementThreshold/restSpeedThreshold removed
 
 ---
 
@@ -399,72 +382,6 @@ function GoodScreen() {
 
 ---
 
-### Anti-Pattern 5: God Components
-
-```typescript
-// ANTI-PATTERN: 500+ lines mixing everything
-function BadDashboard() {
-  const [users, setUsers] = useState([]);
-  const [filters, setFilters] = useState({});
-  const [sortOrder, setSortOrder] = useState("asc");
-  // ... 20 more useState calls
-  // ... 15 useEffect calls
-  // ... API calls mixed with UI logic
-  // ... 300 lines of JSX
-
-  return <View>{/* Everything in one component */}</View>;
-}
-```
-
-**Why it's wrong:** Impossible to test, maintain, or reuse; any state change re-renders entire component.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Split into focused components + hooks
-function GoodDashboard() {
-  const { users, loading, error } = useUsers();
-  const { filters, setFilters } = useFilters();
-
-  return (
-    <View>
-      <FilterBar filters={filters} onChange={setFilters} />
-      <UserList users={users} loading={loading} />
-      {error && <ErrorMessage error={error} />}
-    </View>
-  );
-}
-```
-
----
-
-### Anti-Pattern 6: Direct State Mutation
-
-```typescript
-// ANTI-PATTERN: Mutating state directly
-function BadComponent() {
-  const [items, setItems] = useState([{ id: 1, name: "Item" }]);
-
-  const addItem = () => {
-    items.push({ id: 2, name: "New" }); // Direct mutation
-    setItems(items); // Same reference - React won't re-render
-  };
-}
-```
-
-**Why it's wrong:** React uses reference equality; same array reference means no re-render.
-
-**What to do instead:**
-
-```typescript
-// CORRECT: Create new array
-const addItem = () => {
-  setItems((prev) => [...prev, { id: 2, name: "New" }]);
-};
-```
-
----
-
 ## Performance Checklist
 
 ### FlatList Optimization
@@ -487,7 +404,7 @@ const addItem = () => {
 
 ### Image Optimization
 
-- [ ] Using react-native-fast-image for heavy image usage
+- [ ] Using an optimized image library for heavy image usage
 - [ ] Images sized appropriately (not 4K images in thumbnails)
 - [ ] Preloading critical images
 - [ ] Using appropriate resizeMode

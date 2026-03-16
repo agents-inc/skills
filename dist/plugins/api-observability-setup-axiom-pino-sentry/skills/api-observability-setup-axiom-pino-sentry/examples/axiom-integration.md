@@ -8,7 +8,7 @@
 
 ## Pattern 6: Web Vitals Component
 
-**File: `apps/client-next/app/layout.tsx`**
+**File: `app/layout.tsx`**
 
 ```typescript
 // Good Example - Web Vitals in root layout
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-**Why good:** `AxiomWebVitals` component automatically reports Core Web Vitals (LCP, FID, CLS) to Axiom, no additional configuration needed
+**Why good:** `AxiomWebVitals` component automatically reports Core Web Vitals (LCP, INP, CLS) to Axiom, no additional configuration needed
 
 **Note:** Web Vitals are only sent from production deployments, not local development.
 
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 2. **Error Rate** - Percentage of 4xx/5xx responses
 3. **Response Time P95** - 95th percentile latency
 4. **Top Errors** - Most frequent error messages
-5. **Web Vitals** - LCP, FID, CLS metrics
+5. **Web Vitals** - LCP, INP, CLS metrics
 
 **Axiom APL Queries:**
 

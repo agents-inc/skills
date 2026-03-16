@@ -54,19 +54,20 @@ Where should errors go?
 
 **Common Mistakes:**
 
-- Forgetting to wrap `next.config.js` with `withAxiom`
+- Forgetting to wrap `next.config.ts` with `withAxiom`
 - Using `SENTRY_DSN` without `NEXT_PUBLIC_` prefix (undefined in client)
-- Not setting `hideSourceMaps: true` (source code exposed)
+- Using removed Sentry options (`hideSourceMaps`, `enableTracing`, `disableServerWebpackPlugin`)
 - Missing `instrumentation.ts` (Sentry not initialized properly)
 - Hardcoding sample rates instead of using named constants
 
 **Gotchas & Edge Cases:**
 
 - Web Vitals only sent in production, not development
-- Source maps upload requires `CI=true` environment variable
+- Source maps upload requires `SENTRY_AUTH_TOKEN` in the build environment
 - Edge runtime has limited Sentry features (no replay)
 - Axiom token needs ingest permission for the specific dataset
 - Sentry auth token needs `project:releases` and `org:read` scopes
+- FID metric replaced by INP (Interaction to Next Paint) in Sentry v10
 
 ---
 
@@ -75,7 +76,7 @@ Where should errors go?
 ### Hardcoded Credentials
 
 ```typescript
-// ❌ ANTI-PATTERN: Hardcoded DSN
+// ANTI-PATTERN: Hardcoded DSN
 Sentry.init({
   dsn: "https://abc123@sentry.io/456789",
 });
@@ -90,7 +91,7 @@ Sentry.init({
 ### pino-pretty in Production
 
 ```typescript
-// ❌ ANTI-PATTERN: Always using pino-pretty
+// ANTI-PATTERN: Always using pino-pretty
 import pino from "pino";
 
 export const logger = pino({
@@ -109,7 +110,7 @@ export const logger = pino({
 ### Missing Environment Separation
 
 ```bash
-# ❌ ANTI-PATTERN: Same dataset for all environments
+# ANTI-PATTERN: Same dataset for all environments
 NEXT_PUBLIC_AXIOM_DATASET=myapp
 ```
 
@@ -122,21 +123,21 @@ NEXT_PUBLIC_AXIOM_DATASET=myapp
 ### No Source Maps in CI
 
 ```yaml
-# ❌ ANTI-PATTERN: Build without source maps
+# ANTI-PATTERN: Build without source maps
 - run: npm run build
-# No SENTRY_AUTH_TOKEN, no CI=true
+# No SENTRY_AUTH_TOKEN set
 ```
 
 **Why it's wrong:** Sentry shows minified code in stack traces, impossible to debug.
 
-**What to do instead:** Set `CI=true` and provide Sentry secrets in GitHub Actions.
+**What to do instead:** Set `SENTRY_AUTH_TOKEN` as a GitHub secret and pass it to the build environment.
 
 ---
 
 ### Magic Numbers for Sample Rates
 
 ```typescript
-// ❌ ANTI-PATTERN: Magic numbers
+// ANTI-PATTERN: Magic numbers
 Sentry.init({
   sampleRate: 0.1,
   tracesSampleRate: 0.2,
@@ -162,7 +163,7 @@ Sentry.init({
 ### Missing beforeSend Filter
 
 ```typescript
-// ❌ ANTI-PATTERN: No error filtering
+// ANTI-PATTERN: No error filtering
 Sentry.init({
   dsn: SENTRY_DSN,
   // No beforeSend - all errors sent
@@ -187,7 +188,7 @@ beforeSend(event, hint) {
 ### Single Sentry Config for All Runtimes
 
 ```typescript
-// ❌ ANTI-PATTERN: One config file for everything
+// ANTI-PATTERN: One config file for everything
 // sentry.config.ts
 Sentry.init({
   /* ... */
@@ -204,6 +205,25 @@ Sentry.init({
 
 ---
 
+### Using Removed Sentry Options
+
+```typescript
+// ANTI-PATTERN: Options removed in v8/v9
+withSentryConfig(config, {
+  disableServerWebpackPlugin: true, // Removed in v8
+  disableClientWebpackPlugin: true, // Removed in v8
+  hideSourceMaps: true, // Removed in v9 (now default)
+  disableLogger: true, // Removed in v9
+  enableTracing: true, // Removed in v9
+});
+```
+
+**Why it's wrong:** These options no longer exist and will be silently ignored or cause errors.
+
+**What to do instead:** Use current v9+ API: `silent: !process.env.CI`, `sourcemaps.disable`, `sourcemaps.deleteSourcemapsAfterUpload`. Source maps are hidden by default.
+
+---
+
 ## Checklist: First-Time Setup
 
 - [ ] Install dependencies: `pino`, `next-axiom`, `@sentry/nextjs`, `pino-pretty` (dev)
@@ -212,8 +232,8 @@ Sentry.init({
 - [ ] Create Sentry project and get DSN
 - [ ] Create Sentry auth token with `project:releases` scope
 - [ ] Add all environment variables to `.env.example`
-- [ ] Configure environment variables in Vercel/hosting
-- [ ] Wrap `next.config.js` with `withAxiom` and `withSentryConfig`
+- [ ] Configure environment variables in hosting platform
+- [ ] Wrap `next.config.ts` with `withAxiom` and `withSentryConfig`
 - [ ] Create `sentry.client.config.ts`
 - [ ] Create `sentry.server.config.ts`
 - [ ] Create `sentry.edge.config.ts`
@@ -234,13 +254,14 @@ If upgrading from v8 to v9:
 
 - [ ] Remove `enableTracing` option (use `tracesSampleRate` directly)
 - [ ] Remove `hideSourceMaps` option (now default behavior)
+- [ ] Remove `disableServerWebpackPlugin` / `disableClientWebpackPlugin` (removed in v8)
 - [ ] Update `beforeSendSpan` if returning null (no longer supported)
 - [ ] Rename `captureUserFeedback()` to `captureFeedback()`
 - [ ] Rename `comments` field to `message` in feedback
 - [ ] Remove any Metrics API usage (completely removed)
 - [ ] Ensure Node.js 18.0.0+ (minimum version)
 - [ ] Add explicit `unmask`/`unblock` selectors if relying on defaults
-- [ ] Test React 19 error hooks if using React 19
+- [ ] Update `withSentryConfig` to use `silent: !process.env.CI` instead of removed options
 
 ---
 
@@ -251,11 +272,6 @@ If upgrading from v8 to v9:
 - [Axiom Documentation](https://axiom.co/docs)
 - [Sentry Next.js SDK](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
 - [Sentry v8 to v9 Migration](https://docs.sentry.io/platforms/javascript/guides/nextjs/migration/v8-to-v9/)
+- [Sentry v9 to v10 Migration](https://docs.sentry.io/platforms/javascript/guides/nextjs/migration/v9-to-v10/)
 - [Pino Documentation](https://getpino.io/)
 - [next-axiom GitHub](https://github.com/axiomhq/next-axiom)
-
-**Related Skills:**
-
-- `backend/observability.md` - Ongoing logging patterns and alerts
-- `setup/env.md` - Environment variable management
-- `backend/ci-cd.md` - GitHub Actions configuration

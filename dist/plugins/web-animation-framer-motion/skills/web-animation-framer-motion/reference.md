@@ -29,7 +29,7 @@ import { motion } from "motion/react";
 
 #### Render Scheduling
 
-Motion component renders moved from synchronous to microtask scheduling. Update Jest/Vitest tests:
+Motion component renders moved from synchronous to microtask scheduling. Update tests accordingly:
 
 ```typescript
 // Before v11 - synchronous
@@ -95,7 +95,7 @@ import { stagger } from "motion/react";
 const containerVariants = {
   visible: {
     transition: {
-      staggerChildren: stagger(0.05, {
+      delayChildren: stagger(0.05, {
         from: "center", // Ripple from center
         ease: "easeOut",
       }),

@@ -28,7 +28,7 @@
 
 ### Client Config
 
-**File: `apps/client-next/sentry.client.config.ts`**
+**File: `sentry.client.config.ts`**
 
 ```typescript
 // Good Example - Client-side Sentry config (v9 compatible)
@@ -97,7 +97,7 @@ Sentry.init({
 
 ### Server Config
 
-**File: `apps/client-next/sentry.server.config.ts`**
+**File: `sentry.server.config.ts`**
 
 ```typescript
 // Good Example - Server-side Sentry config
@@ -128,7 +128,7 @@ Sentry.init({
 
 ### Edge Config
 
-**File: `apps/client-next/sentry.edge.config.ts`**
+**File: `sentry.edge.config.ts`**
 
 ```typescript
 // Good Example - Edge runtime Sentry config
@@ -173,10 +173,12 @@ Sentry.init({
 
 ## Pattern 5: Instrumentation File
 
-**File: `apps/client-next/instrumentation.ts`**
+**File: `instrumentation.ts`**
 
 ```typescript
 // Good Example - Instrumentation for Sentry
+import * as Sentry from "@sentry/nextjs";
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("./sentry.server.config");

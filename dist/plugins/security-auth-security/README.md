@@ -1,6 +1,6 @@
 # security-auth-security
 
-Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
+Secrets management, XSS prevention, CSRF protection, dependency scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 
 ## Installation
 

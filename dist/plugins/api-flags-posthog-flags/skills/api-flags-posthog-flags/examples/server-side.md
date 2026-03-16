@@ -15,7 +15,7 @@ Use `posthog-node` for server-side evaluation. Use local evaluation for performa
 import { PostHog } from "posthog-node";
 
 const POSTHOG_POLL_INTERVAL_MS = 30000; // 30 seconds
-const FLAG_REQUEST_TIMEOUT_MS = 3000; // 3 seconds (default)
+const FLAG_REQUEST_TIMEOUT_MS = 10000; // 10 seconds (default)
 
 // Initialize with local evaluation
 // Use Feature Flags Secure API Key (phs_*) from project settings > Feature Flags tab
@@ -29,27 +29,24 @@ export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   // Timeout for flag requests (prevents blocking on slow responses)
   featureFlagsRequestTimeoutMs: FLAG_REQUEST_TIMEOUT_MS,
 });
-
-// Named export
-export { posthog };
 ```
 
 **Note:** Get the Feature Flags Secure API Key from PostHog Project Settings > Feature Flags tab. The key starts with `phs_`. Personal API keys still work but are being deprecated for local evaluation.
 
-### Good Example - Server-side flag evaluation
+### Good Example - Server-side flag evaluation in an API handler
 
 ```typescript
-// app/api/dashboard/route.ts
-import { NextRequest, NextResponse } from "next/server";
-
+// api/dashboard.ts (adapt to your server framework)
 import { posthog } from "@/lib/posthog-server";
 import { FLAG_BETA_DASHBOARD } from "@/lib/feature-flags";
 
-export async function GET(request: NextRequest) {
+export async function handleGetDashboard(request: Request) {
   const userId = request.headers.get("x-user-id");
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
   }
 
   // Evaluate flag server-side with user context
@@ -62,14 +59,14 @@ export async function GET(request: NextRequest) {
         email: request.headers.get("x-user-email"),
         plan: request.headers.get("x-user-plan"),
       },
-    }
+    },
   );
 
-  if (isBetaDashboard) {
-    return NextResponse.json({ dashboard: "beta", features: [...] });
-  }
+  const dashboard = isBetaDashboard
+    ? { dashboard: "beta" }
+    : { dashboard: "stable" };
 
-  return NextResponse.json({ dashboard: "stable", features: [...] });
+  return new Response(JSON.stringify(dashboard));
 }
 ```
 

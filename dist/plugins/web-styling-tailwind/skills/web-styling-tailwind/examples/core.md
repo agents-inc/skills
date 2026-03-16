@@ -15,12 +15,14 @@
 ```typescript
 // vite.config.ts
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 // ✅ Good Example - Vite plugin for optimal performance
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    // ...your framework plugin(s)
+    tailwindcss(),
+  ],
 });
 ```
 

@@ -213,15 +213,19 @@ Do you know all specific paths that need updating?
 - **Server Actions create encrypted IDs recalculated between builds**
 - **Dead code elimination removes unused actions from client bundle**
 - **CSRF protection is built-in via POST-only and Origin header checking**
-- **Next.js 16 Preview:** `revalidateTag()` will require a `cacheLife` profile as second argument
-- **Next.js 16 Preview:** New `updateTag()` API for read-your-writes semantics in Server Actions
-- **Next.js 16 Preview:** New `refresh()` API for uncached data (vs revalidatePath for cached)
+- **Next.js 16:** `revalidateTag()` requires a `cacheLife` profile as second argument (e.g. `revalidateTag("posts", "max")`)
+- **Next.js 16:** New `updateTag()` API for read-your-writes semantics in Server Actions
+- **Next.js 16:** New `refresh()` API for uncached data (vs revalidatePath for cached)
+- **Next.js 16:** `middleware.ts` renamed to `proxy.ts`, export renamed from `middleware` to `proxy`
+- **Next.js 16:** `experimental_ppr` route config removed; use `cacheComponents: true` in next.config
+- **Next.js 16:** Turbopack is default bundler (opt out: `next build --webpack`)
+- **Next.js 16:** Parallel routes require explicit `default.js` in all slots (builds fail without them)
 
 ---
 
-## Next.js 15 Specific Changes
+## Version-Specific Changes
 
-### Breaking Changes from v14
+### Next.js 15 Breaking Changes from v14
 
 | Change                          | Impact                                                             | Migration                                                        |
 | ------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
@@ -250,12 +254,12 @@ export default function SearchPage() {
 }
 ```
 
-#### `unstable_after()` (Experimental)
+#### `after()` (Stable - 15.1+)
 
 Execute code after response finishes streaming (useful for logging, analytics):
 
 ```tsx
-import { unstable_after as after } from "next/server";
+import { after } from "next/server";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   after(() => {
@@ -274,16 +278,14 @@ Use `next dev --turbo` for faster development:
 - 96.3% faster code updates with Fast Refresh
 - 45.8% faster initial route compilation
 
-#### `use cache` Directive (Experimental)
+#### `use cache` Directive (Stable in v16)
 
-Explicit caching with `dynamicIO` flag enabled:
+Explicit opt-in caching with `cacheComponents` flag enabled:
 
 ```tsx
 // next.config.ts
 const nextConfig = {
-  experimental: {
-    dynamicIO: true,
-  },
+  cacheComponents: true, // v15: experimental.dynamicIO
 };
 
 // app/page.tsx
@@ -291,7 +293,7 @@ import { cacheLife } from "next/cache";
 
 export default async function Page() {
   "use cache";
-  cacheLife("hours"); // Built-in profile
+  cacheLife("hours"); // Built-in profile: 'max', 'hours', 'days'
   const data = await fetchData();
   return <div>{data}</div>;
 }
@@ -307,19 +309,19 @@ export default async function Page() {
 | **Route Props Helpers** | Global `PageProps`, `LayoutProps`, `RouteContext` types | Stable |
 | **`next typegen`**      | Manual type generation command                          | Stable |
 
-### Next.js 16 Migration Preview
+### Next.js 16 Changes (Released October 2025)
 
-**Deprecation warnings in 15.5+:**
+**Removals in v16:**
 
-- `legacyBehavior` on `<Link>` - remove wrapper `<a>` tags
-- AMP support - remove all AMP code
-- `next lint` - use ESLint or Biome directly (codemod: `npx @next/codemod@latest next-lint-to-eslint-cli .`)
-- `devIndicators` config options
+- AMP support - all AMP APIs and configs removed
+- `next lint` command - use ESLint or Biome directly
 - `serverRuntimeConfig`, `publicRuntimeConfig` - use env variables
+- `devIndicators` options (`appIsrStatus`, `buildActivity`, `buildActivityPosition`)
+- Synchronous access to `params`, `searchParams`, `cookies()`, `headers()` - must await
 
-**Breaking changes coming in v16:**
+**Breaking changes in v16:**
 
-- `middleware.ts` -> `proxy.ts` (file rename + export rename)
+- `middleware.ts` -> `proxy.ts` (file + export rename, `edge` runtime not supported in proxy)
 - `revalidateTag()` requires `cacheLife` profile as second argument:
 
   ```tsx
@@ -344,10 +346,23 @@ export default async function Page() {
 
 - New `refresh()` for uncached data revalidation (Server Actions only)
 - **Cache Components** replace `experimental.ppr` flag (enable with `cacheComponents: true`)
-- **Turbopack** becomes default bundler (opt out: `next build --webpack`)
+- **Turbopack** is default bundler (opt out: `next build --webpack`)
+- **React Compiler** support stable (`reactCompiler: true` in config, not in `experimental`)
 - Node.js 20.9+ required (18 no longer supported)
 - TypeScript 5.1.0+ required
-- Parallel routes require explicit `default.js` in all slots
+- Parallel routes require explicit `default.js` in all slots (builds fail without them)
+- `experimental.turbopack` moved to top-level `turbopack` config
+- `experimental.dynamicIO` renamed to `cacheComponents`
+- `next/image` defaults changed (minimumCacheTTL 60s -> 4h, imageSizes removed 16px, qualities restricted to [75])
+
+**New features in v16:**
+
+- **React 19.2**: View Transitions, `useEffectEvent`, `<Activity>`
+- **Cache Components**: `"use cache"` directive for explicit opt-in caching
+- **`cacheLife` and `cacheTag`**: Stable (no `unstable_` prefix needed)
+- **Enhanced routing**: Layout deduplication, incremental prefetching
+- **Build Adapters API** (alpha): Custom adapters for deployment platforms
+- **Next.js DevTools MCP**: AI-assisted debugging via Model Context Protocol
 
 For detailed examples, see [examples/nextjs-15-features.md](examples/nextjs-15-features.md).
 
@@ -895,26 +910,27 @@ const [optimisticState, addOptimistic] = useOptimistic(
 
 ---
 
-## Next.js 16 Preview: API Changes
+## Next.js 16 Caching APIs
 
-**Prepare for upcoming Next.js 16 changes:**
-
-### revalidateTag() Change (v16)
+### revalidateTag() (Updated in v16)
 
 ```typescript
-// Current (v15) - single argument (will show deprecation warning in v15.5+)
+// v15 (deprecated single argument)
 revalidateTag("blog-posts");
 
-// Future (v16) - requires cacheLife profile as second argument
+// v16 - requires cacheLife profile as second argument
 revalidateTag("blog-posts", "max");
-// Or with custom profiles:
+// Built-in profiles: 'max', 'hours', 'days'
 revalidateTag("news-feed", "hours");
+// Or inline object:
 revalidateTag("products", { expire: 3600 });
 ```
 
-### New updateTag() API (v16)
+Use for content where slight delay is acceptable (blog posts, product catalogs). Users receive cached data while fresh data loads in background.
 
-For Server Actions, use `updateTag()` instead of `revalidateTag()` for read-your-writes semantics:
+### updateTag() (New in v16)
+
+Server Actions-only API with read-your-writes semantics - expires cache and immediately refreshes within the same request:
 
 ```typescript
 "use server";
@@ -924,14 +940,16 @@ import { updateTag } from "next/cache";
 export async function updateUserProfile(userId: string, formData: FormData) {
   await db.users.update(userId, formData);
 
-  // updateTag ensures immediate consistency (read-your-writes)
+  // Expire cache and refresh immediately - user sees changes right away
   updateTag(`user-${userId}`);
 }
 ```
 
-### New refresh() API (v16)
+Use for forms, user settings, and workflows where users expect to see their updates instantly.
 
-For uncached data that should be refetched:
+### refresh() (New in v16)
+
+Server Actions-only API for refreshing uncached data. Does not touch the cache:
 
 ```typescript
 "use server";
@@ -941,14 +959,25 @@ import { refresh } from "next/cache";
 export async function markNotificationAsRead(notificationId: string) {
   await db.notifications.markAsRead(notificationId);
 
-  // refresh() for uncached data (NOT tagged cache data)
+  // Refresh uncached data displayed elsewhere on the page
   refresh();
 }
 ```
 
+Use when you need to refresh uncached data (notification counts, live metrics) after performing an action.
+
+### When to Use Each
+
+| API                           | Purpose                                 | Scope               |
+| ----------------------------- | --------------------------------------- | ------------------- |
+| `revalidateTag(tag, profile)` | Stale-while-revalidate for tagged cache | Any server context  |
+| `updateTag(tag)`              | Read-your-writes for tagged cache       | Server Actions only |
+| `refresh()`                   | Refresh uncached data                   | Server Actions only |
+| `revalidatePath(path)`        | Invalidate specific route cache         | Any server context  |
+
 ### Migration Codemod
 
 ```bash
-# Automated migration when v16 releases
+# Automated migration to v16
 npx @next/codemod@canary upgrade latest
 ```

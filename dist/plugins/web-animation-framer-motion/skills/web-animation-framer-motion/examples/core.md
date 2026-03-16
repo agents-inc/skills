@@ -1,10 +1,8 @@
-# Motion Examples
+# Motion - Core Examples
 
-> Complete code examples for Motion (formerly Framer Motion) animation patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Core animation patterns for Motion. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
 
-> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
-
-**For advanced patterns**: See topic-specific files in this folder:
+**Related examples:**
 
 - [layout.md](layout.md) - Layout animations, shared elements
 - [scroll.md](scroll.md) - Scroll progress, reveal, parallax
@@ -18,7 +16,7 @@
 ### Good Example - Fade In with Transform
 
 ```typescript
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const FADE_DURATION_S = 0.4;
 const FADE_DISTANCE_PX = 20;
@@ -74,7 +72,7 @@ export const FadeIn = ({ children }) => {
 ### Good Example - Staggered List Animation
 
 ```typescript
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "motion/react";
 
 const STAGGER_DELAY_S = 0.08;
 const ITEM_DISTANCE_PX = 20;
@@ -179,7 +177,7 @@ export const AnimatedList = ({ items }) => {
 ### Good Example - Modal with Exit Animation
 
 ```typescript
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 
 const MODAL_DURATION_S = 0.25;
@@ -264,7 +262,7 @@ export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
 ### Good Example - Page Transitions with mode="wait"
 
 ```typescript
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 
 const PAGE_DURATION_S = 0.3;
 const PAGE_DISTANCE_PX = 20;
@@ -312,7 +310,7 @@ export const PageWrapper = ({ pageKey, children }: PageWrapperProps) => {
 ### Good Example - Interactive Card
 
 ```typescript
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const HOVER_Y_PX = -8;
 const TAP_SCALE = 0.98;
@@ -359,7 +357,7 @@ export const InteractiveCard = ({
 ### Good Example - Draggable Element with Constraints
 
 ```typescript
-import { motion, useDragControls } from "framer-motion";
+import { motion, useDragControls } from "motion/react";
 import { useRef } from "react";
 
 const DRAG_ELASTIC = 0.1;
@@ -402,7 +400,7 @@ export const DraggableItem = ({ children, className }: DraggableItemProps) => {
 ### Good Example - Accessible Animation Component
 
 ```typescript
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 
 const FULL_DISTANCE_PX = 30;
 const FULL_DURATION_S = 0.5;

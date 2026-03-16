@@ -111,139 +111,72 @@ export async function uploadWithPresignedPut(
 
 ---
 
-## Pattern 2: Presigned URL Generator (Server - Hono)
+## Pattern 2: Server-Side Presigned URL Generation
 
-### Generate Presigned PUT URL
+Your server endpoint should:
+
+1. **Validate the request** - check file size, type, and user permissions
+2. **Sanitize the filename** - replace special characters: `fileName.replace(/[^a-zA-Z0-9.-]/g, '_')`
+3. **Generate a unique key** - e.g. `uploads/${userId}/${timestamp}-${sanitizedName}`
+4. **Create the presigned URL** using your cloud SDK (AWS SDK `getSignedUrl`, GCS `generateSignedUrl`, etc.)
+5. **Set expiration** - 15-60 minutes for uploads
+6. **Return URL + key + expiration** to the client
 
 ```typescript
-// routes/upload.ts
-import { Hono } from "hono";
+// Server-side presigned URL generation (framework-agnostic)
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
 
 const PRESIGNED_URL_EXPIRY_SECONDS = 3600;
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
+// In your route handler:
+const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+const key = `uploads/${userId}/${Date.now()}-${sanitizedName}`;
+
+const command = new PutObjectCommand({
+  Bucket: process.env.S3_BUCKET,
+  Key: key,
+  ContentType: fileType,
+  ContentLength: fileSize,
 });
 
-const presignRequestSchema = z.object({
-  fileName: z.string().min(1).max(255),
-  fileType: z.string().min(1),
-  fileSize: z.number().positive().max(MAX_FILE_SIZE_BYTES),
+const presignedUrl = await getSignedUrl(s3Client, command, {
+  expiresIn: PRESIGNED_URL_EXPIRY_SECONDS,
 });
 
-const app = new Hono();
-
-app.post(
-  "/api/upload/presign",
-  zValidator("json", presignRequestSchema),
-  async (c) => {
-    const { fileName, fileType, fileSize } = c.req.valid("json");
-    const userId = c.get("userId"); // From auth middleware
-
-    // Generate unique key with sanitized filename
-    const timestamp = Date.now();
-    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const key = `uploads/${userId}/${timestamp}-${sanitizedName}`;
-
-    const command = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET!,
-      Key: key,
-      ContentType: fileType,
-      ContentLength: fileSize,
-      Metadata: {
-        "original-name": fileName,
-        "uploaded-by": userId,
-      },
-    });
-
-    const presignedUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: PRESIGNED_URL_EXPIRY_SECONDS,
-    });
-
-    return c.json({
-      uploadUrl: presignedUrl,
-      key,
-      expiresAt: new Date(
-        Date.now() + PRESIGNED_URL_EXPIRY_SECONDS * 1000,
-      ).toISOString(),
-    });
-  },
-);
-
-export { app as uploadRoutes };
+// Return: { uploadUrl: presignedUrl, key, expiresAt }
 ```
 
-**Why good:** Validates file size before generating URL, sanitizes filename, includes metadata, returns expiration time for client handling
+**Why good:** Validates before generating URL, sanitizes filename, time-limited for security, client never sees storage credentials
 
 ---
 
-## Pattern 3: Presigned POST Policy (Server)
+## Pattern 3: Presigned POST Policy
 
-### Generate POST Policy with Conditions
+POST policies add server-enforced constraints (size limits, content type restrictions):
 
 ```typescript
-// routes/upload-policy.ts
-import { Hono } from "hono";
-import { S3Client } from "@aws-sdk/client-s3";
+// Using AWS SDK createPresignedPost
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
-import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
 
-const POLICY_EXPIRY_SECONDS = 3600;
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
-const policyRequestSchema = z.object({
-  fileType: z.string().min(1),
+const { url, fields } = await createPresignedPost(s3Client, {
+  Bucket: process.env.S3_BUCKET,
+  Key: `${keyPrefix}/\${filename}`, // S3 replaces ${filename}
+  Conditions: [
+    ["content-length-range", 0, MAX_FILE_SIZE_BYTES],
+    ["starts-with", "$Content-Type", fileType.split("/")[0]],
+    ["starts-with", "$key", keyPrefix],
+  ],
+  Fields: { "Content-Type": fileType },
+  Expires: POLICY_EXPIRY_SECONDS,
 });
 
-const app = new Hono();
-
-app.post(
-  "/api/upload/policy",
-  zValidator("json", policyRequestSchema),
-  async (c) => {
-    const { fileType } = c.req.valid("json");
-    const userId = c.get("userId");
-
-    const keyPrefix = `uploads/${userId}/${Date.now()}`;
-
-    const { url, fields } = await createPresignedPost(s3Client, {
-      Bucket: process.env.S3_BUCKET!,
-      Key: `${keyPrefix}/\${filename}`, // S3 replaces ${filename}
-      Conditions: [
-        ["content-length-range", 0, MAX_FILE_SIZE_BYTES],
-        ["starts-with", "$Content-Type", fileType.split("/")[0]],
-        ["starts-with", "$key", keyPrefix],
-      ],
-      Fields: {
-        "Content-Type": fileType,
-      },
-      Expires: POLICY_EXPIRY_SECONDS,
-    });
-
-    return c.json({
-      url,
-      fields,
-      expiresAt: new Date(
-        Date.now() + POLICY_EXPIRY_SECONDS * 1000,
-      ).toISOString(),
-    });
-  },
-);
-
-export { app as uploadPolicyRoutes };
+// Return: { url, fields, expiresAt }
 ```
 
-**Why good:** Server-side file size limit enforcement, content type restrictions, key prefix ensures files go to correct location, conditions prevent abuse
+**Why good:** Server-side file size enforcement, content type restrictions, key prefix ensures files go to correct location, conditions prevent abuse
 
 ---
 

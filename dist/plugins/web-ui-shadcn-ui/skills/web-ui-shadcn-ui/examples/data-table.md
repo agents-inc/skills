@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+// Use your configured icon library (lucide-react is the shadcn default)
 
 interface User {
   id: string;
@@ -46,7 +46,10 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
           <TableHead className="w-[200px]">
             <Button variant="ghost" className="p-0 hover:bg-transparent">
               Name
-              <ArrowUpDown className="ml-2 h-4 w-4" />
+              {/* Sort icon from your icon library */}
+              <span className="ml-2 h-4 w-4" aria-hidden="true">
+                ↕
+              </span>
             </Button>
           </TableHead>
           <TableHead>Email</TableHead>
@@ -69,7 +72,10 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
                     <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
+                    {/* More icon from your icon library */}
+                    <span className="h-4 w-4" aria-hidden="true">
+                      ...
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

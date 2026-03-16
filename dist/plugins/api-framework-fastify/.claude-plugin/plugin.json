@@ -1,6 +1,6 @@
 {
   "name": "api-framework-fastify",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Fastify routes, JSON Schema validation, plugin system, TypeScript type providers",
   "author": {

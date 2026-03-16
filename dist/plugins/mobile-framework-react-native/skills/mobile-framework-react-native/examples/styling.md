@@ -1,10 +1,12 @@
-# Styling Patterns
+# React Native - Styling Patterns
 
-StyleSheet, NativeWind, CVA variants, and theming patterns.
+> StyleSheet patterns, design tokens, platform-specific styling, and theming. See [core.md](core.md) for component architecture.
+
+**Prerequisites**: Understand [Pattern 3: Platform-Specific Code](../SKILL.md) from SKILL.md.
 
 ---
 
-## Design Tokens
+## Pattern 1: Design Tokens
 
 ```typescript
 // constants/design-tokens.ts
@@ -36,12 +38,6 @@ export const FONT_WEIGHT = {
   semibold: "600" as const,
   bold: "700" as const,
 };
-
-export const LINE_HEIGHT = {
-  tight: 1.2,
-  normal: 1.5,
-  relaxed: 1.75,
-} as const;
 
 // Colors - Light theme
 export const COLORS = {
@@ -86,7 +82,7 @@ export const RADIUS = {
   full: 9999,
 } as const;
 
-// Shadows (iOS)
+// Shadows (iOS only - use ELEVATIONS for Android)
 export const SHADOWS = {
   sm: {
     shadowColor: "#000",
@@ -108,7 +104,7 @@ export const SHADOWS = {
   },
 } as const;
 
-// Elevations (Android)
+// Elevations (Android only - use SHADOWS for iOS)
 export const ELEVATIONS = {
   sm: 2,
   md: 4,
@@ -118,7 +114,7 @@ export const ELEVATIONS = {
 
 ---
 
-## StyleSheet with Design Tokens
+## Pattern 2: StyleSheet with Design Tokens
 
 ```typescript
 import {
@@ -183,7 +179,7 @@ export const cardStyles = StyleSheet.create<CardStyles>({
 
 ---
 
-## New Architecture Style Props (React Native 0.76+)
+## Pattern 3: New Architecture Style Props (React Native 0.76+)
 
 The New Architecture introduces `boxShadow` and `filter` props that work cross-platform.
 
@@ -245,7 +241,7 @@ const styles = StyleSheet.create({
 
 ---
 
-## Platform-Specific Styling
+## Pattern 4: Platform-Specific Styling
 
 ```typescript
 import { StyleSheet, Platform } from "react-native";
@@ -310,240 +306,7 @@ function PlatformButton({ onPress, children }: ButtonProps) {
 
 ---
 
-## NativeWind Configuration
-
-```javascript
-// tailwind.config.js
-module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  presets: [require("nativewind/preset")],
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          DEFAULT: "#007AFF",
-          light: "#4DA3FF",
-          dark: "#0056B3",
-        },
-        secondary: "#5856D6",
-        success: "#34C759",
-        warning: "#FF9500",
-        error: "#FF3B30",
-      },
-      spacing: {
-        4.5: "18px",
-        13: "52px",
-      },
-      borderRadius: {
-        "4xl": "32px",
-      },
-    },
-  },
-  plugins: [],
-};
-```
-
----
-
-## NativeWind Components
-
-```typescript
-// components/ui/card.tsx
-import { View, Text, Pressable } from "react-native";
-import type { ReactNode } from "react";
-
-interface CardProps {
-  children: ReactNode;
-  variant?: "default" | "outlined" | "elevated";
-  onPress?: () => void;
-  className?: string;
-}
-
-export function Card({
-  children,
-  variant = "default",
-  onPress,
-  className = "",
-}: CardProps) {
-  const baseStyles = "rounded-xl p-4";
-
-  const variantStyles = {
-    default: "bg-white",
-    outlined: "bg-white border border-gray-200",
-    elevated: "bg-white shadow-md",
-  };
-
-  const combinedClassName = `${baseStyles} ${variantStyles[variant]} ${className}`;
-
-  if (onPress) {
-    return (
-      <Pressable onPress={onPress} className={`${combinedClassName} active:opacity-80`}>
-        {children}
-      </Pressable>
-    );
-  }
-
-  return <View className={combinedClassName}>{children}</View>;
-}
-
-// Usage
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <Card variant="elevated" className="mb-4">
-      <Text className="text-lg font-bold text-gray-900">{product.name}</Text>
-      <Text className="text-sm text-gray-600 mt-1">{product.description}</Text>
-      <View className="flex-row justify-between items-center mt-4">
-        <Text className="text-xl font-bold text-primary">${product.price}</Text>
-        <Pressable className="bg-primary px-4 py-2 rounded-lg active:bg-primary-dark">
-          <Text className="text-white font-semibold">Add to Cart</Text>
-        </Pressable>
-      </View>
-    </Card>
-  );
-}
-```
-
----
-
-## CVA (Class Variance Authority) Pattern
-
-```typescript
-// components/ui/button.tsx
-import { cva, type VariantProps } from "class-variance-authority";
-import { Pressable, Text, ActivityIndicator } from "react-native";
-import { forwardRef } from "react";
-
-// Button container variants
-const buttonVariants = cva(
-  "flex-row items-center justify-center rounded-lg", // Base styles
-  {
-    variants: {
-      variant: {
-        primary: "bg-primary",
-        secondary: "bg-secondary",
-        outline: "bg-transparent border-2 border-primary",
-        ghost: "bg-transparent",
-        destructive: "bg-error",
-      },
-      size: {
-        sm: "px-3 py-2",
-        md: "px-4 py-3",
-        lg: "px-6 py-4",
-      },
-      fullWidth: {
-        true: "w-full",
-      },
-    },
-    defaultVariants: {
-      variant: "primary",
-      size: "md",
-      fullWidth: false,
-    },
-  }
-);
-
-// Button text variants
-const buttonTextVariants = cva("font-semibold", {
-  variants: {
-    variant: {
-      primary: "text-white",
-      secondary: "text-white",
-      outline: "text-primary",
-      ghost: "text-primary",
-      destructive: "text-white",
-    },
-    size: {
-      sm: "text-sm",
-      md: "text-base",
-      lg: "text-lg",
-    },
-  },
-  defaultVariants: {
-    variant: "primary",
-    size: "md",
-  },
-});
-
-// Props interface
-interface ButtonProps extends VariantProps<typeof buttonVariants> {
-  children: string;
-  onPress: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-}
-
-export const Button = forwardRef<View, ButtonProps>(
-  (
-    {
-      children,
-      variant,
-      size,
-      fullWidth,
-      onPress,
-      disabled = false,
-      loading = false,
-      leftIcon,
-      rightIcon,
-    },
-    ref
-  ) => {
-    const isDisabled = disabled || loading;
-
-    return (
-      <Pressable
-        ref={ref}
-        onPress={onPress}
-        disabled={isDisabled}
-        className={`${buttonVariants({ variant, size, fullWidth })} ${
-          isDisabled ? "opacity-50" : ""
-        }`}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: isDisabled }}
-      >
-        {loading ? (
-          <ActivityIndicator
-            color={variant === "outline" || variant === "ghost" ? "#007AFF" : "#FFFFFF"}
-          />
-        ) : (
-          <>
-            {leftIcon && <View className="mr-2">{leftIcon}</View>}
-            <Text className={buttonTextVariants({ variant, size })}>{children}</Text>
-            {rightIcon && <View className="ml-2">{rightIcon}</View>}
-          </>
-        )}
-      </Pressable>
-    );
-  }
-);
-
-Button.displayName = "Button";
-
-// Usage
-function Actions() {
-  return (
-    <View className="gap-3">
-      <Button variant="primary" size="lg" fullWidth onPress={handleSubmit}>
-        Submit
-      </Button>
-      <Button variant="outline" onPress={handleCancel}>
-        Cancel
-      </Button>
-      <Button variant="ghost" size="sm" onPress={handleSkip}>
-        Skip
-      </Button>
-      <Button variant="destructive" onPress={handleDelete}>
-        Delete
-      </Button>
-    </View>
-  );
-}
-```
-
----
-
-## Theming with Context
+## Pattern 5: Theming with Context
 
 ```typescript
 // context/theme-context.tsx
@@ -601,11 +364,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 // Provider
-interface ThemeProviderProps {
-  children: ReactNode;
-}
-
-export function ThemeProvider({ children }: ThemeProviderProps) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemColorScheme = useColorScheme();
   const [mode, setMode] = useState<"light" | "dark" | "system">("system");
 
@@ -663,7 +422,7 @@ function ThemedCard({ children }: { children: ReactNode }) {
 
 ---
 
-## Dynamic Style Arrays
+## Pattern 6: Dynamic Style Arrays with Variants
 
 ```typescript
 import { StyleSheet, View, Text, type ViewStyle, type TextStyle } from "react-native";
@@ -744,10 +503,10 @@ const styles = StyleSheet.create({
 
 ---
 
-## Responsive Styling
+## Pattern 7: Responsive Styling
 
 ```typescript
-import { Dimensions, StyleSheet, useWindowDimensions } from "react-native";
+import { useWindowDimensions } from "react-native";
 
 // Constants for breakpoints
 const BREAKPOINTS = {

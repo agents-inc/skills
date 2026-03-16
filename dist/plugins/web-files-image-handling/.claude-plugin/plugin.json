@@ -1,6 +1,6 @@
 {
   "name": "web-files-image-handling",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Client-side image handling - preview generation, Canvas API resizing, compression, EXIF orientation, format conversion, memory management with object URL cleanup",
   "author": {

@@ -33,7 +33,6 @@ export async function flushPendingEmails(): Promise<void> {
   await Promise.all(inFlightEmails);
 }
 
-// Named exports
 export { sendEmailAsync, flushPendingEmails };
 ```
 
@@ -44,24 +43,16 @@ export { sendEmailAsync, flushPendingEmails };
 Non-blocking email in a signup flow.
 
 ```typescript
-// app/api/signup/route.ts
-import { NextRequest, NextResponse } from "next/server";
+// api/signup/route.ts
+import { sendEmailAsync } from "./lib/email/async-email";
+import { WelcomeEmail } from "./templates/welcome-email";
 
-import { auth } from "@/lib/auth";
-import { sendEmailAsync } from "@/lib/email/async-email";
-import { WelcomeEmail } from "@repo/emails";
-
-export async function POST(request: NextRequest) {
+// Adapt to your web framework's route handler
+export async function handleSignup(request: Request) {
   const body = await request.json();
 
   // Create user (blocking - required for response)
-  const user = await auth.api.signUpEmail({
-    body: {
-      email: body.email,
-      password: body.password,
-      name: body.name,
-    },
-  });
+  const user = await createUser(body);
 
   // Send welcome email asynchronously (non-blocking)
   sendEmailAsync({
@@ -69,12 +60,12 @@ export async function POST(request: NextRequest) {
     subject: "Welcome to Your App!",
     react: WelcomeEmail({
       userName: user.name ?? "there",
-      loginUrl: `${process.env.NEXT_PUBLIC_APP_URL}/login`,
+      loginUrl: `${process.env.APP_URL}/login`,
     }),
   });
 
   // Return immediately - email sends in background
-  return NextResponse.json({ success: true, user });
+  return Response.json({ success: true, user });
 }
 ```
 
@@ -88,15 +79,13 @@ Send to multiple recipients efficiently using Resend's batch API.
 
 ```typescript
 // lib/email/batch-email.ts
+import { Resend } from "resend";
 import { render } from "@react-email/components";
 
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const MAX_BATCH_SIZE = 100; // Resend limit per batch request
+const DEFAULT_FROM = `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`;
 
 interface BatchEmailItem {
   to: string;
@@ -113,7 +102,6 @@ interface BatchSendResult {
 export async function sendBatchEmails(
   emails: BatchEmailItem[],
 ): Promise<BatchSendResult> {
-  const resend = getResendClient();
   const results: { id: string }[] = [];
   const errors: string[] = [];
 
@@ -121,10 +109,10 @@ export async function sendBatchEmails(
   for (let i = 0; i < emails.length; i += MAX_BATCH_SIZE) {
     const batch = emails.slice(i, i + MAX_BATCH_SIZE);
 
-    // Render all emails in batch
+    // Render all emails in batch in parallel
     const renderedEmails = await Promise.all(
       batch.map(async (email) => ({
-        from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
+        from: DEFAULT_FROM,
         to: email.to,
         subject: email.subject,
         html: await render(email.react),
@@ -154,7 +142,6 @@ export async function sendBatchEmails(
   };
 }
 
-// Named export
 export { sendBatchEmails };
 export type { BatchEmailItem, BatchSendResult };
 ```
@@ -167,8 +154,8 @@ Send notifications to all team members.
 
 ```typescript
 // Send notifications to all team members
-import { sendBatchEmails } from "@/lib/email/batch-email";
-import { NotificationEmail } from "@repo/emails";
+import { sendBatchEmails } from "./lib/email/batch-email";
+import { NotificationEmail } from "./templates/notification-email";
 
 async function notifyTeamMembers(
   members: { email: string; name: string }[],
@@ -184,7 +171,7 @@ async function notifyTeamMembers(
       body: notification.body,
       actionUrl: notification.actionUrl,
       actionText: "View Update",
-      unsubscribeUrl: `https://example.com/unsubscribe?email=${member.email}`,
+      unsubscribeUrl: `${process.env.APP_URL}/unsubscribe?email=${member.email}`,
     }),
   }));
 
@@ -202,28 +189,12 @@ async function notifyTeamMembers(
 
 ---
 
-## Decision Tree: Single vs Batch
-
-```
-How many emails?
-+-- 1 email --> resend.emails.send()
-+-- 2-100 emails --> resend.batch.send()
-+-- 100+ emails --> Loop with batch API
-
-Need attachments or scheduling?
-+-- YES --> Use resend.emails.send() (batch API doesn't support these)
-+-- NO --> Can use resend.batch.send()
-```
-
----
-
 ## Batch API Limitations
 
 **Not Supported in Batch:**
 
 - `attachments` field - use single send for emails with attachments
 - `scheduledAt` field - use single send for scheduled emails
-- Maximum 40MB per email after Base64 encoding (single send limit)
 
 **Supported in Batch:**
 

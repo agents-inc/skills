@@ -9,7 +9,7 @@
 ## Pattern: Performance Tracking Utilities
 
 ```typescript
-import { logger } from "@/lib/logger";
+import { logger } from "./logger";
 
 const SLOW_QUERY_THRESHOLD_MS = 1000;
 const SLOW_API_CALL_THRESHOLD_MS = 3000;
@@ -84,14 +84,15 @@ export async function trackedApiCall<T>(
 ## Pattern: Using Performance Wrappers
 
 ```typescript
-import { trackedQuery, trackedApiCall } from "@/lib/performance";
-import { db, jobs } from "@/lib/db";
+import { trackedQuery, trackedApiCall } from "./performance";
+
+const MAX_JOBS = 100;
 
 async function getJobsWithExternalData(log: Logger) {
   // Track database query
   const dbJobs = await trackedQuery(
     "jobs.findMany",
-    () => db.query.jobs.findMany({ limit: 100 }),
+    () => db.query.jobs.findMany({ limit: MAX_JOBS }),
     log,
   );
 

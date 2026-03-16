@@ -65,19 +65,21 @@ Is data coming from parent component?
         └─ YES → Use signal() ✓
 ```
 
-### When to Use resource() / rxResource() (Angular 19+, Experimental)
+### When to Use resource() / rxResource() / httpResource() (Angular 19+, Experimental)
 
 ```
 Do you need to fetch async data that depends on signals?
 ├─ YES → Is it for GET requests (read-only data)?
-│   ├─ YES → Do you prefer Observables?
-│   │   ├─ YES → Use rxResource() ✓
-│   │   └─ NO → Use resource() ✓
+│   ├─ YES → Are you using Angular's HttpClient (need interceptors)?
+│   │   ├─ YES → Use httpResource() ✓ (19.2+, simplest API)
+│   │   └─ NO → Do you prefer Observables?
+│   │       ├─ YES → Use rxResource() ✓
+│   │       └─ NO → Use resource() ✓ (Promise-based)
 │   └─ NO → Use traditional HttpClient (resource is read-only)
 └─ NO → Use traditional HttpClient or fetch
 ```
 
-**Note:** `resource()` and `rxResource()` are experimental in Angular 19. Do not use them for POST/PUT/DELETE operations.
+**Note:** `resource()`, `rxResource()`, and `httpResource()` are experimental in Angular 19. Do not use them for POST/PUT/DELETE operations.
 
 ### @if vs @switch
 
@@ -103,7 +105,7 @@ Do items have unique IDs?
 
 ### High Priority Issues
 
-- **Missing `standalone: true` in Angular < 19** - Component requires NgModule, loses tree-shaking benefits (Note: default in Angular 19)
+- **Using NgModule components without explicit `standalone: false`** - In Angular 19+, components are standalone by default; only add `standalone: false` for legacy NgModule components
 - **Using @Input/@Output decorators** - Legacy pattern without signal reactivity
 - **Using *ngIf/*ngFor/\*ngSwitch** - Legacy directives require CommonModule, worse type narrowing
 - **Missing `track` in @for** - Poor performance, unnecessary DOM recreation
@@ -380,29 +382,32 @@ export class UserCardComponent {
 
 ### Resource API (Angular 19+, Experimental)
 
-| Function/Property                | Purpose                   | Example                                                               |
-| -------------------------------- | ------------------------- | --------------------------------------------------------------------- |
-| `resource({ params, loader })`   | Async data with signals   | `resource({ params: () => ({ id: userId() }), loader: fetchUser })`   |
-| `rxResource({ params, loader })` | Observable-based resource | `rxResource({ params: () => ({ id }), loader: () => http.get(...) })` |
-| `.value()`                       | Get loaded value          | `users.value()`                                                       |
-| `.hasValue()`                    | Type guard for value      | `@if (users.hasValue()) { ... }`                                      |
-| `.error()`                       | Get error if failed       | `users.error()`                                                       |
-| `.isLoading()`                   | Check loading state       | `@if (users.isLoading()) { ... }`                                     |
-| `.status()`                      | Get ResourceStatus        | `users.status() === 'resolved'`                                       |
-| `.reload()`                      | Re-fetch data             | `users.reload()`                                                      |
+| Function/Property                | Purpose                          | Example                                                               |
+| -------------------------------- | -------------------------------- | --------------------------------------------------------------------- |
+| `resource({ params, loader })`   | Async data with signals          | `resource({ params: () => ({ id: userId() }), loader: fetchUser })`   |
+| `rxResource({ params, loader })` | Observable-based resource        | `rxResource({ params: () => ({ id }), loader: () => http.get(...) })` |
+| `httpResource(() => url)`        | HttpClient-based resource (19.2) | `httpResource<User>(() => \`/api/users/\${id()}\`)`                   |
+| `.value()`                       | Get loaded value                 | `users.value()`                                                       |
+| `.hasValue()`                    | Type guard for value             | `@if (users.hasValue()) { ... }`                                      |
+| `.error()`                       | Get error if failed              | `users.error()`                                                       |
+| `.isLoading()`                   | Check loading state              | `@if (users.isLoading()) { ... }`                                     |
+| `.status()`                      | Get ResourceStatus               | `users.status() === 'resolved'`                                       |
+| `.reload()`                      | Re-fetch data                    | `users.reload()`                                                      |
 
 ### afterRenderEffect Phases (Angular 19+)
 
-| Phase            | Purpose                   | When to use                |
-| ---------------- | ------------------------- | -------------------------- |
-| `earlyRead`      | Read DOM before mutations | Measurements before writes |
-| `write`          | Mutate DOM                | Setting properties, styles |
-| `mixedReadWrite` | Read + write (default)    | Avoid if possible          |
-| `read`           | Read DOM after mutations  | Final measurements         |
+| Phase            | Receives              | Purpose                   | When to use                |
+| ---------------- | --------------------- | ------------------------- | -------------------------- |
+| `earlyRead`      | nothing               | Read DOM before mutations | Measurements before writes |
+| `write`          | `Signal<earlyRead T>` | Mutate DOM                | Setting properties, styles |
+| `mixedReadWrite` | `Signal<write T>`     | Read + write (default)    | Avoid if possible          |
+| `read`           | `Signal<prior T>`     | Read DOM after mutations  | Final measurements         |
+
+Each phase receives the previous phase's return value wrapped in a `Signal`. Prefer `earlyRead` + `write` over `mixedReadWrite`.
 
 ### Component Checklist
 
-- [ ] Uses `standalone: true` (default in Angular 19, explicit for clarity)
+- [ ] Component is standalone (default in Angular 19, no flag needed)
 - [ ] Uses `input()` / `input.required()` for inputs
 - [ ] Uses `output()` for events
 - [ ] Uses `model()` for two-way binding
@@ -414,4 +419,4 @@ export class UserCardComponent {
 - [ ] Uses `linkedSignal()` for writable derived values (Angular 19+)
 - [ ] Uses `effect()` only for side effects (not DOM ops)
 - [ ] Uses `afterRenderEffect()` for DOM operations (Angular 19+)
-- [ ] Uses `resource()` for reactive async data fetching (Angular 19+)
+- [ ] Uses `resource()` / `rxResource()` / `httpResource()` for reactive async data fetching (Angular 19+, experimental)

@@ -12,7 +12,7 @@
 New code to write?
 │
 ├─ Is it a deployable application?
-│  └─ apps/ (Next.js app, API server, admin dashboard)
+│  └─ apps/ (web app, API server, admin dashboard)
 │
 ├─ Is it shared across multiple apps?
 │  └─ packages/ (ui, api-client, types)
@@ -44,7 +44,7 @@ New code to write?
 
 ```
 Is this a monorepo?
-├─ NO → Use standard build tools (Vite, esbuild, etc.)
+├─ NO → Use standard build tools directly
 └─ YES → Are there multiple packages/apps?
     ├─ NO → Use standard build tools
     └─ YES → Do builds take > 30 seconds?
@@ -216,19 +216,25 @@ Is this a monorepo?
 
 ## Turborepo 2.x Features
 
-### New in Turborepo 2.7
+### Recent Additions (2.7 - 2.8)
 
 **Devtools (Visual Graph Exploration):**
 
 ```bash
 # Launch visual devtools for Package/Task Graph exploration
 turbo devtools
-# Opens turborepo.dev/devtools with hot-reloading
+```
+
+**`turbo docs` (CLI Documentation Search):**
+
+```bash
+# Search docs from terminal
+turbo docs "package configurations"
 ```
 
 **Composable Configuration (`$TURBO_EXTENDS$`):**
 
-Package configurations can now extend and append to inherited arrays instead of overwriting:
+Package configurations can extend and append to inherited arrays instead of overwriting:
 
 ```json
 // packages/web/turbo.json - Extend root config and ADD to arrays
@@ -242,13 +248,13 @@ Package configurations can now extend and append to inherited arrays instead of 
 }
 ```
 
-**New Task Options:**
+**Task Options Added in 2.x:**
 
 | Option          | Type       | Purpose                                         |
 | --------------- | ---------- | ----------------------------------------------- |
 | `description`   | `string`   | Human-readable task documentation               |
 | `interruptible` | `boolean`  | Allow `turbo watch` to restart persistent tasks |
-| `with`          | `string[]` | Tasks to run alongside this task                |
+| `with`          | `string[]` | Sibling tasks to run alongside this task        |
 
 **Package Boundaries (Tags):**
 
@@ -273,9 +279,13 @@ Package configurations can now extend and append to inherited arrays instead of 
 }
 ```
 
-**Biome Integration:**
+**Special Microsyntax:**
 
-Turborepo 2.7+ includes a Biome rule `noUndeclaredEnvVars` to lint for undeclared environment variables (requires Biome 2.3.10+).
+| Syntax            | Purpose                                               |
+| ----------------- | ----------------------------------------------------- |
+| `$TURBO_DEFAULT$` | Restores default input behavior while customizing     |
+| `$TURBO_ROOT$`    | Makes globs relative to repo root (not package)       |
+| `$TURBO_EXTENDS$` | Appends to arrays instead of replacing in pkg configs |
 
 ### Breaking Changes (Turborepo 2.0)
 
@@ -374,84 +384,14 @@ Importing from packages?
 ### Gotchas & Edge Cases
 
 - `workspace:*` is replaced with actual version on publish (if you ever publish)
-- CSS/SCSS files must be marked as `sideEffects` even if package is otherwise pure
-- TypeScript `paths` mapping may be needed for some bundlers (Next.js handles automatically)
+- CSS files must be marked as `sideEffects` even if package is otherwise pure
+- TypeScript `paths` mapping may be needed for some bundlers (some handle it automatically)
 - Barrel files slow down hot module replacement (HMR) in development
 - Package.json `exports` field is strict - missing exports cannot be imported
 
 ---
 
-## Package Anti-Patterns
-
-### Default Exports in Library Packages
-
-```typescript
-// ANTI-PATTERN: Default export
-// packages/ui/src/components/button/button.tsx
-export default Button;
-```
-
-**Why it's wrong:** Breaks tree-shaking, naming conflicts across packages, inconsistent imports.
-
-**What to do instead:** Use named exports: `export { Button }`
-
----
-
-### Missing exports Field
-
-```json
-// ANTI-PATTERN: No exports field
-{
-  "name": "@repo/ui",
-  "main": "./src/index.ts"
-}
-```
-
-**Why it's wrong:** Allows importing internal paths (`@repo/ui/src/internal/utils`), breaks encapsulation.
-
-**What to do instead:** Define explicit exports for each public API path.
-
----
-
-### Hardcoded Internal Package Versions
-
-```json
-// ANTI-PATTERN: Hardcoded versions
-{
-  "dependencies": {
-    "@repo/ui": "^1.0.0",
-    "@repo/types": "1.2.3"
-  }
-}
-```
-
-**Why it's wrong:** Creates version conflicts when local package changes, may install from npm instead of using local.
-
-**What to do instead:** Use workspace protocol: `"@repo/ui": "workspace:*"`
-
----
-
-### React in Dependencies (Not peerDependencies)
-
-```json
-// ANTI-PATTERN: React as dependency
-{
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  }
-}
-```
-
-**Why it's wrong:** Causes React version duplication, "hooks can only be called inside body of function component" errors.
-
-**What to do instead:** Mark React as peerDependencies in component packages.
-
----
-
-## Package Checklists
-
-### New Package Checklist
+## Package Checklist
 
 - [ ] Directory in `packages/`
 - [ ] `package.json` with `@repo/` prefix name
@@ -460,32 +400,6 @@ export default Button;
 - [ ] `sideEffects` field set
 - [ ] `workspace:*` for internal dependencies
 - [ ] `peerDependencies` for React (if applicable)
-- [ ] `tsconfig.json` extending `@repo/typescript-config`
-- [ ] `eslint.config.js` extending `@repo/eslint-config`
+- [ ] `tsconfig.json` extending shared config
 - [ ] kebab-case file naming
 - [ ] Named exports only
-
-### Common Anti-Patterns to Avoid
-
-- Default exports in library packages (breaks tree-shaking, naming conflicts)
-- Importing from internal paths (`@repo/ui/src/components/...`)
-- Giant barrel files that re-export everything
-- Missing `exports` field (consumers can import anything)
-- Hardcoded versions instead of `workspace:*` for internal deps
-- Mixed naming conventions (some PascalCase files, some kebab-case)
-- `dependencies` instead of `peerDependencies` for React
-
----
-
-## Additional Package Resources
-
-### Official Documentation
-
-- Node.js Package Exports: https://nodejs.org/api/packages.html#exports
-- TypeScript Module Resolution: https://www.typescriptlang.org/docs/handbook/modules/reference.html
-- Bun Workspaces: https://bun.sh/docs/install/workspaces
-
-### Related
-
-- Tree-shaking: https://webpack.js.org/guides/tree-shaking/
-- Package.json exports: https://nodejs.org/api/packages.html#package-entry-points

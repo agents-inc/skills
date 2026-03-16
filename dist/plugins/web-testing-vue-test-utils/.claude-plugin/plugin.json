@@ -1,6 +1,6 @@
 {
   "name": "web-testing-vue-test-utils",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger, setValue, flushPromises, testing composables, Pinia store mocking",
   "author": {

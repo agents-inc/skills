@@ -10,7 +10,6 @@ Patterns for async data fetching with Jotai.
 
 ```typescript
 import { atom } from "jotai";
-import type { Atom } from "jotai";
 
 interface User {
   id: number;
@@ -165,12 +164,15 @@ function App() {
 
 ## Pattern 3: atomFamily for Parameterized Atoms
 
+> **Deprecation notice:** `atomFamily` from `jotai/utils` is deprecated and will be removed in Jotai v3. For new code, use the [`jotai-family`](https://github.com/jotaijs/jotai-family) package which provides the same API plus `atomTree`. The pattern below still works but should be migrated.
+
+> **Memory leak warning:** `atomFamily` caches every param forever unless you call `myFamily.remove(param)` or `myFamily.setShouldRemove()`. Critical when params are dynamic (e.g., user IDs from a list).
+
 ### Good Example - Creating Atoms On-Demand
 
 ```typescript
 import { atom } from "jotai";
 import { atomFamily } from "jotai/utils";
-import type { Atom } from "jotai";
 
 interface User {
   id: string;

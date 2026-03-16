@@ -2,7 +2,7 @@
 
 > Email preferences and unsubscribe handling for CAN-SPAM compliance. See [SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for basic send pattern.
 
-> **Database examples below use Drizzle ORM.** Adapt to your ORM of choice (Prisma, Kysely, raw SQL, etc.) - the patterns remain the same.
+> **Database examples below are pseudocode.** Adapt to your ORM/database solution - the patterns remain the same.
 
 ---
 
@@ -12,17 +12,25 @@ Store user email preferences in database.
 
 ```typescript
 // lib/db/schema/email-preferences.ts
-// Example using Drizzle ORM - adapt to your database solution
-import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core";
+// Adapt to your database solution (Drizzle, Prisma, Kysely, etc.)
 
-export const emailPreferences = pgTable("email_preferences", {
-  userId: text("user_id").primaryKey(),
-  marketingEmails: boolean("marketing_emails").default(true),
-  productUpdates: boolean("product_updates").default(true),
-  teamNotifications: boolean("team_notifications").default(true),
-  securityAlerts: boolean("security_alerts").default(true), // Cannot be disabled
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// Schema concept - implement with your ORM:
+// table: email_preferences
+//   user_id: text (primary key)
+//   marketing_emails: boolean (default: true)
+//   product_updates: boolean (default: true)
+//   team_notifications: boolean (default: true)
+//   security_alerts: boolean (default: true, cannot be disabled)
+//   updated_at: timestamp
+
+interface EmailPreferences {
+  userId: string;
+  marketingEmails: boolean;
+  productUpdates: boolean;
+  teamNotifications: boolean;
+  securityAlerts: boolean; // Cannot be disabled
+  updatedAt: Date;
+}
 ```
 
 ---
@@ -32,13 +40,8 @@ export const emailPreferences = pgTable("email_preferences", {
 Token-based unsubscribe for security.
 
 ```typescript
-// app/api/email/unsubscribe/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm"; // Adapt to your ORM
+// api/email/unsubscribe/route.ts
 import jwt from "jsonwebtoken";
-
-import { db } from "@/lib/db";
-import { emailPreferences } from "@/lib/db/schema";
 
 const UNSUBSCRIBE_SECRET = process.env.UNSUBSCRIBE_SECRET!;
 
@@ -47,17 +50,19 @@ interface UnsubscribeToken {
   category: "marketing" | "product_updates" | "team_notifications";
 }
 
-export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get("token");
+// Adapt to your web framework's route handler
+export async function handleUnsubscribe(request: Request) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
 
   if (!token) {
-    return NextResponse.redirect("/unsubscribe-error");
+    return Response.redirect("/unsubscribe-error");
   }
 
   try {
     const decoded = jwt.verify(token, UNSUBSCRIBE_SECRET) as UnsubscribeToken;
 
-    // Map category to column
+    // Map category to database column
     const columnMap = {
       marketing: "marketingEmails",
       product_updates: "productUpdates",
@@ -66,15 +71,12 @@ export async function GET(request: NextRequest) {
 
     const column = columnMap[decoded.category];
 
-    // Update preference
-    await db
-      .update(emailPreferences)
-      .set({ [column]: false, updatedAt: new Date() })
-      .where(eq(emailPreferences.userId, decoded.userId));
+    // Update preference in your database
+    await updateEmailPreference(decoded.userId, column, false);
 
-    return NextResponse.redirect("/unsubscribe-success");
+    return Response.redirect("/unsubscribe-success");
   } catch (err) {
-    return NextResponse.redirect("/unsubscribe-error");
+    return Response.redirect("/unsubscribe-error");
   }
 }
 ```
@@ -102,10 +104,9 @@ export function generateUnsubscribeUrl(
     expiresIn: UNSUBSCRIBE_TOKEN_EXPIRY,
   });
 
-  return `${process.env.NEXT_PUBLIC_APP_URL}/api/email/unsubscribe?token=${token}`;
+  return `${process.env.APP_URL}/api/email/unsubscribe?token=${token}`;
 }
 
-// Named export
 export { generateUnsubscribeUrl };
 export type { EmailCategory };
 ```
@@ -120,13 +121,9 @@ Respect user preferences for non-transactional emails.
 
 ```typescript
 // lib/email/send-notification.ts
-import { eq } from "drizzle-orm"; // Adapt to your ORM
-
-import { db } from "@/lib/db";
-import { emailPreferences } from "@/lib/db/schema";
 import { sendEmail } from "./send-email";
 import { generateUnsubscribeUrl } from "./unsubscribe";
-import { NotificationEmail } from "@repo/emails";
+import { NotificationEmail } from "../templates/notification-email";
 
 interface NotificationOptions {
   userId: string;
@@ -142,14 +139,8 @@ interface NotificationOptions {
 export async function sendNotificationEmail(
   options: NotificationOptions,
 ): Promise<{ sent: boolean; reason?: string }> {
-  // Check user preferences
-  const prefs = await db
-    .select()
-    .from(emailPreferences)
-    .where(eq(emailPreferences.userId, options.userId))
-    .limit(1);
-
-  const preferences = prefs[0];
+  // Check user preferences (implement with your database solution)
+  const preferences = await getEmailPreferences(options.userId);
 
   // Check if user has opted out of this category
   const categoryMap = {
@@ -186,7 +177,6 @@ export async function sendNotificationEmail(
   return { sent: result.success, reason: result.error };
 }
 
-// Named export
 export { sendNotificationEmail };
 ```
 

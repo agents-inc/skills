@@ -1,19 +1,14 @@
 # Client State - Core Examples
 
-All code examples for core client state management patterns with good/bad comparisons.
-
-**Extended Examples:**
-
-- [Form State Examples](forms.md) - Form state and validation patterns
+> Extended examples for Zustand and client state management. See [SKILL.md](../SKILL.md) for decision frameworks and red flags.
 
 ---
 
-## Pattern 1: Server State vs Client State
+## Pattern 1: State Placement
 
-### Constants Example
+### Constants Convention
 
 ```typescript
-// File naming convention
 // stores/ui-store.ts (kebab-case, named export)
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -35,12 +30,10 @@ const INITIAL_EXPANDED = false;
 interface FeatureProps {
   id: string;
   title: string;
-  status: string;
   description: string;
 }
 
-// Good Example - Truly local state
-export const Feature = ({ id, title, status, description }: FeatureProps) => {
+export const Feature = ({ id, title, description }: FeatureProps) => {
   const [isExpanded, setIsExpanded] = useState(INITIAL_EXPANDED);
 
   return (
@@ -52,18 +45,16 @@ export const Feature = ({ id, title, status, description }: FeatureProps) => {
 };
 ```
 
-**Why good:** State is truly local to this component, never shared, no prop drilling, named export follows project conventions, uses named constant for initial value
+**Why good:** State is truly local to this component, never shared, no prop drilling, named constant for initial value
 
-### Bad Example - Managing Server State in useState
+### Bad Example - Server Data in useState
 
 ```typescript
-// Bad Example - Managing server state in useState
 import { useState, useEffect } from "react";
 
 interface Feature {
   id: string;
   title: string;
-  status: string;
 }
 
 function FeaturesList() {
@@ -82,14 +73,12 @@ function FeaturesList() {
 }
 ```
 
-**Why bad:** Server data belongs in a data fetching layer not client state, no caching strategy means duplicate requests, no automatic refetch on window focus, manually managing loading/error states that a data fetching solution handles automatically
+**Why bad:** Server data belongs in a data fetching layer, no caching means duplicate requests, no automatic refetch on window focus, manually managing loading/error states
 
 ### Bad Example - Prop Drilling for Shared State
 
 ```typescript
-// Bad Example - Prop drilling for shared state
 import { useState } from "react";
-import type { ReactNode } from "react";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -98,52 +87,41 @@ function App() {
     <Layout sidebarOpen={sidebarOpen}>
       <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       <Sidebar isOpen={sidebarOpen} />
-      <Content />
     </Layout>
   );
 }
 ```
 
-**Why bad:** State is shared across multiple components creating prop drilling, layout coupling between Header/Sidebar/Layout, changing state location requires refactoring props through entire tree
-
-**When to use:** State is genuinely used in only one component and will never be shared.
-
-**When not to use:** As soon as state needs to be accessed from multiple components or requires prop drilling.
+**Why bad:** State shared across multiple components via props, layout coupling between Header/Sidebar/Layout, changing state location requires refactoring the entire prop chain
 
 ---
 
-## Pattern 3: Global State with Zustand
+## Pattern 3: Zustand Store Setup
 
-### Store Setup
+### Store with devtools and persist
 
 ```typescript
 // stores/ui-store.ts
 import { create } from "zustand";
-import { persist, devtools } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 
 const DEFAULT_SIDEBAR_STATE = true;
-const DEFAULT_MODAL_STATE = false;
 const DEFAULT_THEME = "light";
 const UI_STORAGE_KEY = "ui-storage";
 
 interface UIState {
   sidebarOpen: boolean;
-  modalOpen: boolean;
   theme: "light" | "dark";
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
-  openModal: () => void;
-  closeModal: () => void;
   setTheme: (theme: "light" | "dark") => void;
 }
 
-// Good Example - Global UI state in Zustand
 export const useUIStore = create<UIState>()(
   devtools(
     persist(
       (set) => ({
         sidebarOpen: DEFAULT_SIDEBAR_STATE,
-        modalOpen: DEFAULT_MODAL_STATE,
         theme: DEFAULT_THEME,
 
         toggleSidebar: () =>
@@ -151,32 +129,27 @@ export const useUIStore = create<UIState>()(
 
         setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
-        openModal: () => set({ modalOpen: true }),
-
-        closeModal: () => set({ modalOpen: false }),
-
         setTheme: (theme) => set({ theme }),
       }),
       {
         name: UI_STORAGE_KEY,
-        partialize: (state) => ({ theme: state.theme }), // Only persist theme
+        partialize: (state) => ({ theme: state.theme }), // Only persist preferences
       },
     ),
   ),
 );
 ```
 
-**Why good:** Named constants for all default values prevent magic strings/booleans, devtools middleware enables debugging, persist middleware saves theme preference across sessions, partialize prevents persisting transient UI state like modal/sidebar, named export follows project conventions
+**Why good:** Named constants for defaults, devtools enables debugging, persist saves theme preference across sessions, partialize excludes transient UI state (sidebar open/closed shouldn't survive page refreshes)
 
-> **Note (Zustand v5):** The persist middleware no longer stores initial state during store creation. If you need computed or randomized initial values, set them explicitly after store creation: `useUIStore.setState({ theme: computedTheme })`
+> **Zustand v5 note:** persist no longer stores initial state during creation. If you need computed or randomized initial values, set them after creation: `useUIStore.setState({ theme: computedTheme })`
 
-### Usage in Components - Select Only What You Need
+### Atomic Selectors (Preferred)
 
 ```typescript
 // components/header.tsx
 import { useUIStore } from "../stores/ui-store";
 
-// Good Example - Select only what you need
 export const Header = () => {
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
 
@@ -188,15 +161,12 @@ export const Header = () => {
 };
 ```
 
-**Why good:** Component only subscribes to the action it needs, won't re-render when sidebarOpen/modalOpen/theme change, minimal re-renders maximize performance
-
-### Usage in Components - Select Specific Value
+**Why good:** Component only subscribes to one value, won't re-render when other state changes, cleanest and most performant approach
 
 ```typescript
 // components/sidebar.tsx
 import { useUIStore } from "../stores/ui-store";
 
-// Good Example - Select specific value
 export const Sidebar = () => {
   const isOpen = useUIStore((state) => state.sidebarOpen);
 
@@ -204,74 +174,55 @@ export const Sidebar = () => {
 };
 ```
 
-**Why good:** Component only subscribes to sidebarOpen value, won't re-render on theme or modal changes, data-attribute for styling follows project pattern
+**Why good:** Subscribes only to sidebarOpen, ignores theme and modal changes entirely
 
-### Shallow Comparison Pattern (useShallow - Zustand v5)
+### useShallow for Multiple Values
+
+When you need multiple values from one store, use `useShallow` to avoid re-renders from reference changes:
 
 ```typescript
+import { useShallow } from "zustand/react/shallow";
 import { useUIStore } from "../stores/ui-store";
 
-// Bad Example - Will re-render on ANY store change
-export const Header = () => {
-  const { sidebarOpen, modalOpen, theme } = useUIStore();
-  return <header>...</header>;
-};
-```
-
-**Why bad:** Component subscribes to entire store, re-renders when ANY value changes even if component doesn't use those values, causes unnecessary re-renders and performance issues at scale
-
-```typescript
-// Good Example - Using useShallow hook (v5 pattern)
-import { useShallow } from "zustand/react/shallow";
-
-export const Header = () => {
-  const { sidebarOpen, modalOpen, theme } = useUIStore(
+export const StatusBar = () => {
+  const { sidebarOpen, theme } = useUIStore(
     useShallow((state) => ({
       sidebarOpen: state.sidebarOpen,
-      modalOpen: state.modalOpen,
       theme: state.theme,
     })),
   );
-  return <header>...</header>;
+  return <div>...</div>;
 };
 ```
 
-**Why good:** useShallow hook prevents re-renders when object reference changes but values are the same, component only re-renders when these specific values change, v5 recommended pattern, better than subscribing to entire store
+**Why good:** useShallow does shallow comparison on the returned object, preventing re-renders when the object reference changes but values are identical
+
+**Prefer atomic selectors** - multiple `useStore((s) => s.value)` calls are simpler and avoid the shallow comparison overhead. Use `useShallow` only when you genuinely need 3+ values from one store in a single component.
+
+### Bad Example - Destructuring Entire Store
 
 ```typescript
-// Better Example - Select only what you need (preferred)
+// BAD - subscribes to EVERYTHING
 export const Header = () => {
-  const sidebarOpen = useUIStore((state) => state.sidebarOpen);
-  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const { sidebarOpen, toggleSidebar } = useUIStore();
   return <header>...</header>;
 };
 ```
 
-**Why good:** Most performant approach, component only subscribes to exactly what it needs, no shallow comparison overhead, clearest intent
+**Why bad:** No selector means the component subscribes to every state change, re-renders on ANY update even if it only uses two values
 
-**When to use:** As soon as state needs to be accessed from 2+ disconnected components or prop drilling exceeds 2 levels.
+### Selector Stability (v5 Requirement)
 
-**When not to use:** For truly local component state or server data.
-
-### Selector Stability (Zustand v5 Requirement)
-
-In v5, selectors must return stable references. Returning new objects, arrays, or functions inline causes infinite loops.
+Selectors must return stable references. Inline object/function creation causes infinite loops:
 
 ```typescript
-// Bad Example - Creates new function on every render (causes infinite loop in v5)
+// BAD - new function reference every render, infinite loop in v5
 const action = useStore((state) => state.action ?? (() => {}));
-```
 
-**Why bad:** Inline fallback `() => {}` creates a new reference every render, causing infinite re-render loops in v5
-
-```typescript
-// Good Example - Stable fallback reference
+// GOOD - stable fallback reference
 const FALLBACK_ACTION = () => {};
-
 const action = useStore((state) => state.action ?? FALLBACK_ACTION);
 ```
-
-**Why good:** Named constant provides stable reference, prevents infinite render loops, works correctly with Zustand v5's strict equality checks
 
 ---
 
@@ -280,16 +231,14 @@ const action = useStore((state) => state.action ?? FALLBACK_ACTION);
 ### Why Context Fails for State
 
 ```typescript
-// NEVER DO THIS - Context is NOT for state management!
+// NEVER DO THIS - Context is NOT for state management
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
 
 interface UIContextValue {
-  sidebarOpen: boolean;          // This is state!
+  sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  modalOpen: boolean;            // This is state!
-  setModalOpen: (open: boolean) => void;
-  theme: "light" | "dark";       // This changes!
+  theme: "light" | "dark";
   setTheme: (theme: string) => void;
 }
 
@@ -297,28 +246,23 @@ const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  // TERRIBLE: Every consumer re-renders on ANY change!
+  // TERRIBLE: Every consumer re-renders on ANY change
   return (
-    <UIContext.Provider value={{
-      sidebarOpen, setSidebarOpen,
-      modalOpen, setModalOpen,
-      theme, setTheme,
-    }}>
+    <UIContext.Provider value={{ sidebarOpen, setSidebarOpen, theme, setTheme }}>
       {children}
     </UIContext.Provider>
   );
 }
 ```
 
-**Why bad:** Every consumer re-renders when ANY value changes, sidebar toggle causes modal component to re-render, theme change re-renders everything, no way to select specific values, creates performance nightmare at scale, new object created on every render
+**Why bad:** Every consumer re-renders when ANY value changes, sidebar toggle causes unrelated components to re-render, new value object created every render, no way to select specific values
 
-### Acceptable Context Usage - Theme Configuration
+### Acceptable Context Usage - Dependency Injection
 
 ```typescript
-// Good Example - Theme configuration (set once, rarely changes)
+// Good - Theme configuration (set once, never changes during runtime)
 import { createContext } from "react";
 
 const DEFAULT_COLOR_SCHEME = "system";
@@ -332,19 +276,15 @@ interface ThemeConfig {
 const ThemeConfigContext = createContext<ThemeConfig>({
   colorScheme: DEFAULT_COLOR_SCHEME,
   density: DEFAULT_DENSITY,
-  // These are CONFIG, not STATE
-  // They don't change during normal app usage
 });
 
 export { ThemeConfigContext };
 ```
 
-**Why good:** Values are configuration not state, set once at app initialization, rarely/never change during runtime, no performance issues because values are static
-
-### Acceptable Context Usage - Database Connection
+**Why good:** Values are configuration not state, set once at app initialization, never change during runtime, no performance issues
 
 ```typescript
-// Good Example - Database connection (singleton)
+// Good - Database connection (singleton)
 import { createContext } from "react";
 import type { Database } from "./db-types";
 
@@ -353,11 +293,7 @@ const DatabaseContext = createContext<Database | null>(null);
 export { DatabaseContext };
 ```
 
-**Why good:** Database connection is a singleton, never changes after initialization, dependency injection pattern, no re-render concerns
-
-**When to use:** Singletons, dependency injection, values set once at startup.
-
-**When not to use:** Anything that changes based on user interaction.
+**Why good:** Singleton that never changes after initialization, pure dependency injection
 
 ---
 
@@ -366,35 +302,29 @@ export { DatabaseContext };
 ### Good Example - URL Params for Filters
 
 ```typescript
-// app/products/page.tsx
-import { useSearchParams } from "next/navigation";
-
+// Use your framework's searchParams API (useSearchParams, useRouter, etc.)
 const DEFAULT_PAGE = "1";
 const DEFAULT_SORT = "newest";
 
 export const ProductList = () => {
-  const searchParams = useSearchParams();
+  // Read filter state from URL (framework-specific API)
+  const searchParams = new URLSearchParams(window.location.search);
 
-  // Read filter state from URL
   const category = searchParams.get("category") ?? undefined;
   const search = searchParams.get("search") ?? undefined;
-  const minPrice = searchParams.get("minPrice") ?? undefined;
   const page = searchParams.get("page") ?? DEFAULT_PAGE;
   const sort = searchParams.get("sort") ?? DEFAULT_SORT;
 
   // Pass URL params to your data fetching solution
-  // const { data } = useGetProducts({ category, search, minPrice, page, sort });
-
   return <div>...</div>;
 };
 ```
 
-**Why good:** Filters are shareable via URL, browser back/forward works correctly, bookmarkable URLs for specific filter states, SEO-friendly for filtered views, named constants for defaults
+**Why good:** Filters are shareable via URL, browser back/forward works, bookmarkable for specific filter states, named constants for defaults
 
 ### Bad Example - Filter State in useState
 
 ```typescript
-// Bad Example - Filter state in useState
 import { useState } from "react";
 
 export const ProductList = () => {
@@ -405,8 +335,4 @@ export const ProductList = () => {
 };
 ```
 
-**Why bad:** URLs can't be shared with specific filters, browser back button doesn't work for filter changes, can't bookmark filtered views, breaks user expectations for web navigation
-
-**When to use:** Any state that users might want to share, bookmark, or navigate to directly.
-
-**When not to use:** Transient UI state like modal open/closed, sidebar expanded, or sensitive data.
+**Why bad:** URLs can't be shared with specific filters, browser back button doesn't work for filter changes, can't bookmark filtered views

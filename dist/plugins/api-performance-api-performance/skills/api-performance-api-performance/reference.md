@@ -14,7 +14,7 @@ Decision frameworks, anti-patterns, red flags, and performance monitoring for ba
 Is response time > 100ms?
 ├─ YES → Is data read more than written?
 │   ├─ YES → Is staleness acceptable (even 60s)?
-│   │   ├─ YES → Add Redis caching
+│   │   ├─ YES → Add caching (cache-aside pattern)
 │   │   └─ NO → Use write-through or real-time sync
 │   └─ NO → Focus on write optimization instead
 └─ NO → Don't cache (premature optimization)
@@ -114,15 +114,7 @@ Signs of N+1:
 - Response time scales linearly with result count
 - Database shows high query count but low total time
 
-```typescript
-// Add query logging to catch N+1
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  log: (msg) => console.log("[DB Query]", msg),
-});
-```
-
-### Redis Monitoring
+### Cache Hit/Miss Monitoring
 
 ```typescript
 // Track cache hit/miss rates
@@ -134,7 +126,7 @@ async function getCached<T>(
   fetchFn: () => Promise<T>,
   ttl: number,
 ): Promise<T> {
-  const cached = await redis.get(key);
+  const cached = await cacheClient.get(key);
   if (cached) {
     CACHE_HITS.set(key, (CACHE_HITS.get(key) || 0) + 1);
     return JSON.parse(cached);
@@ -142,7 +134,7 @@ async function getCached<T>(
 
   CACHE_MISSES.set(key, (CACHE_MISSES.get(key) || 0) + 1);
   const data = await fetchFn();
-  await redis.set(key, JSON.stringify(data), { EX: ttl });
+  await cacheClient.set(key, JSON.stringify(data), { EX: ttl });
   return data;
 }
 ```
@@ -157,19 +149,19 @@ async function getCached<T>(
 
 **High Priority Issues:**
 
-- ❌ **Missing connection release** - Connections never returned to pool cause pool exhaustion and application hangs
-- ❌ **N+1 queries in loops** - Fetching related data one-by-one instead of eager loading destroys performance
-- ❌ **Blocking event loop** - Synchronous operations or CPU-intensive work blocks all concurrent requests
-- ❌ **Cache without TTL** - Unbounded cache grows until memory exhaustion or serves infinitely stale data
-- ❌ **Full table scans on large tables** - Missing indexes on WHERE/JOIN columns cause slow queries
+- Missing connection release -- connections never returned to pool cause pool exhaustion and application hangs
+- N+1 queries in loops -- fetching related data one-by-one instead of eager loading destroys performance
+- Blocking event loop -- synchronous operations or CPU-intensive work blocks all concurrent requests
+- Cache without TTL -- unbounded cache grows until memory exhaustion or serves infinitely stale data
+- Full table scans on large tables -- missing indexes on WHERE/JOIN columns cause slow queries
 
 **Medium Priority Issues:**
 
-- ⚠️ **No index on foreign keys** - JOINs and ON DELETE CASCADE become slow
-- ⚠️ **Over-indexing** - Every index slows writes; remove unused indexes
-- ⚠️ **Cache key collisions** - Generic keys cause wrong data returned
-- ⚠️ **No connection pool limits** - Unbounded pools can exhaust database connections
-- ⚠️ **Offset pagination on large tables** - OFFSET scans all previous rows; use keyset pagination
+- No index on foreign keys -- JOINs and ON DELETE CASCADE become slow
+- Over-indexing -- every index slows writes; remove unused indexes
+- Cache key collisions -- generic keys cause wrong data returned
+- No connection pool limits -- unbounded pools can exhaust database connections
+- Offset pagination on large tables -- OFFSET scans all previous rows; use keyset pagination
 
 **Common Mistakes:**
 
@@ -181,11 +173,11 @@ async function getCached<T>(
 
 **Gotchas & Edge Cases:**
 
-- PostgreSQL EXPLAIN shows estimates; EXPLAIN ANALYZE shows actual - always use ANALYZE
+- PostgreSQL EXPLAIN shows estimates; EXPLAIN ANALYZE shows actual -- always use ANALYZE
 - Composite index (a, b) doesn't help queries filtering only on b
-- Redis SET with EX option replaces existing TTL - calling SET again resets expiration
-- DataLoader caches within request - don't reuse across requests or you get stale data
-- Worker threads have startup overhead (~30ms) - don't use for fast operations
+- Cache SET with EX option replaces existing TTL -- calling SET again resets expiration
+- DataLoader caches within request -- don't reuse across requests or you get stale data
+- Worker threads have startup overhead (~30ms) -- don't use for fast operations
 - Connection pool `idleTimeoutMillis` can cause "connection terminated unexpectedly" if too short
 
 </red_flags>
@@ -194,12 +186,12 @@ async function getCached<T>(
 
 <anti_patterns>
 
-## Anti-Patterns to Avoid
+## Anti-Patterns
 
 ### 1. Lazy Loading in Loops (N+1)
 
 ```typescript
-// ❌ ANTI-PATTERN: Fetching in a loop
+// ANTI-PATTERN: Fetching in a loop
 const users = await db.query.users.findMany();
 for (const user of users) {
   user.posts = await db.query.posts.findMany({
@@ -208,53 +200,47 @@ for (const user of users) {
 }
 ```
 
-**Why it's wrong:** Creates N+1 queries where N is the number of users. With 100 users, that's 101 database round-trips.
-
-**What to do instead:** Use eager loading with `.with()` or DataLoader for batching.
+**Fix:** Use eager loading with `.with()` or DataLoader for batching.
 
 ---
 
 ### 2. Functions on Indexed Columns
 
 ```sql
--- ❌ ANTI-PATTERN: Function prevents index use
+-- ANTI-PATTERN: Function prevents index use
 SELECT * FROM orders WHERE YEAR(created_at) = 2024;
 
--- ✅ CORRECT: Range condition uses index
+-- CORRECT: Range condition uses index
 SELECT * FROM orders
 WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';
 ```
 
-**Why it's wrong:** Applying a function to a column forces the database to evaluate the function for every row, preventing index use.
-
-**What to do instead:** Rewrite as range conditions or create a functional index.
+**Fix:** Rewrite as range conditions or create a functional index.
 
 ---
 
 ### 3. Cache Without Invalidation Strategy
 
 ```typescript
-// ❌ ANTI-PATTERN: Cache forever
+// ANTI-PATTERN: Cache forever
 async function getUser(id: string) {
-  const cached = await redis.get(`user:${id}`);
+  const cached = await cacheClient.get(`user:${id}`);
   if (cached) return JSON.parse(cached);
 
   const user = await db.query.users.findFirst({ where: eq(users.id, id) });
-  await redis.set(`user:${id}`, JSON.stringify(user)); // No TTL!
+  await cacheClient.set(`user:${id}`, JSON.stringify(user)); // No TTL!
   return user;
 }
 ```
 
-**Why it's wrong:** Cache never expires, serving stale data forever. Updates to user are never reflected.
-
-**What to do instead:** Always set TTL and implement cache invalidation on writes.
+**Fix:** Always set TTL and implement cache invalidation on writes.
 
 ---
 
 ### 4. Blocking Event Loop
 
 ```typescript
-// ❌ ANTI-PATTERN: Synchronous CPU-intensive work
+// ANTI-PATTERN: Synchronous CPU-intensive work
 app.get("/report", (req, res) => {
   const data = fs.readFileSync("large-file.csv"); // Blocks!
   const result = processLargeDataset(data); // Blocks!
@@ -262,30 +248,24 @@ app.get("/report", (req, res) => {
 });
 ```
 
-**Why it's wrong:** While processing, no other requests can be handled. All concurrent users wait.
-
-**What to do instead:** Use async file operations and Worker Threads for CPU work.
+**Fix:** Use async file operations and Worker Threads for CPU work.
 
 ---
 
 ### 5. Offset Pagination on Large Tables
 
 ```sql
--- ❌ ANTI-PATTERN: OFFSET scans all previous rows
+-- ANTI-PATTERN: OFFSET scans all previous rows
 SELECT * FROM products ORDER BY id LIMIT 20 OFFSET 100000;
 -- Database must scan 100,020 rows to return 20!
-```
 
-**Why it's wrong:** OFFSET doesn't skip rows efficiently; it reads and discards them. Performance degrades linearly with offset.
-
-**What to do instead:** Use keyset (cursor-based) pagination.
-
-```sql
--- ✅ CORRECT: Keyset pagination
+-- CORRECT: Keyset pagination
 SELECT * FROM products
 WHERE id > :last_seen_id
 ORDER BY id LIMIT 20;
 ```
+
+**Fix:** Use keyset (cursor-based) pagination for large datasets.
 
 ---
 
@@ -293,7 +273,7 @@ ORDER BY id LIMIT 20;
 
 | Problem               | Solution                     | When                        |
 | --------------------- | ---------------------------- | --------------------------- |
-| Slow repeated queries | Redis cache-aside            | Read-heavy, staleness OK    |
+| Slow repeated queries | Cache-aside                  | Read-heavy, staleness OK    |
 | N+1 with ORM          | Eager loading (`.with()`)    | Known relationships         |
 | N+1 with GraphQL      | DataLoader                   | Dynamic field selection     |
 | Slow JOINs            | Index foreign keys           | Any table with FKs          |

@@ -13,8 +13,8 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from "graphql-ws";
 
-const GRAPHQL_HTTP_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
-const GRAPHQL_WS_URL = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL || "";
+const GRAPHQL_HTTP_URL = process.env.GRAPHQL_URL || "";
+const GRAPHQL_WS_URL = process.env.GRAPHQL_WS_URL || "";
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_HTTP_URL,

@@ -414,12 +414,12 @@ const simpleState = useState("simple", () => ({
 }));
 ```
 
-### When to Consider External Libraries
+### When to Consider an External State Library
 
 ```typescript
-// Consider external state management (Pinia) when:
+// Consider a dedicated state management library when:
 // - Complex state with many actions and getters
-// - Need devtools integration
+// - Need devtools integration for state inspection
 // - State persistence beyond cookies
 // - Multiple stores with cross-store dependencies
 // - Undo/redo functionality

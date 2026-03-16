@@ -5,7 +5,6 @@
 **Additional Examples:**
 
 - [core.md](core.md) - Component architecture, variants, event handlers
-- [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
 - [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
 
@@ -382,7 +381,7 @@ function Comments({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) 
 
 ```typescript
 import { use, Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary } from "./error-boundary"; // See error-boundaries.md
 
 function CommentList({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
   const comments = use(commentsPromise);
@@ -415,60 +414,64 @@ export function CommentsSection({ commentsPromise }: { commentsPromise: Promise<
 ### Good Example - Ref with automatic cleanup
 
 ```typescript
-import { useCallback } from "react";
-
 function VideoPlayer({ src }: { src: string }) {
-  const videoRef = useCallback((video: HTMLVideoElement | null) => {
-    if (video === null) return;
+  return (
+    <video
+      ref={(video) => {
+        if (!video) return;
 
-    // Setup - runs when element mounts
-    video.play();
+        // Setup - runs when element mounts
+        video.play();
 
-    // Cleanup function - runs when element unmounts
-    return () => {
-      video.pause();
-      video.currentTime = 0;
-    };
-  }, []);
-
-  return <video ref={videoRef} src={src} controls />;
+        // Cleanup function - runs when element unmounts
+        return () => {
+          video.pause();
+          video.currentTime = 0;
+        };
+      }}
+      src={src}
+      controls
+    />
+  );
 }
 ```
 
-**Why good:** cleanup function runs automatically when element unmounts, no need for separate useEffect, pattern matches other React cleanup patterns, cleaner code
+**Why good:** cleanup function runs automatically when element unmounts, no need for separate useEffect, no useCallback wrapper needed (React Compiler handles memoization)
 
 ### Good Example - Intersection observer with cleanup
 
 ```typescript
-import { useCallback } from "react";
-
 const INTERSECTION_THRESHOLD = 0.5;
 
 function LazyImage({ src, alt }: { src: string; alt: string }) {
-  const imageRef = useCallback((img: HTMLImageElement | null) => {
-    if (img === null) return;
+  return (
+    <img
+      ref={(img) => {
+        if (!img) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            img.src = src;
-            observer.unobserve(img);
-          }
-        });
-      },
-      { threshold: INTERSECTION_THRESHOLD }
-    );
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                img.src = src;
+                observer.unobserve(img);
+              }
+            });
+          },
+          { threshold: INTERSECTION_THRESHOLD }
+        );
 
-    observer.observe(img);
+        observer.observe(img);
 
-    // Cleanup - disconnect observer when element unmounts
-    return () => {
-      observer.disconnect();
-    };
-  }, [src]);
-
-  return <img ref={imageRef} alt={alt} loading="lazy" />;
+        // Cleanup - disconnect observer when element unmounts
+        return () => {
+          observer.disconnect();
+        };
+      }}
+      alt={alt}
+      loading="lazy"
+    />
+  );
 }
 ```
 

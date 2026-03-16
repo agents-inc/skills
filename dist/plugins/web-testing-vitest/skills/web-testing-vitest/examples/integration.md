@@ -8,7 +8,7 @@
 
 ```typescript
 // Good Example - Integration test with network-level mocking
-// apps/client-react/src/home/__tests__/features.test.tsx
+// src/features/home/__tests__/features.test.tsx
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
@@ -187,4 +187,3 @@ _For more patterns, see:_
 
 - [core.md](core.md) - E2E and Unit testing essentials
 - [anti-patterns.md](anti-patterns.md) - What NOT to test
-- [ladle-stories.md](ladle-stories.md) - Component documentation stories

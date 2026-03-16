@@ -55,16 +55,16 @@ What validation UX do you need?
 └─ Validate on all events → mode: "all" (rarely needed)
 ```
 
-### Form Library Integration
+### Component Library Integration
 
 ```
-Which component library are you using?
-├─ Native HTML inputs → Use register
-├─ Radix UI / Headless UI → Depends on component
-│   ├─ Simple components (Checkbox, Radio) → May work with register
-│   └─ Complex components (Select, Combobox) → Use Controller ✓
-├─ Material UI / Ant Design / Chakra → Use Controller ✓
-└─ Custom components → Does it forward ref to input?
+What kind of component are you integrating?
+├─ Native HTML inputs (input, select, textarea) → Use register
+├─ Headless/unstyled components → Depends on component
+│   ├─ Simple (checkbox, radio with ref forwarding) → May work with register
+│   └─ Complex (custom select, combobox) → Use Controller ✓
+├─ Fully styled component libraries → Use Controller ✓
+└─ Custom components → Does it forward ref to a native input?
     ├─ YES → Use register
     └─ NO → Use Controller ✓
 ```
@@ -109,7 +109,7 @@ Which component library are you using?
 - **useWatch initial value** - Returns `defaultValue` or `defaultValues` from useForm on first render before subscription.
 - **setValue and useFieldArray** - `setValue` no longer directly updates useFieldArray. Use `replace()` API instead.
 - **FormStateSubscribe requires FormProvider** - Must wrap form with FormProvider to use FormStateSubscribe component.
-- **handleSubmit no longer catches errors** - Since v7.42.0, errors in onSubmit callback are not caught. Handle errors in your callback.
+- **handleSubmit does not catch errors** - Errors thrown in your onSubmit callback are not caught by handleSubmit. Use try/catch in your callback.
 
 ---
 
@@ -270,42 +270,6 @@ const handleDuplicate = (index) => {
 | `touchedFields` | Object of touched field names | On blur             |
 | `isSubmitted`   | True after first submit       | On first submit     |
 | `submitCount`   | Number of submit attempts     | On each submit      |
-
-### useFieldArray Methods
-
-| Method               | Description      | Usage                             |
-| -------------------- | ---------------- | --------------------------------- |
-| `append(obj)`        | Add to end       | `append({ name: "" })`            |
-| `prepend(obj)`       | Add to start     | `prepend({ name: "" })`           |
-| `insert(index, obj)` | Add at index     | `insert(1, { name: "" })`         |
-| `remove(index)`      | Remove at index  | `remove(2)` or `remove()` for all |
-| `swap(from, to)`     | Swap positions   | `swap(0, 1)`                      |
-| `move(from, to)`     | Move to position | `move(0, 2)`                      |
-| `update(index, obj)` | Replace at index | `update(0, { name: "new" })`      |
-| `replace(arr)`       | Replace all      | `replace([{ name: "" }])`         |
-
-### Reset Options (v7.47+)
-
-| Option                   | Description                                        |
-| ------------------------ | -------------------------------------------------- |
-| `keepErrors`             | Preserve all errors                                |
-| `keepDirty`              | Preserve isDirty and dirtyFields                   |
-| `keepDirtyValues`        | Preserve dirty field values, update only non-dirty |
-| `keepValues`             | Preserve all input values                          |
-| `keepDefaultValues`      | Keep original defaultValues                        |
-| `keepIsSubmitted`        | Preserve isSubmitted state                         |
-| `keepTouched`            | Preserve touchedFields                             |
-| `keepIsValid`            | Preserve isValid state                             |
-| `keepSubmitCount`        | Preserve submitCount                               |
-| `keepIsSubmitSuccessful` | Preserve isSubmitSuccessful (v7.47.0+)             |
-| `keepFieldsRef`          | Skip input ref re-registration (v7.60.0+)          |
-
-### New Components (v7.46+)
-
-| Component                | Version | Use Case                                   |
-| ------------------------ | ------- | ------------------------------------------ |
-| `<Form />`               | v7.46.0 | Progressive enhancement, Server Actions    |
-| `<FormStateSubscribe />` | v7.68.0 | Targeted re-renders for specific formState |
 
 ### Performance Optimization Checklist
 

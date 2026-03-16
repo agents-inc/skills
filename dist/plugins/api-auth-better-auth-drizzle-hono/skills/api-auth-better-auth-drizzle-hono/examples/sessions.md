@@ -4,11 +4,10 @@
 
 **Additional Examples:**
 
-- [core.md](core.md) - Sign up, sign in, client setup
-- [oauth.md](oauth.md) - GitHub, Google OAuth providers
+- [core.md](core.md) - Sign up, sign in, client setup, database adapter
+- [oauth.md](oauth.md) - Social providers, Generic OAuth
 - [two-factor.md](two-factor.md) - TOTP setup and verification
 - [organizations.md](organizations.md) - Multi-tenancy and invitations
-- [v1.4-features.md](v1.4-features.md) - Stateless auth, performance, Generic OAuth
 
 ---
 
@@ -67,7 +66,6 @@ export async function revokeOtherSessions() {
   await authClient.session.revokeOtherSessions();
 }
 
-// Named exports
 export { listSessions, revokeSession, revokeOtherSessions };
 ```
 
@@ -75,7 +73,7 @@ export { listSessions, revokeSession, revokeOtherSessions };
 
 ---
 
-## Cookie Cache Strategies (v1.4+)
+## Cookie Cache Strategies
 
 Three encoding strategies for session cookies:
 
@@ -132,3 +130,33 @@ export { auth };
 ```
 
 **Why good:** Mass invalidation without database, useful for security incidents
+
+---
+
+## Full Stateless Mode (No Database)
+
+Omit the `database` option entirely for fully stateless sessions stored in encrypted cookies.
+
+```typescript
+// lib/auth.ts - No database dependency
+import { betterAuth } from "better-auth";
+
+const CACHE_MAX_AGE_SECONDS = 60 * 5;
+
+export const auth = betterAuth({
+  // No database option = stateless mode
+  emailAndPassword: { enabled: true },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: CACHE_MAX_AGE_SECONDS,
+      strategy: "jwe", // Encrypted for security
+      refreshCache: true, // Auto-refresh before expiry
+    },
+  },
+});
+```
+
+**Why good:** No database dependency, works with edge functions, auto-refresh prevents expiration during active sessions
+
+**Trade-off:** Individual sessions cannot be revoked - increment `version` to invalidate all sessions at once

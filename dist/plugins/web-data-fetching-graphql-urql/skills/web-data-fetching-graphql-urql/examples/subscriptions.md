@@ -18,8 +18,8 @@ import {
 } from "urql";
 import { createClient as createWSClient } from "graphql-ws";
 
-const GRAPHQL_HTTP_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
-const GRAPHQL_WS_URL = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL || "";
+const GRAPHQL_HTTP_URL = process.env.GRAPHQL_URL || "";
+const GRAPHQL_WS_URL = process.env.GRAPHQL_WS_URL || "";
 const TOKEN_STORAGE_KEY = "auth_token";
 const WS_RETRY_ATTEMPTS = 5;
 
@@ -317,8 +317,8 @@ import { Client, fetchExchange, subscriptionExchange } from "urql";
 import { cacheExchange } from "@urql/exchange-graphcache";
 import { createClient as createWSClient } from "graphql-ws";
 
-const GRAPHQL_HTTP_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
-const GRAPHQL_WS_URL = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL || "";
+const GRAPHQL_HTTP_URL = process.env.GRAPHQL_URL || "";
+const GRAPHQL_WS_URL = process.env.GRAPHQL_WS_URL || "";
 
 const MESSAGES_QUERY = `
   query GetMessages($roomId: ID!) {

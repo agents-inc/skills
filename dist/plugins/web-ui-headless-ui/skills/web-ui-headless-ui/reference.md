@@ -1,6 +1,6 @@
 # Headless UI Quick Reference
 
-> Component APIs, keyboard shortcuts, and data attributes for all Headless UI v2 components. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **Current: v2.2.x (React only)**
+> Component APIs, keyboard shortcuts, and data attributes for all Headless UI v2 components. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **Current: v2.2.9 (React only)**
 
 ---
 
@@ -422,11 +422,8 @@ className =
 
 ```bash
 npm install @headlessui/react
-
-# Often paired with
-npm install @heroicons/react
 ```
 
-**Requirements:** React 18+ (works with React 19), Tailwind CSS v3+ recommended
+**Requirements:** React 18+ (works with React 19)
 
 **Peer dependencies:** React, React DOM

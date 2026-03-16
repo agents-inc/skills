@@ -44,13 +44,14 @@ const client = new OpenAI({
 
 ### Language Models (Chat / Text Generation)
 
-| Model         | Use Case                                | Context Window |
-| ------------- | --------------------------------------- | -------------- |
-| `gpt-4o`      | General purpose, best structured output | 128K           |
-| `gpt-4o-mini` | Fast, cheap, good for simple tasks      | 128K           |
-| `o3`          | Complex reasoning, math, coding         | 200K           |
-| `o3-mini`     | Fast reasoning                          | 200K           |
-| `gpt-4-turbo` | Legacy, use gpt-4o instead              | 128K           |
+| Model         | Use Case                                  | Context Window | Notes                                  |
+| ------------- | ----------------------------------------- | -------------- | -------------------------------------- |
+| `gpt-5.4`     | Most capable, general purpose + reasoning | 1M             | Recommended for new projects           |
+| `gpt-5-mini`  | Cost-optimized, balanced speed/quality    | 1M             | Replaces gpt-4o-mini for most uses     |
+| `gpt-5-nano`  | High-throughput, straightforward tasks    | 1M             | Cheapest GPT-5 variant                 |
+| `gpt-4o`      | General purpose, proven                   | 128K           | Still available, lower cost than GPT-5 |
+| `gpt-4o-mini` | Fast, cheap, simple tasks                 | 128K           | Still available, migrate to gpt-5-mini |
+| `o4-mini`     | Fast reasoning                            | 200K           | Use `max_completion_tokens`            |
 
 ### Embedding Models
 
@@ -86,7 +87,7 @@ const completion = await client.chat.completions.create({
   model: "gpt-4o", // Required
   messages: [], // Required: ChatCompletionMessageParam[]
   temperature: 0.7, // 0-2 (default: 1)
-  max_tokens: 1000, // Max output tokens
+  max_tokens: 1000, // Max output tokens (use max_completion_tokens for reasoning models)
   top_p: 1, // Nucleus sampling
   frequency_penalty: 0, // -2 to 2
   presence_penalty: 0, // -2 to 2
@@ -192,7 +193,7 @@ const translation = await client.audio.translations.create({
 // Upload
 const file = await client.files.create({
   file: readStream, // ReadStream | File | Response | toFile()
-  purpose: "fine-tune", // 'fine-tune' | 'batch' | 'assistants'
+  purpose: "fine-tune", // 'fine-tune' | 'batch'
 });
 
 // List

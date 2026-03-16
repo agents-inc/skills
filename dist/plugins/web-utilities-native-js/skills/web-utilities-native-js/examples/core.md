@@ -201,7 +201,7 @@ badClone.values.personal.birthDate.getTime(); // TypeError: .getTime is not a fu
 
 ## Immutable Array Updates
 
-### Good Example - ES2023 Methods for React State
+### Good Example - ES2023 Immutable Methods
 
 ```typescript
 interface Todo {
@@ -211,7 +211,7 @@ interface Todo {
   priority: number;
 }
 
-// Simulating React state
+// Simulating reactive state
 let todos: Todo[] = [
   { id: "1", text: "Learn TypeScript", completed: true, priority: 2 },
   { id: "2", text: "Build app", completed: false, priority: 1 },
@@ -255,7 +255,7 @@ console.log(todos[0].completed); // true - unchanged
 console.log(sorted === todos); // false - new array
 ```
 
-**Why good:** immutable operations work with React state updates, original preserved for diffing
+**Why good:** immutable operations work with reactive state updates, original preserved for diffing
 
 ### Bad Example - Mutating Methods
 
@@ -274,7 +274,7 @@ function reverseOrderBad(items: Todo[]): Todo[] {
 function toggleCompleteBad(items: Todo[], index: number): Todo[] {
   items[index].completed = !items[index].completed;
   return items;
-  // Direct mutation - React won't detect this change!
+  // Direct mutation - reactive frameworks won't detect this change!
 }
 
 function removeAtBad(items: Todo[], index: number): Todo[] {
@@ -284,7 +284,7 @@ function removeAtBad(items: Todo[], index: number): Todo[] {
 }
 ```
 
-**Why bad:** mutations cause React to miss updates, shared references cause bugs across components
+**Why bad:** mutations cause reactive frameworks to miss updates, shared references cause bugs across components
 
 ---
 

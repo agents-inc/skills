@@ -12,33 +12,33 @@
 
 ```tsx
 // components/chat.tsx
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
 
 export function Chat() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
 
   const { messages, sendMessage, status, stop, error, clearError } = useChat({
     onFinish(message) {
-      console.log('Assistant response complete:', message.id);
+      console.log("Assistant response complete:", message.id);
     },
     onError(error) {
-      console.error('Chat error:', error);
+      console.error("Chat error:", error);
     },
   });
 
-  const isStreaming = status === 'streaming';
-  const isSubmitted = status === 'submitted';
+  const isStreaming = status === "streaming";
+  const isSubmitted = status === "submitted";
   const isDisabled = isSubmitted || isStreaming;
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const trimmed = input.trim();
     if (!trimmed) return;
-    sendMessage({ role: 'user', content: trimmed });
-    setInput('');
+    sendMessage({ text: trimmed });
+    setInput("");
   }
 
   return (
@@ -46,17 +46,15 @@ export function Chat() {
       <div className="messages">
         {messages.map((message) => (
           <div key={message.id} className={`message message-${message.role}`}>
-            <strong>{message.role === 'user' ? 'You' : 'AI'}:</strong>
+            <strong>{message.role === "user" ? "You" : "AI"}:</strong>
             <div>
               {message.parts.map((part, index) => {
-                if (part.type === 'text') {
+                if (part.type === "text") {
                   return <p key={index}>{part.text}</p>;
                 }
-                if (part.type === 'tool-invocation') {
+                if (part.type === "tool-invocation") {
                   return (
-                    <pre key={index}>
-                      Tool: {part.toolInvocation.toolName}
-                    </pre>
+                    <pre key={index}>Tool: {part.toolInvocation.toolName}</pre>
                   );
                 }
                 return null;
@@ -108,15 +106,15 @@ export function Chat() {
 
 ```tsx
 // BAD: v4 patterns
-import { useChat } from 'ai/react'; // Wrong import path
+import { useChat } from "ai/react"; // Wrong import path
 
 function Chat() {
   const {
     messages,
-    input,           // v6 no longer manages input
+    input, // v6 no longer manages input
     handleInputChange, // Removed in v6
-    handleSubmit,    // Removed in v6
-    isLoading,       // Replaced by status in v6
+    handleSubmit, // Removed in v6
+    isLoading, // Replaced by status in v6
   } = useChat();
 
   return (
@@ -138,17 +136,18 @@ function Chat() {
 
 ```typescript
 // app/api/chat/route.ts
-import { streamText } from 'ai';
+import { streamText } from "ai";
 
 export async function POST(request: Request) {
   const { messages } = await request.json();
 
   const result = streamText({
-    model: 'openai/gpt-4o',
-    system: 'You are a helpful coding assistant. Respond with clear explanations and code examples when appropriate.',
+    model: "openai/gpt-4o",
+    system:
+      "You are a helpful coding assistant. Respond with clear explanations and code examples when appropriate.",
     messages,
     onError({ error }) {
-      console.error('Chat stream error:', error);
+      console.error("Chat stream error:", error);
     },
   });
 
@@ -191,7 +190,7 @@ export function ChatWithContext({ projectId, userId }: ChatWithContextProps) {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim()) return;
-    sendMessage({ role: 'user', content: input.trim() });
+    sendMessage({ text: input.trim() });
     setInput('');
   }
 
@@ -219,9 +218,9 @@ export function ChatWithContext({ projectId, userId }: ChatWithContextProps) {
 
 ```tsx
 // components/message-display.tsx
-'use client';
+"use client";
 
-import type { UIMessage } from '@ai-sdk/react';
+import type { UIMessage } from "@ai-sdk/react";
 
 interface MessageDisplayProps {
   message: UIMessage;
@@ -231,33 +230,41 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
   return (
     <div className={`message message-${message.role}`}>
       <div className="message-header">
-        <strong>{message.role === 'user' ? 'You' : 'Assistant'}</strong>
+        <strong>{message.role === "user" ? "You" : "Assistant"}</strong>
       </div>
       <div className="message-content">
         {message.parts.map((part, index) => {
           switch (part.type) {
-            case 'text':
-              return <div key={index} className="text-part">{part.text}</div>;
+            case "text":
+              return (
+                <div key={index} className="text-part">
+                  {part.text}
+                </div>
+              );
 
-            case 'tool-invocation': {
+            case "tool-invocation": {
               const { toolInvocation } = part;
               return (
                 <div key={index} className="tool-part">
                   <details>
                     <summary>
                       Tool: {toolInvocation.toolName}
-                      {toolInvocation.state === 'result' ? ' (done)' : ' (pending)'}
+                      {toolInvocation.state === "result"
+                        ? " (done)"
+                        : " (pending)"}
                     </summary>
                     <pre>{JSON.stringify(toolInvocation.args, null, 2)}</pre>
-                    {toolInvocation.state === 'result' && (
-                      <pre>{JSON.stringify(toolInvocation.result, null, 2)}</pre>
+                    {toolInvocation.state === "result" && (
+                      <pre>
+                        {JSON.stringify(toolInvocation.result, null, 2)}
+                      </pre>
                     )}
                   </details>
                 </div>
               );
             }
 
-            case 'source':
+            case "source":
               return (
                 <div key={index} className="source-part">
                   <a href={part.url} target="_blank" rel="noopener noreferrer">
@@ -286,24 +293,24 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
 
 ```tsx
 // components/onboarding-chat.tsx
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
 
 const WELCOME_MESSAGE = {
-  id: 'welcome-1',
-  role: 'assistant' as const,
+  id: "welcome-1",
+  role: "assistant" as const,
   parts: [
     {
-      type: 'text' as const,
-      text: 'Welcome! I can help you set up your project. What would you like to build?',
+      type: "text" as const,
+      text: "Welcome! I can help you set up your project. What would you like to build?",
     },
   ],
 };
 
 export function OnboardingChat() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
 
   const { messages, sendMessage, status } = useChat({
     messages: [WELCOME_MESSAGE],
@@ -312,8 +319,8 @@ export function OnboardingChat() {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim()) return;
-    sendMessage({ role: 'user', content: input.trim() });
-    setInput('');
+    sendMessage({ text: input.trim() });
+    setInput("");
   }
 
   return (
@@ -322,7 +329,7 @@ export function OnboardingChat() {
         <div key={m.id}>
           <strong>{m.role}:</strong>
           {m.parts.map((p, i) =>
-            p.type === 'text' ? <span key={i}>{p.text}</span> : null
+            p.type === "text" ? <span key={i}>{p.text}</span> : null,
           )}
         </div>
       ))}
@@ -330,7 +337,7 @@ export function OnboardingChat() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={status !== 'ready'}
+          disabled={status !== "ready"}
         />
         <button type="submit">Send</button>
       </form>
@@ -349,24 +356,18 @@ export function OnboardingChat() {
 
 ```tsx
 // components/chat-with-actions.tsx
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
 
 export function ChatWithActions() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
 
-  const {
-    messages,
-    sendMessage,
-    regenerate,
-    setMessages,
-    status,
-    stop,
-  } = useChat();
+  const { messages, sendMessage, regenerate, setMessages, status, stop } =
+    useChat();
 
-  const isActive = status === 'streaming' || status === 'submitted';
+  const isActive = status === "streaming" || status === "submitted";
 
   function handleRegenerate() {
     if (isActive) return;
@@ -381,12 +382,12 @@ export function ChatWithActions() {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim() || isActive) return;
-    sendMessage({ role: 'user', content: input.trim() });
-    setInput('');
+    sendMessage({ text: input.trim() });
+    setInput("");
   }
 
   const lastMessage = messages[messages.length - 1];
-  const canRegenerate = lastMessage?.role === 'assistant' && !isActive;
+  const canRegenerate = lastMessage?.role === "assistant" && !isActive;
 
   return (
     <div>
@@ -394,7 +395,7 @@ export function ChatWithActions() {
         <div key={m.id}>
           <strong>{m.role}:</strong>
           {m.parts.map((p, i) =>
-            p.type === 'text' ? <span key={i}>{p.text}</span> : null
+            p.type === "text" ? <span key={i}>{p.text}</span> : null,
           )}
         </div>
       ))}
@@ -406,9 +407,7 @@ export function ChatWithActions() {
         {messages.length > 0 && !isActive && (
           <button onClick={handleClearHistory}>Clear</button>
         )}
-        {isActive && (
-          <button onClick={stop}>Stop</button>
-        )}
+        {isActive && <button onClick={stop}>Stop</button>}
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -417,7 +416,9 @@ export function ChatWithActions() {
           onChange={(e) => setInput(e.target.value)}
           disabled={isActive}
         />
-        <button type="submit" disabled={isActive}>Send</button>
+        <button type="submit" disabled={isActive}>
+          Send
+        </button>
       </form>
     </div>
   );
@@ -434,11 +435,11 @@ export function ChatWithActions() {
 
 ```tsx
 // components/chat-messages.tsx
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
+import { useChat } from "@ai-sdk/react";
 
-const CHAT_ID = 'main-chat';
+const CHAT_ID = "main-chat";
 
 export function ChatMessages() {
   const { messages, status } = useChat({ id: CHAT_ID });
@@ -448,11 +449,11 @@ export function ChatMessages() {
       {messages.map((m) => (
         <div key={m.id}>
           {m.parts.map((p, i) =>
-            p.type === 'text' ? <p key={i}>{p.text}</p> : null
+            p.type === "text" ? <p key={i}>{p.text}</p> : null,
           )}
         </div>
       ))}
-      {status === 'streaming' && <p>Typing...</p>}
+      {status === "streaming" && <p>Typing...</p>}
     </div>
   );
 }
@@ -460,22 +461,22 @@ export function ChatMessages() {
 
 ```tsx
 // components/chat-input.tsx
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
 
-const CHAT_ID = 'main-chat';
+const CHAT_ID = "main-chat";
 
 export function ChatInput() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const { sendMessage, status } = useChat({ id: CHAT_ID });
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim()) return;
-    sendMessage({ role: 'user', content: input.trim() });
-    setInput('');
+    sendMessage({ text: input.trim() });
+    setInput("");
   }
 
   return (
@@ -483,9 +484,11 @@ export function ChatInput() {
       <input
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        disabled={status !== 'ready'}
+        disabled={status !== "ready"}
       />
-      <button type="submit" disabled={status !== 'ready'}>Send</button>
+      <button type="submit" disabled={status !== "ready"}>
+        Send
+      </button>
     </form>
   );
 }

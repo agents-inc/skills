@@ -49,7 +49,7 @@ jobs:
           NEXT_PUBLIC_APP_VERSION: ${{ github.sha }}
 
       - name: Create Sentry release
-        uses: getsentry/action-release@v1
+        uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}

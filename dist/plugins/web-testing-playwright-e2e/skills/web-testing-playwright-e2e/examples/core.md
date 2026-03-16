@@ -5,11 +5,10 @@
 **Extended examples:**
 
 - [visual-testing.md](visual-testing.md) - Screenshot comparison, component visual testing
-- [configuration.md](configuration.md) - Multi-environment config, staging/production setups
 - [api-mocking.md](api-mocking.md) - Response interception and modification
 - [page-objects.md](page-objects.md) - Page object hierarchy, base page inheritance
-- [fixtures.md](fixtures.md) - Combined fixtures, database seeding
-- [advanced-features.md](advanced-features.md) - Clock API, ARIA snapshots, worker fixtures, toPass polling (v1.50+)
+- [fixtures.md](fixtures.md) - Combined fixtures, database seeding, IndexedDB state
+- [advanced-features.md](advanced-features.md) - Clock API, ARIA snapshots, worker fixtures, polling assertions, accessibility assertions
 
 ---
 
@@ -393,7 +392,7 @@ export default defineConfig({
 
 **Why good:** CI-specific settings for retries and workers, captures trace/screenshot/video on failure, webServer auto-starts dev server, timeout constants are named
 
-> **Extended pattern:** See [configuration.md](configuration.md) for staging/production configs.
+**Multi-environment tip:** Use separate `projects` entries for staging (full suite) and production (smoke tests only with `testMatch: /.*\.smoke\.ts/`). Set `baseURL` per project or via `process.env.BASE_URL`.
 
 ---
 
@@ -444,4 +443,4 @@ export { expect };
 
 ---
 
-_Extended examples: [visual-testing.md](visual-testing.md) | [configuration.md](configuration.md) | [api-mocking.md](api-mocking.md) | [page-objects.md](page-objects.md) | [fixtures.md](fixtures.md) | [advanced-features.md](advanced-features.md)_
+_Extended examples: [visual-testing.md](visual-testing.md) | [api-mocking.md](api-mocking.md) | [page-objects.md](page-objects.md) | [fixtures.md](fixtures.md) | [advanced-features.md](advanced-features.md)_

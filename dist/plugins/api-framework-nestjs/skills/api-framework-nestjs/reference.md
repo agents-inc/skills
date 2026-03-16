@@ -281,18 +281,6 @@ Is it business logic?
 ├─ YES → Service (injected into controller)
 ```
 
-### ORM Selection
-
-```
-Need type-safe queries with great DX?
-├─ YES → Prisma (recommended for most NestJS projects)
-└─ NO → Need decorator-based entities?
-    ├─ YES → TypeORM (Angular-style, decorator-heavy)
-    └─ NO → Need raw SQL performance?
-        ├─ YES → Drizzle ORM (fastest, SQL-like API)
-        └─ NO → Prisma (safe default)
-```
-
 ---
 
 ## RED FLAGS
@@ -323,5 +311,7 @@ Need type-safe queries with great DX?
 - NestJS 11: Termination hooks (`OnModuleDestroy`, `OnApplicationShutdown`) run in reverse order
 - NestJS 11: Express v5 wildcards use `/*splat` syntax (not `/*`)
 - NestJS 11: `ParseDatePipe` added as a built-in pipe
+- NestJS 11: `IntrinsicException` throws without framework auto-logging (for expected flow control)
+- NestJS 11: SWC is the default compiler (20x faster builds)
 - Request-scoped providers (`Scope.REQUEST`) affect performance — use only when needed
 - `forwardRef()` should be a last resort — circular deps usually signal a design issue

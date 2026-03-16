@@ -1,6 +1,8 @@
-# React Navigation Patterns
+# React Native - Navigation Patterns
 
-Type-safe navigation, authentication flows, and common navigation patterns.
+> Type-safe navigation, authentication flows, and deep linking. See [core.md](core.md) for component patterns.
+
+**Prerequisites**: Familiarity with React Navigation concepts (stack, tab, drawer navigators).
 
 ---
 

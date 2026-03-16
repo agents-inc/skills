@@ -120,6 +120,7 @@ import {
 const DEFAULT_THEME = "light" as const;
 const DEFAULT_NOTIFICATIONS = true;
 const DEFAULT_LOCALE = "en-US";
+const DEFAULT_FONT_SIZE = 16;
 
 type Theme = "light" | "dark" | "system";
 
@@ -136,7 +137,7 @@ export const UserPreferencesStore = signalStore(
     theme: DEFAULT_THEME,
     notifications: DEFAULT_NOTIFICATIONS,
     locale: DEFAULT_LOCALE,
-    fontSize: 16,
+    fontSize: DEFAULT_FONT_SIZE,
   }),
   withComputed(({ theme }) => ({
     isDarkMode: computed(() => theme() === "dark"),
@@ -267,6 +268,7 @@ import {
   withMethods,
   patchState,
 } from "@ngrx/signals";
+import { firstValueFrom } from "rxjs";
 
 const API_BASE_URL = "/api/users";
 
@@ -304,7 +306,9 @@ export const UserStore = signalStore(
         patchState(store, { isLoading: true, error: null });
 
         try {
-          const user = await http.get<User>(`${API_BASE_URL}/me`).toPromise();
+          const user = await firstValueFrom(
+            http.get<User>(`${API_BASE_URL}/me`),
+          );
           patchState(store, { currentUser: user ?? null, isLoading: false });
         } catch (err) {
           const message =

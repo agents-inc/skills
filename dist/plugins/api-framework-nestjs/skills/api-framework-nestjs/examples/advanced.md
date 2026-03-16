@@ -178,35 +178,49 @@ export class AppModule {}
 
 Pipes transform and validate input data before it reaches the handler.
 
-### Good Example — Custom Validation Pipe
+### Good Example — Using Built-in ParseDatePipe (NestJS 11+)
 
 ```typescript
-// pipes/parse-date.pipe.ts
-import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+// NestJS 11 includes ParseDatePipe — no custom pipe needed
+import { ParseDatePipe } from '@nestjs/common';
 
-@Injectable()
-export class ParseDatePipe implements PipeTransform<string, Date> {
-  transform(value: string): Date {
-    const date = new Date(value);
-
-    if (isNaN(date.getTime())) {
-      throw new BadRequestException(
-        `"${value}" is not a valid date. Expected ISO 8601 format.`,
-      );
-    }
-
-    return date;
-  }
-}
-
-// Usage in controller
 @Get('events')
 findByDate(@Query('date', ParseDatePipe) date: Date) {
   return this.eventsService.findByDate(date);
 }
 ```
 
-**Why good:** Transforms string to Date, throws descriptive BadRequestException for invalid input, typed input/output with `PipeTransform<string, Date>`
+**Why good:** Built-in pipe handles validation and transformation, throws `BadRequestException` for invalid dates, no custom code needed
+
+### Good Example — Custom Pipe (for domain-specific validation)
+
+```typescript
+// pipes/parse-positive-int.pipe.ts
+import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+
+@Injectable()
+export class ParsePositiveIntPipe implements PipeTransform<string, number> {
+  transform(value: string): number {
+    const num = parseInt(value, 10);
+
+    if (isNaN(num) || num <= 0) {
+      throw new BadRequestException(
+        `"${value}" is not a valid positive integer.`,
+      );
+    }
+
+    return num;
+  }
+}
+
+// Usage
+@Get('items')
+findByPage(@Query('page', ParsePositiveIntPipe) page: number) {
+  return this.itemsService.findPage(page);
+}
+```
+
+**Why good:** Custom pipe for domain validation beyond built-ins, typed input/output with `PipeTransform<string, number>`, descriptive error
 
 ### Good Example — Enum Validation Pipe
 

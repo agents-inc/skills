@@ -8,8 +8,6 @@
 
 ## Pattern: Tracing Utilities
 
-**File: `packages/api/src/lib/tracing.ts`**
-
 ```typescript
 import { trace, SpanStatusCode, type Span } from "@opentelemetry/api";
 
@@ -57,8 +55,7 @@ export function createSpan(
 ## Pattern: Using Custom Spans
 
 ```typescript
-import { withSpan } from "@/lib/tracing";
-import { db, jobs, companies } from "@/lib/db";
+import { withSpan } from "./tracing";
 
 const OPERATION_DB_QUERY = "db.query";
 
@@ -71,10 +68,8 @@ async function getJobWithCompany(jobId: string) {
       "job.id": jobId,
     },
     async (span) => {
-      const result = await db.query.jobs.findFirst({
-        where: eq(jobs.id, jobId),
-        with: { company: true },
-      });
+      // Use your ORM/query builder
+      const result = await db.query.jobs.findFirst({ where: { id: jobId } });
 
       span.setAttribute("db.rows_returned", result ? 1 : 0);
       return result;

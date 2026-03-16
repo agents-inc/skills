@@ -1,6 +1,6 @@
 {
   "name": "web-i18n-vue-i18n",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Type-safe i18n for Vue 3 Composition API",
   "author": {

@@ -82,9 +82,7 @@ Svelte 5 uses native event attributes (`onclick`, `oninput`, `onsubmit`) instead
 
   // Replaces |once modifier
   function handleOnce(event: MouseEvent) {
-    // Do something once
-    console.log('Fired once');
-    // Then remove the handler by setting state
+    // Do something once, then remove the handler by setting state
   }
 </script>
 

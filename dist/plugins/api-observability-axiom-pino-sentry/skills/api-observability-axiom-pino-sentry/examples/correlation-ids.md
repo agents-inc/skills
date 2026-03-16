@@ -6,86 +6,85 @@
 
 ---
 
-## Pattern: Correlation ID Middleware for Hono
+## Pattern: Correlation ID Middleware
 
-**File: `packages/api/src/middleware/correlation-id.ts`**
+**Key logic (adapt to your HTTP framework's middleware API):**
 
 ```typescript
-import type { Context, Next } from "hono";
-import { createMiddleware } from "hono/factory";
 import { randomUUID } from "crypto";
 
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
-export const correlationIdMiddleware = createMiddleware(
-  async (c: Context, next: Next) => {
-    // Use existing correlation ID from upstream or generate new one
-    const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
+/**
+ * Middleware: extract or generate correlation ID per request.
+ * Store it on the request context and set the response header.
+ */
+function correlationIdMiddleware(
+  req: Request,
+  res: Response,
+  next: () => void,
+) {
+  const correlationId = req.headers.get(CORRELATION_ID_HEADER) ?? randomUUID();
 
-    // Store in context for handlers to access
-    c.set("correlationId", correlationId);
+  // Store on request context (mechanism varies by framework)
+  req.correlationId = correlationId;
 
-    // Add to response headers for client tracing
-    c.header(CORRELATION_ID_HEADER, correlationId);
+  // Echo back in response for client tracing
+  res.headers.set(CORRELATION_ID_HEADER, correlationId);
 
-    await next();
-  },
-);
+  next();
+}
 
-// Helper to get correlation ID in route handlers
-export const getCorrelationId = (c: Context): string => {
-  return c.get("correlationId") || "unknown";
-};
+// Helper to retrieve correlation ID in route handlers
+function getCorrelationId(req: Request): string {
+  return req.correlationId ?? "unknown";
+}
 ```
 
 ---
 
 ## Pattern: Request Logger Middleware
 
-**File: `packages/api/src/middleware/request-logger.ts`**
-
 ```typescript
-import type { Context, Next } from "hono";
-import { createMiddleware } from "hono/factory";
-
-import { logger } from "@/lib/logger";
-import { getCorrelationId } from "./correlation-id";
+import { logger } from "./logger";
 
 const HTTP_STATUS_BAD_REQUEST = 400;
 const HTTP_STATUS_INTERNAL_ERROR = 500;
 
-export const requestLoggerMiddleware = createMiddleware(
-  async (c: Context, next: Next) => {
-    const startTime = performance.now();
-    const correlationId = getCorrelationId(c);
+/**
+ * Middleware: create a request-scoped child logger with correlation context,
+ * then log start/completion with appropriate level and duration.
+ */
+function requestLoggerMiddleware(
+  req: Request,
+  res: Response,
+  next: () => void,
+) {
+  const startTime = performance.now();
 
-    // Create request-scoped logger
-    const log = logger.child({
-      correlationId,
-      method: c.req.method,
-      path: c.req.path,
-      userAgent: c.req.header("user-agent"),
-    });
+  // Create request-scoped logger
+  const log = logger.child({
+    correlationId: req.correlationId,
+    method: req.method,
+    path: new URL(req.url).pathname,
+  });
 
-    log.info("Request started");
+  log.info("Request started");
 
-    await next();
+  next();
 
-    const duration = Math.round(performance.now() - startTime);
-    const status = c.res.status;
+  const duration = Math.round(performance.now() - startTime);
+  const status = res.status;
+  const logData = { duration, status };
 
-    // Log completion with appropriate level
-    const logData = { duration, status };
-
-    if (status >= HTTP_STATUS_INTERNAL_ERROR) {
-      log.error(logData, "Request failed with server error");
-    } else if (status >= HTTP_STATUS_BAD_REQUEST) {
-      log.warn(logData, "Request completed with client error");
-    } else {
-      log.info(logData, "Request completed successfully");
-    }
-  },
-);
+  if (status >= HTTP_STATUS_INTERNAL_ERROR) {
+    log.error(logData, "Request failed with server error");
+  } else if (status >= HTTP_STATUS_BAD_REQUEST) {
+    log.warn(logData, "Request completed with client error");
+  } else {
+    log.info(logData, "Request completed successfully");
+  }
+}
 ```
 
 **Why good:** Correlation ID propagated through entire request lifecycle, child logger prevents repeating context, appropriate log level based on response status, duration tracking built-in
@@ -95,24 +94,22 @@ export const requestLoggerMiddleware = createMiddleware(
 ## Pattern: Using in Route Handlers
 
 ```typescript
-import { Hono } from "hono";
+import { logger } from "./logger";
 
-import { logger } from "@/lib/logger";
-import { getCorrelationId } from "@/middleware/correlation-id";
+// Inside a route handler (adapt to your framework)
+async function createJobHandler(req: Request) {
+  const log = logger.child({
+    correlationId: req.correlationId,
+    operation: "job.create",
+  });
 
-const app = new Hono();
+  log.info("Processing job creation request");
 
-app.post("/jobs", async (c) => {
-  const correlationId = getCorrelationId(c);
-  const log = logger.child({ correlationId, operation: "job.create" });
-
-  log.info({ body: c.req.json() }, "Processing job creation request");
-
-  // ... create job
+  const job = await createJob(data);
 
   log.info({ jobId: job.id }, "Job created successfully");
-  return c.json(job);
-});
+  return Response.json(job);
+}
 ```
 
 ---
@@ -121,7 +118,7 @@ app.post("/jobs", async (c) => {
 
 For applications where you need automatic context injection without manually creating child loggers in every handler, use AsyncLocalStorage with Pino's `mixin` option.
 
-**File: `packages/api/src/lib/async-context.ts`**
+**async-context.ts** - Shared storage for request context:
 
 ```typescript
 import { AsyncLocalStorage } from "async_hooks";
@@ -139,7 +136,7 @@ export const getRequestContext = (): RequestContext | undefined => {
 };
 ```
 
-**File: `packages/api/src/lib/logger.ts`**
+**logger.ts** - Logger with automatic context injection via mixin:
 
 ```typescript
 import pino from "pino";
@@ -162,53 +159,38 @@ export const logger = pino({
 });
 ```
 
-**File: `packages/api/src/middleware/context-middleware.ts`**
+**context-middleware.ts** - Middleware that wraps requests in async context:
 
 ```typescript
-import type { Context, Next } from "hono";
-import { createMiddleware } from "hono/factory";
 import { randomUUID } from "crypto";
-
-import { asyncContext } from "@/lib/async-context";
+import { asyncContext } from "./async-context";
 
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
-export const contextMiddleware = createMiddleware(
-  async (c: Context, next: Next) => {
-    const correlationId = c.req.header(CORRELATION_ID_HEADER) || randomUUID();
-    c.header(CORRELATION_ID_HEADER, correlationId);
+// Adapt to your framework's middleware signature
+function contextMiddleware(req: Request, res: Response, next: () => void) {
+  const correlationId = req.headers.get(CORRELATION_ID_HEADER) ?? randomUUID();
+  res.headers.set(CORRELATION_ID_HEADER, correlationId);
 
-    // Run the rest of the request in the async context
-    return asyncContext.run(
-      {
-        correlationId,
-        service: "api",
-      },
-      () => next(),
-    );
-  },
-);
+  // Run the rest of the request inside the async context
+  asyncContext.run({ correlationId, service: "api" }, () => next());
+}
 ```
 
 **Usage (no child logger needed):**
 
 ```typescript
-import { Hono } from "hono";
-import { logger } from "@/lib/logger";
-import { contextMiddleware } from "@/middleware/context-middleware";
+import { logger } from "./logger";
 
-const app = new Hono();
-app.use(contextMiddleware);
-
-app.post("/jobs", async (c) => {
-  // correlationId is AUTOMATICALLY included via mixin!
+// Inside a route handler - correlationId is AUTOMATICALLY included via mixin
+async function createJobHandler(req: Request) {
   logger.info({ operation: "job.create" }, "Processing job creation request");
 
   const job = await createJob(data);
 
   logger.info({ jobId: job.id }, "Job created successfully");
-  return c.json(job);
-});
+  return Response.json(job);
+}
 ```
 
 **Why good:** No manual child logger creation in every handler, context automatically propagates through entire async call chain (including nested function calls and database operations), cleaner code with less boilerplate, works across your entire codebase without passing logger instances

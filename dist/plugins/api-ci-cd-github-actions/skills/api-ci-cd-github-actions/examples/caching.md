@@ -8,7 +8,7 @@
 - [testing.md](testing.md) - Affected detection, quality gates
 - [security.md](security.md) - OIDC auth, secrets rotation
 - [deployment.md](deployment.md) - Multi-env, rollback
-- [monitoring.md](monitoring.md) - Datadog, GitHub Insights
+- [monitoring.md](monitoring.md) - CI metrics, GitHub Insights
 
 ---
 
@@ -27,11 +27,11 @@ env:
 jobs:
   build:
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

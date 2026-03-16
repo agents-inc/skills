@@ -71,7 +71,7 @@ function validateEnv() {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Invalid environment variables:");
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         console.error(`  - ${err.path.join(".")}: ${err.message}`);
       });
       throw new Error("Invalid environment configuration");
@@ -117,4 +117,4 @@ const envSchema = z.object({
 // This breaks env var semantics where "false" should mean false
 ```
 
-**Why bad:** `z.coerce.boolean()` converts ANY non-empty string to `true` including "false", "0", "no" - use `z.stringbool()` (Zod 4+) which correctly parses "true"/"false"/"1"/"0"/"yes"/"no"
+**Why bad:** `z.coerce.boolean()` converts ANY non-empty string to `true` including "false", "0", "no" - use `z.stringbool()` (Zod 4+) which correctly parses "true"/"false"/"1"/"0"/"yes"/"no"/"on"/"off"/"enabled"/"disabled"

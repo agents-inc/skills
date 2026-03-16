@@ -181,121 +181,6 @@ if (isValid(result)) {
 
 ---
 
-## Anti-Patterns
-
-### Using Date Constructor for Parsing
-
-Browser behavior varies, causing silent failures.
-
-```typescript
-// ❌ WRONG - Browser-inconsistent parsing
-const date1 = new Date("2026-01-15"); // Works but timezone varies
-const date2 = new Date("01/15/2026"); // May fail in non-US browsers
-const date3 = new Date("January 15, 2026"); // Unreliable
-
-// ✅ CORRECT - Use parseISO or parse
-import { parseISO, parse, isValid } from "date-fns";
-
-const date1 = parseISO("2026-01-15");
-const date2 = parse("01/15/2026", "MM/dd/yyyy", new Date());
-
-if (isValid(date1)) {
-  // Safe to use
-}
-```
-
-### Mutating Date Objects
-
-Side effects cause bugs when dates are shared.
-
-```typescript
-// ❌ WRONG - Mutation causes side effects
-function getNextWeek(date: Date): Date {
-  date.setDate(date.getDate() + 7);
-  return date; // Original is mutated!
-}
-
-const original = new Date();
-const nextWeek = getNextWeek(original);
-// original is now ALSO next week!
-
-// ✅ CORRECT - Pure functions return new dates
-import { addDays } from "date-fns";
-
-function getNextWeek(date: Date): Date {
-  return addDays(date, 7); // Returns new Date
-}
-
-const original = new Date();
-const nextWeek = getNextWeek(original);
-// original is unchanged
-```
-
-### Importing Entire Library
-
-Bloats bundle with unused code.
-
-```typescript
-// ❌ WRONG - Imports entire 80KB library
-import * as dateFns from "date-fns";
-dateFns.format(date, "yyyy-MM-dd");
-
-// ✅ CORRECT - Tree-shakeable imports (~2KB each)
-import { format, parseISO, addDays } from "date-fns";
-format(date, "yyyy-MM-dd");
-```
-
-### Magic Format Strings
-
-Scattered strings are hard to maintain.
-
-```typescript
-// ❌ WRONG - Magic strings everywhere
-format(date1, "yyyy-MM-dd");
-format(date2, "yyyy-MM-dd");
-format(date3, "yyyy-MM-dd");
-// What if you need to change the format?
-
-// ✅ CORRECT - Named constants
-const ISO_DATE_FORMAT = "yyyy-MM-dd";
-const DISPLAY_FORMAT = "MMMM d, yyyy";
-
-format(date1, ISO_DATE_FORMAT);
-format(date2, ISO_DATE_FORMAT);
-format(date3, ISO_DATE_FORMAT);
-```
-
-### Hardcoded Locale Formats
-
-Assumes all users are from one region.
-
-```typescript
-// ❌ WRONG - US-only format
-format(date, "MM/dd/yyyy"); // Confusing for non-US users
-
-// ✅ CORRECT - Locale-aware
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
-
-format(date, "P", { locale: de }); // "15.01.2026" for German users
-```
-
-### Using Moment.js Token Syntax
-
-Tokens differ between libraries.
-
-```typescript
-// ❌ WRONG - Moment.js tokens
-format(date, "YYYY-MM-DD"); // Wrong! 'YYYY' means week year
-format(date, "DD/MM/YYYY"); // Wrong! 'DD' means day of year
-
-// ✅ CORRECT - date-fns tokens
-format(date, "yyyy-MM-dd"); // "2026-01-15"
-format(date, "dd/MM/yyyy"); // "15/01/2026"
-```
-
----
-
 ## Quick Reference
 
 ### Function Categories
@@ -365,12 +250,17 @@ import {
 | `TZDate`          | Timezone-aware Date (1.2 KB)     | `new TZDate(2026, 0, 15, "America/New_York")`      |
 | `TZDateMini`      | Lightweight TZDate (916 B)       | `new TZDateMini(2026, 0, 15, "America/New_York")`  |
 | `tz()`            | Context function for `in` option | `addDays(date, 7, { in: tz("America/New_York") })` |
-| `transpose()`     | Convert between timezones        | `transpose(sgDate, tz("America/New_York"))`        |
 | `tzName()`        | Get timezone display name        | `tzName("America/New_York", date, "long")`         |
 | `tzScan()`        | Find DST transitions             | `tzScan("America/New_York", startDate, endDate)`   |
 | `tzOffset()`      | Get UTC offset in minutes        | `tzOffset("America/New_York", date)`               |
 | `.withTimeZone()` | TZDate method for conversion     | `nyDate.withTimeZone("Europe/London")`             |
 | `.timeZone`       | TZDate property (read-only)      | `nyDate.timeZone // "America/New_York"`            |
+
+### date-fns Core Timezone Function
+
+| Function      | Purpose                   | Example                                     |
+| ------------- | ------------------------- | ------------------------------------------- |
+| `transpose()` | Convert between timezones | `transpose(sgDate, tz("America/New_York"))` |
 
 ### @date-fns/utc Utilities (v4+)
 

@@ -87,7 +87,7 @@ Testing multiple configurations?
 
 - ❌ **Running full test suite on every PR** - Use affected detection (`--filter=...[origin/main]`) or CI takes 10+ minutes
 - ❌ **No caching configured** - Reinstalling dependencies every run wastes 2-3 minutes
-- ❌ **Using `latest` for tool versions** - Non-deterministic builds break reproducibility (pin to `1.2.2`)
+- ❌ **Using `latest` for tool versions** - Non-deterministic builds break reproducibility (pin to specific version)
 - ❌ **Committing secrets to repository** - Use GitHub Secrets, never hardcode credentials
 - ❌ **Static AWS/GCP credentials** - Use OIDC authentication, never store long-lived access keys
 - ❌ **No quality gates on main branch** - Missing lint/test/type-check allows broken code to merge
@@ -113,12 +113,12 @@ Testing multiple configurations?
 
 - **Turborepo affected detection requires `fetch-depth: 0`** or git comparison fails (shallow clone by default)
 - **New packages have no git history** so `--filter=...[origin/main]` skips them (always check for new package.json files)
-- **GitHub Actions cache has 10GB limit** and evicts oldest entries (don't cache large build artifacts, only node_modules)
+- **GitHub Actions cache has 10GB free limit per repo** (configurable/pay-as-you-go beyond that since Nov 2025, evicts oldest entries)
 - **Vercel remote cache free tier is per-user** not per-organization (each developer needs individual Vercel account linked)
 - **OIDC requires `id-token: write` permission** or token generation fails silently
 - **Environment secrets override repository secrets** with same name (can cause confusion)
 - **Artifact attestations require `attestations: write` permission** in addition to `id-token: write` and `contents: read`
-- **Cache action v4.2.0+ required since Feb 2025** - older versions will fail (runner 2.231.0+ also required)
+- **Cache action v5 is current (v4.2.0 minimum)** - older versions use deprecated cache backend
 - **`actions/create-release` is deprecated** - use `softprops/action-gh-release@v2` instead
 - **workflow_dispatch now supports 25 inputs** (increased from 10) - use `type: environment` for environment selection
 - **Reusable workflow limits increased (Nov 2025)** - now supports 10 nested levels (was 4) and 50 total workflows (was 20)
@@ -152,7 +152,7 @@ jobs:
 jobs:
   test:
     steps:
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
       - run: bun install # Reinstalls every time
       - run: bun run test
 ```
@@ -170,7 +170,7 @@ jobs:
 jobs:
   deploy:
     steps:
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4 # v4 is still current
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -205,7 +205,7 @@ jobs:
 
 ```typescript
 // ci-config.ts - Shared CI configuration constants
-export const BUN_VERSION = "1.2.2";
+export const BUN_VERSION = "1.2.2"; // Pin to your project's version
 export const NODE_ENV_PRODUCTION = "production";
 export const CACHE_RETENTION_DAYS = 30;
 export const ARTIFACT_RETENTION_DAYS = 30;
@@ -318,13 +318,12 @@ export const VAULT_CONFIG = {
 } as const;
 ```
 
-### Datadog CI Configuration
+### CI Observability Configuration
 
 ```typescript
-// datadog-ci-config.ts
-export const DATADOG_CONFIG = {
-  SITE: "datadoghq.com",
-  SERVICE_NAME: "cv-launch-ci",
+// ci-observability-config.ts
+export const CI_OBSERVABILITY_CONFIG = {
+  SERVICE_NAME: "my-project-ci",
   ENV: process.env.GITHUB_REF === "refs/heads/main" ? "production" : "staging",
   TRACE_SAMPLING_RATE: 1.0, // 100% for CI
 } as const;

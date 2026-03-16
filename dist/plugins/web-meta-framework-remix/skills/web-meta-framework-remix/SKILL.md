@@ -3,9 +3,9 @@ name: web-meta-framework-remix
 description: File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement
 ---
 
-# Remix Framework Patterns
+# Remix / React Router v7 Framework Patterns
 
-> **Quick Guide:** Remix is a full-stack React framework where each route exports a loader for reads and an action for writes. Data fetching happens on the server, forms work without JavaScript, and nested routes enable parallel data loading.
+> **Quick Guide:** Each route exports a `loader` for reads and an `action` for writes. Both run on the server. Data flows through loaders, mutations go through actions, forms work without JavaScript, and nested routes enable parallel data loading. `json()` and `defer()` are deprecated in React Router v7 -- return raw objects instead, use `data()` for custom headers/status.
 
 ---
 
@@ -13,30 +13,23 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 
 ## IMPORTANT: React Router v7 Migration
 
-**Remix has merged into React Router v7.** What was planned as Remix v3 is now React Router v7 "framework mode". Key changes:
+**Remix has merged into React Router v7.** What was planned as Remix v3 is now React Router v7 "framework mode".
 
-**Deprecated utilities (will be removed in React Router v7):**
+| Remix v2 (Deprecated)             | React Router v7 (Current)                    |
+| --------------------------------- | -------------------------------------------- |
+| `json(data)`                      | Return raw objects directly                  |
+| `json(data, { status, headers })` | `data(data, { status, headers })`            |
+| `defer({ key: promise })`         | Return `{ key: promise }` with Single Fetch  |
+| `@remix-run/node` imports         | `react-router` / `@react-router/node`        |
+| `LoaderFunctionArgs`              | `Route.LoaderArgs` (generated types)         |
+| `ActionFunctionArgs`              | `Route.ActionArgs` (generated types)         |
+| `useLoaderData<typeof loader>()`  | `loaderData` prop via `Route.ComponentProps` |
+| `RemixServer`                     | `ServerRouter` (from `react-router`)         |
+| `RemixBrowser`                    | `HydratedRouter` (from `react-router/dom`)   |
 
-- `json()` - Return raw objects instead, or use `data()` for custom headers/status
-- `defer()` - Return Promises directly in objects with Single Fetch
+**This skill covers both Remix v2 and React Router v7 patterns.** Examples use Remix v2 imports by default with RR v7 equivalents documented in [examples/react-router-v7.md](examples/react-router-v7.md).
 
-**New patterns in React Router v7:**
-
-- `data()` utility for setting headers/status: `return data(item, { status: 201 })`
-- Single Fetch enables returning raw objects and streaming Promises directly
-- Automatic type generation: Use `Route.LoaderArgs`, `Route.ActionArgs`, `Route.ComponentProps` from `./+types/route-name`
-- `clientAction` for browser-only mutations (complements server-only `action`)
-- Imports change from `@remix-run/*` to `react-router` and `@react-router/*`
-- Entry files: `RemixServer` → `ServerRouter`, `RemixBrowser` → `HydratedRouter`
-- Scripts: `remix vite:dev` → `react-router dev`, `remix vite:build` → `react-router build`
-
-**Migration resources:**
-
-- [Upgrading from Remix](https://reactrouter.com/upgrading/remix)
-- [Single Fetch Guide](https://v2.remix.run/docs/guides/single-fetch)
-- [React Router v7 Actions](https://reactrouter.com/start/framework/actions)
-
-**This skill documents Remix v2 patterns** which remain valid for existing projects. For new projects, consider using React Router v7 directly.
+**Migration guide:** [Upgrading from Remix](https://reactrouter.com/upgrading/remix)
 
 </migration_notice>
 
@@ -48,53 +41,46 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST export loaders and actions as named exports from route modules only)**
+**(You MUST export loaders and actions as named exports from route modules only -- they do not work in non-route files)**
 
-**(You MUST use `useLoaderData<typeof loader>()` for type-safe data access in components)**
+**(You MUST throw Response objects for expected errors (404, 403) -- use ErrorBoundary for handling)**
 
-**(You MUST throw Response objects for expected errors - use ErrorBoundary for handling)**
+**(You MUST await critical data and return non-critical data as Promises for streaming)**
 
-**(You MUST wrap state mutations after await in `runInAction()` if combining with MobX)**
-
-**(You MUST use `defer()` for non-critical data that can stream - keep critical data in direct returns)** _(deprecated in React Router v7 - use raw Promises instead)_
+**(You MUST use named constants for HTTP status codes -- no magic numbers)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Remix routes, React Router v7, loader function, action function, clientAction, useLoaderData, useActionData, useFetcher, defer, ErrorBoundary, Form component, meta function, links function, Single Fetch, ServerRouter, HydratedRouter
+**Auto-detection:** Remix routes, React Router v7, loader function, action function, clientAction, clientLoader, useLoaderData, useActionData, useFetcher, defer, ErrorBoundary, Form component, meta function, links function, Single Fetch, ServerRouter, HydratedRouter, Route.LoaderArgs, Route.ComponentProps, shouldRevalidate
 
 **When to use:**
 
 - Building full-stack React applications with server-side rendering
 - Implementing data loading with loaders and mutations with actions
 - Creating progressively enhanced forms that work without JavaScript
-- Streaming non-critical data with defer and Suspense
+- Streaming non-critical data with defer/Promises and Suspense
 - Handling errors gracefully with route-level ErrorBoundary
+
+**When NOT to use:**
+
+- Static sites without server-side logic
+- Simple SPAs without server rendering needs
+- Projects already committed to a different meta-framework
 
 **Key patterns covered:**
 
 - File-based routing (routes/, \_index, $params, \_layout)
-- Loaders for data fetching
-- Actions for mutations
-- defer() for streaming
-- useFetcher for non-navigation mutations
-- Error boundaries (ErrorBoundary)
-- Form component and progressive enhancement
+- Loaders for server-side data fetching
+- Actions for mutations with progressive enhancement
+- Streaming with defer() / raw Promises (RR v7)
+- useFetcher for non-navigation mutations and optimistic UI
+- Error boundaries with multi-status handling
 - Meta and Links functions for SEO
-- Resource routes
-- Nested routing patterns
-
-**When NOT to use:**
-
-- Static sites without server-side logic (consider Astro)
-- Simple SPAs without server rendering needs (consider Vite + React)
-- Projects already committed to Next.js patterns
-
-**Detailed Resources:**
-
-- For code examples, see [examples.md](examples.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Resource routes (API endpoints, file downloads)
+- Nested routing with parallel data loading
+- React Router v7 migration (Single Fetch, type generation, clientAction)
 
 ---
 
@@ -107,7 +93,7 @@ Remix simplifies full-stack development to a single mental model: **each route e
 **Core Principles:**
 
 1. **Server-first data loading**: Loaders run on the server before rendering, eliminating client-side data fetching waterfalls
-2. **Progressive enhancement**: Forms work with plain POST requests - JavaScript enhances but isn't required
+2. **Progressive enhancement**: Forms work with plain POST requests -- JavaScript enhances but isn't required
 3. **HTTP semantics**: Caching uses standard HTTP headers (Cache-Control), not framework-specific solutions
 4. **Nested routes**: URL segments map to component hierarchy, enabling parallel data loading
 5. **Web standards**: Uses Fetch API Request/Response objects throughout
@@ -115,9 +101,9 @@ Remix simplifies full-stack development to a single mental model: **each route e
 **Data Flow:**
 
 ```
-URL Change → Loader(s) Execute → Component Renders → User Interacts
-                                                          ↓
-                                        Action Executes → Loaders Revalidate
+URL Change -> Loader(s) Execute -> Component Renders -> User Interacts
+                                                            |
+                                          Action Executes -> Loaders Revalidate
 ```
 
 </philosophy>
@@ -130,9 +116,7 @@ URL Change → Loader(s) Execute → Component Renders → User Interacts
 
 ### Pattern 1: File-Based Routing
 
-Remix uses file-system conventions to define routes. Files in `app/routes/` become URL paths.
-
-#### Routing Conventions
+Files in `app/routes/` become URL paths. File naming conventions control nesting, layouts, and dynamic segments.
 
 | File Name         | URL           | Description                   |
 | ----------------- | ------------- | ----------------------------- |
@@ -145,24 +129,20 @@ Remix uses file-system conventions to define routes. Files in `app/routes/` beco
 | `$.tsx`           | `/*`          | Splat/catch-all route         |
 
 ```typescript
-// app/routes/blog.$slug.tsx
-// URL: /blog/my-post-title
+// app/routes/blog.$slug.tsx -- dynamic route with loader
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 export async function loader({ params }: LoaderFunctionArgs) {
-  const { slug } = params;
-  // slug is typed as string | undefined
-  return { slug };
-}
-
-export default function BlogPost() {
-  const { slug } = useLoaderData<typeof loader>();
-  return <h1>Post: {slug}</h1>;
+  const post = await db.post.findUnique({ where: { slug: params.slug } });
+  if (!post) throw new Response("Not Found", { status: 404 });
+  return { post };
 }
 ```
 
-**Why good:** File names map directly to URLs making routing predictable, dynamic segments use `$` prefix which is clear and TypeScript-friendly, loader params are typed
+**Why good:** File names map directly to URLs, `$` prefix for dynamic segments, loader params are typed
+
+See [examples/core.md](examples/core.md) for complete route examples and [examples/nested-routes.md](examples/nested-routes.md) for layout nesting patterns.
 
 ---
 
@@ -170,617 +150,251 @@ export default function BlogPost() {
 
 Loaders are server-only functions that provide data to routes. They run on initial server render and on client navigation via fetch.
 
-#### Basic Loader
-
 ```typescript
-// app/routes/users.tsx
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-
-const DEFAULT_PAGE = 1;
-const PAGE_SIZE = 20;
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  const page = Number(url.searchParams.get("page")) || DEFAULT_PAGE;
-
-  const users = await db.user.findMany({
-    skip: (page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
-  });
-
-  return json({ users, page });
-}
-
-export default function Users() {
-  const { users, page } = useLoaderData<typeof loader>();
-
-  return (
-    <ul>
-      {users.map((user) => (
-        <li key={user.id}>{user.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-**Why good:** Type-safe data access with `typeof loader`, server-only code stays on server, named constants for pagination values, URL search params for pagination state
-
-#### Throwing Responses for Expected Errors
-
-```typescript
-// app/routes/users.$userId.tsx
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-
 const HTTP_NOT_FOUND = 404;
-const HTTP_FORBIDDEN = 403;
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
   const user = await db.user.findUnique({ where: { id: params.userId } });
-
   if (!user) {
     throw json({ message: "User not found" }, { status: HTTP_NOT_FOUND });
   }
-
-  const session = await getSession(request);
-  if (!session.userId) {
-    throw json(
-      { message: "Authentication required" },
-      { status: HTTP_FORBIDDEN },
-    );
-  }
-
   return json({ user });
 }
 ```
 
-**Why good:** Thrown responses trigger ErrorBoundary, HTTP status codes use named constants, early returns for invalid states, authentication checked in loader
+**Key rules:**
+
+- Always throw Response for expected errors (triggers ErrorBoundary)
+- Use `useLoaderData<typeof loader>()` for type-safe access (or `Route.ComponentProps` in RR v7)
+- Loaders run on every navigation -- parent loaders re-run even for child route changes
+- Use `shouldRevalidate` to optimize unnecessary re-runs
+
+See [examples/loaders.md](examples/loaders.md) for authentication, pagination, and caching examples.
 
 ---
 
 ### Pattern 3: Actions for Mutations
 
-Actions handle non-GET requests (POST, PUT, DELETE, PATCH). They run before loaders and enable form handling.
-
-#### Basic Action with Form
+Actions handle non-GET requests (POST, PUT, DELETE, PATCH). They run before loaders and enable progressive form handling.
 
 ```typescript
-// app/routes/contacts.new.tsx
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
-
-const HTTP_BAD_REQUEST = 400;
-
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const name = formData.get("name");
-  const email = formData.get("email");
-
-  const errors: Record<string, string> = {};
-
-  if (!name || typeof name !== "string") {
-    errors.name = "Name is required";
-  }
-  if (!email || typeof email !== "string" || !email.includes("@")) {
-    errors.email = "Valid email is required";
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return json({ errors }, { status: HTTP_BAD_REQUEST });
-  }
-
-  await db.contact.create({ data: { name, email } });
-
-  return redirect("/contacts");
-}
-
-export default function NewContact() {
-  const actionData = useActionData<typeof action>();
-
-  return (
-    <Form method="post">
-      <div>
-        <label htmlFor="name">Name</label>
-        <input id="name" name="name" type="text" />
-        {actionData?.errors?.name && (
-          <span role="alert">{actionData.errors.name}</span>
-        )}
-      </div>
-      <div>
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" />
-        {actionData?.errors?.email && (
-          <span role="alert">{actionData.errors.email}</span>
-        )}
-      </div>
-      <button type="submit">Create Contact</button>
-    </Form>
-  );
-}
-```
-
-**Why good:** Form works without JavaScript (progressive enhancement), validation errors returned with proper HTTP status, redirect after successful mutation prevents double-submission, accessible error messages with role="alert"
-
-#### Multiple Actions with Intent
-
-```typescript
-// app/routes/tasks.$taskId.tsx
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form } from "@remix-run/react";
-
-type Intent = "update" | "delete" | "toggle";
-
-export async function action({ params, request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const intent = formData.get("intent") as Intent;
+  const intent = formData.get("intent");
 
   switch (intent) {
     case "update": {
-      const title = formData.get("title") as string;
-      await db.task.update({
-        where: { id: params.taskId },
-        data: { title },
-      });
-      return json({ success: true });
+      /* ... */ return json({ success: true });
     }
     case "delete": {
-      await db.task.delete({ where: { id: params.taskId } });
-      return redirect("/tasks");
-    }
-    case "toggle": {
-      const task = await db.task.findUnique({ where: { id: params.taskId } });
-      await db.task.update({
-        where: { id: params.taskId },
-        data: { completed: !task?.completed },
-      });
-      return json({ success: true });
+      /* ... */ return redirect("/items");
     }
     default:
       throw new Error(`Unknown intent: ${intent}`);
   }
 }
-
-export default function Task() {
-  return (
-    <div>
-      <Form method="post">
-        <input type="hidden" name="intent" value="toggle" />
-        <button type="submit">Toggle Complete</button>
-      </Form>
-
-      <Form method="post">
-        <input type="hidden" name="intent" value="delete" />
-        <button type="submit">Delete</button>
-      </Form>
-    </div>
-  );
-}
 ```
 
-**Why good:** Single action handles multiple intents via hidden field, switch statement for clear intent handling, redirect after delete prevents stale data display
+**Key rules:**
+
+- Use hidden `intent` field for multiple actions in one route
+- Redirect after successful mutations to prevent double-submission
+- Return validation errors with `json({ errors }, { status: 400 })`
+- Forms work without JavaScript -- progressive enhancement by default
+
+See [examples/actions.md](examples/actions.md) for validation and [examples/forms.md](examples/forms.md) for multi-form patterns.
 
 ---
 
-### Pattern 4: Defer for Streaming
+### Pattern 4: Streaming with defer / Promises
 
-Use `defer()` to stream non-critical data that can load after initial render.
+Await critical data, return Promises for non-critical data that can stream in.
 
 ```typescript
-// app/routes/dashboard.tsx
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { defer } from "@remix-run/node";
-import { Await, useLoaderData } from "@remix-run/react";
-import { Suspense } from "react";
+// Remix v2: use defer()
+return defer({
+  user, // Awaited -- critical
+  analytics: getAnalytics(), // Promise -- streams in
+});
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  // Critical data - wait for this
-  const user = await getUser(request);
-
-  // Non-critical data - stream this
-  const analyticsPromise = getAnalytics(user.id);
-  const recentActivityPromise = getRecentActivity(user.id);
-
-  return defer({
-    user,
-    analytics: analyticsPromise,
-    recentActivity: recentActivityPromise,
-  });
-}
-
-export default function Dashboard() {
-  const { user, analytics, recentActivity } = useLoaderData<typeof loader>();
-
-  return (
-    <div>
-      <h1>Welcome, {user.name}</h1>
-
-      <Suspense fallback={<div>Loading analytics...</div>}>
-        <Await resolve={analytics}>
-          {(data) => <AnalyticsChart data={data} />}
-        </Await>
-      </Suspense>
-
-      <Suspense fallback={<div>Loading activity...</div>}>
-        <Await resolve={recentActivity}>
-          {(activity) => <ActivityList items={activity} />}
-        </Await>
-      </Suspense>
-    </div>
-  );
-}
+// React Router v7: return raw objects with Promises
+return {
+  user, // Awaited -- critical
+  analytics: getAnalytics(), // Promise -- streams via Single Fetch
+};
 ```
 
-**Why good:** Critical user data loads immediately, non-critical data streams in parallel, Suspense provides loading states, page is interactive before all data loads
+Render streamed data with `<Suspense>` + `<Await>`:
 
-**When to use defer:**
+```tsx
+<Suspense fallback={<Skeleton />}>
+  <Await resolve={analytics} errorElement={<p>Failed to load</p>}>
+    {(data) => <Chart data={data} />}
+  </Await>
+</Suspense>
+```
 
-- Analytics and reporting data
-- Recommendation systems
-- Comments and social features
-- Any data not needed for initial render
+**When to stream:** Analytics, comments, recommendations, secondary content below the fold.
+**When NOT to stream:** Auth state, page title, SEO-critical content, data for page structure.
 
-**When NOT to defer:**
-
-- Authentication data (user must be known)
-- SEO-critical content
-- Data needed for page structure
+See [examples/deferred.md](examples/deferred.md) for complete streaming examples.
 
 ---
 
-### Pattern 5: useFetcher for Non-Navigation Data
+### Pattern 5: useFetcher for Non-Navigation Mutations
 
-`useFetcher` enables data loading and mutations without causing page navigation.
-
-#### Inline Mutations
+`useFetcher` enables data loading and mutations without page navigation. Essential for inline interactions.
 
 ```typescript
-// app/routes/posts.$postId.tsx
-import { useFetcher } from "@remix-run/react";
+const fetcher = useFetcher();
 
-function LikeButton({ postId, isLiked }: { postId: string; isLiked: boolean }) {
-  const fetcher = useFetcher();
-
-  // Optimistic UI - show expected state immediately
-  const optimisticIsLiked = fetcher.formData
-    ? fetcher.formData.get("liked") === "true"
-    : isLiked;
-
-  return (
-    <fetcher.Form method="post" action={`/api/posts/${postId}/like`}>
-      <input type="hidden" name="liked" value={String(!optimisticIsLiked)} />
-      <button type="submit" disabled={fetcher.state !== "idle"}>
-        {optimisticIsLiked ? "Unlike" : "Like"}
-      </button>
-    </fetcher.Form>
-  );
-}
+// Optimistic UI: show expected state immediately
+const optimisticIsLiked = fetcher.formData
+  ? fetcher.formData.get("liked") === "true"
+  : isLiked;
 ```
 
-**Why good:** No page navigation on like/unlike, optimistic UI shows expected state immediately, disabled state prevents double-clicks
+**Use `<Form>` for:** Create/login/wizards -- actions that should change the URL.
+**Use `useFetcher` for:** Like buttons, toggles, inline editing, search autocomplete.
 
-#### Data Loading Without Navigation
-
-```typescript
-// Autocomplete search component
-import { useFetcher } from "@remix-run/react";
-import { useEffect } from "react";
-
-const DEBOUNCE_DELAY_MS = 300;
-
-function SearchAutocomplete() {
-  const fetcher = useFetcher<{ results: string[] }>();
-
-  const handleSearch = (query: string) => {
-    fetcher.load(`/api/search?q=${encodeURIComponent(query)}`);
-  };
-
-  return (
-    <div>
-      <input
-        type="search"
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search..."
-      />
-      {fetcher.state === "loading" && <span>Searching...</span>}
-      {fetcher.data?.results && (
-        <ul>
-          {fetcher.data.results.map((result, i) => (
-            <li key={i}>{result}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-```
-
-**Why good:** Search doesn't navigate away from current page, loading state indicates active request, type-safe response data
+See [examples/optimistic.md](examples/optimistic.md) for optimistic UI and debounced search.
 
 ---
 
 ### Pattern 6: Error Boundaries
 
-Export `ErrorBoundary` from route modules to handle errors gracefully.
+Export `ErrorBoundary` from route modules. Distinguish between thrown Response errors and unexpected JavaScript errors.
 
 ```typescript
-// app/routes/users.$userId.tsx
-import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
-
-const HTTP_NOT_FOUND = 404;
-const HTTP_UNAUTHORIZED = 401;
-const HTTP_FORBIDDEN = 403;
-
 export function ErrorBoundary() {
   const error = useRouteError();
 
   if (isRouteErrorResponse(error)) {
-    switch (error.status) {
-      case HTTP_NOT_FOUND:
-        return (
-          <div role="alert">
-            <h1>User Not Found</h1>
-            <p>The user you're looking for doesn't exist.</p>
-          </div>
-        );
-      case HTTP_UNAUTHORIZED:
-        return (
-          <div role="alert">
-            <h1>Unauthorized</h1>
-            <p>Please log in to view this page.</p>
-          </div>
-        );
-      case HTTP_FORBIDDEN:
-        return (
-          <div role="alert">
-            <h1>Access Denied</h1>
-            <p>You don't have permission to view this page.</p>
-          </div>
-        );
-      default:
-        return (
-          <div role="alert">
-            <h1>{error.status} {error.statusText}</h1>
-            <p>{error.data?.message || "An error occurred"}</p>
-          </div>
-        );
-    }
+    // Thrown Response: render status-specific UI
+    return <div role="alert"><h1>{error.status}</h1></div>;
   }
 
-  // Unexpected errors
   if (error instanceof Error) {
-    return (
-      <div role="alert">
-        <h1>Unexpected Error</h1>
-        <p>{error.message}</p>
-      </div>
-    );
+    // Unexpected error: generic fallback
+    return <div role="alert"><h1>Unexpected Error</h1></div>;
   }
 
-  return (
-    <div role="alert">
-      <h1>Unknown Error</h1>
-    </div>
-  );
+  return <div role="alert"><h1>Unknown Error</h1></div>;
 }
 ```
 
-**Why good:** Route-level error isolation keeps rest of page functional, different UI for different error types, accessible error messages with role="alert", named constants for HTTP status codes
+**Key rules:**
+
+- Throw `json({ message }, { status: 404 })` for expected errors
+- ErrorBoundary is route-scoped -- rest of the page stays functional
+- Use named constants for HTTP status codes
+- `isRouteErrorResponse()` checks if error was a thrown Response
+
+See [examples/error-handling.md](examples/error-handling.md) for multi-status error boundaries.
 
 ---
 
-### Pattern 7: Meta Function for SEO
+### Pattern 7: Meta and Links Functions
 
-Export `meta` function to set page metadata dynamically.
+Export `meta` for SEO metadata and `links` for stylesheets/preloads.
 
 ```typescript
-// app/routes/blog.$slug.tsx
-import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-
-const SITE_NAME = "My Blog";
-const DEFAULT_DESCRIPTION = "A blog about web development";
-
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-  if (!data) {
-    return [
-      { title: "Post Not Found" },
-      { name: "description", content: "The requested post could not be found" },
-    ];
-  }
-
+  if (!data) return [{ title: "Not Found" }];
   return [
     { title: `${data.post.title} | ${SITE_NAME}` },
-    { name: "description", content: data.post.excerpt || DEFAULT_DESCRIPTION },
     { property: "og:title", content: data.post.title },
-    { property: "og:description", content: data.post.excerpt },
-    { property: "og:type", content: "article" },
-    {
-      tagName: "link",
-      rel: "canonical",
-      href: `https://example.com/blog/${data.post.slug}`,
-    },
+    { tagName: "link", rel: "canonical", href: url },
   ];
 };
-
-export async function loader({ params }: LoaderFunctionArgs) {
-  const post = await db.post.findUnique({ where: { slug: params.slug } });
-  if (!post) throw new Response("Not Found", { status: 404 });
-  return json({ post });
-}
 ```
 
-**Why good:** Meta data derived from loader data, fallback for missing data, canonical URL prevents duplicate content issues, Open Graph tags for social sharing
+**Gotcha:** `meta` function receives null data on error -- always handle the missing data case.
+**Gotcha:** `links` function cannot access loader data -- use `meta` with `tagName: "link"` for dynamic links.
+
+See [examples/meta.md](examples/meta.md) for Open Graph and Twitter Card patterns.
 
 ---
 
-### Pattern 8: Links Function for Assets
+### Pattern 8: Resource Routes
 
-Export `links` function to add stylesheets and preload assets.
+Routes without a default export become resource routes -- useful for APIs, webhooks, and file downloads.
 
 ```typescript
-// app/routes/dashboard.tsx
-import type { LinksFunction } from "@remix-run/node";
-
-import dashboardStyles from "~/styles/dashboard.css?url";
-import chartStyles from "~/styles/charts.css?url";
-
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: dashboardStyles },
-  { rel: "stylesheet", href: chartStyles },
-  {
-    rel: "preload",
-    href: "/fonts/inter.woff2",
-    as: "font",
-    type: "font/woff2",
-    crossOrigin: "anonymous",
-  },
-];
+// app/routes/api.health.ts (no default export = resource route)
+export async function loader() {
+  return json({ status: "healthy", timestamp: new Date().toISOString() });
+}
 ```
 
-**Why good:** Route-specific styles only load when needed, preload critical assets, crossOrigin required for font preloading
-
-**Note:** For dynamic links based on loader data (like canonical URLs), use `meta` function with `tagName: "link"` instead.
+See [examples/resource-routes.md](examples/resource-routes.md) for webhook and file download examples.
 
 ---
 
-### Pattern 9: Resource Routes
+### Pattern 9: Nested Routes and Layouts
 
-Routes without a default export become resource routes - useful for APIs and file downloads.
+Nested routes share parent layouts and load data in parallel. Parent loaders provide shared data, child loaders run concurrently.
 
-```typescript
-// app/routes/api.users.ts (no default export = resource route)
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+| Pattern               | Purpose                                        |
+| --------------------- | ---------------------------------------------- |
+| `admin.tsx`           | Layout (has `<Outlet />`)                      |
+| `admin._index.tsx`    | Index route (renders at parent URL)            |
+| `admin.users.tsx`     | Nested child route                             |
+| `admin_.settings.tsx` | Escapes parent layout with trailing underscore |
+| `_auth.tsx`           | Pathless layout with leading underscore        |
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const users = await db.user.findMany();
-  return json({ users });
-}
-
-// app/routes/api.posts.$postId.like.ts
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-
-export async function action({ params, request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const liked = formData.get("liked") === "true";
-
-  await db.like.upsert({
-    where: {
-      postId_userId: {
-        postId: params.postId!,
-        userId: getCurrentUserId(request),
-      },
-    },
-    create: {
-      postId: params.postId!,
-      userId: getCurrentUserId(request),
-      liked,
-    },
-    update: { liked },
-  });
-
-  return json({ success: true });
-}
-```
-
-**Why good:** Clean API endpoints without UI, can be called from useFetcher, follows REST conventions
-
----
-
-### Pattern 10: Nested Routes and Layouts
-
-Nested routes share parent layouts and load data in parallel.
-
-```typescript
-// app/routes/dashboard.tsx (parent layout)
-import { Outlet, useLoaderData } from "@remix-run/react";
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
-  return json({ user });
-}
-
-export default function DashboardLayout() {
-  const { user } = useLoaderData<typeof loader>();
-
-  return (
-    <div>
-      <nav>
-        <span>Welcome, {user.name}</span>
-        {/* Navigation links */}
-      </nav>
-      <main>
-        <Outlet /> {/* Child routes render here */}
-      </main>
-    </div>
-  );
-}
-
-// app/routes/dashboard._index.tsx (child - renders at /dashboard)
-import { useLoaderData } from "@remix-run/react";
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  // This loader runs IN PARALLEL with parent loader
-  const stats = await getDashboardStats();
-  return json({ stats });
-}
-
-export default function DashboardIndex() {
-  const { stats } = useLoaderData<typeof loader>();
-  return <StatsDisplay stats={stats} />;
-}
-```
-
-**Why good:** Parent layout data (user) available to all children, child loaders run in parallel with parent (no waterfall), Outlet renders child routes maintaining layout structure
-
-#### Opting Out of Layout Nesting
-
-Use trailing underscore to share URL structure without UI nesting:
-
-```typescript
-// app/routes/dashboard_.settings.tsx
-// URL: /dashboard/settings
-// But NOT nested inside dashboard.tsx layout
-
-export default function Settings() {
-  return <FullPageSettingsForm />;
-}
-```
+See [examples/nested-routes.md](examples/nested-routes.md) for admin layout and pathless layout examples.
 
 </patterns>
 
 ---
 
-<integration>
+**Detailed Resources:**
 
-## Integration Guide
+- [examples/core.md](examples/core.md) - File-based routing, route naming, essential hooks
+- [examples/loaders.md](examples/loaders.md) - Protected routes, pagination, caching headers
+- [examples/actions.md](examples/actions.md) - Signup forms, validation, delete with confirmation
+- [examples/forms.md](examples/forms.md) - Multiple forms in one route, intent pattern
+- [examples/nested-routes.md](examples/nested-routes.md) - Layouts, pathless routes, admin panels
+- [examples/error-handling.md](examples/error-handling.md) - Multi-status error boundaries
+- [examples/optimistic.md](examples/optimistic.md) - Optimistic UI, debounced search
+- [examples/deferred.md](examples/deferred.md) - Streaming with defer/Promises
+- [examples/resource-routes.md](examples/resource-routes.md) - API endpoints, webhooks, file downloads
+- [examples/meta.md](examples/meta.md) - SEO meta tags, Open Graph, Twitter Cards
+- [examples/react-router-v7.md](examples/react-router-v7.md) - Migration: type generation, clientAction, Single Fetch
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, route module exports
 
-**Works with:**
+---
 
-- **React**: Remix is built on React - use React components and hooks
-- **Node.js/Deno adapters**: Server runtime is adapter-agnostic
-- **Any database**: Loaders/actions can use any data source
+<red_flags>
 
-**Styling Integration:**
+## RED FLAGS
 
-Components accept `className` prop for styling flexibility. Remix doesn't prescribe a styling solution - use your preferred approach via the `className` prop.
+**High Priority Issues:**
 
-**State Management:**
+- Loaders/actions exported from non-route files -- Remix only runs these from route modules
+- Missing type inference -- always use `useLoaderData<typeof loader>()` or `Route.ComponentProps`
+- Client-side data fetching with useEffect + fetch -- use loaders for server data
+- Returning null from loader instead of throwing Response -- every consumer must null-check
 
-- Server state: Use loaders and actions (Remix handles caching and revalidation)
-- Client state: Use React hooks (useState, useReducer) or external solutions via props
+**Medium Priority Issues:**
 
-</integration>
+- Streaming critical data (page title, auth state) -- causes content flicker
+- useFetcher without optimistic UI -- makes interactions feel slow
+- Magic numbers for HTTP status codes -- use named constants
+- Form without `method="post"` -- defaults to GET, action not called
+
+**Gotchas & Edge Cases:**
+
+- Loader runs on every navigation -- even for child route changes, parent loaders re-run (use `shouldRevalidate` to optimize)
+- Action runs before all loaders -- after action, all loaders revalidate by default
+- `defer()` requires `<Suspense>` + `<Await>` wrapper -- forgetting causes errors
+- Index routes need `?index` query param for form actions targeting them
+- `meta` function receives null data on error -- must handle missing data case
+- `links` function cannot access loader data -- use `meta` with `tagName: "link"` for dynamic links
+- In React Router v7, `clientAction` takes priority when both `action` and `clientAction` exist -- server action is completely skipped
+
+</red_flags>
 
 ---
 
@@ -790,15 +404,13 @@ Components accept `className` prop for styling flexibility. Remix doesn't prescr
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST export loaders and actions as named exports from route modules only)**
+**(You MUST export loaders and actions as named exports from route modules only -- they do not work in non-route files)**
 
-**(You MUST use `useLoaderData<typeof loader>()` for type-safe data access in components)**
+**(You MUST throw Response objects for expected errors (404, 403) -- use ErrorBoundary for handling)**
 
-**(You MUST throw Response objects for expected errors - use ErrorBoundary for handling)**
+**(You MUST await critical data and return non-critical data as Promises for streaming)**
 
-**(You MUST wrap state mutations after await in `runInAction()` if combining with MobX)**
-
-**(You MUST use `defer()` for non-critical data that can stream - keep critical data in direct returns)**
+**(You MUST use named constants for HTTP status codes -- no magic numbers)**
 
 **Failure to follow these rules will break data loading, type safety, and error handling.**
 

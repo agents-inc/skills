@@ -1,6 +1,6 @@
 # shared-ci-cd-cloudflare-workers
 
-Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI, and Hono integration
+Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI
 
 ## Installation
 

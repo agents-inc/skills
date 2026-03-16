@@ -8,7 +8,7 @@
 - [caching.md](caching.md) - Remote caching, Turborepo
 - [security.md](security.md) - OIDC auth, secrets rotation
 - [deployment.md](deployment.md) - Multi-env, rollback
-- [monitoring.md](monitoring.md) - Datadog, GitHub Insights
+- [monitoring.md](monitoring.md) - CI metrics, GitHub Insights
 
 ---
 
@@ -22,13 +22,13 @@ jobs:
   install:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2 # Named constant, not "latest"
+          bun-version: "1.2.2" # Pin to your project's version, never "latest"
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -40,42 +40,42 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2" # Pin to your project's version
       - run: bunx turbo run lint --filter=...[origin/main]
 
   test:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Required for git diff in affected detection
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2" # Pin to your project's version
       - run: bunx turbo run test --filter=...[origin/main]
 
   type-check:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2" # Pin to your project's version
       - run: bunx turbo run type-check --filter=...[origin/main]
 
   build:
     needs: [lint, test, type-check]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: "1.2.2" # Pin to your project's version
       - run: bunx turbo run build
 ```
 
@@ -87,8 +87,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest # BAD: Non-deterministic
       - run: bun install # No caching
@@ -118,7 +118,7 @@ jobs:
 ```yaml
 # Good Example - Multi-level caching
 - name: Cache Bun dependencies
-  uses: actions/cache@v4
+  uses: actions/cache@v5
   with:
     path: ~/.bun/install/cache
     key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -126,7 +126,7 @@ jobs:
       ${{ runner.os }}-bun-
 
 - name: Cache Turborepo
-  uses: actions/cache@v4
+  uses: actions/cache@v5
   with:
     path: .turbo
     key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -144,7 +144,7 @@ jobs:
 # OR
 
 - name: Cache everything
-  uses: actions/cache@v4
+  uses: actions/cache@v5
   with:
     path: .
     key: my-cache # BAD: Static key never invalidates
@@ -263,11 +263,11 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ inputs.bun-version }}
 
@@ -289,9 +289,9 @@ jobs:
     outputs:
       sha: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ inputs.bun-version }}
 
@@ -367,13 +367,13 @@ runs:
   using: "composite"
   steps:
     - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
+      uses: oven-sh/setup-bun@v2
       with:
         bun-version: ${{ inputs.bun-version }}
 
     - name: Cache dependencies
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.bun/install/cache
         key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -402,7 +402,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Local composite action (same repo)
       - name: Setup environment
@@ -441,9 +441,9 @@ jobs:
       fail-fast: false # Continue other jobs if one fails
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -481,9 +481,9 @@ jobs:
     continue-on-error: ${{ matrix.experimental || false }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -516,7 +516,7 @@ jobs:
       url: ${{ matrix.url }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Deploy to ${{ matrix.environment }}
         if: matrix.auto_deploy || github.event_name == 'workflow_dispatch'

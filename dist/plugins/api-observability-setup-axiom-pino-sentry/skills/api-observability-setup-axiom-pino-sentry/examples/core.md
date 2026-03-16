@@ -23,13 +23,13 @@ npm install -D pino-pretty
 npm install pino pino-pretty next-axiom @sentry/nextjs
 ```
 
-**Why bad:** `pino-pretty` adds ~500KB to production bundle unnecessarily, degrades performance in production where JSON logs should be sent directly to Axiom
+**Why bad:** `pino-pretty` adds ~500KB to production bundle unnecessarily, degrades performance in production where JSON logs should be sent directly to your log aggregator
 
 ---
 
 ## Pattern 2: Environment Variables Template
 
-**File: `apps/client-next/.env.example`**
+**File: `.env.example`**
 
 ```bash
 # Good Example - Complete observability env template
@@ -91,29 +91,24 @@ SENTRY_DSN=
 
 ---
 
-## Pattern 3: next.config.js with withAxiom
+## Pattern 3: next.config.ts with withAxiom
 
-**File: `apps/client-next/next.config.js`**
+**File: `next.config.ts`**
 
-```javascript
-// Good Example - withAxiom wrapper with Sentry
-const { withAxiom } = require("next-axiom");
-const { withSentryConfig } = require("@sentry/nextjs");
+```typescript
+// Good Example - withAxiom wrapper with Sentry (v9+ compatible)
+import { withSentryConfig } from "@sentry/nextjs";
+import { withAxiom } from "next-axiom";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   // Your existing config...
   reactStrictMode: true,
 };
 
-// Wrap with Axiom first, then Sentry
-const configWithAxiom = withAxiom(nextConfig);
-
-// Sentry configuration options
-const sentryWebpackPluginOptions = {
-  // Suppresses source map uploading logs during build
-  silent: true,
-
+// Wrap with Axiom first (inner), then Sentry (outer)
+export default withSentryConfig(withAxiom(nextConfig), {
   // Organization and project from env vars
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
@@ -121,28 +116,23 @@ const sentryWebpackPluginOptions = {
   // Auth token for source map upload
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // Upload source maps only in CI (not local builds)
-  disableServerWebpackPlugin: !process.env.CI,
-  disableClientWebpackPlugin: !process.env.CI,
-
-  // Hide source maps from production bundle
-  hideSourceMaps: true,
-
-  // Automatically tree-shake Sentry logger statements
-  disableLogger: true,
-};
-
-module.exports = withSentryConfig(configWithAxiom, sentryWebpackPluginOptions);
+  // Only print source map upload logs in CI
+  silent: !process.env.CI,
+});
 ```
 
-**Why good:** `withAxiom` wraps first for logging integration, Sentry wraps outer for source map handling, source map upload disabled locally to speed up dev builds, `hideSourceMaps` prevents exposing source code in production
+**Why good:** ESM imports with TypeScript (`next.config.ts`), `withAxiom` wraps first for logging integration, Sentry wraps outer for source map handling, `silent: !process.env.CI` suppresses upload noise locally, source maps are hidden by default in v9+ (no `hideSourceMaps` needed)
 
-```javascript
-// Bad Example - Missing wrappers
-/** @type {import('next').NextConfig} */
-module.exports = {
-  reactStrictMode: true,
-};
+```typescript
+// Bad Example - Using removed v7/v8 options
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  disableServerWebpackPlugin: !process.env.CI, // REMOVED in v8+
+  disableClientWebpackPlugin: !process.env.CI, // REMOVED in v8+
+  hideSourceMaps: true, // REMOVED in v9 (now default behavior)
+  disableLogger: true, // REMOVED in v9
+});
 ```
 
-**Why bad:** No Axiom integration means logs don't reach Axiom, no Sentry integration means source maps not uploaded and errors not tracked
+**Why bad:** `disableServerWebpackPlugin`, `disableClientWebpackPlugin` removed in v8, `hideSourceMaps` removed in v9 (SDK emits hidden source maps by default), `disableLogger` removed in v9

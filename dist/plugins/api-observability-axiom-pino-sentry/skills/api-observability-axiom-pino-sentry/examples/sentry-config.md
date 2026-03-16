@@ -13,15 +13,18 @@
 - v9.x: `hideSourceMaps` option removed (SDK emits hidden source maps by default)
 - v9.x: Metrics API completely removed (was deprecated in v8)
 - v9.x: Minimum browser support raised to ES2020 (Chrome 80+, Safari 14+, Firefox 74+)
+- v10.x: `BaseClient` removed, use `Client`; `hasTracingEnabled()` renamed `hasSpansEnabled()`
+- v10.x: OpenTelemetry dependencies bumped to v2; FID web vital reporting removed (use INP)
+- v10.x: `_experiments.enableLogs` moved to top-level `enableLogs`
+- v10.x: IP address inference now gated by `sendDefaultPii` option
 
 ---
 
 ## Pattern: Setting User Context
 
-**File: `apps/client-next/lib/sentry-user.ts`**
-
 ```typescript
-import * as Sentry from "@sentry/nextjs";
+// Import from your framework-specific Sentry package
+import * as Sentry from "@sentry/react";
 
 import type { User } from "@/types/user";
 
@@ -83,10 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 ## Pattern: Error Filtering Configuration
 
-**File: `apps/client-next/sentry.client.config.ts`**
-
 ```typescript
-import * as Sentry from "@sentry/nextjs";
+// Import from your framework-specific Sentry package
+import * as Sentry from "@sentry/react";
 
 const IGNORED_ERROR_PATTERNS = [
   // User-initiated cancellations
@@ -113,7 +115,7 @@ const HTTP_STATUS_UNAUTHORIZED = 401;
 const HTTP_STATUS_FORBIDDEN = 403;
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: process.env.SENTRY_DSN,
 
   beforeSend(event, hint) {
     const error = hint.originalException;
@@ -163,7 +165,7 @@ Sentry.init({
 
 ```typescript
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: process.env.SENTRY_DSN,
   // No beforeSend - every error goes to Sentry
 });
 ```

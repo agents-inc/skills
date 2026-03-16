@@ -1,6 +1,6 @@
 # shared-tooling-typescript-config
 
-Shared TypeScript strict mode configs, TS 5.x options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs
+TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs
 
 ## Installation
 

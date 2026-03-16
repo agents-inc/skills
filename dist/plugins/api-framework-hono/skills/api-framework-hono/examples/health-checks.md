@@ -12,7 +12,7 @@
 
 ```typescript
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import type { HealthCheckResult } from "@/lib/types";
+// Define health check result types as needed for your project
 
 const HTTP_STATUS_OK = 200;
 const HTTP_STATUS_SERVICE_UNAVAILABLE = 503;
@@ -112,7 +112,8 @@ const checkDatabase = async (): Promise<{
       setTimeout(() => reject(new Error("Timeout")), HEALTH_CHECK_TIMEOUT_MS),
     );
 
-    await Promise.race([db.execute("SELECT 1"), timeoutPromise]);
+    // Use your database client's ping/health check method
+    await Promise.race([checkDatabaseConnection(), timeoutPromise]);
 
     return { status: "connected" };
   } catch (error) {
@@ -122,7 +123,7 @@ const checkDatabase = async (): Promise<{
 };
 ```
 
-**Why good:** Shallow /health is fast (liveness for LB), deep /health/deep checks deps (readiness), timeout prevents hanging forever, 503 triggers K8s restart
+**Why good:** Shallow `/health` is fast (liveness for load balancers), deep `/health/deep` checks deps (readiness), timeout prevents hanging forever, 503 tells orchestrators to restart
 
 ### Bad Example - Slow health check
 

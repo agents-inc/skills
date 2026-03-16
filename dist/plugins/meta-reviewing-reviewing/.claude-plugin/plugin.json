@@ -1,6 +1,6 @@
 {
   "name": "meta-reviewing-reviewing",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.",
   "author": {

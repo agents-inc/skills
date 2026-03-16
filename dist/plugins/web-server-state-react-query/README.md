@@ -1,6 +1,6 @@
 # web-server-state-react-query
 
-REST APIs, React Query, data fetching
+React Query server state, hey-api OpenAPI codegen, type-safe data fetching
 
 ## Installation
 

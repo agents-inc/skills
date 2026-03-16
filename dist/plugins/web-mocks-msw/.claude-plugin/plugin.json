@@ -1,6 +1,6 @@
 {
   "name": "web-mocks-msw",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.",
   "author": {

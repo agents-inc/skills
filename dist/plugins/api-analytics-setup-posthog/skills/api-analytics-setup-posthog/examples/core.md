@@ -2,45 +2,33 @@
 
 > Essential patterns for PostHog setup. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 >
-> **Related examples:** [server.md](server.md) | [deployment.md](deployment.md)
+> **Related examples:** [server.md](server.md)
 
 ---
 
-## Pattern 1: Constants
+## Pattern 1: instrumentation-client.js Setup (Next.js 15.3+)
 
-Define version constants for PostHog defaults.
-
-```typescript
-// lib/posthog/constants.ts
-export const POSTHOG_DEFAULTS_VERSION = "2025-11-30";
-```
-
-**Why good:** Named constant avoids magic strings, version is documented and easy to update when PostHog releases new defaults
-
----
-
-## Pattern 1b: Next.js 15.3+ with instrumentation-client.js
-
-For Next.js 15.3+, use the simpler `instrumentation-client.js` approach instead of a provider.
+For Next.js 15.3+, use `instrumentation-client.js` for the simplest setup. PostHog auto-initializes on the client.
 
 ```typescript
 // ✅ Good Example - instrumentation-client.js (Next.js 15.3+)
 // instrumentation-client.js (in project root)
 import posthog from "posthog-js";
 
+const POSTHOG_DEFAULTS_VERSION = "2026-01-30";
+
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
   api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-  defaults: "2025-11-30",
+  defaults: POSTHOG_DEFAULTS_VERSION,
   person_profiles: "identified_only",
 });
 
-// Optional: Enable debug mode in development
 if (process.env.NODE_ENV === "development") {
   posthog.debug();
 }
 ```
 
-**Why good:** Simpler setup for Next.js 15.3+, no provider component needed, PostHog auto-initializes on client, works with both App Router and Pages Router
+**Why good:** Simplest setup, no provider component needed, `defaults` date enables all recommended behaviors for that snapshot, `person_profiles: "identified_only"` reduces costs
 
 **When to use:** Next.js 15.3+ projects. For older versions, use the PostHogProvider pattern below.
 
@@ -51,7 +39,7 @@ if (process.env.NODE_ENV === "development") {
 Create the provider component for client-side analytics.
 
 ```typescript
-// ✅ Good Example - PostHog Provider with modern defaults
+// ✅ Good Example - PostHog Provider (Next.js < 15.3)
 // lib/posthog/provider.tsx
 "use client";
 
@@ -59,7 +47,7 @@ import { useEffect } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 
-import { POSTHOG_DEFAULTS_VERSION } from "./constants";
+const POSTHOG_DEFAULTS_VERSION = "2026-01-30";
 
 interface PostHogProviderProps {
   children: React.ReactNode;
@@ -70,17 +58,10 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     if (typeof window !== "undefined" && !posthog.__loaded) {
       posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
         api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-        // Use 2025 defaults for automatic SPA page tracking
         defaults: POSTHOG_DEFAULTS_VERSION,
-        // Alternatively, set these explicitly:
-        // capture_pageview: "history_change",
-        // capture_pageleave: "if_capture_pageview",
-
-        // Recommended settings
-        person_profiles: "identified_only", // Only create profiles for identified users
+        person_profiles: "identified_only",
         loaded: (posthog) => {
           if (process.env.NODE_ENV === "development") {
-            // Enable debug mode in development
             posthog.debug();
           }
         },
@@ -90,12 +71,9 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
 
   return <PHProvider client={posthog}>{children}</PHProvider>;
 }
-
-// Named export
-export { PostHogProvider };
 ```
 
-**Why good:** `defaults: "2025-11-30"` enables automatic SPA page/leave tracking, `person_profiles: "identified_only"` reduces event costs, debug mode in development aids troubleshooting, named export follows convention
+**Why good:** `defaults` date enables all recommended behaviors for that snapshot, `person_profiles: "identified_only"` reduces costs, `'use client'` ensures browser context, debug mode aids development
 
 ---
 
@@ -155,39 +133,32 @@ export default function RootLayout({ children }) {
 
 ---
 
-## Pattern 4: Client-Side User Identification
+## Pattern 4: User Identification
 
 Identify users after authentication to link anonymous and authenticated sessions.
 
 ```typescript
 // ✅ Good Example - Identifying user after sign in
-// hooks/use-auth.ts
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "@/lib/auth-client";
-
-export function useAuthIdentify() {
+export function usePostHogIdentify(
+  user: { id: string; email: string; name: string } | null,
+) {
   const posthog = usePostHog();
-  const { data: session } = authClient.useSession();
 
   useEffect(() => {
-    if (session?.user) {
-      // Identify user with PostHog
-      posthog.identify(session.user.id, {
-        email: session.user.email,
-        name: session.user.name,
-        // Add other user properties
+    if (user) {
+      posthog.identify(user.id, {
+        email: user.email,
+        name: user.name,
       });
     }
-  }, [session?.user, posthog]);
+  }, [user, posthog]);
 }
-
-// Named export
-export { useAuthIdentify };
 ```
 
-**Why good:** `identify()` links anonymous to authenticated sessions, user properties enable cohort analysis, runs once on session change
+**Why good:** `identify()` links anonymous to authenticated sessions, user properties enable cohort analysis, decoupled from any specific auth library
 
 ---
 
@@ -197,32 +168,51 @@ Clear user identity when signing out to prevent data bleed.
 
 ```typescript
 // ✅ Good Example - Reset PostHog on sign out
-// components/sign-out-button.tsx
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "@/lib/auth-client";
-
-export function SignOutButton() {
+function handleSignOut() {
   const posthog = usePostHog();
 
-  const handleSignOut = async () => {
-    await authClient.signOut();
-
-    // Reset PostHog to clear user identity
-    posthog.reset();
-  };
-
-  return (
-    <button onClick={handleSignOut} type="button">
-      Sign Out
-    </button>
-  );
+  // After your auth sign-out logic completes:
+  posthog.reset();
 }
-
-// Named export
-export { SignOutButton };
 ```
 
 **Why good:** `reset()` clears identity on sign out preventing data bleed between users on shared devices
+
+```typescript
+// ❌ Bad Example - Missing reset on sign out
+function handleSignOut() {
+  // Sign out logic runs but no posthog.reset()
+  // Next user inherits previous identity!
+}
+```
+
+**Why bad:** User identity bleeds between sessions, corrupts analytics data
+
+---
+
+## Pattern 6: Environment Variables
+
+Client-side variables need the `NEXT_PUBLIC_` prefix. Server-side variables should NOT have it.
+
+```bash
+# ✅ Good Example - .env.local
+# Client-side (embedded in browser bundle)
+NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_api_key
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+
+# Server-side (API routes, never exposed to client)
+POSTHOG_API_KEY=phc_your_project_api_key
+POSTHOG_HOST=https://us.i.posthog.com
+```
+
+```bash
+# ❌ Bad Example - Wrong prefixes
+POSTHOG_KEY=phc_xxx              # Missing NEXT_PUBLIC_, undefined in browser
+NEXT_PUBLIC_SECRET_KEY=xxx       # Exposes server secret to client!
+```
+
+**Why bad:** First var is undefined in browser, second leaks secrets into the client bundle
 
 ---

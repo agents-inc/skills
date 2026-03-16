@@ -1,6 +1,6 @@
 # web-tooling-vite
 
-Vite config, path aliases, vendor chunk splitting (manualChunks), environment-specific builds, Rolldown advancedChunks, Environment API, Sass modern API, build targets, module preload
+Vite config, path aliases, vendor chunk splitting, environment-specific builds, Rolldown codeSplitting, Sass modern API, build targets, module preload
 
 ## Installation
 

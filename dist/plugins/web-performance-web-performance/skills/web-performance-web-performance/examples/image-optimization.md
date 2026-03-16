@@ -1,18 +1,16 @@
 # Image Optimization
 
-> Image formats, lazy loading, and Next.js Image patterns. See [core.md](core.md) for React runtime patterns.
+> Image formats, lazy loading, and responsive image patterns. See [core.md](core.md) for React runtime patterns.
 
 ---
 
-## Image Format Constants
+## Image Format Priority
 
 ```typescript
 // constants/image.ts
 export const IMAGE_FORMATS = {
-  AVIF_COMPRESSION_PERCENT: 40, // 30-50% smaller than JPEG
-  WEBP_COMPRESSION_PERCENT: 30, // 25-35% smaller than JPEG
-  BROWSER_SUPPORT_AVIF_PERCENT: 93,
-  BROWSER_SUPPORT_WEBP_PERCENT: 97,
+  AVIF_SIZE_REDUCTION_PERCENT: 40, // 30-50% smaller than JPEG
+  WEBP_SIZE_REDUCTION_PERCENT: 30, // 25-35% smaller than JPEG
 } as const;
 
 export const IMAGE_SIZE_BUDGETS_KB = {
@@ -21,18 +19,11 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 } as const;
 ```
 
-**Format priority:**
+**Format priority (prefer in order):**
 
-1. **AVIF** - Best compression (30-50% smaller than JPEG)
-   - Browser support: 93% (2024)
-   - Use with fallbacks
-
-2. **WebP** - Good compression (25-35% smaller than JPEG)
-   - Browser support: 97%
-   - Recommended default
-
+1. **AVIF** - Best compression (30-50% smaller than JPEG), ~95% browser support (2026)
+2. **WebP** - Good compression (25-35% smaller), ~97% browser support
 3. **JPEG** - Universal fallback
-   - Supported everywhere
 
 ---
 
@@ -82,7 +73,7 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 </picture>
 ```
 
-**Why good:** Browser chooses best supported format (AVIF > WebP > JPEG), serves appropriate size for viewport, smaller file sizes improve LCP, dimensions prevent CLS
+**Why good:** Browser chooses best supported format (AVIF > WebP > JPEG), serves appropriate size for viewport, smaller file sizes improve LCP, explicit dimensions prevent CLS
 
 ### Bad Example - Single Format, No Responsive Sizes
 
@@ -90,7 +81,7 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 <img src="/images/hero-4k.jpg" alt="Hero" />
 ```
 
-**Why bad:** Serves 4K image to mobile (wasted bandwidth), no modern format optimization (30-50% larger files), no lazy loading (blocks LCP), no dimensions (causes CLS)
+**Why bad:** Serves 4K image to mobile (wasted bandwidth), no modern format optimization (30-50% larger files), no lazy loading, no dimensions (causes CLS)
 
 ---
 
@@ -100,7 +91,7 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 
 ```html
 <img
-  src="/image.jpg"
+  src="/image.webp"
   alt="Description"
   loading="lazy"
   decoding="async"
@@ -109,15 +100,16 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 />
 ```
 
-**Why good:** Defers loading until image near viewport, reduces initial page weight, faster Time to Interactive
+**Why good:** Defers loading until image nears viewport, reduces initial page weight, faster Time to Interactive
 
 ### Bad Example - Lazy Loading Above-Fold Image
 
 ```html
+<!-- Delays LCP! -->
 <img src="/hero.jpg" alt="Hero" loading="lazy" width="1200" height="600" />
 ```
 
-**Why bad:** Delays LCP element, poor perceived performance, lazy loading adds overhead for critical images
+**Why bad:** Delays LCP element, poor perceived performance, lazy loading adds network round-trip for critical images
 
 **When to use lazy loading:**
 
@@ -127,63 +119,8 @@ export const IMAGE_SIZE_BUDGETS_KB = {
 
 **When NOT to use:**
 
-- Above-the-fold images (use `loading="eager"` or priority)
-- Images needed for initial render
-
----
-
-## Next.js Image Component
-
-### Good Example - Priority for Above-Fold
-
-```typescript
-import Image from 'next/image';
-
-export function Hero() {
-  return (
-    <Image
-      src="/hero.jpg"
-      alt="Hero image"
-      width={1200}
-      height={600}
-      priority  // Preload for LCP
-      placeholder="blur"
-      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-    />
-  );
-}
-```
-
-**Why good:** Automatic format selection (AVIF/WebP), prevents layout shift (width/height required), blur placeholder improves perceived performance, priority flag preloads for LCP
-
-### Good Example - Lazy Loading for Below-Fold
-
-```typescript
-import Image from 'next/image';
-
-export function FeatureImage() {
-  return (
-    <Image
-      src="/feature.jpg"
-      alt="Feature"
-      width={800}
-      height={400}
-      loading="lazy"
-      placeholder="blur"
-      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-    />
-  );
-}
-```
-
-**Why good:** Lazy loads by default (reduces initial page weight), blur placeholder shows while loading, automatic responsive images
-
-**Next.js Image benefits:**
-
-- Automatic format selection (AVIF/WebP)
-- Lazy loading by default
-- Prevents layout shift (width/height required)
-- Blur placeholder for better UX
+- Above-the-fold / hero images (use `loading="eager"` + `fetchpriority="high"`)
+- Images needed for initial render (LCP candidates)
 
 ---
 
@@ -203,7 +140,7 @@ for img in public/images/*.{jpg,png}; do
   cwebp -q 80 "$img" -o "${filename}.webp"
 
   # Convert to AVIF (quality 80)
-  avif -q 80 "$img" -o "${filename}.avif"
+  avifenc -s 6 -q 80 "$img" -o "${filename}.avif"
 
   echo "Optimized: $img"
 done
@@ -212,7 +149,6 @@ done
 ### package.json Integration
 
 ```json
-// package.json
 {
   "scripts": {
     "optimize:images": "bash scripts/optimize-images.sh",

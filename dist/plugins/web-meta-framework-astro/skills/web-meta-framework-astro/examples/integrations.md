@@ -13,17 +13,16 @@
 npx astro add react
 
 # Add multiple integrations at once
-npx astro add react tailwind sitemap
+npx astro add react sitemap
 ```
 
 ```javascript
 // astro.config.mjs (manual setup)
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
-import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
-  integrations: [react(), tailwind()],
+  integrations: [react()],
 });
 ```
 

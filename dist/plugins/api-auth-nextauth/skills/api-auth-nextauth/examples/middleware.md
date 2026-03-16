@@ -2,6 +2,8 @@
 
 > Code examples for Auth.js route protection - middleware patterns, Edge compatibility, per-page checks. See [SKILL.md](../SKILL.md) for core concepts.
 
+> **Next.js 16 note:** `middleware.ts` is renamed to `proxy.ts` in Next.js 16+. The Auth.js integration pattern remains the same -- just rename the file. Examples below use `middleware.ts` (Next.js 14/15) but apply to both.
+
 ---
 
 ## Pattern 1: Basic Middleware Protection

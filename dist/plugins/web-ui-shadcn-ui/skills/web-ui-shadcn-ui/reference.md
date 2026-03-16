@@ -1,6 +1,6 @@
 # shadcn/ui Reference
 
-> Decision frameworks, anti-patterns, and red flags for shadcn/ui development. See [SKILL.md](SKILL.md) for core concepts and [examples.md](examples.md) for code examples.
+> Decision frameworks, anti-patterns, and red flags for shadcn/ui development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
 
@@ -17,7 +17,7 @@ Need UI components?
 │   ├─ YES → shadcn/ui integrates perfectly
 │   └─ NO → Consider other options or add Tailwind
 ├─ Do you need accessible components?
-│   └─ YES → shadcn/ui (built on Radix) provides this
+│   └─ YES → shadcn/ui (built on Radix/Base UI) provides this
 └─ Do you need a specific design system (Material, etc.)?
     ├─ YES → Use that design system's library
     └─ NO → shadcn/ui works with any design
@@ -36,7 +36,7 @@ Need a new component?
 │   └─ Major change → Create wrapper or new component
 └─ Is it a one-off component?
     ├─ YES → Build without variant system
-    └─ NO → Follow shadcn variant patterns
+    └─ NO → Follow shadcn variant patterns (cva)
 ```
 
 ### Theming Decision
@@ -44,14 +44,14 @@ Need a new component?
 ```
 Need to change appearance?
 ├─ Is it a global color change?
-│   └─ Modify CSS variables in globals.css
+│   └─ Modify CSS variables in globals.css + @theme inline mapping
 ├─ Is it a component-specific style?
 │   ├─ All instances → Modify component source
 │   └─ One instance → Use className prop with cn()
 ├─ Is it dark mode?
 │   └─ Update variables in .dark class
 └─ Is it a new color?
-    └─ Add new CSS variable (follow naming convention)
+    └─ Add CSS variable + foreground pair + @theme inline mapping
 ```
 
 ### Dialog vs Sheet vs Drawer
@@ -86,8 +86,10 @@ Building a form field?
 ├─ Is it a boolean?
 │   ├─ On/off setting → Switch
 │   └─ Agreement/Terms → Checkbox
-└─ Is it a date/time?
-    └─ Calendar or DatePicker
+├─ Is it a date/time?
+│   └─ Calendar or DatePicker
+└─ Wrapping any field?
+    └─ Use Field component (not legacy FormField)
 ```
 
 ---
@@ -97,7 +99,7 @@ Building a form field?
 ### High Priority Issues
 
 - **Not using CLI for installation** - Manual copy leads to missing dependencies and inconsistent setup
-- **Modifying CSS variables incorrectly** - Breaking OKLCH format (e.g., wrapping values in `hsl()` when they're already OKLCH)
+- **Modifying CSS variables incorrectly** - Breaking OKLCH format (e.g., wrapping values in `hsl()` when they are already OKLCH)
 - **Not using cn() utility** - Direct className concatenation breaks Tailwind class merging
 - **Missing components.json** - CLI commands will fail without proper configuration
 - **Hardcoding colors in components** - Use CSS variables for theme consistency
@@ -113,23 +115,23 @@ Building a form field?
 ### Common Mistakes
 
 - **Forgetting suppressHydrationWarning** - Causes hydration mismatch with theme provider
-- **Not wrapping async actions in try/catch** - Toast errors need proper error handling
 - **Using inline styles over CSS variables** - Breaks theming system
 - **Not providing default values for variants** - Causes undefined className issues
 - **Placing components outside ui/ directory** - Breaks CLI update commands
+- **Using old Form/FormField for new code** - Use Field component instead (form-library-agnostic)
 
 ### Gotchas & Edge Cases
 
-- **CSS variable format (Tailwind v4)** - Store with `oklch()`: `--primary: oklch(0.205 0 0)`, use directly: `bg-primary` via `@theme inline` mapping
+- **CSS variable format (Tailwind v4)** - Store as `oklch()`: `--primary: oklch(0.205 0 0)`, use directly via `@theme inline` mapping: `bg-primary`
 - **Foreground convention** - `--primary-foreground` is text color ON `--primary` background, not the opposite
 - **Server components** - Some components need "use client" directive for interactivity
-- **Button asChild prop** - Use when wrapping with Link component to avoid nested buttons
-- **FormField requires defaultValue** - Controlled inputs need initial values defined
+- **Button asChild prop** - Use when wrapping with Link to avoid nested interactive elements
 - **Select component** - Requires both onValueChange and defaultValue for controlled usage
 - **Toast positioning** - Toaster component position affects all toasts globally
 - **React 19** - No forwardRef needed; ref is now a regular prop
 - **data-slot attributes** - shadcn/ui components now include `data-slot` for enhanced styling capabilities
 - **Chart config (Tailwind v4)** - Use `var(--chart-1)` directly, no `hsl()` wrapper needed
+- **Base UI option** - Since Feb 2026, init supports `--base radix` or `--base base` for primitive selection
 
 ---
 
@@ -143,13 +145,13 @@ Use CSS variables and cn() instead of inline styles or style prop overrides.
 // WRONG - Inline styles break theming
 <Button style={{ backgroundColor: "#3b82f6" }}>Click me</Button>
 
-// WRONG - Hardcoded Tailwind classes
+// WRONG - Hardcoded Tailwind classes bypass theme
 <Button className="bg-blue-500 hover:bg-blue-600">Click me</Button>
 
-// CORRECT - Use CSS variables (update in globals.css)
+// CORRECT - Use variant system
 <Button variant="default">Click me</Button>
 
-// CORRECT - Use cn() for conditional overrides
+// CORRECT - Use CSS variable-based classes via cn()
 <Button className={cn("bg-brand hover:bg-brand/90")}>Click me</Button>
 ```
 
@@ -161,12 +163,10 @@ Use the CLI instead of manually copying component code.
 # WRONG - Manual copy from documentation
 # Copy-pasting code from ui.shadcn.com
 
-# CORRECT - Use CLI
+# CORRECT - Use CLI (resolves deps, installs Radix packages, creates utils)
 npx shadcn@latest add button
 npx shadcn@latest add card dialog form
 ```
-
-**Why CLI matters:** CLI resolves dependencies automatically, installs required Radix packages, creates proper file structure, adds utils if missing.
 
 ### Ignoring the Variant System
 
@@ -185,13 +185,12 @@ Use the variant system for component variations instead of conditional classes.
 // CORRECT - Use variant props
 <Button variant={isPrimary ? "default" : "secondary"}>Click</Button>
 
-// CORRECT - Add new variant to component if needed
+// CORRECT - Add new variant to component source if needed
 const buttonVariants = cva("...", {
   variants: {
     variant: {
-      default: "...",
-      secondary: "...",
-      brand: "bg-brand text-brand-foreground hover:bg-brand/90", // New variant
+      // ...existing variants
+      brand: "bg-brand text-brand-foreground hover:bg-brand/90",
     },
   },
 });
@@ -204,9 +203,7 @@ Maintain compound component patterns when customizing.
 ```tsx
 // WRONG - Breaking compound structure
 <div className="card">
-  <div className="card-header">
-    <h2>{title}</h2>
-  </div>
+  <div className="card-header"><h2>{title}</h2></div>
 </div>
 
 // CORRECT - Use compound components
@@ -215,18 +212,6 @@ Maintain compound component patterns when customizing.
     <CardTitle>{title}</CardTitle>
   </CardHeader>
 </Card>
-
-// CORRECT - Extend, don't replace
-function ProductCard({ title, price, ...props }) {
-  return (
-    <Card {...props}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>${price}</CardDescription>
-      </CardHeader>
-    </Card>
-  );
-}
 ```
 
 ### Missing Foreground Colors
@@ -236,19 +221,19 @@ Always define foreground colors when adding new background colors.
 ```css
 /* WRONG - Background without foreground */
 :root {
-  --brand: 262 83% 58%;
-  /* Missing --brand-foreground */
+  --brand: oklch(0.627 0.265 303.9);
+  /* Missing --brand-foreground! */
 }
 
-/* CORRECT - Pair background with foreground */
+/* CORRECT - Pair background with foreground, both modes */
 :root {
-  --brand: 262 83% 58%;
-  --brand-foreground: 0 0% 100%;
+  --brand: oklch(0.627 0.265 303.9);
+  --brand-foreground: oklch(1 0 0);
 }
 
 .dark {
-  --brand: 263 70% 50%;
-  --brand-foreground: 0 0% 100%;
+  --brand: oklch(0.627 0.265 303.9);
+  --brand-foreground: oklch(1 0 0);
 }
 ```
 
@@ -261,11 +246,6 @@ Use asChild prop to compose with other components like Link.
 <Button>
   <Link href="/dashboard">Dashboard</Link>
 </Button>
-
-// WRONG - Lost button styles
-<Link href="/dashboard" className="...lots of button classes...">
-  Dashboard
-</Link>
 
 // CORRECT - asChild merges components
 <Button asChild>
@@ -280,86 +260,32 @@ Use asChild prop to compose with other components like Link.
 ### CLI Commands
 
 ```bash
-# Initialize project
-npx shadcn@latest init
-
-# Add components
-npx shadcn@latest add [component]
-npx shadcn@latest add button card dialog
-
-# List available components
-npx shadcn@latest add
-
-# Add with specific path (monorepo)
-npx shadcn@latest add button --path=packages/ui/src/components
+npx shadcn@latest init                    # Initialize project
+npx shadcn@latest init --base radix      # Specify primitive library
+npx shadcn@latest init --preset CODE     # Use design system preset
+npx shadcn@latest add [component]        # Add component(s)
+npx shadcn@latest add button --dry-run   # Preview changes
+npx shadcn@latest add button --diff      # Check for updates
+npx shadcn@latest info                   # Show project context
+npx shadcn@latest docs combobox          # View component docs
 ```
 
 ### Essential CSS Variables (Tailwind v4 OKLCH)
 
-| Variable                        | Purpose                     |
-| ------------------------------- | --------------------------- |
-| `--background`                  | Page background             |
-| `--foreground`                  | Default text color          |
-| `--primary`                     | Primary action background   |
-| `--primary-foreground`          | Text on primary             |
-| `--secondary`                   | Secondary action background |
-| `--muted`                       | Subtle backgrounds          |
-| `--muted-foreground`            | Subtle text                 |
-| `--destructive`                 | Danger/error background     |
-| `--border`                      | Border color                |
-| `--input`                       | Input border color          |
-| `--ring`                        | Focus ring color            |
-| `--radius`                      | Border radius base          |
-| `--chart-1` through `--chart-5` | Chart color palette         |
-| `--sidebar`                     | Sidebar background          |
-| `--sidebar-foreground`          | Sidebar text                |
-| `--sidebar-primary`             | Sidebar primary action      |
-
-**Computed radius variables (via @theme inline):**
-
-- `--radius-sm`: `calc(var(--radius) - 4px)`
-- `--radius-md`: `calc(var(--radius) - 2px)`
-- `--radius-lg`: `var(--radius)`
-- `--radius-xl`: `calc(var(--radius) + 4px)`
-
-### Component Import Pattern
-
-```tsx
-// Button
-import { Button } from "@/components/ui/button";
-
-// Card (compound)
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-// Dialog (compound)
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
-// Form (compound)
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-```
+| Variable                                   | Purpose                   |
+| ------------------------------------------ | ------------------------- |
+| `--background / --foreground`              | Page background / text    |
+| `--primary / --primary-foreground`         | Primary action colors     |
+| `--secondary / --secondary-foreground`     | Secondary action colors   |
+| `--muted / --muted-foreground`             | Subtle backgrounds / text |
+| `--destructive / --destructive-foreground` | Danger/error colors       |
+| `--accent / --accent-foreground`           | Accent backgrounds / text |
+| `--border`                                 | Border color              |
+| `--input`                                  | Input border color        |
+| `--ring`                                   | Focus ring color          |
+| `--radius`                                 | Border radius base        |
+| `--chart-1` through `--chart-5`            | Chart color palette       |
+| `--sidebar / --sidebar-*`                  | Sidebar component colors  |
 
 ### Component Checklist
 
@@ -374,28 +300,14 @@ import {
 - [ ] Accessibility attributes preserved
 - [ ] `className` prop exposed on custom components
 
-### Theming Checklist (Tailwind v4)
-
-- [ ] `components.json` has `cssVariables: true`
-- [ ] Colors defined in OKLCH format (e.g., `oklch(0.205 0 0)`)
-- [ ] All colors have foreground pair
-- [ ] `.dark` class has all color overrides
-- [ ] `@theme inline` section maps variables to Tailwind utilities
-- [ ] `@custom-variant dark` defined for dark mode
-- [ ] ThemeProvider wraps application
-- [ ] `suppressHydrationWarning` on html element
-- [ ] Theme toggle component added
-- [ ] Chart variables (`--chart-1` through `--chart-5`) defined if using charts
-- [ ] Sidebar variables defined if using sidebar component
-
 ---
 
 ## Sources
 
 - [shadcn/ui Official Documentation](https://ui.shadcn.com/docs)
 - [shadcn/ui Theming Guide](https://ui.shadcn.com/docs/theming)
-- [shadcn/ui Dark Mode Guide](https://ui.shadcn.com/docs/dark-mode)
-- [shadcn/ui Form Components](https://ui.shadcn.com/docs/components/form)
-- [Tailwind v4 Migration](https://ui.shadcn.com/docs/tailwind-v4)
-- [Vercel Academy - Anatomy of shadcn/ui](https://vercel.com/academy/shadcn-ui/extending-shadcn-ui-with-custom-components)
-- [shadcn/ui Best Practices](https://shadcraft.com/blog/the-complete-beginner-s-guide-to-shadcn-ui)
+- [shadcn/ui Forms Documentation](https://ui.shadcn.com/docs/forms)
+- [shadcn/ui CLI Reference](https://ui.shadcn.com/docs/cli)
+- [shadcn/ui Changelog](https://ui.shadcn.com/docs/changelog)
+- [October 2025 - New Components](https://ui.shadcn.com/docs/changelog/2025-10-new-components)
+- [March 2026 - CLI v4](https://ui.shadcn.com/docs/changelog/2026-03-cli-v4)

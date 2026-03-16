@@ -30,7 +30,7 @@ import { Client, cacheExchange, fetchExchange, mapExchange } from "urql";
 import { authExchange } from "@urql/exchange-auth";
 import { retryExchange } from "@urql/exchange-retry";
 
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
+const GRAPHQL_ENDPOINT = process.env.GRAPHQL_URL || "";
 const MAX_RETRY_ATTEMPTS = 3;
 const INITIAL_RETRY_DELAY_MS = 1000;
 const TOKEN_STORAGE_KEY = "auth_token";

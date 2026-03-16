@@ -11,10 +11,10 @@
 ```
 Need offline functionality?
 ├─ YES → Is it a web application (not a simple website)?
-│   ├─ YES → Service Worker ✓
+│   ├─ YES → Service Worker
 │   └─ NO → Consider if browser caching is sufficient
 └─ NO → Do you need sophisticated caching control?
-    ├─ YES → Service Worker ✓
+    ├─ YES → Service Worker
     └─ NO → Browser HTTP caching may be enough
 ```
 
@@ -23,15 +23,15 @@ Need offline functionality?
 ```
 Choosing a caching strategy?
 ├─ Is the content static and versioned (e.g., /app.abc123.js)?
-│   └─ YES → Cache-first (Pattern 3)
+│   └─ YES → Cache-first
 ├─ Does the content change frequently but should work offline?
-│   └─ YES → Network-first with cache fallback (Pattern 4)
+│   └─ YES → Network-first with cache fallback
 ├─ Is speed critical but slight staleness acceptable?
-│   └─ YES → Stale-while-revalidate (Pattern 5)
+│   └─ YES → Stale-while-revalidate
 ├─ Must content always be fresh (real-time data)?
-│   └─ YES → Network-only (Pattern 17)
+│   └─ YES → Network-only
 └─ Is it precached content that never changes?
-    └─ YES → Cache-only (Pattern 16)
+    └─ YES → Cache-only
 ```
 
 ### Strategy by Content Type
@@ -52,66 +52,22 @@ Choosing a caching strategy?
 ```
 How should updates be applied?
 ├─ Is it a critical security fix?
-│   └─ YES → Aggressive update (Pattern 23) - use sparingly
+│   └─ YES → Aggressive update (Pattern 11) - use sparingly
 ├─ Does update require data migration?
-│   └─ YES → Migration-aware update (Pattern 27)
+│   └─ YES → Migration-aware update (Pattern 15)
 ├─ Want to minimize disruption?
-│   └─ YES → Deferred update with user control (Pattern 24)
+│   └─ YES → Deferred update with user control (Pattern 12)
 ├─ Want automatic updates without disruption?
-│   └─ YES → Update at idle time (Pattern 25)
+│   └─ YES → Update at idle time (Pattern 13)
 └─ Rolling out gradually?
-    └─ YES → Progressive rollout (Pattern 26)
+    └─ YES → Progressive rollout (Pattern 14)
 ```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **No `event.waitUntil()` in install/activate** - Browser may terminate service worker before async operations complete, causing incomplete installations
-- **Calling `skipWaiting()` unconditionally** - Users experience unexpected behavior changes mid-session
-- **No cache versioning** - Old cached content persists forever, cache grows unbounded
-- **Not cleaning up old caches** - Storage quota eventually exceeded, breaking the app
-- **Missing offline fallback** - Users see browser error page instead of helpful offline message
-- **Not checking `response.ok` before caching** - Error responses (404, 500) get cached
-
-### Medium Priority Issues
-
-- **No timeout on network requests** - Fetch hangs indefinitely on slow connections
-- **Not cloning response before caching** - Response body can only be consumed once, causing errors
-- **No cache size limits** - Unbounded growth leads to quota issues
-- **Synchronous skipWaiting without user consent** - Breaks user expectations
-- **Not handling all request methods** - Attempting to cache POST requests fails
-
-### Common Mistakes
-
-- **Caching cross-origin requests without CORS** - Opaque responses count against quota at high cost
-- **Precaching too many assets** - Installation takes too long, may fail on slow connections
-- **Not updating service worker file** - Browser caches SW file for 24h (HTTP caching)
-- **Using `importScripts` with versioned URLs** - Must update SW file to load new scripts
-- **Expecting localStorage access** - Service workers cannot access localStorage
-
-### Gotchas & Edge Cases
-
-- **Service workers only work over HTTPS** - Exception: localhost for development
-- **Scope is determined by SW location** - `/sw.js` controls `/`, but `/scripts/sw.js` only controls `/scripts/`
-- **Browser may terminate idle service workers** - Don't rely on in-memory state
-- **`fetch` event fires for all requests in scope** - Including iframes, images, stylesheets
-- **`clients.claim()` doesn't trigger reload** - Clients keep running with old page but new SW
-- **Chrome DevTools "Update on reload" bypasses waiting** - Useful for dev, not representative of production
-- **Manifest changes don't update service worker** - Only byte changes to SW file trigger update
-- **IndexedDB transactions can't span await** - Complete DB work in single transaction
-- **Navigation preload causes double requests if misused** - If you enable `navigationPreload.enable()`, you MUST use `event.preloadResponse` instead of `fetch(event.request)` for navigation requests
-- **Service worker bootup time varies** - ~50ms on desktop, ~250ms on mobile, can be 500ms+ on slow devices - navigation preload helps mitigate this
 
 ---
 
 ## Anti-Patterns
 
 ### Unconditional skipWaiting
-
-Calling `skipWaiting()` immediately in the install event can cause issues when old tabs are still running.
 
 ```typescript
 // WRONG - Skips waiting unconditionally
@@ -127,27 +83,25 @@ self.addEventListener("install", (event) => {
 // CORRECT - Let clients control when to update
 self.addEventListener("install", (event) => {
   event.waitUntil(precache());
-  // Don't call skipWaiting - let client trigger it
+  // Don't call skipWaiting - let client trigger via message
 });
 
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting(); // User-controlled update
+    self.skipWaiting();
   }
 });
 ```
 
 ### Missing waitUntil
 
-Without `waitUntil`, the browser may terminate the service worker before async operations complete.
-
 ```typescript
-// WRONG - No waitUntil
+// WRONG - Browser may terminate before completion
 self.addEventListener("install", (event) => {
-  precacheAssets(); // Browser may terminate before this completes!
+  precacheAssets(); // No waitUntil!
 });
 
-// CORRECT - Use waitUntil
+// CORRECT
 self.addEventListener("install", (event) => {
   event.waitUntil(precacheAssets());
 });
@@ -155,71 +109,36 @@ self.addEventListener("install", (event) => {
 
 ### Caching Without Version
 
-Without versioning, old cache entries persist indefinitely.
-
 ```typescript
 // WRONG - No version in cache name
 const CACHE_NAME = "app-cache";
-
-self.addEventListener("activate", (event) => {
-  // How do you know which caches to delete?
-});
+// How do you know which caches to delete on upgrade?
 
 // CORRECT - Versioned cache names
 const CACHE_VERSION = "v1.0.0";
 const CACHE_NAME = `app-cache-${CACHE_VERSION}`;
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((names) =>
-        Promise.all(
-          names
-            .filter((name) => name !== CACHE_NAME)
-            .map((name) => caches.delete(name)),
-        ),
-      ),
-  );
-});
 ```
 
 ### No Response Clone Before Caching
 
-Response bodies can only be consumed once.
-
 ```typescript
-// WRONG - Uses response twice
-socket.addEventListener("fetch", (event) => {
-  event.respondWith(
-    (async () => {
-      const response = await fetch(event.request);
-      cache.put(event.request, response); // Consumes body
-      return response; // Body already consumed!
-    })(),
-  );
-});
+// WRONG - Response body consumed twice
+const response = await fetch(event.request);
+cache.put(event.request, response); // Consumes body
+return response; // Body already consumed!
 
-// CORRECT - Clone before caching
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    (async () => {
-      const response = await fetch(event.request);
-      cache.put(event.request, response.clone()); // Clone for cache
-      return response; // Original for client
-    })(),
-  );
-});
+// CORRECT - Clone for cache, original for client
+const response = await fetch(event.request);
+cache.put(event.request, response.clone());
+return response;
 ```
 
 ### Caching Error Responses
 
-Error responses get cached and served on subsequent requests.
-
 ```typescript
-// WRONG - Caches all responses
+// WRONG - Caches 404, 500, etc
 const response = await fetch(request);
-cache.put(request, response.clone()); // Caches 404, 500, etc!
+cache.put(request, response.clone());
 
 // CORRECT - Only cache successful responses
 const response = await fetch(request);
@@ -230,54 +149,28 @@ if (response.ok) {
 
 ### No Offline Fallback
 
-Users see a browser error page when offline instead of a helpful message.
-
 ```typescript
-// WRONG - No fallback
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then((cached) => cached || fetch(event.request)),
-    // If both fail, user sees browser error
-  );
-});
+// WRONG - No fallback, user sees browser error page
+event.respondWith(
+  caches.match(event.request).then((cached) => cached || fetch(event.request)),
+);
 
-// CORRECT - Offline fallback
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    (async () => {
-      const cached = await caches.match(event.request);
-      if (cached) return cached;
+// CORRECT - Offline fallback for navigation
+event.respondWith(
+  (async () => {
+    const cached = await caches.match(event.request);
+    if (cached) return cached;
 
-      try {
-        return await fetch(event.request);
-      } catch {
-        if (event.request.mode === "navigate") {
-          return caches.match("/offline.html");
-        }
-        throw error;
+    try {
+      return await fetch(event.request);
+    } catch {
+      if (event.request.mode === "navigate") {
+        return caches.match("/offline.html");
       }
-    })(),
-  );
-});
-```
-
-### No Network Timeout
-
-Fetch hangs indefinitely on slow connections.
-
-```typescript
-// WRONG - No timeout
-const response = await fetch(request); // Hangs forever on slow network
-
-// CORRECT - Timeout with fallback
-const response = await Promise.race([
-  fetch(request),
-  new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("Timeout")), 3000),
-  ),
-]);
+      throw new Error("Offline");
+    }
+  })(),
+);
 ```
 
 ---
@@ -286,26 +179,24 @@ const response = await Promise.race([
 
 ### Lifecycle Events
 
-| Event                    | When it Fires                    | Common Use                                     |
-| ------------------------ | -------------------------------- | ---------------------------------------------- |
-| `install`                | New SW downloaded and parsed     | Precache critical assets                       |
-| `activate`               | SW takes control (after waiting) | Clean up old caches, enable navigation preload |
-| `fetch`                  | Any network request in scope     | Serve cached responses                         |
-| `message`                | Client sends message             | Handle skip waiting, get version               |
-| `push`                   | Push notification received       | Show notification                              |
-| `sync`                   | Background sync triggered        | Retry failed requests                          |
-| `pushsubscriptionchange` | Push subscription invalidated    | Re-subscribe and update server                 |
-| `notificationclick`      | User clicks notification         | Open app or navigate to URL                    |
+| Event      | When it Fires                    | Common Use                                     |
+| ---------- | -------------------------------- | ---------------------------------------------- |
+| `install`  | New SW downloaded and parsed     | Precache critical assets                       |
+| `activate` | SW takes control (after waiting) | Clean up old caches, enable navigation preload |
+| `fetch`    | Any network request in scope     | Serve cached responses                         |
+| `message`  | Client sends message             | Handle skip waiting, get version               |
+| `push`     | Push notification received       | Show notification                              |
+| `sync`     | Background sync triggered        | Retry failed requests                          |
 
 ### Registration States
 
-| State        | Description                     | Can Use Fetch? |
-| ------------ | ------------------------------- | -------------- |
-| `installing` | Downloading and running install | No             |
-| `installed`  | Install complete, waiting       | No             |
-| `activating` | Running activate event          | No             |
-| `activated`  | Active and controlling          | Yes            |
-| `redundant`  | Replaced by newer SW            | No             |
+| State        | Description                     | Can Intercept Fetch? |
+| ------------ | ------------------------------- | -------------------- |
+| `installing` | Downloading and running install | No                   |
+| `installed`  | Install complete, waiting       | No                   |
+| `activating` | Running activate event          | No                   |
+| `activated`  | Active and controlling          | Yes                  |
+| `redundant`  | Replaced by newer SW            | No                   |
 
 ### Cache API Methods
 
@@ -324,23 +215,20 @@ const response = await Promise.race([
 
 ### Navigation Preload API
 
-Navigation preload allows fetching navigation requests in parallel with service worker bootup, reducing latency for network-first HTML strategies.
+| Method                                                 | Description                                           |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| `registration.navigationPreload.enable()`              | Enable navigation preloading                          |
+| `registration.navigationPreload.disable()`             | Disable navigation preloading                         |
+| `registration.navigationPreload.setHeaderValue(value)` | Set custom `Service-Worker-Navigation-Preload` header |
+| `event.preloadResponse`                                | Promise resolving to preloaded Response               |
 
-| Method                                                 | Description                                                |
-| ------------------------------------------------------ | ---------------------------------------------------------- |
-| `registration.navigationPreload.enable()`              | Enable navigation preloading                               |
-| `registration.navigationPreload.disable()`             | Disable navigation preloading                              |
-| `registration.navigationPreload.setHeaderValue(value)` | Set custom `Service-Worker-Navigation-Preload` header      |
-| `registration.navigationPreload.getState()`            | Returns `{enabled: boolean, headerValue: string}`          |
-| `event.preloadResponse`                                | Promise resolving to preloaded Response (in fetch handler) |
+**When to use:** Network-first HTML pages where content cannot be precached (dynamic/authenticated pages). Not needed for precached app shells.
 
-**When to use:** Network-first HTML pages where content cannot be precached (e.g., dynamic/authenticated pages). Not needed for precached app shells.
-
-**Warning:** If you enable navigation preload, you MUST use `event.preloadResponse` in your fetch handler. Using `fetch(event.request)` instead will result in double requests.
+**Warning:** If you enable navigation preload, you MUST use `event.preloadResponse` in your fetch handler. Using `fetch(event.request)` instead results in double requests.
 
 ---
 
-## Checklist
+## Checklists
 
 ### Registration Checklist
 
@@ -362,7 +250,6 @@ Navigation preload allows fetching navigation requests in parallel with service 
 - [ ] Uses `event.waitUntil()`
 - [ ] Cleans up old versioned caches
 - [ ] Calls `clients.claim()` if needed
-- [ ] Handles migration if needed
 
 ### Fetch Checklist
 
@@ -384,13 +271,5 @@ Navigation preload allows fetching navigation requests in parallel with service 
 ### Security Checklist
 
 - [ ] Only serves over HTTPS (except localhost)
-- [ ] Validates cached responses before use
-- [ ] Handles credential requirements properly
 - [ ] Doesn't cache sensitive data inappropriately
-
-### Performance Checklist
-
-- [ ] Precache list is minimal and critical
-- [ ] Cache size limits prevent unbounded growth
-- [ ] Uses appropriate strategy (not always network-first)
-- [ ] Considers storage quota
+- [ ] Handles credential requirements properly

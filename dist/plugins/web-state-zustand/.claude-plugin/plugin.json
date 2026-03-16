@@ -1,8 +1,8 @@
 {
   "name": "web-state-zustand",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
-  "description": "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, avoiding Context misuse, or handling form state.",
+  "description": "Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, or avoiding Context misuse.",
   "author": {
     "name": "@vince"
   }

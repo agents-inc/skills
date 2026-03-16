@@ -1,6 +1,6 @@
 {
   "name": "web-framework-svelte",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API",
   "author": {

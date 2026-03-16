@@ -104,525 +104,159 @@ The Vercel AI SDK provides a **unified TypeScript API** for building AI-powered 
 
 ### Pattern 1: Provider Setup
 
-Configure providers via direct imports (auto-reads env vars) or custom instances. The AI Gateway (`gateway`) routes to any provider with a `provider/model` string.
+Configure providers via direct imports (auto-reads env vars), custom instances, or AI Gateway. See [examples/core.md](examples/core.md) for full examples.
 
 ```typescript
-// provider-setup.ts
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
-import { gateway } from 'ai';
+import { gateway } from "ai";
+import { openai } from "@ai-sdk/openai";
 
-// Option 1: Direct provider imports (reads OPENAI_API_KEY, etc. from env)
-const model = openai('gpt-4o');
+// Gateway: provider/model string routing
+const model = gateway("anthropic/claude-sonnet-4.5");
 
-// Option 2: AI Gateway with provider/model string format
-const gatewayModel = gateway('anthropic/claude-sonnet-4.5');
-
-// Option 3: Custom provider configuration
-import { createAnthropic } from '@ai-sdk/anthropic';
-
-const customAnthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  baseURL: 'https://api.anthropic.com/v1',
-});
-const customModel = customAnthropic('claude-sonnet-4.5');
+// Direct: auto-reads OPENAI_API_KEY from env
+const openaiModel = openai("gpt-4o");
 ```
 
-**Why good:** Gateway string format makes model switching trivial, env vars auto-detected, custom instances allow proxy/custom auth
-
-```typescript
-// BAD: Hardcoded API keys
-import { createOpenAI } from '@ai-sdk/openai';
-
-const openai = createOpenAI({
-  apiKey: 'sk-1234567890abcdef', // NEVER hardcode API keys
-});
-```
-
-**Why bad:** Hardcoded secrets leak into version control, use environment variables instead
-
-#### Model Aliases
-
-```typescript
-// model-aliases.ts
-import { customProvider, gateway } from 'ai';
-
-export const models = customProvider({
-  languageModels: {
-    fast: gateway('openai/gpt-4o-mini'),
-    smart: gateway('anthropic/claude-sonnet-4.5'),
-    reasoning: gateway('openai/o3'),
-  },
-  fallbackProvider: gateway,
-});
-
-// Usage: models('fast'), models('smart')
-```
+Use `customProvider` for semantic model aliases (`models('fast')`, `models('smart')`). Never hardcode API keys.
 
 ---
 
 ### Pattern 2: Text Generation with generateText
 
-Use `generateText` for non-interactive tasks where you need the complete response before proceeding. Returns a promise that resolves when generation is complete.
+Use `generateText` for non-interactive tasks. Returns a promise that resolves when complete. See [examples/core.md](examples/core.md).
 
 ```typescript
-// generate-text.ts
-import { generateText } from 'ai';
+import { generateText } from "ai";
 
-const { text, usage, finishReason } = await generateText({
-  model: 'openai/gpt-4o',
-  system: 'You are a professional technical writer. Write clear, concise content.',
-  prompt: `Summarize the following article in 3-5 sentences: ${article}`,
+const { text, usage } = await generateText({
+  model: "openai/gpt-4o",
+  system: "You are a professional technical writer.",
+  prompt: `Summarize: ${article}`,
 });
-
-console.log(text);
-console.log(`Tokens used: ${usage.totalTokens}`);
 ```
 
-**Why good:** System prompt sets behavior, prompt provides task, destructured result gives text and metadata
-
-```typescript
-// BAD: Using generateText for user-facing chat responses
-export async function POST(request: Request) {
-  const { messages } = await request.json();
-
-  // BAD: Blocks until complete response -- user sees nothing until done
-  const { text } = await generateText({
-    model: 'openai/gpt-4o',
-    messages,
-  });
-
-  return new Response(text);
-}
-```
-
-**Why bad:** User sees no output until entire response is generated, use `streamText` for user-facing responses
-
-#### Messages Format
-
-```typescript
-import { generateText } from 'ai';
-import type { ModelMessage } from 'ai';
-
-const messages: ModelMessage[] = [
-  { role: 'user', content: 'What is TypeScript?' },
-  { role: 'assistant', content: 'TypeScript is a typed superset of JavaScript.' },
-  { role: 'user', content: 'What are its main benefits?' },
-];
-
-const { text, response } = await generateText({
-  model: 'anthropic/claude-sonnet-4.5',
-  system: 'You are a helpful programming assistant.',
-  messages,
-});
-
-// Append response messages for multi-turn conversation
-messages.push(...response.messages);
-```
+Use `ModelMessage[]` for multi-turn conversations. Append `response.messages` for continued dialogue. Do NOT use `generateText` for user-facing responses -- use `streamText` instead.
 
 ---
 
 ### Pattern 3: Streaming with streamText
 
-Use `streamText` for all user-facing responses. It immediately starts streaming tokens. Errors are part of the stream (not thrown) -- use `onError` to handle them.
+Use `streamText` for all user-facing responses. Errors are part of the stream (not thrown) -- use `onError`. See [examples/core.md](examples/core.md).
 
 ```typescript
-// stream-text.ts
-import { streamText, smoothStream } from 'ai';
+import { streamText, smoothStream } from "ai";
 
 const result = streamText({
-  model: 'anthropic/claude-sonnet-4.5',
-  system: 'You are a helpful assistant.',
-  prompt: 'Explain the benefits of TypeScript in detail.',
+  model: "anthropic/claude-sonnet-4.5",
+  prompt: "Explain TypeScript.",
   experimental_transform: smoothStream(),
-  onChunk({ chunk }) {
-    if (chunk.type === 'text') {
-      process.stdout.write(chunk.text);
-    }
-  },
-  onFinish({ text, usage, finishReason }) {
-    console.log(`\nFinished: ${finishReason}, tokens: ${usage.totalTokens}`);
-  },
   onError({ error }) {
-    console.error('Stream error:', error);
+    console.error("Stream error:", error);
   },
 });
 
-// Option 1: Consume text stream
-for await (const textPart of result.textStream) {
-  process.stdout.write(textPart);
-}
-
-// Option 2: Consume full stream with event types
-for await (const part of result.fullStream) {
-  switch (part.type) {
-    case 'text-delta':
-      process.stdout.write(part.textDelta);
-      break;
-    case 'tool-call':
-      console.log('Tool called:', part.toolName);
-      break;
-    case 'error':
-      console.error('Stream error:', part.error);
-      break;
-    case 'finish':
-      console.log('Done:', part.finishReason);
-      break;
-  }
+for await (const part of result.textStream) {
+  process.stdout.write(part);
 }
 ```
 
-**Why good:** `smoothStream()` provides natural-feeling output, `onError` catches stream errors, `fullStream` gives granular control over all event types
-
-#### Next.js Route Handler
-
-```typescript
-// app/api/chat/route.ts
-import { streamText } from 'ai';
-
-export async function POST(request: Request) {
-  const { messages } = await request.json();
-
-  const result = streamText({
-    model: 'openai/gpt-4o',
-    system: 'You are a helpful assistant.',
-    messages,
-  });
-
-  return result.toTextStreamResponse();
-}
-```
+Use `result.toTextStreamResponse()` in route handlers. Use `result.fullStream` for granular event types (`text-delta`, `tool-call`, `error`, `finish`).
 
 ---
 
 ### Pattern 4: Structured Output with Zod
 
-Use `Output.object()` with `generateText`/`streamText` for type-safe structured data. The Zod schema both validates output and guides the model. Use `.describe()` on properties for clarity.
+Use `Output.object()` with `generateText`/`streamText` for type-safe structured data. See [examples/structured-output.md](examples/structured-output.md).
 
 ```typescript
-// structured-output.ts
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
+import { generateText, Output } from "ai";
+import { z } from "zod";
 
-const recipeSchema = z.object({
-  name: z.string().describe('The name of the recipe'),
-  servings: z.number().describe('Number of servings'),
-  ingredients: z.array(
-    z.object({
-      name: z.string().describe('Ingredient name'),
-      amount: z.string().describe('Amount with unit, e.g. "200g" or "2 cups"'),
-    }),
-  ).describe('List of ingredients with amounts'),
-  steps: z.array(z.string()).describe('Step-by-step cooking instructions'),
-  prepTimeMinutes: z.number().describe('Preparation time in minutes'),
-  cookTimeMinutes: z.number().describe('Cooking time in minutes'),
+const schema = z.object({
+  name: z.string().describe("Recipe name"),
+  steps: z.array(z.string()).describe("Cooking instructions"),
 });
 
 const { output } = await generateText({
-  model: 'openai/gpt-4o',
-  output: Output.object({
-    schema: recipeSchema,
-  }),
-  prompt: 'Generate a vegetarian lasagna recipe for 4 people.',
-});
-
-// output is fully typed: { name: string, servings: number, ... }
-console.log(output.name);
-console.log(`Prep: ${output.prepTimeMinutes}min, Cook: ${output.cookTimeMinutes}min`);
-```
-
-**Why good:** Zod schema provides runtime validation and TypeScript types, `.describe()` guides the model, `Output.object()` is the v6 pattern
-
-```typescript
-// BAD: Deprecated generateObject (removed in v6)
-import { generateObject } from 'ai';
-
-const { object } = await generateObject({
-  model: 'openai/gpt-4o',
-  schema: z.object({ name: z.string() }),
-  prompt: 'Generate a recipe.',
+  model: "openai/gpt-4o",
+  output: Output.object({ schema }),
+  prompt: "Generate a vegetarian lasagna recipe.",
 });
 ```
 
-**Why bad:** `generateObject` is deprecated in v6, use `generateText` with `Output.object()` instead
-
-#### Streaming Partial Objects
-
-```typescript
-import { streamText, Output } from 'ai';
-import { z } from 'zod';
-
-const { partialOutputStream } = streamText({
-  model: 'openai/gpt-4o',
-  output: Output.object({ schema: recipeSchema }),
-  prompt: 'Generate a vegetarian lasagna recipe.',
-});
-
-for await (const partialObject of partialOutputStream) {
-  // partialObject has optional fields as the object builds up
-  console.clear();
-  console.log(partialObject);
-}
-```
-
-#### Array Output with Element Streaming
-
-```typescript
-import { streamText, Output } from 'ai';
-import { z } from 'zod';
-
-const heroSchema = z.object({
-  name: z.string().describe('Hero name'),
-  class: z.string().describe('Character class'),
-  description: z.string().describe('Brief backstory'),
-});
-
-const { elementStream } = streamText({
-  model: 'anthropic/claude-sonnet-4.5',
-  output: Output.array({ element: heroSchema }),
-  prompt: 'Generate 5 hero descriptions for a fantasy RPG.',
-});
-
-for await (const hero of elementStream) {
-  // Each hero is complete and validated before yielding
-  console.log(`${hero.name} (${hero.class}): ${hero.description}`);
-}
-```
+**Key variants:** `Output.array({ element })` with `elementStream` for streaming arrays, `Output.choice()` for classification, `partialOutputStream` for streaming partial objects. Do NOT use deprecated `generateObject`/`streamObject`.
 
 ---
 
 ### Pattern 5: Tool Calling
 
-Define tools with `tool()`, Zod input schemas, and `execute` functions. The SDK handles the tool call lifecycle including multi-step loops.
+Define tools with `tool()`, Zod `inputSchema`, and `execute`. The SDK handles multi-step loops. See [examples/tools.md](examples/tools.md).
 
 ```typescript
-// tools.ts
-import { generateText, tool, stepCountIs } from 'ai';
-import { z } from 'zod';
+import { generateText, tool, stepCountIs } from "ai";
+import { z } from "zod";
 
 const weatherTool = tool({
-  description: 'Get the current weather in a location',
+  description: "Get weather in a location",
   inputSchema: z.object({
-    location: z.string().describe('City name or coordinates'),
-    unit: z.enum(['celsius', 'fahrenheit']).default('celsius')
-      .describe('Temperature unit'),
+    location: z.string().describe("City name"),
   }),
-  execute: async ({ location, unit }) => {
-    const data = await fetchWeatherAPI(location, unit);
-    return {
-      location,
-      temperature: data.temperature,
-      condition: data.condition,
-      unit,
-    };
-  },
+  execute: async ({ location }) => fetchWeather(location),
 });
 
-const MAX_TOOL_STEPS = 5;
-
-const { text, steps } = await generateText({
-  model: 'openai/gpt-4o',
-  tools: { weather: weatherTool },
-  stopWhen: stepCountIs(MAX_TOOL_STEPS),
-  prompt: 'What is the weather in San Francisco and Tokyo?',
-});
-
-// Access all tool calls across steps
-const allToolCalls = steps.flatMap((step) => step.toolCalls);
-console.log(`Made ${allToolCalls.length} tool calls`);
-console.log(text);
-```
-
-**Why good:** Zod schema with `.describe()` guides model, `stepCountIs()` prevents infinite loops, named constant for max steps
-
-```typescript
-// BAD: Tool with no description and magic numbers
-const myTool = tool({
-  description: '', // Empty description -- model won't know when to use it
-  inputSchema: z.object({
-    q: z.string(), // No description on the property
-  }),
-  execute: async ({ q }) => fetch(`/api?q=${q}`),
-});
-
+const MAX_STEPS = 5;
 const { text } = await generateText({
-  model: 'openai/gpt-4o',
-  tools: { myTool },
-  stopWhen: stepCountIs(100), // Magic number, too high
-  prompt: 'Search for something',
+  model: "openai/gpt-4o",
+  tools: { weather: weatherTool },
+  stopWhen: stepCountIs(MAX_STEPS),
+  prompt: "Weather in SF and Tokyo?",
 });
 ```
 
-**Why bad:** Empty tool description, no property descriptions, magic number for step count, unclear parameter names
-
-#### Tool Approval (Human-in-the-Loop)
-
-```typescript
-import { tool } from 'ai';
-import { z } from 'zod';
-
-const PAYMENT_APPROVAL_THRESHOLD = 1000;
-
-const paymentTool = tool({
-  description: 'Process a payment to a recipient',
-  inputSchema: z.object({
-    amount: z.number().describe('Payment amount in USD'),
-    recipient: z.string().describe('Recipient name or ID'),
-  }),
-  needsApproval: async ({ amount }) => amount > PAYMENT_APPROVAL_THRESHOLD,
-  execute: async ({ amount, recipient }) => {
-    return await processPayment(amount, recipient);
-  },
-});
-```
+**Key features:** `needsApproval` for human-in-the-loop, `ToolLoopAgent` for reusable agents (use `instructions` not `system`), `toolChoice` to force/prevent tool usage, `activeTools`/`prepareStep` for per-step control. Always use `stepCountIs()` to prevent infinite loops.
 
 ---
 
 ### Pattern 6: useChat Hook (React)
 
-`useChat` manages streaming chat state in React. In v6, it uses a transport-based architecture and no longer manages input state internally.
+`useChat` manages streaming chat state. v6 uses transport-based architecture and external input state. See [examples/chat.md](examples/chat.md).
 
 ```tsx
-// chat-page.tsx
-'use client';
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
 
-import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
-
-export function ChatPage() {
-  const [input, setInput] = useState('');
+export function Chat() {
+  const [input, setInput] = useState("");
   const { messages, sendMessage, status, stop, error } = useChat();
 
-  const isStreaming = status === 'streaming';
-  const isLoading = status === 'submitted';
-
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     if (!input.trim()) return;
-    sendMessage({ role: 'user', content: input });
-    setInput('');
+    sendMessage({ text: input }); // NOT { role, content }
+    setInput("");
   }
-
-  return (
-    <div>
-      <div>
-        {messages.map((message) => (
-          <div key={message.id}>
-            <strong>{message.role}:</strong>
-            {message.parts.map((part, i) => {
-              if (part.type === 'text') {
-                return <span key={i}>{part.text}</span>;
-              }
-              return null;
-            })}
-          </div>
-        ))}
-      </div>
-
-      {error && <div>Error: {error.message}</div>}
-
-      <form onSubmit={handleSubmit}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message..."
-          disabled={isLoading}
-        />
-        {isStreaming ? (
-          <button type="button" onClick={stop}>Stop</button>
-        ) : (
-          <button type="submit" disabled={isLoading}>Send</button>
-        )}
-      </form>
-    </div>
-  );
+  // ... render messages.parts, status-based UI
 }
 ```
 
-**Why good:** External input state management (v6 pattern), status-based UI states, stop button for streaming, error display, message parts rendering
-
-```tsx
-// BAD: v4 patterns that are deprecated
-import { useChat } from 'ai/react'; // Wrong import path
-
-function Chat() {
-  // BAD: handleSubmit and input are no longer managed by useChat in v6
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input value={input} onChange={handleInputChange} />
-    </form>
-  );
-}
-```
-
-**Why bad:** Import path changed to `@ai-sdk/react`, v6 no longer manages input state internally, `isLoading` replaced by `status`
+**v6 breaking changes:** `sendMessage({ text })` replaces `handleSubmit`/`append({ role, content })`. External `useState` for input (hook no longer manages it). `status` replaces `isLoading`. Import from `@ai-sdk/react` not `ai/react`.
 
 ---
 
 ### Pattern 7: useCompletion Hook (React)
 
-`useCompletion` handles single-turn text completions (not multi-turn chat). Good for autocomplete, summarization, and one-shot generation.
+`useCompletion` handles single-turn text completions. Unlike `useChat`, it still manages input state internally. See [examples/core.md](examples/core.md).
 
 ```tsx
-// completion-page.tsx
-'use client';
+import { useCompletion } from "@ai-sdk/react";
 
-import { useCompletion } from '@ai-sdk/react';
-
-export function CompletionPage() {
-  const {
-    completion,
-    input,
-    setInput,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-    stop,
-  } = useCompletion({
-    api: '/api/completion',
-    onFinish(prompt, completion) {
-      console.log('Completed:', completion);
-    },
-    onError(error) {
-      console.error('Completion error:', error);
-    },
+const { completion, input, handleInputChange, handleSubmit, isLoading } =
+  useCompletion({
+    api: "/api/completion",
   });
-
-  return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <textarea
-          value={input}
-          onChange={handleInputChange}
-          placeholder="Enter a prompt..."
-          rows={4}
-        />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Generating...' : 'Generate'}
-        </button>
-        {isLoading && (
-          <button type="button" onClick={stop}>Stop</button>
-        )}
-      </form>
-
-      {error && <div>Error: {error.message}</div>}
-
-      {completion && (
-        <div>
-          <h3>Result:</h3>
-          <p>{completion}</p>
-        </div>
-      )}
-    </div>
-  );
-}
 ```
 
-**Why good:** Manages input state, streaming completion text, loading/error states, stop support, callbacks for finish/error
+Good for autocomplete, summarization, and one-shot generation where multi-turn chat is not needed.
 
 </patterns>
 
@@ -683,26 +317,23 @@ What is your primary concern?
 
 ## Integration Guide
 
-**Works with:**
+**Framework support:**
 
-- **Next.js**: Route handlers for `streamText`, React Server Components, edge runtime compatible
-- **React**: `useChat` and `useCompletion` hooks from `@ai-sdk/react`
-- **Svelte/Vue/Angular**: Framework-specific hooks from `@ai-sdk/svelte`, `@ai-sdk/vue`, `@ai-sdk/angular`
-- **Zod**: Schema validation for structured output (`Output.object()`) and tool input schemas
-- **Node.js**: Full support for all core functions (`generateText`, `streamText`, `embed`, etc.)
-- **MCP (Model Context Protocol)**: Connect to MCP servers for standardized tool access
+- Server-side route handlers for `streamText` (any framework with standard `Request`/`Response`)
+- Frontend hooks (`useChat`, `useCompletion`) from `@ai-sdk/react` with framework-specific variants for Svelte, Vue, and Angular
+- Edge runtime compatible (Cloudflare Workers, Vercel Edge)
 
-**Provider packages:**
+**Provider architecture:**
 
-- `@ai-sdk/openai` -- OpenAI (GPT-4o, o3, etc.)
-- `@ai-sdk/anthropic` -- Anthropic (Claude Sonnet, Opus, Haiku)
-- `@ai-sdk/google` -- Google (Gemini models)
-- `@ai-sdk/openai-compatible` -- Any OpenAI-compatible API
+- Core `ai` package provides `generateText`, `streamText`, `embed`, `Output`, `tool`, `gateway`
+- Provider packages (`@ai-sdk/openai`, `@ai-sdk/anthropic`, `@ai-sdk/google`) auto-read environment variables
+- `@ai-sdk/openai-compatible` supports any OpenAI-compatible API (Ollama, Together AI, etc.)
+- AI Gateway (`gateway`) routes to any provider with a `provider/model` string
 
-**Replaces / Conflicts with:**
+**Schema integration:**
 
-- Direct `openai` npm package -- AI SDK provides a unified API across providers
-- `langchain` -- AI SDK is lighter-weight for TypeScript-specific use cases
+- Structured output (`Output.object()`) and tool input schemas use Zod for validation and type inference
+- MCP (Model Context Protocol) integration for standardized tool access
 
 </integration>
 
@@ -720,6 +351,7 @@ What is your primary concern?
 - Hardcoding API keys in source code instead of using environment variables
 - Using `import { useChat } from 'ai/react'` instead of `import { useChat } from '@ai-sdk/react'`
 - Using `CoreMessage` type instead of `ModelMessage` (renamed in v6)
+- Calling `sendMessage({ role: 'user', content: text })` instead of `sendMessage({ text })` (v6 API change)
 
 **Medium Priority Issues:**
 
@@ -741,7 +373,8 @@ What is your primary concern?
 - `Output.array()` with `elementStream` yields each element only when fully validated -- partial elements are not emitted
 - `embed()` and `embedMany()` require embedding model strings (e.g., `'openai/text-embedding-3-small'`), not chat model strings
 - Zod schema support varies by provider -- complex unions and transforms may not work with all models
-- `useChat` v6 no longer manages input state -- you must use external `useState` for the input field
+- `useChat` v6 no longer manages input state -- you must use external `useState` for the input field and call `sendMessage({ text })` (not `{ role, content }`)
+- `convertToModelMessages()` is async in v6 (was sync as `convertToCoreMessages()` in v5)
 - `fullStream` gives you all event types including `tool-call`, `tool-result`, `source`, and `error` -- `textStream` only gives text deltas
 - Token usage is available via `usage` property on results, including cache hit details in `usage.inputTokenDetails`
 

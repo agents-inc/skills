@@ -1,6 +1,6 @@
 {
   "name": "api-database-mongodb",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management",
   "author": {

@@ -104,7 +104,7 @@ How many levels deep does data need to go?
 - **Missing TypeScript types on `$props()`** — Lose type safety and IDE support
 - **Using `setContext`/`getContext` with string keys** — Use `createContext` for type safety
 - **Using `<svelte:component this={X}>`** — Use `<X />` directly in Svelte 5
-- **Using `class:name={condition}`** — Use clsx-style arrays/objects in `class` attribute
+- **Using `class:name={condition}`** — Use built-in `class` attribute object/array syntax instead (clsx built-in since 5.16)
 
 ### Common Mistakes
 
@@ -132,19 +132,22 @@ How many levels deep does data need to go?
 
 ### Runes Cheat Sheet
 
-| Rune                     | Purpose                     | Example                                    |
-| ------------------------ | --------------------------- | ------------------------------------------ |
-| `$state(value)`          | Reactive state (deep proxy) | `let count = $state(0)`                    |
-| `$state.raw(value)`      | Reactive state (no proxy)   | `let data = $state.raw([])`                |
-| `$state.snapshot(proxy)` | Plain object from proxy     | `const plain = $state.snapshot(obj)`       |
-| `$derived(expr)`         | Computed value              | `let doubled = $derived(count * 2)`        |
-| `$derived.by(fn)`        | Complex computed value      | `let total = $derived.by(() => { ... })`   |
-| `$effect(fn)`            | Side effect (escape hatch)  | `$effect(() => { ... })`                   |
-| `$effect.pre(fn)`        | Pre-DOM-update effect       | `$effect.pre(() => { ... })`               |
-| `$props()`               | Component props             | `let { x, y } = $props()`                  |
-| `$bindable(default?)`    | Two-way bindable prop       | `let { value = $bindable('') } = $props()` |
-| `$inspect(values)`       | Dev-only logging            | `$inspect(count, name)`                    |
-| `$inspect.trace()`       | Trace effect dependencies   | `$inspect.trace()`                         |
+| Rune                     | Purpose                            | Example                                    |
+| ------------------------ | ---------------------------------- | ------------------------------------------ |
+| `$state(value)`          | Reactive state (deep proxy)        | `let count = $state(0)`                    |
+| `$state.raw(value)`      | Reactive state (no proxy)          | `let data = $state.raw([])`                |
+| `$state.snapshot(proxy)` | Plain object from proxy            | `const plain = $state.snapshot(obj)`       |
+| `$state.eager(value)`    | Immediate UI update (async bypass) | `let x = $state.eager(val)` (5.41+)        |
+| `$derived(expr)`         | Computed value                     | `let doubled = $derived(count * 2)`        |
+| `$derived.by(fn)`        | Complex computed value             | `let total = $derived.by(() => { ... })`   |
+| `$effect(fn)`            | Side effect (escape hatch)         | `$effect(() => { ... })`                   |
+| `$effect.pre(fn)`        | Pre-DOM-update effect              | `$effect.pre(() => { ... })`               |
+| `$effect.tracking()`     | Check if inside tracking context   | `if ($effect.tracking()) { ... }`          |
+| `$effect.root(fn)`       | Manual-cleanup effect scope        | `const cleanup = $effect.root(() => { })`  |
+| `$props()`               | Component props                    | `let { x, y } = $props()`                  |
+| `$bindable(default?)`    | Two-way bindable prop              | `let { value = $bindable('') } = $props()` |
+| `$inspect(values)`       | Dev-only logging                   | `$inspect(count, name)`                    |
+| `$inspect.trace(label?)` | Trace effect dependencies          | `$inspect.trace('my-effect')`              |
 
 ### Svelte 4 to Svelte 5 Migration
 
@@ -158,6 +161,7 @@ How many levels deep does data need to go?
 | `on:click={handler}`          | `onclick={handler}`               |
 | `createEventDispatcher()`     | Callback props                    |
 | `<svelte:component this={C}>` | `<C />`                           |
+| `class:active={isActive}`     | `class={{ active: isActive }}`    |
 | Svelte stores                 | `$state` in `.svelte.ts` files    |
 
 ### Component Template

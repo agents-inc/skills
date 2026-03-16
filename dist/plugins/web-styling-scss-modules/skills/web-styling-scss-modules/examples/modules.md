@@ -280,63 +280,9 @@ $gray: color.grayscale($primary);
 
 **NOTE:** For runtime theming, prefer CSS color functions like `color-mix()` and relative color syntax. Use Sass color functions only for build-time calculations.
 
-#### sass:string
+#### Other Built-in Modules
 
-```scss
-@use "sass:string";
-
-$class-name: "button";
-
-$upper: string.to-upper-case($class-name); // "BUTTON"
-$lower: string.to-lower-case($class-name); // "button"
-$length: string.length($class-name); // 6
-$slice: string.slice($class-name, 1, 4); // "butt"
-$index: string.index($class-name, "tt"); // 3
-$insert: string.insert($class-name, "-lg", 7); // "button-lg"
-$quoted: string.quote(button); // "button"
-$unquoted: string.unquote("button"); // button
-```
-
-#### sass:list
-
-```scss
-@use "sass:list";
-
-$sizes: sm, md, lg, xl;
-
-$first: list.nth($sizes, 1); // sm
-$length: list.length($sizes); // 4
-$appended: list.append($sizes, xxl); // sm, md, lg, xl, xxl
-$joined: list.join($sizes, (xxs, xs)); // sm, md, lg, xl, xxs, xs
-$index: list.index($sizes, lg); // 3
-$has-md: list.index($sizes, md) != null; // true
-```
-
-#### sass:map
-
-```scss
-@use "sass:map";
-
-$breakpoints: (
-  sm: 640px,
-  md: 768px,
-  lg: 1024px,
-  xl: 1280px,
-);
-
-$value: map.get($breakpoints, md); // 768px
-$has-key: map.has-key($breakpoints, md); // true
-$keys: map.keys($breakpoints); // sm, md, lg, xl
-$values: map.values($breakpoints); // 640px, 768px, 1024px, 1280px
-$merged: map.merge(
-  $breakpoints,
-  (
-    xxl: 1536px,
-  )
-);
-$removed: map.remove($breakpoints, sm);
-$deep: map.deep-get($nested-map, key1, key2); // For nested maps
-```
+Sass provides `sass:string`, `sass:list`, `sass:map`, and `sass:selector` modules. These follow the same namespaced pattern. Consult the [Sass built-in modules documentation](https://sass-lang.com/documentation/modules/) for full API reference.
 
 ---
 

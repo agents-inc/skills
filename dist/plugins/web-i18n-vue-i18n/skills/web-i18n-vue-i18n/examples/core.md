@@ -27,8 +27,6 @@ export const i18n = createI18n({
     en,
   },
 });
-
-export { i18n };
 ```
 
 ```typescript

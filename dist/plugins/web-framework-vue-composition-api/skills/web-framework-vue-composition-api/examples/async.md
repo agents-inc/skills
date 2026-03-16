@@ -41,13 +41,14 @@ import { defineAsyncComponent, ref } from "vue";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 
+const LOADING_DELAY_MS = 200;
 const LOAD_TIMEOUT_MS = 10000;
 
 const HeavyChart = defineAsyncComponent({
   loader: () => import("@/components/HeavyChart.vue"),
   loadingComponent: LoadingSpinner,
   errorComponent: ErrorBoundary,
-  delay: 200,
+  delay: LOADING_DELAY_MS,
   timeout: LOAD_TIMEOUT_MS,
 });
 

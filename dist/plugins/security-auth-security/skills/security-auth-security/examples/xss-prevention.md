@@ -1,6 +1,6 @@
 # Security Patterns - XSS Prevention Examples
 
-> XSS prevention patterns including React escaping, DOMPurify sanitization, and CSP headers. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> XSS prevention patterns including framework auto-escaping, DOMPurify sanitization, and CSP headers. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 
 **Related Examples:**
 
@@ -10,64 +10,56 @@
 
 ---
 
-## Pattern 1: React Auto-escaping
+## Pattern 1: Framework Auto-escaping and DOMPurify
 
-### Good Example - React Auto-escaping
+### Good Example - Framework Auto-escaping
 
 ```typescript
-const USER_COMMENT_MAX_LENGTH = 500;
-
-// React auto-escaping
+// Most frameworks auto-escape text content by default.
+// This is safe - user input is rendered as text, not HTML.
 function UserComment({ comment }: { comment: string }) {
-  return <div>{comment}</div>; // React escapes automatically
+  return <div>{comment}</div>; // Auto-escaped by framework
 }
 ```
 
 ### Good Example - Sanitize with DOMPurify
 
 ```typescript
-import DOMPurify from 'dompurify';
-import { useMemo } from 'react';
+import DOMPurify from "dompurify";
 
 // IMPORTANT: DOMPurify's default allows <style> (CSS exfiltration) and <form> (CSRF).
 // Always use explicit whitelist for security-critical applications.
-const ALLOWED_TAGS = ['b', 'i', 'em', 'strong', 'a', 'p', 'br'];
-const ALLOWED_ATTR = ['href', 'title'];
+const ALLOWED_TAGS = ["b", "i", "em", "strong", "a", "p", "br"];
+const ALLOWED_ATTR = ["href", "title"];
 
-function RichUserComment({ comment }: { comment: string }) {
-  const sanitizedHTML = useMemo(
-    () => DOMPurify.sanitize(comment, {
-      ALLOWED_TAGS,
-      ALLOWED_ATTR,
-      ALLOW_DATA_ATTR: false,
-    }),
-    [comment]
-  );
-
-  return <div dangerouslySetInnerHTML={{ __html: sanitizedHTML }} />;
+function sanitizeHTML(untrusted: string): string {
+  return DOMPurify.sanitize(untrusted, {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR,
+    ALLOW_DATA_ATTR: false,
+  });
 }
+
+// Usage: sanitize BEFORE injecting raw HTML into the DOM
+const safeHTML = sanitizeHTML(userContent);
+element.innerHTML = safeHTML;
 ```
 
-**Why good:** React's auto-escaping prevents XSS by converting user input to safe text, DOMPurify whitelist approach only allows explicitly permitted tags, useMemo prevents re-sanitization on every render, named constants make security policy clear and auditable
+**Why good:** Framework auto-escaping prevents XSS by converting user input to safe text, DOMPurify whitelist approach only allows explicitly permitted tags, named constants make security policy clear and auditable
 
-### Bad Example - Dangerous HTML Injection
+### Bad Example - Unsanitized HTML Injection
 
 ```typescript
-// BAD: Dangerous HTML injection
-function UserComment({ comment }: { comment: string }) {
-  return <div dangerouslySetInnerHTML={{ __html: comment }} />;
-}
+// BAD: Injecting raw user content as HTML
+element.innerHTML = userContent; // Arbitrary script execution!
 
-// BAD: Magic array values
-function BadSanitize({ html }: { html: string }) {
-  const clean = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['b', 'i'], // What's the policy?
-  });
-  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
-}
+// BAD: Magic array values hide security policy
+const clean = DOMPurify.sanitize(html, {
+  ALLOWED_TAGS: ["b", "i"], // What's the policy? Why these tags?
+});
 ```
 
-**Why bad:** dangerouslySetInnerHTML without sanitization allows arbitrary script execution via user input, XSS attacks can steal cookies/tokens or perform actions as the user, magic array values hide security policy decisions, no useMemo causes performance issues and repeated sanitization
+**Why bad:** Raw HTML injection without sanitization allows arbitrary script execution via user input, XSS attacks can steal cookies/tokens or perform actions as the user, magic array values hide security policy decisions
 
 ---
 
@@ -76,53 +68,35 @@ function BadSanitize({ html }: { html: string }) {
 ### Good Example - Content Security Policy
 
 ```typescript
-// next.config.js or middleware
-const CSP_NONCE_LENGTH = 32;
-
-const securityHeaders = [
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      // Strict CSP with nonce + strict-dynamic for CSP Level 3
-      // 'strict-dynamic' allows trusted scripts to load additional scripts
-      // 'unsafe-inline' is ignored by browsers when nonce is present (fallback for old browsers)
-      "script-src 'nonce-{NONCE}' 'strict-dynamic' https: 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'", // Needed for CSS-in-JS temporarily
-      "img-src 'self' data: https:",
-      "font-src 'self' data:",
-      "connect-src 'self' https://api.example.com",
-      "object-src 'none'", // Prevent plugin execution (Flash, Java)
-      "frame-ancestors 'none'",
-      "base-uri 'none'", // Prevent base tag hijacking
-      "form-action 'self'",
-    ].join("; "),
-  },
-  {
-    key: "X-Content-Type-Options",
-    value: "nosniff",
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
-  },
-  // Note: X-XSS-Protection is deprecated and removed from modern browsers.
-  // Setting to "0" explicitly disables it to prevent legacy browser issues.
+// Security headers - apply via your framework's middleware or server config
+const securityHeaders: Record<string, string> = {
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    // Strict CSP with nonce + strict-dynamic for CSP Level 3
+    // 'strict-dynamic' allows trusted scripts to load additional scripts
+    // 'unsafe-inline' is ignored by browsers when nonce is present (fallback for old browsers)
+    "script-src 'nonce-{NONCE}' 'strict-dynamic' https: 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.example.com",
+    "object-src 'none'", // Prevent plugin execution (Flash, Java)
+    "frame-ancestors 'none'",
+    "base-uri 'none'", // Prevent base tag hijacking
+    "form-action 'self'",
+  ].join("; "),
+  // Prevent MIME-type sniffing
+  "X-Content-Type-Options": "nosniff",
+  // Prevent clickjacking
+  "X-Frame-Options": "DENY",
+  // X-XSS-Protection is deprecated - set to "0" to prevent legacy browser issues.
   // Rely on CSP for XSS protection instead.
-  {
-    key: "X-XSS-Protection",
-    value: "0",
-  },
-];
+  "X-XSS-Protection": "0",
+};
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-
-  securityHeaders.forEach(({ key, value }) => {
-    response.headers.set(key, value);
-  });
-
-  return response;
+// Apply headers in your server/middleware
+for (const [key, value] of Object.entries(securityHeaders)) {
+  response.headers.set(key, value);
 }
 ```
 

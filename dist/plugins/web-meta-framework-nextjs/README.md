@@ -1,6 +1,6 @@
 # web-meta-framework-nextjs
 
-Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling
+Next.js App Router patterns (15-16) - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, Cache Components
 
 ## Installation
 

@@ -44,7 +44,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 - Implementing responsive design with breakpoint variants
 - Adding dark mode with `dark:` variant
 - Creating custom utilities and variants in CSS
-- Building component libraries with Tailwind + React
+- Building component libraries with Tailwind utility classes
 - Using container queries, 3D transforms, or modern CSS features
 
 **Key patterns covered:**
@@ -67,7 +67,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 - Projects requiring Sass/Less/Stylus (v4 is a standalone preprocessor, no Sass support)
 - Projects needing IE11 or older browser support (requires Safari 16.4+, Chrome 111+, Firefox 128+)
 - Tiny projects where a full utility framework is overkill (use plain CSS)
-- Projects already using SCSS Modules with an established design system
+- Projects already using an established CSS Modules or CSS-in-JS design system
 
 ---
 
@@ -298,18 +298,18 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 
 ---
 
-### Pattern 10: Component Extraction with cn()
+### Pattern 10: Component Class Composition with cn()
 
-For React components, use `cn()` (clsx + tailwind-merge) to handle class composition and conflict resolution. Works with CVA for variant-based components.
+Use `cn()` (clsx + tailwind-merge) to handle class composition and conflict resolution. Compose utility classes programmatically when components need variants or overridable styles.
 
 #### Key Concepts
 
 - `cn()` combines `clsx` (conditional classes) with `twMerge` (conflict resolution)
-- External `className` prop should always be last in `cn()` to allow overrides
-- Use CVA for variant-heavy components, `cn()` for simple composition
-- Never use `@apply` for component extraction in React (use `cn()` instead)
+- External `className` should always be last in `cn()` to allow consumer overrides
+- Use variant objects for multi-variant components, `cn()` for simple composition
+- Prefer `cn()` over `@apply` for component extraction (keeps utilities visible in code)
 
-For implementation examples, see [examples/advanced.md](examples/advanced.md#pattern-10-component-extraction).
+For implementation examples, see [examples/advanced.md](examples/advanced.md#pattern-10-component-class-composition).
 
 </patterns>
 
@@ -323,7 +323,7 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 
 ```
 Need component variants (size, intent, state)?
-|-- YES --> Use CVA + cn() + Tailwind classes
+|-- YES --> Variant objects + cn() + Tailwind classes
 |-- NO --> Just utility classes in markup
 
 Need custom utility not in Tailwind?
@@ -390,28 +390,25 @@ Is the project actively maintained?
 
 <integration>
 
-## Integration Guide
+## Integration Notes
 
-**Works with:**
+**Bundler Setup:**
 
-- **React:** Use `cn()` for class composition, `className` prop forwarding, CVA for variants
-- **CVA (class-variance-authority):** Define Tailwind classes in variant objects, use `tailwind-merge` for conflict resolution
-- **Next.js:** Use `@tailwindcss/postcss` (App Router) or `@tailwindcss/vite` (if Vite-based)
-- **Vite:** Use `@tailwindcss/vite` plugin for best performance
-- **PostCSS:** Use `@tailwindcss/postcss` for non-Vite bundlers
-- **tailwind-merge:** Resolves class conflicts when composing/overriding Tailwind classes
-- **Prettier plugin:** `prettier-plugin-tailwindcss` for automatic class sorting
+- Use `@tailwindcss/vite` for Vite-based projects (fastest)
+- Use `@tailwindcss/postcss` for all other bundlers
+- Use `@tailwindcss/cli` for standalone builds
+- `autoprefixer` and `postcss-import` are NOT needed with v4
 
-**Replaces / Conflicts with:**
+**Component Integration:**
 
-- **SCSS Modules:** Tailwind replaces SCSS Modules entirely -- do not mix in the same project
-- **CSS-in-JS (styled-components, Emotion):** Tailwind replaces runtime CSS-in-JS solutions
-- **PostCSS plugins:** `autoprefixer` and `postcss-import` are NOT needed with v4
+- Use `cn()` for class composition and conflict resolution
+- Forward `className` prop for consumer overrides
+- Use `tailwind-merge` to resolve conflicting utility classes
 
-**Does NOT replace:**
+**What Tailwind Does NOT Replace:**
 
-- **CSS animations / @keyframes:** Use `@theme` to define animation tokens, but complex animations may still need custom CSS
-- **CSS variables for runtime values:** Use `var()` or arbitrary values `bg-(--my-var)` alongside Tailwind
+- Complex CSS animations / `@keyframes` (use `@theme` for tokens, custom CSS for complex sequences)
+- CSS variables for runtime values (use `bg-(--my-var)` arbitrary syntax)
 
 </integration>
 
@@ -435,7 +432,7 @@ Is the project actively maintained?
 
 **Medium Priority Issues:**
 
-- Using `@apply` for React component extraction (use `cn()` with tailwind-merge instead)
+- Using `@apply` for component extraction (use `cn()` with tailwind-merge instead -- keeps utilities visible)
 - Not specifying `@source` for node_modules UI libraries (automatic detection skips node_modules)
 - Using Sass/Less/Stylus with Tailwind v4 (not supported -- v4 is a standalone preprocessor)
 - Using `autoprefixer` or `postcss-import` (not needed with v4)

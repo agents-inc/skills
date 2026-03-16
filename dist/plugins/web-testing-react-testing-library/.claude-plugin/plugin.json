@@ -1,6 +1,6 @@
 {
   "name": "web-testing-react-testing-library",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "React Testing Library patterns - query hierarchy, userEvent, async utilities, renderHook, custom render with providers, accessibility-first testing",
   "author": {

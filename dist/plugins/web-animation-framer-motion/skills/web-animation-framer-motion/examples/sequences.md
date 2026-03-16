@@ -1,8 +1,6 @@
-# Animation Sequences
+# Motion - Sequence Examples
 
 > Complex animation sequences using useAnimation and keyframes. See [core.md](core.md) for basic patterns.
-
-> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
 
 ---
 
@@ -11,7 +9,7 @@
 ### Good Example - Notification Badge Sequence
 
 ```typescript
-import { motion, useAnimation } from "framer-motion";
+import { motion, useAnimation } from "motion/react";
 import { useEffect } from "react";
 
 const STEP_DURATION_S = 0.3;
@@ -62,7 +60,7 @@ export const NotificationBadge = ({ count, className }: NotificationBadgeProps) 
 ### Good Example - Pulsing Indicator
 
 ```typescript
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const PULSE_DURATION_S = 2;
 const PULSE_MIN_SCALE = 0.9;

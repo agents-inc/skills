@@ -1,57 +1,14 @@
 # MSW Core Examples
 
-> Core setup and handler patterns for MSW. Reference from [SKILL.md](../SKILL.md).
-
-**Extended examples:**
-
-- [browser.md](browser.md) - Browser worker setup, SPA/SSR integration
-- [node.md](node.md) - Server worker setup, test configuration
-- [testing.md](testing.md) - Per-test handler overrides
-- [advanced.md](advanced.md) - Variant switching, network latency
+> Core handler patterns, test setup, and advanced techniques. See [browser.md](browser.md) for browser worker integration.
 
 ---
 
-## Package Configuration
-
-```json
-// packages/api-mocks/package.json
-// Good Example
-{
-  "name": "@repo/api-mocks",
-  "exports": {
-    "./handlers": "./src/handlers/index.ts",
-    "./mocks": "./src/mocks/index.ts",
-    "./browserWorker": "./src/browser-worker.ts",
-    "./serverWorker": "./src/server-worker.ts"
-  }
-}
-```
-
-**Why good:** Separate entry points prevent bundling unnecessary code (browser worker won't bundle in tests), explicit exports make dependencies clear, kebab-case file names follow project conventions
-
-```json
-// Bad Example
-{
-  "name": "@repo/api-mocks",
-  "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  }
-}
-```
-
-**Why bad:** Single entry point bundles everything together causing browser worker to load in Node tests (performance hit), mixing concerns violates separation of environments, harder to tree-shake unused code
-
----
-
-## Mock Data Separation
-
-### Mock Data Definition
+## Pattern 1: Mock Data Separation
 
 ```typescript
-// packages/api-mocks/src/mocks/features.ts
-// Good Example
-import type { GetFeaturesResponse } from "@repo/api/types";
+// mocks/features.ts
+import type { GetFeaturesResponse } from "./api-types";
 
 export const defaultFeatures: GetFeaturesResponse = {
   features: [
@@ -78,36 +35,25 @@ export const emptyFeatures: GetFeaturesResponse = {
 **Why good:** Type safety from generated API types catches schema mismatches at compile time, reusable across multiple handlers, easy to update centrally when API changes, `import type` optimizes bundle size
 
 ```typescript
-// Bad Example
+// BAD: Data embedded in handler
 import { http, HttpResponse } from "msw";
 
 export const getFeaturesHandler = http.get("api/v1/features", () => {
   return HttpResponse.json({
-    features: [
-      {
-        id: "1",
-        name: "Dark mode",
-        description: "Toggle dark mode",
-        status: "done",
-      },
-    ],
+    features: [{ id: "1", name: "Dark mode", status: "done" }],
   });
 });
 ```
 
-**Why bad:** Mock data embedded in handler cannot be reused in other tests or handlers, no type checking against API schema causes runtime errors when schema changes, harder to test edge cases with different data variants
+**Why bad:** Mock data cannot be reused in other tests or handlers, no type checking against API schema, harder to test edge cases with different data variants
 
 ---
 
-## Variant Handlers
-
-### Handler Implementation
+## Pattern 2: Variant Handlers
 
 ```typescript
-// packages/api-mocks/src/handlers/features/get-features.ts
-// Good Example
+// handlers/features/get-features.ts
 import { http, HttpResponse } from "msw";
-import type { GetFeaturesResponse } from "@repo/api/types";
 import { mockVariantsByEndpoint } from "../../manage-mock-selection";
 import { defaultFeatures, emptyFeatures } from "../../mocks/features";
 
@@ -149,10 +95,10 @@ export const getFeaturesHandlers = {
 };
 ```
 
-**Why good:** Named constants eliminate magic numbers for maintainability, response factories reduce duplication and ensure consistency, variant switching enables UI development without code changes, explicit handler exports allow per-test overrides
+**Why good:** Named constants eliminate magic numbers, response factories reduce duplication, variant switching enables UI development without code changes, explicit handler exports allow per-test overrides
 
 ```typescript
-// Bad Example
+// BAD: Single hardcoded handler
 import { http, HttpResponse } from "msw";
 
 export const getFeaturesHandler = http.get("api/v1/features", () => {
@@ -160,8 +106,139 @@ export const getFeaturesHandler = http.get("api/v1/features", () => {
 });
 ```
 
-**Why bad:** Hardcoded 200 status is a magic number, only supports one scenario (empty) making error state testing impossible, no variant switching forces code changes to test different states, single export prevents flexible test scenarios
+**Why bad:** Hardcoded 200 is a magic number, only supports one scenario, no variant switching, single export prevents flexible test scenarios
 
 ---
 
-_Extended examples: [browser.md](browser.md) | [node.md](node.md) | [testing.md](testing.md) | [advanced.md](advanced.md)_
+## Pattern 3: Server Worker Setup and Test Lifecycle
+
+```typescript
+// server-worker.ts
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+export const server = setupServer(...handlers);
+```
+
+```typescript
+// test-setup.ts (configure in your test runner's setup file)
+import { server } from "./server-worker";
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+**Why good:** `beforeAll` starts server once for performance, `afterEach` resets handler overrides preventing test pollution, `afterAll` cleans up resources
+
+```typescript
+// BAD: Missing resetHandlers
+beforeAll(() => server.listen());
+afterAll(() => server.close());
+// Missing: afterEach(() => server.resetHandlers());
+```
+
+**Why bad:** Handler overrides from one test leak into subsequent tests, tests become order-dependent and flaky
+
+---
+
+## Pattern 4: Per-Test Handler Overrides
+
+```typescript
+import { getFeaturesHandlers } from "./handlers";
+import { server } from "./server-worker";
+
+it("should render features", async () => {
+  // Uses default handler from setup
+  renderApp();
+  await expect(findByText("Dark mode")).resolves.toBeInTheDocument();
+});
+
+it("should render empty state", async () => {
+  server.use(getFeaturesHandlers.emptyHandler());
+  renderApp();
+  await expect(findByText("No features found")).resolves.toBeInTheDocument();
+});
+
+it("should handle errors", async () => {
+  server.use(getFeaturesHandlers.errorHandler());
+  renderApp();
+  await expect(findByText(/error/i)).resolves.toBeInTheDocument();
+});
+```
+
+**Why good:** `server.use()` scoped to individual test, explicit handler names make intent clear, tests all scenarios (success, empty, error), `afterEach` reset ensures overrides don't leak
+
+```typescript
+// BAD: Only testing happy path
+it("should render features", async () => {
+  renderApp();
+  await expect(findByText("Dark mode")).resolves.toBeInTheDocument();
+});
+// Missing: tests for empty and error scenarios
+```
+
+**Why bad:** Only tests default success, empty and error states untested, incomplete coverage
+
+---
+
+## Pattern 5: Runtime Variant Switching
+
+Use in development to change mock behavior without restarting the app. Do NOT use in tests (use explicit handler overrides instead).
+
+```typescript
+// manage-mock-selection.ts
+export type MockVariant = "default" | "empty" | "error";
+
+export const mockVariantsByEndpoint: Record<string, MockVariant> = {
+  features: "default",
+  users: "default",
+};
+
+export function setMockVariant(endpoint: string, variant: MockVariant) {
+  mockVariantsByEndpoint[endpoint] = variant;
+}
+```
+
+**Why good:** Type-safe variant names prevent typos, centralized state for all endpoint variants, mutation function allows runtime changes without app restart
+
+```typescript
+// BAD: No type safety
+export const mockVariants = {
+  features: "default",
+  users: "defualt", // Typo not caught at compile time
+};
+
+export function setMockVariant(endpoint, variant) {
+  mockVariants[endpoint] = variant;
+}
+```
+
+**Why bad:** No TypeScript validation allows typos to slip through, untyped parameters accept anything
+
+---
+
+## Pattern 6: Simulating Network Latency
+
+```typescript
+import { http, HttpResponse, delay } from "msw";
+
+const MOCK_NETWORK_LATENCY_MS = 500;
+const HTTP_STATUS_OK = 200;
+
+const slowHandler = () =>
+  http.get(API_ENDPOINT, async () => {
+    await delay(MOCK_NETWORK_LATENCY_MS);
+    return HttpResponse.json(defaultFeatures, { status: HTTP_STATUS_OK });
+  });
+```
+
+**Why good:** Named constant makes latency configurable, MSW's `delay()` utility is clean and cancellable, reveals loading state bugs during development
+
+**When not to use:** In tests where speed matters more than loading state validation (omit delay for faster execution).
+
+**Gotcha:** `delay()` with no arguments applies a random 100-400ms "realistic" delay in the browser, but in Node.js the implicit delay is automatically negated to avoid slowing tests. Use an explicit duration if you need delay in tests.
+
+---
+
+_See also: [browser.md](browser.md) for SPA and SSR app integration_

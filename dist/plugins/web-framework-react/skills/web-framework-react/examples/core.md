@@ -4,21 +4,17 @@
 
 **Additional Examples:**
 
-- [icons.md](icons.md) - lucide-react usage, accessibility, color inheritance
 - [hooks.md](hooks.md) - usePagination, useDebounce, useLocalStorage
 - [error-boundaries.md](error-boundaries.md) - Error boundary implementation and recovery
 - [react-19-hooks.md](react-19-hooks.md) - useActionState, useFormStatus, useOptimistic, use()
 
 ---
 
-## Component Architecture Examples (React 19)
+## Pattern 1: Component Architecture (React 19)
 
 ### Good Example - React 19 ref as prop pattern
 
 ```typescript
-// packages/ui/src/components/button/button.tsx
-import { Slot } from "@radix-ui/react-slot";
-
 // Type-safe variant props
 export type ButtonVariant = "default" | "ghost" | "link";
 export type ButtonSize = "default" | "large" | "icon";
@@ -26,7 +22,6 @@ export type ButtonSize = "default" | "large" | "icon";
 export type ButtonProps = React.ComponentProps<"button"> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  asChild?: boolean;
   ref?: React.Ref<HTMLButtonElement>;
 };
 
@@ -35,13 +30,11 @@ export function Button({
   variant = "default",
   size = "default",
   className,
-  asChild = false,
   ref,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : "button";
   return (
-    <Comp
+    <button
       className={className}
       data-variant={variant}
       data-size={size}
@@ -87,7 +80,7 @@ export default function Button({ variant, size, onClick, children }) {
 
 ---
 
-## Variant Props Examples (React 19)
+## Pattern 2: Variant Props (React 19)
 
 ### Good Example - Type-safe variant props with ref as prop
 
@@ -146,7 +139,7 @@ export const Alert = ({ variant = "info", size = "md", className, ...props }) =>
 
 ---
 
-## Event Handler Examples
+## Pattern 3: Event Handlers
 
 ### Good Example - Descriptive event handler names
 
@@ -238,3 +231,38 @@ function SearchBar() {
 ```
 
 **Why bad:** useCallback adds overhead without benefit when child is not memoized, premature optimization that adds complexity, input element re-renders regardless of callback identity
+
+---
+
+## Pattern 4: Accessible Interactive Elements
+
+Icon-only buttons and interactive elements without visible text need accessibility attributes.
+
+### Good Example - Accessible icon-only button
+
+```tsx
+<button
+  type="button"
+  title="Expand details"
+  aria-label="Expand details"
+  onClick={handleToggle}
+>
+  {isExpanded ? (
+    <span aria-hidden="true">&#9650;</span>
+  ) : (
+    <span aria-hidden="true">&#9660;</span>
+  )}
+</button>
+```
+
+**Why good:** title provides tooltip for sighted users, aria-label provides accessible name for screen readers, aria-hidden on decorative content prevents duplicate announcements
+
+### Bad Example - Interactive element without accessible name
+
+```tsx
+<button onClick={handleToggle}>
+  <span>&#9660;</span>
+</button>
+```
+
+**Why bad:** no title means no tooltip, no aria-label means screen readers announce "button" with no context, unusable for keyboard and screen reader users

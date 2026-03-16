@@ -10,14 +10,10 @@ Send emails at a future time using the `scheduledAt` parameter.
 
 ```typescript
 // lib/email/scheduled-email.ts
+import { Resend } from "resend";
 import { render } from "@react-email/components";
 
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 const MAX_SCHEDULE_DAYS = 30; // Resend allows scheduling up to 30 days in advance
 
 interface ScheduledEmailOptions {
@@ -25,20 +21,12 @@ interface ScheduledEmailOptions {
   subject: string;
   react: React.ReactElement;
   scheduledAt: Date;
-  tags?: Array<{ name: string; value: string }>; // Supported in v4+
-}
-
-interface ScheduledEmailResult {
-  success: boolean;
-  id?: string;
-  error?: string;
+  tags?: Array<{ name: string; value: string }>;
 }
 
 export async function sendScheduledEmail(
   options: ScheduledEmailOptions,
-): Promise<ScheduledEmailResult> {
-  const resend = getResendClient();
-
+): Promise<{ success: boolean; id?: string; error?: string }> {
   // Validate scheduling window (up to 30 days in advance)
   const now = new Date();
   const maxScheduleDate = new Date(
@@ -60,12 +48,12 @@ export async function sendScheduledEmail(
     const html = await render(options.react);
 
     const { data, error } = await resend.emails.send({
-      from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: options.to,
       subject: options.subject,
       html,
       scheduledAt: options.scheduledAt.toISOString(),
-      tags: options.tags, // Tags now supported with scheduled emails
+      tags: options.tags,
     });
 
     if (error) {
@@ -73,101 +61,49 @@ export async function sendScheduledEmail(
       return { success: false, error: error.message };
     }
 
-    console.log(
-      "[Email] Scheduled successfully:",
-      data?.id,
-      "for",
-      options.scheduledAt,
-    );
+    console.log("[Email] Scheduled:", data?.id, "for", options.scheduledAt);
     return { success: true, id: data?.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Email] Unexpected error:", message);
     return { success: false, error: message };
   }
 }
 
-// Named exports
 export { sendScheduledEmail };
-export type { ScheduledEmailOptions, ScheduledEmailResult };
+export type { ScheduledEmailOptions };
 ```
 
-**Why good:** Validates scheduling window (up to 30 days), converts Date to ISO string for API, logs scheduled time for debugging, supports tags with scheduled emails (v4+ feature)
+**Why good:** Validates scheduling window (up to 30 days), converts Date to ISO string for API, supports tags with scheduled emails
 
 ---
 
-## Pattern 2: Usage - Schedule Reminder Email
-
-Schedule a reminder email for the next day.
-
-```typescript
-// Example: Schedule reminder email for tomorrow at 9 AM
-import { sendScheduledEmail } from "@/lib/email/scheduled-email";
-import { ReminderEmail } from "@repo/emails";
-
-const REMINDER_HOUR = 9;
-
-async function scheduleReminderForTomorrow(user: {
-  email: string;
-  name: string;
-}) {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(REMINDER_HOUR, 0, 0, 0);
-
-  const result = await sendScheduledEmail({
-    to: user.email,
-    subject: "Your daily reminder",
-    react: ReminderEmail({ userName: user.name }),
-    scheduledAt: tomorrow,
-    tags: [
-      { name: "email_type", value: "reminder" },
-      { name: "schedule_type", value: "daily" },
-    ],
-  });
-
-  return result;
-}
-```
-
----
-
-## Pattern 3: Idempotency Keys
+## Pattern 2: Idempotency Keys
 
 Prevent duplicate email sends using idempotency keys.
 
 ```typescript
 // lib/email/idempotent-email.ts
+import { Resend } from "resend";
 import { render } from "@react-email/components";
 
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 const IDEMPOTENCY_KEY_MAX_LENGTH = 256;
 
 interface IdempotentEmailOptions {
   to: string | string[];
   subject: string;
   react: React.ReactElement;
-  idempotencyKey: string; // Unique identifier for this email request
-}
-
-interface IdempotentEmailResult {
-  success: boolean;
-  id?: string;
-  error?: string;
-  isDuplicate?: boolean;
+  idempotencyKey: string;
 }
 
 export async function sendIdempotentEmail(
   options: IdempotentEmailOptions,
-): Promise<IdempotentEmailResult> {
-  const resend = getResendClient();
-
-  // Validate idempotency key length
+): Promise<{
+  success: boolean;
+  id?: string;
+  error?: string;
+  isDuplicate?: boolean;
+}> {
   if (options.idempotencyKey.length > IDEMPOTENCY_KEY_MAX_LENGTH) {
     return {
       success: false,
@@ -179,7 +115,7 @@ export async function sendIdempotentEmail(
     const html = await render(options.react);
 
     const { data, error } = await resend.emails.send({
-      from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: options.to,
       subject: options.subject,
       html,
@@ -189,7 +125,6 @@ export async function sendIdempotentEmail(
     });
 
     if (error) {
-      // Check for idempotency-related errors
       const errorName = error.name?.toLowerCase() ?? "";
 
       if (errorName.includes("invalid_idempotent_request")) {
@@ -218,23 +153,21 @@ export async function sendIdempotentEmail(
   }
 }
 
-// Named exports
 export { sendIdempotentEmail };
-export type { IdempotentEmailOptions, IdempotentEmailResult };
+export type { IdempotentEmailOptions };
 ```
 
 **Why good:** Validates key length, handles idempotency-specific errors, returns `isDuplicate` flag for caller handling
 
 ---
 
-## Pattern 4: Usage - Idempotent Order Confirmation
+## Pattern 3: Usage - Idempotent Order Confirmation
 
 Use order ID as idempotency key to prevent duplicate confirmation emails.
 
 ```typescript
-// Example: Send order confirmation with idempotency
-import { sendIdempotentEmail } from "@/lib/email/idempotent-email";
-import { OrderConfirmationEmail } from "@repo/emails";
+import { sendIdempotentEmail } from "./lib/email/idempotent-email";
+import { OrderConfirmationEmail } from "./templates/order-confirmation";
 
 async function sendOrderConfirmation(order: {
   id: string;
@@ -255,7 +188,7 @@ async function sendOrderConfirmation(order: {
   });
 
   if (result.isDuplicate) {
-    console.log("[Order] Confirmation email already sent for order:", order.id);
+    console.log("[Order] Confirmation already sent for:", order.id);
   }
 
   return result;
@@ -264,221 +197,48 @@ async function sendOrderConfirmation(order: {
 
 ---
 
-## Pattern 5: Email Tags for Tracking
+## Pattern 4: Email Tags for Tracking
 
 Add metadata tags to emails for analytics and organization.
 
 ```typescript
-// lib/email/tagged-email.ts
-import { render } from "@react-email/components";
-
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
-
-const TAG_KEY_MAX_LENGTH = 256;
-const TAG_VALUE_MAX_LENGTH = 256;
-
-interface EmailTag {
-  name: string;
-  value: string;
-}
-
-interface TaggedEmailOptions {
-  to: string | string[];
-  subject: string;
-  react: React.ReactElement;
-  tags: EmailTag[];
-}
-
-interface TaggedEmailResult {
-  success: boolean;
-  id?: string;
-  error?: string;
-}
-
-export async function sendTaggedEmail(
-  options: TaggedEmailOptions,
-): Promise<TaggedEmailResult> {
-  const resend = getResendClient();
-
-  // Validate tags
-  for (const tag of options.tags) {
-    if (
-      tag.name.length > TAG_KEY_MAX_LENGTH ||
-      tag.value.length > TAG_VALUE_MAX_LENGTH
-    ) {
-      return {
-        success: false,
-        error: `Tag keys and values must be ${TAG_KEY_MAX_LENGTH} characters or less`,
-      };
-    }
-    // Tags must be ASCII alphanumeric, underscore, or dash
-    if (!/^[a-zA-Z0-9_-]+$/.test(tag.name)) {
-      return {
-        success: false,
-        error:
-          "Tag names must contain only ASCII alphanumeric characters, underscores, or dashes",
-      };
-    }
-  }
-
-  try {
-    const html = await render(options.react);
-
-    const { data, error } = await resend.emails.send({
-      from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
-      to: options.to,
-      subject: options.subject,
-      html,
-      tags: options.tags,
-    });
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, id: data?.id };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-// Named exports
-export { sendTaggedEmail };
-export type { EmailTag, TaggedEmailOptions, TaggedEmailResult };
+// Tags are passed directly to resend.emails.send()
+const { data, error } = await resend.emails.send({
+  from,
+  to,
+  subject,
+  html,
+  tags: [
+    { name: "campaign_id", value: campaign.id },
+    { name: "email_type", value: "newsletter" },
+    { name: "ab_variant", value: "A" },
+  ],
+});
 ```
 
-**Why good:** Validates tag format constraints, enables filtering and analytics in Resend dashboard, supports multiple tags per email
+**Tag constraints:**
 
----
-
-## Pattern 6: Usage - Tagged Campaign Email
-
-Track email campaigns with tags for analytics.
-
-```typescript
-// Example: Send marketing email with campaign tags
-import { sendTaggedEmail } from "@/lib/email/tagged-email";
-import { NewsletterEmail } from "@repo/emails";
-
-async function sendCampaignEmail(
-  user: { email: string; name: string },
-  campaign: { id: string; name: string; variant: "A" | "B" },
-) {
-  const result = await sendTaggedEmail({
-    to: user.email,
-    subject: "This week's updates",
-    react: NewsletterEmail({
-      userName: user.name,
-      variant: campaign.variant,
-    }),
-    tags: [
-      { name: "campaign_id", value: campaign.id },
-      { name: "campaign_name", value: campaign.name },
-      { name: "ab_variant", value: campaign.variant },
-      { name: "email_type", value: "newsletter" },
-    ],
-  });
-
-  return result;
-}
-```
-
----
-
-## Pattern 7: Combining Features - Scheduled Email with Tags
-
-Send scheduled emails with tracking tags (v4+ feature).
-
-```typescript
-// lib/email/scheduled-tagged-email.ts
-import { render } from "@react-email/components";
-
-import {
-  getResendClient,
-  DEFAULT_FROM_ADDRESS,
-  DEFAULT_FROM_NAME,
-} from "@repo/emails";
-
-const MAX_SCHEDULE_DAYS = 30;
-
-interface ScheduledTaggedEmailOptions {
-  to: string | string[];
-  subject: string;
-  react: React.ReactElement;
-  scheduledAt: Date;
-  tags: Array<{ name: string; value: string }>;
-}
-
-export async function sendScheduledTaggedEmail(
-  options: ScheduledTaggedEmailOptions,
-) {
-  const resend = getResendClient();
-
-  const now = new Date();
-  const maxScheduleDate = new Date(
-    now.getTime() + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000,
-  );
-
-  if (options.scheduledAt <= now || options.scheduledAt > maxScheduleDate) {
-    return {
-      success: false,
-      error: "Invalid schedule time",
-    };
-  }
-
-  try {
-    const html = await render(options.react);
-
-    const { data, error } = await resend.emails.send({
-      from: `${DEFAULT_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`,
-      to: options.to,
-      subject: options.subject,
-      html,
-      scheduledAt: options.scheduledAt.toISOString(),
-      tags: options.tags, // Now supported together!
-    });
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, id: data?.id };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-// Named exports
-export { sendScheduledTaggedEmail };
-export type { ScheduledTaggedEmailOptions };
-```
-
-**Why good:** Combines scheduled sending with tags (v4+ feature), validates scheduling constraints, enables analytics tracking for scheduled campaigns
+- Names and values: max 256 characters each
+- Characters: ASCII alphanumeric, underscores, dashes only (`/^[a-zA-Z0-9_-]+$/`)
+- Supported in both single send and batch API
+- Supported with scheduled emails
 
 ---
 
 ## Feature Comparison
 
-| Feature           | Use Case                               | Limit                       | Batch Support    |
-| ----------------- | -------------------------------------- | --------------------------- | ---------------- |
-| Scheduled sending | Reminders, time-zone aware             | Up to 30 days in advance    | ❌ Not supported |
-| Idempotency keys  | Prevent duplicates, retry safety       | 256 chars, expires 24 hours | ✅ Supported     |
-| Tags              | Analytics, filtering, A/B testing      | 256 chars per key/value     | ✅ Supported     |
-| Tags + Scheduled  | Campaign tracking for scheduled emails | Combined limits apply       | ❌ Not supported |
+| Feature           | Use Case                          | Limit                       | Batch Support |
+| ----------------- | --------------------------------- | --------------------------- | ------------- |
+| Scheduled sending | Reminders, time-zone aware        | Up to 30 days in advance    | Not supported |
+| Idempotency keys  | Prevent duplicates, retry safety  | 256 chars, expires 24 hours | Supported     |
+| Tags              | Analytics, filtering, A/B testing | 256 chars per key/value     | Supported     |
 
 ---
 
 ## Notes
 
 - **Scheduled emails** cannot be used with batch API
-- **Attachments** cannot be used with batch API (40MB max per single send)
+- **Attachments** cannot be used with batch API
 - **Idempotency keys** expire after 24 hours
 - **Tags** support ASCII alphanumeric characters, underscores, and dashes only
-- **Tags with scheduled emails** is a v4+ feature (2025 update)
 - All features work with the standard `resend.emails.send()` method

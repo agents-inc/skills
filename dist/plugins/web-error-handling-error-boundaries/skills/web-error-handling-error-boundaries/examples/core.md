@@ -1,15 +1,12 @@
-# Error Boundaries Examples
+# Error Boundaries - Core Examples
 
 > Complete code examples for error boundary patterns. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Extended Examples:**
 
-- [react-19-hooks.md](react-19-hooks.md) - **React 19+ error hooks** (`onCaughtError`, `onUncaughtError`, `captureOwnerStack`)
-- [testing.md](testing.md) - Testing patterns for error boundaries
-- [typescript.md](typescript.md) - TypeScript patterns and HOC
-- [nested-boundaries.md](nested-boundaries.md) - Layered error handling architecture
-- [fallback-ui.md](fallback-ui.md) - Advanced fallback UI patterns
-- [recovery.md](recovery.md) - Retry limits and error classification
+- [react-19-hooks.md](react-19-hooks.md) - React 19+ createRoot error options, `captureOwnerStack()`, error filtering
+- [recovery.md](recovery.md) - Retry limits, exponential backoff, error classification
+- [testing.md](testing.md) - Testing boundaries, async errors, resetKeys
 
 ---
 
@@ -408,7 +405,6 @@ function InaccessibleFallback() {
 
 > **See also:**
 >
+> - [react-19-hooks.md](react-19-hooks.md) - React 19+ createRoot error options, captureOwnerStack
+> - [recovery.md](recovery.md) - Retry limits, exponential backoff, error classification
 > - [testing.md](testing.md) - Testing error boundary behavior
-> - [typescript.md](typescript.md) - TypeScript patterns and HOC
-> - [fallback-ui.md](fallback-ui.md) - Advanced fallback UI patterns
-> - [recovery.md](recovery.md) - Retry limits and error classification

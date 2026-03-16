@@ -1,6 +1,6 @@
 {
   "name": "web-framework-angular-standalone",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Angular 17-19 standalone components, signals, control flow, dependency injection patterns",
   "author": {

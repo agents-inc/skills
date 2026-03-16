@@ -1,6 +1,6 @@
 ---
 name: web-meta-framework-nextjs
-description: Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling
+description: Next.js App Router patterns (15-16) - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, Cache Components
 ---
 
 # Next.js App Router Patterns
@@ -39,7 +39,7 @@ description: Next.js 15 App Router patterns - file-based routing, Server/Client 
 
 ---
 
-**Auto-detection:** Next.js App Router, page.tsx, layout.tsx, loading.tsx, error.tsx, Server Components, Client Components, "use client", streaming, Suspense, parallel routes, intercepting routes, generateMetadata, generateStaticParams, Turbopack, next/form, use cache, PPR, experimental_ppr, instrumentation.ts, after(), typedRoutes, Server Actions, use server directive, revalidatePath, revalidateTag, formAction, useActionState, useFormStatus, useOptimistic, server mutation
+**Auto-detection:** Next.js App Router, page.tsx, layout.tsx, loading.tsx, error.tsx, Server Components, Client Components, "use client", streaming, Suspense, parallel routes, intercepting routes, generateMetadata, generateStaticParams, Turbopack, next/form, use cache, cacheComponents, cacheLife, cacheTag, PPR, instrumentation.ts, after(), typedRoutes, proxy.ts, updateTag, refresh, Server Actions, use server directive, revalidatePath, revalidateTag, formAction, useActionState, useFormStatus, useOptimistic, server mutation
 
 **When to use:**
 
@@ -63,7 +63,7 @@ description: Next.js 15 App Router patterns - file-based routing, Server/Client 
 - Metadata API for SEO optimization
 - generateStaticParams for static generation
 - Next.js 15.5+ features (PPR, Turbopack builds, typed routes, after() API)
-- Next.js 16 migration preparation
+- Next.js 16 features (Cache Components, proxy.ts, updateTag, refresh, React 19.2)
 - Server Action definition (`'use server'` directive)
 - Form actions with progressive enhancement
 - Cache revalidation patterns (revalidatePath, revalidateTag)
@@ -88,7 +88,7 @@ description: Next.js 15 App Router patterns - file-based routing, Server/Client 
 - [examples/metadata.md](examples/metadata.md) - Static metadata, dynamic generateMetadata, Open Graph, SEO
 - [examples/parallel-routes.md](examples/parallel-routes.md) - Parallel routes, intercepting routes, modal patterns
 - [examples/route-groups.md](examples/route-groups.md) - Route groups for different layouts per section
-- [examples/nextjs-15-features.md](examples/nextjs-15-features.md) - PPR, Turbopack builds, typed routes, after() API, instrumentation
+- [examples/nextjs-15-features.md](examples/nextjs-15-features.md) - PPR, Turbopack builds, typed routes, after() API, instrumentation, Next.js 16 migration
 
 **Server Actions & Mutations:**
 

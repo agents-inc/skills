@@ -260,36 +260,27 @@ await fetch(uploadUrl, { method: "PUT", body: file });
 
 ```typescript
 // ANTI-PATTERN: Server proxy for large files
-app.post("/upload", async (c) => {
-  const file = await c.req.blob();
-  await s3Client.send(new PutObjectCommand({ Body: file }));
-  return c.json({ success: true });
-});
+// Server receives file, then re-uploads to storage
+const file = await request.blob();
+await s3Client.send(new PutObjectCommand({ Body: file }));
 // Server becomes bottleneck, pays bandwidth twice
 ```
 
-**Why it's wrong:** Server must buffer entire file, uses double bandwidth (client→server + server→S3), and becomes a bottleneck.
+**Why it's wrong:** Server must buffer entire file, uses double bandwidth (client→server + server→storage), and becomes a bottleneck.
 
 **What to do instead:**
 
 ```typescript
-// CORRECT: Presigned URL for direct upload
-app.post("/upload/presign", async (c) => {
-  const { fileName } = await c.req.json();
-  const key = `uploads/${fileName}`;
+// CORRECT: Server generates presigned URL, client uploads directly
+// Server endpoint:
+const url = await getSignedUrl(
+  s3Client,
+  new PutObjectCommand({ Bucket: BUCKET, Key: key }),
+  { expiresIn: 3600 },
+);
+// Return { uploadUrl: url, key } to client
 
-  const url = await getSignedUrl(
-    s3Client,
-    new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-    }),
-    { expiresIn: 3600 },
-  );
-
-  return c.json({ uploadUrl: url, key });
-});
-// Client uploads directly to S3
+// Client uploads directly to storage using the presigned URL
 ```
 
 ---

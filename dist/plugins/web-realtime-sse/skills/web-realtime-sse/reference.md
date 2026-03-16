@@ -231,11 +231,10 @@ Incorrect headers cause connection failures or unexpected behavior.
 // WRONG - Missing required headers
 res.write("data: hello\n\n"); // May be buffered by proxy
 
-// CORRECT - Set all required headers
+// CORRECT - Set required headers
 res.setHeader("Content-Type", "text/event-stream");
 res.setHeader("Cache-Control", "no-cache");
-res.setHeader("Connection", "keep-alive");
-res.setHeader("X-Accel-Buffering", "no"); // For nginx
+res.setHeader("X-Accel-Buffering", "no"); // For nginx proxy
 res.write("data: hello\n\n");
 ```
 
@@ -326,9 +325,10 @@ data: Server requested 10s reconnect interval
 ```http
 Content-Type: text/event-stream
 Cache-Control: no-cache
-Connection: keep-alive
 X-Accel-Buffering: no        # For nginx proxy
 ```
+
+**Note:** `Connection: keep-alive` is **prohibited in HTTP/2 and HTTP/3** (Safari rejects responses containing it). Only set it if you are certain clients use HTTP/1.1.
 
 ### EventSource Behavior Summary
 
@@ -346,7 +346,7 @@ X-Accel-Buffering: no        # For nginx proxy
 - [ ] Handle onerror with readyState check
 - [ ] Use event IDs for message recovery
 - [ ] Send keep-alive comments to prevent proxy timeout
-- [ ] Set all required server headers
+- [ ] Set required server headers (`Content-Type`, `Cache-Control`)
 - [ ] Handle JSON parse errors
 
 ### Security Checklist

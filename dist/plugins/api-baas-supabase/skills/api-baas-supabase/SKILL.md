@@ -54,7 +54,7 @@ description: Supabase backend-as-a-service — Auth, Database, Realtime, Storage
 **When NOT to use:**
 
 - Direct Postgres connections (use a database driver skill instead)
-- Complex server-side ORM patterns (use Drizzle/Prisma skills)
+- Complex server-side ORM patterns (use a dedicated ORM skill)
 - Non-Supabase authentication providers (use dedicated auth skills)
 
 **Detailed Resources:**
@@ -142,7 +142,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   "https://abc.supabase.co",
-  "eyJ..." // Hardcoded key
+  "eyJ...", // Hardcoded key
 );
 
 // No autocomplete, no type checking on queries
@@ -436,7 +436,7 @@ const channel = supabase
     (payload) => {
       const newMessage = payload.new;
       // Handle new message
-    }
+    },
   )
   .subscribe();
 
@@ -454,21 +454,21 @@ const channel = supabase
     { event: "INSERT", schema: "public", table: "posts" },
     (payload) => {
       // Handle new post
-    }
+    },
   )
   .on(
     "postgres_changes",
     { event: "UPDATE", schema: "public", table: "posts" },
     (payload) => {
       // Handle updated post — payload.old requires replica identity full
-    }
+    },
   )
   .on(
     "postgres_changes",
     { event: "DELETE", schema: "public", table: "posts" },
     (payload) => {
       // Handle deleted post
-    }
+    },
   )
   .subscribe();
 ```
@@ -543,7 +543,7 @@ Deno.serve(async (req) => {
         global: {
           headers: { Authorization: req.headers.get("Authorization")! },
         },
-      }
+      },
     );
 
     const { data, error } = await supabase.from("posts").select("*").limit(10);
@@ -575,7 +575,7 @@ import { createClient } from "@supabase/supabase-js"; // Missing npm: prefix
 serve(async (req) => {
   const supabase = createClient(
     "https://abc.supabase.co", // Hardcoded URL
-    "eyJ..." // Hardcoded service_role key in edge function
+    "eyJ...", // Hardcoded service_role key in edge function
   );
   // ...
 });

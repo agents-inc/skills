@@ -167,28 +167,17 @@ describe("ThemeToggle Component", () => {
 
 ### Reusable Mount with Global Providers
 
+When components depend on context providers (router, theme, etc.), create a custom mount command that wraps components in the necessary providers.
+
 ```tsx
 // cypress/support/component.tsx
 import { mount } from "cypress/react18";
 import type { ReactNode } from "react";
-import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// Import YOUR project's providers here
 import { ThemeProvider } from "../../src/contexts/theme-context";
 
 interface MountOptions {
   theme?: "light" | "dark";
-  routerPath?: string;
-}
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
 }
 
 function TestProviders({
@@ -198,16 +187,11 @@ function TestProviders({
   children: ReactNode;
   options: MountOptions;
 }) {
-  const queryClient = createTestQueryClient();
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider theme={options.theme ?? "light"} toggleTheme={() => {}}>
-          {children}
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    // Wrap with your project's providers (router, data fetching, etc.)
+    <ThemeProvider theme={options.theme ?? "light"} toggleTheme={() => {}}>
+      {children}
+    </ThemeProvider>
   );
 }
 

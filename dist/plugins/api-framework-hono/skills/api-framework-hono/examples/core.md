@@ -18,12 +18,9 @@
 
 ### Good Example - Modular Route Setup
 
-**File: `/app/api/[[...route]]/route.ts`**
-
 ```typescript
 // Import order: External deps -> Relative imports
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { handle } from "hono/vercel";
 
 import { jobsRoutes } from "../routes/jobs";
 import { companiesRoutes } from "../routes/companies";
@@ -38,15 +35,11 @@ app.route("/", companiesRoutes);
 // REQUIRED: Export app for OpenAPI spec generation
 export { app };
 
-// Export handlers for Next.js (all HTTP methods)
-export const GET = handle(app);
-export const POST = handle(app);
-export const PUT = handle(app);
-export const PATCH = handle(app);
-export const DELETE = handle(app);
+// Export HTTP method handlers for your framework adapter
+// (e.g., hono/vercel, hono/cloudflare-workers, hono/bun, etc.)
 ```
 
-**Why good:** app.route() prevents God files, app export enables build-time spec generation, named exports follow project convention
+**Why good:** `app.route()` prevents God files, app export enables build-time spec generation, named exports follow project convention
 
 ### Bad Example - Missing exports and poor structure
 
@@ -66,7 +59,7 @@ app.get("/companies", async (c) => {
 });
 
 // BAD: Default export prevents spec generation
-export default handle(app);
+export default app;
 ```
 
 **Why bad:** No OpenAPI means no docs/validation, inline routes create 1000+ line files, default export breaks spec generation, no modularization = unmaintainable
@@ -77,13 +70,8 @@ export default handle(app);
 
 ### Good Example - List Endpoint with OpenAPI
 
-**File: `/app/api/routes/jobs.ts`**
-
 ```typescript
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { and, eq, desc, isNull } from "drizzle-orm";
-
-import { db, jobs, companies } from "@/lib/db";
 import {
   JobsQuerySchema,
   JobsResponseSchema,
@@ -120,30 +108,12 @@ app.openapi(getJobsRoute, async (c) => {
     // Type-safe query parameter extraction
     const { country, employment_type } = c.req.valid("query");
 
-    const conditions = [eq(jobs.isActive, true), isNull(jobs.deletedAt)];
-
-    if (country) {
-      conditions.push(eq(jobs.country, country));
-    }
-
-    if (employment_type) {
-      conditions.push(eq(jobs.employmentType, employment_type as any));
-    }
-
-    const results = await db
-      .select({
-        id: jobs.id,
-        title: jobs.title,
-        description: jobs.description,
-        employmentType: jobs.employmentType,
-        companyName: companies.name,
-        companyLogoUrl: companies.logoUrl,
-      })
-      .from(jobs)
-      .leftJoin(companies, eq(jobs.companyId, companies.id))
-      .where(and(...conditions))
-      .orderBy(desc(jobs.createdAt))
-      .limit(DEFAULT_QUERY_LIMIT);
+    // Use your database solution to query with filters
+    const results = await fetchJobs({
+      country,
+      employment_type,
+      limit: DEFAULT_QUERY_LIMIT,
+    });
 
     return c.json({ jobs: results, total: results.length }, 200);
   } catch (error) {
@@ -162,7 +132,7 @@ app.openapi(getJobsRoute, async (c) => {
 export { app as jobsRoutes };
 ```
 
-**Why good:** operationId becomes client method name (getJobs vs get_api_jobs), c.req.valid() enforces schema validation, soft delete checks prevent exposing deleted data
+**Why good:** `operationId` becomes client method name (`getJobs` vs `get_api_jobs`), `c.req.valid()` enforces schema validation with full types, consistent error shape
 
 ---
 
@@ -209,21 +179,8 @@ app.openapi(getJobByIdRoute, async (c) => {
     // Type-safe param extraction (note: "param" not "params")
     const { id } = c.req.valid("param");
 
-    const job = await db.query.jobs.findFirst({
-      where: and(
-        eq(jobs.id, id),
-        eq(jobs.isActive, true),
-        isNull(jobs.deletedAt),
-      ),
-      with: {
-        company: {
-          with: { locations: true },
-        },
-        jobSkills: {
-          with: { skill: true },
-        },
-      },
-    });
+    // Use your database solution to find by ID
+    const job = await findJobById(id);
 
     if (!job) {
       return c.json(
@@ -259,13 +216,8 @@ app.get("/jobs", async (c) => {
   // BAD: No type-safe query validation
   const country = c.req.query("country");
 
-  // BAD: No soft delete check
-  // BAD: Magic number limit(100)
-  const results = await db
-    .select()
-    .from(jobs)
-    .where(eq(jobs.country, country))
-    .limit(100);
+  // BAD: Magic number limit
+  const results = await fetchJobs({ country, limit: 100 });
 
   // BAD: No error handling
   return c.json({ jobs: results });
@@ -274,6 +226,6 @@ app.get("/jobs", async (c) => {
 export default app; // BAD: Default export
 ```
 
-**Why bad:** No createRoute = no OpenAPI docs, no validation = crashes on bad input, missing soft delete returns deleted records to users, no error handling = 500s with no context
+**Why bad:** No `createRoute` = no OpenAPI docs, no `c.req.valid()` = no validation, magic number limit, no error handling = 500s with no context, default export breaks spec generation
 
 ---

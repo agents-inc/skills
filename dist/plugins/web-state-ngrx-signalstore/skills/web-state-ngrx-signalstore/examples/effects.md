@@ -22,7 +22,15 @@ import { inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { signalStore, withState, withMethods, patchState } from "@ngrx/signals";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { pipe, tap, switchMap, catchError, of } from "rxjs";
+import {
+  pipe,
+  tap,
+  switchMap,
+  catchError,
+  of,
+  debounceTime,
+  distinctUntilChanged,
+} from "rxjs";
 
 const SEARCH_API_URL = "/api/search";
 const DEBOUNCE_MS = 300;
@@ -94,9 +102,6 @@ export const SearchStore = signalStore(
     };
   }),
 );
-
-// Add missing imports at top
-import { debounceTime, distinctUntilChanged } from "rxjs";
 ```
 
 **Why good:** rxMethod for reactive search, debounceTime prevents excessive API calls, switchMap cancels pending requests, error handling with catchError, named constants
@@ -393,6 +398,7 @@ import {
   of,
   merge,
   map,
+  interval,
 } from "rxjs";
 
 const API_BASE = "/api/dashboard";
@@ -504,9 +510,6 @@ export const DashboardStore = signalStore(
     };
   }),
 );
-
-// Add missing import
-import { interval } from "rxjs";
 ```
 
 **Why good:** Multiple independent rxMethods, coordinated via wrapper method, auto-refresh with interval, separate loading states, computed for combined loading state

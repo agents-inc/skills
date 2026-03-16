@@ -1,15 +1,43 @@
-# Image Handling Core Examples
+# Image Handling - Core Examples
 
-> Core code examples for image handling patterns. Reference from [SKILL.md](../SKILL.md).
+> Core code examples for image handling patterns. See [SKILL.md](../SKILL.md) for decision guidance.
 
 **Extended examples:**
 
-- [canvas.md](canvas.md) - Canvas API manipulation, step-down scaling
-- [preview.md](preview.md) - Preview generation, thumbnails, galleries
+- [canvas.md](canvas.md) - Canvas API manipulation, step-down scaling, cropping, filters
+- [preview.md](preview.md) - Drag-and-drop, thumbnails, gallery grid
 
 ---
 
-## Pattern 1: Basic Image Preview Hook
+## Shared Utility: loadImage
+
+Used by most patterns below. Creates an `HTMLImageElement` from a `File`, cleaning up the temporary object URL.
+
+```typescript
+// load-image.ts
+export function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+
+    img.src = url;
+  });
+}
+```
+
+---
+
+## Pattern 1: Image Preview Hook
 
 ### Complete Implementation
 
@@ -59,7 +87,6 @@ export function useImagePreview() {
       return;
     }
 
-    // Validate it's an image
     if (!file.type.startsWith("image/")) {
       setState({
         ...INITIAL_STATE,
@@ -159,7 +186,6 @@ export function ImagePreview({
     error,
     setFile,
     clear,
-    handleInputChange,
     hasImage,
   } = useImagePreview();
 
@@ -167,7 +193,6 @@ export function ImagePreview({
     const selectedFile = event.target.files?.[0];
 
     if (selectedFile) {
-      // Validate size
       if (selectedFile.size > maxSizeBytes) {
         const maxMB = maxSizeBytes / 1024 / 1024;
         alert(`File too large. Maximum size is ${maxMB}MB.`);
@@ -194,7 +219,6 @@ export function ImagePreview({
         accept={accept}
         onChange={handleFileChange}
         aria-label="Select image"
-        id="image-preview-input"
       />
 
       {error && (
@@ -239,231 +263,11 @@ export function ImagePreview({
 }
 ```
 
-**Why good:** Size validation before processing, exposes callbacks for parent integration, displays file info and dimensions, accessible labels and alerts
+**Why good:** Size validation before processing, exposes callbacks for parent integration, displays file info and dimensions, accessible labels and alerts, style-agnostic via className and data-attributes
 
 ---
 
-## Pattern 3: Multiple Image Gallery
-
-### Complete Implementation
-
-```typescript
-// use-image-gallery.ts
-import { useState, useCallback, useEffect } from "react";
-
-interface GalleryImage {
-  id: string;
-  file: File;
-  previewUrl: string;
-  dimensions: { width: number; height: number } | null;
-  status: "loading" | "ready" | "error";
-}
-
-interface UseImageGalleryOptions {
-  maxImages?: number;
-  maxFileSizeBytes?: number;
-}
-
-const DEFAULT_MAX_IMAGES = 10;
-const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-export function useImageGallery(options: UseImageGalleryOptions = {}) {
-  const {
-    maxImages = DEFAULT_MAX_IMAGES,
-    maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE,
-  } = options;
-
-  const [images, setImages] = useState<GalleryImage[]>([]);
-
-  const addImages = useCallback(
-    (
-      files: File[],
-    ): { added: number; rejected: Array<{ name: string; reason: string }> } => {
-      const rejected: Array<{ name: string; reason: string }> = [];
-      const toAdd: GalleryImage[] = [];
-
-      for (const file of files) {
-        // Check capacity
-        if (images.length + toAdd.length >= maxImages) {
-          rejected.push({ name: file.name, reason: "Gallery full" });
-          continue;
-        }
-
-        // Check file type
-        if (!file.type.startsWith("image/")) {
-          rejected.push({ name: file.name, reason: "Not an image" });
-          continue;
-        }
-
-        // Check file size
-        if (file.size > maxFileSizeBytes) {
-          const maxMB = maxFileSizeBytes / 1024 / 1024;
-          rejected.push({
-            name: file.name,
-            reason: `Exceeds ${maxMB}MB limit`,
-          });
-          continue;
-        }
-
-        const id = crypto.randomUUID();
-        const previewUrl = URL.createObjectURL(file);
-
-        toAdd.push({
-          id,
-          file,
-          previewUrl,
-          dimensions: null,
-          status: "loading",
-        });
-
-        // Load dimensions asynchronously
-        const img = new Image();
-        img.onload = () => {
-          setImages((current) =>
-            current.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    dimensions: { width: img.width, height: img.height },
-                    status: "ready" as const,
-                  }
-                : item,
-            ),
-          );
-        };
-        img.onerror = () => {
-          setImages((current) =>
-            current.map((item) =>
-              item.id === id ? { ...item, status: "error" as const } : item,
-            ),
-          );
-        };
-        img.src = previewUrl;
-      }
-
-      if (toAdd.length > 0) {
-        setImages((current) => [...current, ...toAdd]);
-      }
-
-      return { added: toAdd.length, rejected };
-    },
-    [images.length, maxImages, maxFileSizeBytes],
-  );
-
-  const removeImage = useCallback((id: string) => {
-    setImages((current) => {
-      const image = current.find((img) => img.id === id);
-      if (image) {
-        URL.revokeObjectURL(image.previewUrl);
-      }
-      return current.filter((img) => img.id !== id);
-    });
-  }, []);
-
-  const reorderImages = useCallback((fromIndex: number, toIndex: number) => {
-    setImages((current) => {
-      const result = [...current];
-      const [removed] = result.splice(fromIndex, 1);
-      result.splice(toIndex, 0, removed);
-      return result;
-    });
-  }, []);
-
-  const clearAll = useCallback(() => {
-    setImages((current) => {
-      current.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-      return [];
-    });
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return {
-    images,
-    addImages,
-    removeImage,
-    reorderImages,
-    clearAll,
-    count: images.length,
-    canAddMore: images.length < maxImages,
-    remainingSlots: maxImages - images.length,
-  };
-}
-```
-
-**Why good:** Tracks loading state per image, validates each file individually, returns rejection reasons for user feedback, supports reordering, proper cleanup on remove and unmount
-
----
-
-## Pattern 4: File to Blob Conversion
-
-### For Form Submission
-
-```typescript
-// file-conversion.ts
-
-/**
- * Convert a Blob back to a File for form submission
- */
-export function blobToFile(
-  blob: Blob,
-  fileName: string,
-  mimeType?: string,
-): File {
-  return new File([blob], fileName, {
-    type: mimeType ?? blob.type,
-    lastModified: Date.now(),
-  });
-}
-
-/**
- * Read file as ArrayBuffer for binary operations
- */
-export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result instanceof ArrayBuffer) {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Failed to read as ArrayBuffer"));
-      }
-    };
-    reader.onerror = () => reject(new Error("FileReader error"));
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-/**
- * Read file as Data URL (Base64)
- * Use sparingly - creates large strings in memory
- */
-export function readFileAsDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Failed to read as Data URL"));
-      }
-    };
-    reader.onerror = () => reject(new Error("FileReader error"));
-    reader.readAsDataURL(file);
-  });
-}
-```
-
-**Why good:** Preserves filename and type in File conversion, separate functions for different needs, warns about Data URL memory impact
-
----
-
-## Pattern 5: Image Dimension Extraction
+## Pattern 3: Image Dimension Extraction and Validation
 
 ### Without Loading Full Image
 
@@ -476,11 +280,10 @@ interface ImageDimensions {
 }
 
 /**
- * Get image dimensions without fully decoding the image
- * More efficient than creating Image element for dimension check only
+ * Get image dimensions efficiently.
+ * Uses createImageBitmap (avoids layout/decode) with Image element fallback.
  */
 export async function getImageDimensions(file: File): Promise<ImageDimensions> {
-  // Try createImageBitmap first (most efficient)
   if ("createImageBitmap" in window) {
     try {
       const bitmap = await createImageBitmap(file);
@@ -576,7 +379,289 @@ export async function validateImageDimensions(
 }
 ```
 
-**Why good:** Uses createImageBitmap when available (more efficient), properly frees bitmap memory, comprehensive constraint validation with detailed error messages
+**Why good:** Uses createImageBitmap when available (more efficient, avoids layout), properly frees bitmap memory, comprehensive constraint validation with detailed error messages
+
+---
+
+## Pattern 4: EXIF Orientation Parsing
+
+### Read and Normalize Orientation
+
+```typescript
+// exif-orientation.ts
+type Orientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+const EXIF_MARKER = 0xffe1;
+const ORIENTATION_TAG = 0x0112;
+const ORIENTATIONS_NEEDING_SWAP = [5, 6, 7, 8];
+const DEFAULT_QUALITY = 0.85;
+
+/**
+ * Read EXIF orientation from JPEG header without loading full image.
+ * Only reads first 64KB of file data.
+ */
+export async function getExifOrientation(file: File): Promise<Orientation> {
+  const HEADER_SIZE = 65536;
+  const buffer = await file.slice(0, HEADER_SIZE).arrayBuffer();
+  const view = new DataView(buffer);
+
+  // Check for JPEG magic bytes
+  if (view.getUint16(0) !== 0xffd8) {
+    return 1; // Not JPEG, assume normal orientation
+  }
+
+  let offset = 2;
+  while (offset < view.byteLength) {
+    const marker = view.getUint16(offset);
+    offset += 2;
+
+    if (marker === EXIF_MARKER) {
+      const length = view.getUint16(offset);
+      const exifData = new DataView(buffer, offset + 2, length - 2);
+      return parseExifOrientation(exifData);
+    }
+
+    const segmentLength = view.getUint16(offset);
+    offset += segmentLength;
+  }
+
+  return 1; // No EXIF found
+}
+
+function parseExifOrientation(view: DataView): Orientation {
+  const littleEndian = view.getUint16(6) === 0x4949;
+  const ifdOffset = view.getUint32(10, littleEndian);
+  const numEntries = view.getUint16(14 + ifdOffset, littleEndian);
+
+  for (let i = 0; i < numEntries; i++) {
+    const entryOffset = 16 + ifdOffset + i * 12;
+    const tag = view.getUint16(entryOffset, littleEndian);
+
+    if (tag === ORIENTATION_TAG) {
+      return view.getUint16(entryOffset + 8, littleEndian) as Orientation;
+    }
+  }
+
+  return 1;
+}
+
+/**
+ * Normalize orientation by re-drawing with correct transform.
+ * Use ONLY for upload processing - modern browsers auto-rotate for display.
+ */
+export async function normalizeOrientation(file: File): Promise<Blob> {
+  const orientation = await getExifOrientation(file);
+
+  if (orientation === 1) {
+    return file;
+  }
+
+  const img = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get context");
+
+  const needsSwap = ORIENTATIONS_NEEDING_SWAP.includes(orientation);
+  canvas.width = needsSwap ? img.height : img.width;
+  canvas.height = needsSwap ? img.width : img.height;
+
+  applyOrientationTransform(ctx, orientation, img.width, img.height);
+  ctx.drawImage(img, 0, 0);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Blob failed"))),
+      file.type || "image/jpeg",
+      DEFAULT_QUALITY,
+    );
+  });
+}
+
+function applyOrientationTransform(
+  ctx: CanvasRenderingContext2D,
+  orientation: Orientation,
+  width: number,
+  height: number,
+): void {
+  switch (orientation) {
+    case 2:
+      ctx.transform(-1, 0, 0, 1, width, 0);
+      break; // Flip horizontal
+    case 3:
+      ctx.transform(-1, 0, 0, -1, width, height);
+      break; // Rotate 180
+    case 4:
+      ctx.transform(1, 0, 0, -1, 0, height);
+      break; // Flip vertical
+    case 5:
+      ctx.transform(0, 1, 1, 0, 0, 0);
+      break; // Rotate 90 CW + flip
+    case 6:
+      ctx.transform(0, 1, -1, 0, height, 0);
+      break; // Rotate 90 CW
+    case 7:
+      ctx.transform(0, -1, -1, 0, height, width);
+      break; // Rotate 90 CCW + flip
+    case 8:
+      ctx.transform(0, -1, 1, 0, 0, width);
+      break; // Rotate 90 CCW
+  }
+}
+
+// Uses loadImage utility defined above
+```
+
+**Why good:** Reads EXIF from first 64KB only (no full image decode), handles all 8 orientation values, clearly documents when manual handling is needed vs browser auto-rotation
+
+---
+
+## Pattern 5: Multiple Image Gallery Hook
+
+### With Validation and Reordering
+
+```typescript
+// use-image-gallery.ts
+import { useState, useCallback, useEffect } from "react";
+
+interface GalleryImage {
+  id: string;
+  file: File;
+  previewUrl: string;
+  dimensions: { width: number; height: number } | null;
+  status: "loading" | "ready" | "error";
+}
+
+const DEFAULT_MAX_IMAGES = 10;
+const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+export function useImageGallery(
+  options: {
+    maxImages?: number;
+    maxFileSizeBytes?: number;
+  } = {},
+) {
+  const {
+    maxImages = DEFAULT_MAX_IMAGES,
+    maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE,
+  } = options;
+
+  const [images, setImages] = useState<GalleryImage[]>([]);
+
+  const addImages = useCallback(
+    (
+      files: File[],
+    ): { added: number; rejected: Array<{ name: string; reason: string }> } => {
+      const rejected: Array<{ name: string; reason: string }> = [];
+      const toAdd: GalleryImage[] = [];
+
+      for (const file of files) {
+        if (images.length + toAdd.length >= maxImages) {
+          rejected.push({ name: file.name, reason: "Gallery full" });
+          continue;
+        }
+        if (!file.type.startsWith("image/")) {
+          rejected.push({ name: file.name, reason: "Not an image" });
+          continue;
+        }
+        if (file.size > maxFileSizeBytes) {
+          const maxMB = maxFileSizeBytes / 1024 / 1024;
+          rejected.push({
+            name: file.name,
+            reason: `Exceeds ${maxMB}MB limit`,
+          });
+          continue;
+        }
+
+        const id = crypto.randomUUID();
+        const previewUrl = URL.createObjectURL(file);
+
+        toAdd.push({
+          id,
+          file,
+          previewUrl,
+          dimensions: null,
+          status: "loading",
+        });
+
+        // Load dimensions asynchronously
+        const img = new Image();
+        img.onload = () => {
+          setImages((current) =>
+            current.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    dimensions: { width: img.width, height: img.height },
+                    status: "ready" as const,
+                  }
+                : item,
+            ),
+          );
+        };
+        img.onerror = () => {
+          setImages((current) =>
+            current.map((item) =>
+              item.id === id ? { ...item, status: "error" as const } : item,
+            ),
+          );
+        };
+        img.src = previewUrl;
+      }
+
+      if (toAdd.length > 0) {
+        setImages((current) => [...current, ...toAdd]);
+      }
+
+      return { added: toAdd.length, rejected };
+    },
+    [images.length, maxImages, maxFileSizeBytes],
+  );
+
+  const removeImage = useCallback((id: string) => {
+    setImages((current) => {
+      const image = current.find((img) => img.id === id);
+      if (image) URL.revokeObjectURL(image.previewUrl);
+      return current.filter((img) => img.id !== id);
+    });
+  }, []);
+
+  const reorderImages = useCallback((fromIndex: number, toIndex: number) => {
+    setImages((current) => {
+      const result = [...current];
+      const [removed] = result.splice(fromIndex, 1);
+      result.splice(toIndex, 0, removed);
+      return result;
+    });
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setImages((current) => {
+      current.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+      return [];
+    });
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return {
+    images,
+    addImages,
+    removeImage,
+    reorderImages,
+    clearAll,
+    count: images.length,
+    canAddMore: images.length < maxImages,
+    remainingSlots: maxImages - images.length,
+  };
+}
+```
+
+**Why good:** Per-file validation with rejection reasons, async dimension loading, reorder support, individual and batch URL cleanup, unmount cleanup
 
 ---
 

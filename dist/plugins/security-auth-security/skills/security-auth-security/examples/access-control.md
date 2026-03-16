@@ -71,20 +71,18 @@ packages/auth/* @jane-engineer
 
 ### Good Example - Branch Protection Configuration
 
-```yaml
-# Branch protection configuration (via GitHub API or UI)
+```jsonc
+// Branch protection configuration (via GitHub API or UI settings)
 {
-  "required_pull_request_reviews":
-    {
-      "required_approving_review_count": 2,
-      "require_code_owner_reviews": true,
-      "dismiss_stale_reviews": true,
-    },
-  "required_status_checks":
-    {
-      "strict": true,
-      "contexts": ["ci/test", "ci/lint", "ci/type-check", "ci/security-audit"],
-    },
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 2,
+    "require_code_owner_reviews": true,
+    "dismiss_stale_reviews": true,
+  },
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["ci/test", "ci/lint", "ci/type-check", "ci/security-audit"],
+  },
   "enforce_admins": true,
   "restrictions": null,
 }

@@ -1,6 +1,6 @@
 {
   "name": "web-utilities-date-fns",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "date-fns patterns for TypeScript - formatting, parsing, manipulation, comparison, timezone handling, and internationalization",
   "author": {

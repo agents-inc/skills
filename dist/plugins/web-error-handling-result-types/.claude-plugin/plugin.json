@@ -1,6 +1,6 @@
 {
   "name": "web-error-handling-result-types",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values",
   "author": {

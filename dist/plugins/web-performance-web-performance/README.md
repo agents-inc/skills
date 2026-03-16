@@ -1,6 +1,6 @@
 # web-performance-web-performance
 
-Bundle optimization, render performance
+Bundle optimization, render performance, Core Web Vitals
 
 ## Installation
 

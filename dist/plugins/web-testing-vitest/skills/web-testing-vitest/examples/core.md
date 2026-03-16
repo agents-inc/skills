@@ -12,8 +12,6 @@
 // tests/e2e/checkout-flow.spec.ts
 import { test, expect } from "@playwright/test";
 
-this is also a change
-
 const CARD_SUCCESS = "4242424242424242";
 const CARD_DECLINED = "4000000000000002";
 const EXPIRY_DATE = "12/25";
@@ -92,7 +90,7 @@ test("handles payment failure", async ({ page }) => {
 
 **When to use:** All critical user-facing workflows that span multiple components and require backend integration.
 
-**When not to use:** Testing pure utility functions or component variants in isolation (use unit tests or Ladle stories instead).
+**When not to use:** Testing pure utility functions (use unit tests) or component variants in isolation (use story files for visual documentation).
 
 ---
 
@@ -371,4 +369,3 @@ _For more patterns, see:_
 
 - [integration.md](integration.md) - Integration tests with network mocking
 - [anti-patterns.md](anti-patterns.md) - What NOT to test
-- [ladle-stories.md](ladle-stories.md) - Component documentation stories

@@ -14,19 +14,17 @@
 
 ### When to Use Hono + OpenAPI
 
-- Building type-safe REST APIs in Next.js API routes with Hono
-- Defining OpenAPI specifications with automatic validation
+- Building type-safe REST APIs with auto-generated OpenAPI specs
+- Defining OpenAPI specifications with automatic Zod validation
 - Creating standardized error responses with proper status codes
 - Implementing filtering, pagination, and sorting patterns
-- Need public or multi-client API with documentation
+- Public or multi-client APIs needing formal documentation
 - Production APIs requiring rate limiting, CORS, health checks
 
 ### When NOT to Use Hono + OpenAPI
 
-- Simple CRUD operations with no external consumers (use Server Actions instead)
-- Internal-only APIs without documentation requirements (simpler approaches exist)
-- Forms that don't need complex validation (React Hook Form + Server Actions)
-- When building GraphQL APIs (use Apollo Server or similar)
+- Simple CRUD with no external consumers (Server Actions are simpler)
+- Internal-only APIs without documentation requirements
 - Single-use endpoints with no schema reuse (over-engineering)
 
 ### Pagination Decision
@@ -101,12 +99,12 @@
 
 ### High Priority Issues
 
-- **Not using `.openapi()` on Zod schemas** - OpenAPI spec won't include schema metadata or examples
-- **Forgetting `extendZodWithOpenApi(z)`** - Breaks schema registration entirely
-- **Not handling validation errors properly** - Hono validates, but you must return proper error shapes
-- **Not exporting `app` instance** - Can't generate OpenAPI spec at build time
-- **Missing `operationId` in routes** - Generated client has ugly method names like `get_api_v1_jobs`
-- **JWT/JWK without explicit `alg` option** - Vulnerable to algorithm confusion attacks (CVE-2026-22818) allowing forged tokens
+- **Importing `z` from `"zod"` instead of `"@hono/zod-openapi"`** -- `.openapi()` won't be available on schemas
+- **Not using `.openapi()` on Zod schemas** -- OpenAPI spec won't include schema metadata or examples
+- **Not handling validation errors properly** -- Hono validates, but you must return proper error shapes
+- **Not exporting `app` instance** -- can't generate OpenAPI spec at build time
+- **Missing `operationId` in routes** -- generated client has ugly method names like `get_api_v1_jobs`
+- **JWT/JWK without explicit `alg` option** -- vulnerable to algorithm confusion attacks (CVE-2026-22817, CVE-2026-22818) allowing forged tokens
 
 ### Medium Priority Issues
 
@@ -136,12 +134,12 @@
 
 ### Gotchas & Edge Cases
 
-- **Health checks on Kubernetes:** Use `/health` for liveness, `/health/deep` for readiness
-- **Rate limiting in multi-instance:** In-memory stores don't work - use Redis
+- **Health checks with orchestrators:** Use `/health` for liveness probes, `/health/deep` for readiness probes
+- **Rate limiting in multi-instance:** In-memory stores don't work across instances - use a shared store
 - **CORS preflight:** OPTIONS requests bypass auth middleware - configure CORS before auth
 - **ETags with dynamic content:** Don't use for user-specific data (generates new ETag per user)
 - **Correlation IDs:** Forward from client if present (`X-Correlation-ID` header)
-- **JWT `alg` option:** Required since v4.11.4 - omitting it allows algorithm confusion attacks where attackers forge tokens
+- **JWT `alg` option:** Required since v4.11.4 -- omitting it allows algorithm confusion attacks (CVE-2026-22817, CVE-2026-22818) where attackers forge tokens
 - **RPC version mismatch:** Client and server MUST use same Hono version for RPC types to work correctly
 - **RPC route chaining:** Routes must be chained (`.get().post()`) for type inference - separate `app.get()` calls break inference
 - **RPC TypeScript strict mode:** Both client and server `tsconfig.json` MUST have `"strict": true` for RPC type inference to work properly
@@ -201,7 +199,7 @@ app.get("/jobs", async (c) => {
 
 **Why it's wrong:** No OpenAPI spec generation, no auto-documentation, loses type safety benefits.
 
-**What to do instead:** Always use `extendZodWithOpenApi(z)` first, then `.openapi()` on schemas.
+**What to do instead:** Import `z` from `@hono/zod-openapi` (not `zod`), then use `.openapi()` on schemas.
 
 ---
 
@@ -209,13 +207,14 @@ app.get("/jobs", async (c) => {
 
 ```typescript
 // ANTI-PATTERN: Magic numbers everywhere
-const results = await db.select().from(jobs).limit(100);
+const results = await fetchJobs({ limit: 100 }); // What does 100 mean?
 
 if (count > 50) {
+  // Why 50?
   return c.json({ error: "Rate limited" }, 429);
 }
 
-c.header("Cache-Control", "max-age=3600");
+c.header("Cache-Control", "max-age=3600"); // What does 3600 represent?
 ```
 
 **Why it's wrong:** Numbers scattered across code, impossible to tune, no documentation of intent.
@@ -232,9 +231,8 @@ app.get("/jobs/:id", async (c) => {
   const id = c.req.param("id"); // No validation!
   const country = c.req.query("country"); // Could be undefined
 
-  const job = await db.query.jobs.findFirst({
-    where: eq(jobs.id, id),
-  });
+  // Unvalidated input goes straight to database
+  const job = await findJobById(id);
 });
 ```
 
@@ -389,7 +387,7 @@ app.use("/api/*", async (c, next) => {
 
 ### Before Deploying API Routes
 
-- [ ] `extendZodWithOpenApi(z)` called before schemas
+- [ ] `z` imported from `@hono/zod-openapi` (not `zod`)
 - [ ] All schemas have `.openapi()` registration
 - [ ] All routes have `operationId`
 - [ ] App instance exported for spec generation

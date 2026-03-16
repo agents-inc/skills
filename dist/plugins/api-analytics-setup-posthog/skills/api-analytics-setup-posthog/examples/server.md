@@ -2,7 +2,7 @@
 
 > Server-side patterns for PostHog event capture. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
 >
-> **Related examples:** [core.md](core.md) | [deployment.md](deployment.md)
+> **Related examples:** [core.md](core.md)
 
 ---
 
@@ -38,12 +38,9 @@ export async function shutdownPostHog(): Promise<void> {
     posthogClient = null;
   }
 }
-
-// Named exports
-export { getPostHogServerClient, shutdownPostHog };
 ```
 
-**Why good:** Singleton prevents multiple client instances, flushInterval/flushAt configure batching, shutdown function for graceful cleanup, works in serverless (Vercel)
+**Why good:** Singleton prevents multiple client instances, flushInterval/flushAt configure batching, shutdown function for graceful cleanup, works in serverless environments
 
 ---
 
@@ -116,12 +113,10 @@ export async function POST(request: Request) {
 
 ---
 
-## Pattern 3: Next.js API Route with Flush
-
-Capture events in Next.js API routes with proper flush handling.
+## Pattern 3: Server-Side Anti-Pattern - Missing Flush
 
 ```typescript
-// ❌ Bad Example - Not flushing events
+// ❌ Bad Example - Not flushing events in serverless
 // app/api/action/route.ts
 import { getPostHogServerClient } from "@/lib/posthog/server";
 
@@ -138,77 +133,6 @@ export async function POST(request: Request) {
 }
 ```
 
-**Why bad:** PostHog batches events by default, serverless function may terminate before batch is sent, events are silently lost
-
----
-
-## Pattern 3: Hono Middleware Integration
-
-Create analytics middleware for Hono API routes with automatic flush handling.
-
-```typescript
-// ✅ Good Example - PostHog middleware for Hono
-// middleware/analytics-middleware.ts
-import type { Context, Next } from "hono";
-import { createMiddleware } from "hono/factory";
-
-import { getPostHogServerClient } from "@/lib/posthog/server";
-
-interface AnalyticsVariables {
-  posthog: ReturnType<typeof getPostHogServerClient>;
-}
-
-export const analyticsMiddleware = createMiddleware<{
-  Variables: AnalyticsVariables;
-}>(async (c: Context, next: Next) => {
-  const posthog = getPostHogServerClient();
-  c.set("posthog", posthog);
-
-  await next();
-
-  // Flush after response is sent
-  await posthog.flush();
-});
-
-// Named export
-export { analyticsMiddleware };
-```
-
-**Why good:** PostHog client available via `c.get("posthog")` in handlers, automatic flush after response, typed variables for TypeScript safety
-
-### Using the Middleware in Handlers
-
-```typescript
-// ✅ Good Example - Using posthog in Hono handler
-// routes/users.ts
-import { Hono } from "hono";
-
-import { analyticsMiddleware } from "@/middleware/analytics-middleware";
-
-const app = new Hono();
-
-app.use("*", analyticsMiddleware);
-
-app.post("/users", async (c) => {
-  const posthog = c.get("posthog");
-  const body = await c.req.json();
-
-  // Track user creation
-  posthog.capture({
-    distinctId: body.email,
-    event: "user_created",
-    properties: {
-      source: "api",
-    },
-  });
-
-  // No need to flush - middleware handles it
-  return c.json({ success: true });
-});
-
-export { app };
-```
-
-**Why good:** Handler doesn't need to manage flush, consistent tracking across all routes, clean separation of concerns
+**Why bad:** PostHog batches events by default, serverless function may terminate before batch is sent, events are silently lost. Use `await posthog.flush()` or `captureImmediate()` instead.
 
 ---

@@ -1,8 +1,6 @@
-# Scroll Animations
+# Motion - Scroll Animation Examples
 
 > Scroll-linked animations including progress bars, reveal effects, and parallax. See [core.md](core.md) for basic patterns.
-
-> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
 
 ---
 
@@ -11,7 +9,7 @@
 ### Good Example - Page Progress Bar
 
 ```typescript
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring } from "motion/react";
 
 const PROGRESS_SPRING = { stiffness: 100, damping: 30, restDelta: 0.001 };
 const PROGRESS_HEIGHT_PX = 4;
@@ -47,7 +45,7 @@ export const ScrollProgressBar = () => {
 ### Good Example - Fade In When Visible
 
 ```typescript
-import { motion, useInView } from "framer-motion";
+import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 
 const REVEAL_DURATION_S = 0.6;
@@ -90,10 +88,8 @@ export const SectionReveal = ({ children, className }: SectionRevealProps) => {
 ### Good Example - Parallax Image Container
 
 ```typescript
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
-
-const PARALLAX_SPEED_FACTOR = 0.5;
 
 type ParallaxImageProps = {
   src: string;

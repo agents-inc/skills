@@ -92,6 +92,8 @@ export { Button, buttonVariants };
 
 **Why good:** Loading state built into component, disabled while loading prevents double-submission, spinner provides visual feedback
 
+> **Note:** For new projects, consider using the dedicated `Spinner` component (`npx shadcn@latest add spinner`) instead of importing Loader2 directly.
+
 ---
 
 ## Responsive Dialog/Drawer

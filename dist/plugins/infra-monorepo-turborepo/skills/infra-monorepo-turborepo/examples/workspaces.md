@@ -120,7 +120,7 @@ FORBIDDEN:
 ```bash
 # Using madge to detect circular dependencies
 npx madge --circular --extensions ts,tsx ./packages
-npx madge --circular --extensions ts,tsx ./apps/client-next/src
+npx madge --circular --extensions ts,tsx ./apps/web/src
 
 # Using dpdm
 npx dpdm --circular ./packages/*/src/index.ts

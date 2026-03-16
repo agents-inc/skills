@@ -186,7 +186,7 @@ import AppMain from "@/components/AppMain.vue";
 
 **Avoid provide/inject for:**
 
-- Frequently changing state (use Pinia/Zustand)
+- Frequently changing state (use a dedicated state management solution)
 - Data that should flow via props
 - Global state that could use a store
 

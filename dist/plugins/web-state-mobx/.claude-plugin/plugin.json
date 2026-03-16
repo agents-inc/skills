@@ -1,6 +1,6 @@
 {
   "name": "web-state-mobx",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "MobX observable state management patterns with mobx-react-lite. Use when implementing reactive client state with observables, computed values, actions, and the observer HOC.",
   "author": {

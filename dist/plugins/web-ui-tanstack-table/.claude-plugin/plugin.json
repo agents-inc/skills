@@ -1,6 +1,6 @@
 {
   "name": "web-ui-tanstack-table",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "TanStack Table v8 patterns - useReactTable, column definitions, sorting, filtering, pagination, row selection, virtual scrolling, server-side data",
   "author": {

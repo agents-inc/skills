@@ -1,6 +1,6 @@
 # web-meta-framework-nuxt
 
-Nuxt 3 patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO
+Nuxt patterns - file-based routing, data fetching (useFetch/useAsyncData), useState, server routes, middleware, auto-imports, layouts, SEO
 
 ## Installation
 

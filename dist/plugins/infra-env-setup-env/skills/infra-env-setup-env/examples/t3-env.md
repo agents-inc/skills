@@ -60,7 +60,7 @@ export const env = createEnv({
 ### Good Example - Validate at build time via next.config
 
 ```typescript
-// next.config.ts (Next.js 16+)
+// next.config.ts (Next.js 15+ - native TypeScript support, no jiti needed)
 import "./app/env"; // Validates env vars at build time
 
 import type { NextConfig } from "next";
@@ -69,11 +69,11 @@ const nextConfig: NextConfig = {
   // Your config here
 };
 
-export default nextConfig;
+export default nextConfig; // next.config requires default export
 ```
 
 ```typescript
-// next.config.mjs (Next.js < 16, uses jiti for TypeScript)
+// next.config.mjs (Next.js < 15, uses jiti for TypeScript)
 import { fileURLToPath } from "node:url";
 import createJiti from "jiti";
 
@@ -87,7 +87,7 @@ const nextConfig = {
   // Your config here
 };
 
-export default nextConfig;
+export default nextConfig; // next.config requires default export
 ```
 
 **Why good:** Build fails immediately if env vars are missing or invalid, prevents deploying broken builds, catches configuration errors before runtime

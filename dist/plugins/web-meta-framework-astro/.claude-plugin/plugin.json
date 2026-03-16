@@ -1,6 +1,6 @@
 {
   "name": "web-meta-framework-astro",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support",
   "author": {

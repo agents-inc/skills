@@ -215,6 +215,9 @@ return { jobs: results, total: count };
 - v1.0.0-beta.2 removed journal.json - run `drizzle-kit up` to migrate existing migrations
 - DrizzleQueryError wraps all driver errors (v0.44.0+) - check `error.cause` for original error
 - MSSQL/CockroachDB now supported but RQB v2 not yet available for these dialects
+- `drizzle-kit drop` was removed in v1.0.0-beta.2 - delete migration folders manually
+- Validator packages consolidated: `drizzle-zod` is now `drizzle-orm/zod`, `drizzle-valibot` is now `drizzle-orm/valibot`
+- `enableRLS()` deprecated in v1.0.0-beta.1 - use `pgTable.withRLS()` instead
 
 </red_flags>
 

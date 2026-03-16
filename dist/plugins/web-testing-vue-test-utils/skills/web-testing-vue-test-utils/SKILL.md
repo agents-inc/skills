@@ -42,10 +42,10 @@ description: Vue Test Utils patterns - mount, shallowMount, wrapper API, trigger
 
 **When NOT to use:**
 
-- E2E testing spanning multiple pages (use Playwright)
+- E2E testing spanning multiple pages (use your E2E solution)
 - Testing pure utility functions without Vue (use unit tests directly)
 - Visual regression testing (use visual testing tools)
-- Test runner configuration (use Vitest skill)
+- Test runner configuration (separate concern from component testing)
 
 **Key patterns covered:**
 
@@ -425,38 +425,6 @@ export * from "@vue/test-utils";
 See [examples/mocking.md](examples/mocking.md) for complete mocking examples.
 
 </patterns>
-
----
-
-<integration>
-
-## Integration Guide
-
-**Works with Vitest:**
-
-- Configure test setup file to import global plugins
-- Use `vi.mock()` for module mocking
-- `flushPromises` works with Vitest's fake timers
-
-**Works with Pinia:**
-
-- Use `@pinia/testing` package for `createTestingPinia()`
-- Actions are stubbed by default
-- Initialize state via `initialState` option
-
-**Works with Vue Router:**
-
-- Stub `RouterLink` and `RouterView` for unit tests
-- Use `router-mock` for integration tests requiring navigation
-- Access route params via global mocks
-
-**Works with Axios/Fetch:**
-
-- Mock at module level with `vi.mock()`
-- Use MSW for network-level mocking
-- Always use `flushPromises()` after async operations
-
-</integration>
 
 ---
 

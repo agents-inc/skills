@@ -69,7 +69,6 @@ export function ServerSideUserTable() {
   );
 
   // Use your data fetching solution here
-  // Example: const { data, isLoading } = useQuery({ queryKey: ['users', queryParams], queryFn: ... })
   const { data, isLoading } = useFetchUsers(queryParams);
 
   const columns = useMemo(
@@ -249,10 +248,7 @@ const queryParams = useMemo(
   [pagination, sorting, columnFilters],
 );
 
-// Use with React Query
-const { data, isLoading } = useQuery({
-  queryKey: ["users", queryParams],
-  queryFn: () => fetchUsers(queryParams),
-  keepPreviousData: true, // Prevent flicker during page changes
-});
+// Pass queryParams to your data fetching solution
+// Tip: Use keepPreviousData / placeholderData to prevent flicker during page changes
+const { data, isLoading } = useFetchUsers(queryParams);
 ```

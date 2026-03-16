@@ -47,81 +47,9 @@ export default preview;
 
 ---
 
-## JSDoc for Props Documentation
+## JSDoc for Autodocs
 
-### Component Props Documentation
-
-````typescript
-// button.tsx
-interface ButtonProps {
-  /**
-   * The visual style variant of the button
-   * @default "primary"
-   */
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "destructive";
-
-  /**
-   * The size of the button
-   * @default "md"
-   */
-  size?: "sm" | "md" | "lg";
-
-  /**
-   * Whether the button is disabled
-   * @default false
-   */
-  disabled?: boolean;
-
-  /**
-   * Shows a loading spinner and disables interaction
-   * @default false
-   */
-  isLoading?: boolean;
-
-  /**
-   * Icon to display before the button text
-   */
-  leftIcon?: React.ReactNode;
-
-  /**
-   * Icon to display after the button text
-   */
-  rightIcon?: React.ReactNode;
-
-  /**
-   * Handler called when the button is clicked
-   */
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-
-  /**
-   * The button content
-   */
-  children: React.ReactNode;
-}
-
-/**
- * Primary UI component for user interaction.
- *
- * Use buttons for actions in forms, dialogs, and more.
- * Buttons communicate the action that will occur when clicked.
- *
- * @example
- * ```tsx
- * <Button variant="primary" onClick={handleClick}>
- *   Click me
- * </Button>
- * ```
- */
-export function Button({
-  variant = "primary",
-  size = "md",
-  ...props
-}: ButtonProps) {
-  // Implementation
-}
-````
-
-**Why good:** JSDoc comments appear in autodocs props table, @default shows default values, component description shows in docs header
+JSDoc comments on component props and the component function itself appear automatically in the autodocs props table. Use `@default` to show default values. Component-level JSDoc appears as the docs page header description. This is standard JSDoc - the key insight is that Storybook reads it via `react-docgen`.
 
 ---
 
@@ -304,7 +232,7 @@ Use for dangerous or irreversible actions.
 
 ### Standalone Documentation Pages
 
-````mdx
+```mdx
 {/* docs/getting-started.mdx */}
 import { Meta } from "@storybook/blocks";
 
@@ -314,48 +242,10 @@ import { Meta } from "@storybook/blocks";
 
 This Storybook documents the components and patterns used in our application.
 
-## Quick Start
-
-Install the component library:
-
-```bash
-npm install @company/ui
-```
-````
-
-Import and use components:
-
-```tsx
-import { Button } from "@company/ui";
-
-function App() {
-  return <Button variant="primary">Click me</Button>;
-}
+{/* Rest of your documentation content */}
 ```
 
-## Principles
-
-### Consistency
-
-All components share common patterns for props, styling, and behavior.
-
-### Accessibility
-
-Every component is designed with accessibility in mind, following WCAG 2.1 guidelines.
-
-### Composability
-
-Components are designed to work together and can be combined in various ways.
-
-## Navigation
-
-- **Components** - Individual UI components
-- **Patterns** - Common usage patterns and compositions
-- **Tokens** - Design tokens (colors, spacing, typography)
-
-````
-
-**Why good:** Pure documentation pages without components, provides context and getting-started guides
+**Why good:** `<Meta title="..." />` creates docs-only pages in the sidebar without needing a component or stories file
 
 ---
 
@@ -369,65 +259,21 @@ import { Meta, ColorPalette, ColorItem } from "@storybook/blocks";
 
 # Colors
 
-Our color palette is designed for accessibility and consistency.
-
-## Primary Colors
-
 <ColorPalette>
   <ColorItem
     title="Primary"
     subtitle="--color-primary"
-    colors={{
-      50: "#eff6ff",
-      100: "#dbeafe",
-      200: "#bfdbfe",
-      300: "#93c5fd",
-      400: "#60a5fa",
-      500: "#3b82f6",
-      600: "#2563eb",
-      700: "#1d4ed8",
-      800: "#1e40af",
-      900: "#1e3a8a",
-    }}
+    colors={{ 500: "#3b82f6", 600: "#2563eb", 700: "#1d4ed8" }}
   />
-</ColorPalette>
-
-## Semantic Colors
-
-<ColorPalette>
   <ColorItem
     title="Success"
     subtitle="--color-success"
     colors={{ Default: "#10b981", Dark: "#059669" }}
   />
-  <ColorItem
-    title="Warning"
-    subtitle="--color-warning"
-    colors={{ Default: "#f59e0b", Dark: "#d97706" }}
-  />
-  <ColorItem
-    title="Error"
-    subtitle="--color-error"
-    colors={{ Default: "#ef4444", Dark: "#dc2626" }}
-  />
 </ColorPalette>
+```
 
-## Usage
-
-```css
-.button-primary {
-  background-color: var(--color-primary-500);
-  color: white;
-}
-
-.button-primary:hover {
-  background-color: var(--color-primary-600);
-}
-````
-
-````
-
-**Why good:** ColorPalette provides visual documentation, design tokens are documented alongside components
+**Why good:** `ColorPalette` and `ColorItem` blocks provide visual documentation of design tokens alongside components
 
 ---
 
@@ -447,7 +293,7 @@ const meta = {
   parameters: {
     docs: {
       source: {
-        type: "code",  // Shows actual source code
+        type: "code", // Shows actual source code
         // type: "dynamic",  // Shows rendered with current args
         // type: "auto",  // Storybook chooses (default)
       },
@@ -488,7 +334,7 @@ export const CustomSource: Story = {
     title: "Custom Title",
   },
 };
-````
+```
 
 **Why good:** Source code helps developers copy-paste examples, custom source shows cleaner examples
 

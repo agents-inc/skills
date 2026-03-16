@@ -18,7 +18,7 @@
 ### Good Example - Appropriate Log Levels
 
 ```typescript
-import { logger } from "@/lib/logger";
+import { logger } from "./logger";
 
 // debug: Development-only, filtered in production
 logger.debug({ userId, query }, "Search query parameters");
@@ -57,7 +57,7 @@ console.log("Something happened"); // No structured data, no level
 ### Good Example - Structured Logging with Context
 
 ```typescript
-import { logger } from "@/lib/logger";
+import { logger } from "./logger";
 
 const OPERATION_CREATE_JOB = "job.create";
 const OPERATION_SEARCH_JOBS = "job.search";

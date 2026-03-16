@@ -2,7 +2,7 @@
 
 > Decision frameworks, anti-patterns, and red flags for research methodology.
 
-**Navigation:** [Back to SKILL.md](SKILL.md) | [Core Examples](examples/core.md) | [Practical Examples](examples/practical.md)
+**Navigation:** [Back to SKILL.md](SKILL.md) | [Core Examples](examples/core.md)
 
 ---
 
@@ -94,7 +94,7 @@ Research must be grounded in actual file contents, not assumptions.
 ```markdown
 # WRONG - Speculation
 
-"Based on typical React Query patterns, this codebase likely uses..."
+"Based on typical data-fetching patterns, this codebase likely uses..."
 
 # CORRECT - Investigation
 
@@ -102,7 +102,7 @@ Read("/packages/api/src/queries/posts.ts")
 "Based on /packages/api/src/queries/posts.ts:12-30, this codebase uses..."
 ```
 
-**Why this matters:** Developer agents trust research findings. Speculation leads them down wrong paths.
+**Why this matters:** Downstream agents trust research findings. Speculation leads them down wrong paths.
 
 ---
 
@@ -148,25 +148,21 @@ Answer: [Auth flow, session handling, key files - nothing more]
 
 ### Implementation Instead of Research
 
-Research produces findings. Implementation is for developer agents.
+Research produces findings, not implementation code.
 
-`````markdown
+```markdown
 # WRONG - Implementation in research
 
 "Here's how to implement the feature:
-
-````typescript
-export const NewComponent = () => { ... }
-```"
+export const NewComponent = () => { ... }"
 
 # CORRECT - Research findings
+
 "Similar implementations exist at:
+
 1. /path/to/similar.tsx:12-45 - Best reference
 2. /path/to/variant.tsx:8-30 - Alternative approach"
-````
-`````
-
-`````
+```
 
 **Why this matters:** Research informs implementation; it doesn't replace it.
 
@@ -186,126 +182,3 @@ Before finalizing research findings:
 - [ ] Usage counts provided where applicable
 - [ ] Gaps and inconsistencies noted
 - [ ] No implementation code (findings only)
-
----
-
-## Tool Reference
-
-### Glob - File Discovery
-
-```bash
-# Find by extension
-Glob("**/*.tsx")
-
-# Find by name pattern
-Glob("**/auth*.ts")
-
-# Find in specific directory
-Glob("packages/ui/src/**/*.tsx")
-```
-
-### Grep - Content Search
-
-```bash
-# Search for pattern
-Grep("useQuery", "packages/api/")
-
-# Count occurrences
-Grep("forwardRef", "packages/ui/") -> X matches
-
-# Search specific file types
-Grep("export const", "**/*.ts")
-```
-
-### Read - File Examination
-
-```bash
-# Read entire file
-Read("/path/to/file.tsx")
-
-# Note specific lines
-# Lines 12-45: Pattern implementation
-# Lines 67-89: Error handling
-```
-
-### Bash - Read-Only Commands
-
-```bash
-# Count files
-find packages/ui -name "*.tsx" | wc -l
-
-# List directory structure
-ls -la packages/api/src/routes/
-
-# Check file existence
-test -f /path/to/file.tsx && echo "exists"
-```
-
----
-
-## Output Templates
-
-### Pattern Discovery
-
-````markdown
-## Pattern: [Name]
-
-**Location:** `/path/to/file.tsx:12-45`
-**Frequency:** X instances in Y files
-**Description:** [What the pattern does]
-
-**Implementation:**
-
-```typescript
-// From /path/to/file.tsx:15-25
-[Actual code]
-```
-`````
-
-**Variations:**
-
-- Variation A: `/path/to/alt1.tsx:8-20`
-- Variation B: `/path/to/alt2.tsx:30-45`
-
-````
-
-### Inventory Report
-
-```markdown
-## [Category] Inventory
-
-| Item | Location | Lines | Description |
-|------|----------|-------|-------------|
-| [Name] | [/path] | [X-Y] | [Brief] |
-| [Name] | [/path] | [X-Y] | [Brief] |
-
-**Total:** X items in Y files
-**Verified:** Yes
-````
-
-### Implementation Research
-
-```markdown
-## How [Feature] Works
-
-### Entry Point
-
-**File:** `/path/to/entry.tsx:12-30`
-**Description:** [What happens first]
-
-### Core Logic
-
-**File:** `/path/to/logic.ts:45-89`
-**Description:** [Main processing]
-
-### Output
-
-**File:** `/path/to/output.tsx:100-120`
-**Description:** [Final result]
-
-### Files to Reference
-
-1. `/path/to/entry.tsx` - Start here
-2. `/path/to/logic.ts` - Core implementation
-3. `/path/to/output.tsx` - Output handling
-```

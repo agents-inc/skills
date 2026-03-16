@@ -81,7 +81,8 @@ const formatted = format(futureDate, "yyyy-MM-dd HH:mm zzz");
 ### Good Example - transpose Function (v4)
 
 ```typescript
-import { TZDate, tz, transpose } from "@date-fns/tz";
+import { transpose } from "date-fns";
+import { TZDate, tz } from "@date-fns/tz";
 
 const TZ_TOKYO = "Asia/Tokyo";
 const TZ_NEW_YORK = "America/New_York";

@@ -1,6 +1,6 @@
 {
   "name": "web-animation-view-transitions",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "View Transitions API patterns - same-document transitions, cross-document MPA transitions, shared element animations, pseudo-element styling, accessibility",
   "author": {

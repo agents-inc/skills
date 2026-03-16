@@ -69,7 +69,7 @@ How should I define story content?
 ```
 What type of testing should this story have?
 ├─ Visual appearance testing?
-│   └─ Use Chromatic/Percy (visual regression)
+│   └─ Use visual regression tool (via chromatic parameters)
 │       parameters: { chromatic: { viewports: [320, 768, 1200] } }
 │
 ├─ Interaction testing (click, type, etc.)?
@@ -536,16 +536,16 @@ export const WithDiscount: Story = {
 
 ### Recommended Additional Addons
 
-| Addon                           | Purpose                                   | Installation                                |
-| ------------------------------- | ----------------------------------------- | ------------------------------------------- |
-| `@storybook/addon-a11y`         | Accessibility testing                     | `npm i -D @storybook/addon-a11y`            |
-| `@storybook/addon-interactions` | Play function panel                       | `npm i -D @storybook/addon-interactions`    |
-| `@storybook/addon-vitest`       | Vitest integration (replaces test-runner) | `npx storybook add @storybook/addon-vitest` |
-| `@storybook/addon-links`        | Story cross-linking                       | `npm i -D @storybook/addon-links`           |
-| `@storybook/addon-designs`      | Figma embed                               | `npm i -D @storybook/addon-designs`         |
-| `@chromatic-com/storybook`      | Visual testing                            | `npm i -D @chromatic-com/storybook`         |
+| Addon                           | Purpose                           | Installation                                |
+| ------------------------------- | --------------------------------- | ------------------------------------------- |
+| `@storybook/addon-a11y`         | Accessibility testing             | `npm i -D @storybook/addon-a11y`            |
+| `@storybook/addon-interactions` | Play function panel               | `npm i -D @storybook/addon-interactions`    |
+| `@storybook/addon-vitest`       | Test addon (replaces test-runner) | `npx storybook add @storybook/addon-vitest` |
+| `@storybook/addon-links`        | Story cross-linking               | `npm i -D @storybook/addon-links`           |
+| `@storybook/addon-designs`      | Figma embed                       | `npm i -D @storybook/addon-designs`         |
+| `@chromatic-com/storybook`      | Visual testing                    | `npm i -D @chromatic-com/storybook`         |
 
-> **Note:** `@storybook/test-runner` has been superseded by `@storybook/addon-vitest` for Vite-based projects. The Vitest addon provides the same functionality powered by Vitest's browser mode and includes Storybook UI integration.
+> **Note:** `@storybook/test-runner` has been superseded by the Storybook test addon (`@storybook/addon-vitest`) for Vite-based projects. It provides the same functionality via browser mode with Storybook UI integration.
 
 ---
 
@@ -614,14 +614,14 @@ canvas.getByTestId("custom-element");
 | ---------------------------- | ----------------- | ----------------------------------------------------- |
 | `storiesOf` API              | Removed           | Use CSF 3.0 format                                    |
 | `.stories.mdx` format        | Removed           | Split into separate `.stories.tsx` and `.mdx` files   |
-| Storyshots addon             | Removed           | Use `@storybook/addon-vitest` or Chromatic            |
+| Storyshots addon             | Removed           | Use Storybook test addon or visual testing tool       |
 | `@storybook/testing-library` | Deprecated        | Use `@storybook/test`                                 |
 | `@storybook/jest`            | Deprecated        | Use `@storybook/test`                                 |
 | `docs.autodocs` in main.ts   | Deprecated        | Use `tags: ["autodocs"]` in preview.ts                |
 | `globals` in preview.ts      | Deprecated (8.2+) | Use `initialGlobals`                                  |
 | `globalTypes.defaultValue`   | Deprecated (8.2+) | Use `initialGlobals` to set default values            |
 | `argTypesRegex` for actions  | Limited           | Cannot be used in play functions; use explicit `fn()` |
-| `@storybook/test-runner`     | Superseded (8.4+) | Use `@storybook/addon-vitest` for Vite projects       |
+| `@storybook/test-runner`     | Superseded (8.4+) | Use Storybook test addon for Vite projects            |
 
 ### Package Consolidations
 
@@ -640,12 +640,12 @@ canvas.getByTestId("custom-element");
   - Limitation: Cannot extract types imported from other files
   - Use `react-docgen-typescript` if you need imported type support
 
-### CSF Factories (Future)
+### CSF Factories (Storybook 10+)
 
-CSF Factories is the next evolution of CSF, providing better TypeScript ergonomics. However, CSF 3.0 remains fully supported. Migration is optional and can be done incrementally.
+CSF Factories is an alternative story format available in Storybook 10+ with better TypeScript ergonomics. CSF 3.0 remains fully supported and is not deprecated. Migration is optional and can be done incrementally. Currently React only.
 
 ```typescript
-// CSF Factories preview (Storybook 10+)
+// CSF Factories (Storybook 10+)
 import preview from "#.storybook/preview";
 
 const meta = preview.meta({
@@ -656,3 +656,5 @@ export const Primary = meta.story({
   args: { primary: true },
 });
 ```
+
+> **Note:** CSF Factories are "preview" status in Storybook 10. No default export needed. Vue/Angular/Web Components support expected in 10.x releases.

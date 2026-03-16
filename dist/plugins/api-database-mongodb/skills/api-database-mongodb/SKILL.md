@@ -50,9 +50,9 @@ description: MongoDB with Mongoose ODM - schemas, models, queries, aggregation, 
 
 **When NOT to use:**
 
-- Relational data with complex joins and foreign key constraints (use PostgreSQL/Drizzle)
+- Relational data with complex joins and foreign key constraints (use a relational database)
 - ACID transactions across many collections as a core pattern (use a relational database)
-- Simple key-value storage (use Redis)
+- Simple key-value storage (use a dedicated key-value store)
 
 **Detailed Resources:**
 
@@ -105,7 +105,7 @@ MongoDB is a document database. Mongoose provides schema-based modeling on top o
 
 **When NOT to use:**
 
-- Highly relational data with complex joins (use PostgreSQL)
+- Highly relational data with complex joins (use a relational database)
 - Strong ACID guarantees across many collections as a primary pattern
 - Fixed schemas where relational constraints are critical
 - Time-series data at scale (use a dedicated time-series database)
@@ -497,6 +497,7 @@ export { productSchema };
 - Using `Schema.Types.ObjectId` in TypeScript interfaces instead of `Types.ObjectId` -- `Schema.Types.ObjectId` is for schema definitions, `Types.ObjectId` is for interfaces
 - Not handling duplicate key errors (code 11000) from unique indexes
 - Calling `.lean()` on write operations -- lean is for reads only
+- Checking `doc.isNew` in `post('save')` hooks -- always `false` after save, use `this.$locals.wasNew` set in a `pre('save')` hook
 
 **Gotchas & Edge Cases:**
 
@@ -505,6 +506,8 @@ export { productSchema };
 - `deleteOne` / `deleteMany` do not trigger `pre('remove')` middleware -- use `findOneAndDelete` or document `.deleteOne()` if you need middleware
 - Virtual properties are excluded from `toJSON()` / `toObject()` by default -- set `{ toJSON: { virtuals: true } }` in schema options
 - Mongoose 9 dropped callback-based `next()` in pre hooks -- use async/await instead
+- Mongoose 9 renamed `FilterQuery` to `QueryFilter` -- update TypeScript imports if upgrading
+- Mongoose 9 requires `updatePipeline: true` for pipeline-style updates -- they throw by default
 
 </red_flags>
 
