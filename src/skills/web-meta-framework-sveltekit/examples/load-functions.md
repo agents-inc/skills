@@ -10,17 +10,17 @@
 
 ```typescript
 // src/routes/products/+page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 const PRODUCTS_PER_PAGE = 20;
 
 export const load: PageServerLoad = async ({ url, locals }) => {
-  const page = Number(url.searchParams.get('page') ?? '1');
-  const category = url.searchParams.get('category');
+  const page = Number(url.searchParams.get("page") ?? "1");
+  const category = url.searchParams.get("category");
 
   if (page < 1 || !Number.isInteger(page)) {
-    error(400, 'Invalid page number');
+    error(400, "Invalid page number");
   }
 
   const offset = (page - 1) * PRODUCTS_PER_PAGE;
@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       where,
       take: PRODUCTS_PER_PAGE,
       skip: offset,
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
     db.product.count({ where }),
   ]);
@@ -59,8 +59,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 ```typescript
 // src/routes/weather/[city]/+page.ts
-import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch, params }) => {
   // SvelteKit's enhanced fetch:
@@ -68,7 +68,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
   // - Auto-deduplicates identical requests
   // - Inherits cookies for same-origin requests
   const response = await fetch(
-    `https://api.weather.com/v1/forecast?city=${encodeURIComponent(params.city)}`
+    `https://api.weather.com/v1/forecast?city=${encodeURIComponent(params.city)}`,
   );
 
   if (!response.ok) {
@@ -109,7 +109,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 
 ```typescript
 // src/routes/+layout.server.ts
-import type { LayoutServerLoad } from './$types';
+import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   return {
@@ -120,12 +120,12 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 ```typescript
 // src/routes/dashboard/+layout.server.ts
-import { redirect } from '@sveltejs/kit';
-import type { LayoutServerLoad } from './$types';
+import { redirect } from "@sveltejs/kit";
+import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   if (!locals.user) {
-    redirect(303, '/login');
+    redirect(303, "/login");
   }
 
   const [notifications, teams] = await Promise.all([
@@ -184,7 +184,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 ```typescript
 // src/routes/dashboard/+page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
   // FAST: Await critical data (blocks initial render)
@@ -200,14 +200,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   const activityPromise = db.activity.findMany({
     where: { userId: locals.user.id },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: 50,
   });
 
   return {
-    user,                             // Available immediately
-    analytics: analyticsPromise,      // Streams when ready
-    activity: activityPromise,        // Streams when ready
+    user, // Available immediately
+    analytics: analyticsPromise, // Streams when ready
+    activity: activityPromise, // Streams when ready
   };
 };
 ```
@@ -261,7 +261,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 ```typescript
 // src/routes/dashboard/analytics/+page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
   // Fetch independent data first (don't create waterfall)
@@ -272,9 +272,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 
   // Use parent data for additional queries
   const teamAnalytics = await Promise.all(
-    teams.map(team =>
-      db.analytics.getTeamSummary(team.id)
-    )
+    teams.map((team) => db.analytics.getTeamSummary(team.id)),
   );
 
   return {
@@ -310,15 +308,15 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 
 ```typescript
 // src/routes/notifications/+page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, depends }) => {
   // Register custom dependency
-  depends('app:notifications');
+  depends("app:notifications");
 
   const notifications = await db.notification.findMany({
     where: { userId: locals.user.id },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   return { notifications };
@@ -372,14 +370,14 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 
 ```typescript
 // src/routes/dashboard/+page.ts
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch }) => {
   // SvelteKit's fetch makes internal API calls efficient:
   // - On server: Calls handler directly (no HTTP round-trip)
   // - On client: Normal HTTP request
   // - Cookies are inherited automatically
-  const response = await fetch('/api/stats');
+  const response = await fetch("/api/stats");
   const stats = await response.json();
 
   return { stats };

@@ -279,10 +279,18 @@ const products = defineCollection({
     const data = await response.json();
 
     // Loader must return array of objects with `id` property
-    return data.map((product: { slug: string; name: string; price: number; description: string; category: string }) => ({
-      id: product.slug,
-      ...product,
-    }));
+    return data.map(
+      (product: {
+        slug: string;
+        name: string;
+        price: number;
+        description: string;
+        category: string;
+      }) => ({
+        id: product.slug,
+        ...product,
+      }),
+    );
   },
   schema: z.object({
     name: z.string(),

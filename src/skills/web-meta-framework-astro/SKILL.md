@@ -1,5 +1,5 @@
 ---
-name: web-framework-astro
+name: web-meta-framework-astro
 description: Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support
 ---
 
@@ -281,13 +281,13 @@ By default, framework components (React, Vue, Svelte) render to static HTML. Add
 
 #### Client Directive Reference
 
-| Directive        | When it hydrates                        | Use for                         |
-| ---------------- | --------------------------------------- | ------------------------------- |
-| `client:load`    | Immediately on page load                | Critical interactive UI         |
-| `client:idle`    | When browser is idle                    | Lower-priority interactivity    |
-| `client:visible` | When component scrolls into viewport    | Below-the-fold content          |
-| `client:media`   | When media query matches                | Responsive interactivity        |
-| `client:only`    | Skips server render, client-only        | Browser-dependent components    |
+| Directive        | When it hydrates                     | Use for                      |
+| ---------------- | ------------------------------------ | ---------------------------- |
+| `client:load`    | Immediately on page load             | Critical interactive UI      |
+| `client:idle`    | When browser is idle                 | Lower-priority interactivity |
+| `client:visible` | When component scrolls into viewport | Below-the-fold content       |
+| `client:media`   | When media query matches             | Responsive interactivity     |
+| `client:only`    | Skips server render, client-only     | Browser-dependent components |
 
 ```astro
 ---

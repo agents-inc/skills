@@ -245,7 +245,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (!body.title || !body.content) {
     return new Response(
       JSON.stringify({ error: "Title and content are required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
 

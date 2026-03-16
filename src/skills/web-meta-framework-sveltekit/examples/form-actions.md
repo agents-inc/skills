@@ -10,22 +10,22 @@
 
 ```typescript
 // src/routes/posts/new/+page.server.ts
-import { fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
-import { z } from 'zod';
+import { fail, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
+import { z } from "zod";
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_CONTENT_LENGTH = 50_000;
 
 const CreatePostSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(MAX_TITLE_LENGTH),
-  content: z.string().min(1, 'Content is required').max(MAX_CONTENT_LENGTH),
-  published: z.enum(['true', 'false']).transform(v => v === 'true'),
+  title: z.string().min(1, "Title is required").max(MAX_TITLE_LENGTH),
+  content: z.string().min(1, "Content is required").max(MAX_CONTENT_LENGTH),
+  published: z.enum(["true", "false"]).transform((v) => v === "true"),
 });
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) {
-    redirect(303, '/login');
+    redirect(303, "/login");
   }
 
   return { user: locals.user };
@@ -35,15 +35,15 @@ export const actions: Actions = {
   default: async ({ request, locals }) => {
     // 1. Auth check
     if (!locals.user) {
-      return fail(401, { message: 'You must be logged in' });
+      return fail(401, { message: "You must be logged in" });
     }
 
     // 2. Parse form data
     const formData = await request.formData();
     const rawData = {
-      title: formData.get('title')?.toString() ?? '',
-      content: formData.get('content')?.toString() ?? '',
-      published: formData.get('published')?.toString() ?? 'false',
+      title: formData.get("title")?.toString() ?? "",
+      content: formData.get("content")?.toString() ?? "",
+      published: formData.get("published")?.toString() ?? "false",
     };
 
     // 3. Validate
@@ -69,12 +69,12 @@ export const actions: Actions = {
     } catch (err) {
       return fail(500, {
         ...rawData,
-        message: 'Failed to create post. Please try again.',
+        message: "Failed to create post. Please try again.",
       });
     }
 
     // 5. Redirect (OUTSIDE try/catch — redirect throws)
-    redirect(303, '/posts');
+    redirect(303, "/posts");
   },
 };
 ```
@@ -150,8 +150,8 @@ export const actions: Actions = {
 
 ```typescript
 // src/routes/settings/+page.server.ts
-import { fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import { fail } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
   const user = await db.user.findUnique({
@@ -164,11 +164,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
   updateProfile: async ({ request, locals }) => {
     const data = await request.formData();
-    const name = data.get('name')?.toString() ?? '';
-    const bio = data.get('bio')?.toString() ?? '';
+    const name = data.get("name")?.toString() ?? "";
+    const bio = data.get("bio")?.toString() ?? "";
 
     if (!name) {
-      return fail(400, { name, bio, profileError: 'Name is required' });
+      return fail(400, { name, bio, profileError: "Name is required" });
     }
 
     await db.user.update({
@@ -181,15 +181,15 @@ export const actions: Actions = {
 
   updateEmail: async ({ request, locals }) => {
     const data = await request.formData();
-    const email = data.get('email')?.toString() ?? '';
+    const email = data.get("email")?.toString() ?? "";
 
-    if (!email.includes('@')) {
-      return fail(400, { email, emailError: 'Invalid email address' });
+    if (!email.includes("@")) {
+      return fail(400, { email, emailError: "Invalid email address" });
     }
 
     const existing = await db.user.findUnique({ where: { email } });
     if (existing && existing.id !== locals.user.id) {
-      return fail(400, { email, emailError: 'Email already in use' });
+      return fail(400, { email, emailError: "Email already in use" });
     }
 
     await db.user.update({
@@ -202,9 +202,9 @@ export const actions: Actions = {
 
   deleteAccount: async ({ locals, cookies }) => {
     await db.user.delete({ where: { id: locals.user.id } });
-    cookies.delete('session', { path: '/' });
+    cookies.delete("session", { path: "/" });
 
-    redirect(303, '/');
+    redirect(303, "/");
   },
 };
 ```
@@ -378,30 +378,30 @@ export const actions: Actions = {
 
 ```typescript
 // src/routes/posts/+page.server.ts
-import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { fail } from "@sveltejs/kit";
+import type { Actions } from "./$types";
 
 export const actions: Actions = {
   delete: async ({ request, locals }) => {
     if (!locals.user) {
-      return fail(401, { message: 'Unauthorized' });
+      return fail(401, { message: "Unauthorized" });
     }
 
     const data = await request.formData();
-    const postId = data.get('id')?.toString();
+    const postId = data.get("id")?.toString();
 
     if (!postId) {
-      return fail(400, { message: 'Post ID required' });
+      return fail(400, { message: "Post ID required" });
     }
 
     const post = await db.post.findUnique({ where: { id: postId } });
 
     if (!post) {
-      return fail(404, { message: 'Post not found' });
+      return fail(404, { message: "Post not found" });
     }
 
     if (post.authorId !== locals.user.id) {
-      return fail(403, { message: 'Not authorized to delete this post' });
+      return fail(403, { message: "Not authorized to delete this post" });
     }
 
     await db.post.delete({ where: { id: postId } });
@@ -444,11 +444,11 @@ export const actions: Actions = {
     try {
       const result = await createResource(data, locals.user.id);
     } catch (err) {
-      return fail(500, { message: 'Failed to create resource' });
+      return fail(500, { message: "Failed to create resource" });
     }
 
     // Redirect OUTSIDE try/catch
-    redirect(303, '/resources');
+    redirect(303, "/resources");
   },
 };
 ```
@@ -461,9 +461,9 @@ export const actions: Actions = {
   default: async ({ request }) => {
     try {
       await createResource(data);
-      redirect(303, '/resources'); // Caught by catch block!
+      redirect(303, "/resources"); // Caught by catch block!
     } catch (err) {
-      return fail(500, { message: 'Failed' }); // Catches redirect too!
+      return fail(500, { message: "Failed" }); // Catches redirect too!
     }
   },
 };

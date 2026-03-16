@@ -12,11 +12,11 @@
 
 ```typescript
 // src/routes/+page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {
   const posts = await db.post.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: 5,
   });
 
@@ -168,8 +168,8 @@ src/routes/blog/[slug]/
 
 ```typescript
 // src/routes/blog/[slug]/+page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
   const post = await db.post.findUnique({
@@ -178,7 +178,7 @@ export const load: PageServerLoad = async ({ params }) => {
   });
 
   if (!post) {
-    error(404, 'Post not found');
+    error(404, "Post not found");
   }
 
   return { post };
@@ -219,23 +219,23 @@ src/routes/docs/[...path]/
 
 ```typescript
 // src/routes/docs/[...path]/+page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
   // params.path is "getting-started/installation" for /docs/getting-started/installation
-  const segments = params.path.split('/');
+  const segments = params.path.split("/");
   const doc = await loadDocument(segments);
 
   if (!doc) {
-    error(404, 'Documentation page not found');
+    error(404, "Documentation page not found");
   }
 
   return {
     doc,
     breadcrumbs: segments.map((s, i) => ({
-      label: s.replace(/-/g, ' '),
-      href: '/docs/' + segments.slice(0, i + 1).join('/'),
+      label: s.replace(/-/g, " "),
+      href: "/docs/" + segments.slice(0, i + 1).join("/"),
     })),
   };
 };
@@ -323,7 +323,7 @@ Validate route parameters with custom matchers.
 
 ```typescript
 // src/params/integer.ts
-import type { ParamMatcher } from '@sveltejs/kit';
+import type { ParamMatcher } from "@sveltejs/kit";
 
 export const match: ParamMatcher = (param) => {
   return /^\d+$/.test(param);

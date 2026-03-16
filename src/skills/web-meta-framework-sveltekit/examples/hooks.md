@@ -10,11 +10,11 @@
 
 ```typescript
 // src/hooks.server.ts
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
   // 1. Extract session from cookie
-  const sessionId = event.cookies.get('session');
+  const sessionId = event.cookies.get("session");
 
   if (sessionId) {
     // 2. Verify session and attach user to locals
@@ -32,7 +32,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       };
     } else if (session) {
       // Expired session — clean up
-      event.cookies.delete('session', { path: '/' });
+      event.cookies.delete("session", { path: "/" });
     }
   }
 
@@ -75,11 +75,11 @@ export {};
 
 ```typescript
 // src/hooks.server.ts
-import { sequence } from '@sveltejs/kit/hooks';
-import type { Handle } from '@sveltejs/kit';
+import { sequence } from "@sveltejs/kit/hooks";
+import type { Handle } from "@sveltejs/kit";
 
 const handleAuth: Handle = async ({ event, resolve }) => {
-  const sessionId = event.cookies.get('session');
+  const sessionId = event.cookies.get("session");
 
   if (sessionId) {
     const user = await getUserFromSession(sessionId);
@@ -95,7 +95,9 @@ const handleLogging: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
 
   const duration = Math.round(performance.now() - start);
-  console.log(`${event.request.method} ${event.url.pathname} — ${response.status} (${duration}ms)`);
+  console.log(
+    `${event.request.method} ${event.url.pathname} — ${response.status} (${duration}ms)`,
+  );
 
   return response;
 };
@@ -103,15 +105,19 @@ const handleLogging: Handle = async ({ event, resolve }) => {
 const handleSecurityHeaders: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
 
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
   return response;
 };
 
 // sequence runs hooks in order
-export const handle = sequence(handleAuth, handleLogging, handleSecurityHeaders);
+export const handle = sequence(
+  handleAuth,
+  handleLogging,
+  handleSecurityHeaders,
+);
 ```
 
 **Why good:** `sequence` composes multiple hooks cleanly, each hook has single responsibility, logging measures actual response time, security headers on all responses
@@ -124,16 +130,21 @@ export const handle = sequence(handleAuth, handleLogging, handleSecurityHeaders)
 
 ```typescript
 // src/hooks.server.ts
-import type { HandleServerError } from '@sveltejs/kit';
+import type { HandleServerError } from "@sveltejs/kit";
 
-export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+export const handleError: HandleServerError = async ({
+  error,
+  event,
+  status,
+  message,
+}) => {
   // Log error to external service
   const errorId = crypto.randomUUID();
 
   console.error(`[${errorId}] ${status} ${event.url.pathname}:`, error);
 
   // In production, send to error tracking
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     await reportErrorToService({
       errorId,
       error,
@@ -145,7 +156,7 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 
   // Return user-safe error (never expose internal details)
   return {
-    message: 'An unexpected error occurred',
+    message: "An unexpected error occurred",
     code: errorId,
   };
 };
@@ -153,15 +164,19 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 
 ```typescript
 // src/hooks.client.ts
-import type { HandleClientError } from '@sveltejs/kit';
+import type { HandleClientError } from "@sveltejs/kit";
 
-export const handleError: HandleClientError = async ({ error, status, message }) => {
+export const handleError: HandleClientError = async ({
+  error,
+  status,
+  message,
+}) => {
   const errorId = crypto.randomUUID();
 
   console.error(`[${errorId}] Client error:`, error);
 
   return {
-    message: 'Something went wrong',
+    message: "Something went wrong",
     code: errorId,
   };
 };
@@ -177,25 +192,25 @@ export const handleError: HandleClientError = async ({ error, status, message })
 
 ```typescript
 // src/hooks.server.ts
-import type { HandleFetch } from '@sveltejs/kit';
+import type { HandleFetch } from "@sveltejs/kit";
 
 export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
   // During SSR, rewrite public API URL to internal URL
   // (avoids going through load balancer)
-  if (request.url.startsWith('https://api.myapp.com/')) {
+  if (request.url.startsWith("https://api.myapp.com/")) {
     const internalUrl = request.url.replace(
-      'https://api.myapp.com/',
-      'http://api-internal:3000/'
+      "https://api.myapp.com/",
+      "http://api-internal:3000/",
     );
 
     request = new Request(internalUrl, request);
   }
 
   // Forward auth headers to API
-  if (request.url.startsWith('http://api-internal:3000/')) {
-    const sessionId = event.cookies.get('session');
+  if (request.url.startsWith("http://api-internal:3000/")) {
+    const sessionId = event.cookies.get("session");
     if (sessionId) {
-      request.headers.set('Authorization', `Bearer ${sessionId}`);
+      request.headers.set("Authorization", `Bearer ${sessionId}`);
     }
   }
 
@@ -213,29 +228,29 @@ export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
 
 ```typescript
 // src/hooks.server.ts
-import { redirect, type Handle } from '@sveltejs/kit';
+import { redirect, type Handle } from "@sveltejs/kit";
 
-const PROTECTED_PATHS = ['/dashboard', '/settings', '/admin'];
-const ADMIN_PATHS = ['/admin'];
+const PROTECTED_PATHS = ["/dashboard", "/settings", "/admin"];
+const ADMIN_PATHS = ["/admin"];
 
 export const handle: Handle = async ({ event, resolve }) => {
   // Auth check
-  const sessionId = event.cookies.get('session');
+  const sessionId = event.cookies.get("session");
   const user = sessionId ? await getUserFromSession(sessionId) : null;
   event.locals.user = user;
 
   const { pathname } = event.url;
 
   // Check protected routes
-  const isProtected = PROTECTED_PATHS.some(path => pathname.startsWith(path));
+  const isProtected = PROTECTED_PATHS.some((path) => pathname.startsWith(path));
   if (isProtected && !user) {
     redirect(303, `/login?redirectTo=${encodeURIComponent(pathname)}`);
   }
 
   // Check admin routes
-  const isAdmin = ADMIN_PATHS.some(path => pathname.startsWith(path));
-  if (isAdmin && user?.role !== 'admin') {
-    redirect(303, '/dashboard');
+  const isAdmin = ADMIN_PATHS.some((path) => pathname.startsWith(path));
+  if (isAdmin && user?.role !== "admin") {
+    redirect(303, "/dashboard");
   }
 
   return resolve(event);
@@ -252,25 +267,25 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ```typescript
 // src/hooks.server.ts
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const theme = event.cookies.get('theme') ?? 'light';
+  const theme = event.cookies.get("theme") ?? "light";
 
   const response = await resolve(event, {
     // Transform HTML chunks
     transformPageChunk: ({ html }) => {
-      return html.replace('%theme%', theme);
+      return html.replace("%theme%", theme);
     },
 
     // Control which headers are serialized for server load responses
     filterSerializedResponseHeaders: (name) => {
-      return name === 'content-type' || name === 'cache-control';
+      return name === "content-type" || name === "cache-control";
     },
 
     // Control preloading
     preload: ({ type }) => {
-      return type === 'font' || type === 'js' || type === 'css';
+      return type === "font" || type === "js" || type === "css";
     },
   });
 
@@ -281,8 +296,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 ```html
 <!-- src/app.html -->
 <html data-theme="%theme%">
-  <head>...</head>
-  <body>%sveltekit.body%</body>
+  <head>
+    ...
+  </head>
+  <body>
+    %sveltekit.body%
+  </body>
 </html>
 ```
 

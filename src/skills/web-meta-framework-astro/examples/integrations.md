@@ -317,7 +317,11 @@ export default defineConfig({
     starlight({
       title: "My Docs",
       social: [
-        { icon: "github", label: "GitHub", href: "https://github.com/my-org/my-project" },
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/my-org/my-project",
+        },
       ],
       sidebar: [
         {

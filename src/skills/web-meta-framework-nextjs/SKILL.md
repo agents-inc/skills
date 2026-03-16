@@ -1,5 +1,5 @@
 ---
-name: web-framework-nextjs
+name: web-meta-framework-nextjs
 description: Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Server Actions, mutations, revalidation, form handling
 ---
 

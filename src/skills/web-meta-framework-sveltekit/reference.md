@@ -163,21 +163,21 @@ Does the load function fetch multiple data sources?
 
 ### Load Function Inputs
 
-| Property | Server Load | Universal Load | Description |
-|----------|:-----------:|:--------------:|-------------|
-| `params` | Yes | Yes | Route parameters |
-| `url` | Yes | Yes | URL instance |
-| `route` | Yes | Yes | Route info |
-| `fetch` | Yes | Yes | Enhanced fetch |
-| `depends` | Yes | Yes | Custom invalidation |
-| `parent` | Yes | Yes | Parent load data |
-| `untrack` | Yes | Yes | Exclude from tracking |
-| `setHeaders` | Yes | Yes | Set response headers |
-| `cookies` | Yes | No | Cookie access |
-| `locals` | Yes | No | Request-local data |
-| `request` | Yes | No | Raw Request object |
-| `platform` | Yes | No | Platform-specific data |
-| `clientAddress` | Yes | No | Client IP address |
+| Property        | Server Load | Universal Load | Description            |
+| --------------- | :---------: | :------------: | ---------------------- |
+| `params`        |     Yes     |      Yes       | Route parameters       |
+| `url`           |     Yes     |      Yes       | URL instance           |
+| `route`         |     Yes     |      Yes       | Route info             |
+| `fetch`         |     Yes     |      Yes       | Enhanced fetch         |
+| `depends`       |     Yes     |      Yes       | Custom invalidation    |
+| `parent`        |     Yes     |      Yes       | Parent load data       |
+| `untrack`       |     Yes     |      Yes       | Exclude from tracking  |
+| `setHeaders`    |     Yes     |      Yes       | Set response headers   |
+| `cookies`       |     Yes     |       No       | Cookie access          |
+| `locals`        |     Yes     |       No       | Request-local data     |
+| `request`       |     Yes     |       No       | Raw Request object     |
+| `platform`      |     Yes     |       No       | Platform-specific data |
+| `clientAddress` |     Yes     |       No       | Client IP address      |
 
 ### Form Action Response Checklist
 
@@ -193,41 +193,47 @@ Does the load function fetch multiple data sources?
 
 ```typescript
 // Kit utilities
-import { error, fail, redirect, json, text } from '@sveltejs/kit';
+import { error, fail, redirect, json, text } from "@sveltejs/kit";
 
 // Client navigation
-import { goto, invalidate, invalidateAll, beforeNavigate, afterNavigate } from '$app/navigation';
+import {
+  goto,
+  invalidate,
+  invalidateAll,
+  beforeNavigate,
+  afterNavigate,
+} from "$app/navigation";
 
 // Forms
-import { enhance, applyAction, deserialize } from '$app/forms';
+import { enhance, applyAction, deserialize } from "$app/forms";
 
 // State (Svelte 5 — replaces $app/stores)
-import { page, navigating, updated } from '$app/state';
+import { page, navigating, updated } from "$app/state";
 
 // Environment
-import { env } from '$env/dynamic/private';   // Server only
-import { env } from '$env/dynamic/public';    // Both
-import { SECRET_KEY } from '$env/static/private';  // Server only, build-time
-import { PUBLIC_API_URL } from '$env/static/public'; // Both, build-time
+import { env } from "$env/dynamic/private"; // Server only
+import { env } from "$env/dynamic/public"; // Both
+import { SECRET_KEY } from "$env/static/private"; // Server only, build-time
+import { PUBLIC_API_URL } from "$env/static/public"; // Both, build-time
 
 // Auto-generated types
-import type { PageServerLoad, Actions } from './$types';
-import type { PageLoad } from './$types';
-import type { LayoutServerLoad } from './$types';
-import type { RequestHandler } from './$types';
-import type { PageProps, LayoutProps } from './$types';
+import type { PageServerLoad, Actions } from "./$types";
+import type { PageLoad } from "./$types";
+import type { LayoutServerLoad } from "./$types";
+import type { RequestHandler } from "./$types";
+import type { PageProps, LayoutProps } from "./$types";
 ```
 
 ### Page Options
 
 ```typescript
 // In +page.ts, +page.server.ts, +layout.ts, or +layout.server.ts
-export const prerender = true;       // Static HTML at build time
-export const ssr = false;            // Client-only rendering
-export const csr = false;            // No JavaScript (static page)
+export const prerender = true; // Static HTML at build time
+export const ssr = false; // Client-only rendering
+export const csr = false; // No JavaScript (static page)
 
 // Combined patterns
-export const prerender = true;       // Pre-render
-export const ssr = true;             // Required for prerender
-export const csr = false;            // Pure static (no JS)
+export const prerender = true; // Pre-render
+export const ssr = true; // Required for prerender
+export const csr = false; // Pure static (no JS)
 ```

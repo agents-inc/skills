@@ -1,5 +1,5 @@
 ---
-name: web-framework-sveltekit
+name: web-meta-framework-sveltekit
 description: SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement
 ---
 
@@ -131,16 +131,16 @@ SvelteKit uses filesystem-based routing where directories in `src/routes/` defin
 
 #### File Conventions
 
-| File | Purpose | Runs On |
-|------|---------|---------|
-| `+page.svelte` | Page component (UI) | Server (SSR) + Client |
-| `+page.ts` | Universal load function | Server + Client |
-| `+page.server.ts` | Server load function + form actions | Server only |
-| `+layout.svelte` | Shared layout wrapper | Server (SSR) + Client |
-| `+layout.ts` | Universal layout load | Server + Client |
-| `+layout.server.ts` | Server layout load | Server only |
-| `+error.svelte` | Error boundary | Server (SSR) + Client |
-| `+server.ts` | API route (GET, POST, etc.) | Server only |
+| File                | Purpose                             | Runs On               |
+| ------------------- | ----------------------------------- | --------------------- |
+| `+page.svelte`      | Page component (UI)                 | Server (SSR) + Client |
+| `+page.ts`          | Universal load function             | Server + Client       |
+| `+page.server.ts`   | Server load function + form actions | Server only           |
+| `+layout.svelte`    | Shared layout wrapper               | Server (SSR) + Client |
+| `+layout.ts`        | Universal layout load               | Server + Client       |
+| `+layout.server.ts` | Server layout load                  | Server only           |
+| `+error.svelte`     | Error boundary                      | Server (SSR) + Client |
+| `+server.ts`        | API route (GET, POST, etc.)         | Server only           |
 
 #### Route Structure
 
@@ -184,18 +184,18 @@ Server load functions (`+page.server.ts`) run only on the server. Use for databa
 
 ```typescript
 // src/routes/blog/+page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 const POSTS_PER_PAGE = 10;
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   // Access query params
-  const page = Number(url.searchParams.get('page') ?? '1');
+  const page = Number(url.searchParams.get("page") ?? "1");
 
   // Access server-only data (locals set in hooks)
   if (!locals.user) {
-    error(401, 'Not authenticated');
+    error(401, "Not authenticated");
   }
 
   // Fetch from database (server-only)
@@ -204,7 +204,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     db.post.findMany({
       take: POSTS_PER_PAGE,
       skip: offset,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     }),
     db.post.count(),
   ]);
@@ -256,15 +256,15 @@ Universal load functions (`+page.ts`) run on both server and client. Use for ext
 
 ```typescript
 // src/routes/weather/+page.ts
-import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch, params }) => {
   // SvelteKit's fetch: works on server and client, inherits cookies
   const response = await fetch(`https://api.weather.com/forecast?city=london`);
 
   if (!response.ok) {
-    error(response.status, 'Failed to load weather data');
+    error(response.status, "Failed to load weather data");
   }
 
   const forecast = await response.json();
@@ -287,13 +287,13 @@ Layout load functions provide data to all child pages in the route segment.
 
 ```typescript
 // src/routes/dashboard/+layout.server.ts
-import { redirect } from '@sveltejs/kit';
-import type { LayoutServerLoad } from './$types';
+import { redirect } from "@sveltejs/kit";
+import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ cookies, locals }) => {
   // Auth check for all dashboard routes
   if (!locals.user) {
-    redirect(303, '/login');
+    redirect(303, "/login");
   }
 
   // Data available to all dashboard pages
@@ -342,26 +342,26 @@ Form actions handle `POST` requests in `+page.server.ts`. They enable progressiv
 
 ```typescript
 // src/routes/login/+page.server.ts
-import { fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import { fail, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) {
-    redirect(303, '/dashboard');
+    redirect(303, "/dashboard");
   }
 };
 
 export const actions: Actions = {
   login: async ({ request, cookies }) => {
     const data = await request.formData();
-    const email = data.get('email')?.toString() ?? '';
-    const password = data.get('password')?.toString() ?? '';
+    const email = data.get("email")?.toString() ?? "";
+    const password = data.get("password")?.toString() ?? "";
 
     // Validation
     if (!email) {
-      return fail(400, { email, missing: true, message: 'Email is required' });
+      return fail(400, { email, missing: true, message: "Email is required" });
     }
 
     if (password.length < MIN_PASSWORD_LENGTH) {
@@ -376,19 +376,23 @@ export const actions: Actions = {
     const user = await authenticateUser(email, password);
 
     if (!user) {
-      return fail(400, { email, invalid: true, message: 'Invalid credentials' });
+      return fail(400, {
+        email,
+        invalid: true,
+        message: "Invalid credentials",
+      });
     }
 
     // Set session cookie
-    cookies.set('session', user.sessionId, {
-      path: '/',
+    cookies.set("session", user.sessionId, {
+      path: "/",
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: "lax",
       secure: true,
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
-    redirect(303, '/dashboard');
+    redirect(303, "/dashboard");
   },
 
   register: async ({ request }) => {
@@ -470,8 +474,8 @@ SvelteKit uses `+error.svelte` components as error boundaries and the `error()` 
 
 ```typescript
 // In a load function
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
   const post = await db.post.findUnique({
@@ -479,7 +483,7 @@ export const load: PageServerLoad = async ({ params }) => {
   });
 
   if (!post) {
-    error(404, 'Post not found');
+    error(404, "Post not found");
   }
 
   return { post };
@@ -496,7 +500,7 @@ Return unawaited promises from load functions to stream data — fast data rende
 
 ```typescript
 // src/routes/dashboard/+page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Fast query - awaited (blocks render until ready)
@@ -510,8 +514,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   return {
     user,
-    analytics: analyticsPromise,      // Streams when ready
-    recommendations: recommendationsPromise,  // Streams when ready
+    analytics: analyticsPromise, // Streams when ready
+    recommendations: recommendationsPromise, // Streams when ready
   };
 };
 ```
@@ -562,8 +566,8 @@ Use bracket notation for dynamic route segments.
 
 ```typescript
 // src/routes/blog/[slug]/+page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
   const post = await db.post.findUnique({
@@ -571,7 +575,7 @@ export const load: PageServerLoad = async ({ params }) => {
   });
 
   if (!post) {
-    error(404, 'Post not found');
+    error(404, "Post not found");
   }
 
   return { post };
@@ -583,11 +587,11 @@ export const load: PageServerLoad = async ({ params }) => {
 ```typescript
 // src/routes/docs/[...path]/+page.server.ts
 // Matches /docs/a, /docs/a/b, /docs/a/b/c
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
   // params.path is "a/b/c" for /docs/a/b/c
-  const segments = params.path.split('/');
+  const segments = params.path.split("/");
   const doc = await loadDocument(segments);
 
   return { doc, breadcrumbs: segments };
@@ -625,11 +629,11 @@ export const prerender = true;
 export const prerender = false;
 ```
 
-| Option | Values | Effect |
-|--------|--------|--------|
-| `prerender` | `true`, `false`, `'auto'` | Generate static HTML at build time |
-| `ssr` | `true`, `false` | Enable/disable server-side rendering |
-| `csr` | `true`, `false` | Enable/disable client-side rendering (hydration) |
+| Option      | Values                    | Effect                                           |
+| ----------- | ------------------------- | ------------------------------------------------ |
+| `prerender` | `true`, `false`, `'auto'` | Generate static HTML at build time               |
+| `ssr`       | `true`, `false`           | Enable/disable server-side rendering             |
+| `csr`       | `true`, `false`           | Enable/disable client-side rendering (hydration) |
 
 **When to use:**
 

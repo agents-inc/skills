@@ -10,18 +10,21 @@
 
 ```typescript
 // src/routes/api/posts/+server.ts
-import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { json, error } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 const MAX_PAGE_SIZE = 100;
 const DEFAULT_PAGE_SIZE = 20;
 
 // GET /api/posts?page=1&limit=20
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const page = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
+  const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
   const limit = Math.min(
     MAX_PAGE_SIZE,
-    Math.max(1, Number(url.searchParams.get('limit') ?? String(DEFAULT_PAGE_SIZE)))
+    Math.max(
+      1,
+      Number(url.searchParams.get("limit") ?? String(DEFAULT_PAGE_SIZE)),
+    ),
   );
   const offset = (page - 1) * limit;
 
@@ -29,7 +32,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     db.post.findMany({
       take: limit,
       skip: offset,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     }),
     db.post.count(),
   ]);
@@ -43,14 +46,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 // POST /api/posts
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) {
-    error(401, 'Authentication required');
+    error(401, "Authentication required");
   }
 
   const body = await request.json();
 
   // Validate body
   if (!body.title || !body.content) {
-    error(400, 'Title and content are required');
+    error(400, "Title and content are required");
   }
 
   const post = await db.post.create({
@@ -67,8 +70,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 ```typescript
 // src/routes/api/posts/[id]/+server.ts
-import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { json, error } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 // GET /api/posts/:id
 export const GET: RequestHandler = async ({ params }) => {
@@ -78,7 +81,7 @@ export const GET: RequestHandler = async ({ params }) => {
   });
 
   if (!post) {
-    error(404, 'Post not found');
+    error(404, "Post not found");
   }
 
   return json(post);
@@ -87,17 +90,17 @@ export const GET: RequestHandler = async ({ params }) => {
 // PATCH /api/posts/:id
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   if (!locals.user) {
-    error(401, 'Authentication required');
+    error(401, "Authentication required");
   }
 
   const post = await db.post.findUnique({ where: { id: params.id } });
 
   if (!post) {
-    error(404, 'Post not found');
+    error(404, "Post not found");
   }
 
   if (post.authorId !== locals.user.id) {
-    error(403, 'Not authorized');
+    error(403, "Not authorized");
   }
 
   const body = await request.json();
@@ -112,17 +115,17 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 // DELETE /api/posts/:id
 export const DELETE: RequestHandler = async ({ params, locals }) => {
   if (!locals.user) {
-    error(401, 'Authentication required');
+    error(401, "Authentication required");
   }
 
   const post = await db.post.findUnique({ where: { id: params.id } });
 
   if (!post) {
-    error(404, 'Post not found');
+    error(404, "Post not found");
   }
 
   if (post.authorId !== locals.user.id) {
-    error(403, 'Not authorized');
+    error(403, "Not authorized");
   }
 
   await db.post.delete({ where: { id: params.id } });
@@ -141,13 +144,13 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
 ```typescript
 // src/routes/api/events/+server.ts
-import type { RequestHandler } from './$types';
+import type { RequestHandler } from "./$types";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 
 export const GET: RequestHandler = async ({ locals }) => {
   if (!locals.user) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const stream = new ReadableStream({
@@ -156,18 +159,18 @@ export const GET: RequestHandler = async ({ locals }) => {
 
       // Send initial connection event
       controller.enqueue(
-        encoder.encode(`data: ${JSON.stringify({ type: 'connected' })}\n\n`)
+        encoder.encode(`data: ${JSON.stringify({ type: "connected" })}\n\n`),
       );
 
       // Heartbeat to keep connection alive
       const heartbeat = setInterval(() => {
-        controller.enqueue(encoder.encode(': heartbeat\n\n'));
+        controller.enqueue(encoder.encode(": heartbeat\n\n"));
       }, HEARTBEAT_INTERVAL_MS);
 
       // Subscribe to events (pseudo-code — use your pub/sub solution)
       const unsubscribe = eventBus.subscribe(locals.user.id, (event) => {
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
+          encoder.encode(`data: ${JSON.stringify(event)}\n\n`),
         );
       });
 
@@ -181,9 +184,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
     },
   });
 };
@@ -199,30 +202,33 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 ```typescript
 // src/routes/api/upload/+server.ts
-import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { json, error } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) {
-    error(401, 'Authentication required');
+    error(401, "Authentication required");
   }
 
   const formData = await request.formData();
-  const file = formData.get('file');
+  const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    error(400, 'No file provided');
+    error(400, "No file provided");
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    error(400, `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+    error(
+      400,
+      `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+    );
   }
 
-  if (!ALLOWED_TYPES.includes(file.type as typeof ALLOWED_TYPES[number])) {
-    error(400, `Invalid file type. Allowed: ${ALLOWED_TYPES.join(', ')}`);
+  if (!ALLOWED_TYPES.includes(file.type as (typeof ALLOWED_TYPES)[number])) {
+    error(400, `Invalid file type. Allowed: ${ALLOWED_TYPES.join(", ")}`);
   }
 
   // Upload to storage (defer to your storage solution)
@@ -243,15 +249,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 ```typescript
 // src/routes/api/health/+server.ts
-import { json, text } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { json, text } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 // JSON response
 export const GET: RequestHandler = async () => {
   const health = {
-    status: 'ok',
+    status: "ok",
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: "1.0.0",
   };
 
   return json(health);
@@ -260,20 +266,20 @@ export const GET: RequestHandler = async () => {
 
 ```typescript
 // src/routes/api/export/+server.ts
-import type { RequestHandler } from './$types';
+import type { RequestHandler } from "./$types";
 
 // CSV response
 export const GET: RequestHandler = async ({ locals }) => {
   const data = await db.export.getData(locals.user.id);
 
   const csv = data
-    .map(row => `${row.name},${row.email},${row.createdAt}`)
-    .join('\n');
+    .map((row) => `${row.name},${row.email},${row.createdAt}`)
+    .join("\n");
 
   return new Response(`name,email,created_at\n${csv}`, {
     headers: {
-      'Content-Type': 'text/csv',
-      'Content-Disposition': 'attachment; filename="export.csv"',
+      "Content-Type": "text/csv",
+      "Content-Disposition": 'attachment; filename="export.csv"',
     },
   });
 };
@@ -281,15 +287,15 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 ```typescript
 // src/routes/api/redirect/+server.ts
-import { redirect } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { redirect } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 // Redirect response
 export const GET: RequestHandler = async ({ url }) => {
-  const target = url.searchParams.get('url');
+  const target = url.searchParams.get("url");
 
   if (!target) {
-    return new Response('Missing url parameter', { status: 400 });
+    return new Response("Missing url parameter", { status: 400 });
   }
 
   redirect(307, target);
@@ -306,8 +312,8 @@ export const GET: RequestHandler = async ({ url }) => {
 
 ```typescript
 // src/routes/api/posts/+server.ts
-import { json, text } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { json, text } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async () => {
   // ...
@@ -344,7 +350,7 @@ src/routes/posts/
 // src/routes/posts/+page.server.ts
 // Handles: GET requests with Accept: text/html → page rendering
 // Handles: POST requests from forms → form actions
-import type { PageServerLoad, Actions } from './$types';
+import type { PageServerLoad, Actions } from "./$types";
 
 export const load: PageServerLoad = async () => {
   const posts = await db.post.findMany();
@@ -362,8 +368,8 @@ export const actions: Actions = {
 // src/routes/posts/+server.ts
 // Handles: GET requests with Accept: application/json → JSON API
 // Handles: POST requests without form action → API endpoint
-import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async () => {
   const posts = await db.post.findMany();

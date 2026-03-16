@@ -195,7 +195,7 @@ export interface CartItem {
 export const cartItems = atom<CartItem[]>([]);
 
 export const cartTotal = computed(cartItems, (items) =>
-  items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  items.reduce((sum, item) => sum + item.price * item.quantity, 0),
 );
 
 export function addToCart(item: Omit<CartItem, "quantity">) {
@@ -205,8 +205,8 @@ export function addToCart(item: Omit<CartItem, "quantity">) {
   if (existing) {
     cartItems.set(
       current.map((i) =>
-        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-      )
+        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
+      ),
     );
   } else {
     cartItems.set([...current, { ...item, quantity: 1 }]);
@@ -230,7 +230,9 @@ export function AddToCartButton({ productId, productName, price }: Props) {
   const inCart = items.find((i) => i.id === productId);
 
   return (
-    <button onClick={() => addToCart({ id: productId, name: productName, price })}>
+    <button
+      onClick={() => addToCart({ id: productId, name: productName, price })}
+    >
       {inCart ? `In cart (${inCart.quantity})` : "Add to cart"}
     </button>
   );

@@ -1,5 +1,5 @@
 ---
-name: web-framework-remix
+name: web-meta-framework-remix
 description: File-based routing, loaders, actions, defer streaming, useFetcher, error boundaries, progressive enhancement
 ---
 
