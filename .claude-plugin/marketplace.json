@@ -11,6 +11,16 @@
   },
   "plugins": [
     {
+      "name": "api-ai-openai-sdk",
+      "source": "./dist/plugins/api-ai-openai-sdk",
+      "description": "Official OpenAI SDK patterns for TypeScript/Node.js — client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "api"
+    },
+    {
       "name": "api-ai-vercel-ai-sdk",
       "source": "./dist/plugins/api-ai-vercel-ai-sdk",
       "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
@@ -71,6 +81,16 @@
       "category": "api"
     },
     {
+      "name": "api-baas-firebase",
+      "source": "./dist/plugins/api-baas-firebase",
+      "description": "Firebase backend-as-a-service — Firestore, Authentication, Cloud Functions v2, Storage, Hosting, Admin SDK, security rules, emulator suite",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "api"
+    },
+    {
       "name": "api-baas-supabase",
       "source": "./dist/plugins/api-baas-supabase",
       "description": "Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
@@ -114,6 +134,16 @@
       "name": "api-database-prisma",
       "source": "./dist/plugins/api-database-prisma",
       "description": "Prisma ORM, type-safe queries, migrations, relations",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "api"
+    },
+    {
+      "name": "api-database-redis",
+      "source": "./dist/plugins/api-database-redis",
+      "description": "Redis in-memory data store patterns with ioredis and node-redis -- caching, sessions, rate limiting, pub/sub, streams, queues, transactions, cluster",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -261,16 +291,6 @@
       "category": "infra"
     },
     {
-      "name": "infra-tooling-setup-tooling",
-      "source": "./dist/plugins/infra-tooling-setup-tooling",
-      "description": "ESLint 9 flat config, Prettier, TypeScript configuration, Vite, Husky + lint-staged, commitlint - build tooling for monorepos",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "category": "infra"
-    },
-    {
       "name": "meta-methodology-anti-over-engineering",
       "source": "./dist/plugins/meta-methodology-anti-over-engineering",
       "description": "Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.",
@@ -389,6 +409,51 @@
         "name": "@vince"
       },
       "category": "security"
+    },
+    {
+      "name": "shared-ci-cd-cloudflare-workers",
+      "source": "./dist/plugins/shared-ci-cd-cloudflare-workers",
+      "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI, and Hono integration",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-ci-cd-docker",
+      "source": "./dist/plugins/shared-ci-cd-docker",
+      "description": "Docker containerization patterns for Node.js/TypeScript development and production",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-monorepo-nx",
+      "source": "./dist/plugins/shared-monorepo-nx",
+      "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-monorepo-pnpm-workspaces",
+      "source": "./dist/plugins/shared-monorepo-pnpm-workspaces",
+      "description": "pnpm workspace protocol, filtering, catalogs, shared dependencies, publishing, and CI/CD for monorepo management",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-tooling-biome",
+      "source": "./dist/plugins/shared-tooling-biome",
+      "description": "Biome v2 unified linter, formatter, and import organizer — single Rust-powered tool replacing ESLint + Prettier with 97% Prettier compatibility and 20x faster performance",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
     },
     {
       "name": "shared-tooling-eslint-prettier",
@@ -639,6 +704,16 @@
       "name": "web-framework-svelte",
       "source": "./dist/plugins/web-framework-svelte",
       "description": "Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "web"
+    },
+    {
+      "name": "web-framework-tanstack-router",
+      "source": "./dist/plugins/web-framework-tanstack-router",
+      "description": "Type-safe client-side routing for React with file-based routes, search params validation, loaders, and code splitting",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -969,6 +1044,36 @@
       "name": "web-tooling-vite",
       "source": "./dist/plugins/web-tooling-vite",
       "description": "Vite config, path aliases, vendor chunk splitting (manualChunks), environment-specific builds, Rolldown advancedChunks, Environment API, Sass modern API, build targets, module preload",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "web"
+    },
+    {
+      "name": "web-ui-ant-design",
+      "source": "./dist/plugins/web-ui-ant-design",
+      "description": "Ant Design enterprise UI library for React",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "web"
+    },
+    {
+      "name": "web-ui-headless-ui",
+      "source": "./dist/plugins/web-ui-headless-ui",
+      "description": "Unstyled accessible UI components by Tailwind Labs",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "web"
+    },
+    {
+      "name": "web-ui-mui",
+      "source": "./dist/plugins/web-ui-mui",
+      "description": "Material UI component library patterns for React",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
