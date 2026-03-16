@@ -11,6 +11,30 @@
   },
   "plugins": [
     {
+      "name": "api-ai-vercel-ai-sdk",
+      "source": "./dist/plugins/api-ai-vercel-ai-sdk",
+      "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "ai",
+        "ai-sdk",
+        "vercel",
+        "streaming",
+        "chat",
+        "completion",
+        "tools",
+        "function-calling",
+        "rag",
+        "embeddings",
+        "openai",
+        "anthropic"
+      ],
+      "category": "api"
+    },
+    {
       "name": "api-analytics-posthog-analytics",
       "source": "./dist/plugins/api-analytics-posthog-analytics",
       "description": "PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.",
@@ -61,6 +85,27 @@
       "category": "api"
     },
     {
+      "name": "api-auth-clerk",
+      "source": "./dist/plugins/api-auth-clerk",
+      "description": "Clerk managed authentication - ClerkProvider, middleware, pre-built components, hooks, server-side auth, organizations, webhooks",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "clerk",
+        "auth",
+        "authentication",
+        "user-management",
+        "organizations",
+        "sso",
+        "mfa",
+        "webhooks",
+        "session"
+      ],
+      "category": "api"
+    },
+    {
       "name": "api-auth-nextauth",
       "source": "./dist/plugins/api-auth-nextauth",
       "description": "Auth.js (NextAuth v5) authentication patterns - configuration, providers, session strategies, middleware, database adapters, role-based access, Edge compatibility",
@@ -76,6 +121,27 @@
         "sessions",
         "jwt",
         "middleware"
+      ],
+      "category": "api"
+    },
+    {
+      "name": "api-baas-supabase",
+      "source": "./dist/plugins/api-baas-supabase",
+      "description": "Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "supabase",
+        "postgres",
+        "auth",
+        "realtime",
+        "storage",
+        "edge-functions",
+        "rls",
+        "row-level-security",
+        "baas"
       ],
       "category": "api"
     },
@@ -112,6 +178,27 @@
         "migrations",
         "queries",
         "postgresql"
+      ],
+      "category": "api"
+    },
+    {
+      "name": "api-database-mongodb",
+      "source": "./dist/plugins/api-database-mongodb",
+      "description": "MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "mongodb",
+        "mongoose",
+        "nosql",
+        "document-database",
+        "schemas",
+        "models",
+        "aggregation",
+        "indexes",
+        "atlas"
       ],
       "category": "api"
     },
@@ -238,6 +325,30 @@
         "name": "@vince"
       },
       "keywords": ["hono", "openapi", "zod", "rest-api", "validation"],
+      "category": "api"
+    },
+    {
+      "name": "api-framework-nestjs",
+      "source": "./dist/plugins/api-framework-nestjs",
+      "description": "NestJS backend framework - modules, controllers, services, DI, guards, pipes, interceptors, exception filters, middleware, DTOs with class-validator",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "keywords": [
+        "nestjs",
+        "nest",
+        "typescript",
+        "decorators",
+        "dependency-injection",
+        "modules",
+        "controllers",
+        "services",
+        "guards",
+        "interceptors",
+        "pipes",
+        "middleware"
+      ],
       "category": "api"
     },
     {

@@ -1,0 +1,20 @@
+{
+  "name": "api-database-mongodb",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management",
+  "author": {
+    "name": "@vince"
+  },
+  "keywords": [
+    "mongodb",
+    "mongoose",
+    "nosql",
+    "document-database",
+    "schemas",
+    "models",
+    "aggregation",
+    "indexes",
+    "atlas"
+  ]
+}
