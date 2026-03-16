@@ -1,6 +1,6 @@
 # Firebase Reference
 
-> Firebase CLI commands, project structure, service configuration, and quick lookup tables. See [SKILL.md](SKILL.md) for core concepts and [examples/firebase.md](examples/firebase.md) for code examples.
+> Firebase CLI commands, project structure, service configuration, and quick lookup tables. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
 
 ---
 
