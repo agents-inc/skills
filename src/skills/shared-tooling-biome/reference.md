@@ -125,13 +125,13 @@
 
 ### Domains (Technology-Specific)
 
-| Domain    | Detected From               | Purpose                      |
-| --------- | --------------------------- | ---------------------------- |
-| `react`   | react in package.json       | React-specific rules         |
-| `solid`   | solid-js in package.json    | SolidJS-specific rules       |
-| `test`    | vitest/jest in package.json | Test-specific rules          |
-| `project` | Manual opt-in               | Cross-file analysis rules    |
-| `types`   | Manual opt-in               | Type inference rules (v2.4+) |
+| Domain    | Detected From               | Purpose                                                        |
+| --------- | --------------------------- | -------------------------------------------------------------- |
+| `react`   | react in package.json       | React-specific rules                                           |
+| `solid`   | solid-js in package.json    | SolidJS-specific rules                                         |
+| `test`    | vitest/jest in package.json | Test-specific rules                                            |
+| `project` | Manual opt-in               | Cross-file analysis (module graph scanning)                    |
+| `types`   | Manual opt-in               | Type inference rules (v2.4+, ~75% tsc coverage for type rules) |
 
 ---
 

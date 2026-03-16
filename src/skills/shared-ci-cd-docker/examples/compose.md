@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [dockerfile.md](dockerfile.md) - Multi-stage Dockerfiles, layer caching, .dockerignore
+- [core.md](core.md) - Multi-stage Dockerfiles, layer caching, .dockerignore
 - [production.md](production.md) - Security hardening, secrets, CI/CD pipelines
 
 ---

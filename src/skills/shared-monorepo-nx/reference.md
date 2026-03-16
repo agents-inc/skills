@@ -331,67 +331,9 @@ How to configure tasks?
 
 ---
 
-## Nx Version History
+## Key Version Notes
 
-### Nx 22 (Late 2025)
-
-- Self-Healing CI with automated PR fix suggestions
-- Polygraph for multi-repo dependency visualization
-- Graph visualization rewrite (handles massive repos)
-- Terminal UI (TUI) improvements
-- Maven and .NET plugin support (experimental)
-- pnpm catalog support
-- Module Federation for TS project references
-
-### Nx 21 (Mid 2025)
-
-- `continuous: true` for long-running tasks (serve, watch)
-- Dependent tasks no longer wait for continuous tasks to exit
-- Enhanced release tag configuration (nested `releaseTag` object)
-
-### Nx 20 (Early 2025)
-
-- Removed distinction between "integrated" and "package-based" repos
-- TypeScript project references for faster builds/typechecks
-- Collaboration with TypeScript team on monorepo best practices
-- Rust core migration begun for performance
-
-### Nx 19 (2024)
-
-- Atomizer for Playwright/Cypress (split e2e into parallel chunks)
-- Convert-to-inferred migration generators
-- `parallelism` property for targets (Nx 19.5+)
-- `syncGenerators` property (Nx 19.8+)
-
-### Nx 18 (2024)
-
-- Project Crystal — inferred tasks from plugin configuration
-- `createNodesV2` API for plugin authors
-- Dramatically reduced `project.json` boilerplate
-
----
-
-## Resources
-
-**Official documentation:**
-
-- Nx Docs: https://nx.dev/docs
-- nx.json Reference: https://nx.dev/docs/reference/nx-json
-- Project Configuration: https://nx.dev/docs/reference/project-configuration
-- CLI Commands: https://nx.dev/docs/reference/nx-commands
-- Nx Cloud: https://nx.dev/nx-cloud
-- Plugin Registry: https://nx.dev/docs/plugin-registry
-
-**Guides:**
-
-- Task Caching: https://nx.dev/docs/guides/tasks--caching
-- Affected Commands: https://nx.dev/docs/features/ci-features/affected
-- Nx Release: https://nx.dev/docs/features/manage-releases
-- Inferred Tasks: https://nx.dev/docs/concepts/inferred-tasks
-- Module Federation: https://nx.dev/docs/technologies/module-federation/concepts/micro-frontend-architecture
-- Migration: https://nx.dev/docs/features/automate-updating-dependencies
-
-**Tools:**
-
-- Nx Console (VS Code): https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console
-- Nx Cloud: https://cloud.nx.app
+- **Nx 22+**: `releaseTag` uses nested object (`releaseTag.pattern`), old flat `releaseTagPattern` deprecated (removed in Nx 23). `createNodes` v1 API dropped -- plugins must use `createNodesV2`.
+- **Nx 21+**: `continuous: true` for long-running tasks (serve, watch). Dependents start immediately without waiting for continuous tasks to exit.
+- **Nx 20+**: No distinction between "integrated" and "package-based" repos. TypeScript project references for faster builds.
+- **Nx 18+**: Project Crystal -- inferred tasks from plugin configuration. Dramatically reduced `project.json` boilerplate.

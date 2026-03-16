@@ -1,4 +1,4 @@
-# pnpm Workspaces -- Setup Examples
+# pnpm Workspaces -- Core Examples
 
 > Workspace initialization and configuration examples. Reference from [SKILL.md](../SKILL.md).
 
@@ -64,13 +64,14 @@ disallowWorkspaceCycles: true
 strictPeerDependencies: true
 
 # Security: allowlist packages that can run install scripts
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
-  - "@swc/core"
+# Use allowBuilds (preferred) or onlyBuiltDependencies (legacy)
+allowBuilds:
+  esbuild: true
+  sharp: true
+  "@swc/core": true
 ```
 
-**Why good:** Single file defines workspace structure, dependency versions, and pnpm settings. `disallowWorkspaceCycles: true` catches circular dependencies at install time. `onlyBuiltDependencies` explicitly trusts only necessary packages.
+**Why good:** Single file defines workspace structure, dependency versions, and pnpm settings. `disallowWorkspaceCycles: true` catches circular dependencies at install time. `allowBuilds` explicitly trusts only necessary packages to run install scripts.
 
 ---
 
@@ -116,7 +117,7 @@ strictPeerDependencies: true
 ```
 my-monorepo/
   apps/
-    web/                    # Web application (Next.js, Vite, etc.)
+    web/                    # Web application
       package.json
       tsconfig.json         # Extends shared config
     api/                    # API server
@@ -173,64 +174,4 @@ my-monorepo/
 
 **Why good:** Root scripts provide workspace-wide commands, `private: true` prevents accidental root publish, shared devDependencies hoisted to root reduce duplication
 
----
-
-## Workspace Settings Reference
-
-Key settings for `pnpm-workspace.yaml` (pnpm v10+) that control workspace behavior.
-
-### Dependency Resolution
-
-```yaml
-# pnpm-workspace.yaml
-linkWorkspacePackages: true # Link local packages instead of downloading
-saveWorkspaceProtocol: rolling # Auto-save workspace: protocol ("rolling" | "fixed" | false)
-preferWorkspacePackages: false # Prefer workspace packages over registry
-disallowWorkspaceCycles: true # Fail install if circular dependencies detected
-```
-
-### Hoisting
-
-```yaml
-# pnpm-workspace.yaml
-shamefullyHoist: false # Do NOT hoist everything to root (strict by default)
-hoistPattern:
-  - "*" # Hoist to .pnpm/node_modules (hidden)
-publicHoistPattern: [] # Nothing hoisted to root node_modules
-hoistWorkspacePackages: true # Symlink workspace packages based on hoist config
-```
-
-### Injection (Hard Links)
-
-```yaml
-# pnpm-workspace.yaml
-injectWorkspacePackages: true # Hard-link workspace deps (instead of symlink)
-# Required for: pnpm deploy, Docker builds, bundler compatibility
-```
-
-**When to use:** `injectWorkspacePackages: true` is required for `pnpm deploy` and recommended when bundlers have issues with symlinked workspace packages
-
-### Security (v10 Defaults)
-
-```yaml
-# pnpm-workspace.yaml
-# pnpm v10 blocks lifecycle scripts by default
-onlyBuiltDependencies:
-  - esbuild # Allowlist packages that can run install scripts
-  - sharp
-  - better-sqlite3
-```
-
-**Why good:** Supply chain attack prevention, only explicitly trusted packages can run install scripts
-
-### Catalogs
-
-```yaml
-# pnpm-workspace.yaml
-catalogMode: strict # Only catalog versions allowed
-# catalogMode: prefer  # Use catalog if available, fallback allowed
-# catalogMode: manual  # Default -- no automatic catalog enforcement
-
-# Auto-remove unused catalog entries on install
-cleanupUnusedCatalogs: true
-```
+See [reference.md](../reference.md) for a complete settings lookup table.

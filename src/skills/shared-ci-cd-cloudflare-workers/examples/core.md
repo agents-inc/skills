@@ -1,6 +1,6 @@
-# Cloudflare Workers — Setup & Configuration Examples
+# Cloudflare Workers — Core Setup & Configuration Examples
 
-> Setup and configuration patterns for Cloudflare Workers projects. Reference from [SKILL.md](../SKILL.md).
+> Core setup and configuration patterns for Cloudflare Workers projects. See [SKILL.md](../SKILL.md) for decision guidance.
 
 **Related examples:**
 
@@ -8,7 +8,7 @@
 - [D1 Database](d1.md) — SQLite database patterns
 - [R2 Object Storage](r2.md) — File storage patterns
 - [Durable Objects](durable-objects.md) — Stateful edge compute
-- [Routing & Hono](routing.md) — API routing and middleware
+- [Routing & Middleware](routing.md) — API framework and middleware
 
 ---
 
@@ -18,7 +18,7 @@
 # Create a new Workers project
 npm create cloudflare@latest -- my-worker
 
-# Or with Hono template
+# Or with a framework template (e.g., Hono)
 npm create hono@latest my-api
 # Select "cloudflare-workers" template
 ```
@@ -288,7 +288,7 @@ jobs:
 
 ---
 
-## Testing with Vitest Pool Workers
+## Testing with Workers Test Pool
 
 ```typescript
 // vitest.config.ts

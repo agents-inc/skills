@@ -62,7 +62,7 @@ description: Nx monorepo build system — workspace configuration, project graph
 
 ## Examples
 
-- [Workspace Setup](examples/setup.md) — Creating workspaces, directory structure, nx.json config, TypeScript setup
+- [Workspace Setup](examples/core.md) — Directory structure, nx.json config
 - [Task Pipeline & Caching](examples/tasks.md) — dependsOn ordering, namedInputs, cache configuration, affected commands
 - [Generators](examples/generators.md) — Built-in generators, custom generators, schemas, migrations
 - [CI & Release Management](examples/ci.md) — GitHub Actions, Nx Cloud, release configuration, module federation
@@ -141,7 +141,7 @@ The `nx.json` file is the central configuration for task behavior, caching, plug
 
 **Why good:** `namedInputs` exclude test files from build cache keys, `dependsOn: ["^build"]` enforces topological ordering, plugins auto-detect targets
 
-For complete nx.json examples, see [examples/setup.md](examples/setup.md).
+For complete nx.json examples, see [examples/core.md](examples/core.md).
 
 ---
 
@@ -427,23 +427,18 @@ For comprehensive decision trees and anti-patterns, see [reference.md](reference
 
 ## Integration Guide
 
-**Works with:**
+Nx integrates with your tools through its **plugin system**. Each `@nx/*` plugin detects its tool's config file and infers targets automatically (Project Crystal). You do not need to manually configure targets for supported tools -- install the plugin, add it to `nx.json` `plugins` array, and inferred tasks appear.
 
-- **Package managers (npm, pnpm, Bun, Yarn)**: Nx works with any package manager's workspace feature
-- **Vite**: `@nx/vite/plugin` infers build/serve/test targets from vite.config.ts
-- **Jest / Vitest**: `@nx/jest/plugin` and `@nx/vite/plugin` infer test targets
-- **ESLint**: `@nx/eslint/plugin` infers lint targets from eslint.config.js
-- **Next.js**: `@nx/next` provides generators, executors, and module federation
-- **React / Angular**: `@nx/react` and `@nx/angular` provide generators and executors
-- **Storybook**: `@nx/storybook` infers build-storybook and storybook targets
-- **Playwright / Cypress**: `@nx/playwright` and `@nx/cypress` with test atomizer
-- **Nx Cloud**: Remote caching (Nx Replay) and distributed task execution (Nx Agents)
+**Plugin model:** `@nx/<tool>/plugin` reads the tool's config file (e.g., `vite.config.ts`, `eslint.config.js`) and registers targets. Use `nx show project <name>` to see what a plugin inferred.
+
+**Package managers:** Nx works with npm, pnpm, Bun, or Yarn workspaces. No lock-in.
+
+**Nx Cloud:** Remote caching (Nx Replay) and distributed task execution (Nx Agents). Connect with `nx connect`.
 
 **Replaces / Conflicts with:**
 
-- **Turborepo**: Similar monorepo tool — choose one, not both
+- **Turborepo**: Similar monorepo orchestrator -- choose one, not both
 - **Lerna**: Nx subsumes Lerna's functionality (Nx team maintains Lerna since v6)
-- **Rush**: Microsoft's monorepo tool — Nx provides broader plugin ecosystem
 
 </integration>
 

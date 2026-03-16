@@ -4,5 +4,5 @@ slug: eslint-prettier
 domain: shared
 author: "@vince"
 displayName: ESLint & Prettier
-cliDescription: ESLint 9 flat config and Prettier formatting
+cliDescription: ESLint 9/10 flat config and Prettier formatting
 usageGuidance: Use when configuring ESLint 9 flat config, Prettier formatting, shared linting configs, or migrating from legacy .eslintrc to flat config.

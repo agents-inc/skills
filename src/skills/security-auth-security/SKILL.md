@@ -1,11 +1,11 @@
 ---
 name: security-auth-security
-description: Authentication, authorization, secrets management, XSS prevention, CSRF protection, Dependabot configuration, vulnerability scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
+description: Secrets management, XSS prevention, CSRF protection, dependency scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 ---
 
 # Security Patterns
 
-> **Quick Guide:** Managing secrets? Use .env.local (gitignored), CI secrets (GitHub/Vercel), rotate quarterly. Dependency security? Enable Dependabot, audit weekly, patch critical vulns within 24hrs. XSS prevention? React escapes by default - never use dangerouslySetInnerHTML with user input. Sanitize with DOMPurify if needed. Set CSP headers. CODEOWNERS? Require security team review for auth/, .env.example, workflows.
+> **Quick Guide:** Managing secrets? Use .env.local (gitignored), CI secrets, rotate on compromise or team changes. Dependency security? Enable automated scanning (Dependabot), patch critical vulns within 24hrs. XSS prevention? Modern frameworks auto-escape output by default - never bypass with raw HTML injection unless sanitized with DOMPurify. Set CSP headers. CODEOWNERS? Require security team review for auth/, .env.example, workflows.
 
 **Detailed Resources:**
 
@@ -28,7 +28,7 @@ description: Authentication, authorization, secrets management, XSS prevention, 
 
 **(You MUST NEVER commit secrets to the repository - use .env.local and CI secrets only)**
 
-**(You MUST sanitize ALL user input before rendering HTML - use DOMPurify with dangerouslySetInnerHTML)**
+**(You MUST sanitize ALL user input before rendering raw HTML - use DOMPurify before any HTML injection)**
 
 **(You MUST patch critical/high vulnerabilities within 24 hours - use Dependabot for automated scanning)**
 
@@ -46,22 +46,22 @@ description: Authentication, authorization, secrets management, XSS prevention, 
 
 - Managing secrets securely (never commit, use .env.local and CI secrets)
 - Setting up Dependabot for automated vulnerability scanning
-- Preventing XSS attacks (React escaping, DOMPurify, CSP headers)
+- Preventing XSS attacks (framework auto-escaping, DOMPurify, CSP headers)
 - Configuring CODEOWNERS for security-sensitive code
 - Implementing secure authentication and token storage
 
 **When NOT to use:**
 
-- For general code quality (use reviewing skill instead)
-- For performance optimization (use performance skills)
-- For CI/CD pipeline setup (use ci-cd skill - security patterns here are for code, not pipelines)
+- For general code quality reviews (not a security concern)
+- For performance optimization (different domain)
+- For CI/CD pipeline setup (security patterns here are for code, not infrastructure)
 - When security review would delay critical hotfixes (document for follow-up)
 
 **Key patterns covered:**
 
 - Never commit secrets (.gitignore, CI secrets, rotation policies quarterly)
 - Automated dependency scanning with Dependabot (critical within 24h)
-- XSS prevention (React's built-in escaping, DOMPurify for HTML, CSP headers)
+- XSS prevention (framework auto-escaping, DOMPurify for HTML, CSP headers)
 - CSRF protection with tokens and SameSite cookies
 - CODEOWNERS for security-sensitive areas (.env.example, auth code, workflows)
 - Secure token storage (HttpOnly cookies, in-memory access tokens)
@@ -177,11 +177,11 @@ Enable automated vulnerability scanning with Dependabot to catch security issues
 
 ### Pattern 3: XSS Prevention
 
-React automatically escapes user input by default. Never use `dangerouslySetInnerHTML` with user input unless sanitized with DOMPurify. Configure Content Security Policy (CSP) headers to block unauthorized scripts.
+Modern UI frameworks auto-escape user input by default. Never bypass this protection with raw HTML injection unless sanitized with DOMPurify. Configure Content Security Policy (CSP) headers to block unauthorized scripts.
 
-#### React's Built-in Protection
+#### Framework Auto-escaping
 
-React escapes all text content automatically. Only `dangerouslySetInnerHTML` bypasses this protection.
+Most frameworks escape text content automatically. Only explicit HTML injection APIs (e.g., `dangerouslySetInnerHTML`, `v-html`, `{@html}`) bypass this protection.
 
 #### DOMPurify Sanitization
 
@@ -191,50 +191,34 @@ When HTML rendering is required, use DOMPurify with a whitelist of allowed tags 
 
 Configure CSP headers to prevent unauthorized script execution even if XSS occurs.
 
-**See [examples/xss-prevention.md](examples/xss-prevention.md) for React, DOMPurify, and CSP code examples.**
+**See [examples/xss-prevention.md](examples/xss-prevention.md) for DOMPurify and CSP code examples.**
 
 ---
 
-### OWASP Top 10 2025 Coverage
+### OWASP Top 10:2025 Coverage
 
-This skill addresses the following OWASP Top 10:2025 categories:
+This skill addresses the following [OWASP Top 10:2025](https://owasp.org/Top10/2025/) categories:
 
-| OWASP Category                                | Coverage                                          |
-| --------------------------------------------- | ------------------------------------------------- |
-| A01: Broken Access Control                    | CODEOWNERS, branch protection, rate limiting      |
-| A02: Security Misconfiguration                | CSP headers, security headers, Dependabot         |
-| A03: Software Supply Chain Failures (NEW)     | Dependabot, CI security audits, dependency review |
-| A04: Cryptographic Failures                   | HttpOnly/Secure cookies, HTTPS enforcement        |
-| A05: Injection (includes XSS)                 | DOMPurify, React auto-escaping, CSP               |
-| A07: Identification & Auth Failures           | HttpOnly cookies, session management              |
-| A09: Security Logging & Alerting              | (See observability skill)                         |
-| A10: Mishandling Exceptional Conditions (NEW) | Fail securely principle, error handling           |
+| OWASP Category                             | Coverage                                          |
+| ------------------------------------------ | ------------------------------------------------- |
+| A01: Broken Access Control                 | CODEOWNERS, branch protection, rate limiting      |
+| A02: Security Misconfiguration             | CSP headers, security headers, Dependabot         |
+| A03: Software Supply Chain Failures        | Dependabot, CI security audits, dependency review |
+| A04: Cryptographic Failures                | HttpOnly/Secure cookies, HTTPS enforcement        |
+| A05: Injection                             | DOMPurify, framework auto-escaping, CSP           |
+| A07: Authentication Failures               | HttpOnly cookies, session management              |
+| A10: Mishandling of Exceptional Conditions | Fail securely principle, error handling           |
 
 </patterns>
 
 ---
 
-<integration>
+**Defense in depth layers:**
 
-## Integration Guide
-
-**Works with:**
-
-- **React**: Built-in XSS protection via auto-escaping, use DOMPurify for rich HTML
-- **Next.js**: Configure security headers in middleware or next.config.js
-- **GitHub**: Dependabot for automated vulnerability scanning, CODEOWNERS for code review
-- **Vercel/CI**: Store secrets in environment variables, never commit
-- **axios**: Interceptors for automatic CSRF token injection
-- **DOMPurify**: Sanitize user HTML before rendering with dangerouslySetInnerHTML
-
-**Security layers:**
-
-- **Secrets**: .env.local (dev) -> CI secrets (GitHub/Vercel) -> Environment variables (production)
-- **XSS**: React auto-escaping -> DOMPurify sanitization -> CSP headers
+- **Secrets**: .env.local (dev) -> CI secrets -> Environment variables (production)
+- **XSS**: Framework auto-escaping -> DOMPurify sanitization -> CSP headers
 - **CSRF**: Tokens -> SameSite cookies -> Server-side validation
-- **Dependencies**: Dependabot -> CI security audit -> Manual review
-
-</integration>
+- **Dependencies**: Automated scanning -> CI security audit -> Manual review
 
 ---
 
@@ -246,7 +230,7 @@ This skill addresses the following OWASP Top 10:2025 categories:
 
 **(You MUST NEVER commit secrets to the repository - use .env.local and CI secrets only)**
 
-**(You MUST sanitize ALL user input before rendering HTML - use DOMPurify with dangerouslySetInnerHTML)**
+**(You MUST sanitize ALL user input before rendering raw HTML - use DOMPurify before any HTML injection)**
 
 **(You MUST patch critical/high vulnerabilities within 24 hours - use Dependabot for automated scanning)**
 

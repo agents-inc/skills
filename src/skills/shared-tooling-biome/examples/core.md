@@ -1,4 +1,4 @@
-This file has been replaced by individual example files:
+See the individual example files for specific topics:
 
 - [setup.md](setup.md) — Installation, biome.json config, editor integration, monorepos
 - [linting.md](linting.md) — Lint rules, domains, suppressions, overrides, import ordering

@@ -137,9 +137,10 @@ packages:
 
 ### Security (v10)
 
-| Setting                 | Purpose                                         |
-| ----------------------- | ----------------------------------------------- |
-| `onlyBuiltDependencies` | Allowlist packages that can run install scripts |
+| Setting                 | Purpose                                                                  |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `allowBuilds`           | Map-based allowlist for install scripts (preferred, per-package boolean) |
+| `onlyBuiltDependencies` | Array-based allowlist (legacy, still supported)                          |
 
 ---
 
@@ -151,6 +152,15 @@ In pnpm v10, `.npmrc` should ONLY contain auth and registry settings:
 //registry.npmjs.org/:_authToken=${NPM_TOKEN}
 @myorg:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+---
+
+## Build Script Approval
+
+```bash
+pnpm approve-builds                   # Interactive approval of packages needing install scripts
+pnpm approve-builds --all             # Approve all pending builds without prompting
 ```
 
 ---
@@ -178,19 +188,19 @@ pnpm publish -r --access=public        # Publish scoped public packages
 - [ ] Use `--filter "...[origin/main]"` for affected-only builds
 - [ ] Pin pnpm version to match local development
 - [ ] Configure `NPM_TOKEN` secret for publishing
-- [ ] Allowlist `onlyBuiltDependencies` for packages needing install scripts
+- [ ] Configure `allowBuilds` (or `onlyBuiltDependencies`) for packages needing install scripts
 
 ---
 
 ## pnpm v10 Breaking Changes
 
-| Change                                                 | Migration                                  |
-| ------------------------------------------------------ | ------------------------------------------ |
-| Settings moved from `.npmrc` to `pnpm-workspace.yaml`  | Move non-auth settings to YAML             |
-| Lifecycle scripts blocked by default                   | Add `onlyBuiltDependencies` allowlist      |
-| `pnpm deploy` requires `injectWorkspacePackages: true` | Add setting to workspace config            |
-| JSR support via `jsr:` protocol                        | Use for JSR packages                       |
-| `devEngines.runtime` support                           | Specify runtime versions in `package.json` |
+| Change                                                 | Migration                                           |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| Settings moved from `.npmrc` to `pnpm-workspace.yaml`  | Move non-auth settings to YAML                      |
+| Lifecycle scripts blocked by default                   | Add `allowBuilds` map or run `pnpm approve-builds`  |
+| `pnpm deploy` requires `injectWorkspacePackages: true` | Add setting to workspace config (or use `--legacy`) |
+| JSR support via `jsr:` protocol                        | Use for JSR packages                                |
+| `devEngines.runtime` support                           | Specify runtime versions in `package.json`          |
 
 ---
 

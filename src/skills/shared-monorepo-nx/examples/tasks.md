@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) - Workspace creation, directory structure, nx.json config
+- [core.md](core.md) - Workspace structure, nx.json config
 - [generators.md](generators.md) - Built-in and custom generators
 - [ci.md](ci.md) - CI pipelines, Nx Cloud, release management
 

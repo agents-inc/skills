@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) - Workspace creation, directory structure, nx.json config
+- [core.md](core.md) - Workspace structure, nx.json config
 - [tasks.md](tasks.md) - Task pipelines, caching, affected commands
 - [generators.md](generators.md) - Built-in and custom generators
 

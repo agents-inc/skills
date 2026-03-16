@@ -1,18 +1,18 @@
-# Cloudflare Workers — Routing & Hono Examples
+# Cloudflare Workers — Routing & Middleware Examples
 
-> Hono framework integration, middleware, multi-handler workers (scheduled, queue), and service bindings. Reference from [SKILL.md](../SKILL.md).
+> API framework integration, middleware, multi-handler workers (scheduled, queue), and service bindings. See [SKILL.md](../SKILL.md) for decision guidance.
 
 **Related examples:**
 
-- [Setup & Configuration](setup.md) — Project setup and wrangler.jsonc
-- [D1 Database](d1.md) — Hono + D1 CRUD API
-- [R2 Object Storage](r2.md) — Hono + R2 file service
+- [Core Setup & Configuration](core.md) — Project setup and wrangler.jsonc
+- [D1 Database](d1.md) — D1 CRUD API
+- [R2 Object Storage](r2.md) — R2 file service
 - [KV Storage](kv.md) — KV caching patterns
 - [Durable Objects](durable-objects.md) — Stateful edge compute
 
 ---
 
-## Basic Hono Setup
+## Basic Framework Setup (Hono)
 
 ```typescript
 // src/index.ts — Hono with typed bindings
@@ -58,7 +58,7 @@ export default app;
 
 ---
 
-## Hono with Multiple Handlers (Scheduled, Queue)
+## Framework with Multiple Handlers (Scheduled, Queue)
 
 ```typescript
 // When you need fetch + scheduled + queue handlers
@@ -84,9 +84,9 @@ export default {
 
 ---
 
-## Production Hono API with D1, KV, Middleware
+## Production API with D1, KV, Middleware
 
-A production-ready Hono API with D1, KV caching, middleware, error handling, and structured logging.
+A production-ready Workers API (using Hono) with D1, KV caching, middleware, error handling, and structured logging.
 
 ```jsonc
 // wrangler.jsonc

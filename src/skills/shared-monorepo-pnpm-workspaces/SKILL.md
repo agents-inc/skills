@@ -50,7 +50,7 @@ description: pnpm workspace protocol, filtering, catalogs, shared dependencies, 
 - Single-package projects with no shared code
 - Projects using Bun or Yarn as their package manager
 - Projects that need npm compatibility exclusively (e.g., npm workspaces)
-- Task orchestration logic (use Turborepo or Nx on top of pnpm)
+- Task orchestration logic (use a dedicated task runner on top of pnpm)
 
 **Key patterns covered:**
 
@@ -67,7 +67,7 @@ description: pnpm workspace protocol, filtering, catalogs, shared dependencies, 
 
 **Detailed resources:**
 
-- [Workspace Setup](examples/setup.md) -- pnpm-workspace.yaml, .npmrc, directory structure, settings
+- [Core Setup](examples/core.md) -- pnpm-workspace.yaml, .npmrc, directory structure, settings
 - [Shared Packages](examples/packages.md) -- workspace protocol, catalogs, TypeScript/ESLint config
 - [Scripts & Filtering](examples/scripts.md) -- --filter, recursive execution, dependency management
 - [Publishing & Versioning](examples/publishing.md) -- changesets, publishConfig, Docker
@@ -136,7 +136,7 @@ disallowWorkspaceCycles: true
 
 **Why good:** Single source of truth for workspace definition and settings
 
-See [examples/setup.md](examples/setup.md) for full workspace setup, directory structure, and all settings.
+See [examples/core.md](examples/core.md) for full workspace setup, directory structure, and all settings.
 
 ---
 
@@ -446,29 +446,6 @@ Need zero-config PnP (no node_modules)?
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**Works with:**
-
-- **Turborepo**: pnpm workspaces + Turborepo for task orchestration, caching, and remote cache sharing
-- **Nx**: Alternative orchestration layer with computation caching and affected detection
-- **Changesets**: Versioning and publishing automation for pnpm workspaces
-- **TypeScript Project References**: Combine with `tsconfig.json` `references` for incremental builds
-- **Docker**: Use `pnpm deploy` with `injectWorkspacePackages: true` for production images
-- **Vercel / Netlify**: Native pnpm support with automatic workspace detection
-
-**Replaces / Conflicts with:**
-
-- **npm workspaces**: pnpm provides stricter dependency isolation and better disk efficiency
-- **Yarn workspaces**: pnpm offers similar features without Yarn Berry's PnP complexity
-- **Lerna (standalone)**: pnpm workspaces + changesets replace Lerna's core functionality
-
-</integration>
-
----
-
 <red_flags>
 
 ## RED FLAGS
@@ -486,7 +463,7 @@ Need zero-config PnP (no node_modules)?
 - Not using `catalog:` when 3+ packages share the same dependency version (version drift)
 - Running `pnpm -r build` in CI instead of `--filter "...[origin/main]"` (wastes time)
 - Missing `private: true` on internal packages (risk of accidental npm publish)
-- Not configuring `onlyBuiltDependencies` allowlist (blocks all install scripts in v10)
+- Not configuring `allowBuilds` (or the older `onlyBuiltDependencies`) allowlist (blocks all install scripts in v10)
 
 **Common Mistakes:**
 
@@ -500,8 +477,8 @@ Need zero-config PnP (no node_modules)?
 - `workspace:*` is replaced with the actual version on `pnpm publish` -- this is expected behavior, not a bug
 - `catalog:` entries must match the dependency name exactly -- typos silently fall through
 - `--filter "...[origin/main]"` requires git history -- use `fetch-depth: 0` or at minimum `fetch-depth: 2`
-- pnpm v10 blocks ALL lifecycle scripts by default -- you must allowlist packages that need `postinstall` (like `esbuild`, `sharp`)
-- `injectWorkspacePackages: true` is required for `pnpm deploy` to work correctly
+- pnpm v10 blocks ALL lifecycle scripts by default -- use `pnpm approve-builds` to allowlist packages that need `postinstall` (like `esbuild`, `sharp`), or configure `allowBuilds` in `pnpm-workspace.yaml`
+- `injectWorkspacePackages: true` is required for `pnpm deploy` (or use `pnpm deploy --legacy` to bypass)
 - Circular workspace dependencies cause unpredictable script execution order -- use `disallowWorkspaceCycles: true`
 - `saveWorkspaceProtocol: rolling` (default) means `pnpm add` auto-saves with `workspace:` -- this is correct behavior
 

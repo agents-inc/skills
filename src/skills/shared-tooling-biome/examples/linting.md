@@ -22,22 +22,19 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      // Enable all style rules (not just recommended)
+      // Enable all style rules, then configure individual ones
       "style": {
         "all": true,
-      },
-      // Disable specific rules
-      "complexity": {
-        "noForEach": "off",
-      },
-      // Configure rule with options
-      "style": {
         "useNamingConvention": {
           "level": "warn",
           "options": {
             "strictCase": false,
           },
         },
+      },
+      // Disable specific rules
+      "complexity": {
+        "noForEach": "off",
       },
       // Enable nursery rules explicitly
       "nursery": {
@@ -230,7 +227,7 @@ function processData(input: unknown) {
               ["@company/**"],
               ":BLANK_LINE:",
               ":ALIAS:",
-              ["../**", "./**"],
+              ":PATH:",
             ],
           },
         },
@@ -246,13 +243,11 @@ function processData(input: unknown) {
 import { readFileSync } from "node:fs";
 
 import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@company/api-client";
 import { Button } from "@company/ui";
 
 import { useAuth } from "@/hooks/use-auth";
-
 import { formatDate } from "../utils/date";
 import { UserCard } from "./user-card";
 ```

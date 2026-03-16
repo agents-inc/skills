@@ -1,128 +1,14 @@
-# ESLint 9 Configuration Examples
+# ESLint - Advanced Examples
 
-> ESLint 9 flat config patterns with shared configurations and only-warn plugin for better developer experience. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
->
-> **WARNING**: ESLint 10 (February 2026) completely removes .eslintrc support. Migrate to flat config now.
+> Shared configs, custom rules, and ESLint 10 migration. See [core.md](core.md) for essential flat config setup.
 
----
-
-## Modern Flat Config with defineConfig()
-
-ESLint 9.15+ introduced `defineConfig()` for type-safe configuration with automatic flattening.
-
-```typescript
-// eslint.config.ts (TypeScript config supported since ESLint 9.15)
-import js from "@eslint/js";
-import { defineConfig, globalIgnores } from "eslint/config";
-import tseslint from "typescript-eslint";
-import eslintConfigPrettier from "eslint-config-prettier";
-import * as onlyWarnPlugin from "eslint-plugin-only-warn";
-
-export default defineConfig(
-  // Global ignores using the new helper function
-  globalIgnores(["dist/**", "generated/**", ".next/**", "node_modules/**"]),
-
-  js.configs.recommended,
-  eslintConfigPrettier,
-
-  // typescript-eslint configs (use defineConfig, not tseslint.config)
-  tseslint.configs.recommended,
-
-  // Convert all errors to warnings for better DX (must be last)
-  {
-    plugins: {
-      "only-warn": onlyWarnPlugin,
-    },
-  },
-);
-```
-
-**Why good:** `defineConfig()` provides type safety and auto-flattens nested arrays, `globalIgnores()` explicitly marks global ignores (clearer intent than bare `ignores`), TypeScript config files supported natively, only-warn plugin loaded last converts all preceding errors to warnings
-
-```javascript
-// BAD: Legacy .eslintrc format (BROKEN in ESLint 10)
-// .eslintrc.json (DON'T USE THIS)
-{
-  "extends": ["eslint:recommended", "prettier"],
-  "plugins": ["@typescript-eslint"],
-  "rules": {
-    "no-unused-vars": "error" // Blocks developers
-  },
-  "ignorePatterns": ["dist/"]
-}
-```
-
-**Why bad:** Legacy .eslintrc is deprecated in ESLint 9 and **completely removed in ESLint 10** (February 2026), error severity blocks developers during development reducing productivity, no only-warn plugin means disruptive error messages, harder to compose and extend configs
+**Prerequisites**: Understand Pattern 1 (Standalone Flat Config) and Pattern 2 (projectService) from [core.md](core.md) first.
 
 ---
 
-## Using extends Property (ESLint 9.15+)
+## Pattern 6: Shared Config Package
 
-The new `extends` property in flat config objects simplifies plugin composition:
-
-```typescript
-// eslint.config.ts
-import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
-import reactPlugin from "eslint-plugin-react";
-
-export default defineConfig({
-  files: ["**/*.tsx"],
-  extends: [
-    // String references for standard configs
-    "eslint/recommended",
-    // Plugin configs (various formats supported)
-    tseslint.configs.recommended,
-    reactPlugin.configs.flat.recommended,
-  ],
-  rules: {
-    // Override specific rules
-    "react/prop-types": "off",
-  },
-});
-```
-
-**Why good:** Standardizes config merging regardless of plugin format (object, array, or string), cleaner than spreading arrays manually, conditionally applies configs based on file patterns
-
----
-
-## typescript-eslint v8+ with projectService
-
-The `projectService` feature (stable since typescript-eslint v8) provides easier typed linting:
-
-```typescript
-// eslint.config.ts
-import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
-
-export default defineConfig(tseslint.configs.recommended, {
-  languageOptions: {
-    parser: tseslint.parser,
-    parserOptions: {
-      // projectService replaces the old project/parserOptions pattern
-      projectService: true,
-      // Allows linting files not in tsconfig (like config files)
-      allowDefaultProject: ["*.config.ts", "*.config.mjs"],
-    },
-  },
-});
-```
-
-**Why good:** `projectService` auto-discovers nearest tsconfig.json for each file, `allowDefaultProject` lints config files without adding them to tsconfig, faster than manual project configuration, cleaner than EXPERIMENTAL_useProjectService
-
-```javascript
-// BAD: Deprecated tseslint.config() wrapper
-import tseslint from "typescript-eslint";
-
-// tseslint.config() is deprecated - use defineConfig() instead
-export default tseslint.config(tseslint.configs.recommended);
-```
-
-**Why bad:** `tseslint.config()` is deprecated in favor of ESLint's native `defineConfig()`, mixing wrapper functions creates confusion
-
----
-
-## Shared Config Pattern
+For teams or monorepos, extract linting config into a shared package:
 
 ```typescript
 // packages/eslint-config/base.ts
@@ -148,61 +34,11 @@ export const baseConfig = defineConfig(
 );
 ```
 
-**Why good:** Uses modern `defineConfig()` for type safety, explicit `globalIgnores()` for clarity, TypeScript config file support, only-warn plugin loaded last to convert all errors
+**Why good:** Single source of truth prevents config drift, `defineConfig()` provides type safety, explicit `globalIgnores()` for clarity
 
 ---
 
-## Custom ESLint Rules
-
-```javascript
-// packages/eslint-config/custom-rules.js
-export const customRules = {
-  rules: {
-    "import/no-default-export": "warn",
-    "no-restricted-imports": [
-      "error",
-      {
-        patterns: [
-          {
-            group: ["@repo/*/src/**"],
-            message: "Import from package exports, not internal paths",
-          },
-        ],
-      },
-    ],
-    "@typescript-eslint/consistent-type-imports": [
-      "warn",
-      {
-        prefer: "type-imports",
-        fixable: "code",
-      },
-    ],
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      {
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_",
-      },
-    ],
-  },
-};
-```
-
-**Why good:** Named exports enable better tree-shaking reducing bundle size, preventing internal imports maintains package API boundaries, consistent type imports improve build performance, unused variable warnings catch dead code early
-
-```javascript
-// BAD: No custom rules
-export const config = [
-  js.configs.recommended,
-  // Missing project-specific rules
-];
-```
-
-**Why bad:** No enforcement of named exports allows default exports reducing tree-shaking effectiveness, no internal import restrictions breaks package encapsulation, no type import consistency slows builds, unused variables clutter codebase
-
----
-
-## Using Shared Config in Apps
+## Pattern 7: Consuming Shared Config
 
 ```typescript
 // apps/my-app/eslint.config.ts
@@ -218,7 +54,7 @@ export default defineConfig(baseConfig, customRules, {
 });
 ```
 
-**Why good:** No spread operators needed with `defineConfig()` (auto-flattens), TypeScript config file for type checking, clean composition of shared configs
+**Why good:** No spread operators needed with `defineConfig()` (auto-flattens), clean composition of shared configs
 
 ```javascript
 // BAD: Manual spreading (old pattern)
@@ -233,20 +69,56 @@ export default [
 
 ---
 
-## Key Points
+## Pattern 8: Custom ESLint Rules
 
-| Requirement                | Implementation                               |
-| -------------------------- | -------------------------------------------- |
-| Use flat config            | `defineConfig(...)` with TypeScript config   |
-| Type-safe config           | `eslint.config.ts` with `defineConfig()`     |
-| Global ignores             | `globalIgnores(["dist/**", ".next/**"])`     |
-| Convert errors to warnings | Include `eslint-plugin-only-warn`            |
-| Prevent Prettier conflicts | Include `eslint-config-prettier`             |
-| typescript-eslint v8+      | Use `projectService: true` for typed linting |
+Common custom rules for enforcing project conventions:
+
+```javascript
+// packages/eslint-config/custom-rules.js
+export const customRules = {
+  rules: {
+    // Enforce named exports for better tree-shaking
+    "import/no-default-export": "warn",
+
+    // Prevent importing from internal package paths
+    "no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            group: ["@repo/*/src/**"],
+            message: "Import from package exports, not internal paths",
+          },
+        ],
+      },
+    ],
+
+    // Enforce import type for type-only imports
+    "@typescript-eslint/consistent-type-imports": [
+      "warn",
+      {
+        prefer: "type-imports",
+        fixable: "code",
+      },
+    ],
+
+    // Catch unused variables with underscore escape hatch
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      },
+    ],
+  },
+};
+```
+
+**Why good:** Named exports enable better tree-shaking, preventing internal imports maintains package API boundaries, consistent type imports improve build performance, unused variable warnings catch dead code early with underscore escape hatch
 
 ---
 
-## ESLint 10 Migration Notes
+## ESLint 10 Migration
 
 ESLint 10 was released February 6, 2026 and completely removes .eslintrc support. Before upgrading:
 
@@ -287,18 +159,4 @@ export default defineConfig(
 );
 ```
 
-**Why good:** This config works with both ESLint 9.15+ and ESLint 10 with zero changes needed - `defineConfig()` and `globalIgnores()` are the forward-compatible API
-
----
-
-## See Also
-
-- [prettier.md](prettier.md) for Prettier configuration
-- [reference.md](../reference.md) for ESLint vs Biome decision framework
-
-**Official Documentation:**
-
-- [ESLint Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files)
-- [ESLint Migration Guide](https://eslint.org/docs/latest/use/configure/migration-guide)
-- [typescript-eslint v8](https://typescript-eslint.io/blog/announcing-typescript-eslint-v8/)
-- [ESLint 10 Release](https://eslint.org/blog/2026/02/eslint-v10.0.0-released/)
+**Why good:** This config works with both ESLint 9.15+ and ESLint 10 with zero changes — `defineConfig()` and `globalIgnores()` are the forward-compatible API

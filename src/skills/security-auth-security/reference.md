@@ -22,7 +22,7 @@ Is it a secret (API key, password, token)?
 └─ NO → Is it user input being rendered?
     ├─ YES → Does it need to be HTML?
     │   ├─ YES → Sanitize with DOMPurify first
-    │   └─ NO → Use React's auto-escaping (default)
+    │   └─ NO → Use framework auto-escaping (default)
     └─ NO → Is it an authentication token?
         ├─ YES → HttpOnly cookie (server-side)
         │   └─ Short-lived access token in memory (client-side)
@@ -48,7 +48,7 @@ Is it a secret (API key, password, token)?
 **High Priority Issues:**
 
 - Committing secrets to repository (.env files, API keys in code)
-- Using `dangerouslySetInnerHTML` with unsanitized user input (enables XSS attacks)
+- Injecting raw HTML with unsanitized user input (enables XSS attacks)
 - Storing authentication tokens in localStorage/sessionStorage (accessible to XSS)
 - No CSRF protection on state-changing operations (allows forged requests)
 - Critical/high vulnerabilities unpatched (exploit window open)
@@ -74,7 +74,7 @@ Is it a secret (API key, password, token)?
 
 **Gotchas & Edge Cases:**
 
-- `.env.local` is gitignored by default in Next.js, but not in all frameworks - verify
+- `.env.local` is gitignored by default in some frameworks but not all - verify your `.gitignore` includes it
 - DOMPurify sanitization happens client-side - also sanitize on server for defense in depth
 - CSRF tokens need refresh on expiration - handle gracefully without breaking UX
 - SameSite=Lax is the modern browser default and recommended for session cookies (balances security/UX)
@@ -127,15 +127,18 @@ function storeAuthToken(token: string) {
 ### Unsanitized HTML Rendering
 
 ```typescript
-// ANTI-PATTERN: dangerouslySetInnerHTML without sanitization
-function UserComment({ comment }: { comment: string }) {
-  return <div dangerouslySetInnerHTML={{ __html: comment }} />;
-}
+// ANTI-PATTERN: Injecting raw HTML without sanitization
+element.innerHTML = userComment; // Arbitrary script execution!
+
+// Also applies to framework-specific APIs:
+// React: dangerouslySetInnerHTML={{ __html: userComment }}
+// Vue: v-html="userComment"
+// Svelte: {@html userComment}
 ```
 
 **Why it's wrong:** Allows arbitrary script execution via user input, XSS attacks can steal cookies/tokens or perform actions as user.
 
-**What to do instead:** Use DOMPurify to sanitize before rendering, or use React's default text escaping.
+**What to do instead:** Use DOMPurify to sanitize before rendering, or rely on framework auto-escaping (the default in modern frameworks).
 
 ---
 

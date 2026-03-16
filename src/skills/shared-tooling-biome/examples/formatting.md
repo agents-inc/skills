@@ -84,41 +84,7 @@
 | `endOfLine`       | `lineEnding`              | Different naming     |
 | `jsxSingleQuote`  | `jsxQuoteStyle: "single"` | Different naming     |
 
----
-
-## All Formatter Configuration Options
-
-### Global Options (All Languages)
-
-| Option              | Type                         | Default  | Notes                           |
-| ------------------- | ---------------------------- | -------- | ------------------------------- |
-| `enabled`           | boolean                      | `true`   | Enable/disable formatting       |
-| `indentStyle`       | `"tab"` \| `"space"`         | `"tab"`  | **Biome defaults to tabs**      |
-| `indentWidth`       | number                       | `2`      | Spaces per indent level         |
-| `lineWidth`         | number                       | `80`     | Maximum line width              |
-| `lineEnding`        | `"lf"` \| `"crlf"` \| `"cr"` | `"lf"`   | Line ending character           |
-| `bracketSpacing`    | boolean                      | `true`   | Spaces inside `{ }`             |
-| `attributePosition` | `"auto"` \| `"multiline"`    | `"auto"` | HTML/JSX attribute position     |
-| `useEditorconfig`   | boolean                      | `false`  | Respect .editorconfig           |
-| `formatWithErrors`  | boolean                      | `false`  | Format files with syntax errors |
-
-### JavaScript/TypeScript Options
-
-| Option             | Type                           | Default      | Notes                        |
-| ------------------ | ------------------------------ | ------------ | ---------------------------- |
-| `quoteStyle`       | `"single"` \| `"double"`       | `"double"`   | String quote style           |
-| `jsxQuoteStyle`    | `"single"` \| `"double"`       | `"double"`   | JSX attribute quote style    |
-| `quoteProperties`  | `"asNeeded"` \| `"preserve"`   | `"asNeeded"` | Object property quoting      |
-| `trailingCommas`   | `"all"` \| `"es5"` \| `"none"` | `"all"`      | Trailing comma behavior      |
-| `semicolons`       | `"always"` \| `"asNeeded"`     | `"always"`   | Semicolon insertion          |
-| `arrowParentheses` | `"always"` \| `"asNeeded"`     | `"always"`   | Arrow function parens        |
-| `bracketSameLine`  | boolean                        | `false`      | JSX closing `>` on same line |
-
-### JSON Options
-
-| Option           | Type                | Default  | Notes                |
-| ---------------- | ------------------- | -------- | -------------------- |
-| `trailingCommas` | `"none"` \| `"all"` | `"none"` | JSON trailing commas |
+> For complete formatter option tables (global, JS/TS, JSON, CSS), see [reference.md](../reference.md#formatter-configuration-options).
 
 ---
 

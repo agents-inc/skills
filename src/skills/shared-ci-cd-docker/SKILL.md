@@ -31,7 +31,7 @@ description: Docker containerization patterns for Node.js/TypeScript development
 
 ## Examples
 
-- [Dockerfile Patterns](examples/dockerfile.md) - Multi-stage builds, Bun, monorepo, layer caching, .dockerignore, signal handling
+- [Dockerfile Patterns](examples/core.md) - Multi-stage builds, Bun, monorepo, layer caching, .dockerignore, signal handling
 - [Docker Compose](examples/compose.md) - Development environments, networking, volumes, healthchecks
 - [Production & CI/CD](examples/production.md) - Security hardening, secrets, CI/CD pipelines, vulnerability scanning
 - [Quick Reference](reference.md) - Dockerfile instructions, CLI commands, base image comparison
@@ -119,14 +119,14 @@ A production Dockerfile uses three stages:
 
 ```dockerfile
 # Stage 1: Production dependencies
-FROM node:22-alpine3.21 AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --no-audit --no-fund
 
 # Stage 2: Build TypeScript
-FROM node:22-alpine3.21 AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -136,7 +136,7 @@ COPY src/ ./src/
 RUN npm run build
 
 # Stage 3: Production runtime
-FROM node:22-alpine3.21 AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache tini
 ENV NODE_ENV=production
@@ -153,7 +153,7 @@ CMD ["node", "dist/server.js"]
 
 **Why good:** Three-stage build separates concerns, BuildKit cache mount speeds up npm ci, non-root user, tini for signal handling, only production artifacts in final image
 
-See [examples/dockerfile.md](examples/dockerfile.md) for complete Dockerfiles including Bun and Turborepo monorepo variants.
+See [examples/core.md](examples/core.md) for complete Dockerfiles including Bun and monorepo variants.
 
 ---
 
@@ -210,7 +210,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 
 **Layer ordering rules:** Pin base image versions > Copy dependency manifests > Install dependencies > Copy source code > Build/compile. This maximizes cache hits.
 
-See [examples/dockerfile.md](examples/dockerfile.md) for cache mount patterns for npm, Bun, pnpm, and apt.
+See [examples/core.md](examples/core.md) for cache mount patterns for npm, Bun, pnpm, and apt.
 
 ---
 
@@ -283,7 +283,7 @@ coverage
 
 **Why good:** Excludes node_modules (reinstalled deterministically), .env files (prevents secret leaks), .git (invalidates cache), keeps build context small
 
-See [examples/dockerfile.md](examples/dockerfile.md) for a comprehensive .dockerignore file.
+See [examples/core.md](examples/core.md) for a comprehensive .dockerignore file.
 
 ---
 
@@ -299,7 +299,7 @@ CMD ["node", "dist/server.js"]
 
 **Why good:** Tini forwards signals to node process, handles zombie process reaping, ensures graceful shutdown on `docker stop`
 
-See [examples/dockerfile.md](examples/dockerfile.md) for complete TypeScript graceful shutdown implementation.
+See [examples/core.md](examples/core.md) for complete TypeScript graceful shutdown implementation.
 
 </patterns>
 

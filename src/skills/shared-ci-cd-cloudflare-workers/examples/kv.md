@@ -1,13 +1,13 @@
 # Cloudflare Workers — KV Storage Examples
 
-> KV namespace binding, get/put/delete/list operations, caching patterns, and stale-while-revalidate. Reference from [SKILL.md](../SKILL.md).
+> KV namespace binding, get/put/delete/list operations, caching patterns, and stale-while-revalidate. See [SKILL.md](../SKILL.md) for decision guidance.
 
 **Related examples:**
 
-- [Setup & Configuration](setup.md) — Project setup and wrangler.jsonc
+- [Core Setup & Configuration](core.md) — Project setup and wrangler.jsonc
 - [D1 Database](d1.md) — Relational data with SQL
 - [R2 Object Storage](r2.md) — File/blob storage
-- [Routing & Hono](routing.md) — API routing and middleware
+- [Routing & Middleware](routing.md) — API routing and middleware
 
 ---
 

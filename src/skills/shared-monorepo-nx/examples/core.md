@@ -1,6 +1,6 @@
 # Nx - Workspace Setup Examples
 
-> Complete examples for creating Nx workspaces, directory structure, and nx.json configuration. Reference from [SKILL.md](../SKILL.md).
+> Core patterns for nx.json configuration and workspace structure. See [SKILL.md](../SKILL.md) for concepts and decision guidance.
 
 **Related examples:**
 
@@ -10,38 +10,17 @@
 
 ---
 
-## Creating a New Nx Workspace
-
-```bash
-# Create workspace with React preset
-npx create-nx-workspace@latest my-org --preset=react-monorepo --bundler=vite
-
-# Create workspace with Next.js
-npx create-nx-workspace@latest my-org --preset=next
-
-# Create workspace with Angular
-npx create-nx-workspace@latest my-org --preset=angular-monorepo
-
-# Create empty workspace (add plugins later)
-npx create-nx-workspace@latest my-org --preset=ts
-
-# Add Nx to an existing monorepo
-npx nx init
-```
-
----
-
 ## Typical Directory Structure
 
 ```
 my-org/
 ├── apps/
-│   ├── web/                    # Next.js or React app
+│   ├── web/                    # Frontend application
 │   │   ├── src/
 │   │   ├── project.json        # Only overrides (or omitted entirely)
 │   │   ├── vite.config.ts      # Plugin infers build/serve/test
 │   │   └── tsconfig.json
-│   └── api/                    # Node.js API server
+│   └── api/                    # Backend API server
 │       ├── src/
 │       ├── project.json
 │       └── tsconfig.json
@@ -184,73 +163,7 @@ my-org/
 
 ---
 
-## TypeScript Project References Setup
-
-### tsconfig.base.json (Workspace Root)
-
-```json
-{
-  "compileOnSave": false,
-  "compilerOptions": {
-    "rootDir": ".",
-    "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "bundler",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "es2015",
-    "module": "esnext",
-    "lib": ["es2020", "dom"],
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@my-org/shared-ui": ["libs/shared/ui/src/index.ts"],
-      "@my-org/shared-types": ["libs/shared/types/src/index.ts"],
-      "@my-org/utils": ["libs/shared/utils/src/index.ts"]
-    }
-  }
-}
-```
-
-**Why good:** Centralized path mappings enable TypeScript imports across workspace without publishing packages. Editors resolve types correctly. Nx uses these paths to build the project graph.
-
----
-
-## Adding Nx to an Existing Project
-
-```bash
-# Initialize Nx in existing monorepo
-npx nx init
-
-# Add specific plugin
-npx nx add @nx/react
-npx nx add @nx/vite
-
-# Verify inferred tasks
-npx nx show project my-app
-```
-
----
-
-## Nx Console (IDE Integration)
-
-### VS Code Setup
-
-```bash
-# Install via VS Code marketplace
-# Extension: "Nx Console" by Nrwl
-
-# Features available:
-# - Visual project graph
-# - Run targets from the sidebar
-# - Generate code with GUI forms
-# - Explore inferred task configuration
-# - Nx Cloud integration (PR status, self-healing fixes)
-```
-
-### Verifying Inferred Tasks
+## Verifying Inferred Tasks
 
 ```bash
 # Show all targets for a project (including inferred)

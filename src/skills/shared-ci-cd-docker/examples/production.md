@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [dockerfile.md](dockerfile.md) - Multi-stage Dockerfiles, layer caching, .dockerignore
+- [core.md](core.md) - Multi-stage Dockerfiles, layer caching, .dockerignore
 - [compose.md](compose.md) - Docker Compose for development, networking, volumes
 
 ---
@@ -236,7 +236,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -251,7 +251,7 @@ jobs:
 
       - name: Extract metadata (tags, labels)
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -311,7 +311,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

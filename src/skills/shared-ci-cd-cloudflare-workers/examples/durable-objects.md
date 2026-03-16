@@ -1,12 +1,12 @@
 # Cloudflare Workers — Durable Objects Examples
 
-> Durable Object classes, SQLite storage, RPC methods, rate limiting, and WebSocket handling with hibernation. Reference from [SKILL.md](../SKILL.md).
+> Durable Object classes, SQLite storage, RPC methods, rate limiting, and WebSocket handling with hibernation. See [SKILL.md](../SKILL.md) for decision guidance.
 
 **Related examples:**
 
-- [Setup & Configuration](setup.md) — Project setup and wrangler.jsonc
+- [Core Setup & Configuration](core.md) — Project setup and wrangler.jsonc
 - [D1 Database](d1.md) — When to use D1 vs Durable Objects
-- [Routing & Hono](routing.md) — API routing and middleware
+- [Routing & Middleware](routing.md) — API routing and middleware
 - [KV Storage](kv.md) — Eventually consistent key-value storage
 
 ---

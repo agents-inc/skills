@@ -11,7 +11,7 @@
 
 ## Example 1: Production Dockerfile for Node.js/TypeScript API
 
-Complete multi-stage Dockerfile for a TypeScript Express/Hono API server.
+Complete multi-stage Dockerfile for a TypeScript API server.
 
 ```dockerfile
 # syntax=docker/dockerfile:1
@@ -20,7 +20,7 @@ Complete multi-stage Dockerfile for a TypeScript Express/Hono API server.
 # Stage 1: Production dependencies only
 # ============================================================
 ARG NODE_VERSION=22
-ARG ALPINE_VERSION=3.21
+ARG ALPINE_VERSION=3.22
 
 FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS deps
 WORKDIR /app
@@ -150,7 +150,7 @@ Building a single service from a Turborepo monorepo.
 ```dockerfile
 # syntax=docker/dockerfile:1
 ARG NODE_VERSION=22
-ARG ALPINE_VERSION=3.21
+ARG ALPINE_VERSION=3.22
 
 # ============================================================
 # Stage 1: Prune monorepo for target package
@@ -300,18 +300,13 @@ __tests__
 *.spec.ts
 *.spec.js
 coverage
-.nyc_output
-jest.config.*
-vitest.config.*
-playwright.config.*
-playwright-report
 
 # CI/CD configuration
 .github
 .gitlab-ci.yml
 .circleci
 
-# Turborepo
+# Monorepo cache
 .turbo
 
 # OS files

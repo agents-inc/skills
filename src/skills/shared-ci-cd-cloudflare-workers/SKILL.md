@@ -1,11 +1,11 @@
 ---
 name: shared-ci-cd-cloudflare-workers
-description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI, and Hono integration
+description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI
 ---
 
 # Cloudflare Workers Patterns
 
-> **Quick Guide:** Cloudflare Workers run TypeScript/JavaScript on Cloudflare's global edge network with V8 isolates (not containers). Use `wrangler.jsonc` for configuration, `wrangler dev` for local development, and `wrangler deploy` for production. Access KV, D1, R2, Queues, Durable Objects, and Workers AI through type-safe bindings on the `env` parameter. Run `wrangler types` to auto-generate your `Env` interface. Pair with Hono for structured API routing. Stream large payloads — Workers have a 128 MB memory limit. Never store request-scoped state in module-level variables.
+> **Quick Guide:** Cloudflare Workers run TypeScript/JavaScript on Cloudflare's global edge network with V8 isolates (not containers). Use `wrangler.jsonc` for configuration, `wrangler dev` for local development, and `wrangler deploy` for production. Access KV, D1, R2, Queues, Durable Objects, and Workers AI through type-safe bindings on the `env` parameter. Run `wrangler types` to auto-generate your `Env` interface. Stream large payloads — Workers have a 128 MB memory limit. Never store request-scoped state in module-level variables.
 
 ---
 
@@ -31,12 +31,12 @@ description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, 
 
 ## Examples
 
-- [Setup & Configuration](examples/setup.md) — wrangler.jsonc, project init, fetch handler, secrets, multi-env, CI/CD, testing
+- [Core Setup & Configuration](examples/core.md) — wrangler.jsonc, project init, fetch handler, secrets, multi-env, CI/CD, testing
 - [KV Storage](examples/kv.md) — KV binding, typed get/put, TTL, stale-while-revalidate caching
-- [D1 Database](examples/d1.md) — D1 binding, parameterized queries, batch ops, migrations, Hono CRUD
+- [D1 Database](examples/d1.md) — D1 binding, parameterized queries, batch ops, migrations, CRUD API
 - [R2 Object Storage](examples/r2.md) — R2 binding, file upload/download/delete with streaming
 - [Durable Objects](examples/durable-objects.md) — DO classes, SQLite, RPC, rate limiter, WebSocket chat
-- [Routing & Hono](examples/routing.md) — Hono framework, middleware, queues, cron, service bindings, AI, streaming
+- [Routing & Middleware](examples/routing.md) — API framework integration, middleware, queues, cron, service bindings, AI, streaming
 - [Quick Reference](reference.md) — Wrangler CLI commands, binding type signatures, config template, CPU limits
 
 ---
@@ -48,7 +48,7 @@ description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, 
 - Deploying TypeScript/JavaScript to Cloudflare's edge network
 - Configuring Wrangler CLI for local development and deployment
 - Using Cloudflare bindings: KV, D1, R2, Queues, Durable Objects, Workers AI
-- Building APIs on Workers with Hono framework
+- Building APIs on Workers with a framework (e.g., Hono)
 - Implementing real-time features with Durable Objects and WebSockets
 - Setting up cron triggers and scheduled handlers
 - Configuring service bindings for worker-to-worker communication
@@ -70,12 +70,12 @@ description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, 
 - Durable Objects (stateful edge compute, WebSockets, coordination)
 - Cloudflare Queues (async message processing)
 - Workers AI (inference at the edge)
-- Hono framework integration with typed bindings
+- Framework integration (Hono examples) with typed bindings
 - Environment variables, secrets, and multi-environment config
 - Service bindings (worker-to-worker RPC)
 - Cron triggers and scheduled workers
 - Streaming and performance optimization
-- Testing with `@cloudflare/vitest-pool-workers`
+- Testing with Workers-native test pool
 
 ---
 
@@ -131,7 +131,7 @@ Every Workers project starts with `wrangler.jsonc`. Cloudflare recommends JSON f
 }
 ```
 
-See [examples/setup.md](examples/setup.md) for full project initialization, multi-environment config, secrets management, CI/CD, and testing setup.
+See [examples/core.md](examples/core.md) for full project initialization, multi-environment config, secrets management, CI/CD, and testing setup.
 
 ---
 
@@ -153,7 +153,7 @@ export default {
 } satisfies ExportedHandler<Env>;
 ```
 
-Never store mutable state in module-level variables — V8 isolate reuse causes cross-request data leaks. See [examples/setup.md](examples/setup.md) for complete handler with CORS and routing.
+Never store mutable state in module-level variables — V8 isolate reuse causes cross-request data leaks. See [examples/core.md](examples/core.md) for complete handler with CORS and routing.
 
 ---
 
@@ -181,7 +181,7 @@ See [examples/kv.md](examples/kv.md) for stale-while-revalidate pattern and full
 
 ### Pattern 4: D1 SQLite Database
 
-D1 is serverless SQLite at the edge. Always use parameterized queries via `prepare().bind()` to prevent SQL injection. Use `batch()` for atomic multi-statement operations.
+D1 is serverless SQLite at the edge. Always use parameterized queries via `prepare().bind()` to prevent SQL injection. Use `batch()` for atomic multi-statement operations. Use `withSession()` for read replica consistency when read replication is enabled.
 
 ```typescript
 const user = await db
@@ -195,7 +195,7 @@ const { results } = await db
   .all<User>();
 ```
 
-See [examples/d1.md](examples/d1.md) for migrations, batch operations, and full Hono CRUD API.
+See [examples/d1.md](examples/d1.md) for migrations, batch operations, and full CRUD API.
 
 ---
 
@@ -211,7 +211,7 @@ object.writeHttpMetadata(headers);
 return new Response(object.body, { headers }); // Stream directly
 ```
 
-See [examples/r2.md](examples/r2.md) for Hono file service with content-type validation and list operations.
+See [examples/r2.md](examples/r2.md) for file service with content-type validation and list operations.
 
 ---
 
@@ -251,9 +251,9 @@ See [examples/routing.md](examples/routing.md) for all these patterns with full 
 
 ---
 
-### Pattern 8: Hono Framework on Workers
+### Pattern 8: API Framework Integration
 
-Hono is the recommended framework for structured APIs. Use `Hono<{ Bindings: Env }>` for type-safe binding access. Export `app.fetch` alongside scheduled/queue handlers.
+For structured APIs, use a framework with typed bindings (Hono is the Workers ecosystem standard). Export the framework's `fetch` handler alongside scheduled/queue handlers.
 
 ```typescript
 import { Hono } from "hono";
@@ -269,7 +269,7 @@ app.get("/users/:id", async (c) => {
 export default app;
 ```
 
-See [examples/routing.md](examples/routing.md) for production Hono API with middleware, error handling, and multi-handler setup.
+See [examples/routing.md](examples/routing.md) for production API with middleware, error handling, and multi-handler setup.
 
 </patterns>
 
@@ -381,21 +381,26 @@ Do you need coordination between concurrent requests?
 
 ## Integration Guide
 
-**Works with:**
+**Cloudflare Platform Services:**
 
-- **Hono**: Recommended API framework for Workers — typed bindings via `Hono<{ Bindings: Env }>`, middleware ecosystem, zero overhead
-- **Drizzle ORM**: Works with D1 for type-safe SQL queries and migrations
-- **Prisma ORM**: Supports Workers and D1 since v5.12.0
-- **Vitest**: `@cloudflare/vitest-pool-workers` for testing inside Workers runtime
-- **GitHub Actions**: `cloudflare/wrangler-action@v3` for CI/CD deployment
-- **Hyperdrive**: Connection pooling proxy for external PostgreSQL/MySQL
+- **Hyperdrive**: Connection pooling proxy for external PostgreSQL/MySQL — eliminates per-request TCP/TLS overhead
 - **Vectorize**: Vector database for embeddings and semantic search with Workers AI
+- **Cloudflare Pages**: Static site hosting with Workers-powered functions for full-stack apps
+- **GitHub Actions**: `cloudflare/wrangler-action@v3` for CI/CD deployment
 
-**Replaces / Conflicts with:**
+**Framework & ORM Compatibility:**
 
-- **AWS Lambda@Edge / CloudFront Functions**: Cloudflare Workers are the equivalent edge compute platform
-- **Vercel Edge Functions**: Similar V8-based edge runtime but vendor-locked to Vercel
-- **Express/Fastify on Workers**: Use Hono instead — designed for edge runtimes, smaller bundle
+Workers are compatible with edge-optimized frameworks and ORMs that support the V8 runtime. Use `Hono<{ Bindings: Env }>` for type-safe binding access in the recommended framework. D1 works with any ORM that supports SQLite (check your ORM's Workers compatibility docs).
+
+**Testing:**
+
+Use `@cloudflare/vitest-pool-workers` to run tests inside the actual Workers runtime with real bindings (KV, D1, R2). See [examples/core.md](examples/core.md) for test configuration.
+
+**Comparable Platforms:**
+
+- AWS Lambda@Edge / CloudFront Functions
+- Vercel Edge Functions
+- Deno Deploy
 
 </integration>
 
@@ -430,7 +435,7 @@ Do you need coordination between concurrent requests?
 - Not using `ctx.waitUntil()` for post-response background work (work may be cancelled when response is sent)
 - Comparing secrets with `===` instead of `crypto.subtle.timingSafeEqual()` (timing side-channel attack)
 - Using `passThroughOnException()` as error handling (hides bugs, use explicit try/catch)
-- Floating promises (not awaited, not returned, not passed to `waitUntil()`) causing silent failures
+- Floating promises (not awaited, not returned, not passed to `waitUntil()`) causing silent failures — enable `@typescript-eslint/no-floating-promises` to catch at dev time
 
 **Gotchas and Edge Cases:**
 
@@ -438,6 +443,9 @@ Do you need coordination between concurrent requests?
 - `wrangler dev` uses local simulation by default; use `--remote` to test against real Cloudflare services
 - D1 batch operations execute sequentially (not in parallel) but atomically
 - Durable Objects in-memory state is lost on eviction — always persist important data to SQLite first
+- Unnecessary `await` between DO storage writes breaks write coalescing — batch writes happen atomically when you don't await between them
+- DO alarm handlers may fire multiple times — design them to be idempotent
+- Using `blockConcurrencyWhile()` on every request limits throughput to ~200 req/sec — use it only for initialization
 - Workers on the free plan have a 10ms CPU time limit per request (not wall-clock time — I/O waiting is free)
 - Cron trigger changes take up to 15 minutes to propagate globally
 - `.dev.vars` file is for local secrets only and must be gitignored

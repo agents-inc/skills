@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Workspace initialization, pnpm-workspace.yaml, settings
+- [core.md](core.md) -- Workspace initialization, pnpm-workspace.yaml, settings
 - [scripts.md](scripts.md) -- Running scripts, filtering, dependency management
 - [publishing.md](publishing.md) -- Changesets, versioning, publishing
 - [ci.md](ci.md) -- CI/CD pipelines, GitHub Actions, Docker

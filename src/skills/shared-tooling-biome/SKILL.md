@@ -47,8 +47,8 @@ description: Biome v2 unified linter, formatter, and import organizer — single
 - Projects requiring ESLint plugins with no Biome equivalent (e.g., custom framework-specific plugins)
 - Projects needing Markdown, YAML, or TOML formatting (Biome does not support these yet)
 - Runtime code (this is build-time tooling only)
-- Git hooks setup details (see `shared-tooling-git-hooks` for Husky/Lefthook patterns)
-- TypeScript compiler configuration (see `shared-tooling-typescript-config`)
+- Git hooks framework setup (Husky/Lefthook configuration is a separate concern)
+- TypeScript compiler configuration (`tsconfig.json` is a separate concern)
 
 **Key patterns covered:**
 
@@ -78,10 +78,6 @@ description: Biome v2 unified linter, formatter, and import organizer — single
 **Other resources:**
 
 - [CLI Quick Reference](reference.md) — All CLI commands, flags, and configuration option tables
-- For ESLint + Prettier configuration (alternative approach), see `shared-tooling-eslint-prettier`
-- For git hooks and lint-staged, see `shared-tooling-git-hooks`
-- For TypeScript compiler configuration, see `shared-tooling-typescript-config`
-- For daily coding conventions (naming, imports, constants), see CLAUDE.md
 
 ---
 
@@ -232,14 +228,17 @@ Biome v2 revamped the import organizer with custom group ordering. Configure und
           "level": "on",
           "options": {
             "groups": [
-              ":NODE:",
+              [":BUN:", ":NODE:"],
               ":PACKAGE:",
               ":BLANK_LINE:",
               ["@company/**"],
               ":BLANK_LINE:",
               ":ALIAS:",
+              ":PATH:",
+              ":BLANK_LINE:",
               { "type": true },
             ],
+            "identifierOrder": "natural",
           },
         },
       },
@@ -248,16 +247,20 @@ Biome v2 revamped the import organizer with custom group ordering. Configure und
 }
 ```
 
+**Key options:** `identifierOrder` controls named import sorting — `"natural"` (default, e.g. `var1, var2, var11`) or `"lexicographic"` (strict alphabetical). Groups accept predefined matchers, glob patterns (`"@my/lib/**"`), object matchers (`{ "type": true, "source": ["@my/lib"] }`), or arrays combining any of these.
+
 #### Predefined Groups
 
-| Group          | Matches                                    |
-| -------------- | ------------------------------------------ |
-| `:NODE:`       | Node.js built-ins and `node:` protocol     |
-| `:PACKAGE:`    | Regular npm packages                       |
-| `:ALIAS:`      | Aliased imports (`@/`, `#`, `~`, `$`, `%`) |
-| `:URL:`        | HTTP/HTTPS imports                         |
-| `:BUN:`        | Bun-specific modules                       |
-| `:BLANK_LINE:` | Visual separator between groups            |
+| Group                     | Matches                                    |
+| ------------------------- | ------------------------------------------ |
+| `:NODE:`                  | Node.js built-ins and `node:` protocol     |
+| `:BUN:`                   | Bun-specific modules                       |
+| `:PACKAGE:`               | Scoped and bare npm packages               |
+| `:PACKAGE_WITH_PROTOCOL:` | Packages with a protocol prefix            |
+| `:ALIAS:`                 | Aliased imports (`@/`, `#`, `~`, `$`, `%`) |
+| `:PATH:`                  | Absolute and relative path imports         |
+| `:URL:`                   | HTTP/HTTPS imports                         |
+| `:BLANK_LINE:`            | Visual separator between groups            |
 
 > **Full examples:** See [examples/linting.md](examples/linting.md#custom-import-ordering) for import ordering with results.
 

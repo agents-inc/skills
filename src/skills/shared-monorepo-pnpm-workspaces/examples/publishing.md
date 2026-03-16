@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Workspace initialization, pnpm-workspace.yaml, settings
+- [core.md](core.md) -- Workspace initialization, pnpm-workspace.yaml, settings
 - [packages.md](packages.md) -- Shared packages, TypeScript config, workspace protocol
 - [scripts.md](scripts.md) -- Running scripts, filtering, dependency management
 - [ci.md](ci.md) -- CI/CD pipelines, GitHub Actions, Docker
@@ -166,7 +166,7 @@ ENV NODE_ENV=production
 CMD ["node", "dist/index.js"]
 ```
 
-**Why good:** `pnpm deploy` creates a standalone directory with only the production dependencies for a specific package, dramatically smaller Docker images, `injectWorkspacePackages: true` required for deploy to resolve workspace deps correctly
+**Why good:** `pnpm deploy` creates a standalone directory with only the production dependencies for a specific package, dramatically smaller Docker images, `injectWorkspacePackages: true` required for deploy to resolve workspace deps correctly. Use `pnpm deploy --legacy` if you cannot enable `injectWorkspacePackages` globally.
 
 ---
 
