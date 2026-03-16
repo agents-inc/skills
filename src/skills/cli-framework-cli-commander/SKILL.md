@@ -1,11 +1,11 @@
 ---
 name: cli-framework-cli-commander
-description: Node.js CLI development with Commander.js, @clack/prompts, and picocolors. Command structure, interactive prompts, state machines, error handling, exit codes, configuration hierarchies.
+description: Node.js CLI development with Commander.js and @clack/prompts - command structure, interactive prompts, wizard state machines, config hierarchies, exit codes, cancellation handling
 ---
 
 # CLI Application Development with Commander.js
 
-> **Quick Guide:** Use Commander.js for command structure, @clack/prompts for interactive UX, and picocolors for terminal colors. Structure commands in separate files, use standardized exit codes, handle cancellation gracefully, and implement config hierarchies (flag > env > project > global > default).
+> **Quick Guide:** Use Commander.js for command structure and option parsing. Use @clack/prompts for interactive UX (spinners, selects, confirms). Always handle Ctrl+C cancellation with `p.isCancel()`. Use named exit code constants. Use `parseAsync()` for async actions. Structure commands in separate files. Resolve config with precedence: flag > env > project > global > default.
 
 ---
 
@@ -17,40 +17,49 @@ description: Node.js CLI development with Commander.js, @clack/prompts, and pico
 
 **(You MUST handle SIGINT (Ctrl+C) gracefully and exit with appropriate codes)**
 
-**(You MUST use `p.isCancel()` to detect cancellation in ALL @clack/prompts and handle gracefully)**
+**(You MUST use `p.isCancel()` to detect cancellation in ALL @clack/prompts calls and handle gracefully)**
 
 **(You MUST use named constants for ALL exit codes - NEVER use magic numbers like `process.exit(1)`)**
 
 **(You MUST use `parseAsync()` for async actions to properly propagate errors)**
 
+**(You MUST stop spinners before any console output or error display)**
+
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Commander.js, @clack/prompts, CLI command structure, p.spinner, p.select, p.confirm, p.text, picocolors, process.exit, exit codes, SIGINT handling, interactive prompts, wizard state machine, config hierarchy, CLI error handling
+**Auto-detection:** Commander.js, commander, @clack/prompts, picocolors, p.spinner, p.select, p.confirm, p.text, p.isCancel, p.tasks, p.progress, process.exit, exit codes, SIGINT handling, interactive prompts, wizard state machine, config hierarchy, CLI error handling, parseAsync, subcommand
 
 **When to use:**
 
-- Building command-line tools with Node.js
-- Creating interactive terminal prompts and wizards
-- Implementing multi-step workflows with state machines
+- Building command-line tools with Node.js using Commander.js
+- Creating interactive terminal prompts and wizards with @clack/prompts
+- Implementing multi-step wizard flows with back navigation
 - Managing hierarchical configuration (flag > env > project > global)
-- Structuring CLI applications with subcommands
-- Handling errors and exit codes consistently
+- Structuring CLI applications with subcommands and global options
+
+**When NOT to use:**
+
+- Simple scripts with no user interaction (just use process.argv directly)
+- Web server frameworks (use your API framework skill)
+- Single-prompt scripts (use readline or raw @clack/prompts without Commander)
 
 **Key patterns covered:**
 
-- Commander.js command structure and options
-- @clack/prompts for interactive UX (spinners, selects, confirms)
-- picocolors for terminal output styling
+- CLI entry point with SIGINT handling and global options
 - Standardized exit codes with named constants
-- SIGINT and cancellation handling
-- Config hierarchy resolution (precedence chain)
-- Wizard state machines for multi-step flows
-- Command organization and subcommands
-- Error handling patterns and user feedback
+- Command definition with typed options and subcommands
+- @clack/prompts for interactive UX (spinners, selects, confirms, text)
+- Cancellation handling (`p.isCancel()`) on every prompt
+- Wizard state machines with back navigation
+- Configuration hierarchy resolution
 - Dry-run mode implementation
-- File system operations with fs-extra and fast-glob
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) - Entry point, exit codes, commands, prompts, cancellation
+- [examples/wizard-patterns.md](examples/wizard-patterns.md) - State machines, config hierarchy, dry-run mode
 
 ---
 
@@ -60,22 +69,22 @@ description: Node.js CLI development with Commander.js, @clack/prompts, and pico
 
 **User experience first.** CLI tools should be intuitive, provide helpful feedback, and fail gracefully. Users should always know what's happening (spinners), what went wrong (clear errors), and how to fix it (actionable messages).
 
-**Consistency across commands.** Every command should follow the same patterns: options at top, spinner feedback, success/error messaging, and proper exit codes. This makes the CLI predictable and learnable.
+**Consistency across commands.** Every command follows the same patterns: options at top, spinner feedback, success/error messaging, and proper exit codes. This makes the CLI predictable and learnable.
 
-**Graceful degradation.** Always handle cancellation (Ctrl+C), invalid input, and errors. Never leave users in an unknown state.
+**Graceful degradation.** Always handle cancellation (Ctrl+C), invalid input, and errors. Never leave users in an unknown state. Stop spinners before displaying errors.
 
 **When to use Commander.js:**
 
 - Multi-command CLI tools (git-like interfaces)
-- Tools with complex option parsing
-- Applications needing help generation
+- Tools with complex option parsing and subcommands
+- Applications needing auto-generated help text
 - TypeScript-first development
 
 **When to use @clack/prompts:**
 
-- Interactive setup wizards
-- User confirmation flows
-- Multi-step selections
+- Interactive setup wizards and multi-step flows
+- User confirmation before destructive actions
+- Selection from lists of options
 - Any user input beyond simple flags
 
 </philosophy>
@@ -88,799 +97,177 @@ description: Node.js CLI development with Commander.js, @clack/prompts, and pico
 
 ### Pattern 1: CLI Entry Point Structure
 
-Organize the main entry point with global options, signal handling, and command registration.
-
-#### File: `src/cli/index.ts`
+Register commands, handle SIGINT, use `parseAsync()` for async error propagation. See [examples/core.md](examples/core.md#pattern-1-cli-entry-point-structure) for full implementation.
 
 ```typescript
-import { Command } from "commander";
-import pc from "picocolors";
-import { initCommand } from "./commands/init";
-import { configCommand } from "./commands/config";
-import { validateCommand } from "./commands/validate";
-import { EXIT_CODES } from "./lib/exit-codes";
-
-// Handle Ctrl+C gracefully - REQUIRED for good UX
+// Handle Ctrl+C gracefully
 process.on("SIGINT", () => {
   console.log(pc.yellow("\nCancelled"));
   process.exit(EXIT_CODES.CANCELLED);
 });
 
-async function main() {
-  const program = new Command();
-
-  program
-    .name("mycli")
-    .description("My CLI tool description")
-    .version("1.0.0")
-    // Global options available to all commands
-    .option("--dry-run", "Preview operations without executing")
-    .option("-v, --verbose", "Enable verbose output")
-    // Customize error output with colors
-    .configureOutput({
-      writeErr: (str) => console.error(pc.red(str)),
-    })
-    // Show help after errors for discoverability
-    .showHelpAfterError(true);
-
-  // Register commands - keep main file clean
-  program.addCommand(initCommand);
-  program.addCommand(configCommand);
-  program.addCommand(validateCommand);
-
-  // Use parseAsync for proper async error handling
-  await program.parseAsync(process.argv);
-}
-
-// Centralized error handling
-main().catch((err) => {
-  console.error(pc.red("Error:"), err.message);
-  process.exit(EXIT_CODES.ERROR);
-});
+// Use parseAsync for proper async error handling
+await program.parseAsync(process.argv);
 ```
-
-**Why good:** SIGINT handler prevents orphaned processes, parseAsync properly propagates errors, configureOutput adds consistent styling, global options shared across commands
 
 ---
 
 ### Pattern 2: Standardized Exit Codes
 
-Define exit codes as named constants for consistency and maintainability.
-
-#### File: `src/cli/lib/exit-codes.ts`
+Define all exit codes as named constants. Never use magic numbers. See [examples/core.md](examples/core.md#pattern-2-standardized-exit-codes) for the full constant definition.
 
 ```typescript
-/**
- * CLI exit codes for standardized process termination
- * Following Unix conventions: 0 = success, non-zero = error
- */
 export const EXIT_CODES = {
-  /** Successful execution */
   SUCCESS: 0,
-  /** General error */
   ERROR: 1,
-  /** Invalid arguments or options */
   INVALID_ARGS: 2,
-  /** Network or connectivity error */
-  NETWORK_ERROR: 3,
-  /** User cancelled operation (Ctrl+C) */
   CANCELLED: 4,
-  /** Resource not found */
-  NOT_FOUND: 5,
-  /** Permission denied */
-  PERMISSION_DENIED: 6,
-  /** Validation failed */
   VALIDATION_ERROR: 7,
 } as const;
 
-export type ExitCode = (typeof EXIT_CODES)[keyof typeof EXIT_CODES];
-```
-
-**Why good:** Named constants make code readable, `as const` enables type inference, JSDoc explains each code's meaning, follows Unix conventions
-
-```typescript
-// BAD Example - Magic numbers
-process.exit(1); // What does 1 mean?
-process.exit(0);
-
-// GOOD Example - Named constants
-import { EXIT_CODES } from "./lib/exit-codes";
+// GOOD: Named constant
 process.exit(EXIT_CODES.VALIDATION_ERROR);
-```
 
-**Why bad:** Magic numbers are unmaintainable and unclear to readers
+// BAD: Magic number
+process.exit(1); // What does 1 mean?
+```
 
 ---
 
 ### Pattern 3: Command Definition with Options
 
-Structure individual commands with proper typing and option handling.
-
-#### File: `src/cli/commands/init.ts`
+Structure commands with typed options, descriptions for help text, and global option access. See [examples/core.md](examples/core.md#pattern-3-command-definition-with-options) for full implementation.
 
 ```typescript
-import { Command } from "commander";
-import * as p from "@clack/prompts";
-import pc from "picocolors";
-import { EXIT_CODES } from "../lib/exit-codes";
-
 export const initCommand = new Command("init")
   .description("Initialize the project")
-  // Options with descriptions for auto-generated help
-  .option("--source <url>", "Source URL (e.g., github:org/repo)")
-  .option("--refresh", "Force refresh from remote", false)
+  .option("--source <url>", "Source URL")
   .option("-f, --force", "Overwrite existing files", false)
-  // Consistent error styling
-  .configureOutput({
-    writeErr: (str) => console.error(pc.red(str)),
-  })
-  .showHelpAfterError(true)
-  // Action handler receives options and command context
   .action(async (options, command) => {
-    // Access global options from parent
     const globalOpts = command.optsWithGlobals();
-    const dryRun = globalOpts.dryRun ?? false;
-    const verbose = globalOpts.verbose ?? false;
-
-    // Start interactive UI
-    p.intro(pc.cyan("Project Setup"));
-
-    if (dryRun) {
-      p.log.info(
-        pc.yellow("[dry-run] Preview mode - no files will be created"),
-      );
-    }
-
-    // ... implementation
+    // ...
   });
 ```
-
-**Why good:** Named export follows convention, options have descriptions, access global options via optsWithGlobals(), intro sets context for user
 
 ---
 
-### Pattern 4: Interactive Prompts with @clack/prompts
+### Pattern 4: Interactive Prompts with Cancellation
 
-Use @clack/prompts for beautiful, consistent interactive UX.
-
-#### Spinner Pattern
+Every @clack/prompts call must be followed by `p.isCancel()`. See [examples/core.md](examples/core.md#pattern-4-interactive-prompts-with-cancellation) for spinner, select, confirm, and text patterns.
 
 ```typescript
-import * as p from "@clack/prompts";
-import pc from "picocolors";
+const result = await p.select({
+  message: "Select a framework:",
+  options: [
+    { value: "react", label: "React", hint: "recommended" },
+    { value: "vue", label: "Vue" },
+  ],
+});
 
-async function processFiles() {
-  const s = p.spinner();
-
-  // Start with descriptive message
-  s.start("Processing files...");
-
-  try {
-    const result = await doAsyncWork();
-    // Stop with success message including result info
-    s.stop(`Processed ${result.count} files`);
-    return result;
-  } catch (error) {
-    // Stop spinner before showing error
-    s.stop("Failed to process files");
-    p.log.error(error instanceof Error ? error.message : "Unknown error");
-    process.exit(EXIT_CODES.ERROR);
-  }
-}
-```
-
-#### Select Pattern with Cancellation Handling
-
-```typescript
-import * as p from "@clack/prompts";
-import pc from "picocolors";
-
-async function selectFramework(): Promise<string | null> {
-  const result = await p.select({
-    message: "Select a framework:",
-    options: [
-      { value: "react", label: "React", hint: "recommended" },
-      { value: "vue", label: "Vue" },
-      { value: "angular", label: "Angular" },
-    ],
-    initialValue: "react",
-  });
-
-  // CRITICAL: Always check for cancellation
-  if (p.isCancel(result)) {
-    p.cancel("Setup cancelled");
-    process.exit(EXIT_CODES.CANCELLED);
-  }
-
-  return result;
-}
-```
-
-**Why good:** isCancel check prevents undefined behavior, hint guides users, initialValue improves UX
-
-#### Confirm Pattern
-
-```typescript
-async function confirmDestructiveAction(): Promise<boolean> {
-  const proceed = await p.confirm({
-    message: "This will delete existing files. Continue?",
-    initialValue: false, // Default to safe option
-  });
-
-  if (p.isCancel(proceed)) {
-    p.cancel("Operation cancelled");
-    process.exit(EXIT_CODES.CANCELLED);
-  }
-
-  return proceed;
-}
-```
-
-#### Text Input with Validation
-
-```typescript
-async function getProjectName(): Promise<string> {
-  const name = await p.text({
-    message: "Project name:",
-    placeholder: "my-project",
-    validate: (value) => {
-      if (!value) return "Name is required";
-      if (!/^[a-z0-9-]+$/.test(value)) {
-        return "Use lowercase letters, numbers, and hyphens only";
-      }
-    },
-  });
-
-  if (p.isCancel(name)) {
-    p.cancel("Setup cancelled");
-    process.exit(EXIT_CODES.CANCELLED);
-  }
-
-  return name;
+// CRITICAL: Always check for cancellation
+if (p.isCancel(result)) {
+  p.cancel("Setup cancelled");
+  process.exit(EXIT_CODES.CANCELLED);
 }
 ```
 
 ---
 
-### Pattern 5: Wizard State Machine
+### Pattern 5: Subcommand Organization
 
-Implement complex multi-step flows with a state machine pattern.
-
-#### Constants
+Group related commands under parent commands. See [examples/core.md](examples/core.md#pattern-5-subcommand-organization) for full implementation.
 
 ```typescript
-// Navigation sentinel values
-const BACK_VALUE = "__back__";
-const CONTINUE_VALUE = "__continue__";
+export const configCommand = new Command("config").description(
+  "Manage configuration",
+);
 
-// State machine step types
-type WizardStep = "approach" | "selection" | "review" | "confirm";
-```
-
-#### State Interface
-
-```typescript
-interface WizardState {
-  currentStep: WizardStep;
-  selectedItems: string[];
-  history: WizardStep[]; // For back navigation
-  lastSelectedItem: string | null; // For cursor restoration
-}
-
-function createInitialState(): WizardState {
-  return {
-    currentStep: "approach",
-    selectedItems: [],
-    history: [],
-    lastSelectedItem: null,
-  };
-}
-```
-
-#### State Machine Implementation
-
-```typescript
-import * as p from "@clack/prompts";
-import pc from "picocolors";
-
-interface WizardResult {
-  selectedItems: string[];
-  confirmed: boolean;
-}
-
-export async function runWizard(): Promise<WizardResult | null> {
-  const state = createInitialState();
-
-  // Main wizard loop
-  while (true) {
-    switch (state.currentStep) {
-      case "approach": {
-        const result = await stepApproach(state);
-
-        if (p.isCancel(result)) {
-          return null; // User cancelled
-        }
-
-        if (result === "scratch") {
-          pushHistory(state);
-          state.currentStep = "selection";
-        } else if (result === "template") {
-          // Handle template selection...
-        }
-        break;
-      }
-
-      case "selection": {
-        const result = await stepSelection(state);
-
-        if (p.isCancel(result)) {
-          return null;
-        }
-
-        if (result === BACK_VALUE) {
-          state.currentStep = popHistory(state) || "approach";
-          break;
-        }
-
-        if (result === CONTINUE_VALUE) {
-          pushHistory(state);
-          state.currentStep = "confirm";
-          break;
-        }
-
-        // Toggle selection
-        toggleSelection(state, result as string);
-        break;
-      }
-
-      case "confirm": {
-        const result = await stepConfirm(state);
-
-        if (p.isCancel(result)) {
-          return null;
-        }
-
-        if (result === BACK_VALUE) {
-          state.currentStep = popHistory(state) || "selection";
-          break;
-        }
-
-        if (result === "confirm") {
-          return {
-            selectedItems: state.selectedItems,
-            confirmed: true,
-          };
-        }
-        break;
-      }
-    }
-  }
-}
-
-// History management for back navigation
-function pushHistory(state: WizardState): void {
-  state.history.push(state.currentStep);
-}
-
-function popHistory(state: WizardState): WizardStep | null {
-  return state.history.pop() || null;
-}
-
-function toggleSelection(state: WizardState, item: string): void {
-  const index = state.selectedItems.indexOf(item);
-  if (index > -1) {
-    state.selectedItems.splice(index, 1);
-  } else {
-    state.selectedItems.push(item);
-  }
-  state.lastSelectedItem = item;
-}
-```
-
-**Why good:** State machine makes complex flows manageable, history enables natural back navigation, separation of step functions keeps code organized
-
----
-
-### Pattern 6: Configuration Hierarchy
-
-Implement config resolution with clear precedence chain.
-
-#### File: `src/cli/lib/config.ts`
-
-```typescript
-import path from "path";
-import os from "os";
-import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { readFile, writeFile, fileExists, ensureDir } from "../utils/fs";
-
-// Config locations
-export const GLOBAL_CONFIG_DIR = path.join(os.homedir(), ".myapp");
-export const GLOBAL_CONFIG_FILE = "config.yaml";
-const PROJECT_CONFIG_DIR = ".myapp";
-const PROJECT_CONFIG_FILE = "config.yaml";
-
-// Environment variable name
-export const SOURCE_ENV_VAR = "MYAPP_SOURCE";
-
-// Default value
-export const DEFAULT_SOURCE = "github:myorg/default-repo";
-
-export interface GlobalConfig {
-  source?: string;
-  author?: string;
-}
-
-export interface ProjectConfig {
-  source?: string;
-}
-
-export interface ResolvedConfig {
-  source: string;
-  sourceOrigin: "flag" | "env" | "project" | "global" | "default";
-}
-
-/**
- * Resolve configuration with precedence:
- * 1. CLI flag (--source)
- * 2. Environment variable (MYAPP_SOURCE)
- * 3. Project config (.myapp/config.yaml)
- * 4. Global config (~/.myapp/config.yaml)
- * 5. Default value
- */
-export async function resolveSource(
-  flagValue?: string,
-  projectDir?: string,
-): Promise<ResolvedConfig> {
-  // 1. CLI flag takes highest priority
-  if (flagValue !== undefined) {
-    if (flagValue.trim() === "") {
-      throw new Error("--source flag cannot be empty");
-    }
-    return { source: flagValue, sourceOrigin: "flag" };
-  }
-
-  // 2. Environment variable
-  const envValue = process.env[SOURCE_ENV_VAR];
-  if (envValue) {
-    return { source: envValue, sourceOrigin: "env" };
-  }
-
-  // 3. Project config
-  if (projectDir) {
-    const projectConfig = await loadProjectConfig(projectDir);
-    if (projectConfig?.source) {
-      return { source: projectConfig.source, sourceOrigin: "project" };
-    }
-  }
-
-  // 4. Global config
-  const globalConfig = await loadGlobalConfig();
-  if (globalConfig?.source) {
-    return { source: globalConfig.source, sourceOrigin: "global" };
-  }
-
-  // 5. Default
-  return { source: DEFAULT_SOURCE, sourceOrigin: "default" };
-}
-
-export function formatSourceOrigin(
-  origin: ResolvedConfig["sourceOrigin"],
-): string {
-  switch (origin) {
-    case "flag":
-      return "--source flag";
-    case "env":
-      return `${SOURCE_ENV_VAR} environment variable`;
-    case "project":
-      return "project config (.myapp/config.yaml)";
-    case "global":
-      return "global config (~/.myapp/config.yaml)";
-    case "default":
-      return "default";
-  }
-}
-```
-
-**Why good:** Clear precedence chain documented, each source explicitly named, format function for user-friendly display
-
----
-
-### Pattern 7: Subcommand Organization
-
-Structure complex commands with subcommands for related operations.
-
-#### File: `src/cli/commands/config.ts`
-
-```typescript
-import { Command } from "commander";
-import * as p from "@clack/prompts";
-import pc from "picocolors";
-import {
-  resolveSource,
-  loadGlobalConfig,
-  saveGlobalConfig,
-  getGlobalConfigPath,
-  formatSourceOrigin,
-} from "../lib/config";
-import { EXIT_CODES } from "../lib/exit-codes";
-
-export const configCommand = new Command("config")
-  .description("Manage configuration")
-  .configureOutput({
-    writeErr: (str) => console.error(pc.red(str)),
-  })
-  .showHelpAfterError(true);
-
-// Subcommand: config show
 configCommand
   .command("show")
   .description("Show current effective configuration")
   .action(async () => {
-    const projectDir = process.cwd();
-    const resolved = await resolveSource(undefined, projectDir);
-
-    console.log(pc.cyan("\nConfiguration\n"));
-    console.log(pc.bold("Source:"));
-    console.log(`  ${pc.green(resolved.source)}`);
-    console.log(
-      `  ${pc.dim(`(from ${formatSourceOrigin(resolved.sourceOrigin)})`)}`,
-    );
-    console.log("");
+    /* ... */
   });
 
-// Subcommand: config set
 configCommand
   .command("set")
-  .description("Set a global configuration value")
-  .argument("<key>", "Configuration key (source, author)")
-  .argument("<value>", "Configuration value")
-  .action(async (key: string, value: string) => {
-    const validKeys = ["source", "author"];
-
-    if (!validKeys.includes(key)) {
-      p.log.error(`Unknown configuration key: ${key}`);
-      p.log.info(`Valid keys: ${validKeys.join(", ")}`);
-      process.exit(EXIT_CODES.INVALID_ARGS);
-    }
-
-    const existingConfig = (await loadGlobalConfig()) || {};
-    const newConfig = { ...existingConfig, [key]: value };
-
-    await saveGlobalConfig(newConfig);
-
-    p.log.success(`Set ${key} = ${value}`);
-    p.log.info(`Saved to ${getGlobalConfigPath()}`);
-  });
-
-// Subcommand: config get
-configCommand
-  .command("get")
-  .description("Get a configuration value")
   .argument("<key>", "Configuration key")
-  .action(async (key: string) => {
-    if (key === "source") {
-      const resolved = await resolveSource(undefined, process.cwd());
-      console.log(resolved.source);
-    } else {
-      p.log.error(`Unknown key: ${key}`);
-      process.exit(EXIT_CODES.INVALID_ARGS);
-    }
+  .argument("<value>", "Configuration value")
+  .action(async (key, value) => {
+    /* ... */
   });
 ```
 
-**Why good:** Logical grouping of related commands, arguments validated early, consistent error handling across subcommands
-
 ---
 
-### Pattern 8: Output Formatting with picocolors
+### Pattern 6: Wizard State Machine
 
-Use consistent styling for different message types.
+Complex multi-step flows with back navigation. See [examples/wizard-patterns.md](examples/wizard-patterns.md#pattern-6-wizard-state-machine) for full state machine implementation.
 
 ```typescript
-import pc from "picocolors";
+const state = createInitialState();
 
-// Success messages
-console.log(pc.green("Operation completed successfully!"));
-
-// Warnings
-console.log(pc.yellow("Warning: This may take a while"));
-
-// Errors
-console.error(pc.red("Error:"), error.message);
-
-// Informational with dimmed context
-console.log(`Source: ${pc.cyan(source)}`);
-console.log(pc.dim(`(from ${origin})`));
-
-// Section headers
-console.log(pc.bold("\nConfiguration:\n"));
-
-// Lists with icons
-console.log(`  ${pc.green("+")} Added: ${item}`);
-console.log(`  ${pc.red("-")} Removed: ${item}`);
-console.log(`  ${pc.yellow("!")} Warning: ${message}`);
-
-// Status indicators
-const status = isValid ? pc.green("valid") : pc.red("invalid");
-console.log(`Status: ${status}`);
-
-// Styled options in prompts
-const options = [
-  { value: "yes", label: pc.green("Yes, proceed") },
-  { value: "no", label: pc.dim("No, cancel") },
-];
+while (true) {
+  switch (state.currentStep) {
+    case "approach": {
+      const result = await stepApproach(state);
+      if (p.isCancel(result)) return null;
+      pushHistory(state);
+      state.currentStep = "selection";
+      break;
+    }
+    case "selection": {
+      const result = await stepSelection(state);
+      if (result === BACK_VALUE) {
+        state.currentStep = popHistory(state) || "approach";
+        break;
+      }
+      // ...
+    }
+  }
+}
 ```
 
 ---
 
-### Pattern 9: Dry-Run Mode
+### Pattern 7: Configuration Hierarchy
 
-Implement preview functionality for destructive operations.
+Resolve config values with clear precedence: flag > env > project > global > default. See [examples/wizard-patterns.md](examples/wizard-patterns.md#pattern-7-configuration-hierarchy) for full implementation.
 
 ```typescript
-import * as p from "@clack/prompts";
-import pc from "picocolors";
+export async function resolveSource(
+  flagValue?: string,
+  projectDir?: string,
+): Promise<ResolvedConfig> {
+  if (flagValue !== undefined)
+    return { source: flagValue, sourceOrigin: "flag" };
 
+  const envValue = process.env[SOURCE_ENV_VAR];
+  if (envValue) return { source: envValue, sourceOrigin: "env" };
+
+  // ... project config, global config, default
+}
+```
+
+---
+
+### Pattern 8: Dry-Run Mode
+
+Preview operations without executing. See [examples/wizard-patterns.md](examples/wizard-patterns.md#pattern-8-dry-run-mode) for full implementation.
+
+```typescript
 export async function executeWithDryRun(
   dryRun: boolean,
   operations: Array<{ description: string; execute: () => Promise<void> }>,
 ): Promise<void> {
   if (dryRun) {
-    p.log.info(pc.yellow("[dry-run] Preview mode - no changes will be made"));
-    console.log("");
-
     for (const op of operations) {
       console.log(pc.yellow(`[dry-run] Would: ${op.description}`));
     }
-
-    console.log("");
-    p.outro(pc.green("[dry-run] Preview complete"));
     return;
   }
-
-  // Execute for real
-  const s = p.spinner();
-  for (const op of operations) {
-    s.start(op.description);
-    await op.execute();
-    s.stop(`Done: ${op.description}`);
-  }
+  // Execute for real with spinner feedback
 }
-
-// Usage in command
-.action(async (options, command) => {
-  const dryRun = command.optsWithGlobals().dryRun ?? false;
-
-  await executeWithDryRun(dryRun, [
-    {
-      description: "Create config file",
-      execute: async () => {
-        await writeFile(configPath, content);
-      },
-    },
-    {
-      description: "Install dependencies",
-      execute: async () => {
-        await installDeps();
-      },
-    },
-  ]);
-});
-```
-
----
-
-### Pattern 10: File System Utilities
-
-Wrap fs-extra and fast-glob for consistent async patterns.
-
-#### File: `src/cli/utils/fs.ts`
-
-```typescript
-import fs from "fs-extra";
-import fg from "fast-glob";
-import path from "path";
-
-export async function readFile(filePath: string): Promise<string> {
-  return fs.readFile(filePath, "utf-8");
-}
-
-export async function readFileOptional(
-  filePath: string,
-  fallback = "",
-): Promise<string> {
-  try {
-    return await fs.readFile(filePath, "utf-8");
-  } catch {
-    return fallback;
-  }
-}
-
-export async function fileExists(filePath: string): Promise<boolean> {
-  return fs.pathExists(filePath);
-}
-
-export async function directoryExists(dirPath: string): Promise<boolean> {
-  try {
-    const stat = await fs.stat(dirPath);
-    return stat.isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-export async function glob(pattern: string, cwd: string): Promise<string[]> {
-  return fg(pattern, { cwd, onlyFiles: true });
-}
-
-export async function writeFile(
-  filePath: string,
-  content: string,
-): Promise<void> {
-  // Ensure parent directory exists
-  await fs.ensureDir(path.dirname(filePath));
-  await fs.writeFile(filePath, content, "utf-8");
-}
-
-export async function ensureDir(dirPath: string): Promise<void> {
-  await fs.ensureDir(dirPath);
-}
-
-export async function remove(filePath: string): Promise<void> {
-  await fs.remove(filePath);
-}
-
-export async function copy(src: string, dest: string): Promise<void> {
-  await fs.copy(src, dest);
-}
-
-export async function listDirectories(dirPath: string): Promise<string[]> {
-  try {
-    const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    return entries.filter((e) => e.isDirectory()).map((e) => e.name);
-  } catch {
-    return [];
-  }
-}
-```
-
-**Why good:** Consistent async API, ensureDir before writes prevents errors, optional file read with fallback
-
----
-
-### Pattern 11: Verbose Logging Utility
-
-Implement conditional verbose output.
-
-#### File: `src/cli/utils/logger.ts`
-
-```typescript
-import pc from "picocolors";
-
-let verboseMode = false;
-
-export function setVerbose(enabled: boolean): void {
-  verboseMode = enabled;
-}
-
-export function verbose(msg: string): void {
-  if (verboseMode) {
-    console.log(pc.dim(`  ${msg}`));
-  }
-}
-
-// Usage in commands
-import { setVerbose, verbose } from "../utils/logger";
-
-.action(async (options) => {
-  setVerbose(options.verbose);
-
-  verbose("Starting operation...");
-  verbose(`Reading from ${path}`);
-
-  // ... regular output
-  console.log("Operation complete");
-});
 ```
 
 </patterns>
@@ -940,172 +327,39 @@ Check in order, first defined wins:
 
 ---
 
-<testing>
-
-## Testing CLI Commands
-
-### Testing Commander Commands
-
-```typescript
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Command } from "commander";
-
-describe("init command", () => {
-  let program: Command;
-  let exitSpy: ReturnType<typeof vi.spyOn>;
-  let consoleSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    program = new Command();
-    program.exitOverride(); // Prevent actual process.exit
-    exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
-      throw new Error("process.exit called");
-    });
-    consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-  });
-
-  it("shows help with --help", async () => {
-    const helpSpy = vi.spyOn(program, "outputHelp");
-
-    try {
-      await program.parseAsync(["node", "test", "--help"]);
-    } catch {
-      // exitOverride throws
-    }
-
-    expect(helpSpy).toHaveBeenCalled();
-  });
-
-  it("validates required options", async () => {
-    // Add your command setup here
-
-    await expect(
-      program.parseAsync(["node", "test", "init", "--invalid"]),
-    ).rejects.toThrow();
-  });
-});
-```
-
-### Testing with Mock File System
-
-```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { vol } from "memfs";
-
-vi.mock("fs-extra", async () => {
-  const memfs = await import("memfs");
-  return memfs.fs.promises;
-});
-
-describe("config loading", () => {
-  beforeEach(() => {
-    vol.reset();
-  });
-
-  afterEach(() => {
-    vol.reset();
-  });
-
-  it("loads config from file", async () => {
-    vol.fromJSON({
-      "/home/user/.myapp/config.yaml": "source: github:org/repo",
-    });
-
-    const config = await loadGlobalConfig();
-    expect(config?.source).toBe("github:org/repo");
-  });
-
-  it("returns null for missing config", async () => {
-    vol.fromJSON({});
-
-    const config = await loadGlobalConfig();
-    expect(config).toBeNull();
-  });
-});
-```
-
-### Testing Interactive Prompts
-
-```typescript
-import { describe, it, expect, vi } from "vitest";
-import * as p from "@clack/prompts";
-
-vi.mock("@clack/prompts", () => ({
-  select: vi.fn(),
-  confirm: vi.fn(),
-  spinner: vi.fn(() => ({
-    start: vi.fn(),
-    stop: vi.fn(),
-  })),
-  isCancel: vi.fn((value) => value === Symbol.for("cancel")),
-  intro: vi.fn(),
-  outro: vi.fn(),
-  log: {
-    info: vi.fn(),
-    error: vi.fn(),
-    success: vi.fn(),
-  },
-}));
-
-describe("wizard flow", () => {
-  it("handles user cancellation", async () => {
-    vi.mocked(p.select).mockResolvedValueOnce(Symbol.for("cancel"));
-
-    const result = await runWizard();
-
-    expect(result).toBeNull();
-  });
-
-  it("completes selection flow", async () => {
-    vi.mocked(p.select)
-      .mockResolvedValueOnce("scratch")
-      .mockResolvedValueOnce("item1")
-      .mockResolvedValueOnce("__continue__")
-      .mockResolvedValueOnce("confirm");
-
-    const result = await runWizard();
-
-    expect(result?.selectedItems).toContain("item1");
-  });
-});
-```
-
-</testing>
-
----
-
 <red_flags>
 
 ## RED FLAGS
 
 **High Priority Issues:**
 
-- Missing `p.isCancel()` checks after prompts - causes undefined behavior on Ctrl+C
-- Using magic numbers for exit codes - makes debugging impossible
-- Not handling SIGINT - leaves processes in unknown state
-- Synchronous file operations blocking the event loop
+- Missing `p.isCancel()` checks after prompts — causes undefined behavior on Ctrl+C
+- Using magic numbers for exit codes — makes debugging impossible
+- Not handling SIGINT — leaves processes in unknown state
+- Using `.parse()` instead of `.parseAsync()` with async actions — swallows errors silently
 
 **Medium Priority Issues:**
 
 - Missing spinner feedback for operations > 500ms
-- Not using `parseAsync()` for async actions - swallows errors
-- Inconsistent error message formatting
+- Inconsistent error message formatting across commands
 - Missing `--help` descriptions for options
+- Not stopping spinner before showing error output — corrupts terminal display
 
 **Common Mistakes:**
 
-- Forgetting to call `process.exit()` after `p.cancel()` - execution continues
-- Not validating early - errors occur deep in flow
-- Mixing sync and async patterns - leads to race conditions
-- Not cleaning up on errors (spinners left running)
+- Forgetting to call `process.exit()` after `p.cancel()` — execution continues past cancellation
+- Not validating inputs early — errors occur deep in flow where recovery is harder
+- Not cleaning up on errors (spinners left running, terminal state corrupted)
+- Using `program.parse()` then trying to catch errors — `parseAsync()` required for async error propagation
 
 **Gotchas & Edge Cases:**
 
-- Commander converts `--my-option` to `myOption` in camelCase
-- `optsWithGlobals()` needed to access parent command options
-- Spinner must be stopped before any console output
-- YAML parsing can throw - always wrap in try/catch
-- `process.exit()` in async context may not wait for cleanup
+- Commander converts `--my-option` to `myOption` in camelCase automatically
+- `optsWithGlobals()` needed to access parent command options (not just `opts()`)
+- Spinner must be stopped before any `console.log` / `p.log` output
+- `process.exit()` in async context may not wait for pending I/O — use `await` before exit-triggering operations
+- Commander v14+ defaults `allowExcessArguments` to false — extra positional args are now errors
+- @clack/prompts spinner has `.isCancelled` property and `.cancel()` / `.error()` methods for richer feedback
 
 </red_flags>
 
@@ -1119,11 +373,13 @@ describe("wizard flow", () => {
 
 **(You MUST handle SIGINT (Ctrl+C) gracefully and exit with appropriate codes)**
 
-**(You MUST use `p.isCancel()` to detect cancellation in ALL @clack/prompts and handle gracefully)**
+**(You MUST use `p.isCancel()` to detect cancellation in ALL @clack/prompts calls and handle gracefully)**
 
 **(You MUST use named constants for ALL exit codes - NEVER use magic numbers like `process.exit(1)`)**
 
 **(You MUST use `parseAsync()` for async actions to properly propagate errors)**
+
+**(You MUST stop spinners before any console output or error display)**
 
 **Failure to follow these rules will result in poor UX, orphaned processes, and debugging nightmares.**
 
