@@ -1,6 +1,6 @@
 # Ant Design Quick Reference
 
-> Decision frameworks, component checklists, and ConfigProvider options for Ant Design v5. See [SKILL.md](SKILL.md) for core concepts and [examples/ant-design.md](examples/ant-design.md) for full code examples.
+> Decision frameworks, component checklists, and ConfigProvider options for Ant Design v5. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for full code examples.
 
 ---
 
@@ -106,7 +106,7 @@ Algorithms can be combined: `algorithm: [theme.darkAlgorithm, theme.compactAlgor
 - [ ] Pagination configured (or `pagination={false}` if virtual)
 - [ ] `loading` prop connected to data fetch state
 - [ ] Column `key` set for each column
-- [ ] Virtual mode has explicit column `width` values
+- [ ] Virtual mode has explicit column `width` values and both `scroll.x` and `scroll.y` as numbers
 - [ ] `onChange` handler typed: `TableProps<RecordType>["onChange"]`
 - [ ] Filters use `onFilter` for client-side or server-side pagination params
 

@@ -1,6 +1,6 @@
 # TanStack Router Quick Reference
 
-> Route options, hooks, and components at a glance. See [SKILL.md](SKILL.md) for core patterns and [examples/tanstack-router.md](examples/tanstack-router.md) for practical examples.
+> Route options, hooks, and components at a glance. See [SKILL.md](SKILL.md) for core patterns and [examples/](examples/) for practical examples.
 
 ---
 

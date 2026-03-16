@@ -62,10 +62,19 @@ description: Type-safe client-side routing for React with file-based routes, sea
 - Simple apps with 1-2 pages (plain React Router or no router)
 - Static sites without client-side navigation
 
-**Detailed Resources:**
+---
 
-- For practical code examples, see [examples/tanstack-router.md](examples/tanstack-router.md)
-- For quick reference of hooks and components, see [reference.md](reference.md)
+## Examples
+
+- [Setup & Configuration](examples/setup.md) -- installation, Vite plugin, root route, entry point, devtools
+- [Routes & Layouts](examples/routes.md) -- file-based routing conventions, nested layouts, pathless routes, catch-all
+- [Navigation](examples/navigation.md) -- Link component, useNavigate, redirect, active states
+- [Data Loading](examples/data-loading.md) -- loaders, beforeLoad, TanStack Query, SWR caching
+- [Search Params](examples/search-params.md) -- Zod validation, updating params, search middleware
+- [Auth & Context](examples/auth-and-context.md) -- auth guards, route context, dependency injection, getRouteApi
+- [Error Handling & Code Splitting](examples/error-handling.md) -- error/pending/not-found components, code splitting
+
+For quick API reference (hooks, components, route options), see [reference.md](reference.md).
 
 ---
 
@@ -105,175 +114,54 @@ TanStack Router treats the URL as a first-class, fully-typed state manager. Ever
 
 ## Core Patterns
 
-### Pattern 1: Project Setup and Installation
+### Pattern 1: Project Setup
 
-Install the core packages and configure the Vite plugin for file-based routing.
-
-#### Packages
-
-```bash
-# Runtime dependencies
-npm install @tanstack/react-router @tanstack/react-router-devtools
-
-# Build tool plugin (dev dependency)
-npm install -D @tanstack/router-plugin
-```
-
-#### Vite Configuration
+Install `@tanstack/react-router`, `@tanstack/router-plugin`, and optionally `@tanstack/zod-adapter`. Configure the Vite plugin with `autoCodeSplitting: true` before the React plugin. Register the router via `declare module` for app-wide type safety.
 
 ```typescript
-// vite.config.ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-
-export default defineConfig({
-  plugins: [
-    // Router plugin MUST come before React plugin
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true,
-    }),
-    react(),
-  ],
-});
+// vite.config.ts - Router plugin MUST come before React plugin
+tanstackRouter({ target: "react", autoCodeSplitting: true }),
+react(),
 ```
 
-**Why good:** `autoCodeSplitting: true` automatically splits route components and loaders into separate chunks, the plugin generates `routeTree.gen.ts` with full type safety, placing the router plugin before react plugin ensures correct transform order
-
-#### Entry Point
-
 ```typescript
-// src/main.tsx
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-
+// src/main.tsx - Register for type safety
 const router = createRouter({ routeTree });
-
-// Register router for type safety
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
 }
-
-const ROOT_ELEMENT_ID = "root";
-
-const rootElement = document.getElementById(ROOT_ELEMENT_ID);
-if (!rootElement) throw new Error(`Missing #${ROOT_ELEMENT_ID} element`);
-
-createRoot(rootElement).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
 ```
 
-**Why good:** module declaration enables type-safe `Link` and `useNavigate` across the entire app, named constant for root element ID prevents magic strings, null check on root element catches missing DOM early
+See [examples/setup.md](examples/setup.md) for complete setup with TanStack Query context and devtools.
 
 ---
 
 ### Pattern 2: File-Based Routing Conventions
 
-The router plugin generates a typed route tree from your file structure. Understanding the naming conventions is essential.
-
-#### File Structure
-
-```
-src/routes/
-  __root.tsx              # Root layout (required)
-  index.tsx               # / (home page)
-  about.tsx               # /about
-  posts/
-    index.tsx             # /posts
-    $postId/
-      index.tsx           # /posts/:postId
-      edit.tsx            # /posts/:postId/edit
-    route.tsx             # /posts layout wrapper
-  _authenticated.tsx      # Pathless layout (no URL segment)
-  _authenticated/
-    dashboard.tsx         # /dashboard (wrapped by _authenticated layout)
-    settings.tsx          # /settings (wrapped by _authenticated layout)
-```
-
-#### Naming Conventions
+The router plugin generates a typed route tree from your file structure. Key conventions:
 
 | Convention   | Example              | Purpose                                  |
 | ------------ | -------------------- | ---------------------------------------- |
 | `__root.tsx` | `__root.tsx`         | Root layout, wraps entire app            |
 | `index.tsx`  | `posts/index.tsx`    | Index route for directory (`/posts`)     |
 | `$param`     | `$postId/index.tsx`  | Dynamic path parameter                   |
-| `$`          | `$.tsx`              | Splat/catch-all route                    |
-| `_prefix`    | `_authenticated.tsx` | Pathless layout route (no URL segment)   |
+| `_prefix`    | `_authenticated.tsx` | Pathless layout (no URL segment)         |
 | `route.tsx`  | `posts/route.tsx`    | Layout for directory children            |
+| `suffix_`    | `posts_.detail.tsx`  | Non-nested route (escapes parent layout) |
+| `$`          | `$.tsx`              | Splat/catch-all route                    |
 | `-prefix`    | `-components.tsx`    | Ignored by router (not a route)          |
 | `(group)`    | `(admin)/`           | Organizational grouping (no URL effect)  |
-| `suffix_`    | `posts_.detail.tsx`  | Non-nested route (escapes parent layout) |
-
-#### Root Route
-
-```typescript
-// src/routes/__root.tsx
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-export const Route = createRootRoute({
-  component: RootLayout,
-});
-
-function RootLayout() {
-  return (
-    <>
-      <nav>
-        <Link to="/" activeProps={{ className: "active" }}>
-          Home
-        </Link>
-        <Link to="/posts" activeProps={{ className: "active" }}>
-          Posts
-        </Link>
-      </nav>
-      <main>
-        <Outlet />
-      </main>
-      <TanStackRouterDevtools position="bottom-right" />
-    </>
-  );
-}
-```
-
-#### File Route
 
 ```typescript
 // src/routes/posts/index.tsx
-import { createFileRoute } from "@tanstack/react-router";
-
 export const Route = createFileRoute("/posts/")({
   component: PostsIndex,
 });
-
-function PostsIndex() {
-  return <h1>All Posts</h1>;
-}
 ```
 
-**Why good:** `createFileRoute` path string is validated against the actual file location, `Outlet` in root layout renders matched child routes, devtools auto-hide in production builds, `activeProps` provides styling hooks for active navigation links
-
-```typescript
-// Bad Example - Manual route definition with file-based routing
-import { createRoute } from "@tanstack/react-router";
-import { rootRoute } from "./__root";
-
-// WRONG: Don't define routes manually when using the router plugin
-const postsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/posts",
-  component: PostsIndex,
-});
-```
-
-**Why bad:** manual route definitions bypass the plugin's type generation and route tree, the path string is not validated against the file system, creates maintenance burden of manual route tree assembly
+See [examples/routes.md](examples/routes.md) for nested layouts, pathless routes, non-nested routes, and catch-all routes.
 
 ---
 
@@ -281,210 +169,47 @@ const postsRoute = createRoute({
 
 TanStack Router validates all navigation destinations, params, and search params at compile time.
 
-#### Link Component
-
 ```typescript
-// Good Example - Type-safe Link with params and search
-import { Link } from "@tanstack/react-router";
+// Declarative - Link component
+<Link to="/posts/$postId" params={{ postId: post.id }} preload="intent">
+  {post.title}
+</Link>
 
-function PostList({ posts }: { posts: Post[] }) {
-  return (
-    <ul>
-      {posts.map((post) => (
-        <li key={post.id}>
-          <Link
-            to="/posts/$postId"
-            params={{ postId: post.id }}
-            search={{ tab: "comments" }}
-            activeProps={{ className: "font-bold" }}
-            preload="intent"
-          >
-            {post.title}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
+// Imperative - after side effects
+const navigate = useNavigate();
+await navigate({ to: "/posts/$postId", params: { postId: post.id }, replace: true });
+
+// In loaders/beforeLoad - redirect
+throw redirect({ to: "/login", search: { redirect: location.href } });
 ```
 
-**Why good:** TypeScript validates that `/posts/$postId` exists in the route tree, `params` is required and typed to match the route's path params, `search` is validated against the route's search schema, `preload="intent"` prefetches data on hover for instant navigation
-
-#### Imperative Navigation
-
-```typescript
-// Good Example - useNavigate for side-effect navigation
-import { useNavigate } from "@tanstack/react-router";
-
-function CreatePostForm() {
-  const navigate = useNavigate();
-
-  const handleSubmit = async (data: PostFormData) => {
-    const post = await createPost(data);
-    // Navigate after successful mutation
-    await navigate({
-      to: "/posts/$postId",
-      params: { postId: post.id },
-      replace: true,
-    });
-  };
-
-  return <form onSubmit={handleSubmit}>{/* form fields */}</form>;
-}
-```
-
-**Why good:** `useNavigate` is for imperative navigation after side effects (mutations, async actions), `replace: true` prevents back-button returning to the form, all params are type-checked against the route tree
-
-#### Redirect from Loaders
-
-```typescript
-// Good Example - redirect() in beforeLoad
-import { createFileRoute, redirect } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/admin/")({
-  beforeLoad: async ({ context }) => {
-    if (!context.auth.isAdmin) {
-      throw redirect({
-        to: "/",
-        search: { error: "unauthorized" },
-      });
-    }
-  },
-  component: AdminDashboard,
-});
-```
-
-**Why good:** `redirect()` accepts the same typed options as `navigate`, throwing it from `beforeLoad` prevents the component from ever rendering, search params on redirect are validated against the target route's schema
+See [examples/navigation.md](examples/navigation.md) for active states, search param updaters, and navigation decision tree.
 
 ---
 
 ### Pattern 4: Search Params Validation
 
-Search params are validated and typed using `validateSearch`. Use the Zod adapter for schema-based validation with defaults and error handling.
-
-#### Installation
-
-```bash
-npm install @tanstack/zod-adapter zod
-```
-
-#### Zod Adapter Pattern
+Validate and type search params with `validateSearch`. Use Zod adapter for schema-based validation with `fallback()` for safe defaults.
 
 ```typescript
-// Good Example - Search params with Zod validation
-import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
 
 const DEFAULT_PAGE = 1;
-const DEFAULT_PAGE_SIZE = 20;
-
-const productsSearchSchema = z.object({
+const schema = z.object({
   page: fallback(z.number().min(1), DEFAULT_PAGE).default(DEFAULT_PAGE),
-  pageSize: fallback(z.number().min(1).max(100), DEFAULT_PAGE_SIZE).default(
-    DEFAULT_PAGE_SIZE,
-  ),
-  category: fallback(z.enum(["all", "electronics", "books", "clothing"]), "all").default("all"),
   q: fallback(z.string(), "").default(""),
-  sort: fallback(z.enum(["price", "name", "date"]), "date").default("date"),
 });
 
 export const Route = createFileRoute("/products/")({
-  validateSearch: zodValidator(productsSearchSchema),
+  validateSearch: zodValidator(schema),
   component: ProductsPage,
 });
 
-function ProductsPage() {
-  // Fully typed - { page: number, pageSize: number, category: string, q: string, sort: string }
-  const search = Route.useSearch();
-
-  return (
-    <div>
-      <p>
-        Page {search.page}, showing {search.pageSize} per page
-      </p>
-      <p>Category: {search.category}</p>
-    </div>
-  );
-}
+// In component: fully typed
+const { page, q } = Route.useSearch();
 ```
 
-**Why good:** `fallback()` provides safe defaults for invalid/missing params instead of throwing errors, Zod schema gives full type inference to `useSearch()`, `.min()` and `.max()` validate bounds at the URL level, named constants prevent magic numbers for defaults
-
-#### Updating Search Params
-
-```typescript
-// Good Example - Updating search params with functional updater
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Route } from "./products";
-
-function Pagination() {
-  const { page } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
-
-  const handleNextPage = () => {
-    navigate({
-      search: (prev) => ({ ...prev, page: prev.page + 1 }),
-    });
-  };
-
-  return (
-    <div>
-      {/* Declarative - Link with search updater */}
-      <Link
-        from={Route.fullPath}
-        search={(prev) => ({ ...prev, page: prev.page - 1 })}
-      >
-        Previous
-      </Link>
-
-      <span>Page {page}</span>
-
-      {/* Imperative - navigate with search updater */}
-      <button type="button" onClick={handleNextPage}>
-        Next
-      </button>
-    </div>
-  );
-}
-```
-
-**Why good:** functional updater `(prev) => ({...prev, ...})` preserves other search params, both Link and navigate support the same search updater pattern, `from` prop anchors type inference to the correct route's search schema
-
-```typescript
-// Bad Example - Reading search params manually
-function ProductsPage() {
-  // WRONG: Bypasses validation, loses type safety
-  const params = new URLSearchParams(window.location.search);
-  const page = Number(params.get("page") || 1);
-
-  return <p>Page {page}</p>;
-}
-```
-
-**Why bad:** bypasses `validateSearch` entirely losing all type safety, no default handling or validation, breaks SSR compatibility, does not react to URL changes
-
-#### Plain Function Validation (No Zod)
-
-```typescript
-// Good Example - validateSearch without external schema library
-import type { SearchSchemaInput } from "@tanstack/react-router";
-
-const DEFAULT_PAGE = 1;
-
-export const Route = createFileRoute("/posts/")({
-  validateSearch: (
-    input: Record<string, unknown> & SearchSchemaInput,
-  ): { page: number; tag?: string } => ({
-    page: Number(input.page ?? DEFAULT_PAGE) || DEFAULT_PAGE,
-    tag: typeof input.tag === "string" ? input.tag : undefined,
-  }),
-  component: PostsList,
-});
-```
-
-**Why good:** `SearchSchemaInput` marker type signals that input is optional (users navigate without search params), plain function validation works without additional dependencies, return type becomes the typed search schema
+See [examples/search-params.md](examples/search-params.md) for complete filter pages, search middleware, plain function validation, and declarative vs imperative updates.
 
 ---
 
@@ -492,46 +217,8 @@ export const Route = createFileRoute("/posts/")({
 
 Loaders fetch data before the component renders. They run in parallel for sibling routes and support SWR-style caching.
 
-#### Basic Loader
-
 ```typescript
-// Good Example - Route with loader
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/posts/")({
-  loader: async () => {
-    const posts = await fetchPosts();
-    return { posts };
-  },
-  component: PostsPage,
-});
-
-function PostsPage() {
-  // Data is guaranteed available - loader resolved before render
-  const { posts } = Route.useLoaderData();
-
-  return (
-    <ul>
-      {posts.map((post) => (
-        <li key={post.id}>{post.title}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-**Why good:** `useLoaderData()` is fully typed from the loader return type, data is available on first render (no loading spinners in the component), loader errors are caught by the route's `errorComponent`
-
-#### Loader with Params, Search, and Context
-
-```typescript
-// Good Example - Loader accessing all available data
-import { createFileRoute } from "@tanstack/react-router";
-
-const STALE_TIME_MS = 60_000; // 1 minute
-
 export const Route = createFileRoute("/posts/$postId/")({
-  // Cache loader results for 1 minute
   staleTime: STALE_TIME_MS,
   loader: async ({ params, context, abortController }) => {
     const post = await context.apiClient.getPost(params.postId, {
@@ -542,644 +229,101 @@ export const Route = createFileRoute("/posts/$postId/")({
   component: PostDetail,
 });
 
-function PostDetail() {
-  const { post } = Route.useLoaderData();
-  return <article>{post.title}</article>;
-}
+// Data is guaranteed available - no loading state needed
+const { post } = Route.useLoaderData();
 ```
 
-**Why good:** `params.postId` is typed from the route path, `context.apiClient` is injected via router context (no global imports), `abortController.signal` cancels fetch on navigation away, `staleTime` enables SWR-style caching to avoid redundant fetches
+**beforeLoad** runs first (sequentially) for auth checks and context enrichment. **loader** runs after (in parallel with siblings) for data fetching.
 
-#### beforeLoad vs loader
-
-```typescript
-// Good Example - beforeLoad for middleware, loader for data
-export const Route = createFileRoute("/dashboard/")({
-  // beforeLoad: runs first, sequentially, blocks loaders
-  // Use for: auth checks, redirects, adding to context
-  beforeLoad: async ({ context }) => {
-    const user = await context.auth.getUser();
-    if (!user) {
-      throw redirect({ to: "/login" });
-    }
-    // Return value merges into context for child routes and loader
-    return { user };
-  },
-
-  // loader: runs after beforeLoad, in parallel with sibling loaders
-  // Use for: fetching data the component needs
-  loader: async ({ context }) => {
-    // context.user is available from beforeLoad above
-    const stats = await fetchDashboardStats(context.user.id);
-    return { stats };
-  },
-
-  component: Dashboard,
-});
-```
-
-**Why good:** separation of concerns - `beforeLoad` handles auth/redirects, `loader` handles data, `beforeLoad` return value automatically merges into context for the loader and child routes, parallel execution of sibling loaders prevents waterfalls
+See [examples/data-loading.md](examples/data-loading.md) for TanStack Query integration, non-blocking prefetch, and SWR caching.
 
 ---
 
 ### Pattern 6: Nested Layouts and Outlets
 
-Layout routes wrap child routes with shared UI without adding a URL segment.
-
-#### Directory Layout Route
+Layout routes wrap child routes with shared UI. Use `<Outlet />` to render matched child content.
 
 ```typescript
-// src/routes/posts/route.tsx - Layout for all /posts/* routes
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-
+// src/routes/posts/route.tsx - Layout for /posts/*
 export const Route = createFileRoute("/posts")({
-  component: PostsLayout,
-});
-
-function PostsLayout() {
-  return (
+  component: () => (
     <div className="posts-layout">
-      <aside>
-        <h2>Posts Navigation</h2>
-        {/* Sidebar shared across all /posts/* pages */}
-      </aside>
-      <section>
-        <Outlet /> {/* Renders /posts/, /posts/$postId, etc. */}
-      </section>
+      <aside>{/* Sidebar */}</aside>
+      <Outlet /> {/* Renders child route */}
     </div>
-  );
-}
+  ),
+});
 ```
 
-#### Pathless Layout Route
+Pathless layouts (`_prefix`) add UI/guards without affecting the URL:
 
 ```typescript
-// src/routes/_authenticated.tsx - Wraps children without adding URL segment
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-
+// src/routes/_authenticated.tsx -> children at /dashboard, /settings (no /_authenticated in URL)
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ context }) => {
-    if (!context.auth.isAuthenticated) {
-      throw redirect({ to: "/login" });
-    }
+    if (!context.auth.isAuthenticated) throw redirect({ to: "/login" });
   },
-  component: AuthenticatedLayout,
-});
-
-function AuthenticatedLayout() {
-  return (
-    <div className="authenticated-layout">
-      <header>{/* Authenticated header with user info */}</header>
-      <Outlet /> {/* Renders /dashboard, /settings, etc. */}
-    </div>
-  );
-}
-
-// src/routes/_authenticated/dashboard.tsx -> URL: /dashboard
-// src/routes/_authenticated/settings.tsx  -> URL: /settings
-```
-
-**Why good:** pathless layout (`_` prefix) adds shared UI and auth guards without affecting the URL, all children inherit the `beforeLoad` auth check, `Outlet` renders the matched child route within the shared layout
-
-```typescript
-// Bad Example - Checking auth in every child route
-// src/routes/dashboard.tsx
-export const Route = createFileRoute("/dashboard/")({
-  beforeLoad: async ({ context }) => {
-    // WRONG: duplicating auth check in every protected route
-    if (!context.auth.isAuthenticated) {
-      throw redirect({ to: "/login" });
-    }
-  },
-  component: Dashboard,
+  component: () => <Outlet />,
 });
 ```
 
-**Why bad:** auth logic duplicated in every protected route instead of a single layout route, easy to forget on new routes creating security holes, violates DRY principle
+See [examples/routes.md](examples/routes.md) for nested pathless layouts, non-nested routes, and catch-all routes.
 
 ---
 
 ### Pattern 7: Route Context and Dependency Injection
 
-Route context provides type-safe dependency injection throughout the route tree, eliminating global imports in loaders.
-
-#### Setting Up Router Context
+Use `createRootRouteWithContext` to inject dependencies (queryClient, auth) into all routes via typed context.
 
 ```typescript
-// src/routes/__root.tsx
-import {
-  createRootRouteWithContext,
-  Outlet,
-} from "@tanstack/react-router";
-import type { QueryClient } from "@tanstack/react-query";
-
-// Define the shape of your router context
-export interface RouterContext {
-  queryClient: QueryClient;
-  auth: AuthService;
-}
-
+// Root: define context shape
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
 });
 
-function RootLayout() {
-  return <Outlet />;
-}
-```
-
-```typescript
-// src/main.tsx - Provide context when creating the router
-import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { routeTree } from "./routeTree.gen";
-import { authService } from "./services/auth";
-
-const queryClient = new QueryClient();
-
+// Entry: provide context
 const router = createRouter({
   routeTree,
-  context: {
-    queryClient,
-    auth: authService,
-  },
+  context: { queryClient, auth: authService },
 });
 
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-}
+// Routes: access typed context
+loader: async ({ context }) => {
+  await context.queryClient.ensureQueryData(postsQueryOptions);
+};
 ```
 
-**Why good:** `createRootRouteWithContext<RouterContext>()` enforces that `context` is passed to `createRouter`, TypeScript errors if required context properties are missing, all loaders/beforeLoad hooks receive fully typed `context`, avoids global imports in loaders making them testable
-
-#### Accessing Context in Routes
-
-```typescript
-// src/routes/posts/$postId/index.tsx
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/posts/$postId/")({
-  loader: async ({ context, params }) => {
-    // context.queryClient is typed from RouterContext
-    const post = await context.queryClient.ensureQueryData({
-      queryKey: ["posts", params.postId],
-      queryFn: () => fetchPost(params.postId),
-    });
-    return { post };
-  },
-  component: PostDetail,
-});
-```
-
-#### Enriching Context with beforeLoad
-
-```typescript
-// src/routes/_authenticated.tsx
-export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async ({ context }) => {
-    const user = await context.auth.getUser();
-    if (!user) {
-      throw redirect({ to: "/login" });
-    }
-    // Returned object merges into context for all child routes
-    return { user };
-  },
-  component: () => <Outlet />,
-});
-
-// src/routes/_authenticated/profile.tsx
-export const Route = createFileRoute("/_authenticated/profile")({
-  loader: async ({ context }) => {
-    // context.user is available here, typed from the parent beforeLoad
-    const profile = await fetchProfile(context.user.id);
-    return { profile };
-  },
-  component: ProfilePage,
-});
-```
-
-**Why good:** context accumulates down the route tree - child routes see all parent context additions, `beforeLoad` return value is merged into context automatically, TypeScript infers the full context shape including parent additions
+See [examples/auth-and-context.md](examples/auth-and-context.md) for complete patterns including context enrichment via `beforeLoad` and `getRouteApi` for shared components.
 
 ---
 
-### Pattern 8: Authentication Guards and Protected Routes
-
-Use `beforeLoad` with `redirect()` to protect routes. The pathless layout pattern groups protected routes under a single guard.
-
-#### Complete Auth Guard Pattern
+### Pattern 8: Error, Pending, and Not-Found Handling
 
 ```typescript
-// src/routes/_authenticated.tsx
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async ({ context, location }) => {
-    if (!context.auth.isAuthenticated) {
-      throw redirect({
-        to: "/login",
-        search: {
-          redirect: location.href,
-        },
-      });
-    }
-  },
-  component: () => <Outlet />,
-});
-```
-
-```typescript
-// src/routes/login.tsx
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
-
-const loginSearchSchema = z.object({
-  redirect: fallback(z.string(), "/").default("/"),
-});
-
-export const Route = createFileRoute("/login")({
-  validateSearch: zodValidator(loginSearchSchema),
-  component: LoginPage,
-});
-
-function LoginPage() {
-  const { redirect: redirectTo } = Route.useSearch();
-  const navigate = useNavigate();
-
-  const handleLogin = async (credentials: Credentials) => {
-    await loginUser(credentials);
-    // Navigate to the originally requested page after login
-    await navigate({ to: redirectTo });
-  };
-
-  return <LoginForm onSubmit={handleLogin} />;
-}
-```
-
-**Why good:** `location.href` captures the full intended URL including search params, the login page receives the redirect target as a validated search param, after successful login the user returns to their original destination, all routes under `_authenticated/` are protected by a single guard
-
----
-
-### Pattern 9: Error, Pending, and Not-Found Handling
-
-TanStack Router provides route-level error boundaries, loading indicators, and not-found handling.
-
-#### Error and Pending Components
-
-```typescript
-// Good Example - Route with error and pending handling
-import { createFileRoute, ErrorComponent } from "@tanstack/react-router";
-
 const PENDING_DELAY_MS = 200;
-const PENDING_MIN_DISPLAY_MS = 300;
 
 export const Route = createFileRoute("/posts/$postId/")({
-  loader: async ({ params }) => {
-    const post = await fetchPost(params.postId);
-    return { post };
-  },
-  // Show loading UI after 200ms (avoids flash for fast loads)
   pendingMs: PENDING_DELAY_MS,
-  // Keep loading UI visible for at least 300ms (avoids flicker)
-  pendingMinMs: PENDING_MIN_DISPLAY_MS,
-  pendingComponent: () => <div>Loading post...</div>,
+  pendingComponent: () => <div>Loading...</div>,
   errorComponent: ({ error, reset }) => (
     <div role="alert">
-      <p>Failed to load post</p>
       <pre>{error.message}</pre>
-      <button type="button" onClick={reset}>
-        Retry
-      </button>
+      <button type="button" onClick={reset}>Retry</button>
     </div>
   ),
-  component: PostDetail,
-});
-```
-
-**Why good:** `pendingMs` prevents loading flash for fast navigations, `pendingMinMs` prevents loading flicker for near-threshold loads, `errorComponent` receives `reset` function for retry capability, named constants for timing values prevent magic numbers
-
-#### Not-Found Handling
-
-```typescript
-// Good Example - Not-found at route and router level
-import { createFileRoute, notFound } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/posts/$postId/")({
+  notFoundComponent: () => <div>Post not found</div>,
   loader: async ({ params }) => {
     const post = await fetchPost(params.postId);
-    if (!post) {
-      // Triggers the route's notFoundComponent
-      throw notFound();
-    }
+    if (!post) throw notFound();
     return { post };
   },
-  notFoundComponent: () => (
-    <div>
-      <h2>Post not found</h2>
-      <p>The post you are looking for does not exist.</p>
-    </div>
-  ),
   component: PostDetail,
 });
 ```
 
-```typescript
-// Router-level default not-found (catches unmatched URLs)
-const router = createRouter({
-  routeTree,
-  defaultNotFoundComponent: () => (
-    <div>
-      <h1>404</h1>
-      <p>Page not found</p>
-    </div>
-  ),
-});
-```
-
-**Why good:** `notFound()` in loaders handles data-level not-found (valid route, missing data), `notFoundComponent` on route handles that specific route's not-found, `defaultNotFoundComponent` on router catches URLs that match no route at all
-
----
-
-### Pattern 10: Code Splitting
-
-Enable automatic code splitting to lazy-load route components and loaders.
-
-#### Automatic Code Splitting (Recommended)
-
-```typescript
-// vite.config.ts - Enable automatic code splitting
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-
-export default defineConfig({
-  plugins: [
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true, // Splits component + loader per route
-    }),
-    react(),
-  ],
-});
-```
-
-**Why good:** no manual `lazy()` calls needed, the plugin automatically extracts `component`, `loader`, `pendingComponent`, and `errorComponent` into separate chunks, each route only loads its code when navigated to
-
-#### Manual Code Splitting (When Needed)
-
-```typescript
-// src/routes/posts.lazy.tsx - Lazy-loaded route component
-import { createLazyFileRoute } from "@tanstack/react-router";
-
-export const Route = createLazyFileRoute("/posts")({
-  component: PostsPage,
-});
-
-function PostsPage() {
-  return <div>Posts content loaded lazily</div>;
-}
-```
-
-```typescript
-// src/routes/posts.tsx - Critical route config (always loaded)
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/posts/")({
-  // loader, beforeLoad, validateSearch stay in the main bundle
-  loader: async () => {
-    const posts = await fetchPosts();
-    return { posts };
-  },
-  // component is defined in posts.lazy.tsx
-});
-```
-
-**Why good:** `.lazy.tsx` files are only loaded when the route is navigated to, critical route config (loaders, search validation) stays in the main bundle for preloading, manual splitting gives fine-grained control when auto splitting is insufficient
-
-**When to use:** prefer `autoCodeSplitting: true` for most projects. Manual splitting is useful when you need specific bundling behavior or when not using the router plugin.
-
----
-
-### Pattern 11: TanStack Query Integration
-
-TanStack Router pairs with TanStack Query for advanced server state management. Loaders prefetch query data, components consume it reactively.
-
-#### Prefetching in Loaders
-
-```typescript
-// src/routes/posts/index.tsx
-import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-
-const postsQueryOptions = {
-  queryKey: ["posts"] as const,
-  queryFn: fetchPosts,
-};
-
-export const Route = createFileRoute("/posts/")({
-  loader: async ({ context }) => {
-    // Prefetch in loader - data is ready when component renders
-    await context.queryClient.ensureQueryData(postsQueryOptions);
-  },
-  component: PostsPage,
-});
-
-function PostsPage() {
-  // useSuspenseQuery will read from cache (already prefetched)
-  const { data: posts } = useSuspenseQuery(postsQueryOptions);
-
-  return (
-    <ul>
-      {posts.map((post) => (
-        <li key={post.id}>{post.title}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-**Why good:** `ensureQueryData` in loader prefetches data before component renders, `useSuspenseQuery` in component reads from cache (no loading state needed), TanStack Query handles background refetching, cache invalidation, and optimistic updates, query options are shared between loader and component ensuring cache key consistency
-
-#### Non-Blocking Prefetch
-
-```typescript
-// Good Example - Fire-and-forget prefetch (no await)
-export const Route = createFileRoute("/dashboard/")({
-  loader: async ({ context }) => {
-    // Critical data - awaited (blocks render)
-    const stats = await context.queryClient.ensureQueryData(statsQueryOptions);
-
-    // Non-critical data - not awaited (starts fetching, doesn't block)
-    context.queryClient.prefetchQuery(recentActivityQueryOptions);
-
-    return { stats };
-  },
-  component: Dashboard,
-});
-```
-
-**Why good:** critical data blocks render ensuring it is available, non-critical data starts fetching in parallel without blocking, the component can show a loading state for non-critical data while critical data is immediate
-
----
-
-### Pattern 12: Devtools
-
-TanStack Router Devtools provide route tree visualization, search param inspection, and navigation debugging.
-
-```typescript
-// src/routes/__root.tsx
-import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      {/* Auto-hidden in production (process.env.NODE_ENV === "production") */}
-      <TanStackRouterDevtools position="bottom-right" />
-    </>
-  ),
-});
-```
-
-**Why good:** devtools are automatically excluded from production builds, placing in root route provides visibility across all routes, shows route tree, active route, search params, loader status
-
-#### Lazy-Loaded Devtools (Optional)
-
-```typescript
-// Lazy-load devtools to reduce dev bundle size
-import { lazy, Suspense } from "react";
-
-const RouterDevtools =
-  process.env.NODE_ENV === "production"
-    ? () => null
-    : lazy(() =>
-        import("@tanstack/react-router-devtools").then((mod) => ({
-          default: mod.TanStackRouterDevtools,
-        })),
-      );
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <Suspense>
-        <RouterDevtools position="bottom-right" />
-      </Suspense>
-    </>
-  ),
-});
-```
-
-**Why good:** devtools are lazy-loaded so they do not increase initial bundle size even in development, production build tree-shakes the entire import, `Suspense` wrapper prevents flash while devtools load
+See [examples/error-handling.md](examples/error-handling.md) for router-level defaults, code splitting strategies, and preloading.
 
 </patterns>
-
----
-
-<performance>
-
-## Performance Optimization
-
-### Preloading
-
-Configure route preloading to fetch data before the user clicks a link.
-
-```typescript
-// Router-level preloading defaults
-const router = createRouter({
-  routeTree,
-  defaultPreload: "intent", // Preload on hover/focus
-});
-
-// Per-link preloading override
-<Link to="/posts/$postId" params={{ postId: "1" }} preload="intent">
-  View Post
-</Link>
-```
-
-**Preload strategies:**
-
-| Strategy     | Behavior                                      |
-| ------------ | --------------------------------------------- |
-| `"intent"`   | Preloads on hover/focus (recommended default) |
-| `"viewport"` | Preloads when link enters viewport            |
-| `"render"`   | Preloads immediately on render                |
-| `false`      | No preloading                                 |
-
-### SWR Caching
-
-TanStack Router includes built-in stale-while-revalidate caching for loaders.
-
-```typescript
-const STALE_TIME_MS = 30_000; // 30 seconds
-const GC_TIME_MS = 300_000; // 5 minutes
-
-// Router-level defaults
-const router = createRouter({
-  routeTree,
-  defaultPreload: "intent",
-  defaultStaleTime: STALE_TIME_MS,
-  defaultGcTime: GC_TIME_MS,
-});
-
-// Per-route override
-export const Route = createFileRoute("/posts/")({
-  staleTime: STALE_TIME_MS,
-  loader: async () => {
-    const posts = await fetchPosts();
-    return { posts };
-  },
-  component: PostsPage,
-});
-```
-
-**Caching properties:**
-
-| Property           | Purpose                                                      |
-| ------------------ | ------------------------------------------------------------ |
-| `staleTime`        | How long cached data is considered fresh (skips re-fetch)    |
-| `gcTime`           | How long stale data stays in cache before garbage collection |
-| `preloadStaleTime` | Separate stale time for preloaded data                       |
-
-### Search Middleware for Clean URLs
-
-Use search middleware to strip default values and retain important params during navigation.
-
-```typescript
-import { retainSearchParams, stripSearchParams } from "@tanstack/react-router";
-
-const DEFAULT_PAGE = 1;
-const DEFAULT_SORT = "date";
-
-export const Route = createFileRoute("/products/")({
-  validateSearch: zodValidator(productsSearchSchema),
-  search: {
-    middlewares: [
-      // Keep these params when navigating away and back
-      retainSearchParams(["q"]),
-      // Remove params matching defaults from URL
-      stripSearchParams({ page: DEFAULT_PAGE, sort: DEFAULT_SORT }),
-    ],
-  },
-  component: ProductsPage,
-});
-```
-
-**Why good:** `stripSearchParams` keeps URLs clean by removing default values, `retainSearchParams` preserves important state across navigations, both reduce URL clutter while maintaining full type safety
-
-</performance>
 
 ---
 

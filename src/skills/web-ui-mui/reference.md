@@ -1,6 +1,6 @@
 # MUI (Material UI) Reference
 
-> Decision frameworks, anti-patterns, and quick reference for MUI. See [SKILL.md](SKILL.md) for core concepts and [examples/mui.md](examples/mui.md) for practical code examples. **Current: v7.x (March 2025)** - CSS layers, standardized slots, Grid v2 promoted.
+> Decision frameworks, anti-patterns, and quick reference for MUI. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for practical code examples. **Current: v7.x (March 2025)** -- CSS layers, standardized slots, Grid v2 promoted.
 
 ---
 
