@@ -1,5 +1,5 @@
 ---
-name: security-auth-security
+name: shared-security-auth-security
 description: Secrets management, XSS prevention, CSRF protection, dependency scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies
 ---
 

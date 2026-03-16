@@ -1,5 +1,5 @@
 ---
-name: meta-research-research-methodology
+name: shared-meta-research-methodology
 description: Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.
 ---
 

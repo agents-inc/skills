@@ -1,5 +1,5 @@
 ---
-name: api-ci-cd-github-actions
+name: shared-ci-cd-github-actions
 description: GitHub Actions, pipelines, deployment
 ---
 

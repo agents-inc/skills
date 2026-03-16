@@ -1,5 +1,5 @@
 ---
-name: meta-reviewing-cli-reviewing
+name: shared-meta-cli-reviewing
 description: CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.
 ---
 

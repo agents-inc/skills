@@ -1,5 +1,5 @@
 ---
-name: infra-monorepo-turborepo
+name: shared-monorepo-turborepo
 description: Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking
 ---
 
