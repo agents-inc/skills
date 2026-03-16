@@ -315,7 +315,8 @@ export const Default: Story = {
 // icon-button.stories.tsx
 import type { Meta, StoryObj } from "@storybook/react";
 import { IconButton } from "./icon-button";
-import { Home, Settings, User, Mail, Bell, Search } from "lucide-react";
+// Import icons from your icon library
+import { HomeIcon, SettingsIcon, UserIcon, MailIcon, BellIcon, SearchIcon } from "./icons";
 
 const meta = {
   title: "Components/IconButton",
@@ -326,12 +327,12 @@ const meta = {
       control: { type: "select" },
       options: ["home", "settings", "user", "mail", "bell", "search"],
       mapping: {
-        home: <Home />,
-        settings: <Settings />,
-        user: <User />,
-        mail: <Mail />,
-        bell: <Bell />,
-        search: <Search />,
+        home: <HomeIcon />,
+        settings: <SettingsIcon />,
+        user: <UserIcon />,
+        mail: <MailIcon />,
+        bell: <BellIcon />,
+        search: <SearchIcon />,
       },
       description: "Icon to display",
     },

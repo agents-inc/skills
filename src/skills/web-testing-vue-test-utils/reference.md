@@ -60,7 +60,7 @@ What type of async operation?
 │       └─ await flushPromises()
 │
 ├─ setTimeout/setInterval?
-│   └─ Use Vitest fake timers
+│   └─ Use fake timers from your test runner
 │       └─ vi.useFakeTimers()
 │       └─ vi.advanceTimersByTime(1000)
 │
@@ -237,7 +237,7 @@ config.global.stubs = {
 // Render default slot content even in shallow mounts
 config.global.renderStubDefaultSlot = true;
 
-// Auto-unmount wrappers after tests (Vitest example)
+// Auto-unmount wrappers after tests
 import { enableAutoUnmount } from "@vue/test-utils";
 
 enableAutoUnmount(afterEach);
@@ -512,7 +512,7 @@ When a test fails unexpectedly:
 
 ---
 
-## Vitest Matcher Reference for Vue
+## Common Assertion Patterns for Vue
 
 | Matcher             | Use Case                 | Example                                                              |
 | ------------------- | ------------------------ | -------------------------------------------------------------------- |

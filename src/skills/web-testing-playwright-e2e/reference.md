@@ -383,7 +383,7 @@ test("can view order details", async ({ page, orderId }) => {
 | 7        | `getByTestId()`      | No semantic role available   | `getByTestId('user-avatar')`               |
 | 8        | CSS/XPath            | Legacy, avoid                | `locator('.btn-primary')`                  |
 
-### Locator Operators (v1.50+)
+### Locator Operators (v1.33+)
 
 | Operator                  | Purpose                     | Example                                                      |
 | ------------------------- | --------------------------- | ------------------------------------------------------------ |
@@ -444,7 +444,7 @@ test("can view order details", async ({ page, orderId }) => {
 | `toHaveRole()`                   | ARIA role (v1.44+)              | `await expect(element).toHaveRole('button')`                     |
 | `toHaveAccessibleErrorMessage()` | Error message (v1.50+)          | `await expect(input).toHaveAccessibleErrorMessage(/required/)`   |
 
-### Polling Assertions (v1.50+)
+### Polling Assertions (toPass)
 
 ```typescript
 // Custom polling for complex async conditions
@@ -571,25 +571,34 @@ npx playwright show-trace trace.zip
 
 ## Breaking Changes & Deprecations
 
-### v1.57 (Latest)
+### v1.58 (Latest)
+
+- **`_react` and `_vue` selectors removed**: Use `data-testid` or role-based locators instead
+- **`:light` selector engine suffix removed**: Use standard CSS selectors
+- **`devtools` option removed from `browserType.launch()`**: Use browser DevTools directly
+- **macOS 13 WebKit removed**: Minimum macOS for WebKit is now 14
+
+### v1.57
 
 - **Chrome for Testing**: Playwright now uses Chrome for Testing instead of Chromium for both headed and headless modes
 - **`page.accessibility` removed**: Use external libraries like Axe for accessibility auditing
+- **`webServer.wait` option**: Wait for server regex pattern before running tests
+- **`testConfig.tag`**: Tag all tests in a run for merge-reports
 
 ### v1.54
 
 - **Node.js 16 removed**: Minimum Node.js version is now 18
 - **Node.js 18 deprecated**: Plan to upgrade to Node.js 20+
 
+### v1.52
+
+- **Glob URL patterns in `page.route()`**: `?` and `[]` no longer supported; use regex instead
+- **`route.continue()` Cookie change**: Cannot override Cookie header; use `browserContext.addCookies()` instead
+
 ### v1.50
 
 - **`toBeEditable()` throws**: Now throws on non-editable elements instead of returning false
 - **`updateSnapshots: 'all'`**: Updates all snapshots; use `'changed'` for previous behavior
-
-### v1.48
-
-- **`route.continue()` Cookie change**: Cannot override Cookie header; use `browserContext.addCookies()` instead
-- **Glob patterns**: `?` and `[]` no longer supported in URL patterns; use regex instead
 
 ---
 

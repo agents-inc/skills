@@ -349,9 +349,11 @@ export const EscapeToClose: Story = {
 
 ---
 
-## Visual Testing Configuration
+## Visual Testing Parameters
 
-### Chromatic Integration
+### Configuring Visual Regression Snapshots
+
+Visual testing tools use the `chromatic` parameter key for snapshot configuration. These parameters control how your visual regression tool captures stories.
 
 ```typescript
 // button.stories.tsx
@@ -363,7 +365,7 @@ const meta = {
   component: Button,
   tags: ["autodocs"],
   parameters: {
-    // Chromatic capture configuration
+    // Visual testing capture configuration
     chromatic: {
       viewports: [320, 768, 1200],  // Capture at multiple widths
     },
@@ -385,7 +387,7 @@ export const AllVariants: Story = {
   ),
 };
 
-// Skip this story in Chromatic (animations cause flaky tests)
+// Skip this story from visual snapshots (animations cause flaky tests)
 export const WithAnimation: Story = {
   parameters: {
     chromatic: { disableSnapshot: true },
@@ -465,131 +467,6 @@ export const LowContrast: Story = {
 ```
 
 **Why good:** a11y addon runs axe-core automatically, rules can be customized per-story
-
----
-
-## Vitest Addon Integration (Recommended for Storybook 8.4+)
-
-The Vitest addon is the recommended approach for running story tests in Vite-based projects. It supersedes the test runner with better performance and Storybook UI integration.
-
-### Installation
-
-```bash
-# Automatic setup (recommended)
-npx storybook add @storybook/addon-vitest
-```
-
-### Configuration
-
-```typescript
-// vitest.config.ts
-import { defineConfig, mergeConfig } from "vitest/config";
-import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
-import viteConfig from "./vite.config";
-
-export default mergeConfig(
-  viteConfig,
-  defineConfig({
-    test: {
-      projects: [
-        {
-          plugins: [storybookTest({ configDir: ".storybook" })],
-          browser: {
-            enabled: true,
-            provider: "playwright",
-            name: "chromium",
-          },
-        },
-      ],
-    },
-  }),
-);
-```
-
-### Tag-Based Test Control
-
-```typescript
-// button.stories.tsx
-const meta = {
-  title: "Components/Button",
-  component: Button,
-  tags: ["stable"], // Custom tag
-} satisfies Meta<typeof Button>;
-
-// Skip this story from tests
-export const Experimental: Story = {
-  tags: ["!test", "experimental"], // Remove test tag, add experimental
-  args: { children: "Experimental" },
-};
-
-// Docs-only story (hidden from sidebar)
-export const DocsOnly: Story = {
-  tags: ["autodocs", "!dev"], // Show in docs, hide from sidebar
-  args: { children: "Docs Only" },
-};
-```
-
-### Package.json Scripts
-
-```json
-{
-  "scripts": {
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "test-storybook": "vitest --project=storybook",
-    "test-storybook:watch": "vitest --project=storybook --watch"
-  }
-}
-```
-
-**Why good:** Uses Vitest browser mode for real browser testing, integrates with Storybook UI, supports IDE extensions, faster than test runner
-
----
-
-## Legacy Test Runner (For Non-Vite Projects)
-
-> **Note:** For Vite-based projects, use the Vitest addon instead. The test runner is still available for Webpack-based Storybook projects.
-
-### Running Tests in CI
-
-```typescript
-// .storybook/test-runner.ts
-import type { TestRunnerConfig } from "@storybook/test-runner";
-
-const config: TestRunnerConfig = {
-  // Run setup before all tests
-  async preVisit(page) {
-    // Set viewport
-    await page.setViewportSize({ width: 1280, height: 720 });
-  },
-
-  // Run after each test
-  async postVisit(page, context) {
-    // Take accessibility snapshot
-    const element = await page.locator("#storybook-root");
-    await element.evaluate((el) => {
-      // Custom assertions can go here
-    });
-  },
-};
-
-export default config;
-```
-
-### Package.json Scripts (Test Runner)
-
-```json
-{
-  "scripts": {
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "test-storybook": "test-storybook",
-    "test-storybook:ci": "test-storybook --ci --maxWorkers=2"
-  }
-}
-```
-
-**Why good:** Works with any Storybook framework, executes play functions in CI, catches interaction regressions
 
 ---
 
@@ -676,4 +553,4 @@ _For more patterns, see:_
 
 - [core.md](core.md) - CSF 3.0 format, args, controls
 - [docs.md](docs.md) - Autodocs and MDX documentation
-- [addons.md](addons.md) - Addon configuration
+- [addons.md](addons.md) - Addon configuration, Storybook test addon setup, visual testing addon setup

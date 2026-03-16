@@ -4,5 +4,5 @@ slug: vitest
 domain: web
 author: "@vince"
 displayName: Vitest
-cliDescription: Unit and integration testing
-usageGuidance: Use when writing unit tests, integration tests, or configuring Vitest.
+cliDescription: E2E, unit, and integration testing
+usageGuidance: Use when writing E2E tests (Playwright), unit tests, integration tests, or configuring Vitest.

@@ -452,75 +452,13 @@ export const TransparentCard: Story = {
 
 ---
 
-## Chromatic Addon (Visual Testing)
+## Visual Testing Addon
 
-### Installation
+Visual testing tools integrate with Storybook to capture snapshots of stories for regression detection. See [testing.md](testing.md) for story-level visual testing parameters (`chromatic.viewports`, `chromatic.disableSnapshot`, `chromatic.delay`).
 
-```bash
-npm install -D @chromatic-com/storybook
-```
-
-### Configuration
+### Modes for Theme Testing
 
 ```typescript
-// .storybook/main.ts
-import type { StorybookConfig } from "@storybook/react-vite";
-
-const config: StorybookConfig = {
-  addons: [
-    "@storybook/addon-essentials",
-    "@chromatic-com/storybook", // Chromatic integration
-  ],
-  // ...
-};
-
-export default config;
-```
-
-### Story Configuration
-
-```typescript
-// button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "./button";
-
-const meta = {
-  title: "Components/Button",
-  component: Button,
-  parameters: {
-    chromatic: {
-      // Capture at multiple viewports
-      viewports: [320, 768, 1200],
-    },
-  },
-} satisfies Meta<typeof Button>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Story captured for visual testing
-export const Primary: Story = {
-  args: { variant: "primary", children: "Primary" },
-};
-
-// Skip this story (animations cause flaky snapshots)
-export const Animated: Story = {
-  parameters: {
-    chromatic: { disableSnapshot: true },
-  },
-  args: { animated: true },
-};
-
-// Delay snapshot for async content
-export const WithAsyncData: Story = {
-  parameters: {
-    chromatic: {
-      delay: 300, // Wait 300ms
-    },
-  },
-};
-
-// Different modes for theme testing
 export const ThemedButton: Story = {
   parameters: {
     chromatic: {
@@ -533,39 +471,7 @@ export const ThemedButton: Story = {
 };
 ```
 
-### CI Integration
-
-```yaml
-# .github/workflows/chromatic.yml
-name: Chromatic
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-jobs:
-  chromatic:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - run: npm ci
-
-      - name: Publish to Chromatic
-        uses: chromaui/action@latest
-        with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-          buildScriptName: build-storybook
-```
-
-**Why good:** Automated visual regression testing, catches unintended UI changes, integrates with PR workflow
+**Why good:** Modes capture the same story under different global configurations, catches theme-specific regressions
 
 ---
 
@@ -653,33 +559,20 @@ export const WithMultipleDesigns: Story = {
 
 ---
 
-## Vitest Addon (Recommended for Storybook 8.4+)
+## Storybook Test Addon (Recommended for Storybook 8.4+)
 
-The Vitest addon is the recommended testing solution for Vite-based Storybook projects. It supersedes the test runner with Vitest browser mode integration.
+The Storybook test addon transforms stories into component tests running in a real browser. It supersedes the legacy test runner with better performance and Storybook UI integration.
 
 ### Installation
 
 ```bash
-# Automatic setup (recommended)
+# Automatic setup (recommended - configures everything)
 npx storybook add @storybook/addon-vitest
 ```
 
 ### Configuration
 
-```typescript
-// .storybook/main.ts
-import type { StorybookConfig } from "@storybook/react-vite";
-
-const config: StorybookConfig = {
-  addons: [
-    "@storybook/addon-essentials",
-    "@storybook/addon-vitest", // Add Vitest addon
-  ],
-  // ...
-};
-
-export default config;
-```
+The automatic setup creates the necessary config files. Key pieces:
 
 ```typescript
 // vitest.config.ts
@@ -690,194 +583,87 @@ import viteConfig from "./vite.config";
 export default mergeConfig(
   viteConfig,
   defineConfig({
-    test: {
-      projects: [
-        {
-          plugins: [
-            storybookTest({
-              configDir: ".storybook",
-              // Optional: Enable clickable story links in CI
-              storybookUrl: "https://your-storybook.com",
-              // Tag filtering
-              tags: {
-                include: ["test"],
-                exclude: ["experimental"],
-              },
-            }),
-          ],
-          browser: {
-            enabled: true,
-            provider: "playwright",
-            name: "chromium",
-          },
+    plugins: [
+      storybookTest({
+        configDir: ".storybook",
+        // Optional: clickable story links in CI output
+        storybookUrl: "https://your-storybook.com",
+        // Tag filtering
+        tags: {
+          include: ["test"],
+          exclude: ["experimental"],
         },
-      ],
+      }),
+    ],
+    test: {
+      browser: {
+        enabled: true,
+        provider: "playwright",
+        name: "chromium",
+        headless: true,
+      },
+      // Required: setup file for portable stories
+      setupFiles: ["./.storybook/vitest.setup.ts"],
     },
   }),
 );
 ```
 
-### Package Scripts
+```typescript
+// .storybook/vitest.setup.ts
+// Required: connects Storybook preview config to Vitest
+import { beforeAll } from "vitest";
+import { setProjectAnnotations } from "@storybook/react";
+import * as previewAnnotations from "./preview";
 
-```json
-{
-  "scripts": {
-    "test-storybook": "vitest --project=storybook",
-    "test-storybook:watch": "vitest --project=storybook --watch",
-    "test-storybook:ui": "vitest --project=storybook --ui"
-  }
-}
+const annotations = setProjectAnnotations([previewAnnotations]);
+
+beforeAll(annotations.beforeAll);
 ```
 
-**Why good:** Runs in real browser (Vitest browser mode), integrates with Storybook UI, supports IDE extensions, faster than test runner
+### Tag-Based Test Control
+
+```typescript
+// button.stories.tsx
+const meta = {
+  title: "Components/Button",
+  component: Button,
+  tags: ["stable"],
+} satisfies Meta<typeof Button>;
+
+// Skip this story from tests
+export const Experimental: Story = {
+  tags: ["!test", "experimental"],
+  args: { children: "Experimental" },
+};
+
+// Docs-only story (hidden from sidebar)
+export const DocsOnly: Story = {
+  tags: ["autodocs", "!dev"],
+  args: { children: "Docs Only" },
+};
+```
+
+**Why good:** Runs in real browser via Vitest browser mode, integrates with Storybook UI, supports IDE test extensions, faster than legacy test runner
 
 ---
 
-## Test Runner Addon (Legacy - For Non-Vite Projects)
+## Legacy Test Runner (For Non-Vite Projects)
 
-> **Note:** For Vite-based projects, use `@storybook/addon-vitest` instead.
+> **Note:** For Vite-based projects, use the Storybook test addon above instead. The test runner is for Webpack-based projects only.
 
-### Installation
-
-```bash
-npm install -D @storybook/test-runner
-```
-
-### Configuration
-
-```typescript
-// .storybook/test-runner.ts
-import type { TestRunnerConfig } from "@storybook/test-runner";
-import { getStoryContext } from "@storybook/test-runner";
-
-const config: TestRunnerConfig = {
-  // Setup before all tests
-  async preVisit(page) {
-    await page.setViewportSize({ width: 1280, height: 720 });
-  },
-
-  // After each story visit
-  async postVisit(page, context) {
-    // Access story context
-    const storyContext = await getStoryContext(page, context);
-
-    // Example: Take accessibility snapshot
-    if (storyContext.parameters.a11y?.disable !== true) {
-      // Run accessibility checks
-    }
-  },
-
-  // Custom test timeout
-  testTimeout: 15000,
-};
-
-export default config;
-```
-
-### Package Scripts
-
-```json
-{
-  "scripts": {
-    "test-storybook": "test-storybook",
-    "test-storybook:ci": "test-storybook --ci",
-    "test-storybook:coverage": "test-storybook --coverage"
-  }
-}
-```
-
-### Running Tests
-
-```bash
-# Start Storybook first
-npm run storybook
-
-# In another terminal, run tests
-npm run test-storybook
-
-# Or run against built Storybook
-npm run build-storybook
-npx http-server storybook-static --port 6006
-npm run test-storybook -- --url http://localhost:6006
-```
-
-**Why good:** Runs all play functions as tests, works with any Storybook framework, integrates with CI
+The legacy test runner (`@storybook/test-runner`) requires a running Storybook instance and visits each story in a headless browser. Configure via `.storybook/test-runner.ts` with `preVisit`/`postVisit` hooks for setup and assertions. Run with `test-storybook --ci` in CI environments.
 
 ---
 
-## Complete Configuration Example
+## Key Configuration Decisions
 
-```typescript
-// .storybook/main.ts
-import type { StorybookConfig } from "@storybook/react-vite";
+Non-obvious choices when setting up `.storybook/main.ts`:
 
-const config: StorybookConfig = {
-  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
-  addons: [
-    "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
-    "@storybook/addon-a11y",
-    "@storybook/addon-vitest", // Storybook 8.4+ testing
-    "@storybook/addon-links",
-    "@chromatic-com/storybook",
-  ],
-  framework: {
-    name: "@storybook/react-vite",
-    options: {},
-  },
-  // NOTE: docs.autodocs is deprecated in Storybook 8 - use tags in preview.tsx instead
-  staticDirs: ["../public"],
-  typescript: {
-    // Storybook 8 default is react-docgen (faster)
-    // Use react-docgen-typescript only if you need imported type support
-    reactDocgen: "react-docgen",
-  },
-};
-
-export default config;
-```
-
-```typescript
-// .storybook/preview.tsx
-import type { Preview } from "@storybook/react";
-import "../src/styles/globals.css";
-
-const preview: Preview = {
-  // Enable autodocs globally (Storybook 8+ approach)
-  tags: ["autodocs"],
-  parameters: {
-    controls: {
-      matchers: {
-        color: /(background|color)$/i,
-        date: /Date$/i,
-      },
-    },
-    layout: "centered",
-    backgrounds: {
-      default: "light",
-      values: [
-        { name: "light", value: "#ffffff" },
-        { name: "dark", value: "#1a1a1a" },
-      ],
-    },
-  },
-  // Use initialGlobals instead of globals (Storybook 8.2+)
-  initialGlobals: {
-    theme: "light",
-  },
-  decorators: [
-    (Story) => (
-      <div style={{ margin: "1rem" }}>
-        <Story />
-      </div>
-    ),
-  ],
-};
-
-export default preview;
-```
-
-**Why good:** Complete Storybook 8.4+ setup for professional component development, covers documentation, testing, accessibility, and visual regression
+- **`react-docgen` vs `react-docgen-typescript`**: Default `react-docgen` is ~50% faster but cannot extract types imported from other files. Switch to `react-docgen-typescript` only if your props reference external type definitions.
+- **`docs.autodocs` in main.ts is deprecated**: Use `tags: ["autodocs"]` in `preview.ts` instead.
+- **`globals` renamed to `initialGlobals`** in Storybook 8.2+. The old field is deprecated.
+- **`argTypesRegex` for actions is deprecated**: Use explicit `fn()` from `@storybook/test` for testable handlers.
 
 ---
 

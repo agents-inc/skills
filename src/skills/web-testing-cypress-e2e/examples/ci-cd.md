@@ -204,8 +204,6 @@ jobs:
 
 ```yaml
 # docker-compose.cypress.yml
-version: "3.8"
-
 services:
   app:
     build: .
@@ -557,8 +555,8 @@ export default defineConfig({
 
   component: {
     devServer: {
-      framework: "react",
-      bundler: "vite",
+      framework: "react", // Match your framework: "react" | "angular" | "vue" | "svelte"
+      bundler: "vite", // Match your bundler: "vite" | "webpack"
     },
   },
 });

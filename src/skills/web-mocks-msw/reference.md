@@ -12,7 +12,7 @@ Need API mocking?
 │   ├─ YES → Browser worker + variant switching
 │   └─ NO → Server worker in tests
 ├─ Testing different scenarios?
-│   ├─ YES → Per-test handler overrides
+│   ├─ YES → Per-test handler overrides with server.use()
 │   └─ NO → Default handlers sufficient
 ├─ Need to change mock behavior without restarting?
 │   ├─ YES → Variant switching + runtime control
@@ -24,7 +24,6 @@ Need API mocking?
 
 **Choosing between approaches:**
 
-- **Centralized package**: Always use for shared mocks across apps
 - **Handler variants**: Use when testing multiple scenarios (empty, error states)
 - **Per-test overrides**: Use when specific tests need different responses
 - **Runtime switching**: Use in development for UI exploration
@@ -37,7 +36,6 @@ Need API mocking?
 **High Priority Issues:**
 
 - ❌ **Using `setupWorker` in Node tests or `setupServer` in browser** - Wrong API for environment causes cryptic failures
-- ❌ **Manual API type definitions instead of generated types** - Types drift from real API schema causing runtime errors
 - ❌ **Not resetting handlers between tests** - Test pollution and order-dependent failures
 - ❌ **Mixing handlers and mock data in same file** - Reduces reusability and violates separation of concerns
 - ❌ **Missing `await` when starting browser worker before render** - Race conditions cause intermittent failures
@@ -49,64 +47,52 @@ Need API mocking?
 - ⚠️ **Top-level import of browser worker in SSR frameworks** - Build failures due to service worker APIs
 - ⚠️ **No `onUnhandledRequest` configuration** - Unclear which requests are mocked vs real
 
-**Common Mistakes:**
-
-- Forgetting to call `serverWorker.resetHandlers()` in `afterEach`
-- Using default exports instead of named exports
-- Embedding mock data inside handlers instead of separating into `mocks/` directory
-- Not providing variant handlers (only `defaultHandler`)
-
 **Gotchas & Edge Cases:**
 
-- MSW requires async/await for browser worker start - rendering before ready causes race conditions
-- Handler overrides with `serverWorker.use()` persist until `resetHandlers()` is called
-- Browser worker doesn't work in Node environment and vice versa - check your imports
-- Dynamic imports in SSR frameworks are required for browser-only code to avoid server bundling issues
+- `delay()` with no arguments applies a random 100-400ms delay in the browser, but is automatically negated in Node.js to avoid slowing tests. Use an explicit duration if you actually need delay in tests.
+- Handler overrides with `server.use()` persist until `resetHandlers()` is called -- they do NOT reset automatically between tests.
+- Browser worker doesn't work in Node environment and vice versa -- check your imports.
+- Dynamic imports are required for browser-only code in SSR frameworks to avoid server bundling issues.
+- `http.all()` intercepts any HTTP method on a path -- useful for catch-all handlers but can mask bugs if overused.
+- The `once: true` option on a handler makes it match only the first request, useful for testing sequential responses.
 
 ---
 
-## Anti-Patterns to Avoid
+## Anti-Patterns
 
 ### Wrong MSW API for Environment
 
 ```typescript
-// ❌ ANTI-PATTERN: setupServer in browser
+// ❌ setupServer in browser
 import { setupServer } from "msw/node";
 export const browserWorker = setupServer(...handlers);
 
-// ❌ ANTI-PATTERN: setupWorker in Node tests
+// ❌ setupWorker in Node tests
 import { setupWorker } from "msw/browser";
-export const serverWorker = setupWorker(...handlers);
+export const server = setupWorker(...handlers);
 ```
 
-**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs - wrong API causes cryptic runtime errors.
-
-**What to do instead:** Use `setupWorker` from `msw/browser` for browser, `setupServer` from `msw/node` for tests.
+**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs -- wrong API causes cryptic runtime errors.
 
 ---
 
 ### Missing Handler Reset Between Tests
 
 ```typescript
-// ❌ ANTI-PATTERN: No resetHandlers
-import { serverWorker } from "@repo/api-mocks/serverWorker";
-
-// In your test setup file
-beforeAll(() => serverWorker.listen());
-afterAll(() => serverWorker.close());
-// Missing: afterEach(() => serverWorker.resetHandlers());
+// ❌ No resetHandlers
+beforeAll(() => server.listen());
+afterAll(() => server.close());
+// Missing: afterEach(() => server.resetHandlers());
 ```
 
-**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures, tests become order-dependent.
-
-**What to do instead:** Always include `afterEach(() => serverWorker.resetHandlers())`.
+**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures and order-dependent behavior.
 
 ---
 
 ### Mock Data Embedded in Handlers
 
 ```typescript
-// ❌ ANTI-PATTERN: Data inside handler
+// ❌ Data inside handler
 export const getFeaturesHandler = http.get("api/v1/features", () => {
   return HttpResponse.json({
     features: [{ id: "1", name: "Dark mode" }],
@@ -116,14 +102,12 @@ export const getFeaturesHandler = http.get("api/v1/features", () => {
 
 **Why it's wrong:** Mock data cannot be reused in other tests or handlers, no type checking against API schema.
 
-**What to do instead:** Separate mock data into `mocks/` directory with proper types from `@repo/api/types`.
-
 ---
 
 ### Rendering Before MSW Ready
 
 ```typescript
-// ❌ ANTI-PATTERN: Missing await
+// ❌ Missing await
 if (import.meta.env.DEV) {
   browserWorker.start({ onUnhandledRequest: "bypass" }); // No await!
 }
@@ -131,5 +115,3 @@ createRoot(document.getElementById("root")!).render(<App />);
 ```
 
 **Why it's wrong:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably.
-
-**What to do instead:** Await worker start before rendering: `await browserWorker.start(...)`.

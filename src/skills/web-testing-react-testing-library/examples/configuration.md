@@ -1,64 +1,13 @@
 # React Testing Library - Configuration Examples
 
-> Global configuration and userEvent setup options. Reference from [SKILL.md](../SKILL.md).
-
----
-
-## Global Configuration
-
-```typescript
-// Good Example - Test setup file configuration
-// test-setup.ts (referenced in vitest.config.ts or jest.config.js)
-import { configure } from "@testing-library/react";
-import "@testing-library/jest-dom";
-
-// Configure Testing Library defaults
-configure({
-  // Change default test ID attribute
-  testIdAttribute: "data-test-id",
-
-  // Increase default async timeout (default: 1000ms)
-  asyncUtilTimeout: 5000,
-
-  // Throw errors on deprecated features
-  throwSuggestions: true,
-});
-```
-
-**Why good:** Centralizes configuration in setup file, applies to all tests automatically
-
----
-
-## Custom Test ID Attribute
-
-```typescript
-// Good Example - Using custom test ID attribute
-import { configure, render, screen } from "@testing-library/react";
-
-// Configure custom attribute (typically in setup file)
-configure({ testIdAttribute: "data-automation-id" });
-
-// Component uses custom attribute
-function MyComponent() {
-  return <div data-automation-id="my-element">Content</div>;
-}
-
-test("finds element by custom test ID", () => {
-  render(<MyComponent />);
-
-  // getByTestId now uses data-automation-id
-  expect(screen.getByTestId("my-element")).toBeInTheDocument();
-});
-```
-
-**Why good:** Supports legacy test ID conventions or team-specific attributes
+> Non-obvious configuration patterns. See [core.md](core.md) for query patterns.
 
 ---
 
 ## userEvent with Fake Timers
 
 ```typescript
-// Good Example - userEvent with Vitest fake timers
+// Good Example - userEvent with fake timers
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DebounceSearch } from "./debounce-search";
@@ -126,16 +75,6 @@ test("clicks button with pointer-events: none during loading", async () => {
   // Click still fires (tests event handler, not CSS behavior)
   expect(onClick).toHaveBeenCalled();
 });
-
-// Default behavior (recommended for most tests)
-test("respects pointer-events: none by default", async () => {
-  const user = userEvent.setup(); // Default: pointerEventsCheck: 2
-
-  render(<LoadingButton isLoading={true} />);
-
-  // This would throw error because button has pointer-events: none
-  // await user.click(screen.getByRole("button")); // THROWS
-});
 ```
 
 **Pointer events check levels:**
@@ -146,44 +85,7 @@ test("respects pointer-events: none by default", async () => {
 
 ---
 
-## userEvent Delay Options
-
-```typescript
-// Good Example - Customizing event delays
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { TypeAhead } from "./type-ahead";
-
-test("fast typing for performance tests", async () => {
-  // No delay between events (faster tests)
-  const user = userEvent.setup({
-    delay: null, // null = no delay
-  });
-
-  render(<TypeAhead />);
-
-  // Types instantly without delays between keystrokes
-  await user.type(screen.getByRole("textbox"), "Hello World");
-});
-
-test("realistic typing speed", async () => {
-  // Custom delay between events (simulates real typing)
-  const user = userEvent.setup({
-    delay: 50, // 50ms between each event
-  });
-
-  render(<TypeAhead />);
-
-  // Types with realistic delays (slower but more realistic)
-  await user.type(screen.getByRole("textbox"), "Hello");
-});
-```
-
-**Why good:** Allows trading off between test speed and realistic behavior
-
----
-
-## Combined Configuration Pattern
+## Combined Configuration with Fake Timers
 
 ```typescript
 // Good Example - Test-specific configuration
@@ -237,7 +139,7 @@ describe("ComplexForm with slow API", () => {
 ## Reset Configuration Between Tests
 
 ```typescript
-// Good Example - Resetting configuration
+// Good Example - Saving and restoring configuration
 import { configure, getConfig } from "@testing-library/react";
 
 describe("tests with custom config", () => {
