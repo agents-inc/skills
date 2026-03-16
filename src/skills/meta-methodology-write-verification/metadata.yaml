@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-methodology
-slug: write-verification
-domain: shared
-author: "@vince"
-displayName: Write Verification
-cliDescription: Verify edits were actually saved
-usageGuidance: Apply after any file write or edit operation. Re-read and verify before reporting success.

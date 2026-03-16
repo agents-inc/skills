@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-methodology
-slug: anti-over-engineering
-domain: shared
-author: "@vince"
-displayName: Anti-Over-Engineering
-cliDescription: Surgical implementation, not architectural innovation
-usageGuidance: Apply to every implementation task. Prevents scope creep, unnecessary abstractions, and "while I'm here" syndrome.

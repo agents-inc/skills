@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-methodology
-slug: success-criteria
-domain: shared
-author: "@vince"
-displayName: Success Criteria
-cliDescription: Define done with measurable criteria
-usageGuidance: Define success criteria before starting any task. Verify each criterion and provide evidence after completion.

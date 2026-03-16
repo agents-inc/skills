@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-methodology
-slug: investigation-requirements
-domain: shared
-author: "@vince"
-displayName: Investigation Requirements
-cliDescription: Never speculate - read actual code first
-usageGuidance: Apply before any implementation or analysis. Prevents hallucination by requiring evidence-based claims.

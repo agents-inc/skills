@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-methodology
-slug: improvement-protocol
-domain: shared
-author: "@vince"
-displayName: Improvement Protocol
-cliDescription: Evidence-based self-improvement for agents
-usageGuidance: Use when agents need to improve their own prompts or configurations. Evidence-based changes only.
