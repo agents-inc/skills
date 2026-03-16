@@ -393,17 +393,8 @@ const storageError = (
 });
 
 export function getItem<T>(key: string): Result<T | null, StorageError> {
-  return tryCatch(
-    () => {
-      const item = localStorage.getItem(key);
-      if (item === null) return null;
-
-      const parsed = safeJsonParse<T>(item);
-      if (!parsed.ok) {
-        throw new Error(parsed.error.message);
-      }
-      return parsed.value;
-    },
+  const rawResult = tryCatch(
+    () => localStorage.getItem(key),
     (error): StorageError =>
       storageError(
         "get",
@@ -411,6 +402,16 @@ export function getItem<T>(key: string): Result<T | null, StorageError> {
         error instanceof Error ? error.message : "Unknown error",
       ),
   );
+
+  if (!rawResult.ok) return rawResult;
+  if (rawResult.value === null) return ok(null);
+
+  const parsed = safeJsonParse<T>(rawResult.value);
+  if (!parsed.ok) {
+    return err(storageError("get", key, parsed.error.message));
+  }
+
+  return ok(parsed.value);
 }
 
 export function setItem<T>(key: string, value: T): Result<void, StorageError> {

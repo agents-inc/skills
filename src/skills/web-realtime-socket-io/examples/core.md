@@ -11,12 +11,12 @@ Create a typed socket instance with proper configuration.
 ### Constants
 
 ```typescript
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+// Use your framework's env variable convention
+const SOCKET_URL = process.env.SOCKET_URL ?? "http://localhost:3001";
 const RECONNECTION_ATTEMPTS = 10;
 const RECONNECTION_DELAY_MS = 1000;
 const RECONNECTION_DELAY_MAX_MS = 5000;
-const ACK_TIMEOUT_MS = 10000;
+const CONNECTION_TIMEOUT_MS = 20000;
 ```
 
 ### Event Types
@@ -115,7 +115,7 @@ export function createSocket(authToken: string): TypedSocket {
     reconnectionAttempts: RECONNECTION_ATTEMPTS,
     reconnectionDelay: RECONNECTION_DELAY_MS,
     reconnectionDelayMax: RECONNECTION_DELAY_MAX_MS,
-    timeout: ACK_TIMEOUT_MS,
+    timeout: CONNECTION_TIMEOUT_MS,
     transports: ["websocket", "polling"],
   });
 
@@ -131,7 +131,7 @@ export function disconnectSocket(): void {
   socket = null;
 }
 
-export { SOCKET_URL, ACK_TIMEOUT_MS };
+export { SOCKET_URL, CONNECTION_TIMEOUT_MS };
 ```
 
 ---
@@ -812,7 +812,7 @@ useEffect(() => {
 const socket = io(url, {
   reconnectionDelay: RECONNECTION_DELAY_MS,
   reconnectionDelayMax: RECONNECTION_DELAY_MAX_MS,
-  timeout: REQUEST_TIMEOUT_MS,
+  timeout: CONNECTION_TIMEOUT_MS,
 });
 
 // CORRECT - Check connection status

@@ -274,7 +274,9 @@ const socket = io(url, {
 
 // CORRECT - Function called on each connection
 const socket = io(url, {
-  auth: () => ({ token: getToken() }), // Fresh token each time
+  auth: (cb) => {
+    cb({ token: getToken() });
+  }, // Fresh token each time
 });
 
 // OR update before reconnection
@@ -318,7 +320,7 @@ const socket = io(url, {
 
 | Option                 | Type               | Default                                  | Description                                                  |
 | ---------------------- | ------------------ | ---------------------------------------- | ------------------------------------------------------------ |
-| `auth`                 | object \| function | -                                        | Authentication payload                                       |
+| `auth`                 | object \| function | -                                        | Authentication payload (function called on each connection)  |
 | `autoConnect`          | boolean            | true                                     | Connect on instantiation                                     |
 | `reconnection`         | boolean            | true                                     | Enable automatic reconnection                                |
 | `reconnectionAttempts` | number             | Infinity                                 | Max attempts                                                 |

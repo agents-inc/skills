@@ -32,7 +32,6 @@ export function NotificationBadge({ count }: Props) {
 // Output (count=1): "1 notification"
 // Output (count=5): "5 notifications"
 
-export { NotificationBadge };
 ```
 
 **Why good:** `=0` provides zero-specific message, `#` formats the count with locale-appropriate separators, `other` category is REQUIRED (omission causes runtime error), accessible with aria-label and role
@@ -64,7 +63,6 @@ export function ShoppingCartSummary({ itemCount, totalPrice }: Props) {
 // Output (itemCount=1): "1 item in cart - $29.99"
 // Output (itemCount=3): "3 items in cart - $89.97"
 
-export { ShoppingCartSummary };
 ```
 
 **Why good:** combines pluralization with other variables, `total` interpolated in plural branches, zero case provides meaningful empty state
@@ -96,7 +94,6 @@ export function ActivitySummary({ followerCount, postCount }: Props) {
 // Output: "1 follower and no posts"
 // Output: "No followers yet and 1 post"
 
-export { ActivitySummary };
 ```
 
 **Why good:** multiple plural expressions in one message, maintains sentence structure for translators
@@ -133,7 +130,6 @@ export function RankingBadge({ position }: Props) {
 // Output (position=4): "4th place"
 // Output (position=21): "21st place"
 
-export { RankingBadge };
 ```
 
 **Why good:** `selectordinal` handles language-specific ordinal rules, English has four categories (one, two, few, other), `#` is replaced with formatted number
@@ -165,7 +161,6 @@ export function AnniversaryMessage({ years, userName }: Props) {
 // Output: "Happy 3rd anniversary, Bob!"
 // Output: "Happy 10th anniversary, Carol!"
 
-export { AnniversaryMessage };
 ```
 
 **Why good:** ordinal combined with other interpolation, celebratory context clear for translators
@@ -204,7 +199,6 @@ export function ProfileAction({ userName, gender, action }: Props) {
 // Output (female, comment): "She commented on your post."
 // Output (other, share): "They shared your post."
 
-export { ProfileAction };
 ```
 
 **Why good:** `other` category is REQUIRED as fallback, multiple select expressions compose well, type-safe enum values
@@ -237,7 +231,6 @@ export function OrderStatusMessage({ status, orderNumber }: Props) {
 // Output: "Order #12345: is on its way"
 // Output: "Order #12345: has been delivered"
 
-export { OrderStatusMessage };
 ```
 
 **Why good:** enum-like status maps to full phrases, `other` handles unexpected values gracefully, order number interpolated
@@ -276,7 +269,6 @@ export function FollowerNotification({ userName, gender, followerCount }: Props)
 // Output (female, 1): "She has 1 follower"
 // Output (other, 0): "They have no followers"
 
-export { FollowerNotification };
 ```
 
 **Why good:** nested plural inside select handles both dimensions, verb agreement ("has" vs "have") varies with gender
@@ -308,7 +300,6 @@ export function ExpirationNotice({ daysRemaining, expirationDate }: Props) {
 // Output (days=1): "Your subscription expires tomorrow (Jan 16, 2024)"
 // Output (days=5): "Your subscription expires in 5 days (Jan 20, 2024)"
 
-export { ExpirationNotice };
 ```
 
 **Why good:** special cases for 0 and 1 days, date formatting embedded in message, contextual information preserved
@@ -410,7 +401,6 @@ export function DurationDisplay({ hours, minutes }: Props) {
 // Output: "1 hour"
 // Output: "45 minutes"
 
-export { DurationDisplay };
 ```
 
 **Why good:** handles edge cases (zero hours, zero minutes), separate message IDs for different formats, clean composition
@@ -442,7 +432,6 @@ export function FileSelection({ selectedCount, totalCount }: Props) {
 // Output: "1 file selected of 10 files"
 // Output: "5 files selected of 10 files"
 
-export { FileSelection };
 ```
 
 **Why good:** `=0` provides meaningful zero state, two pluralizations in one message, maintains sentence flow
@@ -479,7 +468,6 @@ export function SyntaxHelp() {
 // Output: "To display literal braces, use '{' and '}'"
 // Output: "It's a nice day! (double apostrophe for literal)"
 
-export { SyntaxHelp };
 ```
 
 **Why good:** single quotes escape syntax characters, double single quotes produce literal apostrophe, clear examples for edge cases
@@ -488,39 +476,16 @@ export { SyntaxHelp };
 
 ## Testing Pluralization
 
-### Good Example - Testing All Plural Branches
+### Testing Plural Branches
 
-```typescript
-// src/components/notification-badge.test.tsx
-import { screen } from "@testing-library/react";
-import { renderWithIntl } from "../test/test-utils";
-import { NotificationBadge } from "./notification-badge";
+When testing components with pluralization, verify all branches:
 
-describe("NotificationBadge", () => {
-  it("displays zero case correctly", () => {
-    renderWithIntl(<NotificationBadge count={0} />);
-    expect(screen.getByText("No notifications")).toBeInTheDocument();
-  });
+- **Zero case** (`=0`): e.g. "No notifications"
+- **Singular** (`one`): e.g. "1 notification"
+- **Plural** (`other`): e.g. "5 notifications"
+- **Large numbers**: locale formatting applies (en-US: "1,000 notifications")
 
-  it("displays singular case correctly", () => {
-    renderWithIntl(<NotificationBadge count={1} />);
-    expect(screen.getByText("1 notification")).toBeInTheDocument();
-  });
-
-  it("displays plural case correctly", () => {
-    renderWithIntl(<NotificationBadge count={5} />);
-    expect(screen.getByText("5 notifications")).toBeInTheDocument();
-  });
-
-  it("handles large numbers with locale formatting", () => {
-    renderWithIntl(<NotificationBadge count={1000} />);
-    // Note: en-US formats as "1,000"
-    expect(screen.getByText("1,000 notifications")).toBeInTheDocument();
-  });
-});
-```
-
-**Why good:** tests all plural branches (zero, one, other), tests locale formatting for large numbers, uses custom render helper
+Create a custom render wrapper that wraps components with `IntlProvider` so tests have i18n context. Test each plural branch explicitly to catch missing `other` categories.
 
 ---
 

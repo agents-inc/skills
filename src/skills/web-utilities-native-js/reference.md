@@ -71,7 +71,7 @@ Does the operation modify the array?
 └─ pop()/shift() → Use slice() (creates new)
 
 Why prefer immutable?
-- Works with React state (reference equality)
+- Works with reactive frameworks (reference equality detection)
 - Prevents side effects in shared data
 - Original preserved for comparison/undo
 ```
@@ -195,7 +195,7 @@ initializeOnce(); // Returns cached result
 ### High Priority Issues
 
 - **Using `JSON.parse(JSON.stringify())` for deep clone** - Loses Date, Map, Set, undefined, functions. Use `structuredClone`.
-- **Using mutating array methods with React state** - `sort()`, `reverse()`, `splice()` mutate in place. Use ES2023 immutable versions.
+- **Using mutating array methods with reactive state** - `sort()`, `reverse()`, `splice()` mutate in place. Use ES2023 immutable versions.
 - **Using `arr[arr.length - 1]` for last element** - Verbose and error-prone. Use `arr.at(-1)`.
 - **Using lodash for simple operations** - `_.get`, `_.last`, `_.uniq` have native alternatives. Check this skill first.
 - **Using `includes()` or `indexOf()` in loops** - O(n) per check. Convert to Set first for O(1) lookups.
@@ -256,7 +256,7 @@ const correct = structuredClone(original);
 
 ### Mutating Shared State
 
-Causes bugs in React and shared references.
+Causes bugs in reactive frameworks and shared references.
 
 ```typescript
 // ❌ WRONG - Mutation affects original

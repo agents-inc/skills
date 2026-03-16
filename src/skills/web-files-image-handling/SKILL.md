@@ -5,7 +5,7 @@ description: Client-side image handling - preview generation, Canvas API resizin
 
 # Image Handling Patterns
 
-> **Quick Guide:** Use `URL.createObjectURL()` for image previews (most efficient). Resize/compress with Canvas API before upload. Always cleanup object URLs with `URL.revokeObjectURL()` to prevent memory leaks. Handle EXIF orientation for mobile photos. Use step-down scaling for quality preservation on large reductions.
+> **Quick Guide:** Use `URL.createObjectURL()` for image previews (most efficient). Resize/compress with Canvas API before upload. Always cleanup object URLs with `URL.revokeObjectURL()` to prevent memory leaks. Handle EXIF orientation for mobile photos only when processing for upload (modern browsers auto-rotate for display). Use step-down scaling for quality preservation on large reductions.
 
 ---
 
@@ -17,13 +17,11 @@ description: Client-side image handling - preview generation, Canvas API resizin
 
 **(You MUST cleanup object URLs with `URL.revokeObjectURL()` in useEffect cleanup or when replacing URLs)**
 
-**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling may cause double rotation)**
+**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling causes double rotation)**
 
 **(You MUST use step-down scaling when reducing images by more than 50% - single-pass resize loses quality)**
 
 **(You MUST limit canvas dimensions to browser maximums (typically 4096px) - larger canvases crash browsers)**
-
-**(You MUST use Web Workers for compression of large images - main thread blocking causes UI freeze)**
 
 </critical_requirements>
 
@@ -40,25 +38,11 @@ description: Client-side image handling - preview generation, Canvas API resizin
 - Generating thumbnails from user-selected images
 - Implementing image cropping interfaces
 
-**Key patterns covered:**
-
-- Object URL preview with proper cleanup
-- Canvas API resize with quality preservation
-- EXIF orientation normalization
-- Step-down scaling for large reductions
-- Format detection and conversion
-- Memory management for image processing
-
 **When NOT to use:**
 
-- Server-side image processing (use backend skills)
-- Image CDN/optimization services (use infrastructure skills)
-- Complex image editing (consider dedicated libraries)
-
-**Detailed Resources:**
-
-- For code examples, see [examples/](examples/)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Server-side image processing (not client-side scope)
+- Image CDN/optimization services (infrastructure concern)
+- Complex image editing (consider dedicated libraries like Fabric.js or Konva)
 
 ---
 
@@ -73,8 +57,8 @@ Client-side image handling improves UX by providing instant previews and reducin
 1. **Object URLs for preview** - No file reading, instant display, must cleanup
 2. **Canvas for processing** - Resize, compress, convert formats
 3. **Memory management is critical** - Leaked object URLs accumulate indefinitely
-4. **EXIF awareness** - Mobile photos have orientation metadata
-5. **Progressive quality** - Step-down scaling preserves sharpness
+4. **EXIF awareness** - Modern browsers auto-rotate for display; manual handling only for upload processing
+5. **Progressive quality** - Step-down scaling preserves sharpness on large reductions
 
 **Preview Method Comparison:**
 
@@ -94,634 +78,157 @@ Client-side image handling improves UX by providing instant previews and reducin
 
 ### Pattern 1: Object URL Preview with Cleanup
 
-Use `URL.createObjectURL()` for instant image previews. **Always cleanup** to prevent memory leaks.
-
-#### Constants
+Use `URL.createObjectURL()` for instant image previews. **Always cleanup** to prevent memory leaks. The critical pattern is revoking the previous URL before creating a new one, and revoking in the useEffect cleanup.
 
 ```typescript
-// image-preview.ts
-const ACCEPTED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-];
+// The essential cleanup pattern
+useEffect(() => {
+  const url = URL.createObjectURL(file);
+  setPreviewUrl(url);
+  return () => URL.revokeObjectURL(url); // MUST cleanup
+}, [file]);
 ```
 
-#### Implementation
-
-```typescript
-// use-image-preview.ts
-import { useState, useEffect, useCallback } from "react";
-
-interface ImagePreviewState {
-  file: File | null;
-  previewUrl: string | null;
-}
-
-export function useImagePreview() {
-  const [state, setState] = useState<ImagePreviewState>({
-    file: null,
-    previewUrl: null,
-  });
-
-  // Cleanup: Revoke URL to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (state.previewUrl) {
-        URL.revokeObjectURL(state.previewUrl);
-      }
-    };
-  }, [state.previewUrl]);
-
-  const setFile = useCallback(
-    (file: File | null) => {
-      // Revoke previous URL if exists
-      if (state.previewUrl) {
-        URL.revokeObjectURL(state.previewUrl);
-      }
-
-      if (file) {
-        const previewUrl = URL.createObjectURL(file);
-        setState({ file, previewUrl });
-      } else {
-        setState({ file: null, previewUrl: null });
-      }
-    },
-    [state.previewUrl],
-  );
-
-  const clear = useCallback(() => {
-    if (state.previewUrl) {
-      URL.revokeObjectURL(state.previewUrl);
-    }
-    setState({ file: null, previewUrl: null });
-  }, [state.previewUrl]);
-
-  return {
-    file: state.file,
-    previewUrl: state.previewUrl,
-    setFile,
-    clear,
-  };
-}
-```
-
-**Why good:** Instant preview without reading file into memory, proper cleanup prevents memory leaks, callback updates revoke previous URL before creating new one
+**Why good:** Instant preview without reading file into memory, cleanup prevents memory leaks
 
 ```typescript
 // BAD: No cleanup - memory leak
-function BadImagePreview({ file }: { file: File }) {
-  const [preview] = useState(() => URL.createObjectURL(file));
-  // Memory leak - URL never revoked!
-  return <img src={preview} alt="Preview" />;
-}
+const [preview] = useState(() => URL.createObjectURL(file));
+// URL never revoked - memory accumulates indefinitely!
 ```
 
-**Why bad:** Object URL never revoked, memory accumulates with each new file, browser holds reference indefinitely
+**Why bad:** Object URL never revoked, browser holds blob reference indefinitely, compounds with each file selection
+
+See [examples/core.md](examples/core.md) Pattern 1-2 for complete hook and component implementations.
 
 ---
 
-### Pattern 2: Multiple Image Preview Management
+### Pattern 2: Canvas Resize with Quality Preservation
 
-Track multiple images with individual cleanup.
-
-#### Implementation
+Resize images using Canvas API. Key concerns: clamp dimensions to browser limits (4096px safe max), enable `imageSmoothingQuality: "high"`, fill white background for JPEG (transparency becomes black otherwise).
 
 ```typescript
-// use-multiple-image-preview.ts
-import { useState, useCallback, useEffect } from "react";
-
-interface ImageFile {
-  id: string;
-  file: File;
-  previewUrl: string;
-}
-
-const DEFAULT_MAX_IMAGES = 10;
-
-export function useMultipleImagePreview(maxImages = DEFAULT_MAX_IMAGES) {
-  const [images, setImages] = useState<ImageFile[]>([]);
-
-  const addImages = useCallback(
-    (files: File[]) => {
-      setImages((current) => {
-        const availableSlots = maxImages - current.length;
-        const filesToAdd = files.slice(0, availableSlots);
-
-        const newImages: ImageFile[] = filesToAdd.map((file) => ({
-          id: crypto.randomUUID(),
-          file,
-          previewUrl: URL.createObjectURL(file),
-        }));
-
-        return [...current, ...newImages];
-      });
-    },
-    [maxImages],
-  );
-
-  const removeImage = useCallback((id: string) => {
-    setImages((current) => {
-      const image = current.find((img) => img.id === id);
-      if (image) {
-        URL.revokeObjectURL(image.previewUrl);
-      }
-      return current.filter((img) => img.id !== id);
-    });
-  }, []);
-
-  const clearAll = useCallback(() => {
-    setImages((current) => {
-      current.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-      return [];
-    });
-  }, []);
-
-  // Cleanup all on unmount
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-    };
-  }, []); // Empty deps - only cleanup on unmount
-
-  return {
-    images,
-    addImages,
-    removeImage,
-    clearAll,
-    canAddMore: images.length < maxImages,
-  };
-}
-```
-
-**Why good:** Individual URL cleanup on remove, batch cleanup on clear/unmount, enforces max limit, unique IDs for React keys
-
----
-
-### Pattern 3: Canvas Resize with Quality Preservation
-
-Resize images using Canvas API with proper quality settings.
-
-#### Constants
-
-```typescript
-// image-resize.ts
-const DEFAULT_MAX_WIDTH = 1920;
-const DEFAULT_MAX_HEIGHT = 1080;
-const DEFAULT_QUALITY = 0.85;
 const MAX_CANVAS_DIMENSION = 4096;
+
+// Clamp to browser limits, maintain aspect ratio
+const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+const width = Math.round(img.width * Math.min(ratio, 1));
+const height = Math.round(img.height * Math.min(ratio, 1));
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+if (mimeType === "image/jpeg") {
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height); // White bg for JPEG
+}
+ctx.drawImage(img, 0, 0, width, height);
 ```
 
-#### Implementation
-
-```typescript
-// image-resize.ts
-interface ResizeOptions {
-  maxWidth?: number;
-  maxHeight?: number;
-  quality?: number;
-  mimeType?: "image/jpeg" | "image/png" | "image/webp";
-}
-
-export async function resizeImage(
-  file: File,
-  options: ResizeOptions = {},
-): Promise<Blob> {
-  const {
-    maxWidth = DEFAULT_MAX_WIDTH,
-    maxHeight = DEFAULT_MAX_HEIGHT,
-    quality = DEFAULT_QUALITY,
-    mimeType = "image/jpeg",
-  } = options;
-
-  const img = await createImageFromFile(file);
-  const { width, height } = calculateDimensions(
-    img.width,
-    img.height,
-    maxWidth,
-    maxHeight,
-  );
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Failed to get canvas context");
-  }
-
-  // Enable high-quality image smoothing
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-
-  ctx.drawImage(img, 0, 0, width, height);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error("Failed to create blob"));
-        }
-      },
-      mimeType,
-      quality,
-    );
-  });
-}
-
-function createImageFromFile(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-
-    img.src = url;
-  });
-}
-
-function calculateDimensions(
-  originalWidth: number,
-  originalHeight: number,
-  maxWidth: number,
-  maxHeight: number,
-): { width: number; height: number } {
-  // Clamp to browser canvas limits
-  const safeMaxWidth = Math.min(maxWidth, MAX_CANVAS_DIMENSION);
-  const safeMaxHeight = Math.min(maxHeight, MAX_CANVAS_DIMENSION);
-
-  let width = originalWidth;
-  let height = originalHeight;
-
-  if (width > safeMaxWidth || height > safeMaxHeight) {
-    const widthRatio = safeMaxWidth / width;
-    const heightRatio = safeMaxHeight / height;
-    const ratio = Math.min(widthRatio, heightRatio);
-
-    width = Math.round(width * ratio);
-    height = Math.round(height * ratio);
-  }
-
-  return { width, height };
-}
-```
-
-**Why good:** Maintains aspect ratio, clamps to browser limits, high-quality smoothing enabled, cleans up temporary URL immediately
-
-```typescript
-// BAD: May crash browser with large images
-async function badResize(file: File) {
-  const img = await createImageFromFile(file);
-  const canvas = document.createElement("canvas");
-  // No dimension limit - can exceed 32k pixels and crash
-  canvas.width = img.width;
-  canvas.height = img.height;
-}
-```
-
-**Why bad:** No dimension limits, very large images crash the browser, canvas context allocation fails
+See [examples/core.md](examples/core.md) Pattern 3 for dimension validation, [examples/canvas.md](examples/canvas.md) for complete resize pipeline.
 
 ---
 
-### Pattern 4: Step-Down Scaling for Large Reductions
+### Pattern 3: Step-Down Scaling
 
-For significant size reductions (>50%), scale in multiple steps to preserve quality.
-
-#### Implementation
+For reductions >50%, scale in multiple passes to preserve sharpness. A 4000px to 100px single-pass resize produces blurry results; two intermediate steps maintain quality.
 
 ```typescript
-// step-down-resize.ts
-const DEFAULT_STEPS = 2;
-const STEP_THRESHOLD_RATIO = 0.5;
+const STEP_DOWN_THRESHOLD = 0.5;
+const reductionRatio = targetWidth / img.width;
 
-export async function stepDownResize(
-  file: File,
-  targetWidth: number,
-  targetHeight: number,
-  steps = DEFAULT_STEPS,
-): Promise<Blob> {
-  const img = await createImageFromFile(file);
-
-  // Calculate if step-down is needed
-  const widthRatio = targetWidth / img.width;
-  const heightRatio = targetHeight / img.height;
-  const minRatio = Math.min(widthRatio, heightRatio);
-
-  // Single-pass if reduction is less than 50%
-  if (minRatio > STEP_THRESHOLD_RATIO) {
-    return resizeImage(file, {
-      maxWidth: targetWidth,
-      maxHeight: targetHeight,
-    });
-  }
-
-  let currentWidth = img.width;
-  let currentHeight = img.height;
-  let source: HTMLImageElement | HTMLCanvasElement = img;
-
-  const widthFactor = Math.pow(targetWidth / currentWidth, 1 / steps);
-  const heightFactor = Math.pow(targetHeight / currentHeight, 1 / steps);
-
+if (reductionRatio < STEP_DOWN_THRESHOLD) {
+  // Multi-pass: 4000 -> 400 -> 100 (two steps)
+  const factor = Math.pow(targetWidth / img.width, 1 / steps);
   for (let i = 0; i < steps; i++) {
-    const isLastStep = i === steps - 1;
-
-    currentWidth = isLastStep
-      ? targetWidth
-      : Math.round(currentWidth * widthFactor);
-    currentHeight = isLastStep
-      ? targetHeight
-      : Math.round(currentHeight * heightFactor);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = currentWidth;
-    canvas.height = currentHeight;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Failed to get context");
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(source, 0, 0, currentWidth, currentHeight);
-
-    source = canvas;
+    /* scale by factor each step */
   }
-
-  const finalCanvas = source as HTMLCanvasElement;
-  return new Promise((resolve, reject) => {
-    finalCanvas.toBlob(
-      (blob) =>
-        blob ? resolve(blob) : reject(new Error("Blob creation failed")),
-      "image/jpeg",
-      DEFAULT_QUALITY,
-    );
-  });
+} else {
+  // Single-pass is fine for small reductions
 }
 ```
 
-**Why good:** Gradual scaling preserves sharpness, auto-detects when step-down is needed, configurable step count
+See [examples/canvas.md](examples/canvas.md) Pattern 1 for complete step-down implementation with automatic strategy selection.
 
 ---
 
-### Pattern 5: EXIF Orientation Handling
+### Pattern 4: EXIF Orientation
 
-Normalize image orientation from mobile photo metadata.
+**Modern browsers (2020+) auto-rotate images for display** via CSS `image-orientation: from-image` (default). Manual EXIF handling is only needed when:
 
-> **Important (2020+):** Modern browsers automatically respect EXIF orientation:
->
-> - `<img>` elements: CSS `image-orientation` defaults to `from-image`
-> - Canvas `drawImage()`: Chromium browsers (Chrome 81+) auto-apply EXIF rotation
->
-> **Only use manual EXIF handling when:**
->
-> - Processing images for upload/output files (server may not handle EXIF)
-> - Supporting legacy browsers (pre-2020)
-> - Using Node.js canvas (doesn't auto-rotate)
-> - You need to detect orientation without rendering
-
-#### Constants
+- Processing images for upload (server may strip EXIF and not rotate)
+- Using Node.js canvas (no auto-rotation)
+- Needing to detect orientation programmatically
 
 ```typescript
-// exif-orientation.ts
-type Orientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+// For DISPLAY: modern browsers handle it - do nothing
+<img src={URL.createObjectURL(file)} /> // Auto-rotated
 
-const EXIF_MARKER = 0xffe1;
-const ORIENTATION_TAG = 0x0112;
-const ORIENTATIONS_NEEDING_SWAP = [5, 6, 7, 8];
+// For UPLOAD PROCESSING: normalize before sending to server
+const orientation = await getExifOrientation(file); // Read from JPEG header
+if (orientation !== 1) {
+  const normalized = await normalizeOrientation(file);
+  await uploadToServer(normalized);
+}
+
+// To BYPASS auto-rotation (show raw orientation)
+<img src={url} style={{ imageOrientation: 'none' }} />
 ```
 
-#### Implementation
+**Gotcha:** Applying `normalizeOrientation()` then displaying via `<img>` causes double-rotation in modern browsers.
 
-```typescript
-// exif-orientation.ts
-export async function getExifOrientation(file: File): Promise<Orientation> {
-  const HEADER_SIZE = 65536;
-  const buffer = await file.slice(0, HEADER_SIZE).arrayBuffer();
-  const view = new DataView(buffer);
-
-  // Check for JPEG
-  if (view.getUint16(0) !== 0xffd8) {
-    return 1; // Not JPEG, assume normal orientation
-  }
-
-  let offset = 2;
-  while (offset < view.byteLength) {
-    const marker = view.getUint16(offset);
-    offset += 2;
-
-    if (marker === EXIF_MARKER) {
-      // Found EXIF segment
-      const length = view.getUint16(offset);
-      const exifData = new DataView(buffer, offset + 2, length - 2);
-      return parseExifOrientation(exifData);
-    }
-
-    // Skip non-EXIF segments
-    const segmentLength = view.getUint16(offset);
-    offset += segmentLength;
-  }
-
-  return 1; // No EXIF found, assume normal
-}
-
-function parseExifOrientation(view: DataView): Orientation {
-  // Simplified EXIF parsing - checks for orientation tag
-  const littleEndian = view.getUint16(6) === 0x4949;
-  const ifdOffset = view.getUint32(10, littleEndian);
-  const numEntries = view.getUint16(14 + ifdOffset, littleEndian);
-
-  for (let i = 0; i < numEntries; i++) {
-    const entryOffset = 16 + ifdOffset + i * 12;
-    const tag = view.getUint16(entryOffset, littleEndian);
-
-    if (tag === ORIENTATION_TAG) {
-      return view.getUint16(entryOffset + 8, littleEndian) as Orientation;
-    }
-  }
-
-  return 1;
-}
-
-export async function normalizeOrientation(file: File): Promise<Blob> {
-  const orientation = await getExifOrientation(file);
-
-  // Normal orientation - no transform needed
-  if (orientation === 1) {
-    return file;
-  }
-
-  const img = await createImageFromFile(file);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get context");
-
-  // Swap dimensions for 90/270 degree rotations
-  const needsSwap = ORIENTATIONS_NEEDING_SWAP.includes(orientation);
-  canvas.width = needsSwap ? img.height : img.width;
-  canvas.height = needsSwap ? img.width : img.height;
-
-  applyOrientationTransform(ctx, orientation, img.width, img.height);
-  ctx.drawImage(img, 0, 0);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Blob failed"))),
-      file.type || "image/jpeg",
-      DEFAULT_QUALITY,
-    );
-  });
-}
-
-function applyOrientationTransform(
-  ctx: CanvasRenderingContext2D,
-  orientation: Orientation,
-  width: number,
-  height: number,
-): void {
-  switch (orientation) {
-    case 2:
-      ctx.transform(-1, 0, 0, 1, width, 0);
-      break; // Flip horizontal
-    case 3:
-      ctx.transform(-1, 0, 0, -1, width, height);
-      break; // Rotate 180
-    case 4:
-      ctx.transform(1, 0, 0, -1, 0, height);
-      break; // Flip vertical
-    case 5:
-      ctx.transform(0, 1, 1, 0, 0, 0);
-      break; // Rotate 90 CW + flip
-    case 6:
-      ctx.transform(0, 1, -1, 0, height, 0);
-      break; // Rotate 90 CW
-    case 7:
-      ctx.transform(0, -1, -1, 0, height, width);
-      break; // Rotate 90 CCW + flip
-    case 8:
-      ctx.transform(0, -1, 1, 0, 0, width);
-      break; // Rotate 90 CCW
-  }
-}
-```
-
-**Why good:** Reads EXIF without loading full image, handles all 8 orientations, preserves original quality setting
+See [examples/core.md](examples/core.md) Pattern 4 for EXIF parsing implementation.
 
 ---
 
-### Pattern 6: Format Conversion with Quality Control
+### Pattern 5: Format Conversion
 
-Convert images to optimal formats for web delivery.
-
-#### Constants
+Convert between JPEG/PNG/WebP with format-appropriate quality defaults. Key detail: JPEG cannot represent transparency, so fill white background before conversion.
 
 ```typescript
-// format-conversion.ts
-const FORMAT_SUPPORT_CACHE = new Map<string, boolean>();
-
-const WEBP_TEST_DATA =
-  "data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=";
-
 const FORMAT_QUALITY_DEFAULTS: Record<string, number> = {
   "image/jpeg": 0.85,
   "image/webp": 0.82,
-  "image/png": 1, // PNG is lossless
+  "image/png": 1, // Lossless - quality param ignored
 };
 ```
 
-#### Implementation
+WebP is supported in all modern browsers (including Safari 14+). For target file size, use binary search over quality parameter.
+
+See [examples/canvas.md](examples/canvas.md) Pattern 2 for binary search quality targeting.
+
+---
+
+### Pattern 6: Cropping
+
+Canvas-based cropping using `drawImage()` with source rectangle parameters. Validate crop region is within image bounds, support resize-during-crop for generating specific output dimensions.
 
 ```typescript
-// format-conversion.ts
-export async function supportsWebP(): Promise<boolean> {
-  if (FORMAT_SUPPORT_CACHE.has("webp")) {
-    return FORMAT_SUPPORT_CACHE.get("webp")!;
-  }
-
-  const supported = await new Promise<boolean>((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img.width > 0 && img.height > 0);
-    img.onerror = () => resolve(false);
-    img.src = WEBP_TEST_DATA;
-  });
-
-  FORMAT_SUPPORT_CACHE.set("webp", supported);
-  return supported;
-}
-
-export async function convertToFormat(
-  file: File,
-  targetFormat: "image/jpeg" | "image/png" | "image/webp",
-  quality?: number,
-): Promise<Blob> {
-  const img = await createImageFromFile(file);
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get context");
-
-  // Fill white background for JPEG (no transparency)
-  if (targetFormat === "image/jpeg") {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  ctx.drawImage(img, 0, 0);
-
-  const finalQuality =
-    quality ?? FORMAT_QUALITY_DEFAULTS[targetFormat] ?? DEFAULT_QUALITY;
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Conversion failed"))),
-      targetFormat,
-      finalQuality,
-    );
-  });
-}
-
-export async function convertToOptimalFormat(file: File): Promise<Blob> {
-  const webpSupported = await supportsWebP();
-  const targetFormat = webpSupported ? "image/webp" : "image/jpeg";
-  return convertToFormat(file, targetFormat);
-}
+// drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh)
+ctx.drawImage(
+  img,
+  cropX,
+  cropY,
+  cropWidth,
+  cropHeight,
+  0,
+  0,
+  outputWidth,
+  outputHeight,
+);
 ```
 
-**Why good:** Caches format detection results, handles JPEG transparency correctly (white background), uses format-specific quality defaults
+See [examples/canvas.md](examples/canvas.md) Pattern 3 for complete crop implementation with aspect ratio helper.
 
 </patterns>
 
 ---
 
-<integration>
+**Detailed Resources:**
 
-## Integration Guide
-
-**Styling Integration:**
-Image preview components accept `className` prop for styling flexibility.
-Use `data-loading` and `data-error` attributes for state-based styling.
-
-**Component Integration:**
-Image handling functions return Blobs/URLs that work with any component approach.
-Preview URLs work directly with `<img>` elements.
-
-**Processing Integration:**
-All processing functions accept File objects and return Blobs.
-Results can be converted to Files for form submission.
-
-</integration>
+- [examples/core.md](examples/core.md) - Preview hooks, components, dimension validation, EXIF parsing
+- [examples/preview.md](examples/preview.md) - Drag-and-drop, thumbnails, gallery grid
+- [examples/canvas.md](examples/canvas.md) - Resize pipeline, target-size compression, cropping, watermarks, filters
+- [reference.md](reference.md) - Decision frameworks, constants reference, browser compatibility, anti-patterns
 
 ---
 
@@ -733,31 +240,22 @@ Results can be converted to Files for form submission.
 
 - Not calling `URL.revokeObjectURL()` - causes memory leaks that accumulate indefinitely
 - Canvas dimensions exceeding 4096px - crashes browser tab or silently fails
-- Processing images on main thread without Web Workers - UI freezes for large images
-- Double EXIF rotation - applying manual rotation in browsers that auto-rotate (Chrome 81+, Safari, Firefox)
+- Double EXIF rotation - applying manual rotation in browsers that auto-rotate (all modern browsers since 2020)
 
 **Medium Priority Issues:**
 
-- Using `FileReader.readAsDataURL()` for preview - slow and memory-intensive
-- Single-pass resize for large reductions (>50%) - results in blurry images
-- Not checking format support before WebP conversion - breaks on older browsers
-
-**Common Mistakes:**
-
-- Forgetting cleanup in useEffect return function
-- Creating object URLs in render (creates new URL every render)
-- Not handling image load errors gracefully
-- Using toDataURL instead of toBlob (toBlob is async and more efficient)
+- Using `FileReader.readAsDataURL()` for preview - slow and memory-intensive vs object URLs
+- Single-pass resize for large reductions (>50%) - results in blurry/aliased images
+- Creating object URLs inside render functions - creates new URL every render cycle
 
 **Gotchas & Edge Cases:**
 
-- Object URLs are session-scoped - they work until page unload even without cleanup (but waste memory)
-- Canvas `toBlob()` is async, `toDataURL()` is sync - use toBlob for better performance
-- Modern browsers auto-rotate EXIF (since 2020) - manual rotation causes double-rotation issues
-- Use `image-orientation: none` CSS to bypass auto-rotation when needed
-- PNG with transparency converted to JPEG needs white background fill
-- Very large images may exceed WebGL limits even within canvas limits
-- Node.js canvas does NOT auto-rotate - still needs manual EXIF handling on server
+- Object URLs persist until page unload even without cleanup (but waste memory)
+- Canvas `toBlob()` is async, `toDataURL()` is sync - prefer toBlob for performance
+- PNG with transparency converted to JPEG needs white background fill (otherwise black)
+- Very large images may exceed WebGL limits even within canvas dimension limits
+- Node.js canvas does NOT auto-rotate EXIF - still needs manual handling server-side
+- Use `image-orientation: none` CSS to bypass browser auto-rotation when needed
 
 </red_flags>
 
@@ -771,13 +269,11 @@ Results can be converted to Files for form submission.
 
 **(You MUST cleanup object URLs with `URL.revokeObjectURL()` in useEffect cleanup or when replacing URLs)**
 
-**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling may cause double rotation)**
+**(You MUST check browser context before applying EXIF orientation - modern browsers auto-rotate, manual handling causes double rotation)**
 
 **(You MUST use step-down scaling when reducing images by more than 50% - single-pass resize loses quality)**
 
 **(You MUST limit canvas dimensions to browser maximums (typically 4096px) - larger canvases crash browsers)**
-
-**(You MUST use Web Workers for compression of large images - main thread blocking causes UI freeze)**
 
 **Failure to follow these rules will cause memory leaks, browser crashes, and poor image quality.**
 

@@ -70,12 +70,12 @@ Is the default cross-fade appropriate?
 
 ### Valid Names
 
-| Value            | Description                                           |
-| ---------------- | ----------------------------------------------------- |
-| `none`           | Element doesn't participate (default)                 |
-| `<custom-ident>` | Unique identifier for the element                     |
-| `match-element`  | Auto-generate based on element identity (Chrome 137+) |
-| `root`           | Reserved for document root (auto-applied)             |
+| Value            | Description                                                         |
+| ---------------- | ------------------------------------------------------------------- |
+| `none`           | Element doesn't participate (default)                               |
+| `<custom-ident>` | Unique identifier for the element                                   |
+| `match-element`  | Auto-generate based on element identity (Chrome 137+, Safari 18.4+) |
+| `root`           | Reserved for document root (auto-applied)                           |
 
 ### Naming Requirements
 
@@ -177,8 +177,8 @@ view-transition-name: item/detail; /* Contains slash */
 - **Old state is a screenshot** - Videos, animations freeze in the old snapshot
 - **New state is "live"** - Videos, GIFs continue playing in the new snapshot
 - **Transition names are global** - Same name on different page sections will conflict
-- **Navigation types require modern Chrome** - `:active-view-transition-type()` needs Chrome 126+
-- **match-element is Chrome 137+** - Auto-naming not available in all browsers yet
+- **Navigation types not in Firefox** - `:active-view-transition-type()` needs Chrome 126+, Safari 18.2+; not yet in Firefox
+- **match-element is Chrome 137+/Safari 18.4+** - Auto-naming not available in Firefox yet
 - **Cross-document needs same-origin** - Different origins cannot share transitions
 - **Animations block interaction** - User cannot interact until transition completes
 
@@ -357,13 +357,13 @@ function shouldEnableTransitions(): boolean {
 
 ## Browser Support Quick Reference
 
-| Feature                        | Chrome | Safari  | Firefox | Edge |
-| ------------------------------ | ------ | ------- | ------- | ---- |
-| Same-document transitions      | 111+   | 18+     | 144+    | 111+ |
-| Cross-document transitions     | 126+   | Partial | Planned | 126+ |
-| view-transition-class          | 125+   | 18+     | 144+    | 125+ |
-| match-element                  | 137+   | 18.4+   | Planned | 137+ |
-| :active-view-transition-type() | 126+   | Partial | Planned | 126+ |
+| Feature                        | Chrome | Safari | Firefox | Edge |
+| ------------------------------ | ------ | ------ | ------- | ---- |
+| Same-document transitions      | 111+   | 18+    | 133+    | 111+ |
+| Cross-document transitions     | 126+   | 18.2+  | No      | 126+ |
+| view-transition-class          | 125+   | 18+    | 144+    | 125+ |
+| match-element                  | 137+   | 18.4+  | No      | 137+ |
+| :active-view-transition-type() | 126+   | 18.2+  | No      | 126+ |
 
 ---
 
@@ -371,16 +371,18 @@ function shouldEnableTransitions(): boolean {
 
 ### Essential API
 
-| API                                      | Purpose                                |
-| ---------------------------------------- | -------------------------------------- |
-| `document.startViewTransition(callback)` | Start same-document transition         |
-| `@view-transition { navigation: auto }`  | Enable cross-document transitions      |
-| `view-transition-name: <name>`           | Name element for individual transition |
-| `view-transition-class: <class>`         | Group elements for shared styling      |
-| `transition.ready`                       | Promise: pseudo-elements created       |
-| `transition.updateCallbackDone`          | Promise: DOM update complete           |
-| `transition.finished`                    | Promise: animation complete            |
-| `transition.skipTransition()`            | Skip to final state immediately        |
+| API                                               | Purpose                                    |
+| ------------------------------------------------- | ------------------------------------------ |
+| `document.startViewTransition(callback)`          | Start same-document transition             |
+| `document.startViewTransition({ update, types })` | Start transition with typed classification |
+| `@view-transition { navigation: auto }`           | Enable cross-document transitions          |
+| `view-transition-name: <name>`                    | Name element for individual transition     |
+| `view-transition-class: <class>`                  | Group elements for shared styling          |
+| `transition.ready`                                | Promise: pseudo-elements created           |
+| `transition.updateCallbackDone`                   | Promise: DOM update complete               |
+| `transition.finished`                             | Promise: animation complete                |
+| `transition.types`                                | ViewTransitionTypeSet for classification   |
+| `transition.skipTransition()`                     | Skip to final state immediately            |
 
 ### Essential Pseudo-Elements
 

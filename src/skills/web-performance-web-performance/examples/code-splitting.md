@@ -4,25 +4,6 @@
 
 ---
 
-## Bundle Analysis
-
-```bash
-# Next.js bundle analysis
-ANALYZE=true bun run build
-
-# Vite bundle analysis
-bun run build -- --mode analyze
-```
-
-**What to look for:**
-
-- Largest dependencies (consider lighter alternatives)
-- Duplicate packages (fix with syncpack)
-- Unused code (improve tree shaking)
-- Large vendor chunks (split into smaller chunks)
-
----
-
 ## Route-Based Lazy Loading
 
 ### Good Example - Lazy Routes
@@ -80,18 +61,12 @@ export function App() {
 ### Good Example - Load on Demand
 
 ```typescript
-const DEBOUNCE_DELAY_MS = 500;
-
-async function loadLodash() {
-  const { default: _ } = await import("lodash");
-  return _;
+// Heavy charting library loaded only when user opens analytics
+async function renderChart(container: HTMLElement, data: ChartData) {
+  const { Chart } = await import("chart.js");
+  const chart = new Chart(container, { type: "bar", data });
+  return chart;
 }
-
-// Use when needed
-const handleHeavyOperation = async () => {
-  const _ = await loadLodash();
-  _.debounce(() => {}, DEBOUNCE_DELAY_MS);
-};
 ```
 
 **Why good:** Library only loaded when needed, smaller initial bundle, user doesn't pay for unused code
@@ -99,62 +74,66 @@ const handleHeavyOperation = async () => {
 ### Bad Example - Import Large Library Upfront
 
 ```typescript
-import _ from "lodash";
+import { Chart } from "chart.js"; // ~200KB loaded even if charts never viewed
 
-const DEBOUNCE_DELAY_MS = 500;
-
-const handleHeavyOperation = () => {
-  _.debounce(() => {}, DEBOUNCE_DELAY_MS);
-};
+export function AnalyticsPage() {
+  // Chart.js code in initial bundle regardless of usage
+}
 ```
 
-**Why bad:** Entire lodash (~70KB) loaded upfront even if never used, increases initial bundle size, slower Time to Interactive
+**Why bad:** Entire library loaded upfront even if never used, increases initial bundle size, slower Time to Interactive
 
 ---
 
-## Tree Shaking Configuration
+## Tree Shaking
 
-### Good Example - Mark Packages as Side-Effect-Free
+### Good Example - ESM with Named Exports
 
-```json
-// package.json
-{
-  "sideEffects": false
-}
+```typescript
+// ✅ Tree-shakeable - bundler removes unused exports
+import { debounce } from "lodash-es";
 
-// Or specify files with side effects
-{
-  "sideEffects": ["*.css", "*.scss", "*.global.js"]
-}
+// ✅ Mark package as side-effect-free in package.json
+// { "sideEffects": false }
+// Or specify files with side effects:
+// { "sideEffects": ["*.css", "*.scss"] }
 ```
 
-**Why good:** Enables bundler to remove unused exports, reduces bundle size by 20-40%, only includes imported code
+**Why good:** Bundler removes unused exports, reduces bundle size by 20-40%
+
+### Bad Example - CommonJS or Full Library Import
+
+```typescript
+// ❌ Not tree-shakeable - bundles entire lodash (~70KB)
+import _ from "lodash";
+_.debounce(fn, 300);
+
+// ❌ CommonJS - not tree-shakeable
+const { debounce } = require("lodash");
+```
+
+**Why bad:** CommonJS and default imports bundle everything, prevents dead code elimination
 
 **Requirements for tree shaking:**
 
 - ES modules (not CommonJS)
 - Named exports (not default exports)
-- Side-effect-free code
+- Side-effect-free code (or declared in `sideEffects` field)
 
 **Common tree shaking issues:**
 
-- CommonJS imports (`require()`) - not tree-shakeable
-- Barrel exports (`index.ts` re-exporting everything) - imports everything
-- Side effects in module scope - prevents tree shaking
+- Barrel exports (`index.ts` re-exporting everything) -- imports entire barrel
+- Side effects in module scope -- prevents tree shaking
+- Dependencies using CommonJS internally -- not tree-shakeable
 
 ---
 
 ## Bundle Budget Enforcement
 
-### Good Example - Size Limits in package.json
+### Good Example - size-limit in package.json
 
 ```json
-// package.json
 {
-  "scripts": {
-    "build": "vite build",
-    "build:check": "vite build && bun run check:size"
-  },
   "size-limit": [
     {
       "name": "Main bundle",
@@ -177,39 +156,4 @@ const handleHeavyOperation = () => {
 
 **Why good:** Automated bundle size checking, fails CI if budgets exceeded, prevents bundle bloat before merging
 
----
-
-## CI Workflow for Bundle Size
-
-```yaml
-# .github/workflows/size.yml
-name: Bundle Size Check
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  size:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.2.2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build
-        run: bun run build
-
-      - name: Check bundle size
-        uses: andresz1/size-limit-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-**Why good:** Catches bundle size regressions in PR reviews, prevents shipping bloated code, enforces budgets automatically
+**Integrate with CI:** Use size-limit with your CI provider to check bundle size on every PR. The `size-limit-action` GitHub Action provides inline PR comments showing bundle size changes.

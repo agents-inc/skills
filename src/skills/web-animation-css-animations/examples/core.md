@@ -455,7 +455,7 @@
 
 ### Good Example - Progressive Enhancement Approach
 
-```scss
+```css
 /* Base styles - no motion */
 .element {
   opacity: 1;

@@ -80,7 +80,7 @@ Is the app multi-locale?
 
 ### Medium Priority Issues
 
-- **Missing `globalInjection: true`** - Templates can't use `$t`, `$d`, `$n` shorthand
+- **Setting `globalInjection: false`** - Disables `$t`, `$d`, `$n` template shorthand (defaults to `true`)
 - **Inline datetime/number format options** - Define named formats in config for consistency
 - **Not updating `document.documentElement.lang`** - Accessibility and SEO issue when locale changes
 - **Loading all locales upfront** - Poor performance for apps with many locales
@@ -91,7 +91,7 @@ Is the app multi-locale?
 - Forgetting to await locale loading before using translations
 - Using `dateTimeFormats` instead of `datetimeFormats` (lowercase 't')
 - Not handling loading states during lazy locale loading
-- Expecting `t()` to return ReactNode (it returns string, use `<i18n-t>` for components)
+- Expecting `t()` to return VNode (it returns string, use `<i18n-t>` for component interpolation)
 - Using `$tc` (deprecated in v10, removed in v11) instead of `t()` with count parameter
 
 ### Gotchas & Edge Cases
@@ -222,7 +222,7 @@ expect(en.welcome.title).toBeDefined();
 - [ ] Set `legacy: false` for Composition API mode
 - [ ] Set `locale` to default/detected locale
 - [ ] Set `fallbackLocale` for missing translation fallback
-- [ ] Set `globalInjection: true` for template shorthand
+- [ ] Confirm `globalInjection` is not set to `false` (defaults to `true`)
 - [ ] Configure `datetimeFormats` for date formatting (camelCase!)
 - [ ] Configure `numberFormats` for currency/number formatting
 - [ ] Set `pluralRules` for languages with complex plural forms
@@ -248,8 +248,8 @@ expect(en.welcome.title).toBeDefined();
 ### Performance Checklist
 
 - [ ] Use `@intlify/unplugin-vue-i18n` for message pre-compilation
-- [ ] Set `runtimeOnly: true` in Vite plugin
-- [ ] Define feature flags to drop unused code
+- [ ] Set `runtimeOnly: true` in the unplugin config
+- [ ] Define feature flags (`__VUE_I18N_LEGACY_API__: false`) to drop unused code
 - [ ] Lazy load non-default locales
 - [ ] Split large translation files by feature
 - [ ] Preload locales on hover for perceived performance

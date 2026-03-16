@@ -6,11 +6,24 @@
 
 ## Modal Dialogs
 
-### Example: Accessible Modal Dialog with Radix UI
+### Example: Accessible Modal Dialog
+
+Use your headless component library for dialogs - they handle focus trapping, Escape to close, and ARIA attributes automatically.
+
+**Key accessibility requirements for dialogs:**
+
+- Focus trapped inside dialog while open
+- Escape key closes dialog
+- Focus moves to dialog on open
+- Focus returns to trigger element on close
+- `role="dialog"` and `aria-modal="true"`
+- `aria-labelledby` pointing to dialog title
 
 ```typescript
 // components/dialog.tsx
-import * as RadixDialog from '@radix-ui/react-dialog';
+// Use your headless component library (Radix UI, Headless UI, React Aria, Ariakit)
+// This shows the accessibility contract:
+
 import { useEffect, useRef, type ReactNode } from 'react';
 
 interface DialogProps {
@@ -39,41 +52,43 @@ export function Dialog({
     }
   }, [open]);
 
+  // Your headless component library handles:
+  // - Focus trapping (Tab cycles within dialog)
+  // - Escape to close
+  // - Click outside to close (overlay)
+  // - aria-modal="true"
+  // - Scroll lock on body
+
   return (
-    <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
-      <RadixDialog.Portal>
-        <RadixDialog.Overlay className="dialog-overlay" />
+    // Wrap with your component library's Dialog primitive
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialog-title"
+      aria-describedby={description ? "dialog-desc" : undefined}
+      className={className}
+    >
+      <h2 id="dialog-title">{title}</h2>
 
-        <RadixDialog.Content className={className}>
-          <RadixDialog.Title>
-            {title}
-          </RadixDialog.Title>
+      {description && (
+        <p id="dialog-desc">{description}</p>
+      )}
 
-          {description && (
-            <RadixDialog.Description>
-              {description}
-            </RadixDialog.Description>
-          )}
+      <div>{children}</div>
 
-          <div>
-            {children}
-          </div>
-
-          <RadixDialog.Close
-            ref={closeButtonRef}
-            aria-label="Close dialog"
-          >
-            {/* Use your icon component here */}
-            <span aria-hidden="true">X</span>
-          </RadixDialog.Close>
-        </RadixDialog.Content>
-      </RadixDialog.Portal>
-    </RadixDialog.Root>
+      <button
+        ref={closeButtonRef}
+        onClick={() => onOpenChange(false)}
+        aria-label="Close dialog"
+      >
+        <span aria-hidden="true">X</span>
+      </button>
+    </div>
   );
 }
 ```
 
-**Why good:** Traps focus in dialog. Closes on Escape. Restores focus on close. Screen reader announcements. ARIA attributes automatic.
+**Why good:** Traps focus in dialog. Closes on Escape. Restores focus on close. Screen reader announcements. ARIA attributes handled by library.
 
 **Edge Cases:**
 

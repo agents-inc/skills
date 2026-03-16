@@ -171,23 +171,18 @@ export class ChunkedUploader {
     processor: (item: T) => Promise<R>,
   ): Promise<R[]> {
     const results: R[] = [];
-    const executing: Promise<void>[] = [];
+    const executing = new Set<Promise<void>>();
 
     for (const item of items) {
       const promise = processor(item).then((result) => {
         results.push(result);
+        executing.delete(promise);
       });
 
-      executing.push(promise);
+      executing.add(promise);
 
-      if (executing.length >= this.maxConcurrent) {
+      if (executing.size >= this.maxConcurrent) {
         await Promise.race(executing);
-        // Remove completed promises
-        const completed = executing.filter((p) => {
-          // Check if settled using a race with an immediately resolved promise
-          return false; // Simplified - in practice use Promise.allSettled
-        });
-        executing.splice(0, completed.length);
       }
     }
 
@@ -617,161 +612,27 @@ upload.start();
 
 ---
 
-## Pattern 4: Server-Side TUS Handler (Hono)
+## Pattern 4: Server-Side TUS Handler
 
-### Basic TUS Endpoint
+Your server needs these TUS protocol endpoints:
 
-```typescript
-// routes/tus.ts
-import { Hono } from "hono";
-import { createReadStream, createWriteStream } from "fs";
-import { mkdir, stat, unlink } from "fs/promises";
-import { join } from "path";
+| Method    | Path       | Purpose                    | Key Headers                                                      |
+| --------- | ---------- | -------------------------- | ---------------------------------------------------------------- |
+| `OPTIONS` | `/tus/*`   | CORS preflight + discovery | `Tus-Version`, `Tus-Extension`, `Tus-Max-Size`                   |
+| `POST`    | `/tus`     | Create upload              | `Upload-Length`, `Upload-Metadata`                               |
+| `HEAD`    | `/tus/:id` | Check upload offset        | Returns `Upload-Offset`, `Upload-Length`                         |
+| `PATCH`   | `/tus/:id` | Upload chunk               | `Upload-Offset`, `Content-Type: application/offset+octet-stream` |
+| `DELETE`  | `/tus/:id` | Cancel/terminate upload    | Cleanup partial files                                            |
 
-const TUS_VERSION = "1.0.0";
-const UPLOAD_DIR = "./uploads";
+**Key requirements:**
 
-interface UploadInfo {
-  length: number;
-  offset: number;
-  metadata: Record<string, string>;
-  createdAt: number;
-}
+- All responses include `Tus-Resumable: 1.0.0` header
+- PATCH must verify `Upload-Offset` matches server offset (return 409 on mismatch)
+- Store upload metadata (length, offset, creation time) per upload ID
+- Append chunks to file at the correct offset
+- Return updated `Upload-Offset` after each PATCH
 
-const uploads = new Map<string, UploadInfo>();
-
-const app = new Hono();
-
-// TUS: Options (for CORS preflight)
-app.options("/tus/*", (c) => {
-  return c.text("", 204, {
-    "Tus-Resumable": TUS_VERSION,
-    "Tus-Version": TUS_VERSION,
-    "Tus-Extension": "creation,termination",
-    "Tus-Max-Size": String(5 * 1024 * 1024 * 1024), // 5GB
-  });
-});
-
-// TUS: Create upload
-app.post("/tus", async (c) => {
-  const uploadLength = c.req.header("Upload-Length");
-  const uploadMetadata = c.req.header("Upload-Metadata");
-
-  if (!uploadLength) {
-    return c.text("Upload-Length required", 400);
-  }
-
-  const id = crypto.randomUUID();
-  const metadata = parseMetadata(uploadMetadata ?? "");
-
-  uploads.set(id, {
-    length: parseInt(uploadLength, 10),
-    offset: 0,
-    metadata,
-    createdAt: Date.now(),
-  });
-
-  await mkdir(UPLOAD_DIR, { recursive: true });
-
-  const location = `${c.req.url}/${id}`;
-
-  return c.text("", 201, {
-    Location: location,
-    "Tus-Resumable": TUS_VERSION,
-  });
-});
-
-// TUS: Get upload status
-app.head("/tus/:id", (c) => {
-  const id = c.req.param("id");
-  const upload = uploads.get(id);
-
-  if (!upload) {
-    return c.text("Not found", 404);
-  }
-
-  return c.text("", 200, {
-    "Upload-Offset": String(upload.offset),
-    "Upload-Length": String(upload.length),
-    "Tus-Resumable": TUS_VERSION,
-  });
-});
-
-// TUS: Upload chunk
-app.patch("/tus/:id", async (c) => {
-  const id = c.req.param("id");
-  const upload = uploads.get(id);
-
-  if (!upload) {
-    return c.text("Not found", 404);
-  }
-
-  const offset = parseInt(c.req.header("Upload-Offset") ?? "0", 10);
-
-  if (offset !== upload.offset) {
-    return c.text("Conflict - offset mismatch", 409);
-  }
-
-  const body = await c.req.arrayBuffer();
-  const chunk = Buffer.from(body);
-
-  const filePath = join(UPLOAD_DIR, id);
-  const writeStream = createWriteStream(filePath, {
-    flags: "a",
-    start: offset,
-  });
-
-  writeStream.write(chunk);
-  writeStream.end();
-
-  upload.offset += chunk.length;
-
-  return c.text("", 204, {
-    "Upload-Offset": String(upload.offset),
-    "Tus-Resumable": TUS_VERSION,
-  });
-});
-
-// TUS: Delete upload
-app.delete("/tus/:id", async (c) => {
-  const id = c.req.param("id");
-
-  if (!uploads.has(id)) {
-    return c.text("Not found", 404);
-  }
-
-  uploads.delete(id);
-
-  try {
-    await unlink(join(UPLOAD_DIR, id));
-  } catch {
-    // File might not exist
-  }
-
-  return c.text("", 204, {
-    "Tus-Resumable": TUS_VERSION,
-  });
-});
-
-function parseMetadata(header: string): Record<string, string> {
-  const result: Record<string, string> = {};
-
-  if (!header) return result;
-
-  for (const pair of header.split(",")) {
-    const [key, value] = pair.trim().split(" ");
-    if (key && value) {
-      result[key] = atob(value);
-    }
-  }
-
-  return result;
-}
-
-export { app as tusRoutes };
-```
-
-**Why good:** Implements core TUS protocol (creation, resumable patches), tracks offset for resume, handles OPTIONS for CORS, supports termination
+For production use, consider the [tus-node-server](https://github.com/tus/tus-node-server) package instead of implementing from scratch.
 
 ---
 

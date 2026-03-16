@@ -1,6 +1,6 @@
 # Form Accessibility Patterns
 
-> Form validation, error handling, Radix UI select, and required field patterns.
+> Form validation, error handling, accessible select, and required field patterns.
 
 ---
 
@@ -109,50 +109,36 @@ export function PasswordInput({
 
 ---
 
-## Accessible Form Field with Radix UI
+## Accessible Select Pattern
 
-### Example: Radix UI Select
+### Example: Headless Component Library Select
+
+Use your headless component library (Radix UI, Headless UI, React Aria, Ariakit) for select/listbox patterns. They handle all ARIA attributes and keyboard navigation automatically:
+
+- `aria-haspopup="listbox"` on trigger
+- `aria-expanded` state management
+- `aria-controls` linking trigger to content
+- Arrow key navigation, Enter to select, Escape to close
+- Focus management between trigger and options
 
 ```typescript
-// components/custom-select.tsx
-import * as Select from "@radix-ui/react-select";
+// Your component library's Select handles ARIA automatically
+// This shows the accessibility contract, not a specific library's API:
 
-export function CustomSelect() {
-  return (
-    <Select.Root>
-      {/* Radix UI automatically handles:
-          - aria-haspopup="listbox"
-          - aria-expanded
-          - aria-controls
-          - Keyboard navigation (arrows, enter, escape)
-          - Focus management
-      */}
-      <Select.Trigger aria-label="Select option">
-        <Select.Value placeholder="Choose an option" />
-        <Select.Icon>
-          {/* Use your icon component here */}
-          <span aria-hidden="true">▼</span>
-        </Select.Icon>
-      </Select.Trigger>
+// The trigger needs:
+<button aria-haspopup="listbox" aria-expanded={open} aria-label="Select option">
+  {selectedValue || "Choose an option"}
+  <span aria-hidden="true">▼</span>
+</button>
 
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            <Select.Item value="option1">
-              <Select.ItemText>Option 1</Select.ItemText>
-            </Select.Item>
-            <Select.Item value="option2">
-              <Select.ItemText>Option 2</Select.ItemText>
-            </Select.Item>
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
+// The listbox needs:
+<ul role="listbox">
+  <li role="option" aria-selected={selected}>Option 1</li>
+  <li role="option" aria-selected={selected}>Option 2</li>
+</ul>
 ```
 
-**Why good:** Radix UI components include all required ARIA attributes and keyboard support automatically.
+**Why good:** Shows the ARIA contract that headless libraries implement automatically. Never build this manually.
 
 ---
 

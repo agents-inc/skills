@@ -75,8 +75,6 @@ export function getPersistedLocale(): SupportedLocale {
 
   return DEFAULT_LOCALE;
 }
-
-export { i18n };
 ```
 
 **Why good:** messages loaded only when needed, loadedLocales Set prevents duplicate loads, chunk naming enables code splitting, localStorage persists preference, browser language detection as fallback
@@ -191,8 +189,6 @@ router.beforeEach(async (to, from, next) => {
 
   next();
 });
-
-export { router };
 ```
 
 **Why good:** locale in URL path for SEO and shareability, navigation guard loads locale before route renders, unsupported locales redirect gracefully, browser language detection
@@ -247,43 +243,33 @@ const switchLocale = (newLocale: SupportedLocale) => {
 
 ## Performance Optimization
 
-### Good Example - Vite Plugin Configuration
+### Good Example - Build Plugin and Feature Flags
+
+Use `@intlify/unplugin-vue-i18n` (supports Vite, Webpack, Rollup) for message pre-compilation. Key options:
 
 ```typescript
-// vite.config.ts
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
-import { resolve } from "path";
-
-export default defineConfig({
-  plugins: [
-    vue(),
-    VueI18nPlugin({
-      // Locale message files
-      include: resolve(__dirname, "./src/locales/**"),
-      // Use runtime-only build (smaller bundle)
-      runtimeOnly: true,
-      // Pre-compile locale messages
-      compositionOnly: true,
-      // Enable strict message format checking
-      strictMessage: true,
-      // Drop console warnings in production
-      dropMessageCompiler: true,
-    }),
-  ],
-  define: {
-    // Drop legacy API support (reduces bundle size)
-    __VUE_I18N_LEGACY_API__: false,
-    // Drop full install (smaller bundle)
-    __VUE_I18N_FULL_INSTALL__: false,
-    // Disable production devtools
-    __VUE_I18N_PROD_DEVTOOLS__: false,
-  },
+// unplugin options (adapt to your bundler)
+VueI18nPlugin({
+  include: resolve(__dirname, "./src/locales/**"),
+  runtimeOnly: true, // Smaller bundle (~7KB savings)
+  compositionOnly: true, // Drop legacy API support
+  strictMessage: true, // Catch format errors at build
+  dropMessageCompiler: true, // Drop compiler in production
 });
 ```
 
-**Why good:** pre-compiles messages at build time, runtimeOnly reduces bundle by ~7KB, feature flags drop unused code, strictMessage catches errors early
+Define feature flags to tree-shake unused code:
+
+```typescript
+// In your bundler's define/DefinePlugin config
+{
+  __VUE_I18N_LEGACY_API__: false,     // Drop legacy API (~7KB)
+  __VUE_I18N_FULL_INSTALL__: false,   // Drop full install
+  __VUE_I18N_PROD_DEVTOOLS__: false,  // Disable prod devtools
+}
+```
+
+**Why good:** pre-compiles messages at build time, runtimeOnly reduces bundle, feature flags tree-shake unused code, strictMessage catches errors early
 
 ### Good Example - Split Messages by Feature
 

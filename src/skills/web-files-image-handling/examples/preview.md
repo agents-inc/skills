@@ -1,399 +1,16 @@
-# Image Preview Examples
+# Image Handling - Preview Examples
 
-> Preview generation patterns for thumbnails and galleries. Reference from [SKILL.md](../SKILL.md).
+> Advanced preview generation patterns. See [core.md](core.md) for basic preview hook and component.
 
----
-
-## Pattern 1: Lazy Preview Generation
-
-### Generate Previews On-Demand
-
-```typescript
-// lazy-preview.ts
-import { useState, useCallback, useMemo } from "react";
-
-interface LazyImage {
-  id: string;
-  file: File;
-  previewUrl: string | null;
-  status: "pending" | "loading" | "ready" | "error";
-}
-
-const CONCURRENT_PREVIEWS = 3;
-
-/**
- * Generate previews lazily as they scroll into view
- * Useful for large galleries where generating all previews upfront is expensive
- */
-export function useLazyPreviews(files: File[]) {
-  const [previews, setPreviews] = useState<Map<string, LazyImage>>(new Map());
-
-  const initializeFiles = useCallback(() => {
-    const newPreviews = new Map<string, LazyImage>();
-
-    files.forEach((file, index) => {
-      const id = `${file.name}-${index}-${file.size}`;
-      newPreviews.set(id, {
-        id,
-        file,
-        previewUrl: null,
-        status: "pending",
-      });
-    });
-
-    setPreviews(newPreviews);
-  }, [files]);
-
-  const generatePreview = useCallback(
-    async (id: string) => {
-      setPreviews((current) => {
-        const image = current.get(id);
-        if (!image || image.status !== "pending") return current;
-
-        const updated = new Map(current);
-        updated.set(id, { ...image, status: "loading" });
-        return updated;
-      });
-
-      try {
-        const image = previews.get(id);
-        if (!image) return;
-
-        const previewUrl = URL.createObjectURL(image.file);
-
-        // Validate it loads
-        await new Promise<void>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error("Load failed"));
-          img.src = previewUrl;
-        });
-
-        setPreviews((current) => {
-          const updated = new Map(current);
-          const existing = updated.get(id);
-          if (existing) {
-            updated.set(id, { ...existing, previewUrl, status: "ready" });
-          }
-          return updated;
-        });
-      } catch {
-        setPreviews((current) => {
-          const updated = new Map(current);
-          const existing = updated.get(id);
-          if (existing) {
-            updated.set(id, { ...existing, status: "error" });
-          }
-          return updated;
-        });
-      }
-    },
-    [previews],
-  );
-
-  const cleanup = useCallback(() => {
-    previews.forEach((image) => {
-      if (image.previewUrl) {
-        URL.revokeObjectURL(image.previewUrl);
-      }
-    });
-    setPreviews(new Map());
-  }, [previews]);
-
-  const imagesList = useMemo(() => Array.from(previews.values()), [previews]);
-
-  return {
-    images: imagesList,
-    initializeFiles,
-    generatePreview,
-    cleanup,
-  };
-}
-```
-
-**Why good:** Defers preview generation until needed, tracks loading state per image, proper cleanup method
+**Prerequisites:** Understand Pattern 1-2 from [core.md](core.md) first.
 
 ---
 
-## Pattern 2: Thumbnail Generation
-
-### Create Smaller Versions
-
-```typescript
-// thumbnail-generator.ts
-const THUMBNAIL_SIZES = {
-  small: 100,
-  medium: 200,
-  large: 400,
-} as const;
-
-type ThumbnailSize = keyof typeof THUMBNAIL_SIZES;
-
-interface Thumbnail {
-  blob: Blob;
-  url: string;
-  width: number;
-  height: number;
-}
-
-interface ThumbnailSet {
-  small: Thumbnail;
-  medium: Thumbnail;
-  large: Thumbnail;
-  original: { width: number; height: number };
-}
-
-const THUMBNAIL_QUALITY = 0.7;
-
-/**
- * Generate multiple thumbnail sizes at once
- */
-export async function generateThumbnailSet(file: File): Promise<ThumbnailSet> {
-  const img = await loadImage(file);
-
-  const [small, medium, large] = await Promise.all([
-    createThumbnail(img, THUMBNAIL_SIZES.small),
-    createThumbnail(img, THUMBNAIL_SIZES.medium),
-    createThumbnail(img, THUMBNAIL_SIZES.large),
-  ]);
-
-  return {
-    small,
-    medium,
-    large,
-    original: { width: img.width, height: img.height },
-  };
-}
-
-async function createThumbnail(
-  img: HTMLImageElement,
-  maxSize: number,
-): Promise<Thumbnail> {
-  const { width, height } = calculateThumbnailSize(
-    img.width,
-    img.height,
-    maxSize,
-  );
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas context unavailable");
-
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-
-  ctx.drawImage(img, 0, 0, width, height);
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("Thumbnail failed"))),
-      "image/jpeg",
-      THUMBNAIL_QUALITY,
-    );
-  });
-
-  return {
-    blob,
-    url: URL.createObjectURL(blob),
-    width,
-    height,
-  };
-}
-
-function calculateThumbnailSize(
-  originalWidth: number,
-  originalHeight: number,
-  maxSize: number,
-): { width: number; height: number } {
-  const ratio = Math.min(maxSize / originalWidth, maxSize / originalHeight);
-
-  // Don't upscale
-  if (ratio >= 1) {
-    return { width: originalWidth, height: originalHeight };
-  }
-
-  return {
-    width: Math.round(originalWidth * ratio),
-    height: Math.round(originalHeight * ratio),
-  };
-}
-
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-
-    img.src = url;
-  });
-}
-
-/**
- * Cleanup thumbnail URLs
- */
-export function cleanupThumbnailSet(thumbnails: ThumbnailSet): void {
-  URL.revokeObjectURL(thumbnails.small.url);
-  URL.revokeObjectURL(thumbnails.medium.url);
-  URL.revokeObjectURL(thumbnails.large.url);
-}
-```
-
-**Why good:** Generates all sizes in parallel, doesn't upscale small images, provides cleanup function
-
----
-
-## Pattern 3: Preview with Progress
-
-### Show Generation Progress
-
-```typescript
-// preview-with-progress.ts
-import { useState, useCallback, useRef } from "react";
-
-interface PreviewProgress {
-  loaded: number;
-  total: number;
-  percentage: number;
-}
-
-interface ProgressivePreviewState {
-  previewUrl: string | null;
-  progress: PreviewProgress | null;
-  status: "idle" | "loading" | "ready" | "error";
-  error: string | null;
-}
-
-const INITIAL_STATE: ProgressivePreviewState = {
-  previewUrl: null,
-  progress: null,
-  status: "idle",
-  error: null,
-};
-
-/**
- * Generate preview with progress tracking
- * Useful for large images where load time is noticeable
- */
-export function usePreviewWithProgress() {
-  const [state, setState] = useState<ProgressivePreviewState>(INITIAL_STATE);
-  const abortRef = useRef<(() => void) | null>(null);
-
-  const generatePreview = useCallback((file: File) => {
-    // Cancel any in-progress generation
-    abortRef.current?.();
-
-    let cancelled = false;
-    abortRef.current = () => {
-      cancelled = true;
-    };
-
-    setState({
-      ...INITIAL_STATE,
-      status: "loading",
-      progress: { loaded: 0, total: file.size, percentage: 0 },
-    });
-
-    const reader = new FileReader();
-
-    reader.onprogress = (event) => {
-      if (cancelled) return;
-
-      if (event.lengthComputable) {
-        setState((prev) => ({
-          ...prev,
-          progress: {
-            loaded: event.loaded,
-            total: event.total,
-            percentage: Math.round((event.loaded / event.total) * 100),
-          },
-        }));
-      }
-    };
-
-    reader.onload = () => {
-      if (cancelled) return;
-
-      const dataUrl = reader.result as string;
-
-      // Validate image loads
-      const img = new Image();
-      img.onload = () => {
-        if (cancelled) return;
-
-        // Create object URL from blob for better performance
-        const url = URL.createObjectURL(file);
-        setState({
-          previewUrl: url,
-          progress: { loaded: file.size, total: file.size, percentage: 100 },
-          status: "ready",
-          error: null,
-        });
-      };
-
-      img.onerror = () => {
-        if (cancelled) return;
-        setState({
-          previewUrl: null,
-          progress: null,
-          status: "error",
-          error: "Invalid image file",
-        });
-      };
-
-      img.src = dataUrl;
-    };
-
-    reader.onerror = () => {
-      if (cancelled) return;
-      setState({
-        previewUrl: null,
-        progress: null,
-        status: "error",
-        error: "Failed to read file",
-      });
-    };
-
-    reader.readAsDataURL(file);
-  }, []);
-
-  const clear = useCallback(() => {
-    abortRef.current?.();
-    if (state.previewUrl) {
-      URL.revokeObjectURL(state.previewUrl);
-    }
-    setState(INITIAL_STATE);
-  }, [state.previewUrl]);
-
-  return {
-    ...state,
-    generatePreview,
-    clear,
-    isLoading: state.status === "loading",
-    isReady: state.status === "ready",
-    hasError: state.status === "error",
-  };
-}
-```
-
-**Why good:** Reports load progress, cancellable, validates image after load, proper cleanup
-
----
-
-## Pattern 4: Drag-and-Drop Preview Zone
+## Pattern 1: Drag-and-Drop Preview Zone
 
 ### Visual Feedback During Drag
+
+Uses a drag counter to handle nested element enter/leave events correctly (the most common drag-and-drop bug).
 
 ```typescript
 // drag-drop-preview.tsx
@@ -512,177 +129,130 @@ export function DragDropPreviewZone({
 }
 ```
 
-**Why good:** Uses drag counter for nested element handling, validates during drop, shows errors, accessible with role and aria-label
+**Why good:** Drag counter handles nested elements correctly, validates during drop, accessible with role and aria-label, style-agnostic via className and data-attributes
 
 ---
 
-## Pattern 5: Responsive Image Preview
+## Pattern 2: Thumbnail Generation
 
-### Size-Appropriate Preview
+### Create Multiple Sizes in Parallel
 
 ```typescript
-// responsive-preview.tsx
-import { useState, useEffect, useRef, useCallback } from 'react';
+// thumbnail-generator.ts
+import { loadImage } from "./load-image";
 
-interface ResponsivePreviewProps {
-  file: File;
-  alt: string;
-  className?: string;
-}
-
-const BREAKPOINT_SIZES = {
-  small: 320,
-  medium: 640,
-  large: 1280,
+const THUMBNAIL_SIZES = {
+  small: 100,
+  medium: 200,
+  large: 400,
 } as const;
 
-/**
- * Generate size-appropriate preview based on container width
- */
-export function ResponsivePreview({ file, alt, className }: ResponsivePreviewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-
-  // Observe container size
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setContainerWidth(entry.contentRect.width);
-      }
-    });
-
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
-  // Generate appropriately-sized preview
-  useEffect(() => {
-    if (containerWidth === 0) return;
-
-    let cancelled = false;
-    let url: string | null = null;
-
-    async function generatePreview() {
-      // Determine target size based on container width
-      let targetSize = BREAKPOINT_SIZES.large;
-      if (containerWidth < 400) {
-        targetSize = BREAKPOINT_SIZES.small;
-      } else if (containerWidth < 800) {
-        targetSize = BREAKPOINT_SIZES.medium;
-      }
-
-      // Account for device pixel ratio
-      const scaledSize = targetSize * Math.min(window.devicePixelRatio, 2);
-
-      const resizedBlob = await resizeForPreview(file, scaledSize);
-
-      if (cancelled) return;
-
-      url = URL.createObjectURL(resizedBlob);
-      setPreviewUrl(url);
-    }
-
-    generatePreview().catch(console.error);
-
-    return () => {
-      cancelled = true;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [file, containerWidth]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  return (
-    <div ref={containerRef} className={className}>
-      {previewUrl && (
-        <img
-          src={previewUrl}
-          alt={alt}
-          loading="lazy"
-          decoding="async"
-        />
-      )}
-    </div>
-  );
+interface Thumbnail {
+  blob: Blob;
+  url: string;
+  width: number;
+  height: number;
 }
 
-async function resizeForPreview(file: File, maxSize: number): Promise<Blob> {
+interface ThumbnailSet {
+  small: Thumbnail;
+  medium: Thumbnail;
+  large: Thumbnail;
+  original: { width: number; height: number };
+}
+
+const THUMBNAIL_QUALITY = 0.7;
+
+export async function generateThumbnailSet(file: File): Promise<ThumbnailSet> {
   const img = await loadImage(file);
 
-  // Skip resize if image is already smaller
-  if (img.width <= maxSize && img.height <= maxSize) {
-    return file;
+  const [small, medium, large] = await Promise.all([
+    createThumbnail(img, THUMBNAIL_SIZES.small),
+    createThumbnail(img, THUMBNAIL_SIZES.medium),
+    createThumbnail(img, THUMBNAIL_SIZES.large),
+  ]);
+
+  return {
+    small,
+    medium,
+    large,
+    original: { width: img.width, height: img.height },
+  };
+}
+
+async function createThumbnail(
+  img: HTMLImageElement,
+  maxSize: number,
+): Promise<Thumbnail> {
+  const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+
+  // Don't upscale
+  if (ratio >= 1) {
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas context unavailable"));
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Thumbnail failed"))),
+        "image/jpeg",
+        THUMBNAIL_QUALITY,
+      );
+    });
+    return {
+      blob,
+      url: URL.createObjectURL(blob),
+      width: img.width,
+      height: img.height,
+    };
   }
 
-  const ratio = Math.min(maxSize / img.width, maxSize / img.height);
   const width = Math.round(img.width * ratio);
   const height = Math.round(img.height * ratio);
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas context unavailable');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas context unavailable");
 
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, 0, 0, width, height);
 
-  return new Promise((resolve, reject) => {
+  const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Resize failed'))),
-      'image/jpeg',
-      0.85
+      (b) => (b ? resolve(b) : reject(new Error("Thumbnail failed"))),
+      "image/jpeg",
+      THUMBNAIL_QUALITY,
     );
   });
+
+  return { blob, url: URL.createObjectURL(blob), width, height };
 }
 
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
-
-    img.src = url;
-  });
+/** Cleanup all thumbnail URLs */
+export function cleanupThumbnailSet(thumbnails: ThumbnailSet): void {
+  URL.revokeObjectURL(thumbnails.small.url);
+  URL.revokeObjectURL(thumbnails.medium.url);
+  URL.revokeObjectURL(thumbnails.large.url);
 }
 ```
 
-**Why good:** Observes container size, generates appropriately-sized preview, accounts for device pixel ratio, skips resize for small images
+**Why good:** Generates all sizes in parallel, doesn't upscale small images, provides cleanup function for all URLs
 
 ---
 
-## Pattern 6: Preview Gallery Grid
+## Pattern 3: Preview Gallery Grid
 
-### Multiple Images with Selection
+### Multiple Images with Keyboard Navigation
 
 ```typescript
 // preview-gallery.tsx
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 
 interface GalleryImage {
   id: string;
@@ -771,7 +341,7 @@ export function PreviewGallery({
 }
 ```
 
-**Why good:** Keyboard navigation support, ARIA listbox pattern, stop propagation on remove button, lazy loading images
+**Why good:** ARIA listbox pattern for accessibility, keyboard Delete/Backspace support, stopPropagation on remove button prevents triggering select, lazy loading images
 
 ---
 

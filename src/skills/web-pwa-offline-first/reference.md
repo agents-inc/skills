@@ -15,7 +15,7 @@ What type of data are you storing?
 │   │   └─ YES → Dexie.js 4.x with useLiveQuery
 │   │   └─ NO → idb 8.x (lighter weight, ~1.2KB)
 │   └─ Complex relational queries?
-│       └─ YES → Consider SQLite via WebAssembly, PouchDB, or RxDB
+│       └─ YES → Consider SQLite via WebAssembly or a sync-capable DB (e.g. PouchDB, RxDB)
 │       └─ NO → Dexie.js or idb
 ├─ Simple key-value data (< 5MB, not critical)
 │   └─ localStorage (sync, blocks UI) or idb-keyval (~295 bytes)
@@ -38,7 +38,7 @@ What type of data is conflicting?
 ├─ Independent values (toggle, counter)
 │   └─ Last-Write-Wins (LWW)
 ├─ Collaborative text (documents)
-│   └─ CRDT (Yjs, Automerge)
+│   └─ CRDT library (e.g. Yjs, Automerge)
 ├─ User preferences
 │   └─ Field-Level Merge
 ├─ Business-critical data

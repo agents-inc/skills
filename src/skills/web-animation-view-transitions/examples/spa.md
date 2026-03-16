@@ -99,8 +99,6 @@ function toggleThemeClass(): void {
 // form-transitions.ts
 
 const TOTAL_STEPS = 4;
-const SLIDE_DURATION_MS = 250;
-const SLIDE_DISTANCE = "20px";
 
 type FormStep = 1 | 2 | 3 | 4;
 
@@ -148,12 +146,11 @@ export async function goToStep(step: FormStep): Promise<void> {
     return;
   }
 
-  // Set direction type for CSS
-  const transition = document.startViewTransition(updateFn);
-
-  if ("types" in transition) {
-    (transition.types as Set<string>).add(formState.direction);
-  }
+  // Set direction type for CSS targeting via :active-view-transition-type()
+  const transition = document.startViewTransition({
+    update: updateFn,
+    types: [formState.direction],
+  });
 
   await transition.finished;
 }
@@ -243,8 +240,6 @@ html:active-view-transition-type(backward) {
 ```typescript
 // tab-transitions.ts
 
-const TAB_TRANSITION_DURATION_MS = 200;
-
 interface Tab {
   id: string;
   label: string;
@@ -324,8 +319,6 @@ export function switchTab(tabId: string): void {
 
 ```typescript
 // accordion-transitions.ts
-
-const ACCORDION_DURATION_MS = 300;
 
 function toggleAccordionSection(triggerId: string): void {
   const trigger = document.getElementById(triggerId);

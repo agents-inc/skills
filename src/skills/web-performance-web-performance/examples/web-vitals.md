@@ -1,51 +1,44 @@
 # Core Web Vitals
 
-> LCP, INP (formerly FID), CLS patterns and real-user monitoring. See [core.md](core.md) for React runtime patterns.
+> LCP, INP, CLS patterns and real-user monitoring. See [core.md](core.md) for React runtime patterns.
 
 ---
 
 ## LCP (Largest Contentful Paint)
 
-### Good Example - Optimize LCP with Next.js Image Priority
+### Good Example - Optimize Hero Image for LCP
 
-```typescript
-import Image from 'next/image';
+```html
+<!-- Preload hero image, serve modern format, set dimensions -->
+<link rel="preload" as="image" href="/hero.webp" type="image/webp" />
 
-export function Hero() {
-  return (
-    <Image
-      src="/hero.jpg"
-      alt="Hero image"
-      width={1200}
-      height={600}
-      priority  // Preload for LCP
-      placeholder="blur"
-      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-    />
-  );
-}
+<img
+  src="/hero.webp"
+  alt="Hero image"
+  width="1200"
+  height="600"
+  loading="eager"
+  fetchpriority="high"
+  decoding="async"
+/>
 ```
 
-**Why good:** Priority flag preloads image for faster LCP, automatic WebP/AVIF format selection reduces file size by 30-50%, blur placeholder improves perceived performance
+**Why good:** `fetchpriority="high"` tells browser to prioritize this image, explicit dimensions prevent CLS, `loading="eager"` (default) ensures immediate fetch, preload link starts fetch before HTML parser reaches the `<img>`
 
 ### Bad Example - Large Hero Image Without Optimization
 
-```typescript
-export function Hero() {
-  return (
-    <img src="/hero-4k.jpg" alt="Hero" />
-    // No optimization, no preload, blocks LCP
-  );
-}
+```html
+<img src="/hero-4k.jpg" alt="Hero" />
+<!-- No optimization, no preload, no dimensions, blocks LCP -->
 ```
 
-**Why bad:** Large unoptimized image (2-5MB) blocks LCP, no format optimization, no lazy loading, no preload
+**Why bad:** Large unoptimized image (2-5MB) blocks LCP, no format optimization, no dimensions (causes CLS), no priority hint
 
 ---
 
 ## INP (Interaction to Next Paint)
 
-**Note:** INP replaced FID (First Input Delay) as a Core Web Vital on March 12, 2024. FID is now deprecated.
+INP replaced FID (First Input Delay) as a Core Web Vital in March 2024. It measures ALL interactions, not just the first.
 
 ### Good Example - Web Worker for Heavy Computation
 
@@ -93,6 +86,27 @@ export function DataProcessor({ data }: Props) {
 
 **Why good:** Heavy computation runs off main thread, main thread stays responsive to user input, prevents INP issues
 
+### Good Example - Breaking Up Long Tasks
+
+```typescript
+const LONG_TASK_THRESHOLD_MS = 50;
+
+async function processItems(items: Item[]) {
+  for (const item of items) {
+    processItem(item);
+
+    // Yield to main thread between items to keep UI responsive
+    if ("scheduler" in globalThis && "yield" in scheduler) {
+      await scheduler.yield(); // Chromium browsers
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 0)); // Fallback
+    }
+  }
+}
+```
+
+**Why good:** Breaks long tasks (> 50ms) into smaller chunks, keeps main thread responsive between iterations, `scheduler.yield()` preserves task priority (falls back to `setTimeout` in unsupported browsers)
+
 ### Bad Example - Heavy Computation on Main Thread
 
 ```typescript
@@ -110,32 +124,26 @@ export function DataProcessor({ data }: Props) {
 
 ## CLS (Cumulative Layout Shift)
 
-### Good Example - Image with Dimensions
+### Good Example - Image with Explicit Dimensions
 
-```typescript
-import Image from 'next/image';
-
-export function ProductImage({ src, alt }: Props) {
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      width={1200}
-      height={600}
-      placeholder="blur"
-      blurDataURL="data:image/jpeg;base64,..."
-    />
-  );
-}
+```html
+<img
+  src="/product.jpg"
+  alt="Product"
+  width="800"
+  height="400"
+  loading="lazy"
+  decoding="async"
+/>
 ```
 
-**Why good:** Explicit dimensions reserve space before image loads, prevents layout shift when image appears, blur placeholder improves perceived performance
+**Why good:** Explicit dimensions reserve space before image loads, prevents layout shift when image appears
 
 ### Bad Example - No Dimensions, Causes Layout Shift
 
 ```html
 <!-- No dimensions, causes layout shift -->
-<img src="/hero.jpg" alt="Hero" />
+<img src="/product.jpg" alt="Product" />
 ```
 
 **Why bad:** No space reserved for image, content jumps when image loads, causes CLS score increase
@@ -156,21 +164,20 @@ body {
 }
 ```
 
-**Why good:** Size-adjust prevents layout shift when custom font loads, font-display swap shows fallback immediately, prevents invisible text (FOIT)
+**Why good:** `size-adjust` prevents layout shift when custom font loads, `font-display: swap` shows fallback immediately, prevents invisible text (FOIT)
 
 ### Bad Example - Font Loading Without size-adjust
 
 ```css
-/* Font loading without size-adjust */
 @font-face {
   font-family: "CustomFont";
   src: url("/fonts/custom-font.woff2") format("woff2");
-  /* No font-display - defaults to block */
-  /* No size-adjust - causes layout shift */
+  /* No font-display - defaults to block (invisible text) */
+  /* No size-adjust - causes layout shift on swap */
 }
 ```
 
-**Why bad:** Text invisible while font loads (FOIT), layout shifts when custom font loads with different metrics, poor perceived performance
+**Why bad:** Text invisible while font loads (FOIT), layout shifts when custom font loads with different metrics
 
 ---
 
@@ -179,78 +186,42 @@ body {
 ### Good Example - Web Vitals Analytics
 
 ```typescript
-// lib/analytics.ts
+// lib/web-vitals.ts
 import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
 import type { Metric } from "web-vitals";
 
-interface AnalyticsEvent {
-  name: string;
-  value: number;
-  id: string;
-  delta: number;
-  rating: "good" | "needs-improvement" | "poor";
-}
-
 function sendToAnalytics(metric: Metric) {
-  const event: AnalyticsEvent = {
+  const body = JSON.stringify({
     name: metric.name,
     value: metric.value,
     id: metric.id,
     delta: metric.delta,
-    rating: metric.rating,
-  };
+    rating: metric.rating, // "good" | "needs-improvement" | "poor"
+  });
 
-  // Send to Google Analytics
-  if (typeof gtag === "function") {
-    gtag("event", metric.name, {
-      value: Math.round(
-        metric.name === "CLS" ? metric.value * 1000 : metric.value,
-      ),
-      metric_id: metric.id,
-      metric_value: metric.value,
-      metric_delta: metric.delta,
-      metric_rating: metric.rating,
-    });
+  // Use sendBeacon for reliability on page unload
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon("/api/analytics", body);
+  } else {
+    fetch("/api/analytics", {
+      method: "POST",
+      body,
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+    }).catch(() => {});
   }
-
-  // Send to custom analytics endpoint
-  fetch("/api/analytics", {
-    method: "POST",
-    body: JSON.stringify(event),
-    headers: { "Content-Type": "application/json" },
-    keepalive: true, // Ensures request completes even if page unloads
-  }).catch(console.error);
 }
 
-// Initialize Web Vitals tracking
-// Note: onINP replaced onFID - FID was deprecated March 2024
+// Initialize - call once on app mount
 export function initWebVitals() {
   onCLS(sendToAnalytics);
-  onINP(sendToAnalytics); // INP replaced FID as Core Web Vital
+  onINP(sendToAnalytics);
   onFCP(sendToAnalytics);
   onLCP(sendToAnalytics);
   onTTFB(sendToAnalytics);
 }
 ```
 
-**Why good:** Tracks real user performance (not lab metrics), measures all Core Web Vitals (LCP, INP, CLS), sends to analytics for trend analysis, keepalive ensures data sent even on page unload
+**Why good:** Tracks real user performance (not lab metrics), measures all Core Web Vitals, `sendBeacon` ensures data sent even on page unload, `rating` field gives instant pass/fail
 
-**Note:** The `onFID` function is deprecated. INP (Interaction to Next Paint) replaced FID (First Input Delay) as a Core Web Vital on March 12, 2024. Use `onINP` instead.
-
-### Usage in App
-
-```typescript
-// pages/_app.tsx
-import { useEffect } from 'react';
-import { initWebVitals } from '../lib/analytics';
-
-export default function App({ Component, pageProps }) {
-  useEffect(() => {
-    initWebVitals();
-  }, []);
-
-  return <Component {...pageProps} />;
-}
-```
-
-**Why good:** Initializes on app mount, tracks metrics throughout session, runs in production to measure real users
+**Note:** web-vitals v5 removed `onFID` entirely. Use `onINP` instead. Do not call these functions more than once per page load -- each creates a PerformanceObserver that persists for the page lifetime.

@@ -1,10 +1,8 @@
-# Layout Animations
+# Motion - Layout Animation Examples
 
 > Layout animations and shared element transitions. See [core.md](core.md) for basic patterns.
 
-> **Import Note:** Examples show `from "framer-motion"` for compatibility. For v11+, use `from "motion/react"` instead.
-
-**Prerequisites**: Understand AnimatePresence Patterns from [core.md](core.md) first.
+**Prerequisites**: Understand AnimatePresence from [core.md](core.md) Pattern 3 first.
 
 ---
 
@@ -13,7 +11,7 @@
 ### Good Example - Card with Animated Expansion
 
 ```typescript
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 
 const LAYOUT_SPRING = { type: "spring" as const, stiffness: 500, damping: 30 };
@@ -79,7 +77,7 @@ export const ExpandableCard = ({
 ### Good Example - Animated Tab Indicator
 
 ```typescript
-import { motion, LayoutGroup } from "framer-motion";
+import { motion, LayoutGroup } from "motion/react";
 
 const INDICATOR_SPRING = { type: "spring" as const, stiffness: 500, damping: 35 };
 

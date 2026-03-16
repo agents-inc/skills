@@ -4,7 +4,7 @@
 
 ---
 
-## Pattern 12: File Upload Over WebSocket
+## Pattern 13: File Upload Over WebSocket
 
 Chunked binary file upload with progress tracking.
 

@@ -246,21 +246,27 @@ Shows errors immediately before user has interacted with field.
 
 ### useForm Return Values
 
-| Property        | Type           | Description                                    |
-| --------------- | -------------- | ---------------------------------------------- |
-| `handleSubmit`  | `function`     | Wraps submit handler with validation           |
-| `errors`        | `object`       | First error per field                          |
-| `errorBag`      | `object`       | All errors per field as arrays                 |
-| `values`        | `object`       | Current form values (reactive)                 |
-| `meta`          | `object`       | Form metadata (valid, dirty, touched, pending) |
-| `isSubmitting`  | `Ref<boolean>` | True during async submit                       |
-| `defineField`   | `function`     | Creates field model and attrs tuple            |
-| `setFieldValue` | `function`     | Set field value programmatically               |
-| `setFieldError` | `function`     | Set field error programmatically               |
-| `setErrors`     | `function`     | Set multiple errors at once                    |
-| `resetForm`     | `function`     | Reset form to initial values                   |
-| `validate`      | `function`     | Trigger form validation manually               |
-| `validateField` | `function`     | Trigger single field validation                |
+| Property          | Type           | Description                                    |
+| ----------------- | -------------- | ---------------------------------------------- |
+| `handleSubmit`    | `function`     | Wraps submit handler with validation           |
+| `errors`          | `object`       | First error per field                          |
+| `errorBag`        | `object`       | All errors per field as arrays                 |
+| `values`          | `object`       | Current form values (reactive)                 |
+| `meta`            | `object`       | Form metadata (valid, dirty, touched, pending) |
+| `isSubmitting`    | `Ref<boolean>` | True during async submit                       |
+| `isValidating`    | `Ref<boolean>` | True during async validation                   |
+| `submitCount`     | `Ref<number>`  | Number of submission attempts                  |
+| `defineField`     | `function`     | Creates field model and attrs tuple            |
+| `setFieldValue`   | `function`     | Set field value programmatically               |
+| `setValues`       | `function`     | Set multiple field values at once              |
+| `setFieldError`   | `function`     | Set field error programmatically               |
+| `setErrors`       | `function`     | Set multiple errors at once                    |
+| `setFieldTouched` | `function`     | Set field touched state                        |
+| `setTouched`      | `function`     | Set multiple touched states at once            |
+| `resetForm`       | `function`     | Reset form to initial values                   |
+| `handleReset`     | `function`     | Reset handler for native form reset events     |
+| `validate`        | `function`     | Trigger form validation manually               |
+| `validateField`   | `function`     | Trigger single field validation                |
 
 ### useField Return Values
 

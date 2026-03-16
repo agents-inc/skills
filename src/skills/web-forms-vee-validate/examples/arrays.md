@@ -405,9 +405,10 @@ const onSubmit = handleSubmit((values) => {
 
 ```vue
 <script setup lang="ts">
-import { useForm, useFieldArray, useField } from "vee-validate";
+import { useForm, useFieldArray } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
+import { computed } from "vue";
 
 const MIN_PRICE = 0;
 const DEFAULT_PRICE = 0;

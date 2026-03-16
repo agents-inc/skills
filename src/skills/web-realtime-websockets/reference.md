@@ -22,12 +22,12 @@ Need real-time communication?
 
 ```
 Building WebSocket features?
-├─ Need Socket.IO-specific features (rooms, namespaces, auto-transport)?
-│   └─ YES → Use Socket.IO (defer to socket-io skill)
+├─ Need library-managed features (rooms, namespaces, auto-transport fallback)?
+│   └─ YES → Use a WebSocket wrapper library (not this skill's scope)
 ├─ Need simple bidirectional communication?
-│   └─ YES → Native WebSocket API ✓
+│   └─ YES → Native WebSocket API
 ├─ Need to support legacy browsers without WebSocket?
-│   └─ YES → Use library with fallback transports
+│   └─ YES → Use a library with fallback transports
 └─ Default → Native WebSocket API for simplicity
 ```
 
@@ -40,7 +40,7 @@ Managing WebSocket connections?
 ├─ Single component needs connection?
 │   └─ YES → Use custom hook in component
 ├─ Complex state transitions?
-│   └─ YES → Use state machine pattern (Pattern 11)
+│   └─ YES → Use state machine pattern (Pattern 12)
 └─ Simple connection → Basic WebSocket class
 ```
 
@@ -77,7 +77,7 @@ Handling binary data?
 ├─ Need synchronous processing?
 │   └─ YES → binaryType = 'arraybuffer' ✓
 ├─ Working with files/blobs?
-│   └─ YES → Consider chunked uploads (Pattern 12)
+│   └─ YES → Consider chunked uploads (Pattern 13)
 ├─ Need protocol with headers?
 │   └─ YES → DataView for parsing binary headers
 └─ Default → binaryType = 'arraybuffer' for performance

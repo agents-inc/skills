@@ -152,30 +152,15 @@ export function useUploadProgress(): UseUploadProgressResult {
 
 ```typescript
 // progress-bar.tsx
-import { cva, type VariantProps } from 'class-variance-authority';
 import styles from './progress-bar.module.scss';
 
-const progressVariants = cva(styles.progressBar, {
-  variants: {
-    size: {
-      sm: styles.small,
-      md: styles.medium,
-      lg: styles.large,
-    },
-    status: {
-      uploading: styles.uploading,
-      success: styles.success,
-      error: styles.error,
-    },
-  },
-  defaultVariants: {
-    size: 'md',
-    status: 'uploading',
-  },
-});
+type ProgressSize = 'sm' | 'md' | 'lg';
+type ProgressStatus = 'uploading' | 'success' | 'error';
 
-interface ProgressBarProps extends VariantProps<typeof progressVariants> {
+interface ProgressBarProps {
   progress: number; // 0-100
+  size?: ProgressSize;
+  status?: ProgressStatus;
   showLabel?: boolean;
   label?: string;
   className?: string;
@@ -185,8 +170,8 @@ export function ProgressBar({
   progress,
   showLabel = true,
   label,
-  size,
-  status,
+  size = 'md',
+  status = 'uploading',
   className,
 }: ProgressBarProps) {
   const clampedProgress = Math.min(100, Math.max(0, progress));
@@ -194,7 +179,9 @@ export function ProgressBar({
 
   return (
     <div
-      className={progressVariants({ size, status, className })}
+      className={`${styles.progressBar} ${className ?? ''}`}
+      data-size={size}
+      data-status={status}
       role="progressbar"
       aria-valuenow={clampedProgress}
       aria-valuemin={0}
@@ -223,18 +210,16 @@ export function ProgressBar({
   background: var(--color-surface);
   border-radius: var(--radius-full);
   overflow: hidden;
-}
 
-.small {
-  height: 4px;
-}
-
-.medium {
-  height: 8px;
-}
-
-.large {
-  height: 16px;
+  &[data-size="sm"] {
+    height: 4px;
+  }
+  &[data-size="md"] {
+    height: 8px;
+  }
+  &[data-size="lg"] {
+    height: 16px;
+  }
 }
 
 .fill {
@@ -242,15 +227,13 @@ export function ProgressBar({
   transition: width 0.2s ease;
 }
 
-.uploading .fill {
+.progressBar[data-status="uploading"] .fill {
   background: var(--color-primary);
 }
-
-.success .fill {
+.progressBar[data-status="success"] .fill {
   background: var(--color-success);
 }
-
-.error .fill {
+.progressBar[data-status="error"] .fill {
   background: var(--color-error);
 }
 
@@ -266,7 +249,7 @@ export function ProgressBar({
 }
 ```
 
-**Why good:** Accessible with role="progressbar" and aria attributes, variant support with CVA, clamps progress to valid range, label hidden from screen readers (aria-hidden) since aria-label provides info
+**Why good:** Accessible with role="progressbar" and aria attributes, variants via data attributes (style-agnostic), clamps progress to valid range, label hidden from screen readers (aria-hidden) since aria-label provides info
 
 ---
 

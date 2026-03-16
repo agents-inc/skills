@@ -86,8 +86,7 @@ import type {
   JWTPayload,
 } from "../types/auth-events";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+const SOCKET_URL = process.env.SOCKET_URL ?? "http://localhost:3001";
 const RECONNECTION_ATTEMPTS = 5;
 const RECONNECTION_DELAY_MS = 1000;
 
@@ -518,8 +517,7 @@ Different authentication per namespace (e.g., admin requires elevated permission
 // lib/namespace-auth.ts
 import { Manager, Socket } from "socket.io-client";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+const SOCKET_URL = process.env.SOCKET_URL ?? "http://localhost:3001";
 
 interface NamespaceAuthConfig {
   userToken: string;
@@ -581,8 +579,7 @@ For session-based auth where cookies are automatically sent.
 // lib/socket-cookie-auth.ts
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+const SOCKET_URL = process.env.SOCKET_URL ?? "http://localhost:3001";
 
 export function createCookieAuthSocket(): Socket {
   const socket = io(SOCKET_URL, {
@@ -828,6 +825,8 @@ socket.io.on("reconnect_attempt", async () => {
 
 // CORRECT - Dynamic token from storage/state
 const socket = io(url, {
-  auth: () => ({ token: getToken() }), // Function called on each connection
+  auth: (cb) => {
+    cb({ token: getToken() });
+  }, // Function called on each connection
 });
 ```

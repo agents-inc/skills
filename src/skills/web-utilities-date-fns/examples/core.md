@@ -159,10 +159,9 @@ function getAppointmentEnd(startTime: Date): Date {
 }
 
 // Chain operations (still returns new dates)
+// Note: startOfMonth and endOfMonth are imported in boundary examples below
 function getQuarterEnd(date: Date): Date {
-  const threeMonthsLater = addMonths(date, 3);
-  const startOfQuarterEnd = startOfMonth(threeMonthsLater);
-  return subDays(startOfQuarterEnd, 1);
+  return endOfMonth(addMonths(date, 2));
 }
 
 // Original date is never modified

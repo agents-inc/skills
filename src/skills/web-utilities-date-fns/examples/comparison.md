@@ -301,7 +301,7 @@ const duration = intervalToDuration({ start, end });
 // { months: 5, days: 14 }
 
 // Utility: Human-readable duration
-function formatDuration(duration: Duration): string {
+function formatDurationConcise(duration: Duration): string {
   const parts: string[] = [];
 
   if (duration.years && duration.years > 0) {
@@ -319,7 +319,7 @@ function formatDuration(duration: Duration): string {
 
 // Usage
 const d = intervalToDuration({ start, end });
-const readable = formatDuration(d); // "5 months, 14 days"
+const readable = formatDurationConcise(d); // "5 months, 14 days"
 ```
 
 **Why good:** clear function names, handles rounding correctly, business day calculation is built-in

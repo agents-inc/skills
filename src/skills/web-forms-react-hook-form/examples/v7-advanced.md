@@ -1,6 +1,6 @@
-# React Hook Form - v7.6x+ Advanced Features
+# React Hook Form - v7.46+ Advanced Features
 
-> Advanced patterns and new features added in React Hook Form v7.46-v7.71. See [core.md](core.md) for basic form patterns.
+> Advanced patterns and new features added in React Hook Form v7.46+. See [core.md](core.md) for basic form patterns.
 
 **Prerequisites:** Understand Basic Forms from [core.md](core.md), [controlled-components.md](controlled-components.md), and [performance.md](performance.md) first.
 
@@ -14,7 +14,6 @@ Use `values` instead of `defaultValues` when loading async data. The `values` pr
 
 ```typescript
 import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import type { SubmitHandler } from "react-hook-form";
 
 interface UserProfileFormData {
@@ -25,14 +24,11 @@ interface UserProfileFormData {
 
 interface UserProfileFormProps {
   userId: string;
+  userData: UserProfileFormData | undefined;
 }
 
-export function UserProfileForm({ userId }: UserProfileFormProps) {
-  // Fetch user data with your data fetching solution
-  const { data: userData } = useQuery({
-    queryKey: ["user", userId],
-    queryFn: () => fetchUser(userId),
-  });
+export function UserProfileForm({ userId, userData }: UserProfileFormProps) {
+  // userData comes from your data fetching solution (passed as prop)
 
   const {
     register,
@@ -76,12 +72,7 @@ export function UserProfileForm({ userId }: UserProfileFormProps) {
 
 ```typescript
 // WRONG: defaultValues only works on first render
-export function UserProfileForm({ userId }: UserProfileFormProps) {
-  const { data: userData } = useQuery({
-    queryKey: ["user", userId],
-    queryFn: () => fetchUser(userId),
-  });
-
+export function UserProfileForm({ userId, userData }: UserProfileFormProps) {
   const { register, handleSubmit, reset } = useForm<UserProfileFormData>({
     // defaultValues doesn't update when userData changes!
     defaultValues: userData,
@@ -196,11 +187,12 @@ export function ContactForm() {
   });
 
   const onSubmit: SubmitHandler<ContactFormData> = async (data) => {
-    console.log("Form submitted:", data);
+    await submitContactForm(data);
   };
 
   const onError = (error: unknown) => {
-    console.error("Submission error:", error);
+    // Handle submission error (e.g., show notification)
+    reportError(error);
   };
 
   return (
@@ -608,7 +600,7 @@ export function PricingForm() {
 | Option    | Version | Description                                  |
 | --------- | ------- | -------------------------------------------- |
 | `exact`   | v7.47.0 | Match field names exactly                    |
-| `compute` | v7.x    | Transform/compute values before subscription |
+| `compute` | v7.61.0 | Transform/compute values before subscription |
 
 ### v7.71 Performance Improvements
 

@@ -95,53 +95,43 @@ root.render(
 
 ---
 
-## Pattern 2: Integration with Sentry
+## Pattern 2: Integration with Error Monitoring Services
 
-Sentry SDK v8.6.0+ provides `reactErrorHandler()` for seamless integration.
+Most error monitoring SDKs provide React-specific handlers that wrap `createRoot` error options. Check your monitoring service's documentation for React 19 integration helpers.
 
-### Good Example - Sentry Integration
+### Good Example - Generic Monitoring Integration
 
 ```typescript
 // src/main.tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 import { App } from "./app";
 
 const ROOT_ELEMENT_ID = "root";
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 
-// Initialize Sentry first
-Sentry.init({
-  dsn: SENTRY_DSN,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
-  ],
-  tracesSampleRate: 0.1,
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-});
+// Your error monitoring service's React handler
+// Most monitoring SDKs provide a reactErrorHandler() wrapper
+function createMonitoringHandler(
+  level: "caught" | "uncaught" | "recoverable",
+) {
+  return (error: Error, errorInfo: { componentStack?: string | null }) => {
+    // Send to your monitoring service with appropriate severity
+    reportToMonitoring({
+      level,
+      error,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+    });
+  };
+}
 
 const container = document.getElementById(ROOT_ELEMENT_ID);
 if (!container) throw new Error("Root element not found");
 
 const root = createRoot(container, {
-  // Sentry.reactErrorHandler() wraps your custom callback
-  onCaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
-    // Optional: Add custom tags or context
-    Sentry.setTag("error.type", "caught");
-    console.warn("Error caught by boundary:", error.message);
-  }),
-
-  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
-    Sentry.setTag("error.type", "uncaught");
-    Sentry.setTag("error.severity", "fatal");
-    console.error("Uncaught error:", error.message);
-  }),
-
-  // No custom callback needed for recoverable errors
-  onRecoverableError: Sentry.reactErrorHandler(),
+  onCaughtError: createMonitoringHandler("caught"),
+  onUncaughtError: createMonitoringHandler("uncaught"),
+  onRecoverableError: createMonitoringHandler("recoverable"),
 });
 
 root.render(
@@ -151,7 +141,7 @@ root.render(
 );
 ```
 
-**Why good:** `Sentry.reactErrorHandler()` automatically captures React-specific context, can wrap custom callbacks for additional handling, single configuration point for error monitoring
+**Why good:** Centralized error reporting through monitoring service, severity-aware handling, works with any monitoring SDK that accepts error + component stack
 
 ---
 
@@ -270,7 +260,7 @@ const ROOT_ELEMENT_ID = "root";
 const IGNORED_ERROR_MESSAGES = [
   "ResizeObserver loop limit exceeded",
   "ResizeObserver loop completed with undelivered notifications",
-  "Network request failed", // Handled by React Query
+  "Network request failed", // Handled by data fetching layer
 ] as const;
 
 function shouldIgnoreError(error: Error): boolean {
@@ -484,5 +474,5 @@ Error type?
 > **See also:**
 >
 > - [core.md](core.md) - Basic error boundary patterns
+> - [recovery.md](recovery.md) - Retry limits and error classification
 > - [testing.md](testing.md) - Testing error boundaries
-> - [nested-boundaries.md](nested-boundaries.md) - Multi-level boundary architecture

@@ -65,22 +65,19 @@ What kind of operation is this?
 
 ```
 What are your requirements?
-├─ Zero dependencies, full control → Custom implementation
-├─ Simple needs, small bundle → neverthrow (~2KB)
-│   ├─ Has ResultAsync for async
-│   ├─ Has combine methods
-│   └─ Active community
-├─ Full FP ecosystem → fp-ts (~30KB)
-│   ├─ Comprehensive utilities
+├─ Zero dependencies, full control → Custom implementation (recommended default)
+│   ├─ Covers 90% of use cases
+│   ├─ No maintenance risk
+│   └─ Full understanding of internals
+├─ Full effect system + typed error channel → Effect
+│   ├─ Active ecosystem (successor to fp-ts)
 │   ├─ Steeper learning curve
-│   └─ Pipe-based composition
-├─ Maximum capability → Effect (~50KB)
-│   ├─ Full effect system
-│   ├─ Very steep learning curve
-│   └─ Best for complex systems
+│   └─ Best for complex systems with many error types
 └─ Learning the pattern → Custom implementation
-    └─ Understand internals before using library
+    └─ Understand internals before considering libraries
 ```
+
+> **Note on deprecated options:** neverthrow is no longer actively maintained (unreviewed PRs). fp-ts development has stopped in favor of Effect. ts-results has unclear maintenance. Custom implementations are the safest default.
 
 ### Typed Error Design
 
@@ -346,12 +343,10 @@ function fetchUser(id: string): Result<User, FetchError> {
 
 ### Library Quick Reference
 
-| Library    | Import                                         | Success          | Failure         | Chain                 |
-| ---------- | ---------------------------------------------- | ---------------- | --------------- | --------------------- |
-| Custom     | N/A                                            | `ok(value)`      | `err(error)`    | `flatMap(result, fn)` |
-| neverthrow | `import { ok, err, Result } from "neverthrow"` | `ok(value)`      | `err(error)`    | `result.andThen(fn)`  |
-| fp-ts      | `import * as E from "fp-ts/Either"`            | `E.right(value)` | `E.left(error)` | `E.chain(fn)`         |
-| ts-results | `import { Ok, Err, Result } from "ts-results"` | `Ok(value)`      | `Err(error)`    | `result.andThen(fn)`  |
+| Library | Import                            | Success          | Failure         | Chain                 | Status              |
+| ------- | --------------------------------- | ---------------- | --------------- | --------------------- | ------------------- |
+| Custom  | N/A                               | `ok(value)`      | `err(error)`    | `flatMap(result, fn)` | Recommended default |
+| Effect  | `import { Either } from "effect"` | `Either.right()` | `Either.left()` | `Either.flatMap(fn)`  | Active, growing     |
 
 ### Common Operations Reference
 
@@ -420,16 +415,4 @@ interface UserError {
 
 ### TypeScript Configuration
 
-```json
-// tsconfig.json - Recommended settings
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noPropertyAccessFromIndexSignature": true
-  }
-}
-```
-
-These settings help catch Result-related issues at compile time.
+Enable `strict` mode and `noUncheckedIndexedAccess` in your tsconfig to catch Result-related issues at compile time. These settings ensure TypeScript enforces proper narrowing before accessing Result properties.

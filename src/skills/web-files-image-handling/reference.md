@@ -344,14 +344,14 @@ function goodLargePreview(file: File) {
 - `imageSmoothingQuality` - Chrome 54+, Firefox 51+, Safari 10+
 - Canvas auto-EXIF rotation - Chrome 81+, Firefox 78+, Safari 14+
 
-### Good Support (2023+)
+### Baseline (2023+)
 
-- `OffscreenCanvas` - Chrome 69+, Firefox 105+, Safari 16.4+ (widely available now)
+- `OffscreenCanvas` - Baseline since March 2023 (Chrome 69+, Firefox 105+, Safari 16.4+)
 - WebP encoding via `toBlob()` - All modern browsers including Safari 14+
 
 ### Limited Support
 
-- AVIF encoding via `toBlob()` - Chrome 121+, Firefox 113+ (Safari not yet)
+- AVIF encoding via `toBlob()` - Not standardized across browsers. Use third-party libraries (e.g., `@jsquash/avif`) for AVIF encoding from canvas data
 
 ### Feature Detection
 

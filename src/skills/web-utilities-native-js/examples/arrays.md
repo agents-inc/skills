@@ -126,13 +126,13 @@ function findCommonTags(articles: Article[]): string[] {
 }
 
 const articles: Article[] = [
-  { title: "React Basics", tags: ["react", "javascript", "frontend"] },
-  { title: "Advanced React", tags: ["react", "typescript", "frontend"] },
-  { title: "React Testing", tags: ["react", "testing", "frontend"] },
+  { title: "Getting Started", tags: ["tutorial", "javascript", "basics"] },
+  { title: "Advanced Patterns", tags: ["patterns", "typescript", "basics"] },
+  { title: "Testing Guide", tags: ["patterns", "testing", "basics"] },
 ];
 
 const commonTags = findCommonTags(articles);
-// ["react", "frontend"]
+// ["basics"]
 ```
 
 **Why good:** native O(n) set operations, clean API, no dependencies

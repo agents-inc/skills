@@ -615,8 +615,7 @@ import type {
   AdminClientEvents,
 } from "../types/namespace-events";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+const SOCKET_URL = process.env.SOCKET_URL ?? "http://localhost:3001";
 
 // Typed socket types
 type ChatSocket = Socket<ChatServerEvents, ChatClientEvents>;
@@ -752,8 +751,7 @@ import { useEffect, useState, useCallback } from "react";
 import type { Socket } from "socket.io-client";
 import { Manager } from "socket.io-client";
 
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+const SOCKET_URL = process.env.SOCKET_URL ?? "http://localhost:3001";
 
 interface UseNamespaceOptions {
   namespace: string;

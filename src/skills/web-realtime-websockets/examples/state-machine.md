@@ -4,7 +4,7 @@
 
 ---
 
-## Pattern 11: Connection State Machine
+## Pattern 12: Connection State Machine
 
 A robust state machine for managing complex WebSocket connection states.
 
