@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-auth
+slug: nextauth
+domain: api
+author: "@vince"
+displayName: Auth.js
+cliDescription: Auth.js (NextAuth v5) authentication
+usageGuidance: Use when implementing authentication with Auth.js/NextAuth for Next.js, SvelteKit, or other frameworks.
+tags:
+  - auth-js
+  - nextauth
+  - oauth
+  - authentication
+  - sessions
+  - jwt
+  - middleware
