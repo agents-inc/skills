@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Observability Setup
 cliDescription: Logging and monitoring setup
 usageGuidance: Use when setting up Pino logging, Axiom, or Sentry for the first time.
-tags:
-  - pino
-  - axiom
-  - sentry
-  - setup
-  - installation
-  - logging

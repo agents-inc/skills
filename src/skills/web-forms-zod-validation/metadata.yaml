@@ -6,12 +6,3 @@ author: "@vince"
 displayName: Zod
 cliDescription: Schema validation
 usageGuidance: Use when defining validation schemas, type inference, or data transforms.
-tags:
-  - zod
-  - validation
-  - schema
-  - typescript
-  - type-inference
-  - runtime-validation
-  - zod-v3
-  - zod-v4

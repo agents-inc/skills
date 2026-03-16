@@ -6,14 +6,3 @@ author: "@vince"
 displayName: CLI Commander
 cliDescription: CLI dev with Commander.js, clack, picocolors
 usageGuidance: Use when building CLI applications, interactive prompts, wizard flows, or command-line tools with Node.js.
-tags:
-  - cli
-  - commander
-  - clack
-  - prompts
-  - terminal
-  - node
-  - interactive
-  - wizard
-  - state-machine
-  - picocolors

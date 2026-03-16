@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Better Auth
 cliDescription: Authentication and sessions
 usageGuidance: Use when implementing authentication, sessions, OAuth, or user management.
-tags:
-  - better-auth
-  - sessions
-  - oauth
-  - authentication
-  - authorization

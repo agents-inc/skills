@@ -6,15 +6,3 @@ author: "@vince"
 displayName: Socket.IO
 cliDescription: Bidirectional real-time communication
 usageGuidance: Use when implementing Socket.IO client connections, rooms, or namespaces.
-tags:
-  - socket-io
-  - realtime
-  - bidirectional
-  - rooms
-  - namespaces
-  - acknowledgments
-  - connection-management
-  - reconnection
-  - authentication
-  - binary-data
-  - typescript

@@ -6,17 +6,5 @@ author: "@vince"
 displayName: React
 cliDescription: React component patterns
 usageGuidance: Use when building React components, hooks, or following React 19 patterns.
-tags:
-  - react
-  - react-19
-  - components
-  - hooks
-  - use-action-state
-  - use-form-status
-  - use-optimistic
-  - use
-  - actions
-  - jsx
-  - tsx
 contentHash: c48bfef
 updated: 2026-01-22

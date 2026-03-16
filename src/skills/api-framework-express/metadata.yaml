@@ -6,11 +6,3 @@ author: "@vince"
 displayName: Express
 cliDescription: Express API framework
 usageGuidance: Use when building Express.js APIs, middleware chains, or error handling.
-tags:
-  - express
-  - expressjs
-  - nodejs
-  - rest-api
-  - middleware
-  - routing
-  - http

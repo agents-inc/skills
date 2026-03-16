@@ -6,14 +6,3 @@ author: "@vince"
 displayName: File Upload
 cliDescription: File upload handling
 usageGuidance: Use when implementing file uploads, drag-drop, or chunked uploads.
-tags:
-  - file-upload
-  - drag-drop
-  - react-dropzone
-  - uppy
-  - tus-protocol
-  - s3-presigned
-  - multipart-upload
-  - file-validation
-  - progress-tracking
-  - accessibility

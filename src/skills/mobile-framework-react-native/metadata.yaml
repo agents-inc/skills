@@ -6,24 +6,3 @@ author: "@vince"
 displayName: React Native
 cliDescription: React Native mobile apps
 usageGuidance: Use when building cross-platform mobile apps, working with native modules, or React Navigation.
-tags:
-  - react-native
-  - mobile
-  - ios
-  - android
-  - expo
-  - navigation
-  - react-navigation
-  - nativewind
-  - reanimated
-  - gesture-handler
-  - flatlist
-  - flashlist
-  - performance
-  - new-architecture
-  - fabric
-  - turbomodules
-  - jsi
-  - react-19
-  - box-shadow
-  - filter

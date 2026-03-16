@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Drizzle
 cliDescription: Drizzle ORM patterns
 usageGuidance: Use when writing database queries, migrations, or working with Drizzle ORM.
-tags:
-  - drizzle
-  - orm
-  - database
-  - migrations
-  - queries
-  - postgresql

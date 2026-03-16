@@ -6,12 +6,3 @@ author: "@vince"
 displayName: Service Workers
 cliDescription: Offline caching strategies
 usageGuidance: Use when implementing service workers, caching strategies, or offline support.
-tags:
-  - service-worker
-  - pwa
-  - offline-first
-  - cache-first
-  - network-first
-  - stale-while-revalidate
-  - cache-api
-  - precache

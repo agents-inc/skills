@@ -6,9 +6,3 @@ author: "@vince"
 displayName: React Query
 cliDescription: Server state and caching
 usageGuidance: Use when fetching API data, caching responses, or managing server state.
-tags:
-  - react-query
-  - tanstack-query
-  - data-fetching
-  - rest-api
-  - caching

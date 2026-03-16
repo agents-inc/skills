@@ -6,12 +6,3 @@ author: "@vince"
 displayName: Cypress
 cliDescription: E2E browser testing
 usageGuidance: Use when writing Cypress E2E tests, custom commands, or component tests.
-tags:
-  - cypress
-  - e2e
-  - end-to-end
-  - browser-testing
-  - component-testing
-  - data-cy
-  - cy-intercept
-  - cypress-axe

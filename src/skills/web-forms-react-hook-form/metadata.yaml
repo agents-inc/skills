@@ -6,10 +6,3 @@ author: "@vince"
 displayName: React Hook Form
 cliDescription: React form handling
 usageGuidance: Use when building forms in React with validation, field arrays, or Controller.
-tags:
-  - forms
-  - react-hook-form
-  - use-form
-  - use-field-array
-  - controller
-  - validation

@@ -6,8 +6,3 @@ author: "@vince"
 displayName: Zustand
 cliDescription: Lightweight client state
 usageGuidance: Use when managing global UI state, replacing Context misuse, or handling cross-component state.
-tags:
-  - zustand
-  - state-management
-  - stores
-  - client-state

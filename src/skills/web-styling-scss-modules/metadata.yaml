@@ -6,9 +6,3 @@ author: "@vince"
 displayName: SCSS Modules
 cliDescription: SCSS Modules styling
 usageGuidance: Use when styling with SCSS Modules, design tokens, or CSS cascade layers.
-tags:
-  - scss
-  - css-modules
-  - cva
-  - design-tokens
-  - styling

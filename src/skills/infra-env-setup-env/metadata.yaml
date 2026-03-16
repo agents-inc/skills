@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Environment
 cliDescription: Environment variable management
 usageGuidance: Use when setting up environment variables, .env files, or Zod validation for config.
-tags:
-  - environment
-  - env
-  - configuration
-  - zod
-  - validation
-  - dotenv

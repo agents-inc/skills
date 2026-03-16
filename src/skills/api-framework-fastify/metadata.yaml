@@ -6,14 +6,3 @@ author: "@vince"
 displayName: Fastify
 cliDescription: Fastify API framework
 usageGuidance: Use when building Fastify APIs, using JSON Schema validation, or plugin architecture.
-tags:
-  - fastify
-  - nodejs
-  - high-performance
-  - rest-api
-  - json-schema
-  - schema-validation
-  - typebox
-  - typescript
-  - plugins
-  - encapsulation

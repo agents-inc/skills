@@ -6,16 +6,3 @@ author: "@vince"
 displayName: Offline First
 cliDescription: Offline-first patterns
 usageGuidance: Use when building offline-first apps with IndexedDB or sync queues.
-tags:
-  - offline-first
-  - indexeddb
-  - dexie
-  - idb
-  - local-first
-  - sync-queue
-  - conflict-resolution
-  - optimistic-ui
-  - pwa
-  - background-sync
-  - version-vector
-  - delta-sync

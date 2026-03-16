@@ -6,10 +6,3 @@ author: "@vince"
 displayName: GitHub Actions
 cliDescription: CI/CD pipelines
 usageGuidance: Use when configuring CI/CD pipelines, GitHub workflows, or deployment automation.
-tags:
-  - github-actions
-  - pipelines
-  - deployment
-  - ci
-  - cd
-  - automation

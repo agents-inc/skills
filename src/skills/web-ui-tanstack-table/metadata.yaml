@@ -6,12 +6,3 @@ author: "@vince"
 displayName: TanStack Table
 cliDescription: Data table component
 usageGuidance: Use when building data tables with sorting, filtering, or pagination.
-tags:
-  - table
-  - datagrid
-  - sorting
-  - filtering
-  - pagination
-  - row-selection
-  - virtual-scrolling
-  - server-side

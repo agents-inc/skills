@@ -6,11 +6,3 @@ author: "@vince"
 displayName: View Transitions
 cliDescription: Page transition animations
 usageGuidance: Use when implementing page transitions with View Transitions API.
-tags:
-  - view-transitions
-  - page-transitions
-  - shared-element
-  - hero-animation
-  - spa-transitions
-  - mpa-transitions
-  - css-animations

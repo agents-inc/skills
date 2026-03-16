@@ -8,13 +8,3 @@ cliDescription: Clerk managed authentication and user management
 usageGuidance: >-
   Use when building with Clerk for auth, user management, organizations,
   or pre-built UI components.
-tags:
-  - clerk
-  - auth
-  - authentication
-  - user-management
-  - organizations
-  - sso
-  - mfa
-  - webhooks
-  - session

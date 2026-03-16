@@ -6,10 +6,3 @@ author: "@vince"
 displayName: tRPC
 cliDescription: Type-safe API layer
 usageGuidance: Use when building type-safe APIs with tRPC procedures and React Query.
-tags:
-  - trpc
-  - type-safe-api
-  - react-query
-  - typescript
-  - monorepo
-  - rpc

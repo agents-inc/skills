@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Observability
 cliDescription: Logging and error tracking
 usageGuidance: Use when implementing structured logging, error tracking, or performance monitoring.
-tags:
-  - pino
-  - sentry
-  - axiom
-  - logging
-  - error-tracking
-  - monitoring

@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Research
 cliDescription: Codebase investigation
 usageGuidance: Use when investigating codebase patterns, researching implementations, or discovering how things work.
-tags:
-  - research
-  - investigation
-  - evidence-based
-  - methodology
-  - analysis

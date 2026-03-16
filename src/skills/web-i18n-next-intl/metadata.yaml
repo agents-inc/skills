@@ -6,11 +6,3 @@ author: "@vince"
 displayName: next-intl
 cliDescription: Next.js internationalization
 usageGuidance: Use when implementing i18n in Next.js with next-intl.
-tags:
-  - next-intl
-  - i18n
-  - internationalization
-  - localization
-  - translations
-  - icu
-  - next-intl-v4

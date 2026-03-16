@@ -6,14 +6,3 @@ author: "@vince"
 displayName: SvelteKit
 cliDescription: SvelteKit full-stack framework
 usageGuidance: Use when building SvelteKit apps with load functions, form actions, or server hooks.
-tags:
-  - sveltekit
-  - routing
-  - load-functions
-  - form-actions
-  - hooks
-  - ssr
-  - ssg
-  - server-routes
-  - streaming
-  - progressive-enhancement

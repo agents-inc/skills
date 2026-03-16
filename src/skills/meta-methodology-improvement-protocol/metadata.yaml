@@ -6,8 +6,3 @@ author: "@vince"
 displayName: Improvement Protocol
 cliDescription: Evidence-based self-improvement for agents
 usageGuidance: Use when agents need to improve their own prompts or configurations. Evidence-based changes only.
-tags:
-  - methodology
-  - implementation
-  - self-improvement
-  - meta

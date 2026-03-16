@@ -6,15 +6,3 @@ author: "@vince"
 displayName: Apollo Client
 cliDescription: Apollo GraphQL client
 usageGuidance: Use when working with Apollo Client for GraphQL queries and mutations.
-tags:
-  - apollo-client
-  - graphql
-  - data-fetching
-  - caching
-  - real-time
-  - subscriptions
-  - optimistic-updates
-  - suspense
-  - use-suspense-query
-  - use-loadable-query
-  - apollo-client-v4

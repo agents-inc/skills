@@ -6,13 +6,3 @@ author: "@vince"
 displayName: SWR
 cliDescription: Server state and caching
 usageGuidance: Use when implementing stale-while-revalidate data fetching patterns.
-tags:
-  - swr
-  - swr-v2
-  - data-fetching
-  - caching
-  - stale-while-revalidate
-  - react-hooks
-  - vercel
-  - use-swr-mutation
-  - preload

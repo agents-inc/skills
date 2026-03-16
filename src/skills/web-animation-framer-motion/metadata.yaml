@@ -6,13 +6,3 @@ author: "@vince"
 displayName: Motion
 cliDescription: Motion animation library
 usageGuidance: Use when animating React components with Motion (Framer Motion).
-tags:
-  - animation
-  - motion
-  - framer-motion
-  - motion-react
-  - transitions
-  - gestures
-  - scroll
-  - layout
-  - v11

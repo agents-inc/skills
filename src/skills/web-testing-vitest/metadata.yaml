@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Vitest
 cliDescription: Unit and integration testing
 usageGuidance: Use when writing unit tests, integration tests, or configuring Vitest.
-tags:
-  - playwright
-  - vitest
-  - react-testing-library
-  - e2e
-  - unit-testing
-  - integration-testing

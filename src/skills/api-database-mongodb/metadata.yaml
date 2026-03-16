@@ -6,13 +6,3 @@ author: "@vince"
 displayName: MongoDB
 cliDescription: MongoDB with Mongoose ODM
 usageGuidance: Use when building with MongoDB, Mongoose schemas, or document-based data models.
-tags:
-  - mongodb
-  - mongoose
-  - nosql
-  - document-database
-  - schemas
-  - models
-  - aggregation
-  - indexes
-  - atlas

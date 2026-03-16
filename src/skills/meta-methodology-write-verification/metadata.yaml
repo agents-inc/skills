@@ -6,8 +6,3 @@ author: "@vince"
 displayName: Write Verification
 cliDescription: Verify edits were actually saved
 usageGuidance: Apply after any file write or edit operation. Re-read and verify before reporting success.
-tags:
-  - methodology
-  - implementation
-  - verification
-  - quality-assurance

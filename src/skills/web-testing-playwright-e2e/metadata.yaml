@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Playwright
 cliDescription: E2E browser testing
 usageGuidance: Use when writing E2E tests, Page Object Models, or visual regression tests.
-tags:
-  - playwright
-  - e2e
-  - end-to-end
-  - browser-testing
-  - visual-regression
-  - page-object-model

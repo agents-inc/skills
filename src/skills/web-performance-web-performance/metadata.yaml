@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Frontend Performance
 cliDescription: Bundle and render optimization
 usageGuidance: Use when optimizing bundle size, render performance, or implementing memoization.
-tags:
-  - bundle-optimization
-  - render-performance
-  - code-splitting
-  - lazy-loading
-  - memoization

@@ -6,12 +6,3 @@ author: "@vince"
 displayName: date-fns
 cliDescription: Date utilities
 usageGuidance: Use when formatting, parsing, or manipulating dates with date-fns.
-tags:
-  - date-fns
-  - dates
-  - time
-  - formatting
-  - parsing
-  - timezone
-  - internationalization
-  - manipulation

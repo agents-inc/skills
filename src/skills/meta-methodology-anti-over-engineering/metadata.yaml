@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Anti-Over-Engineering
 cliDescription: Surgical implementation, not architectural innovation
 usageGuidance: Apply to every implementation task. Prevents scope creep, unnecessary abstractions, and "while I'm here" syndrome.
-tags:
-  - methodology
-  - foundational
-  - universal
-  - anti-patterns
-  - minimal-changes

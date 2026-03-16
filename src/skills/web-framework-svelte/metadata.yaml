@@ -6,13 +6,3 @@ author: "@vince"
 displayName: Svelte
 cliDescription: Svelte 5 with Runes reactivity
 usageGuidance: Use when building Svelte 5 apps with Runes ($state, $derived, $effect), components, or snippets.
-tags:
-  - svelte
-  - runes
-  - reactivity
-  - components
-  - snippets
-  - state
-  - derived
-  - effect
-  - props

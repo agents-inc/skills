@@ -6,13 +6,3 @@ author: "@vince"
 displayName: Storybook
 cliDescription: Component documentation
 usageGuidance: Use when documenting components with Storybook, writing stories, or interaction tests.
-tags:
-  - storybook
-  - component-development
-  - documentation
-  - visual-testing
-  - interaction-testing
-  - csf3
-  - autodocs
-  - controls
-  - design-system

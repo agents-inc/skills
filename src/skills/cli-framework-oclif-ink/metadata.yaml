@@ -10,10 +10,3 @@ usageGuidance: >-
   terminal UIs with Ink, or integrating both for interactive CLI applications.
   Triggers: oclif, Ink, @oclif/core, @inkjs/ui, terminal React, CLI commands,
   useInput, useApp, render(), Command class, Flags, Args.
-tags:
-  - cli
-  - oclif
-  - ink
-  - react
-  - terminal
-  - framework

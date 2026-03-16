@@ -6,12 +6,3 @@ author: "@vince"
 displayName: CSS Animations
 cliDescription: Native CSS animations
 usageGuidance: Use when implementing CSS transitions, keyframes, or scroll-driven animations.
-tags:
-  - animation
-  - css
-  - transitions
-  - keyframes
-  - scroll-driven
-  - view-transitions
-  - accessibility
-  - performance

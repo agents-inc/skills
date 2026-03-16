@@ -6,14 +6,3 @@ author: "@vince"
 displayName: Image Handling
 cliDescription: Client-side image processing
 usageGuidance: Use when processing images client-side, resizing, or format conversion.
-tags:
-  - image-preview
-  - canvas-api
-  - image-resize
-  - image-compression
-  - exif-orientation
-  - object-url
-  - thumbnail
-  - blob
-  - file-api
-  - client-side-processing

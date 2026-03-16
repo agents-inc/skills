@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Context Management
 cliDescription: Maintain continuity across sessions
 usageGuidance: Use for long-running agents and multi-session projects. Ensures context is preserved between sessions.
-tags:
-  - methodology
-  - extended-session
-  - context
-  - continuity
-  - documentation

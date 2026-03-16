@@ -6,19 +6,3 @@ author: "@vince"
 displayName: Radix UI
 cliDescription: Accessible UI primitives
 usageGuidance: Use when building accessible UI with Radix primitives.
-tags:
-  - radix
-  - radix-ui
-  - primitives
-  - headless
-  - accessibility
-  - compound-components
-  - as-child
-  - dialog
-  - popover
-  - tooltip
-  - dropdown
-  - react-19
-  - rsc
-  - otp
-  - password-toggle

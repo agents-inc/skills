@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Pinia
 cliDescription: Vue client state
 usageGuidance: Use when managing state in Vue apps with Options or Setup stores.
-tags:
-  - pinia
-  - state-management
-  - vue
-  - vue3
-  - stores
-  - client-state

@@ -6,15 +6,3 @@ author: "@vince"
 displayName: Native JS
 cliDescription: Native JS utilities
 usageGuidance: Use when using modern JS methods instead of lodash utilities.
-tags:
-  - native-javascript
-  - es2023
-  - es2024
-  - es2025
-  - lodash-alternative
-  - array-methods
-  - object-methods
-  - set-operations
-  - structured-clone
-  - optional-chaining
-  - immutable-arrays

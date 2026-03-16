@@ -6,11 +6,3 @@ author: "@vince"
 displayName: shadcn/ui
 cliDescription: Tailwind component library
 usageGuidance: Use when using shadcn/ui components, theming, or customization.
-tags:
-  - shadcn
-  - ui-components
-  - radix
-  - theming
-  - dark-mode
-  - forms
-  - accessibility

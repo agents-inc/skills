@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Backend Performance
 cliDescription: Query and caching optimization
 usageGuidance: Use when optimizing database queries, implementing caching, or improving API response times.
-tags:
-  - performance
-  - query-optimization
-  - caching
-  - indexing
-  - backend

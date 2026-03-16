@@ -6,11 +6,3 @@ author: "@vince"
 displayName: WebSockets
 cliDescription: Bidirectional real-time communication
 usageGuidance: Use when implementing WebSocket connections, reconnection, or message handling.
-tags:
-  - websocket
-  - realtime
-  - bidirectional
-  - connection-management
-  - heartbeat
-  - reconnection
-  - binary-data

@@ -6,14 +6,3 @@ author: "@vince"
 displayName: Prisma
 cliDescription: Prisma ORM patterns
 usageGuidance: Use when writing database queries, migrations, or working with Prisma ORM.
-tags:
-  - prisma
-  - orm
-  - database
-  - typescript
-  - migrations
-  - queries
-  - postgresql
-  - mysql
-  - sqlite
-  - type-safety

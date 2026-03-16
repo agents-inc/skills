@@ -6,10 +6,3 @@ author: "@vince"
 displayName: Redux Toolkit
 cliDescription: Enterprise client state
 usageGuidance: Use when managing enterprise-scale state, needing DevTools, or RTK Query.
-tags:
-  - redux
-  - redux-toolkit
-  - rtk-query
-  - state-management
-  - client-state
-  - entity-adapter

@@ -6,13 +6,3 @@ author: "@vince"
 displayName: React Intl
 cliDescription: React internationalization
 usageGuidance: Use when implementing i18n in React with FormatJS/react-intl.
-tags:
-  - react-intl
-  - formatjs
-  - i18n
-  - internationalization
-  - localization
-  - translations
-  - icu
-  - formatted-message
-  - use-intl

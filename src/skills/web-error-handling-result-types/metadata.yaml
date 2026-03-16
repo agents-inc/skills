@@ -6,16 +6,3 @@ author: "@vince"
 displayName: Result Types
 cliDescription: Type-safe error handling
 usageGuidance: Use when implementing Result/Either types for type-safe error handling.
-tags:
-  - result-type
-  - either-type
-  - error-handling
-  - railway-oriented-programming
-  - typed-errors
-  - flat-map
-  - and-then
-  - try-catch
-  - discriminated-union
-  - neverthrow
-  - fp-ts
-  - error-as-value

@@ -6,11 +6,3 @@ author: "@vince"
 displayName: Astro
 cliDescription: Astro content-first framework
 usageGuidance: Use when building Astro sites with islands architecture, content collections, or hybrid rendering.
-tags:
-  - astro
-  - islands
-  - content-collections
-  - ssg
-  - ssr
-  - view-transitions
-  - server-islands

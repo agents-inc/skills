@@ -6,11 +6,3 @@ author: "@vince"
 displayName: Security
 cliDescription: Application security patterns
 usageGuidance: Use when implementing authentication, authorization, XSS prevention, CSRF protection, CSP headers, or managing secrets.
-tags:
-  - security
-  - authentication
-  - authorization
-  - secrets
-  - xss
-  - csrf
-  - input-validation

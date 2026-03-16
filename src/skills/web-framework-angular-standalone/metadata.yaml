@@ -6,13 +6,3 @@ author: "@vince"
 displayName: Angular
 cliDescription: Angular standalone components
 usageGuidance: Use when building Angular 17+ apps with standalone components, signals, or DI.
-tags:
-  - angular
-  - angular-19
-  - standalone
-  - signals
-  - linked-signal
-  - resource
-  - components
-  - control-flow
-  - dependency-injection

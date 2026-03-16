@@ -6,12 +6,3 @@ author: "@vince"
 displayName: React Testing Library
 cliDescription: React component testing
 usageGuidance: Use when testing React components with user-centric queries.
-tags:
-  - react-testing-library
-  - testing
-  - component-testing
-  - accessibility
-  - user-event
-  - queries
-  - async-testing
-  - render-hook

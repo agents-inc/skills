@@ -6,12 +6,3 @@ author: "@vince"
 displayName: NgRx SignalStore
 cliDescription: Angular signal-based state
 usageGuidance: Use when managing Angular state with Signals and SignalStore.
-tags:
-  - ngrx
-  - signalstore
-  - angular
-  - signals
-  - state-management
-  - client-state
-  - entities
-  - rxjs

@@ -6,15 +6,3 @@ author: "@vince"
 displayName: Vue Test Utils
 cliDescription: Vue component testing
 usageGuidance: Use when testing Vue components with mount, shallowMount, or testing composables.
-tags:
-  - vue-test-utils
-  - testing
-  - component-testing
-  - mount
-  - shallow-mount
-  - wrapper
-  - trigger
-  - set-value
-  - flush-promises
-  - composables
-  - pinia-testing

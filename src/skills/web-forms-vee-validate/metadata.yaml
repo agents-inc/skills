@@ -6,12 +6,3 @@ author: "@vince"
 displayName: VeeValidate
 cliDescription: Vue form validation
 usageGuidance: Use when building forms in Vue with useForm, useField, or schema validation.
-tags:
-  - forms
-  - vee-validate
-  - vue
-  - use-form
-  - use-field
-  - define-field
-  - use-field-array
-  - validation

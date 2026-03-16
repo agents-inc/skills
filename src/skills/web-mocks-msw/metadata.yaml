@@ -6,9 +6,3 @@ author: "@vince"
 displayName: MSW
 cliDescription: API mocking
 usageGuidance: Use when mocking APIs for development or testing with MSW handlers.
-tags:
-  - msw
-  - mock-service-worker
-  - mocking
-  - test-data
-  - api-mocking

@@ -6,12 +6,3 @@ author: "@vince"
 displayName: Server-Sent Events
 cliDescription: Server-to-client streaming
 usageGuidance: Use when implementing Server-Sent Events for server-to-client streaming.
-tags:
-  - sse
-  - server-sent-events
-  - eventsource
-  - streaming
-  - realtime
-  - server-push
-  - fetch-streaming
-  - llm-streaming

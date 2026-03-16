@@ -6,16 +6,3 @@ author: "@vince"
 displayName: NestJS
 cliDescription: NestJS structured backend framework
 usageGuidance: Use when building NestJS apps with modules, controllers, services, or decorators.
-tags:
-  - nestjs
-  - nest
-  - typescript
-  - decorators
-  - dependency-injection
-  - modules
-  - controllers
-  - services
-  - guards
-  - interceptors
-  - pipes
-  - middleware

@@ -6,11 +6,3 @@ author: "@vince"
 displayName: SolidJS
 cliDescription: SolidJS reactive patterns
 usageGuidance: Use when building SolidJS apps with signals, effects, or SolidStart.
-tags:
-  - solidjs
-  - signals
-  - fine-grained-reactivity
-  - stores
-  - create-resource
-  - jsx
-  - suspense

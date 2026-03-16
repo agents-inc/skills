@@ -6,12 +6,3 @@ author: "@vince"
 displayName: Vue I18n
 cliDescription: Vue internationalization
 usageGuidance: Use when implementing i18n in Vue with vue-i18n.
-tags:
-  - vue-i18n
-  - i18n
-  - internationalization
-  - localization
-  - translations
-  - vue-3
-  - composition-api
-  - pluralization

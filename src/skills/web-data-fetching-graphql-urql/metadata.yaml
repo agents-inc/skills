@@ -6,12 +6,3 @@ author: "@vince"
 displayName: URQL
 cliDescription: URQL GraphQL client
 usageGuidance: Use when working with URQL client for GraphQL.
-tags:
-  - urql
-  - graphql
-  - data-fetching
-  - caching
-  - real-time
-  - subscriptions
-  - exchanges
-  - graphcache

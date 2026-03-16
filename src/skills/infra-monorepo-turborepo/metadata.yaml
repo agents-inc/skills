@@ -6,14 +6,3 @@ author: "@vince"
 displayName: Turborepo
 cliDescription: Monorepo orchestration
 usageGuidance: Use when configuring monorepo pipelines, workspaces, or package architecture.
-tags:
-  - turborepo
-  - workspaces
-  - monorepo
-  - package-management
-  - bun
-  - package
-  - exports
-  - conventions
-  - internal-packages
-  - typescript

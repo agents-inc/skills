@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Code Review
 cliDescription: Code review guidance
 usageGuidance: Use when reviewing code, PRs, or making approval/rejection decisions.
-tags:
-  - code-review
-  - feedback
-  - patterns
-  - review-principles
-  - quality

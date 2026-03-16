@@ -6,14 +6,3 @@ author: "@vince"
 displayName: Expo
 cliDescription: Expo managed workflow
 usageGuidance: Use when building React Native apps with Expo, configuring EAS builds, or using Expo Router.
-tags:
-  - expo
-  - expo-router
-  - eas-build
-  - eas-update
-  - expo-dev-client
-  - expo-prebuild
-  - managed-workflow
-  - ota-updates
-  - config-plugins
-  - react-native

@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Hono
 cliDescription: Hono API framework
 usageGuidance: Use when building API routes with Hono, implementing OpenAPI specs, or Zod validation.
-tags:
-  - hono
-  - openapi
-  - zod
-  - rest-api
-  - validation

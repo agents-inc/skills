@@ -6,8 +6,3 @@ author: "@vince"
 displayName: PostHog Analytics
 cliDescription: Product analytics tracking
 usageGuidance: Use when tracking user events, setting up funnels, or implementing GDPR-compliant analytics.
-tags:
-  - posthog
-  - analytics
-  - event-tracking
-  - user-identification

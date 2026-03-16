@@ -9,13 +9,3 @@ usageGuidance: >-
   Use when building with Supabase Auth, Database, Realtime, Storage, or Edge Functions.
   Covers client setup, typed queries, RLS policies, realtime subscriptions, file storage,
   and Deno edge functions.
-tags:
-  - supabase
-  - postgres
-  - auth
-  - realtime
-  - storage
-  - edge-functions
-  - rls
-  - row-level-security
-  - baas

@@ -6,9 +6,3 @@ author: "@vince"
 displayName: PostHog Setup
 cliDescription: PostHog initial setup
 usageGuidance: Use when setting up PostHog analytics or feature flags for the first time.
-tags:
-  - posthog
-  - setup
-  - analytics
-  - feature-flags
-  - installation

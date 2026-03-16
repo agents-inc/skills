@@ -6,12 +6,3 @@ author: "@vince"
 displayName: CVA
 cliDescription: Component variant styling
 usageGuidance: Use when building component variants with class-variance-authority.
-tags:
-  - cva
-  - class-variance-authority
-  - variants
-  - type-safe
-  - component-styling
-  - typescript
-  - css-classes
-  - design-system

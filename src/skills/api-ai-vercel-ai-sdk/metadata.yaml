@@ -10,16 +10,3 @@ usageGuidance: >-
   multi-provider AI integrations. Covers generateText, streamText,
   structured output with Zod, tool calling, useChat/useCompletion hooks,
   embeddings, and RAG patterns.
-tags:
-  - ai
-  - ai-sdk
-  - vercel
-  - streaming
-  - chat
-  - completion
-  - tools
-  - function-calling
-  - rag
-  - embeddings
-  - openai
-  - anthropic

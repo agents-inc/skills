@@ -6,16 +6,3 @@ author: "@vince"
 displayName: Next.js
 cliDescription: Next.js full-stack framework
 usageGuidance: Use when building Next.js apps with App Router, Server/Client Components, Server Actions, or streaming.
-tags:
-  - nextjs
-  - app-router
-  - server-components
-  - server-actions
-  - streaming
-  - suspense
-  - ssr
-  - ssg
-  - routing
-  - mutations
-  - revalidation
-  - forms

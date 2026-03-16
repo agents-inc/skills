@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Email Setup
 cliDescription: Email service setup
 usageGuidance: Use when configuring Resend email service or domain verification.
-tags:
-  - resend
-  - setup
-  - email
-  - domain-verification
-  - installation

@@ -6,9 +6,3 @@ author: "@vince"
 displayName: Jotai
 cliDescription: Atomic client state
 usageGuidance: Use when managing atomic state with bottom-up composition.
-tags:
-  - jotai
-  - state-management
-  - atoms
-  - client-state
-  - atomic-state
