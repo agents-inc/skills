@@ -210,7 +210,7 @@ export * from "./components/input/input";
   "peerDependencies": {
     "react": "^19.0.0"
   },
-  "sideEffects": ["*.css", "*.scss"]
+  "sideEffects": ["*.css"]
 }
 ```
 
@@ -221,11 +221,7 @@ export * from "./components/input/input";
   "name": "@repo/api",
   "exports": {
     ".": "./src/client.ts",
-    "./queries": "./src/queries/index.ts",
     "./types": "./src/types.ts"
-  },
-  "dependencies": {
-    "@tanstack/react-query": "^5.0.0"
   },
   "sideEffects": false
 }
@@ -238,8 +234,7 @@ export * from "./components/input/input";
   "name": "@repo/eslint-config",
   "exports": {
     "./base": "./base.js",
-    "./react": "./react.js",
-    "./next": "./next.js"
+    "./react": "./react.js"
   },
   "dependencies": {
     "eslint": "^9.0.0",
@@ -255,7 +250,6 @@ export * from "./components/input/input";
   "name": "@repo/typescript-config",
   "exports": {
     "./base.json": "./base.json",
-    "./nextjs.json": "./nextjs.json",
     "./react-library.json": "./react-library.json"
   }
 }
@@ -263,85 +257,7 @@ export * from "./components/input/input";
 
 ---
 
-## Creating New Packages
-
-### Step-by-Step Guide
-
-**1. Create directory structure:**
-
-```bash
-mkdir -p packages/my-package/src
-```
-
-**2. Create package.json:**
-
-```json
-{
-  "name": "@repo/my-package",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "scripts": {
-    "lint": "eslint .",
-    "type-check": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "typescript": "^5.7.0"
-  }
-}
-```
-
-**3. Create tsconfig.json:**
-
-```json
-{
-  "extends": "@repo/typescript-config/base.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-```
-
-**4. Create eslint.config.js:**
-
-```javascript
-import { baseConfig } from "@repo/eslint-config/base";
-
-export default [...baseConfig];
-```
-
-**5. Create source files:**
-
-```typescript
-// packages/my-package/src/index.ts
-export { myFunction } from "./my-function";
-export type { MyType } from "./types";
-```
-
-**6. Install dependencies from root:**
-
-```bash
-bun install
-```
-
-**7. Verify package is linked:**
-
-```bash
-# In another package
-bun add @repo/my-package
-```
-
----
-
-## Directory Layout (Full)
+## Directory Layout
 
 ```
 packages/
@@ -349,32 +265,23 @@ packages/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── button/
-│   │   │   │   ├── button.tsx
-│   │   │   │   ├── button.module.scss
-│   │   │   │   └── button.stories.tsx
+│   │   │   │   └── button.tsx
 │   │   │   └── switch/
-│   │   │       ├── switch.tsx
-│   │   │       └── switch.module.scss
-│   │   ├── hooks/
-│   │   │   └── index.ts
-│   │   └── styles/
-│   │       └── global.scss
+│   │   │       └── switch.tsx
+│   │   └── hooks/
+│   │       └── index.ts
 │   ├── package.json
 │   └── tsconfig.json
 │
 ├── api/                          # API client package
 │   ├── src/
 │   │   ├── client.ts
-│   │   ├── queries/
-│   │   │   └── index.ts
 │   │   └── types.ts
 │   ├── package.json
 │   └── tsconfig.json
 │
 ├── eslint-config/                # Shared ESLint config
 │   ├── base.js
-│   ├── react.js
-│   ├── next.js
 │   └── package.json
 │
 ├── prettier-config/              # Shared Prettier config
@@ -383,7 +290,6 @@ packages/
 │
 └── typescript-config/            # Shared TypeScript config
     ├── base.json
-    ├── nextjs.json
     ├── react-library.json
     └── package.json
 ```

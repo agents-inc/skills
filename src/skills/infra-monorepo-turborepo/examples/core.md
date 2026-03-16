@@ -82,13 +82,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["NEXT_PUBLIC_API_URL", "NODE_ENV", "DATABASE_URL"],
+      "env": ["API_URL", "NODE_ENV", "DATABASE_URL"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["NEXT_PUBLIC_API_URL", "NODE_ENV"]
+      "env": ["API_URL", "NODE_ENV"]
     }
   }
 }

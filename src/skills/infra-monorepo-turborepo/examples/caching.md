@@ -21,7 +21,7 @@
   },
   "tasks": {
     "build": {
-      "env": ["DATABASE_URL", "NODE_ENV", "NEXT_PUBLIC_API_URL"]
+      "env": ["DATABASE_URL", "NODE_ENV", "API_URL"]
     }
   }
 }
@@ -75,20 +75,20 @@
 
 ```bash
 # Local development - uses local cache
-npx turbo run build
+turbo run build
 # Cache miss - Building...
 # Packages built: 5
 # Time: 45.2s
 
 # Second run - hits cache
-npx turbo run build
+turbo run build
 # Cache hit - Skipping...
 # Packages restored: 5
 # Time: 1.2s (97% faster)
 
 # Only rebuilds changed packages
 # Edit packages/ui/src/Button.tsx
-npx turbo run build
+turbo run build
 # Cache hit: @repo/types, @repo/config, @repo/api-client
 # Cache miss: @repo/ui (changed)
 # Cache miss: web, admin (depend on @repo/ui)
@@ -114,16 +114,12 @@ jobs:
         with:
           fetch-depth: 2 # Needed for --filter
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-
-      - run: pnpm install
+      # Install dependencies with your package manager
+      - run: bun install
 
       # Remote cache with Vercel
       - name: Build
-        run: npx turbo run build
+        run: turbo run build
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -131,12 +127,12 @@ jobs:
       # Only run affected tests on PRs
       - name: Test affected
         if: github.event_name == 'pull_request'
-        run: npx turbo run test --filter=...[HEAD^]
+        run: turbo run test --filter=...[HEAD^]
 
       # Run all tests on main
       - name: Test all
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx turbo run test
+        run: turbo run test
 ```
 
 **Why good:** `fetch-depth: 2` enables affected detection with `--filter=...[HEAD^]`, remote cache tokens shared via secrets, affected tests run only on PRs to save CI time, full tests run on main for comprehensive coverage

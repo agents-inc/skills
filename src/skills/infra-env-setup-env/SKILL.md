@@ -131,10 +131,11 @@ packages/
 
 **Next.js loading order (highest to lowest priority):**
 
-1. `.env.$(NODE_ENV).local` (e.g., `.env.production.local`)
-2. `.env.local` (not loaded when `NODE_ENV=test`)
-3. `.env.$(NODE_ENV)` (e.g., `.env.production`)
-4. `.env`
+1. `process.env` (already set in environment)
+2. `.env.$(NODE_ENV).local` (e.g., `.env.production.local`)
+3. `.env.local` (not loaded when `NODE_ENV=test`)
+4. `.env.$(NODE_ENV)` (e.g., `.env.production`)
+5. `.env`
 
 **Vite loading order:**
 
@@ -143,7 +144,7 @@ packages/
 3. `.env.local`
 4. `.env`
 
-**Exception:** Shared variables can go in `turbo.json` `env` array (see setup/monorepo/basic.md)
+**Exception:** Shared variables can go in your build tool's env configuration (e.g., `turbo.json` `env` array) for cache invalidation
 
 See [examples/core.md](examples/core.md) for complete code examples.
 
@@ -151,65 +152,24 @@ See [examples/core.md](examples/core.md) for complete code examples.
 
 ### Pattern 2: Type-Safe Environment Variables with Zod
 
-Validate environment variables at application startup using Zod schemas.
-
-#### Constants
-
-```typescript
-const DEFAULT_API_TIMEOUT_MS = 30000;
-const DEFAULT_API_RETRY_ATTEMPTS = 3;
-```
-
-#### Validation Schema
+Validate environment variables at application startup using Zod schemas. Define a schema, parse at startup, export a typed `env` object.
 
 ```typescript
 // lib/env.ts
-import { z } from "zod";
-
-const DEFAULT_API_TIMEOUT_MS = 30000;
-
 const envSchema = z.object({
-  // Public variables (VITE_ prefix)
   VITE_API_URL: z.string().url(),
   VITE_API_TIMEOUT: z.coerce.number().default(DEFAULT_API_TIMEOUT_MS),
-  // Use z.stringbool() for boolean env vars (Zod 4+)
-  // Handles "true"/"false"/"1"/"0"/"yes"/"no" correctly
-  VITE_ENABLE_ANALYTICS: z.stringbool().default(false),
-  VITE_ENVIRONMENT: z.enum(["development", "staging", "production"]),
-
-  // Build-time variables
-  MODE: z.enum(["development", "production"]),
-  DEV: z.boolean(),
-  PROD: z.boolean(),
+  VITE_ENABLE_ANALYTICS: z.stringbool().default(false), // Zod 4+ (NOT z.coerce.boolean())
 });
-
-// Validate and export
-function validateEnv() {
-  try {
-    return envSchema.parse(import.meta.env);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error("Invalid environment variables:");
-      error.errors.forEach((err) => {
-        console.error(`  - ${err.path.join(".")}: ${err.message}`);
-      });
-      throw new Error("Invalid environment configuration");
-    }
-    throw error;
-  }
-}
-
-export const env = validateEnv();
-
-// Type-safe usage
-console.log(env.VITE_API_URL); // string
-console.log(env.VITE_API_TIMEOUT); // number
-console.log(env.VITE_ENABLE_ANALYTICS); // boolean
+export const env = envSchema.parse(import.meta.env);
 ```
 
-**Why good:** Type safety prevents runtime errors from typos or wrong types, runtime validation fails fast at startup with clear error messages, default values reduce required configuration, IDE autocomplete improves DX
+**Key gotchas:**
 
-> **Note:** For Next.js/Vite projects, consider using T3 Env (`@t3-oss/env-nextjs` or `@t3-oss/env-core`) which provides additional features like client/server variable separation and build-time validation. See [examples/t3-env.md](examples/t3-env.md).
+- `z.coerce.boolean()` converts `"false"` to `true` (string is truthy) - always use `z.stringbool()` instead
+- Use `error.issues` (not `error.errors`) for Zod 4 error handling
+
+> **Note:** For Next.js/Vite projects, consider T3 Env (`@t3-oss/env-nextjs` or `@t3-oss/env-core`) for client/server variable separation and build-time validation. See [examples/t3-env.md](examples/t3-env.md).
 
 See [examples/core.md](examples/core.md) for complete good/bad comparisons.
 
@@ -253,19 +213,25 @@ See [examples/naming-and-templates.md](examples/naming-and-templates.md) for com
 
 ## Integration Guide
 
-**Works with:**
+**Core dependencies:**
 
-- **Zod**: Runtime validation and type inference for environment variables
-- **T3 Env**: Recommended wrapper for Zod validation with client/server separation (`@t3-oss/env-nextjs`, `@t3-oss/env-core`)
-- **Turborepo**: Declare shared env vars in turbo.json for cache invalidation (see setup/monorepo/basic.md)
-- **CI/CD**: GitHub Secrets, Vercel Environment Variables for production secrets (see backend/ci-cd/basic.md)
-- **Next.js**: Automatic .env file loading with NEXT*PUBLIC*\* prefix for client-side
-- **Vite**: Automatic .env file loading with VITE\_\* prefix for client-side
+- **Zod** (v4+): Runtime validation and type inference for environment variables
+- **T3 Env** (`@t3-oss/env-nextjs`, `@t3-oss/env-core`): Recommended wrapper for client/server separation
+
+**Framework support:**
+
+- **Next.js**: Automatic .env file loading with `NEXT_PUBLIC_*` prefix for client-side
+- **Vite**: Automatic .env file loading with `VITE_*` prefix for client-side
+
+**Monorepo considerations:**
+
+- Declare shared env vars in your build tool's env configuration for cache invalidation
+- Use per-app .env files even in monorepos to prevent conflicts
 
 **Replaces / Conflicts with:**
 
 - Hardcoded configuration values (use env vars instead)
-- Runtime feature flag services for simple boolean flags (use env vars first, upgrade to LaunchDarkly if needed)
+- Runtime feature flag services for simple boolean flags (use env vars first, upgrade when needing gradual rollouts)
 
 </integration>
 
@@ -316,7 +282,7 @@ See [reference.md](reference.md) for complete decision frameworks including feat
 
 - Next.js/Vite embed prefixed variables at **build time**, not runtime - requires rebuild to change
 - Environment variables are strings - use `z.coerce.number()` for numbers, use `z.stringbool()` for booleans (Zod 4+)
-- **CRITICAL:** `z.coerce.boolean()` converts "false" to `true` (string is truthy) - use `z.stringbool()` instead
+- **CRITICAL:** `z.coerce.boolean()` converts "false" to `true` (string is truthy) - use `z.stringbool()` (Zod 4+) instead
 - Empty string env vars are NOT `undefined` - use T3 Env's `emptyStringAsUndefined: true` option
 - Turborepo cache is NOT invalidated by env changes unless declared in `turbo.json` env array
 
