@@ -747,7 +747,7 @@
       "name": "web-framework-react",
       "source": "./dist/plugins/web-framework-react",
       "description": "Component architecture, hooks, patterns",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -787,7 +787,7 @@
       "name": "web-framework-vue-composition-api",
       "source": "./dist/plugins/web-framework-vue-composition-api",
       "description": "Vue 3 Composition API patterns, reactivity primitives, composables, lifecycle hooks",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
       },
@@ -938,6 +938,16 @@
       "source": "./dist/plugins/web-realtime-websockets",
       "description": "Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks",
       "version": "2.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "web"
+    },
+    {
+      "name": "web-routing-tanstack-router",
+      "source": "./dist/plugins/web-routing-tanstack-router",
+      "description": "Type-safe client-side routing for React with file-based routes, search params validation, loaders, and code splitting",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       },
