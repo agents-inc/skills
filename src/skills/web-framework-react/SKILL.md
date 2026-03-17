@@ -170,6 +170,8 @@ See [examples/error-boundaries.md](examples/error-boundaries.md) for full implem
 
 ### Pattern 6: useActionState for Form Submissions
 
+**Skip if using a meta-framework (Next.js, Remix, Astro) — use Server Actions instead.**
+
 Use `useActionState` for form submissions with automatic pending state and error handling. Replaces manual `useState` for loading/error.
 
 ```typescript

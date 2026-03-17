@@ -136,6 +136,8 @@ See [examples/reactivity.md](examples/reactivity.md) for ref/reactive/computed p
 
 ### Pattern 3: Watch and WatchEffect
 
+**Skip if using Nuxt — use useFetch or useAsyncData instead.**
+
 `watch()` for explicit sources with access to old values. `watchEffect()` for automatic dependency tracking that runs immediately. Use `onWatcherCleanup()` (Vue 3.5+) to cancel stale async work.
 
 ```typescript
