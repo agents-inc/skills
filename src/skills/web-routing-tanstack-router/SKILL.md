@@ -1,5 +1,5 @@
 ---
-name: web-framework-tanstack-router
+name: web-routing-tanstack-router
 description: Type-safe client-side routing for React with file-based routes, search params validation, loaders, and code splitting
 ---
 

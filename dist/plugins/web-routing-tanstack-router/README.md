@@ -1,4 +1,4 @@
-# web-framework-tanstack-router
+# web-routing-tanstack-router
 
 Type-safe client-side routing for React with file-based routes, search params validation, loaders, and code splitting
 
@@ -8,7 +8,7 @@ Add this plugin to your Claude Code configuration:
 
 ```json
 {
-  "plugins": ["web-framework-tanstack-router"]
+  "plugins": ["web-routing-tanstack-router"]
 }
 ```
 
