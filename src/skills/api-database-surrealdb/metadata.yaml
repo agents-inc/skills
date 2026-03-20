@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: surrealdb
+domain: api
+author: "@vince"
+displayName: SurrealDB
+cliDescription: Multi-model database with SQL-like query language, graph relations, and real-time subscriptions
+usageGuidance: Use when working with SurrealDB — SurrealQL queries, record links for graph relations, live queries for real-time, schema-full and schema-less modes, and multi-tenancy with namespaces and databases.

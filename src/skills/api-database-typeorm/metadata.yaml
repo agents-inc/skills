@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: typeorm
+domain: api
+author: "@vince"
+displayName: TypeORM
+cliDescription: Decorator-based TypeScript ORM with Data Mapper patterns
+usageGuidance: Use when building TypeScript applications with relational databases — entity decorators, repository pattern, migrations, relations, query builder, and transaction management.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: edgedb
+domain: api
+author: "@vince"
+displayName: Gel (EdgeDB)
+cliDescription: Graph-relational database with EdgeQL and code-first schema
+usageGuidance: >-
+  Use when working with Gel (formerly EdgeDB) — EdgeQL for type-safe queries,
+  code-first schema with migrations, link-based relations, computed properties,
+  and the query builder for fully typed TypeScript queries.

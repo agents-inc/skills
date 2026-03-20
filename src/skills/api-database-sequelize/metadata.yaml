@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: sequelize
+domain: api
+author: "@vince"
+displayName: Sequelize
+cliDescription: Promise-based ORM for SQL databases with model definitions and migrations
+usageGuidance: Use when working with SQL databases via Sequelize — model definitions, associations, queries, transactions, migrations, hooks, and scopes.

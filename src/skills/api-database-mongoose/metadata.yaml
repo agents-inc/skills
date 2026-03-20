@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: mongoose
+domain: api
+author: "@vince"
+displayName: Mongoose
+cliDescription: MongoDB ODM with schemas, validation, middleware, and TypeScript support
+usageGuidance: Use when working with MongoDB via Mongoose — schema definitions, model creation, queries, population, middleware hooks, virtuals, and TypeScript integration.

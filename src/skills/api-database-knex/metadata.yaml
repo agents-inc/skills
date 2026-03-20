@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: knex
+domain: api
+author: "@vince"
+displayName: Knex.js
+cliDescription: SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL
+usageGuidance: Use when building SQL queries programmatically -- fluent query builder, schema builder, migrations, seeds, transactions, and raw queries with parameter binding.

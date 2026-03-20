@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: postgresql
+domain: api
+author: "@vince"
+displayName: PostgreSQL
+cliDescription: Direct PostgreSQL database access with node-postgres (pg)
+usageGuidance: Use when interacting directly with PostgreSQL -- connection pools, parameterized queries, transactions, migrations, and type-safe query results with pg.

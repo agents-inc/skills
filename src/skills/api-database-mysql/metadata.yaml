@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-database
+slug: mysql
+domain: api
+author: "@vince"
+displayName: MySQL
+cliDescription: Direct MySQL database access with mysql2 driver
+usageGuidance: Use when interacting directly with MySQL -- connection pools, prepared statements, transactions, streaming, and promise-based API with mysql2.
