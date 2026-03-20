@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-routing
+slug: react-router
+domain: web
+author: "@vince"
+displayName: React Router
+cliDescription: Client-side and server-side routing for React applications
+usageGuidance: Use when building React apps with client-side routing — nested routes, loaders, actions, error boundaries, lazy loading, and URL-based state.

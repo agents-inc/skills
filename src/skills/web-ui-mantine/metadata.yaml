@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-ui-components
+slug: mantine
+domain: web
+author: "@vince"
+displayName: Mantine
+cliDescription: Full-featured React component library with hooks, forms, and theming
+usageGuidance: >-
+  Use when building React UIs with Mantine — 100+ components, CSS modules styling,
+  theme customization, built-in hooks, form management with @mantine/form, and
+  notification system.

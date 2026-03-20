@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-meta-framework
+slug: qwik
+domain: web
+author: "@vince"
+displayName: Qwik
+cliDescription: Resumable framework with zero JS hydration and fine-grained lazy loading
+usageGuidance: Use when building web apps that need instant interactivity — resumability eliminates hydration, $ suffixed functions mark lazy boundaries, and Qwik City provides file-based routing with server loaders and actions.

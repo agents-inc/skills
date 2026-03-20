@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-utilities
+slug: rxjs
+domain: web
+author: "@vince"
+displayName: RxJS
+cliDescription: Reactive programming with Observables, operators, and async stream composition
+usageGuidance: >-
+  Use when handling complex async flows with RxJS — Observables, operators
+  (map, filter, switchMap, mergeMap), Subjects, error handling,
+  unsubscription, and reactive patterns for event streams and HTTP requests.
