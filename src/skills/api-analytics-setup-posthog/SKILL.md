@@ -15,11 +15,9 @@ description: PostHog analytics and feature flags setup
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `NEXT_PUBLIC_` prefix for client-side PostHog environment variables)**
+**(You MUST initialize posthog-js only in a client/browser context - it requires browser APIs like window and localStorage)**
 
-**(You MUST create PostHogProvider as a 'use client' component - posthog-js requires browser APIs)**
-
-**(You MUST call `posthog.shutdown()` or `posthog.flush()` after server-side event capture to prevent lost events)**
+**(You MUST call `posthog.shutdown()`, `posthog.flush()`, or use `captureImmediate()` after server-side event capture to prevent lost events)**
 
 **(You MUST use `defaults: '2026-01-30'` for automatic SPA page tracking and latest recommended behaviors)**
 
@@ -27,7 +25,7 @@ description: PostHog analytics and feature flags setup
 
 ---
 
-**Auto-detection:** PostHog setup, posthog-js, posthog-node, PostHogProvider, analytics setup, feature flags setup, event tracking setup, NEXT_PUBLIC_POSTHOG_KEY
+**Auto-detection:** PostHog setup, posthog-js, posthog-node, PostHogProvider, analytics setup, feature flags setup, event tracking setup, posthog.init
 
 **When to use:**
 
@@ -44,7 +42,7 @@ description: PostHog analytics and feature flags setup
 
 **Key patterns covered:**
 
-- Client-side setup with PostHogProvider or instrumentation-client.js
+- Client-side setup with PostHogProvider or framework initialization hook
 - Server-side setup with posthog-node
 - Environment variables (client vs server prefix)
 - User identification and reset flows
@@ -54,7 +52,7 @@ description: PostHog analytics and feature flags setup
 
 - [examples/core.md](examples/core.md) - Provider setup, layout integration, user identification, env vars
 - [examples/server.md](examples/server.md) - Server client singleton, API routes, serverless patterns
-- [reference.md](reference.md) - Decision frameworks, red flags, good/bad comparisons
+- [reference.md](reference.md) - Decision frameworks, red flags
 
 ---
 
@@ -109,7 +107,7 @@ PostHog Organization: "Your Company"
 
 ### Pattern 2: Client-Side Setup
 
-Install `posthog-js` and configure a provider or use `instrumentation-client.js` (Next.js 15.3+).
+Install `posthog-js` and configure a provider or use your framework's client-side initialization hook.
 
 Key config options: `defaults: "2026-01-30"` enables recommended behaviors, `person_profiles: "identified_only"` reduces costs.
 
@@ -136,17 +134,37 @@ See [examples/server.md](examples/server.md) for singleton setup, API route usag
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+- Initializing posthog-js on the server (requires browser APIs - will crash)
+- No `flush()` or `captureImmediate()` after server-side capture in serverless environments (events silently lost)
+- Hardcoding API keys in source code instead of environment variables
+- Missing `posthog.reset()` on sign out (user identity bleeds to next session)
+- Not using `defaults` date option (manual pageview tracking required, misses recommended behaviors)
+- Not calling `posthog.identify()` after authentication (anonymous and authenticated sessions remain unlinked)
+
+**Gotchas & Edge Cases:**
+
+- Server-side SDK does NOT auto-flush like the client - you must explicitly call `flush()`, `shutdown()`, or use `captureImmediate()`
+- `captureImmediate()` is simpler for serverless but sends one HTTP request per event (no batching)
+- Free tier resets monthly (1M events then stops capturing until next month)
+- `person_profiles: 'identified_only'` reduces costs but means no anonymous user profiles are created
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use `NEXT_PUBLIC_` prefix for client-side PostHog environment variables)**
+**(You MUST initialize posthog-js only in a client/browser context - it requires browser APIs like window and localStorage)**
 
-**(You MUST create PostHogProvider as a 'use client' component - posthog-js requires browser APIs)**
-
-**(You MUST call `posthog.shutdown()` or `posthog.flush()` after server-side event capture to prevent lost events)**
+**(You MUST call `posthog.shutdown()`, `posthog.flush()`, or use `captureImmediate()` after server-side event capture to prevent lost events)**
 
 **(You MUST use `defaults: '2026-01-30'` for automatic SPA page tracking and latest recommended behaviors)**
 
@@ -161,4 +179,3 @@ See [examples/server.md](examples/server.md) for singleton setup, API route usag
 - [PostHog JavaScript SDK](https://posthog.com/docs/libraries/js)
 - [PostHog JavaScript Configuration](https://posthog.com/docs/libraries/js/config)
 - [PostHog Node.js SDK](https://posthog.com/docs/libraries/node)
-- [PostHog Next.js Guide](https://posthog.com/docs/libraries/next-js)

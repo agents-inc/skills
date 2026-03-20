@@ -18,9 +18,9 @@ import { useEffect } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
+const POSTHOG_KEY = process.env.POSTHOG_KEY!;
 const POSTHOG_HOST =
-  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+  process.env.POSTHOG_HOST ?? "https://us.i.posthog.com";
 
 // Initialize PostHog
 if (typeof window !== "undefined" && POSTHOG_KEY) {
@@ -75,7 +75,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
 import { useCallback } from "react";
 import { usePostHog } from "posthog-js/react";
 
-import type { PostHogEvent } from "@/lib/analytics/constants";
+import type { PostHogEvent } from "../lib/analytics/constants";
 
 interface EventProperties {
   [key: string]: string | number | boolean | null | undefined;
@@ -115,8 +115,8 @@ export function useAnalytics() {
 // Good Example - Tracking in components
 "use client";
 
-import { useAnalytics } from "@/hooks/use-analytics";
-import { POSTHOG_EVENTS } from "@/lib/analytics/constants";
+import { useAnalytics } from "../hooks/use-analytics";
+import { POSTHOG_EVENTS } from "../lib/analytics/constants";
 
 export function CreateProjectButton() {
   const { track } = useAnalytics();

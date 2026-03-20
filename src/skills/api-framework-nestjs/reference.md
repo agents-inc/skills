@@ -1,6 +1,6 @@
 # NestJS Reference
 
-> CLI commands, project structure, decorator reference, and decision frameworks. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> CLI commands, project structure, decorator tables, pipes, exceptions, and provider scopes. See [SKILL.md](SKILL.md) for core concepts, decision frameworks, and red flags.
 
 ---
 
@@ -245,73 +245,4 @@ export class RequestScopedService {
 
 ---
 
-## Decision Framework
-
-### Request Lifecycle (Execution Order)
-
-```
-1. Middleware
-2. Guards
-3. Interceptors (pre-handler)
-4. Pipes
-5. Route Handler
-6. Interceptors (post-handler)
-7. Exception Filters (on error)
-```
-
-### Which Layer For Your Logic
-
-```
-Is it request preprocessing (logging, CORS)?
-├─ YES → Middleware
-
-Does it decide allow/deny?
-├─ YES → Guard (auth, roles, rate limiting)
-
-Does it transform/validate input?
-├─ YES → Pipe (ParseIntPipe, ValidationPipe, custom)
-
-Does it wrap handler execution (timing, caching, response)?
-├─ YES → Interceptor
-
-Does it handle errors?
-├─ YES → Exception Filter
-
-Is it business logic?
-├─ YES → Service (injected into controller)
-```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Business logic in controllers** — Move to services, controllers should be thin
-- **Missing `@Injectable()`** — Service won't be available for DI
-- **No global `ValidationPipe`** — DTOs are not being validated
-- **`any` type on `@Body()`** — Lose type safety and validation
-- **`new ServiceClass()` instead of constructor injection** — Breaks DI, untestable
-- **Raw `throw new Error()` instead of NestJS exceptions** — Produces 500 instead of proper HTTP status
-
-### Medium Priority Issues
-
-- **Not exporting services** — Other modules can't use them
-- **Using `@Res()` when not streaming** — Disables NestJS response handling (interceptors, serialization)
-- **Missing `whitelist: true` on ValidationPipe** — Mass-assignment vulnerability
-- **Circular module dependencies** — Use `forwardRef()` or restructure
-- **Not using `PartialType` for update DTOs** — Duplicated validation rules
-
-### Gotchas and Edge Cases
-
-- `@UseGuards(AuthGuard)` takes a class reference — NestJS creates the instance via DI
-- `ValidationPipe` with `transform: true` auto-converts query params to declared types
-- Guards run AFTER middleware but BEFORE interceptors and pipes
-- `@Catch()` with no arguments catches ALL exceptions (including non-HTTP)
-- NestJS 11: Termination hooks (`OnModuleDestroy`, `OnApplicationShutdown`) run in reverse order
-- NestJS 11: Express v5 wildcards use `/*splat` syntax (not `/*`)
-- NestJS 11: `ParseDatePipe` added as a built-in pipe
-- NestJS 11: `IntrinsicException` throws without framework auto-logging (for expected flow control)
-- NestJS 11: SWC is the default compiler (20x faster builds)
-- Request-scoped providers (`Scope.REQUEST`) affect performance — use only when needed
-- `forwardRef()` should be a last resort — circular deps usually signal a design issue
+> For decision frameworks and red flags, see [SKILL.md](SKILL.md).

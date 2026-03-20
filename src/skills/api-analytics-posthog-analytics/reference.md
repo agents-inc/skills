@@ -140,48 +140,6 @@ posthog.capture("action");
 
 ---
 
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- Using email as `distinct_id` - PII should not be the identifier
-- Missing `posthog.reset()` on logout - Users get mixed together
-- No `await shutdown()` in serverless - Events are lost
-- Using `capture()` instead of `captureImmediate()` in serverless - Events may not complete
-- PII in event properties - GDPR violation risk
-- Calling `identify()` on every render - Performance degradation
-
-**Medium Priority Issues:**
-
-- Inconsistent event naming - Makes analysis difficult
-- No category prefix in events - Hard to find related events
-- Tracking everything with autocapture only - Signal-to-noise problem
-- Missing group analytics for B2B - Can't measure organization metrics
-- Not using `person_profiles: "identified_only"` - Higher costs
-
-**Common Mistakes:**
-
-- Importing `posthog` directly instead of using `usePostHog` hook
-- Not setting up reverse proxy - Events blocked by ad blockers
-- Different event names for same action on frontend vs backend
-- Not testing events in development before production
-- Forgetting to filter internal/test traffic
-
-**Gotchas & Edge Cases:**
-
-- `distinct_id` is required for ALL server-side events (unlike client-side)
-- `group()` must include group ID with every event (not like `identify()`)
-- Maximum 5 group types per project
-- Cookieless mode doesn't support `identify()` - privacy trade-off
-- Session IDs must be manually passed to server-side events
-- PostHog web SDK is client-side only - won't work in Server Components
-
-</red_flags>
-
----
-
 ## Event Taxonomy Reference
 
 ### Naming Convention

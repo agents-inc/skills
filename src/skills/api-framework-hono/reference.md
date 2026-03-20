@@ -147,6 +147,7 @@
 - **getContext() throws:** Use `tryGetContext()` (v4.11.0+) in code that may run outside request context (tests, background jobs)
 - **Middleware `next()` never throws:** Since Hono catches errors, wrapping `await next()` in try/catch is unnecessary
 - **some/every execution order:** Middleware in `some()` runs sequentially until first success; in `every()` runs until first failure
+- **getConnInfo is adapter-specific:** Import from `hono/bun`, `hono/deno`, `@hono/node-server/conninfo`, or `hono/cloudflare-workers` -- NOT from `hono/ip-restriction`
 
 </red_flags>
 

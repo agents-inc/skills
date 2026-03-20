@@ -223,12 +223,10 @@ export const errorHandler = (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const requestId = (request as { requestId?: string }).requestId;
-
   // Fastify validation errors
   if (error.validation) {
     request.log.warn(
-      { requestId, validation: error.validation },
+      { reqId: request.id, validation: error.validation },
       "Validation failed",
     );
 
@@ -242,7 +240,10 @@ export const errorHandler = (
 
   // Custom application errors
   if ("statusCode" in error && typeof error.statusCode === "number") {
-    request.log.warn({ requestId, error: error.message }, "Application error");
+    request.log.warn(
+      { reqId: request.id, error: error.message },
+      "Application error",
+    );
 
     return reply.status(error.statusCode).send({
       statusCode: error.statusCode,
@@ -254,7 +255,7 @@ export const errorHandler = (
 
   // Unexpected errors - log full details but send generic response
   request.log.error(
-    { requestId, error: error.message, stack: error.stack },
+    { reqId: request.id, error: error.message, stack: error.stack },
     "Unexpected error",
   );
 

@@ -81,19 +81,19 @@ firebase functions:delete myFunctionName
 ## Environment Variables
 
 ```bash
-# .env.local (client-side — safe to expose)
-NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=my-project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=my-project
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=my-project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
+# Client-side (safe to expose -- use your framework's public env prefix)
+FIREBASE_API_KEY=AIza...
+FIREBASE_AUTH_DOMAIN=my-project.firebaseapp.com
+FIREBASE_PROJECT_ID=my-project
+FIREBASE_STORAGE_BUCKET=my-project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=123456789
+FIREBASE_APP_ID=1:123456789:web:abc123
 
 # Server-side only (NEVER expose to client)
 FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
 ```
 
-**Note:** Firebase API keys are NOT secret — they identify your project but don't grant access. Security rules protect your data, not the API key.
+**Note:** Firebase API keys are NOT secret -- they identify your project but don't grant access. Security rules protect your data, not the API key. Use your framework's public env prefix (e.g., `NEXT_PUBLIC_`, `VITE_`) when exposing to client code.
 
 ---
 
@@ -259,9 +259,9 @@ my-firebase-app/
 
 | Package              | Version | Purpose                                          |
 | -------------------- | ------- | ------------------------------------------------ |
-| `firebase`           | 12.10.0 | Client SDK (Firestore, Auth, Storage, etc.)      |
+| `firebase`           | 12.11.0 | Client SDK (Firestore, Auth, Storage, etc.)      |
 | `firebase-admin`     | 13.7.0  | Admin SDK (server-side, bypasses security rules) |
-| `firebase-functions` | 7.1.1   | Cloud Functions SDK (v2 API)                     |
+| `firebase-functions` | 7.2.2   | Cloud Functions SDK (v2 API)                     |
 | `firebase-tools`     | latest  | Firebase CLI                                     |
 
 **Runtime Requirements:**

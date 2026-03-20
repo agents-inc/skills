@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Connection setup, Lua scripting basics
+- [core.md](core.md) -- Connection setup, Lua scripting basics
 - [sessions.md](sessions.md) -- Session storage (often paired with rate limiting)
 - [queues.md](queues.md) -- BullMQ for throttled job processing
 

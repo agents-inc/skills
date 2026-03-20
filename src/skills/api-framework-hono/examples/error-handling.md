@@ -109,7 +109,7 @@ app.openapi(getJobsRoute, async (c) => {
 // BAD Example - Inconsistent error handling
 app.get("/jobs", async (c) => {
   try {
-    const jobs = await db.select().from(jobs);
+    const jobs = await fetchJobs();
     return c.json(jobs);
   } catch (error) {
     // BAD: Magic number 500

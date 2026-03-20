@@ -124,24 +124,4 @@ try {
 
 ---
 
-## Stream Methods Reference
-
-```typescript
-const stream = client.chat.completions.stream({
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Hello" }],
-});
-
-// Promise-based accessors
-await stream.finalContent(); // Promise<string> -- last assistant content
-await stream.finalMessage(); // Promise<ChatCompletionMessage>
-await stream.allChatCompletions(); // Promise<ChatCompletion[]>
-
-// Control
-stream.abort(); // Cancel stream and network request
-stream.controller; // Underlying AbortController
-```
-
----
-
-_For core concepts, see [SKILL.md](../SKILL.md). For API reference tables, see [reference.md](../reference.md)._
+_For core concepts, see [SKILL.md](../SKILL.md). For stream method signatures, event types, and API tables, see [reference.md](../reference.md)._

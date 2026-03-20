@@ -29,10 +29,10 @@ description: Redis in-memory data store patterns with ioredis and node-redis -- 
 
 ## Examples
 
-- [Setup & Connection](examples/setup.md) -- ioredis/node-redis connection, error handling, reconnection, cluster, sentinel
+- [Core Patterns](examples/core.md) -- ioredis/node-redis connection, error handling, reconnection, cluster, sentinel, pipelining, transactions
 - [Caching Patterns](examples/caching.md) -- Cache-aside, write-through, invalidation, stampede prevention, multi-key pipeline
 - [Data Structures](examples/data-structures.md) -- Strings, hashes, lists, sets, sorted sets with typed helpers
-- [Sessions](examples/sessions.md) -- Express connect-redis, Hono manual middleware, token blacklisting
+- [Sessions](examples/sessions.md) -- Express connect-redis (node-redis required for v9+), Hono manual middleware
 - [Pub/Sub](examples/pub-sub.md) -- Publish/subscribe, event broadcasting, pattern subscriptions
 - [Rate Limiting](examples/rate-limiting.md) -- Sliding window (Lua), token bucket (Lua), middleware integration
 - [Queues & Locks](examples/queues.md) -- BullMQ job queues, Redis Streams with consumer groups, distributed locks
@@ -71,8 +71,8 @@ description: Redis in-memory data store patterns with ioredis and node-redis -- 
 
 **When NOT to use:**
 
-- Primary database for relational data (use PostgreSQL/Drizzle)
-- Document storage with complex queries (use MongoDB)
+- Primary database for relational data (use your relational database)
+- Document storage with complex queries (use a document database)
 - Large binary file storage (use S3/object storage)
 - Data that must survive total memory loss without persistence configured
 
@@ -102,7 +102,7 @@ Redis is an **in-memory data store** used as a cache, message broker, and stream
 
 ### Pattern 1: ioredis Connection Setup
 
-Configure ioredis with proper error handling and reconnection strategy. See [examples/setup.md](examples/setup.md) for full examples including node-redis and cluster configuration.
+Configure ioredis with proper error handling and reconnection strategy. See [examples/core.md](examples/core.md) for full examples including node-redis and cluster configuration.
 
 ```typescript
 // ✅ Good Example - Proper ioredis setup with error handling
@@ -184,7 +184,7 @@ async function cacheAside<T>(
 
 ### Pattern 3: Pipelining and Transactions
 
-Batch commands for network efficiency (pipeline) or atomicity (MULTI/EXEC). See [examples/setup.md](examples/setup.md) for full examples.
+Batch commands for network efficiency (pipeline) or atomicity (MULTI/EXEC). See [examples/core.md](examples/core.md) for full examples.
 
 ```typescript
 // ✅ Pipeline - batch for network efficiency (NOT atomic)
@@ -359,46 +359,11 @@ await redis.xack(STREAM_KEY, GROUP_NAME, messageId);
 
 ## Performance Optimization
 
-### Auto-Pipelining
-
-ioredis can automatically batch commands issued during the same event loop tick:
-
-```typescript
-const redis = new Redis(process.env.REDIS_URL!, {
-  enableAutoPipelining: true,
-});
-
-// These three commands are automatically batched into one pipeline
-const [name, email, role] = await Promise.all([
-  redis.get("user:name"),
-  redis.get("user:email"),
-  redis.get("user:role"),
-]);
-```
-
-**When to use:** High-throughput applications issuing many independent commands per request.
-
-**When NOT to use:** When commands depend on each other's results, or when using WATCH/MULTI for transactions.
-
-### Key Expiration Strategy
-
-```typescript
-const TTL_SHORT_SECONDS = 60; // 1 minute -- volatile data
-const TTL_MEDIUM_SECONDS = 300; // 5 minutes -- API response cache
-const TTL_LONG_SECONDS = 3600; // 1 hour -- user profiles
-const TTL_SESSION_SECONDS = 86400; // 24 hours -- sessions
-```
-
-### Scanning Instead of KEYS
-
-Never use `KEYS` in production -- it blocks the Redis server. Use `scanStream`:
-
-```typescript
-const stream = redis.scanStream({ match: "user:*", count: 100 });
-stream.on("data", (keys: string[]) => {
-  /* process batch */
-});
-```
+- **Auto-pipelining** -- Enable `enableAutoPipelining: true` to batch commands issued during the same event loop tick. Does NOT work with WATCH/MULTI or blocking commands. See [examples/core.md](examples/core.md) for setup.
+- **Manual pipelining** -- Use `redis.pipeline()` for explicit command batching. See [examples/core.md](examples/core.md).
+- **Key expiration** -- Set TTLs on all cache keys. Use named constants (`TTL_SHORT_SECONDS = 60`, `TTL_MEDIUM_SECONDS = 300`, etc.). See [examples/core.md](examples/core.md).
+- **SCAN over KEYS** -- Never use `KEYS` in production (blocks Redis). Use `redis.scanStream({ match: "pattern", count: 100 })`. See [examples/core.md](examples/core.md).
+- **UNLINK over DEL** -- Use `unlink` for large keys (non-blocking deletion).
 
 </performance>
 
@@ -471,19 +436,18 @@ Do I need atomicity across multiple commands?
 
 ## Integration Guide
 
-**Works with:**
+**Common integration patterns:**
 
-- **Drizzle/Prisma** -- Cache database queries using cache-aside pattern; invalidate cache on writes
-- **Express/Hono/Fastify** -- Session storage via connect-redis, rate limiting middleware
-- **BullMQ** -- Job queues built on Redis (requires ioredis with `maxRetriesPerRequest: null`)
-- **Socket.IO** -- Redis adapter for scaling WebSocket connections across multiple servers
-- **Docker/Kubernetes** -- Redis containers for development, Redis Cluster for production
+- **Database caching** -- Cache query results using cache-aside pattern; invalidate cache on writes
+- **HTTP framework sessions** -- Session storage middleware, rate limiting middleware
+- **BullMQ job queues** -- Built on Redis (requires ioredis with `maxRetriesPerRequest: null`)
+- **WebSocket scaling** -- Redis adapter for distributing WebSocket connections across servers
 
 **Replaces / Conflicts with:**
 
-- **In-memory caches (node-cache, lru-cache)** -- Redis provides distributed caching across multiple app instances
+- **In-memory caches** -- Redis provides distributed caching across multiple app instances
 - **Database-backed sessions** -- Redis sessions are faster and reduce database load
-- **RabbitMQ/Kafka** (partially) -- Redis Streams and BullMQ cover most queue use cases; use dedicated message brokers for complex routing or massive throughput
+- **Simple message queues** -- Redis Streams and BullMQ cover most queue use cases; use dedicated message brokers for complex routing or massive throughput
 
 </integration>
 

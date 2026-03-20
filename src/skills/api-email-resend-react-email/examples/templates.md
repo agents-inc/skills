@@ -70,8 +70,6 @@ PasswordResetEmail.PreviewProps = {
   resetUrl: "https://example.com/reset?token=abc123",
 } satisfies PasswordResetEmailProps;
 
-// Named exports
-export { PasswordResetEmail };
 export type { PasswordResetEmailProps };
 ```
 
@@ -164,8 +162,6 @@ NotificationEmail.PreviewProps = {
   unsubscribeUrl: "https://example.com/unsubscribe?token=abc",
 } satisfies NotificationEmailProps;
 
-// Named exports
-export { NotificationEmail };
 export type { NotificationEmailProps };
 ```
 

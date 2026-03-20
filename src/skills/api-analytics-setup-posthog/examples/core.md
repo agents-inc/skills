@@ -6,19 +6,18 @@
 
 ---
 
-## Pattern 1: instrumentation-client.js Setup (Next.js 15.3+)
+## Pattern 1: Client-Side Initialization (Standalone)
 
-For Next.js 15.3+, use `instrumentation-client.js` for the simplest setup. PostHog auto-initializes on the client.
+Initialize posthog-js in a client-side entry point. This is the simplest approach when your framework supports a client initialization hook (e.g., Next.js 15.3+ `instrumentation-client.js`).
 
 ```typescript
-// ✅ Good Example - instrumentation-client.js (Next.js 15.3+)
-// instrumentation-client.js (in project root)
+// ✅ Good Example - Client-side init in entry point
 import posthog from "posthog-js";
 
 const POSTHOG_DEFAULTS_VERSION = "2026-01-30";
 
-posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-  api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+posthog.init(process.env.POSTHOG_KEY, {
+  api_host: process.env.POSTHOG_HOST,
   defaults: POSTHOG_DEFAULTS_VERSION,
   person_profiles: "identified_only",
 });
@@ -30,16 +29,16 @@ if (process.env.NODE_ENV === "development") {
 
 **Why good:** Simplest setup, no provider component needed, `defaults` date enables all recommended behaviors for that snapshot, `person_profiles: "identified_only"` reduces costs
 
-**When to use:** Next.js 15.3+ projects. For older versions, use the PostHogProvider pattern below.
+**When to use:** When your framework provides a client-side initialization hook. For React apps needing context-based access via hooks, use the PostHogProvider pattern below.
 
 ---
 
-## Pattern 2: PostHogProvider Component
+## Pattern 2: PostHogProvider Component (React)
 
-Create the provider component for client-side analytics.
+Create a provider component for React apps that need hook-based access to the PostHog client.
 
 ```typescript
-// ✅ Good Example - PostHog Provider (Next.js < 15.3)
+// ✅ Good Example - PostHog Provider (React)
 // lib/posthog/provider.tsx
 "use client";
 
@@ -56,8 +55,8 @@ interface PostHogProviderProps {
 export function PostHogProvider({ children }: PostHogProviderProps) {
   useEffect(() => {
     if (typeof window !== "undefined" && !posthog.__loaded) {
-      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+      posthog.init(process.env.POSTHOG_KEY!, {
+        api_host: process.env.POSTHOG_HOST!,
         defaults: POSTHOG_DEFAULTS_VERSION,
         person_profiles: "identified_only",
         loaded: (posthog) => {
@@ -77,29 +76,19 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
 
 ---
 
-## Pattern 3: Root Layout Integration
+## Pattern 3: App-Level Provider Integration
 
-Wrap the app with PostHogProvider in the root layout.
+Wrap the app with PostHogProvider at the root of your component tree.
 
 ```typescript
 // ✅ Good Example - Root layout with PostHog
-// app/layout.tsx
-import type { Metadata } from "next";
-
-import { PostHogProvider } from "@/lib/posthog/provider";
-
-import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "My App",
-  description: "My awesome app",
-};
+import { PostHogProvider } from "./lib/posthog/provider";
 
 interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
@@ -110,17 +99,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
 }
 ```
 
-**Why good:** PostHogProvider wraps entire app, layout remains a Server Component, children passed through correctly
+**Why good:** PostHogProvider wraps entire app, provider handles client-only initialization, children passed through correctly
 
 ```typescript
-// ❌ Bad Example - Provider without 'use client' or inline initialization
-// app/layout.tsx
+// ❌ Bad Example - Initializing posthog-js outside a client context
 import posthog from "posthog-js";
 
 // BAD: posthog-js requires browser APIs, fails on server
 posthog.init("phc_xxx", { api_host: "https://us.i.posthog.com" });
 
-export default function RootLayout({ children }) {
+export function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>{children}</body>
@@ -129,7 +117,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Why bad:** posthog-js uses browser APIs (localStorage, window), initializing in Server Component crashes on server render, no provider means hooks won't work
+**Why bad:** posthog-js uses browser APIs (localStorage, window), initializing in a server-rendered context crashes, no provider means hooks won't work
 
 ---
 
@@ -170,11 +158,13 @@ Clear user identity when signing out to prevent data bleed.
 // ✅ Good Example - Reset PostHog on sign out
 import { usePostHog } from "posthog-js/react";
 
-function handleSignOut() {
+export function useSignOut() {
   const posthog = usePostHog();
 
-  // After your auth sign-out logic completes:
-  posthog.reset();
+  return () => {
+    // After your auth sign-out logic completes:
+    posthog.reset();
+  };
 }
 ```
 
@@ -194,25 +184,27 @@ function handleSignOut() {
 
 ## Pattern 6: Environment Variables
 
-Client-side variables need the `NEXT_PUBLIC_` prefix. Server-side variables should NOT have it.
+Client-side variables must be exposed to the browser bundle (check your framework's prefix convention). Server-side variables should NOT be exposed.
 
 ```bash
 # ✅ Good Example - .env.local
-# Client-side (embedded in browser bundle)
-NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_api_key
-NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
-
-# Server-side (API routes, never exposed to client)
-POSTHOG_API_KEY=phc_your_project_api_key
+# Client-side (exposed to browser bundle)
+# Use your framework's public prefix: NEXT_PUBLIC_, VITE_, EXPO_PUBLIC_, etc.
+POSTHOG_KEY=phc_your_project_api_key
 POSTHOG_HOST=https://us.i.posthog.com
+
+# Server-side only (API routes, never exposed to client)
+POSTHOG_API_KEY=phc_your_project_api_key
 ```
+
+**Why good:** Separate client and server env vars, keys never hardcoded in source
 
 ```bash
-# ❌ Bad Example - Wrong prefixes
-POSTHOG_KEY=phc_xxx              # Missing NEXT_PUBLIC_, undefined in browser
-NEXT_PUBLIC_SECRET_KEY=xxx       # Exposes server secret to client!
+# ❌ Bad Example - Hardcoded keys
+# API keys directly in source code instead of environment variables
+posthog.init("phc_hardcoded_key_123", { api_host: "..." });
 ```
 
-**Why bad:** First var is undefined in browser, second leaks secrets into the client bundle
+**Why bad:** Hardcoded keys are committed to version control, cannot be rotated, and differ between environments
 
 ---

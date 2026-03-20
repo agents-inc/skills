@@ -57,14 +57,14 @@ description: Firebase backend-as-a-service — Firestore, Authentication, Cloud 
 
 **When NOT to use:**
 
-- Complex relational queries needing JOIN operations (use a SQL database with Drizzle/Prisma)
+- Complex relational queries needing JOIN operations (use a relational database with an ORM)
 - Full server-side ORM patterns (Firestore is a document database, not relational)
-- Non-Firebase authentication providers (use dedicated auth skills)
+- Applications using a non-Firebase authentication provider
 - Applications requiring complex server-side business logic beyond Cloud Functions scope
 
 **Examples:**
 
-- [Setup & Configuration](examples/setup.md) -- App init, emulators, offline persistence
+- [Core Setup & Configuration](examples/core.md) -- App init, emulators, offline persistence
 - [Firestore Database](examples/firestore.md) -- CRUD, queries, real-time listeners, transactions
 - [Authentication](examples/auth.md) -- Email/password, OAuth, React context pattern
 - [Cloud Functions & Admin SDK](examples/functions.md) -- HTTP, callable, triggers, scheduled, Admin SDK
@@ -130,7 +130,7 @@ export const storage = getStorage(app);
 
 **Why good:** Modular imports enable tree-shaking, each service initialized from the app instance, named exports
 
-> Full setup with emulators and offline persistence: [examples/setup.md](examples/setup.md)
+> Full setup with emulators and offline persistence: [examples/core.md](examples/core.md)
 
 ---
 
@@ -482,19 +482,23 @@ What kind of files?
 
 ## Integration Guide
 
-**Works with:**
+**Firebase ecosystem integration:**
 
-- **React / Next.js**: Use `onAuthStateChanged` in a context provider, Firestore listeners in `useEffect` with cleanup
-- **React Query / TanStack Query**: Wrap Firestore reads in query functions, use `onSnapshot` for real-time invalidation
 - **Firebase Hosting + Cloud Functions**: Rewrite rules in `firebase.json` route requests to functions
 - **App Check**: Protect your backend resources from abuse by verifying requests come from your app (`initializeAppCheck` with reCAPTCHA Enterprise)
-- **Firebase Extensions**: Pre-built Cloud Functions for common tasks (Stripe payments, image resizing, email sending)
+- **Firebase Extensions**: Pre-built Cloud Functions for common tasks (payments, image resizing, email sending)
+
+**Client framework integration:**
+
+- Use `onAuthStateChanged` in your framework's lifecycle (e.g., context provider, composable, store) to track auth state
+- Firestore `onSnapshot` listeners require cleanup when components unmount -- use your framework's cleanup mechanism
+- Wrap Firestore reads in your data fetching solution's query functions for caching and real-time invalidation
 
 **Replaces / Conflicts with:**
 
 - **Supabase**: Alternative BaaS -- don't use both for the same purpose
 - **AWS Amplify**: Alternative BaaS -- pick one platform
-- **Custom auth (Clerk, Auth0)**: Firebase Auth can replace these, or vice versa -- don't mix auth providers
+- **Custom auth providers**: Firebase Auth can replace third-party auth, or vice versa -- don't mix auth providers
 
 </integration>
 

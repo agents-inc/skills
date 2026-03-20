@@ -255,6 +255,7 @@ const app = express();
 const RATE_LIMIT_WINDOW_MS = 900000; // 15 minutes
 const RATE_LIMIT_MAX = 100;
 const JSON_LIMIT = "10mb";
+const HTTP_NOT_FOUND = 404;
 
 // 1. Security headers FIRST
 app.use(helmet());
@@ -288,7 +289,7 @@ app.use("/api/products", productRoutes);
 
 // 7. 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: { message: "Route not found" } });
+  res.status(HTTP_NOT_FOUND).json({ error: { message: "Route not found" } });
 });
 
 // 8. Error handler LAST

@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Connection setup (separate connections required for pub/sub)
+- [core.md](core.md) -- Connection setup (separate connections required for pub/sub)
 - [queues.md](queues.md) -- BullMQ and Redis Streams for persistent messaging
 
 ---

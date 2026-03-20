@@ -1,13 +1,13 @@
 # Email - Testing
 
-> **Testing guidance:** Use React Email's preview server (`email:dev`) for visual testing during development. For unit tests, `await render(YourTemplate({ props }))` returns HTML string you can assert against. Mock the Resend client in send function tests.
+> **Testing guidance:** Use React Email's preview server for visual testing during development. For unit tests, `await render(YourTemplate({ props }))` returns HTML string you can assert against. Mock the Resend client in send function tests.
 
 **Preview server:**
 
 ```bash
 # Start React Email preview server for visual testing
-bun run email:dev
-# View at http://localhost:3001
+npx react-email dev
+# View at http://localhost:3000
 ```
 
 **Template testing pattern:**

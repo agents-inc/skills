@@ -17,7 +17,7 @@ description: Auth.js (NextAuth v5) authentication patterns - configuration, prov
 
 **(You MUST configure Auth.js in a root `auth.ts` file and export `{ auth, handlers, signIn, signOut }` from `NextAuth()`)**
 
-**(You MUST use the unified `auth()` function for session access - NOT the deprecated `getServerSession()`, `getSession()`, `getToken()`, or `useSession()`)**
+**(You MUST use the unified `auth()` function for server-side session access - NOT the deprecated `getServerSession()`, `getSession()`, or `getToken()`)**
 
 **(You MUST use `AUTH_SECRET` environment variable - `NEXTAUTH_SECRET` is deprecated in v5)**
 
@@ -78,7 +78,7 @@ description: Auth.js (NextAuth v5) authentication patterns - configuration, prov
 
 ## Philosophy
 
-Auth.js (v5) consolidates authentication into a **single, unified API**. The `auth()` function replaces `getServerSession`, `getSession`, `withAuth`, `getToken`, and `useSession` from v4. Configuration lives in a root file, not in API routes.
+Auth.js (v5) consolidates authentication into a **single, unified API**. The `auth()` function replaces `getServerSession`, `getSession`, `withAuth`, and `getToken` from v4 for server-side use. `useSession()` remains the correct client-side API. Configuration lives in a root file, not in API routes.
 
 **Core principles:**
 
@@ -198,39 +198,25 @@ Four callbacks customize auth behavior. Data flows: **jwt callback** (enrich tok
 
 ```typescript
 callbacks: {
-  jwt({ token, user, account }) {
-    // `user` only available on first sign-in — check before accessing
+  jwt({ token, user }) {
     if (user) { token.id = user.id; token.role = user.role ?? "user"; }
-    if (account) { token.accessToken = account.access_token; }
     return token;
   },
   session({ session, token }) {
-    // Expose only what client needs — NEVER expose accessToken
     session.user.id = token.id as string;
     session.user.role = token.role as string;
     return session;
   },
-  signIn({ user, account }) {
-    // Return false to deny, true to allow
-    if (account?.provider === "google") return user.email?.endsWith("@company.com") ?? false;
-    return true;
-  },
-  redirect({ url, baseUrl }) {
-    // Prevent open redirects
-    if (url.startsWith("/")) return `${baseUrl}${url}`;
-    if (new URL(url).origin === baseUrl) return url;
-    return baseUrl;
-  },
 }
 ```
 
-**Key rules:** JWT callback runs on EVERY `auth()` call (keep lightweight), `user` param is only present at sign-in, never expose OAuth tokens to client. See [examples/core.md](examples/core.md) for complete callback implementations.
+**Key rules:** JWT callback runs on EVERY `auth()` call (keep lightweight), `user` param is only present at sign-in, never expose OAuth tokens to client. See [examples/core.md](examples/core.md) for complete callback implementations including `signIn` and `redirect`.
 
 ---
 
 ### Pattern 4: Session Access
 
-The unified `auth()` function replaces `getServerSession`, `getSession`, `getToken`, and `useSession` from v4.
+The unified `auth()` function replaces `getServerSession`, `getSession`, and `getToken` from v4 for server-side use. `useSession()` remains for Client Components.
 
 | Context          | How to access session                                     |
 | ---------------- | --------------------------------------------------------- |
@@ -265,35 +251,7 @@ import { signIn, signOut } from "next-auth/react";
 
 ### Pattern 6: TypeScript Extensions
 
-#### Extending Session and JWT Types
-
-```typescript
-// types/next-auth.d.ts
-import type { DefaultSession, DefaultJWT } from "next-auth";
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      role: string;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    role?: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT extends DefaultJWT {
-    id?: string;
-    role?: string;
-    accessToken?: string;
-  }
-}
-```
-
-**Why good:** Type-safe custom session fields, extends default types instead of replacing, declaration merging for all auth contexts
+Extend session and JWT types via declaration merging in `types/next-auth.d.ts`. Declare custom fields (e.g., `id`, `role`) on `Session`, `User`, and `JWT` interfaces using `& DefaultSession["user"]` to preserve defaults. See [examples/core.md](examples/core.md) for the complete type declaration example.
 
 </patterns>
 
@@ -347,7 +305,7 @@ See [reference.md](reference.md) for the complete anti-pattern list, gotchas, an
 
 **(You MUST configure Auth.js in a root `auth.ts` file and export `{ auth, handlers, signIn, signOut }` from `NextAuth()`)**
 
-**(You MUST use the unified `auth()` function for session access - NOT the deprecated `getServerSession()`, `getSession()`, `getToken()`, or `useSession()`)**
+**(You MUST use the unified `auth()` function for server-side session access - NOT the deprecated `getServerSession()`, `getSession()`, or `getToken()`)**
 
 **(You MUST use `AUTH_SECRET` environment variable - `NEXTAUTH_SECRET` is deprecated in v5)**
 

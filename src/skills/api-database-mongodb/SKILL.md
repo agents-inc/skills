@@ -358,12 +358,12 @@ await User.deleteMany({ isActive: false, archivedAt: { $lt: cutoffDate } });
 ```
 
 ```typescript
-// BAD: Using remove() (deprecated) or deleteOne() on document without checking existence
+// BAD: No null check before calling method on potentially null result
 const user = await User.findById(id);
-user.remove(); // deprecated in Mongoose 7+
+user.deleteOne(); // TypeError if user is null
 ```
 
-**Why bad:** `remove()` is deprecated, no null check before calling method on potentially null result
+**Why bad:** No null check before calling method on potentially null result, crashes at runtime if document not found
 
 ---
 
@@ -505,9 +505,11 @@ export { productSchema };
 - Mongoose buffers operations before connection is established -- queries queue silently if connection fails
 - `deleteOne` / `deleteMany` do not trigger `pre('remove')` middleware -- use `findOneAndDelete` or document `.deleteOne()` if you need middleware
 - Virtual properties are excluded from `toJSON()` / `toObject()` by default -- set `{ toJSON: { virtuals: true } }` in schema options
+- `remove()` was completely removed in Mongoose 7+ -- use `deleteOne()` or `deleteMany()` instead
 - Mongoose 9 dropped callback-based `next()` in pre hooks -- use async/await instead
 - Mongoose 9 renamed `FilterQuery` to `QueryFilter` -- update TypeScript imports if upgrading
 - Mongoose 9 requires `updatePipeline: true` for pipeline-style updates -- they throw by default
+- Mongoose 9 removed the `background` index option -- MongoDB 4.2+ builds all indexes in the background by default
 
 </red_flags>
 

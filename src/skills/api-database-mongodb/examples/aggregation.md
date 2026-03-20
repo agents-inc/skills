@@ -11,7 +11,7 @@
 ### Good Example -- Sales Report
 
 ```typescript
-import { PipelineStage } from "mongoose";
+import type { PipelineStage } from "mongoose";
 
 const MIN_ORDER_COUNT = 5;
 
@@ -158,7 +158,7 @@ const result = await Order.aggregate([
 const PAGE_SIZE = 20;
 
 async function searchProducts(searchTerm: string, page: number = 1) {
-  const matchStage: PipelineStage = {
+  const matchStage = {
     $match: {
       isActive: true,
       $or: [

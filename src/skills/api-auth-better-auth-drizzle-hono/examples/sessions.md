@@ -39,8 +39,6 @@ export const auth = betterAuth({
     },
   },
 });
-
-export { auth };
 ```
 
 **Why good:** cookieCache reduces DB queries (verify signature instead), freshAge requires recent auth for sensitive ops, named constants make policy auditable
@@ -65,8 +63,6 @@ export async function revokeSession(token: string) {
 export async function revokeOtherSessions() {
   await authClient.session.revokeOtherSessions();
 }
-
-export { listSessions, revokeSession, revokeOtherSessions };
 ```
 
 **Why good:** listSessions enables "active sessions" UI, revokeOtherSessions useful after password change
@@ -94,8 +90,6 @@ export const auth = betterAuth({
     },
   },
 });
-
-export { auth };
 ```
 
 | Strategy  | Size     | Security  | Use Case                                |
@@ -125,8 +119,6 @@ export const auth = betterAuth({
     },
   },
 });
-
-export { auth };
 ```
 
 **Why good:** Mass invalidation without database, useful for security incidents

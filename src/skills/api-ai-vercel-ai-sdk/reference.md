@@ -77,7 +77,7 @@ const ollama = createOpenAICompatible({
 | OpenAI    | `openai/o3-mini`              | Fast reasoning                          |
 | Anthropic | `anthropic/claude-sonnet-4.5` | Best overall quality                    |
 | Anthropic | `anthropic/claude-haiku-4.5`  | Fast, cheap                             |
-| Anthropic | `anthropic/claude-opus-4.1`   | Highest capability                      |
+| Anthropic | `anthropic/claude-opus-4.5`   | Highest capability                      |
 | Google    | `google/gemini-2.5-flash`     | Fast, multimodal                        |
 | Google    | `google/gemini-2.5-pro`       | Highest capability                      |
 
@@ -118,7 +118,7 @@ const {
   output: Output.object({}), // Structured output config
   stopWhen: stepCountIs(5), // Multi-step stop condition
   toolChoice: "auto", // 'auto' | 'required' | 'none' | { type: 'tool', toolName: 'x' }
-  maxTokens: 1000, // Max output tokens
+  maxOutputTokens: 1000, // Max output tokens
   temperature: 0.7, // Randomness (0-2)
   onStepFinish({ stepNumber, text, toolCalls, finishReason }) {},
   onFinish({ text, usage, finishReason }) {},
@@ -261,7 +261,7 @@ export async function POST(request: Request) {
 | Reason             | Meaning                   |
 | ------------------ | ------------------------- |
 | `'stop'`           | Model completed naturally |
-| `'length'`         | Hit maxTokens limit       |
+| `'length'`         | Hit maxOutputTokens limit |
 | `'tool-calls'`     | Model wants to call tools |
 | `'content-filter'` | Blocked by safety filter  |
 | `'other'`          | Provider-specific reason  |

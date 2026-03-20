@@ -251,9 +251,9 @@ const logger = pino({
 - `a[*].b` - Redact `b` in all array elements of `a`
 - `["a-b"].c` - Bracket notation for hyphenated properties
 
-**Performance Notes (Pino v10+):**
+**Performance Notes (Pino v9.14+):**
 
-- Pino v10+ uses `@pinojs/redact` (replaced `fast-redact`)
+- Pino v9.14+ uses `@pinojs/redact` (replaced `fast-redact`; uses selective cloning instead of mutation)
 - No wildcards: ~2% overhead on JSON.stringify
 - With wildcards: ~50% overhead when redacting multiple paths
 - Redaction is NOT supported in browser environments

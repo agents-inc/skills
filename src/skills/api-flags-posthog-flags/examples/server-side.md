@@ -14,8 +14,7 @@ Use `posthog-node` for server-side evaluation. Use local evaluation for performa
 // lib/posthog-server.ts
 import { PostHog } from "posthog-node";
 
-const POSTHOG_POLL_INTERVAL_MS = 30000; // 30 seconds
-const FLAG_REQUEST_TIMEOUT_MS = 10000; // 10 seconds (default)
+const POSTHOG_POLL_INTERVAL_MS = 300_000; // 5 minutes (SDK default)
 
 // Initialize with local evaluation
 // Use Feature Flags Secure API Key (phs_*) from project settings > Feature Flags tab
@@ -24,14 +23,12 @@ export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
   // Enable local evaluation with feature flags secure key (phs_*)
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
-  // Poll for flag definition updates
+  // Poll for flag definition updates (default: 300000ms / 5 minutes)
   featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS,
-  // Timeout for flag requests (prevents blocking on slow responses)
-  featureFlagsRequestTimeoutMs: FLAG_REQUEST_TIMEOUT_MS,
 });
 ```
 
-**Note:** Get the Feature Flags Secure API Key from PostHog Project Settings > Feature Flags tab. The key starts with `phs_`. Personal API keys still work but are being deprecated for local evaluation.
+**Note:** Get the Feature Flags Secure API Key from PostHog Project Settings > Feature Flags tab. The key starts with `phs_`. Personal API keys are deprecated for local evaluation.
 
 ### Good Example - Server-side flag evaluation in an API handler
 
@@ -126,11 +123,16 @@ const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
 ```typescript
 // lib/posthog-server-redis.ts
 import { PostHog } from "posthog-node";
-import type { FlagDefinitionCacheProvider } from "posthog-node";
+import type {
+  FlagDefinitionCacheProvider,
+  FlagDefinitionCacheData,
+} from "posthog-node";
 import { createClient } from "redis";
 
 const CACHE_TTL_SECONDS = 300; // 5 minutes
 const CACHE_KEY = "posthog:flag-definitions";
+const LOCK_KEY = "posthog:flag-definitions:lock";
+const LOCK_TTL_SECONDS = 60;
 
 // Create a Redis-based cache provider (experimental feature)
 const createRedisCache = (redisUrl: string): FlagDefinitionCacheProvider => {
@@ -138,12 +140,32 @@ const createRedisCache = (redisUrl: string): FlagDefinitionCacheProvider => {
   client.connect();
 
   return {
-    async get() {
+    // Retrieve cached flag definitions
+    async getFlagDefinitions(): Promise<FlagDefinitionCacheData | undefined> {
       const data = await client.get(CACHE_KEY);
       return data ? JSON.parse(data) : undefined;
     },
-    async set(data) {
+
+    // Only one instance should fetch definitions at a time
+    async shouldFetchFlagDefinitions(): Promise<boolean> {
+      const acquired = await client.set(LOCK_KEY, "1", {
+        NX: true,
+        EX: LOCK_TTL_SECONDS,
+      });
+      return acquired !== null;
+    },
+
+    // Store definitions after a successful fetch
+    async onFlagDefinitionsReceived(
+      data: FlagDefinitionCacheData,
+    ): Promise<void> {
       await client.setEx(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(data));
+    },
+
+    // Release locks and close connections
+    async shutdown(): Promise<void> {
+      await client.del(LOCK_KEY);
+      await client.quit();
     },
   };
 };
@@ -151,12 +173,13 @@ const createRedisCache = (redisUrl: string): FlagDefinitionCacheProvider => {
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
+  enableLocalEvaluation: true,
   // Use Redis for shared flag definitions across instances
   flagDefinitionCacheProvider: createRedisCache(process.env.REDIS_URL!),
 });
 ```
 
-**Why good:** All Lambda/Edge instances share one cache, only one instance fetches definitions, eliminates cold start penalty
+**Why good:** All Lambda/Edge instances share one cache, `shouldFetchFlagDefinitions` ensures only one instance fetches, eliminates cold start penalty
 
 ### Solution 2: Split Read/Write Pattern (Cloudflare KV)
 

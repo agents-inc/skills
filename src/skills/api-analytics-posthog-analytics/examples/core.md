@@ -178,7 +178,7 @@ export type PostHogEvent = (typeof POSTHOG_EVENTS)[keyof typeof POSTHOG_EVENTS];
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "../lib/auth-client";
 
 export function useAnalyticsIdentify() {
   const posthog = usePostHog();
@@ -233,7 +233,7 @@ export function BadIdentify() {
 
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "../lib/auth-client";
 
 export function useLogout() {
   const posthog = usePostHog();

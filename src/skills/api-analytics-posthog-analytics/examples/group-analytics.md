@@ -17,7 +17,7 @@
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "../lib/auth-client";
 
 export function useOrganizationAnalytics() {
   const posthog = usePostHog();
@@ -45,7 +45,7 @@ export function useOrganizationAnalytics() {
 
 ```typescript
 // ✅ Good Example - Group event on server
-import { posthogServer } from "@/lib/analytics/posthog-server";
+import { posthogServer } from "../lib/analytics/posthog-server";
 
 interface InviteEventData {
   userId: string;

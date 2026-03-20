@@ -44,18 +44,15 @@ export async function shutdownPostHog(): Promise<void> {
 
 ---
 
-## Pattern 2: Next.js API Route Usage
+## Pattern 2: API Route Usage with flush()
 
-Capture events in Next.js API routes with proper flush handling.
+Capture events in API routes with proper flush handling for serverless environments.
 
 ```typescript
-// ✅ Good Example - Capturing events in API route
-// app/api/signup/route.ts
-import { NextResponse } from "next/server";
+// ✅ Good Example - Capturing events in an API route
+import { getPostHogServerClient } from "./lib/posthog/server";
 
-import { getPostHogServerClient } from "@/lib/posthog/server";
-
-export async function POST(request: Request) {
+export async function handleSignup(request: Request) {
   const posthog = getPostHogServerClient();
   const body = await request.json();
 
@@ -72,7 +69,7 @@ export async function POST(request: Request) {
   // CRITICAL: Flush events before response in serverless
   await posthog.flush();
 
-  return NextResponse.json({ success: true });
+  return Response.json({ success: true });
 }
 ```
 
@@ -86,12 +83,9 @@ For simpler serverless usage, use `captureImmediate` which awaits the HTTP reque
 
 ```typescript
 // ✅ Good Example - Using captureImmediate (recommended for serverless)
-// app/api/signup/route.ts
-import { NextResponse } from "next/server";
+import { getPostHogServerClient } from "./lib/posthog/server";
 
-import { getPostHogServerClient } from "@/lib/posthog/server";
-
-export async function POST(request: Request) {
+export async function handleSignup(request: Request) {
   const posthog = getPostHogServerClient();
   const body = await request.json();
 
@@ -105,7 +99,7 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ success: true });
+  return Response.json({ success: true });
 }
 ```
 
@@ -117,10 +111,9 @@ export async function POST(request: Request) {
 
 ```typescript
 // ❌ Bad Example - Not flushing events in serverless
-// app/api/action/route.ts
-import { getPostHogServerClient } from "@/lib/posthog/server";
+import { getPostHogServerClient } from "./lib/posthog/server";
 
-export async function POST(request: Request) {
+export async function handleAction(request: Request) {
   const posthog = getPostHogServerClient();
 
   posthog.capture({
@@ -129,7 +122,7 @@ export async function POST(request: Request) {
   });
 
   // BAD: No flush() - events may be lost in serverless!
-  return NextResponse.json({ success: true });
+  return Response.json({ success: true });
 }
 ```
 

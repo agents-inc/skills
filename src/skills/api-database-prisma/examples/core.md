@@ -466,26 +466,4 @@ type UserSummary = Prisma.UserGetPayload<{
 | `delete`            | `T`         | Yes                 |
 | `deleteMany`        | `{ count }` | No                  |
 
-### Common Filter Operators
-
-| Operator                 | Example                                               |
-| ------------------------ | ----------------------------------------------------- |
-| `equals`                 | `{ email: { equals: "a@b.com" } }`                    |
-| `not`                    | `{ status: { not: "DELETED" } }`                      |
-| `in`                     | `{ role: { in: ["USER", "ADMIN"] } }`                 |
-| `notIn`                  | `{ id: { notIn: excludedIds } }`                      |
-| `lt`, `lte`, `gt`, `gte` | `{ age: { gte: 18 } }`                                |
-| `contains`               | `{ title: { contains: "prisma" } }`                   |
-| `startsWith`             | `{ email: { startsWith: "admin" } }`                  |
-| `endsWith`               | `{ email: { endsWith: "@company.com" } }`             |
-| `mode`                   | `{ name: { contains: "john", mode: "insensitive" } }` |
-
-### Relation Filter Operators
-
-| Operator | Description                  | Example                                     |
-| -------- | ---------------------------- | ------------------------------------------- |
-| `some`   | At least one matches         | `{ posts: { some: { published: true } } }`  |
-| `every`  | All match                    | `{ posts: { every: { published: true } } }` |
-| `none`   | None match                   | `{ posts: { none: { published: true } } }`  |
-| `is`     | Related record matches       | `{ author: { is: { role: "ADMIN" } } }`     |
-| `isNot`  | Related record doesn't match | `{ author: { isNot: { role: "BANNED" } } }` |
+> See [reference.md](../reference.md) for filter operators, relation filter operators, and relation write operations.

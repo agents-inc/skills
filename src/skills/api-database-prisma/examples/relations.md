@@ -9,7 +9,7 @@
 ### Good Example - Eager Loading Relations
 
 ```typescript
-import { prisma } from "@/lib/db/client";
+import { prisma } from "../lib/db/client";
 
 // Include single relation
 const userWithProfile = await prisma.user.findUnique({

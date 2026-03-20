@@ -87,7 +87,6 @@ WelcomeEmail.PreviewProps = {
   features: ["Create projects", "Invite team members", "Track progress"],
 } satisfies WelcomeEmailProps;
 
-export { WelcomeEmail };
 export type { WelcomeEmailProps };
 ```
 
@@ -155,7 +154,6 @@ export async function sendEmail(
   }
 }
 
-export { sendEmail };
 export type { SendEmailOptions, SendEmailResult };
 ```
 
@@ -262,8 +260,6 @@ export async function sendEmailWithRetry(
 
   return { success: false, error: lastError ?? "Max retries exceeded" };
 }
-
-export { sendEmailWithRetry };
 ```
 
 **Why good:** Exponential backoff prevents overwhelming the API, only retries transient errors, configurable retry count, logs retry attempts

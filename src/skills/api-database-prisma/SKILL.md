@@ -340,7 +340,7 @@ export const prisma = new PrismaClient({
 
 **Gotchas & Edge Cases:**
 
-- `createMany` doesn't return created records (use `createManyAndReturn` on PostgreSQL/SQLite)
+- `createMany` doesn't return created records (use `createManyAndReturn` on PostgreSQL/CockroachDB/SQLite)
 - `updateMany` and `deleteMany` don't trigger `@updatedAt` hooks
 - Implicit many-to-many tables can't have extra fields - use explicit join model
 - `Json` fields are typed as `JsonValue` - need runtime validation at parse boundary

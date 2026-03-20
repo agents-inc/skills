@@ -108,50 +108,9 @@ Should I define a response schema?
 
 ---
 
-<red_flags>
+## Red Flags
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **No type provider configured** - Loses compile-time type safety on request/response
-- **Shared plugins without fastify-plugin** - Decorators invisible to other plugins
-- **Missing response schemas** - Loses 2-3x serialization performance
-- **Raw status code numbers** - Use named constants (HTTP_OK, HTTP_NOT_FOUND)
-- **Synchronous decorator values with async initialization** - Fastify may boot before ready
-- **Reference types in decorateRequest/decorateReply** - Mutations affect ALL requests (security risk)
-
-### Medium Priority Issues
-
-- **No error handler configured** - Stack traces exposed to clients in production
-- **Logging sensitive data** - PII in logs violates GDPR/compliance
-- **No request ID tracking** - Cannot trace requests across services
-- **Missing dependencies in plugin options** - Race conditions on decorator access
-- **Inline route handlers** - Creates unmaintainable god files
-- **No schema for query/params** - No validation, types are `unknown`
-
-### Common Mistakes
-
-- **Using `request.query` directly without schema** - Type is `unknown`, no validation
-- **Forgetting `await server.ready()`** - Plugins may not be fully loaded
-- **Not cleaning up in onClose** - Connection leaks on shutdown
-- **Using Express patterns** - `res.send()` vs `reply.send()`, `next()` vs returning
-- **Mixing async/await with done callback** - Pick one pattern per hook
-- **Mutating shared decorator state** - Use request decorator for per-request state
-
-### Gotchas & Edge Cases
-
-- **Hook return values:** Returning a value from hooks sends response immediately
-- **Plugin registration order:** Later plugins can't access earlier encapsulated decorators
-- **Validation error shape:** Fastify validation errors have `.validation` array, not `.message`
-- **Content-Type inference:** Fastify auto-detects JSON objects, manual for other types
-- **Route specificity:** More specific routes must be registered before wildcards
-- **Async errors in hooks:** Thrown errors go to error handler, not caught locally
-- **preHandler vs route preHandler:** Route-level runs AFTER plugin-level hooks
-- **onResponse timing:** Runs after response sent, cannot modify response
-- **Schema compilation:** Happens at startup, errors surface during server.ready()
-
-</red_flags>
+> See [SKILL.md](SKILL.md) for the full red flags list.
 
 ---
 

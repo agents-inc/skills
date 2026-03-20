@@ -102,7 +102,7 @@ What ORM/database are you using?
 - **Not handling the `user` parameter in JWT callback** - `user` is only available on first sign-in; check for it before accessing
 - **Forgetting `authorized` callback returns boolean** - Return `true` to allow, `false` to deny, or `Response` for redirect
 - **Cookie name change from v4** - Cookies changed from `next-auth.*` to `authjs.*` prefix
-- **Not awaiting `signIn()` in Server Actions** - `signIn()` throws a redirect; must be called in a try/catch or form action
+- **Wrapping `signIn()` in try/catch expecting a return value** - `signIn()` throws a NEXT_REDIRECT internally; call it directly in a form action, not inside try/catch
 
 ### Gotchas & Edge Cases
 

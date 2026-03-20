@@ -121,310 +121,82 @@ Supabase is an open-source Firebase alternative built on Postgres. It provides a
 
 ### Pattern 1: Typed Client Setup
 
-Create a Supabase client with the generated `Database` type for full type safety across all queries.
+Always pass the `Database` generic to `createClient` for full autocomplete on table names, column names, and return types. Use environment variables for URL and keys.
 
 ```typescript
-// lib/supabase.ts
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "./database.types";
-
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 ```
 
-**Why good:** `Database` generic enables autocomplete for table names, column names, and return types; environment variables keep secrets out of code; named constants for clarity
-
-```typescript
-// BAD: Untyped client
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  "https://abc.supabase.co",
-  "eyJ...", // Hardcoded key
-);
-
-// No autocomplete, no type checking on queries
-const { data } = await supabase.from("tabel_name").select("*"); // Typo not caught
-```
-
-**Why bad:** No `Database` generic loses all type safety, hardcoded URL and key are security risks, typos in table/column names not caught at compile time
+Without the generic, typos in table/column names are not caught at compile time. See [examples/core.md](examples/core.md) for browser, server, and admin client setup patterns.
 
 ---
 
 ### Pattern 2: Error Handling with { data, error }
 
-Every Supabase method returns `{ data, error }`. Always destructure and check the error.
+Every Supabase method returns `{ data, error }`. Always destructure and check `error` before using `data`. Never use non-null assertions on `data`.
 
 ```typescript
-// Good: Always check error before using data
-async function getProfile(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, username, avatar_url")
-    .eq("id", userId)
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to fetch profile: ${error.message}`);
-  }
-
-  return data;
-}
+const { data, error } = await supabase
+  .from("profiles")
+  .select("id, username")
+  .eq("id", userId)
+  .single();
+if (error) throw new Error(`Failed to fetch profile: ${error.message}`);
 ```
 
-**Why good:** Error checked before data access, `.single()` returns one row or error, descriptive error message with context
-
-```typescript
-// BAD: Ignoring errors
-async function getProfile(userId: string) {
-  const { data } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
-
-  return data!; // Dangerous non-null assertion
-}
-```
-
-**Why bad:** Error silently ignored, `data` could be `null` on failure, non-null assertion hides the problem, `select("*")` fetches unnecessary columns
+See [examples/core.md](examples/core.md) for the reusable error handler pattern and common mistakes.
 
 ---
 
 ### Pattern 3: Authentication Flows
 
-Use Supabase Auth for email/password, OAuth, and magic link authentication. Listen to auth state changes with `onAuthStateChange`.
+Supabase Auth supports email/password (`signInWithPassword`), OAuth (`signInWithOAuth`), magic links (`signInWithOtp`), and phone OTP. Register `onAuthStateChange` early in the app lifecycle and always clean up with `subscription.unsubscribe()`.
 
-#### Sign Up and Sign In
+Key gotcha: Do NOT call Supabase methods directly inside `onAuthStateChange` — use `setTimeout(..., 0)` to defer.
 
-```typescript
-// Sign up with email and password
-const { data, error } = await supabase.auth.signUp({
-  email: "user@example.com",
-  password: "secure-password-123",
-  options: {
-    data: {
-      full_name: "Alice Smith",
-    },
-  },
-});
-
-if (error) {
-  throw new Error(`Sign up failed: ${error.message}`);
-}
-
-// Sign in with email and password
-const { data: session, error: signInError } =
-  await supabase.auth.signInWithPassword({
-    email: "user@example.com",
-    password: "secure-password-123",
-  });
-
-if (signInError) {
-  throw new Error(`Sign in failed: ${signInError.message}`);
-}
-```
-
-#### OAuth (Social Login)
-
-```typescript
-// Redirect to OAuth provider
-const { data, error } = await supabase.auth.signInWithOAuth({
-  provider: "github",
-  options: {
-    redirectTo: `${window.location.origin}/auth/callback`,
-  },
-});
-```
-
-#### Auth State Listener
-
-```typescript
-// Listen to auth state changes — register early in app lifecycle
-const {
-  data: { subscription },
-} = supabase.auth.onAuthStateChange((event, session) => {
-  // IMPORTANT: Do NOT call other Supabase methods directly in this callback.
-  // Use setTimeout(..., 0) to defer if needed.
-  if (event === "SIGNED_IN") {
-    // Handle sign in
-  }
-  if (event === "SIGNED_OUT") {
-    // Handle sign out
-  }
-  if (event === "TOKEN_REFRESHED") {
-    // Token was refreshed
-  }
-});
-
-// Cleanup when done
-subscription.unsubscribe();
-```
-
-**Why good:** Separate error handling for each operation, OAuth uses `redirectTo` for callback URL, auth listener registered early, cleanup via `unsubscribe()`
-
-**When to use:** Every app that needs user authentication. Prefer `signInWithPassword` for email/password, `signInWithOAuth` for social providers, `signInWithOtp` for passwordless magic links.
+See [examples/auth.md](examples/auth.md) for sign up, sign in, OAuth, magic link, session management, middleware protection, and password reset patterns.
 
 ---
 
 ### Pattern 4: Database Queries
 
-Use the Supabase query builder for type-safe database operations with filters, ordering, pagination, and joins.
-
-#### Select with Filters
+Use the query builder for type-safe CRUD with filters, joins, ordering, and pagination. Always add `.select()` after `.insert()` or `.update()` to return the affected row.
 
 ```typescript
-const PAGE_SIZE = 20;
-
-// Fetch paginated, filtered results
-const { data: posts, error } = await supabase
+const { data, error } = await supabase
   .from("posts")
-  .select("id, title, content, created_at, author:profiles(username)")
+  .select("id, title, author:profiles(username)")
   .eq("published", true)
   .order("created_at", { ascending: false })
   .range(0, PAGE_SIZE - 1);
-
-if (error) {
-  throw new Error(`Failed to fetch posts: ${error.message}`);
-}
 ```
 
-#### Insert
-
-```typescript
-const { data, error } = await supabase
-  .from("posts")
-  .insert({
-    title: "New Post",
-    content: "Post content here",
-    author_id: userId,
-  })
-  .select()
-  .single();
-
-if (error) {
-  throw new Error(`Failed to create post: ${error.message}`);
-}
-```
-
-#### Update
-
-```typescript
-const { data, error } = await supabase
-  .from("posts")
-  .update({ title: "Updated Title" })
-  .eq("id", postId)
-  .select()
-  .single();
-
-if (error) {
-  throw new Error(`Failed to update post: ${error.message}`);
-}
-```
-
-#### Delete
-
-```typescript
-const { error } = await supabase.from("posts").delete().eq("id", postId);
-
-if (error) {
-  throw new Error(`Failed to delete post: ${error.message}`);
-}
-```
-
-#### RPC (Remote Procedure Call)
-
-```typescript
-// Call a Postgres function
-const { data, error } = await supabase.rpc("search_posts", {
-  search_query: "supabase",
-  result_limit: 10,
-});
-
-if (error) {
-  throw new Error(`Search failed: ${error.message}`);
-}
-```
-
-**Why good:** Named constants for page size, `.select()` after insert/update returns the created/updated row, joins via foreign key reference (`author:profiles(username)`), `.single()` for single-row operations, RPC for complex queries
+See [examples/database.md](examples/database.md) for complex queries, upserts, RPC calls, conditional filters, counting, and migrations.
 
 ---
 
 ### Pattern 5: Row Level Security (RLS) Policies
 
-RLS is the primary security mechanism in Supabase. Every table in an exposed schema must have RLS enabled with appropriate policies.
-
-#### Enable RLS and Create Policies
+RLS is the primary security mechanism. Enable it on every table, write separate policies per operation (not `FOR ALL`), and wrap `auth.uid()` in a subquery for performance.
 
 ```sql
--- ALWAYS enable RLS on every table
 alter table public.posts enable row level security;
 
--- SELECT: Users can read published posts or their own drafts
-create policy "Users can read published posts or own drafts"
-on public.posts for select
-to authenticated
-using (
-  published = true
-  or (select auth.uid()) = author_id
-);
-
--- INSERT: Users can only create posts as themselves
-create policy "Users can create their own posts"
-on public.posts for insert
-to authenticated
-with check (
-  (select auth.uid()) = author_id
-);
-
--- UPDATE: Users can only update their own posts
-create policy "Users can update their own posts"
-on public.posts for update
-to authenticated
-using ( (select auth.uid()) = author_id )
-with check ( (select auth.uid()) = author_id );
-
--- DELETE: Users can only delete their own posts
-create policy "Users can delete their own posts"
-on public.posts for delete
-to authenticated
-using ( (select auth.uid()) = author_id );
+create policy "posts_select" on public.posts for select to authenticated
+using ( published = true or (select auth.uid()) = author_id );
 ```
 
-**Why good:** RLS enabled first, separate policies per operation (not `FOR ALL`), `(select auth.uid())` wrapped in subquery for performance, `to authenticated` limits to logged-in users, `USING` for read filtering, `WITH CHECK` for write validation
-
-```sql
--- BAD: Common RLS mistakes
-
--- Forgetting to enable RLS (table is wide open!)
--- alter table public.posts enable row level security;  -- MISSING!
-
--- Using FOR ALL instead of separate policies
-create policy "bad_policy" on public.posts for all
-using (auth.uid() = author_id);  -- No subquery wrapper, no WITH CHECK
-
--- Trusting JWT metadata for access control
-create policy "bad_role_check" on public.posts for select
-using (auth.jwt() ->> 'user_metadata' ->> 'role' = 'admin');
--- BAD: user_metadata is modifiable by users!
-```
-
-**Why bad:** Missing `enable row level security` leaves table exposed, `FOR ALL` is less clear and harder to audit, bare `auth.uid()` without subquery hurts performance, `user_metadata` in JWT is user-modifiable and insecure for access control
+Never trust `user_metadata` from JWT for access control — it is user-modifiable. See [examples/database.md](examples/database.md) for full CRUD policies, team-based access, and anti-patterns.
 
 ---
 
 ### Pattern 6: Realtime Subscriptions
 
-Subscribe to database changes using channels with `postgres_changes`.
+Subscribe to database changes via `channel().on('postgres_changes', ...)`. Always unsubscribe on cleanup. DELETE events cannot be filtered — all deletes are received. UPDATE/DELETE payloads need `replica identity full` for old record data.
 
 ```typescript
-// Subscribe to new messages in a chat room
-const CHANNEL_NAME = "room-messages";
-
 const channel = supabase
-  .channel(CHANNEL_NAME)
+  .channel("room-messages")
   .on(
     "postgres_changes",
     {
@@ -434,154 +206,29 @@ const channel = supabase
       filter: `room_id=eq.${roomId}`,
     },
     (payload) => {
-      const newMessage = payload.new;
-      // Handle new message
-    },
-  )
-  .subscribe();
-
-// Cleanup: unsubscribe when leaving the room
-channel.unsubscribe();
-```
-
-#### Multiple Event Listeners
-
-```typescript
-const channel = supabase
-  .channel("post-changes")
-  .on(
-    "postgres_changes",
-    { event: "INSERT", schema: "public", table: "posts" },
-    (payload) => {
-      // Handle new post
-    },
-  )
-  .on(
-    "postgres_changes",
-    { event: "UPDATE", schema: "public", table: "posts" },
-    (payload) => {
-      // Handle updated post — payload.old requires replica identity full
-    },
-  )
-  .on(
-    "postgres_changes",
-    { event: "DELETE", schema: "public", table: "posts" },
-    (payload) => {
-      // Handle deleted post
+      /* handle */
     },
   )
   .subscribe();
 ```
 
-**Why good:** Named constant for channel name, filter scopes subscription to relevant rows, separate handlers per event type, cleanup via `unsubscribe()`
-
-**When to use:** Chat apps, live dashboards, collaborative editing, notification feeds. Avoid for high-frequency data (use polling or batch updates instead).
+Use for chat, live dashboards, notifications. Avoid for high-frequency data (> 100 updates/sec).
 
 ---
 
 ### Pattern 7: Storage Operations
 
-Upload, download, and serve files from Supabase Storage with bucket policies.
+Upload files with `supabase.storage.from(bucket).upload()`. Use `getPublicUrl()` for public buckets, `createSignedUrl()` for private buckets with time-limited access. Storage access control uses RLS on `storage.objects`.
 
-```typescript
-const BUCKET_NAME = "avatars";
-const SIGNED_URL_EXPIRY_SECONDS = 3600;
-
-// Upload a file
-const { data, error } = await supabase.storage
-  .from(BUCKET_NAME)
-  .upload(`${userId}/avatar.png`, file, {
-    cacheControl: "3600",
-    upsert: true,
-  });
-
-if (error) {
-  throw new Error(`Upload failed: ${error.message}`);
-}
-
-// Get a signed URL (temporary, expiring)
-const { data: signedUrl, error: signError } = await supabase.storage
-  .from(BUCKET_NAME)
-  .createSignedUrl(`${userId}/avatar.png`, SIGNED_URL_EXPIRY_SECONDS);
-
-// Get a public URL (permanent, for public buckets only)
-const {
-  data: { publicUrl },
-} = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${userId}/avatar.png`);
-```
-
-**Why good:** Named constants for bucket name and expiry, `upsert: true` replaces existing file, separate methods for signed (private) vs public URLs, error handling on upload
+See [examples/storage.md](examples/storage.md) for upload, signed URLs, public URLs, image transforms, bucket policies, and signed upload URLs.
 
 ---
 
 ### Pattern 8: Edge Functions
 
-Supabase Edge Functions run on Deno at the edge. Use `Deno.serve()` for the HTTP handler.
+Use `Deno.serve()` (not the deprecated `serve` import). Import supabase-js with `npm:` prefix: `import { createClient } from "npm:@supabase/supabase-js@2"`. Handle CORS on every response. Use `Deno.env.get()` for secrets. Forward user JWT for RLS enforcement.
 
-```typescript
-// supabase/functions/hello-world/index.ts
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    // Create Supabase client with the user's JWT for RLS
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      },
-    );
-
-    const { data, error } = await supabase.from("posts").select("*").limit(10);
-
-    if (error) {
-      throw error;
-    }
-
-    return new Response(JSON.stringify({ data }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
-  }
-});
-```
-
-**Why good:** CORS headers handled for browser requests, user JWT forwarded for RLS enforcement, `Deno.env.get()` for secrets (never hardcode), proper error handling with try/catch, `npm:` prefix for Deno package imports
-
-```typescript
-// BAD: Edge function mistakes
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"; // Deprecated
-import { createClient } from "@supabase/supabase-js"; // Missing npm: prefix
-
-serve(async (req) => {
-  const supabase = createClient(
-    "https://abc.supabase.co", // Hardcoded URL
-    "eyJ...", // Hardcoded service_role key in edge function
-  );
-  // ...
-});
-```
-
-**Why bad:** `serve` from deno.land is deprecated (use `Deno.serve`), bare specifier without `npm:` prefix fails in Deno, hardcoded credentials are insecure, service_role key in edge function bypasses all RLS
+See [examples/edge-functions.md](examples/edge-functions.md) for basic functions, authenticated access, shared utilities, webhooks, multi-route "fat functions", and background processing with `EdgeRuntime.waitUntil()`.
 
 </patterns>
 

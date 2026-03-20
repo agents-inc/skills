@@ -279,6 +279,35 @@ function createCacheMiddleware(options: CacheOptions) {
 
 ---
 
+## Cache Hit/Miss Monitoring
+
+```typescript
+// Track cache hit/miss rates
+const CACHE_HITS = new Map<string, number>();
+const CACHE_MISSES = new Map<string, number>();
+
+async function getCached<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+  ttl: number,
+): Promise<T> {
+  const cached = await cacheClient.get(key);
+  if (cached) {
+    CACHE_HITS.set(key, (CACHE_HITS.get(key) || 0) + 1);
+    return JSON.parse(cached);
+  }
+
+  CACHE_MISSES.set(key, (CACHE_MISSES.get(key) || 0) + 1);
+  const data = await fetchFn();
+  await cacheClient.set(key, JSON.stringify(data), { EX: ttl });
+  return data;
+}
+```
+
+**Why good:** Separates cache concerns from business logic, tracks per-key hit rates for targeted optimization, generic wrapper works with any data type
+
+---
+
 ## See Also
 
 - [core.md](core.md) - Query optimization, indexing, connection pooling
