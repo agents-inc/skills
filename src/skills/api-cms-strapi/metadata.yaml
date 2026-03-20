@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-cms
+slug: strapi
+domain: api
+author: "@vince"
+displayName: Strapi
+cliDescription: Open-source headless CMS with content types, REST/GraphQL API, and admin panel
+usageGuidance: >-
+  Use when building content-managed applications with Strapi — content type schemas,
+  REST API (filters, populate, pagination), Document Service API (find, create, update,
+  delete, publish), custom controllers, services, policies, middlewares, lifecycle hooks,
+  authentication (register, login, JWT), roles and permissions, media upload, and
+  TypeScript support.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-baas
+slug: turso
+domain: api
+author: "@vince"
+displayName: Turso
+cliDescription: Edge-hosted SQLite database with libSQL driver and embedded replicas
+usageGuidance: >-
+  Use when deploying SQLite on Turso — libSQL client for edge/serverless,
+  embedded replicas for zero-latency reads, database groups for multi-region,
+  and schema migrations with branching.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-cms
+slug: payload
+domain: api
+author: "@vince"
+displayName: Payload CMS
+cliDescription: TypeScript-native headless CMS with code-first schema and built-in admin panel
+usageGuidance: >-
+  Use when building content-managed applications with Payload — collection configs,
+  field types, hooks, access control, REST/GraphQL/Local API, admin panel customization,
+  and database adapter pattern.

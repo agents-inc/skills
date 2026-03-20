@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-baas
+slug: upstash
+domain: api
+author: "@vince"
+displayName: Upstash
+cliDescription: Serverless Redis with REST API for edge and serverless functions
+usageGuidance: Use when deploying Redis on Upstash -- REST-based Redis for edge/serverless compatibility, automatic JSON serialization, pipeline support, rate limiting with @upstash/ratelimit, and global replication.

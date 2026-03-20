@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-baas
+slug: vercel-postgres
+domain: api
+author: "@vince"
+displayName: Vercel Postgres
+cliDescription: Serverless PostgreSQL on Vercel with edge-compatible SDK
+usageGuidance: >-
+  Use when deploying PostgreSQL on Vercel -- sql tagged template for edge
+  functions, createPool/createClient for Node.js, automatic connection
+  management via POSTGRES_URL env vars. NOTE: @vercel/postgres is deprecated
+  (Dec 2024). For new projects, use @neondatabase/serverless instead.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-cms
+slug: sanity
+domain: api
+author: "@vince"
+displayName: Sanity
+cliDescription: Structured content platform with GROQ query language and real-time collaboration
+usageGuidance: >-
+  Use when building content-managed applications with Sanity — schema definitions,
+  GROQ queries, @sanity/client for data fetching, image handling with @sanity/image-url,
+  Portable Text for rich text, and Sanity Studio customization.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-baas
+slug: planetscale
+domain: api
+author: "@vince"
+displayName: PlanetScale
+cliDescription: Serverless MySQL platform with branching, deploy requests, and edge-compatible driver
+usageGuidance: >-
+  Use when deploying MySQL on PlanetScale — serverless driver for edge/serverless,
+  database branching, deploy requests for schema changes, connection pooling,
+  and Vitess-powered horizontal scaling.
