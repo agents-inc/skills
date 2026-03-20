@@ -81,49 +81,15 @@ Testing multiple configurations?
 
 ---
 
-## RED FLAGS
+## Gotchas Quick Reference
 
-**High Priority Issues:**
+> For the full RED FLAGS list, see [SKILL.md](SKILL.md). This section covers extended gotchas and version-specific notes.
 
-- ❌ **Running full test suite on every PR** - Use affected detection (`--filter=...[origin/main]`) or CI takes 10+ minutes
-- ❌ **No caching configured** - Reinstalling dependencies every run wastes 2-3 minutes
-- ❌ **Using `latest` for tool versions** - Non-deterministic builds break reproducibility (pin to specific version)
-- ❌ **Committing secrets to repository** - Use GitHub Secrets, never hardcode credentials
-- ❌ **Static AWS/GCP credentials** - Use OIDC authentication, never store long-lived access keys
-- ❌ **No quality gates on main branch** - Missing lint/test/type-check allows broken code to merge
-
-**Medium Priority Issues:**
-
-- ⚠️ **Sequential jobs instead of parallel** - Lint/test/type-check should run in parallel (saves 40% time)
-- ⚠️ **No remote caching for Turborepo** - Team doesn't benefit from shared cache (enable Vercel remote cache)
-- ⚠️ **No concurrency limits** - Multiple CI runs on same PR waste resources (use `cancel-in-progress: true`)
-- ⚠️ **Rebuilding for each environment** - Build once, promote artifact through staging/production
-- ⚠️ **No monitoring of CI performance** - Can't identify bottlenecks (track duration, cache hit rate)
-- ⚠️ **Magic numbers in workflows** - Hardcoded timeouts, thresholds (use named constants)
-
-**Common Mistakes:**
-
-- Not using `fetch-depth: 0` for affected detection (git diff fails without history)
-- Forgetting to cache `node_modules` in addition to `~/.bun/install/cache`
-- Using `needs: [all, previous, jobs]` on every job (creates sequential execution)
-- Not handling new packages in affected detection (they get skipped)
-- Mixing kebab-case and camelCase in workflow/job names (inconsistent)
-
-**Gotchas & Edge Cases:**
-
-- **Turborepo affected detection requires `fetch-depth: 0`** or git comparison fails (shallow clone by default)
-- **New packages have no git history** so `--filter=...[origin/main]` skips them (always check for new package.json files)
-- **GitHub Actions cache has 10GB free limit per repo** (configurable/pay-as-you-go beyond that since Nov 2025, evicts oldest entries)
-- **Vercel remote cache free tier is per-user** not per-organization (each developer needs individual Vercel account linked)
-- **OIDC requires `id-token: write` permission** or token generation fails silently
-- **Environment secrets override repository secrets** with same name (can cause confusion)
-- **Artifact attestations require `attestations: write` permission** in addition to `id-token: write` and `contents: read`
 - **Cache action v5 is current (v4.2.0 minimum)** - older versions use deprecated cache backend
-- **`actions/create-release` is deprecated** - use `softprops/action-gh-release@v2` instead
-- **workflow_dispatch now supports 25 inputs** (increased from 10) - use `type: environment` for environment selection
-- **Reusable workflow limits increased (Nov 2025)** - now supports 10 nested levels (was 4) and 50 total workflows (was 20)
+- **Vercel remote cache free tier is per-user** not per-organization (each developer needs individual Vercel account linked)
 - **OIDC tokens now include `check_run_id` claim (Nov 2025)** - enables tracing tokens to exact job/compute for compliance
 - **M2 macOS runners available** - use `macos-latest-xlarge`, `macos-15-xlarge` for Apple Silicon with GPU
+- **Reusable workflow limits increased (Nov 2025)** - now supports 10 nested levels (was 4) and 50 total workflows (was 20)
 
 ---
 
@@ -247,8 +213,8 @@ export const QUALITY_GATES = {
 export const TURBO_FILTERS = {
   AFFECTED_SINCE_MAIN: "--filter=...[origin/main]",
   AFFECTED_APPS_ONLY: "--filter=./apps/*...[origin/main]",
-  SPECIFIC_PACKAGE_WITH_DEPS: "--filter=@repo/ui...",
-  SPECIFIC_PACKAGE_WITH_DEPENDENTS: "--filter=...@repo/api",
+  SPECIFIC_PACKAGE_WITH_DEPS: "--filter=my-package...",
+  SPECIFIC_PACKAGE_WITH_DEPENDENTS: "--filter=...my-package",
 } as const;
 ```
 

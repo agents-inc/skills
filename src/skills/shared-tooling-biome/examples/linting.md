@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Installation, biome.json config, editor integration
+- [core.md](core.md) -- Installation, biome.json config, editor integration
 - [formatting.md](formatting.md) -- Formatter config, Prettier compatibility
 - [ci.md](ci.md) -- CI pipelines, git hooks, staged files
 - [migration.md](migration.md) -- Migrating from ESLint + Prettier
@@ -129,13 +129,7 @@ function processData(input: unknown) {
 }
 ```
 
-### Suppression Levels
-
-| Level    | Example                                    | Scope                |
-| -------- | ------------------------------------------ | -------------------- |
-| Category | `biome-ignore lint:`                       | All lint rules       |
-| Group    | `biome-ignore lint/suspicious:`            | All suspicious rules |
-| Rule     | `biome-ignore lint/suspicious/noDebugger:` | Single rule          |
+Suppressions can target a category (`lint`), group (`lint/suspicious`), or individual rule (`lint/suspicious/noDebugger`). See [reference.md](../reference.md#suppression-comment-syntax) for the full specifier table.
 
 **Important:** Explanations are mandatory. `// biome-ignore lint:` without a reason after the colon will be flagged.
 

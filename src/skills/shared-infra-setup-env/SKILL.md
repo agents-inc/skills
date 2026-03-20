@@ -5,7 +5,7 @@ description: Environment configuration, Zod validation
 
 # Environment Management
 
-> **Quick Guide:** Per-app .env files (apps/client-next/.env). Framework-specific prefixes (NEXT*PUBLIC*\_, VITE\_\_). Zod validation at startup. Maintain .env.example templates. Never commit secrets (.gitignore). Environment-based feature flags.
+> **Quick Guide:** Per-app .env files. Framework-specific prefixes (`NEXT_PUBLIC_*` for Next.js, `VITE_*` for Vite). Zod validation at startup. Maintain .env.example templates. Never commit secrets (.gitignore). Environment-based feature flags.
 
 ---
 
@@ -17,7 +17,7 @@ description: Environment configuration, Zod validation
 
 **(You MUST validate ALL environment variables with Zod at application startup)**
 
-**(You MUST use framework-specific prefixes for client-side variables - NEXT*PUBLIC*\* for Next.js, VITE\_\* for Vite)**
+**(You MUST use framework-specific prefixes for client-side variables - `NEXT_PUBLIC_*` for Next.js, `VITE_*` for Vite)**
 
 **(You MUST maintain .env.example templates with ALL required variables documented)**
 
@@ -29,7 +29,7 @@ description: Environment configuration, Zod validation
 
 ---
 
-**Auto-detection:** Environment variables, .env files, Zod validation, t3-env, @t3-oss/env, secrets management, NEXT*PUBLIC* prefix, VITE\_ prefix, feature flags, z.stringbool
+**Auto-detection:** Environment variables, .env files, Zod validation, t3-env, @t3-oss/env, secrets management, `NEXT_PUBLIC_` prefix, `VITE_` prefix, feature flags, z.stringbool
 
 **When to use:**
 
@@ -50,7 +50,7 @@ description: Environment configuration, Zod validation
 - Per-app .env files (not root-level, prevents conflicts)
 - Zod validation at startup for type safety and early failure
 - T3 Env pattern for Next.js/Vite projects (recommended)
-- Framework-specific prefixes (NEXT*PUBLIC*\_ for client, VITE\_\_ for Vite client)
+- Framework-specific prefixes (`NEXT_PUBLIC_*` for client, `VITE_*` for Vite client)
 - .env.example templates for documentation and onboarding
 
 **Detailed Resources:**
@@ -144,7 +144,7 @@ packages/
 3. `.env.local`
 4. `.env`
 
-**Exception:** Shared variables can go in your build tool's env configuration (e.g., `turbo.json` `env` array) for cache invalidation
+**Exception:** Shared variables can go in your build tool's env configuration for cache invalidation
 
 See [examples/core.md](examples/core.md) for complete code examples.
 
@@ -253,7 +253,7 @@ Need environment configuration?
 │   └─ NO → Use .env with defaults
 └─ Is it app-specific or shared?
     ├─ App-specific → Per-app .env file
-    └─ Shared → Declare in turbo.json env array
+    └─ Shared → Declare in build tool's env configuration
 ```
 
 See [reference.md](reference.md) for complete decision frameworks including feature flag decisions.
@@ -270,7 +270,7 @@ See [reference.md](reference.md) for complete decision frameworks including feat
 
 - Committing secrets to version control (.env files with real credentials)
 - Using environment variables directly without Zod validation (causes runtime errors)
-- Using NEXT*PUBLIC*\_ or VITE\_\_ prefix for secrets (embeds in client bundle)
+- Using `NEXT_PUBLIC_*` or `VITE_*` prefix for secrets (embeds in client bundle)
 
 **Medium Priority Issues:**
 
@@ -284,7 +284,7 @@ See [reference.md](reference.md) for complete decision frameworks including feat
 - Environment variables are strings - use `z.coerce.number()` for numbers, use `z.stringbool()` for booleans (Zod 4+)
 - **CRITICAL:** `z.coerce.boolean()` converts "false" to `true` (string is truthy) - use `z.stringbool()` (Zod 4+) instead
 - Empty string env vars are NOT `undefined` - use T3 Env's `emptyStringAsUndefined: true` option
-- Turborepo cache is NOT invalidated by env changes unless declared in `turbo.json` env array
+- Monorepo build tool caches may NOT be invalidated by env changes unless declared in the tool's env configuration
 
 See [reference.md](reference.md) for complete RED FLAGS, anti-patterns, and checklists.
 
@@ -300,7 +300,7 @@ See [reference.md](reference.md) for complete RED FLAGS, anti-patterns, and chec
 
 **(You MUST validate ALL environment variables with Zod at application startup)**
 
-**(You MUST use framework-specific prefixes for client-side variables - NEXT*PUBLIC*\* for Next.js, VITE\_\* for Vite)**
+**(You MUST use framework-specific prefixes for client-side variables - `NEXT_PUBLIC_*` for Next.js, `VITE_*` for Vite)**
 
 **(You MUST maintain .env.example templates with ALL required variables documented)**
 

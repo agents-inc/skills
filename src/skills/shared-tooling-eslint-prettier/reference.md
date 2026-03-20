@@ -11,7 +11,7 @@
 | ESLint 9                | v9.39.4       | Flat config, defineConfig(), multithreaded linting |
 | ESLint 10               | v10.0.3       | .eslintrc removed, file-based config lookup        |
 | Prettier                | v3.8.1        | TS config files, experimental options              |
-| typescript-eslint       | v8.57.0       | projectService (stable), shared configs            |
+| typescript-eslint       | v8.57.1       | projectService (stable), shared configs            |
 | eslint-config-prettier  | latest        | Disables conflicting ESLint formatting rules       |
 | eslint-plugin-only-warn | latest        | Converts errors to warnings                        |
 

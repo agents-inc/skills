@@ -21,7 +21,7 @@ description: Expo managed workflow
 
 **(You MUST use config plugins for native customization - NEVER manually edit android/ios directories in managed workflow)**
 
-**(You MUST use EXPO*PUBLIC* prefix for client-side environment variables - NEVER store secrets in these variables)**
+**(You MUST use `EXPO_PUBLIC_` prefix for client-side environment variables - NEVER store secrets in these variables)**
 
 </critical_requirements>
 
@@ -213,7 +213,7 @@ SplashScreen.preventAutoHideAsync();
 
 **(You MUST use config plugins for native customization - NEVER manually edit android/ios directories in managed workflow)**
 
-**(You MUST use EXPO*PUBLIC* prefix for client-side environment variables - NEVER store secrets in these variables)**
+**(You MUST use `EXPO_PUBLIC_` prefix for client-side environment variables - NEVER store secrets in these variables)**
 
 **Failure to follow these rules will cause OTA update crashes, broken builds, and security vulnerabilities.**
 

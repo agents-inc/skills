@@ -338,7 +338,7 @@ src/
 
 - oclif hooks run in **parallel**, not sequence -- don't depend on execution order between hooks
 - `useInput` fires **once** for pasted text, not per-character -- use `usePaste` for paste handling
-- Ink requires **React 18+** for concurrent features
+- Ink v5 requires **React 18+**, Ink v6 requires **React 19+** -- check your Ink version's peer dependencies
 - `enableJsonFlag` makes `run()` return value the JSON output -- ensure the return type matches what consumers expect
 - oclif's `this.error()` throws (exits the process) -- it does not return
 

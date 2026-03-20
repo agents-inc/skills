@@ -32,7 +32,7 @@
 *.pfx
 ```
 
-**Why good:** .env.local and .env._.local patterns prevent committing local secrets, sensitive file extensions (_.key, \*.pem) prevent accidental key commits, optional .env ignore with !.env.example allows flexibility
+**Why good:** `.env.local` and `.env.*.local` patterns prevent committing local secrets, sensitive file extensions (`*.key`, `*.pem`) prevent accidental key commits, optional .env ignore with `!.env.example` allows flexibility
 
 ### Bad Example - Secrets committed to repository
 

@@ -138,7 +138,7 @@ How to navigate?
 
 - **Using Expo Go for production testing** - missing native modules, push notifications, accurate splash screens; always use development builds
 - **Not updating runtimeVersion after native changes** - OTA updates will crash apps with incompatible native code
-- **Storing secrets in EXPO*PUBLIC* variables** - these are embedded in JavaScript bundle, visible to anyone
+- **Storing secrets in `EXPO_PUBLIC_` variables** - these are embedded in JavaScript bundle, visible to anyone
 - **Manually editing android/ios in managed workflow** - changes lost on `prebuild --clean`; use config plugins instead
 - **Mixing version numbers incorrectly** - iOS buildNumber must be string, Android versionCode must be integer
 - **Using expo-av** - fully removed in SDK 55; migrate to `expo-video` and `expo-audio`
@@ -250,7 +250,7 @@ export default {
 
 ---
 
-### Anti-Pattern 3: Secrets in EXPO*PUBLIC* Variables
+### Anti-Pattern 3: Secrets in `EXPO_PUBLIC_` Variables
 
 ```bash
 # ANTI-PATTERN: Exposing secrets
@@ -411,14 +411,19 @@ eas build --profile preview --platform all
 - Expo Router v7 with Stack.Toolbar, Apple Zoom transitions, SplitView (experimental)
 - **Legacy Architecture support removed** - New Architecture is the only option, `newArchEnabled` flag removed
 - `expo-av` completely removed from Expo Go and SDK - use `expo-video` and `expo-audio`
-- 75% smaller OTA update downloads with Hermes bytecode diffing
+- `edgeToEdgeEnabled` removed from app.json - edge-to-edge is mandatory on Android 16+
+- 75% smaller OTA update downloads with Hermes bytecode diffing (opt-in via `enableBsdiffPatchSupport`)
+- Hermes v1 opt-in via `useHermesV1` in expo-build-properties (better ES6+ support, increased build times)
 - `eas update` now requires `--environment` flag (replaces `--channel`)
 - `expo-server` package (renamed from `@expo/server`) ships as part of SDK
 - `expo-widgets` for iOS home screen widgets and Live Activities
 - `expo-brownfield` for adding Expo to existing native apps
 - New default template uses native tabs and `/src/app` directory structure
+- NativeTabs compound component API: use `NativeTabs.Trigger.Icon` instead of separate `Icon` import
+- All SDK packages use matching major versions (expo-camera for SDK 55 is `^55.0.0`)
 - `removeSubscription` function exports deprecated across packages (use `subscription.remove()`)
 - `expo-video-thumbnails` deprecated (use `expo-video` instead)
+- Minimum Node.js: ^20.19.4, ^22.13.0, ^24.3.0, ^25.0.0
 
 ### Migration Checklist
 

@@ -199,7 +199,7 @@
 
 ## See Also
 
-- [examples/setup.md](examples/setup.md) for installation, biome.json, editor integration
+- [examples/core.md](examples/core.md) for installation, biome.json, editor integration
 - [examples/linting.md](examples/linting.md) for lint rules, suppressions, overrides
 - [examples/formatting.md](examples/formatting.md) for formatter options, Prettier mapping
 - [examples/ci.md](examples/ci.md) for CI pipelines, git hooks, staged files

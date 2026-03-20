@@ -644,7 +644,7 @@ SDK 52+ provides headless tab components via `expo-router/ui` for fully custom t
 ```typescript
 // app/(tabs)/_layout.tsx
 import { Tabs, TabList, TabTrigger, TabSlot } from "expo-router/ui";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Text, StyleSheet } from "react-native";
 
 const TAB_BAR_HEIGHT = 60;
 
@@ -654,36 +654,18 @@ export default function CustomTabLayout() {
       {/* Content area */}
       <TabSlot />
 
-      {/* Custom tab bar */}
+      {/* Custom tab bar - TabTrigger renders as Pressable by default */}
       <TabList style={styles.tabBar}>
-        <TabTrigger name="home" href="/" asChild>
-          <Pressable style={styles.tab}>
-            {({ isFocused }) => (
-              <Text style={[styles.tabText, isFocused && styles.tabTextFocused]}>
-                Home
-              </Text>
-            )}
-          </Pressable>
+        <TabTrigger name="home" href="/" style={styles.tab}>
+          <Text>Home</Text>
         </TabTrigger>
 
-        <TabTrigger name="search" href="/search" asChild>
-          <Pressable style={styles.tab}>
-            {({ isFocused }) => (
-              <Text style={[styles.tabText, isFocused && styles.tabTextFocused]}>
-                Search
-              </Text>
-            )}
-          </Pressable>
+        <TabTrigger name="search" href="/search" style={styles.tab}>
+          <Text>Search</Text>
         </TabTrigger>
 
-        <TabTrigger name="profile" href="/profile" asChild>
-          <Pressable style={styles.tab}>
-            {({ isFocused }) => (
-              <Text style={[styles.tabText, isFocused && styles.tabTextFocused]}>
-                Profile
-              </Text>
-            )}
-          </Pressable>
+        <TabTrigger name="profile" href="/profile" style={styles.tab}>
+          <Text>Profile</Text>
         </TabTrigger>
       </TabList>
     </Tabs>
@@ -703,35 +685,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tabText: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  tabTextFocused: {
-    color: "#007AFF",
-    fontWeight: "600",
-  },
 });
 ```
 
 ### TabTrigger Props
 
-| Prop           | Type                                 | Description                                                         |
-| -------------- | ------------------------------------ | ------------------------------------------------------------------- |
-| `name`         | string                               | Required identifier for the tab                                     |
-| `href`         | string                               | Required route destination (in TabList)                             |
-| `resetOnFocus` | "always" \| "onLongPress" \| "never" | Navigation state reset behavior (renamed from `reset` in Router v7) |
-| `asChild`      | boolean                              | Pass navigation to child component                                  |
-| `isFocused`    | boolean                              | Forwarded prop indicating active state                              |
+| Prop      | Type                                 | Description                             |
+| --------- | ------------------------------------ | --------------------------------------- |
+| `name`    | string                               | Required identifier for the tab         |
+| `href`    | string                               | Required route destination (in TabList) |
+| `reset`   | "always" \| "onLongPress" \| "never" | Navigation state reset behavior         |
+| `asChild` | boolean                              | Pass navigation to child component      |
 
 ### Native Tabs (SDK 54+ Alpha)
 
-SDK 54 introduces true native tabs with iOS 26 Liquid Glass support. **Note: This API is in alpha and subject to change.**
+SDK 54+ introduces native tabs with iOS 26 Liquid Glass support. **Note: This API is in alpha and subject to change.**
 
 ```typescript
 // app/(tabs)/_layout.tsx
 // IMPORTANT: Import from unstable-native-tabs, not expo-router
-import { NativeTabs, Icon, Label, Badge } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 const TAB_BAR_TINT_COLOR = "#007AFF";
 
@@ -742,19 +715,19 @@ export default function TabLayout() {
       minimizeBehavior="onScrollDown" // iOS 26+
     >
       <NativeTabs.Trigger name="index">
-        <Icon sf="house.fill" />
-        <Label>Home</Label>
+        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="search">
-        <Icon sf="magnifyingglass" />
-        <Label>Search</Label>
-        <Badge>3</Badge>
+        <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
+        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Badge>3</NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
-        <Icon sf="person.fill" />
-        <Label>Profile</Label>
+        <NativeTabs.Trigger.Icon sf="person.fill" md="person" />
+        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

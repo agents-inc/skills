@@ -69,7 +69,7 @@ description: Biome v2 unified linter, formatter, and import organizer — single
 
 ## Examples
 
-- [Setup & Configuration](examples/setup.md) — Installation, biome.json, VS Code, monorepos, framework configs
+- [Setup & Configuration](examples/core.md) — Installation, biome.json, VS Code, monorepos, framework configs
 - [Linting Rules](examples/linting.md) — Rule groups, domains, suppressions, overrides, import ordering
 - [Formatting](examples/formatting.md) — Formatter options, Prettier compatibility, option mapping
 - [CI & Git Hooks](examples/ci.md) — GitHub Actions, GitLab CI, Husky, Lefthook, staged files
@@ -153,7 +153,7 @@ npx @biomejs/biome init
 
 **Why bad:** Missing `$schema` loses autocompletion, no VCS means linting node_modules, Biome defaults to tabs which surprises Prettier migrants
 
-> **Full example:** See [examples/setup.md](examples/setup.md) for a production-ready biome.json with overrides, framework configs, and monorepo setup.
+> **Full example:** See [examples/core.md](examples/core.md) for a production-ready biome.json with overrides, framework configs, and monorepo setup.
 
 ---
 
@@ -326,7 +326,7 @@ Biome v2 supports nested `biome.json` files. Each subdirectory can override the 
 
 **Why good:** `"extends": "//"` shorthand inherits root config, `"root": false` marks as child, each package can relax or tighten rules independently
 
-> **Full examples:** See [examples/setup.md](examples/setup.md#monorepo-nested-configuration) for root + child config patterns.
+> **Full examples:** See [examples/core.md](examples/core.md#monorepo-nested-configuration) for root + child config patterns.
 
 ---
 
@@ -453,7 +453,7 @@ How to configure Biome?
 - **eslint-plugin-import**: Biome's import organizer replaces import sorting plugins
 - **eslint-config-prettier**: Not needed — Biome has no formatter/linter conflicts
 
-> **CI/editor integration:** See [examples/ci.md](examples/ci.md) and [examples/setup.md](examples/setup.md#vs-code-integration).
+> **CI/editor integration:** See [examples/ci.md](examples/ci.md) and [examples/core.md](examples/core.md#vs-code-integration).
 
 </integration>
 

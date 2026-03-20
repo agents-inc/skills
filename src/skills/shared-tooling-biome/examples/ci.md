@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Installation, biome.json config, editor integration
+- [core.md](core.md) -- Installation, biome.json config, editor integration
 - [linting.md](linting.md) -- Lint rules, domains, suppressions, overrides
 - [formatting.md](formatting.md) -- Formatter config, Prettier compatibility
 - [migration.md](migration.md) -- Migrating from ESLint + Prettier

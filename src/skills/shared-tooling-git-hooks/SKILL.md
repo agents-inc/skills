@@ -121,7 +121,16 @@ lint-staged v16 runs commands only on staged files. Uses `picomatch` for glob ma
 export default {
   "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
   "*.{css,scss}": ["prettier --write"],
-  "*.{ts,tsx}": () => "tsc --noEmit", // Function syntax runs on ALL files
+};
+```
+
+Type checking requires function syntax (runs on ALL files, not just staged):
+
+```javascript
+// lint-staged.config.mjs — with type checking
+export default {
+  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{ts,tsx,js,jsx}": () => "tsc --noEmit",
 };
 ```
 

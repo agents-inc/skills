@@ -30,7 +30,7 @@ STRIPE_SECRET_KEY=sk_test_...
 JWT_SECRET=jwt-secret-key
 ```
 
-**Why good:** NEXT*PUBLIC*\* prefix makes client-side variables explicit preventing accidental secret exposure, server-side variables never embedded in bundle, clear separation improves security
+**Why good:** `NEXT_PUBLIC_*` prefix makes client-side variables explicit preventing accidental secret exposure, server-side variables never embedded in bundle, clear separation improves security
 
 ### Bad Example - Missing prefixes and poor naming
 

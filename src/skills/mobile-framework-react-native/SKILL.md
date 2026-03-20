@@ -65,7 +65,7 @@ description: React Native mobile development patterns - New Architecture (Fabric
 - [examples/navigation.md](examples/navigation.md) - Type-safe navigation, auth flows, deep linking
 - [examples/styling.md](examples/styling.md) - StyleSheet, design tokens, theming, responsive styling
 - [examples/performance.md](examples/performance.md) - FlashList, FlatList optimization, memoization
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, CLI commands
+- [reference.md](reference.md) - Decision frameworks, checklists, CLI commands
 
 ---
 

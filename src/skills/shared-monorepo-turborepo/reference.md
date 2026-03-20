@@ -216,16 +216,16 @@ Is this a monorepo?
 
 ## Turborepo 2.x Features
 
-### Recent Additions (2.7 - 2.8)
+### Recent Additions
 
-**Devtools (Visual Graph Exploration):**
+**Devtools (2.7 — Visual Graph Exploration):**
 
 ```bash
 # Launch visual devtools for Package/Task Graph exploration
 turbo devtools
 ```
 
-**`turbo docs` (CLI Documentation Search):**
+**`turbo docs` (2.8 — CLI Documentation Search):**
 
 ```bash
 # Search docs from terminal
@@ -256,28 +256,35 @@ Package configurations can extend and append to inherited arrays instead of over
 | `interruptible` | `boolean`  | Allow `turbo watch` to restart persistent tasks |
 | `with`          | `string[]` | Sibling tasks to run alongside this task        |
 
-**Package Boundaries (Tags):**
+**Package Boundaries (Tags) — experimental:**
 
 ```json
-// turbo.json - Define package boundaries
+// Root turbo.json - Define boundary rules for tags
 {
   "boundaries": {
     "tags": {
-      "@repo/ui": ["ui"],
-      "@repo/api": ["api"]
+      "ui": {
+        "dependencies": {
+          "allow": ["shared"],
+          "deny": ["api"]
+        }
+      }
     }
   }
 }
 
-// Package turbo.json - Restrict dependencies
+// packages/ui/turbo.json - Assign tags to package
 {
-  "tags": ["ui"],
-  "boundaries": {
-    "allow": ["shared"],
-    "deny": ["api"]
-  }
+  "tags": ["ui"]
+}
+
+// packages/api/turbo.json
+{
+  "tags": ["api"]
 }
 ```
+
+Run `turbo boundaries` to validate dependency rules against tag assignments.
 
 **Special Microsyntax:**
 
@@ -320,7 +327,7 @@ Key changes:
 **Tools:**
 
 - Syncpack: https://github.com/JamieMason/syncpack
-- Turborepo Remote Cache: https://turbo.build/repo/docs/core-concepts/remote-caching
+- Turborepo Remote Cache: https://turborepo.dev/docs/core-concepts/remote-caching
 
 ---
 

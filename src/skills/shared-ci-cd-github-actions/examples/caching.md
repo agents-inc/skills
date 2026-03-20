@@ -109,7 +109,7 @@ bunx turbo run build --force
 TURBO_FORCE=true bunx turbo run build
 
 # Invalidate specific task
-bunx turbo run build --force --filter=@repo/api
+bunx turbo run build --force --filter=my-package
 ```
 
 **Why good:** --force flag rebuilds from scratch when cache is suspected corrupt, TURBO_FORCE env var allows bypassing remote cache for debugging, scoped force rebuild (--filter) limits blast radius to specific packages

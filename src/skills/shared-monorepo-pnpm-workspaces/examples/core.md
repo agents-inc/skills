@@ -162,8 +162,8 @@ my-monorepo/
     "lint": "pnpm -r --parallel lint",
     "clean": "pnpm -r exec rm -rf dist node_modules",
     "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "version-packages": "changeset version && pnpm install",
+    "release": "pnpm build && pnpm publish -r --access=public"
   },
   "devDependencies": {
     "@changesets/cli": "catalog:",

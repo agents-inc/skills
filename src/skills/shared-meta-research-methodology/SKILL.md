@@ -142,9 +142,7 @@ For good/bad comparison examples, see [examples/core.md](examples/core.md#patter
 
 ### Pattern 3: Structured Output Format
 
-Research findings follow a consistent structure for AI consumption.
-
-#### Output Sections
+Research findings follow a consistent structure for AI consumption. Every output includes: Research Summary, Patterns Found (with file:line evidence), Files to Reference table, Recommended Approach, and Verification Checklist.
 
 ```markdown
 ## Research Summary
@@ -160,30 +158,12 @@ Research findings follow a consistent structure for AI consumption.
 
 - File: [path:lines]
 - Description: [Brief explanation]
-- Usage Count: [X instances]
-- Code Example: [Actual code block]
-
-## Files to Reference
-
-| Priority | File                | Lines   | Why Reference        |
-| -------- | ------------------- | ------- | -------------------- |
-| 1        | [/path/to/best.tsx] | [12-45] | Best example         |
-| 2        | [/path/to/alt.tsx]  | [8-30]  | Alternative approach |
-
-## Recommended Approach
-
-1. [Step 1 with file reference]
-2. [Step 2 with file reference]
-3. [Step 3 with file reference]
-
-## Verification Checklist
-
-| Finding | Verification   | Status          |
-| ------- | -------------- | --------------- |
-| [Claim] | [How verified] | Verified/Failed |
+  ...
 ```
 
 **Why structured:** Other AI agents parse this output. Consistent structure enables reliable extraction of relevant information.
+
+For the complete output template, see [examples/core.md - Pattern 3](examples/core.md#pattern-3-structured-output-format).
 
 </patterns>
 
@@ -248,6 +228,45 @@ See [examples/core.md - Pattern 6](examples/core.md#pattern-6-progress-tracking-
 **Output consumers:** Any agent that needs to understand codebase patterns before implementing, specifying, or reviewing code.
 
 </integration>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Claiming patterns without file:line evidence
+- Including file paths that weren't verified with Read
+- Speculating about code structure without investigation
+- Providing implementation advice when asked for research
+- Missing verification checklist in output
+
+**Medium Priority Issues:**
+
+- Vague line references ("around line 50" instead of "lines 45-67")
+- Not reporting usage counts when available
+- Skipping the Files to Reference section
+- Not noting gaps or inconsistencies found
+
+**Common Mistakes:**
+
+- Assuming file locations from convention without checking
+- Inferring patterns from file names without reading content
+- Mixing research findings with opinions
+- Expanding scope without asking
+
+**Gotchas & Edge Cases:**
+
+- Some patterns exist but are deprecated (check for `@deprecated` comments)
+- Tests may show patterns that differ from production code
+- Config files may override patterns in source code
+- Monorepo patterns may vary by package
+
+See [reference.md](reference.md) for anti-pattern code examples and the quality checklist.
+
+</red_flags>
 
 ---
 

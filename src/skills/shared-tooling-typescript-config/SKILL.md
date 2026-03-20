@@ -29,7 +29,7 @@ description: TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSynt
 
 ---
 
-**Auto-detection:** TypeScript config, tsconfig.json, tsconfig, strict mode, noUncheckedIndexedAccess, exactOptionalPropertyTypes, verbatimModuleSyntax, moduleDetection force, module preserve, moduleResolution bundler, configDir, path aliases, typescript-config, shared config, noImplicitOverride, isolatedDeclarations, erasableSyntaxOnly, import defer, stableTypeOrdering
+**Auto-detection:** TypeScript config, tsconfig.json, tsconfig, strict mode, noUncheckedIndexedAccess, exactOptionalPropertyTypes, verbatimModuleSyntax, moduleDetection force, module preserve, moduleResolution bundler, configDir, path aliases, typescript-config, shared config, noImplicitOverride, isolatedDeclarations, erasableSyntaxOnly, import defer
 
 **When to use:**
 
@@ -93,49 +93,25 @@ TypeScript configuration should be **strict by default, shared across packages, 
 All apps and packages extend a shared strict base. The base config lives in `packages/typescript-config/` (monorepo) or is inlined in a standalone project.
 
 ```json
-// packages/typescript-config/base.json
+// packages/typescript-config/base.json (abbreviated)
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "preserve",
-    "moduleResolution": "bundler",
-    "moduleDetection": "force",
-
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "incremental": true
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true
   }
 }
 ```
 
-```json
-// apps/web/tsconfig.json - extends shared config
-{
-  "extends": "@repo/typescript-config/base.json",
-  "compilerOptions": {
-    "paths": { "@/*": ["./src/*"] }
-  }
-}
-```
+Consumer configs extend the shared base and only add what differs (e.g. `paths`).
 
 **Why good:** Single source of truth for strict settings, all packages get the same safety guarantees, consumers only add what differs
 
-> See [examples/core.md](examples/core.md) for specialized configs (react.json, node.json, library.json).
+> See [examples/core.md](examples/core.md) for full base config, consumer configs, and specialized configs (react.json, node.json, library.json).
 
 ---
 
@@ -254,16 +230,20 @@ Prohibits TypeScript-specific constructs that have runtime behavior (enums, name
 
 // Good - type-only constructs (safely erasable)
 type Status = "active" | "inactive";
-const enum Direction {
-  Up,
-  Down,
-} // const enum is erasable
+interface Config {
+  host: string;
+  port: number;
+}
 
-// Bad - runtime behavior (will error)
+// Bad - constructs with runtime behavior (will error)
 enum Direction {
   Up,
   Down,
-} // runtime enum object
+} // enum declaration
+const enum Dir {
+  Left,
+  Right,
+} // const enum also blocked
 namespace Utils {
   export function parse() {}
 } // runtime namespace
@@ -305,16 +285,17 @@ TS 6.0 (February 2026) changes several defaults. If your config already follows 
 | ------------------------------ | ------------------------ | -------------------- |
 | `strict`                       | `false`                  | `true`               |
 | `module`                       | `commonjs`               | `esnext`             |
-| `target`                       | `es5`                    | `es2025`             |
+| `target`                       | `es3`                    | `es2025`             |
 | `rootDir`                      | inferred                 | `.` (current dir)    |
 | `types`                        | auto-discover `@types/*` | `[]` (explicit only) |
 | `noUncheckedSideEffectImports` | `false`                  | `true`               |
+| `libReplacement`               | `true`                   | `false`              |
 
 **Action required:** Set `"types": ["node"]` (or relevant packages) explicitly after upgrading to TS 6.0 -- the auto-discovery of `@types/*` is gone.
 
 **Deprecated in TS 6.0** (removed in TS 7.0):
 
-- `target: "es5"`, `moduleResolution: "node"` (node10), `module: "amd"|"umd"|"systemjs"`
+- `target: "es5"`, `moduleResolution: "node"` (node10), `module: "amd"|"umd"|"systemjs"|"none"`
 - `esModuleInterop: false`, `--baseUrl` as module resolution root, `--outFile`
 
 Use `"ignoreDeprecations": "6.0"` during migration to suppress warnings.

@@ -140,12 +140,12 @@ docker stats                                 # Resource usage
 
 ## Base Image Comparison
 
-| Image                 | Size   | C Library | Vulnerabilities | Best For                       |
-| --------------------- | ------ | --------- | --------------- | ------------------------------ |
-| `node:22`             | ~1GB   | glibc     | High            | Development, debugging         |
-| `node:22-slim`        | ~200MB | glibc     | Medium          | Production (max compatibility) |
-| `node:22-alpine`      | ~135MB | musl      | Low             | Production (small + secure)    |
-| `distroless/nodejs22` | ~120MB | glibc     | Very Low        | Production (max security)      |
+| Image                                 | Size   | C Library | Vulnerabilities | Best For                       |
+| ------------------------------------- | ------ | --------- | --------------- | ------------------------------ |
+| `node:22`                             | ~1GB   | glibc     | High            | Development, debugging         |
+| `node:22-slim`                        | ~200MB | glibc     | Medium          | Production (max compatibility) |
+| `node:22-alpine`                      | ~135MB | musl      | Low             | Production (small + secure)    |
+| `gcr.io/distroless/nodejs22-debian12` | ~120MB | glibc     | Very Low        | Production (max security)      |
 
 ## Docker Scout Commands
 

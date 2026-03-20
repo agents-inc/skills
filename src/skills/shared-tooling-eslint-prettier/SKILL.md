@@ -177,7 +177,7 @@ See [examples/prettier.md](examples/prettier.md) for TypeScript config files, ex
 
 ### Pattern 5: Custom ESLint Rules
 
-Common custom rules for enforcing project conventions:
+Common custom rules for enforcing project conventions — named exports, consistent type imports, unused variable detection, and import boundary enforcement:
 
 ```javascript
 export const customRules = {
@@ -191,22 +191,11 @@ export const customRules = {
       "warn",
       { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
     ],
-    "no-restricted-imports": [
-      "error",
-      {
-        patterns: [
-          {
-            group: ["@repo/*/src/**"],
-            message: "Import from package exports, not internal paths",
-          },
-        ],
-      },
-    ],
   },
 };
 ```
 
-See [examples/eslint.md](examples/eslint.md) for the full custom rules pattern.
+See [examples/eslint.md](examples/eslint.md) for the full custom rules pattern including import boundary restrictions.
 
 ---
 
@@ -315,7 +304,7 @@ What Prettier config format to use?
 - only-warn plugin must be loaded AFTER other plugins to convert their errors to warnings
 - `defineConfig()` auto-flattens arrays — never use spread operators with it
 - `projectService` requires typescript-eslint v8+ (was `EXPERIMENTAL_useProjectService` in v6-v7)
-- ESLint 10 requires Node.js 20.19.0+ — upgrade Node before upgrading ESLint
+- ESLint 10 requires Node.js `^20.19.0 || ^22.13.0 || >=24` (v21.x and v23.x explicitly unsupported)
 - ESLint 10 config lookup starts from linted file directory (not cwd) — enables monorepo multi-config
 - Prettier TypeScript config files (`.prettierrc.ts`) require Node.js 22.6.0+; before Node v24.3.0 run with `--experimental-strip-types`
 - Prettier 3.0+ APIs are async — plugins using sync APIs need migration (use `@prettier/sync` for sync wrappers)

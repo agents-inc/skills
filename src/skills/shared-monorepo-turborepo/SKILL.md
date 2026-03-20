@@ -116,10 +116,9 @@ Define task dependencies and caching behavior in turbo.json to enable intelligen
 - `cache: false` - Disable caching for tasks with side effects
 - `persistent: true` - Keep dev servers running
 
-#### Configuration
+#### Minimal Example
 
 ```json
-// Good Example - Proper task configuration with dependencies
 {
   "tasks": {
     "build": {
@@ -127,32 +126,14 @@ Define task dependencies and caching behavior in turbo.json to enable intelligen
       "env": ["DATABASE_URL", "NODE_ENV"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
-    "test": {
-      "dependsOn": ["^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "src/**/*.tsx",
-        "src/**/*.ts",
-        "test/**/*.ts",
-        "test/**/*.tsx"
-      ]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "generate": {
-      "dependsOn": ["^generate"],
-      "cache": false
-    },
-    "lint": {}
+    "dev": { "cache": false, "persistent": true }
   }
 }
 ```
 
-**Why good:** `dependsOn: ["^build"]` ensures topological task execution (dependencies build first), `env` array includes all environment variables for proper cache invalidation, `cache: false` prevents caching tasks with side effects (dev servers, code generation), `outputs` specifies cacheable artifacts while excluding cache directories
+**Key:** `dependsOn: ["^build"]` ensures topological execution, `env` declares variables for cache invalidation, `cache: false` for side-effect tasks.
 
-See [examples/core.md](examples/core.md) for good/bad comparison examples.
+See [examples/core.md](examples/core.md) for full good/bad comparison examples.
 
 ---
 
@@ -189,40 +170,13 @@ See [examples/caching.md](examples/caching.md) for remote caching configuration 
 
 Configure Bun workspaces to enable package linking and dependency sharing across monorepo packages.
 
-#### Workspace Configuration
+#### Key Concepts
 
-```json
-// Good Example - Properly configured workspaces
-{
-  "workspaces": ["apps/*", "packages/*"],
-  "dependencies": {
-    "@repo/ui": "workspace:*",
-    "@repo/types": "workspace:*"
-  }
-}
-```
+- Root `package.json` declares `"workspaces": ["apps/*", "packages/*"]`
+- Internal deps use `"@repo/ui": "workspace:*"` protocol for automatic linking
+- Standard structure: `apps/` for deployable apps, `packages/` for shared code
 
-**Why good:** `workspace:*` protocol links local packages automatically, glob patterns `apps/*` and `packages/*` discover all packages dynamically, Bun hoists common dependencies to root reducing duplication
-
-#### Directory Structure
-
-```
-my-monorepo/
-├── apps/
-│   ├── web/              # Frontend application
-│   ├── admin/            # Admin dashboard
-│   └── server/           # Backend server
-├── packages/
-│   ├── ui/               # Shared UI components
-│   ├── api/              # API client
-│   ├── eslint-config/    # Shared ESLint config
-│   ├── prettier-config/  # Shared Prettier config
-│   └── typescript-config/ # Shared TypeScript config
-├── turbo.json            # Turborepo configuration
-└── package.json          # Root package.json with workspaces
-```
-
-See [examples/workspaces.md](examples/workspaces.md) for workspace protocol good/bad comparison examples.
+See [examples/workspaces.md](examples/workspaces.md) for full good/bad comparison examples and syncpack configuration.
 
 </patterns>
 
@@ -265,24 +219,9 @@ bun run build --filter=...[HEAD^1]
 
 ## Decision Framework
 
-### When to Create a New Package
-
 ```
-New code to write?
-├─ Is it a deployable application? → apps/
-├─ Is it shared across 2+ apps? → packages/
-├─ Is it app-specific? → Keep in app directory
-└─ Is it a build tool? → tools/
-```
-
-### When to Use Turborepo
-
-```
-Is this a monorepo with multiple packages/apps?
-├─ NO → Use standard build tools
-└─ YES → Do builds take > 30s or is caching important?
-    ├─ YES → Use Turborepo
-    └─ NO → Standard tools may suffice
+New code? → Shared across 2+ apps? → packages/ (else keep in app)
+Monorepo? → Builds > 30s or caching matters? → Use Turborepo
 ```
 
 For comprehensive decision trees and package creation criteria, see [reference.md](reference.md).
