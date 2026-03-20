@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-search
+slug: elasticsearch
+domain: api
+author: "@vince"
+displayName: Elasticsearch
+cliDescription: Distributed search and analytics engine with full-text search, aggregations, and vector search
+usageGuidance: Use when building search with Elasticsearch -- full-text search, structured queries, aggregations, vector/semantic search, index management, and bulk operations.

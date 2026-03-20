@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-vector-db
+slug: pinecone
+domain: api
+author: "@vince"
+displayName: Pinecone
+cliDescription: Serverless vector database for similarity search and RAG applications
+usageGuidance: Use when building semantic search or RAG with Pinecone -- index management, vector upsert/query, metadata filtering, namespaces, sparse-dense hybrid search, and serverless scaling.

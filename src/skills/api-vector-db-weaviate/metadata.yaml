@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-vector-db
+slug: weaviate
+domain: api
+author: "@vince"
+displayName: Weaviate
+cliDescription: Open-source vector database with built-in vectorization and hybrid search
+usageGuidance: Use when building semantic search or RAG with Weaviate — collection management, built-in vectorization modules, hybrid search (vector + keyword), filtering, multi-tenancy, and generative search.

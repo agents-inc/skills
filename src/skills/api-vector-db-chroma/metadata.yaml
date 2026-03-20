@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-vector-db
+slug: chroma
+domain: api
+author: "@vince"
+displayName: Chroma
+cliDescription: Lightweight embedding database with automatic vectorization and metadata filtering
+usageGuidance: Use when building semantic search or RAG with Chroma -- collection management, automatic embedding generation, metadata filtering, document storage, and multi-modal embeddings.

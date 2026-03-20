@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-search
+slug: meilisearch
+domain: api
+author: "@vince"
+displayName: Meilisearch
+cliDescription: Fast, typo-tolerant search engine with instant results and faceted filtering
+usageGuidance: Use when adding search to applications with Meilisearch -- instant typo-tolerant search, faceted filtering, geo search, multi-index search, and real-time document indexing.

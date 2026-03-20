@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-framework
+slug: elysia
+domain: api
+author: "@vince"
+displayName: Elysia
+cliDescription: Bun-native HTTP framework with end-to-end type safety
+usageGuidance: Use when building APIs on Bun runtime — end-to-end type safety via Eden Treaty, plugin-based architecture, schema validation with TypeBox, lifecycle hooks, and high-performance routing.
