@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: replicate
+domain: api
+author: "@vince"
+displayName: Replicate
+cliDescription: API for running open-source ML models with serverless GPU inference
+usageGuidance: >-
+  Use when running open-source models on Replicate — model predictions,
+  streaming, webhooks, file handling, model versioning, and serverless GPU
+  deployment.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: anthropic-sdk
+domain: api
+author: "@vince"
+displayName: Anthropic SDK
+cliDescription: Official TypeScript SDK for Claude API with messages, streaming, tool use, and vision
+usageGuidance: >-
+  Use when integrating Claude via the Anthropic API — messages API, streaming
+  responses, tool use (function calling), vision (image input), extended
+  thinking, batch API, and prompt caching.

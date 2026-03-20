@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: elevenlabs
+domain: api
+author: "@vince"
+displayName: ElevenLabs
+cliDescription: AI voice synthesis with text-to-speech, voice cloning, and real-time streaming
+usageGuidance: >-
+  Use when generating speech with ElevenLabs — text-to-speech, streaming audio,
+  voice cloning, voice selection, pronunciation control (SSML), and real-time
+  conversational AI.

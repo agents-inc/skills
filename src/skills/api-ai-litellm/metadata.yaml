@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: litellm
+domain: api
+author: "@vince"
+displayName: LiteLLM
+cliDescription: Unified LLM proxy supporting 100+ providers with OpenAI-compatible API
+usageGuidance: >-
+  Use when routing LLM requests through LiteLLM proxy — unified OpenAI-compatible
+  API across providers, model fallbacks, load balancing, spend tracking, and rate
+  limiting. Covers proxy server config.yaml setup, TypeScript client via OpenAI SDK,
+  virtual keys, and production deployment.

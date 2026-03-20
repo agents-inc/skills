@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: google-gemini-sdk
+domain: api
+author: "@vince"
+displayName: Google Gemini SDK
+cliDescription: Official TypeScript SDK for Google Gemini with multimodal input, function calling, and structured output
+usageGuidance: >-
+  Use when integrating Google Gemini — text generation, multimodal input
+  (images, video, audio, PDF), function calling, structured JSON output,
+  streaming, embeddings, and context caching.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: together-ai
+domain: api
+author: "@vince"
+displayName: Together AI
+cliDescription: Multi-model inference API for open-source LLMs
+usageGuidance: >-
+  Use when running open-source LLMs on Together AI — chat completions,
+  streaming, embeddings, image generation, function calling, JSON mode,
+  structured output, fine-tuning, and OpenAI-compatible endpoints.

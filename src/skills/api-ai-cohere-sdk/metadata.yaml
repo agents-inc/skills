@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-ai
+slug: cohere-sdk
+domain: api
+author: "@vince"
+displayName: Cohere SDK
+cliDescription: Official TypeScript SDK for Cohere with chat, embeddings, rerank, and RAG
+usageGuidance: >-
+  Use when integrating Cohere AI -- chat completions with Command models,
+  embeddings for semantic search, rerank for relevance scoring, RAG with
+  inline documents and citations, tool use / function calling, and streaming.
