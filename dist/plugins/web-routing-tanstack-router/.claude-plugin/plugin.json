@@ -1,6 +1,6 @@
 {
   "name": "web-routing-tanstack-router",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Type-safe client-side routing for React with file-based routes, search params validation, loaders, and code splitting",
   "author": {

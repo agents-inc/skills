@@ -6,7 +6,7 @@
 
 ---
 
-## Pattern 10: Retry Limit Boundaries
+## Pattern 7: Retry Limit Boundaries
 
 ### Good Example - Retry Tracking Boundary
 
@@ -170,7 +170,7 @@ export function BackoffRetryBoundary({
 
 ---
 
-## Pattern 11: Error Classification
+## Pattern 8: Error Classification
 
 ### Good Example - Classified Error Handling
 
@@ -395,7 +395,7 @@ export function categorizeHttpError(error: Error): CategorizedHttpError {
 import { useState, useCallback, type ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
-import { categorizeHttpError, type CategorizedHttpError } from "@/utils/error-classification";
+import { categorizeHttpError, type CategorizedHttpError } from "../utils/error-classification";
 
 const MAX_AUTO_RETRIES = 2;
 const RETRY_DELAY_MS = 2000;

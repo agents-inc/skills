@@ -172,7 +172,7 @@ jobs:
       - name: Deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # Per-environment secret
-          NEXT_PUBLIC_API_URL: ${{ secrets.PROD_API_URL }}
+          API_URL: ${{ secrets.PROD_API_URL }}
         run: bun run deploy
 ```
 

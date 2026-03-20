@@ -1,6 +1,6 @@
 # web-animation-css-animations
 
-CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion
+CSS Animation patterns - transitions, keyframes, scroll-driven animations, @property, GPU-accelerated properties, accessibility with prefers-reduced-motion
 
 ## Installation
 

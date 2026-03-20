@@ -1,6 +1,6 @@
 {
   "name": "cli-framework-oclif-ink",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Modern CLI development combining oclif's command framework with Ink's React-based terminal rendering",
   "author": {

@@ -1,4 +1,4 @@
-# Nuxt 3 - Server Routes Examples
+# Nuxt - Server Routes Examples
 
 > API routes with defineEventHandler, validation, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
 

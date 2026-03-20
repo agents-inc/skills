@@ -228,7 +228,7 @@ Use the `Slot` utility to build your own components with `asChild` support.
 
 ```typescript
 import { forwardRef } from "react";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot } from "radix-ui";
 
 export type ButtonProps = React.ComponentProps<"button"> & {
   asChild?: boolean;
@@ -438,7 +438,7 @@ import { Dialog } from "radix-ui";
 
 **Works with:**
 
-- **Slot utility**: Build custom `asChild` components with `@radix-ui/react-slot`
+- **Slot utility**: Build custom `asChild` components with the `Slot` component from `radix-ui`
 - **Any CSS solution**: Styles applied via className prop
 - **Animation libraries**: Use `forceMount` for JavaScript animation control
 

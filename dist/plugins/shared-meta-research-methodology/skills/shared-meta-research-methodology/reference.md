@@ -1,6 +1,6 @@
 # Research Methodology - Reference
 
-> Decision frameworks, anti-patterns, and red flags for research methodology.
+> Decision frameworks, anti-patterns, and quality checklist for research methodology.
 
 **Navigation:** [Back to SKILL.md](SKILL.md) | [Core Examples](examples/core.md)
 
@@ -49,39 +49,6 @@ Is this a research task?
 ├─ "Create..." → NOT research (defer to developer)
 └─ "Fix..." → NOT research (defer to developer)
 ```
-
----
-
-## Red Flags
-
-### High Priority Issues
-
-- Claiming patterns without file:line evidence
-- Including file paths that weren't verified with Read
-- Speculating about code structure without investigation
-- Providing implementation advice when asked for research
-- Missing verification checklist in output
-
-### Medium Priority Issues
-
-- Vague line references ("around line 50" instead of "lines 45-67")
-- Not reporting usage counts when available
-- Skipping the Files to Reference section
-- Not noting gaps or inconsistencies found
-
-### Common Mistakes
-
-- Assuming file locations from convention without checking
-- Inferring patterns from file names without reading content
-- Mixing research findings with opinions
-- Expanding scope without asking
-
-### Gotchas and Edge Cases
-
-- Some patterns exist but are deprecated (check for // @deprecated comments)
-- Tests may show patterns that differ from production code
-- Config files may override patterns in source code
-- Monorepo patterns may vary by package
 
 ---
 

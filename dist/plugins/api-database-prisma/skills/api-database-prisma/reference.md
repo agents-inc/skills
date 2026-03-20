@@ -1,6 +1,6 @@
 # Prisma Reference
 
-Decision frameworks, anti-patterns, red flags, and performance optimization for Prisma ORM.
+Decision frameworks, performance optimization, and quick reference tables for Prisma ORM.
 
 ---
 
@@ -30,7 +30,7 @@ Creating records?
 ├─ Single record → create()
 ├─ Single with relations → create() with nested writes
 ├─ Multiple records → createMany()
-└─ Multiple with return values → createManyAndReturn() (PostgreSQL/SQLite)
+└─ Multiple with return values → createManyAndReturn() (PostgreSQL/CockroachDB/SQLite)
 
 Updating records?
 ├─ Single by unique field → update()
@@ -180,174 +180,7 @@ For serverless, use a connection pooler like PgBouncer or Prisma Accelerate.
 
 ---
 
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- ❌ **Creating PrismaClient on every import** - Exhausts database connections during hot reload, causes "10 Prisma Clients running" warning
-- ❌ **Using `prisma` instead of `tx` in interactive transactions** - Bypasses transaction context, operations won't rollback together
-- ❌ **N+1 queries in loops** - Multiple queries for related data instead of using `include`, extremely slow at scale
-- ❌ **Missing `@relation` attributes** - Ambiguous foreign keys cause migration errors and unclear schema
-
-**Medium Priority Issues:**
-
-- ⚠️ **No indexes on frequently filtered columns** - Slow queries as data grows
-- ⚠️ **Offset pagination on large tables** - Performance degrades linearly with offset
-- ⚠️ **Missing `onDelete` cascade** - Orphaned records when parent deleted
-- ⚠️ **No `@@map` for table names** - PascalCase tables in database (convention is snake_case)
-- ⚠️ **Fetching all fields with `include`** - Larger payloads than needed, use `select`
-
-**Common Mistakes:**
-
-- Forgetting `skipDuplicates` on `createMany` - Fails on unique constraint violations
-- Not handling `null` from `findUnique` - Runtime errors when record doesn't exist
-- Using `delete` without cascade - Foreign key violations
-- Hardcoding pagination limits - No protection against large page sizes
-- Missing `@updatedAt` on models - Can't track when records changed
-- Using `findFirst` when `findUnique` is appropriate - Less predictable, no guarantee of uniqueness
-
-**Gotchas & Edge Cases:**
-
-- `createMany` doesn't return created records (use `createManyAndReturn` on PostgreSQL/SQLite)
-- `updateMany` and `deleteMany` don't trigger `@updatedAt` hooks
-- `findFirst` with `orderBy` different from `findUnique` behavior
-- Prisma uses implicit many-to-many tables - you can't add extra fields without explicit join table
-- `@db.Uuid` requires valid UUID format - will error on invalid strings
-- Enum changes require migration - adding/removing values
-- `Json` fields are typed as `JsonValue` - need runtime validation at parse boundary
-- `Decimal` fields return `Prisma.Decimal` type - convert with `.toNumber()` for calculations
-- Transactions have default 5s timeout - increase with `timeout` option for slow operations
-- Interactive transactions hold connections - keep them short
-
-</red_flags>
-
----
-
-<anti_patterns>
-
-## Anti-Patterns to Avoid
-
-### Creating PrismaClient on Every Import
-
-```typescript
-// ❌ ANTI-PATTERN: New client every import
-// lib/db.ts
-import { PrismaClient } from "@prisma/client";
-export const prisma = new PrismaClient();
-```
-
-**Why it's wrong:** During development hot reloading, each reload creates a new client instance with its own connection pool. After 10+ reloads, you'll exhaust database connections.
-
-**What to do instead:** Use the singleton pattern with `globalThis`.
-
----
-
-### N+1 Queries for Relations
-
-```typescript
-// ❌ ANTI-PATTERN: Fetching relations in a loop
-const users = await prisma.user.findMany();
-
-for (const user of users) {
-  // N additional queries!
-  user.posts = await prisma.post.findMany({
-    where: { authorId: user.id },
-  });
-}
-```
-
-**Why it's wrong:** If you have 100 users, this executes 101 queries (1 for users + 100 for posts). This doesn't scale.
-
-**What to do instead:** Use `include` to fetch relations in a single query.
-
----
-
-### Using `prisma` Instead of `tx` in Transactions
-
-```typescript
-// ❌ ANTI-PATTERN: Using global prisma in transaction
-await prisma.$transaction(async (tx) => {
-  const user = await prisma.user.create({ data: { name: "Alice" } }); // Using prisma!
-  await tx.profile.create({ data: { userId: user.id, bio: "..." } });
-});
-```
-
-**Why it's wrong:** The `prisma.user.create` runs outside the transaction context. If `tx.profile.create` fails, the user is still created, leaving inconsistent data.
-
-**What to do instead:** Always use the `tx` parameter for all operations within the transaction.
-
----
-
-### Unbounded Pagination
-
-```typescript
-// ❌ ANTI-PATTERN: No limit on page size
-const getUsers = async (page: number, pageSize: number) => {
-  return prisma.user.findMany({
-    skip: (page - 1) * pageSize,
-    take: pageSize, // Could be 1,000,000
-  });
-};
-```
-
-**Why it's wrong:** Malicious or buggy clients could request huge page sizes, overwhelming your database and server.
-
-**What to do instead:** Always clamp page size to a maximum value.
-
----
-
-### Missing Error Handling on findUnique
-
-```typescript
-// ❌ ANTI-PATTERN: Assuming record exists
-const user = await prisma.user.findUnique({ where: { id: userId } });
-console.log(user.name); // TypeError if user is null!
-```
-
-**Why it's wrong:** `findUnique` returns `null` when no record matches. Accessing properties on `null` crashes your app.
-
-**What to do instead:** Always check for `null` or use `findUniqueOrThrow`.
-
----
-
-### Implicit Many-to-Many with Extra Fields
-
-```prisma
-// ❌ ANTI-PATTERN: Trying to add fields to implicit join
-model Post {
-  id         String     @id
-  categories Category[] // Implicit many-to-many
-}
-
-model Category {
-  id    String @id
-  posts Post[]
-}
-
-// Can't add "assignedAt" or "weight" to the relationship!
-```
-
-**Why it's wrong:** Prisma's implicit many-to-many creates a hidden join table you can't customize.
-
-**What to do instead:** Create an explicit join model when you need extra fields on the relationship.
-
-```prisma
-// CORRECT: Explicit join model
-model PostCategory {
-  post       Post     @relation(fields: [postId], references: [id])
-  postId     String
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
-  assignedAt DateTime @default(now())
-  weight     Int      @default(0)
-
-  @@id([postId, categoryId])
-}
-```
-
-</anti_patterns>
+> See [SKILL.md](SKILL.md) for red flags, anti-patterns, and gotchas.
 
 ---
 

@@ -237,6 +237,7 @@ const config: ModuleFederationConfig = {
   remotes: ["shop", "cart"],
 };
 
+// Nx module federation config requires default export
 export default config;
 ```
 

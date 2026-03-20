@@ -105,7 +105,7 @@ const config = AppConfigSchema.parse({
 
 ## Pattern 13: Recursive Schemas
 
-### Getter Syntax (Preferred, Zod 3.22+)
+### Getter Syntax (Preferred)
 
 ```typescript
 import { z } from "zod";
@@ -161,7 +161,7 @@ const TreeNodeSchema: z.ZodType<TreeNode> = z.object({
 
 ---
 
-## Pattern 14: ISO Date/Time Validators (Zod 3.23+)
+## Pattern 14: ISO Date/Time Validators
 
 ```typescript
 import { z } from "zod";

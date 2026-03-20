@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Connection setup, pipelining, transactions
+- [core.md](core.md) -- Connection setup, pipelining, transactions
 - [data-structures.md](data-structures.md) -- Hashes, lists, sets, sorted sets
 - [sessions.md](sessions.md) -- Session storage patterns
 
@@ -121,17 +121,15 @@ async function updateProduct(
 async function deleteProduct(redis: Redis, productId: string): Promise<void> {
   await db.delete(products).where(eq(products.id, productId));
 
-  // Invalidate all related cache keys using pattern
-  const keys = await redis.keys(`${PRODUCT_CACHE_PREFIX}${productId}*`);
-  if (keys.length > 0) {
-    await redis.del(...keys);
-  }
+  // Invalidate specific cache key and list cache
+  await redis.del(`${PRODUCT_CACHE_PREFIX}${productId}`);
+  await redis.del(PRODUCT_LIST_CACHE_KEY);
 }
 
 export { updateProduct, deleteProduct };
 ```
 
-**Why good:** Database is always updated first (source of truth), both specific and list caches invalidated, pattern-based deletion for related keys
+**Why good:** Database is always updated first (source of truth), both specific and list caches invalidated, uses explicit key deletion instead of `KEYS` pattern scan
 
 ---
 

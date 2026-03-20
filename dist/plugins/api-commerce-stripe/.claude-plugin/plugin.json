@@ -1,0 +1,9 @@
+{
+  "name": "api-commerce-stripe",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Stripe payment processing — Checkout Sessions, Payment Intents, subscriptions, webhooks, Connect, customer management, error handling",
+  "author": {
+    "name": "@vince"
+  }
+}

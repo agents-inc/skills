@@ -1,6 +1,6 @@
 {
   "name": "shared-tooling-git-hooks",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Husky v9 setup, lint-staged v16 patterns, commitlint with conventional commits, CI/production handling, monorepo setup, migration from v8",
   "author": {

@@ -154,7 +154,7 @@ import { useEffect } from "react";
 // Import from your framework-specific Sentry package
 import * as Sentry from "@sentry/react";
 
-// Note: SSR frameworks like Next.js require default exports for error pages
+// Note: Some SSR frameworks require default exports for error pages
 export default function GlobalError({
   error,
   reset,

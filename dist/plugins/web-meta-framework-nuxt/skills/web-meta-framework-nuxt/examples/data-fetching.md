@@ -1,4 +1,4 @@
-# Nuxt 3 - Data Fetching Examples
+# Nuxt - Data Fetching Examples
 
 > SSR-safe data fetching with useFetch, useAsyncData, and $fetch. See [SKILL.md](../SKILL.md) for core concepts.
 

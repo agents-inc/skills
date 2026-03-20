@@ -176,7 +176,7 @@ Use plugins for persisting state across sessions.
 
 - Use `pinia-plugin-persistedstate` for most cases
 - Only persist user preferences and non-sensitive data
-- Use `paths` option to persist specific properties only
+- Use `pick` option to persist specific properties only
 - Never persist server data (refetch on load instead)
 - Consider storage type: localStorage vs sessionStorage
 

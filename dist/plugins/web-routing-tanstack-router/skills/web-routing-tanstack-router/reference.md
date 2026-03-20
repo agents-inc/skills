@@ -163,9 +163,10 @@ validateSearch: (input: Record<string, unknown>): SearchType => ({
   page: Number(input.page ?? 1) || 1,
 });
 
-// Zod 3.24.0+ Standard Schema (no adapter needed)
+// Zod 3.24.0+ / Zod 4+ Standard Schema (no adapter needed)
+// Use .catch() for fallback defaults instead of fallback() from adapter
 validateSearch: z.object({
-  page: z.number().default(1),
+  page: z.number().catch(1).default(1),
 });
 ```
 

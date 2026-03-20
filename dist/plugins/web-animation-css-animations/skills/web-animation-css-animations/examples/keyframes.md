@@ -38,7 +38,7 @@ Modern CSS allows animations tied to scroll position without JavaScript.
 
 **Why good:** No JavaScript needed, uses scaleX (GPU-accelerated), linear is correct for progress representation
 
-**Browser support:** Chrome/Edge 115+, Safari 18+, Firefox behind flag
+**Browser support:** Chrome/Edge 115+, Safari 26+, Firefox behind flag
 
 ---
 
@@ -399,106 +399,7 @@ Multiple elements with cascading delays.
 
 ---
 
-## Pattern 10: View Transitions API
-
-Modern page transitions between navigations.
-
-### Good Example - Basic View Transition (SPA)
-
-```css
-/* Default crossfade */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 300ms;
-}
-
-/* Custom slide transition */
-@keyframes slide-out-left {
-  to {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-  }
-}
-
-::view-transition-old(root) {
-  animation: slide-out-left 300ms var(--ease-in) forwards;
-}
-
-::view-transition-new(root) {
-  animation: slide-in-right 300ms var(--ease-out) forwards;
-}
-
-/* Named transitions for specific elements */
-.hero-image {
-  view-transition-name: hero;
-}
-
-::view-transition-old(hero),
-::view-transition-new(hero) {
-  animation-duration: 500ms;
-}
-```
-
-**Usage with JavaScript:**
-
-```typescript
-// Trigger view transition
-document.startViewTransition(() => {
-  // Update DOM here
-  updateContent();
-});
-```
-
-**Why good:** Native browser-level transitions, smooth between DOM updates, named transitions for shared elements
-
-**Browser support:** Chrome/Edge 111+, Firefox 144+, Safari 18+
-
----
-
-## Pattern 11: Cross-Document View Transitions (MPA)
-
-Enable transitions between full page navigations.
-
-### Good Example - MPA View Transitions
-
-```css
-/* Enable on both source and destination pages */
-@view-transition {
-  navigation: auto;
-}
-
-/* Customize the transition */
-::view-transition-old(root) {
-  animation: fade-out 200ms var(--ease-in);
-}
-
-::view-transition-new(root) {
-  animation: fade-in 200ms var(--ease-out);
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: auto;
-  }
-
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 0.01ms;
-  }
-}
-```
-
-**Why good:** Works with traditional multi-page apps, no JavaScript needed, respects reduced motion
-
----
-
-## Pattern 12: Chained Animations
+## Pattern 10: Chained Animations
 
 Sequential animations using animation-delay.
 

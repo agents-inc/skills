@@ -171,18 +171,18 @@ type User = RouterOutputs["user"]["getById"];
 ```typescript
 // BAD: No snapshot, no rollback
 onMutate: async () => {
-  utils.todo.list.setData(undefined, (old) => [...(old ?? []), newTodo]);
+  queryClient.setQueryData(trpc.todo.list.queryKey(), (old: any) => [...(old ?? []), newTodo]);
 };
 
 // GOOD: Full optimistic pattern
 onMutate: async () => {
-  await utils.todo.list.cancel();
-  const previous = utils.todo.list.getData();
-  utils.todo.list.setData(undefined, (old) => [...(old ?? []), newTodo]);
+  await queryClient.cancelQueries({ queryKey: trpc.todo.list.queryKey() });
+  const previous = queryClient.getQueryData(trpc.todo.list.queryKey());
+  queryClient.setQueryData(trpc.todo.list.queryKey(), (old: any) => [...(old ?? []), newTodo]);
   return { previous };
 },
 onError: (err, vars, ctx) => {
-  if (ctx?.previous) utils.todo.list.setData(undefined, ctx.previous);
+  if (ctx?.previous) queryClient.setQueryData(trpc.todo.list.queryKey(), ctx.previous);
 },
 ```
 

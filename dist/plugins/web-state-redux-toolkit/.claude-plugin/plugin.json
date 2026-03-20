@@ -1,6 +1,6 @@
 {
   "name": "web-state-redux-toolkit",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Redux Toolkit patterns for complex client state. Use when managing enterprise-scale state, needing DevTools, entity normalization, or RTK Query for data fetching.",
   "author": {

@@ -228,7 +228,7 @@ async fetchUsers(): Promise<void> {
 }
 ```
 
-`flow` returns a cancellable promise with `.cancel()`. `makeAutoObservable` auto-infers generators as `flow`.
+`flow` returns a cancellable promise with `.cancel()`. `makeAutoObservable` auto-infers generators as `flow`. Use `flowResult()` to cast the generator return for TypeScript type inference; import `CancellablePromise` from `"mobx"` for the return type.
 
 See [examples/advanced.md](examples/advanced.md#pattern-8-async-patterns-flow-and-runinaction) for complete examples.
 
@@ -386,8 +386,9 @@ Is it server data (from API)?
 - `autorun` tracks only synchronous reads -- observables read in async callbacks, promises, or after `await` are NOT tracked
 - `reaction` does NOT run on initialization (unlike `autorun`) -- use `fireImmediately: true` option if needed
 - Generator functions are automatically inferred as `flow` by `makeAutoObservable` -- do not also wrap them in `flow()`. However, some transpiler configurations cannot detect generators; if flow does not work as expected, specify `flow` explicitly in overrides
-- `action.bound` and `autoBind: true` are NOT the same as arrow function class fields -- arrow functions cannot be overridden in subclasses
+- `action.bound` and `autoBind: true` are NOT the same as arrow function class fields -- arrow functions cannot be overridden in subclasses. `flow.bound` works the same way for generator methods
 - MobX tracks property access ("arrows"), not values -- reassigning a variable that held an observable reference does NOT trigger reactions
+- Reactions accept a `signal: AbortSignal` option as an alternative to manual disposer calls -- useful when tying reaction lifetime to an `AbortController`
 
 </red_flags>
 

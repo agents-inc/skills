@@ -224,6 +224,7 @@ See [examples/core.md](examples/core.md) for implementation examples.
 - **No caching configured** - Reinstalling dependencies every run wastes 2-3 minutes
 - **Using `latest` for runtime versions** - Non-deterministic builds break reproducibility
 - **Static cloud credentials in secrets** - Use OIDC authentication, never store long-lived access keys
+- **Committing secrets to repository** - Use GitHub Secrets, never hardcode credentials in YAML
 - **No quality gates on main branch** - Missing lint/test/type-check allows broken code to merge
 
 **Medium Priority:**
@@ -231,7 +232,14 @@ See [examples/core.md](examples/core.md) for implementation examples.
 - **Sequential jobs instead of parallel** - Lint/test/type-check should fan out after install
 - **No `concurrency` limits** - Multiple CI runs on same PR waste resources
 - **Rebuilding for each environment** - Build once, promote artifact through environments
+- **No monitoring of CI performance** - Cannot identify bottlenecks without tracking duration and cache hit rate
 - **Magic numbers in workflows** - Hardcoded timeouts and thresholds with no documentation of intent
+
+**Common Mistakes:**
+
+- Not using `fetch-depth: 0` for affected detection (git diff fails without history)
+- Using `needs: [all, previous, jobs]` on every job (creates sequential execution)
+- Not handling new packages in affected detection (they get skipped)
 
 **Gotchas & Edge Cases:**
 
@@ -242,6 +250,8 @@ See [examples/core.md](examples/core.md) for implementation examples.
 - Environment secrets override repository secrets with the same name
 - Artifact attestations require `attestations: write` AND `id-token: write` AND `contents: read`
 - Reusable workflows support 10 nested levels (increased from 4) and 50 total per run
+- `actions/create-release` is deprecated - use `softprops/action-gh-release@v2` instead
+- `workflow_dispatch` now supports 25 inputs (increased from 10)
 
 </red_flags>
 

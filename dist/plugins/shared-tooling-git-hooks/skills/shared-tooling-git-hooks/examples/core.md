@@ -81,12 +81,14 @@ export default {
   // JSON files - format only
   "*.json": ["prettier --write"],
 
-  // Type check ALL TS files when any changes (function syntax = all files)
-  "*.{ts,tsx}": () => "tsc --noEmit",
+  // Type check ALL files when any TS changes (function syntax = all files)
+  "*.{ts,tsx,js,jsx}": () => "tsc --noEmit",
 };
 ```
 
-**Why good:** Different file types get appropriate tooling, array syntax runs commands sequentially, function syntax runs on all files (needed for type checking)
+**Why good:** Different file types get appropriate tooling, array syntax runs commands sequentially on staged files, function syntax runs on all files (needed for type checking since tsc needs the full project)
+
+**Gotcha:** Duplicate object keys silently overwrite in JavaScript. The type-check glob intentionally uses `*.{ts,tsx,js,jsx}` to avoid colliding with the lint-and-format glob above. Both will run for matching staged files because lint-staged runs all matching globs independently.
 
 ### lint-staged v16 Changes
 
@@ -159,15 +161,15 @@ env:
 ### Conditional Prepare Script
 
 ```json
-// package.json - skip husky in CI
+// package.json - gracefully skip husky when not installed (CI/production)
 {
   "scripts": {
-    "prepare": "node -e \"if (process.env.CI !== 'true') require('husky')\""
+    "prepare": "husky || true"
   }
 }
 ```
 
-**Why good:** Prevents hook installation failures when `devDependencies` not installed in production/CI builds
+**Why good:** If `husky` is not installed (e.g., production `--omit=dev`), the `|| true` ensures the script exits successfully instead of failing the install
 
 ---
 

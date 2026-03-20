@@ -296,11 +296,10 @@ export { PostView };
 
 ```typescript
 // providers/swr-provider.tsx
-"use client";
-
+// Mark as client component if using an SSR framework
 import { SWRConfig } from "swr";
 import type { ReactNode } from "react";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher } from "../lib/fetcher";
 
 const REVALIDATE_FOCUS_INTERVAL_MS = 5000;
 const ERROR_RETRY_COUNT = 3;

@@ -251,7 +251,7 @@ import {
 | `TZDateMini`      | Lightweight TZDate (916 B)       | `new TZDateMini(2026, 0, 15, "America/New_York")`  |
 | `tz()`            | Context function for `in` option | `addDays(date, 7, { in: tz("America/New_York") })` |
 | `tzName()`        | Get timezone display name        | `tzName("America/New_York", date, "long")`         |
-| `tzScan()`        | Find DST transitions             | `tzScan("America/New_York", startDate, endDate)`   |
+| `tzScan()`        | Find DST transitions             | `tzScan("America/New_York", { start, end })`       |
 | `tzOffset()`      | Get UTC offset in minutes        | `tzOffset("America/New_York", date)`               |
 | `.withTimeZone()` | TZDate method for conversion     | `nyDate.withTimeZone("Europe/London")`             |
 | `.timeZone`       | TZDate property (read-only)      | `nyDate.timeZone // "America/New_York"`            |

@@ -138,6 +138,7 @@ import {
   subMonths,
   addHours,
   addMinutes,
+  endOfMonth,
 } from "date-fns";
 
 // Business rule constants
@@ -159,7 +160,6 @@ function getAppointmentEnd(startTime: Date): Date {
 }
 
 // Chain operations (still returns new dates)
-// Note: startOfMonth and endOfMonth are imported in boundary examples below
 function getQuarterEnd(date: Date): Date {
   return endOfMonth(addMonths(date, 2));
 }

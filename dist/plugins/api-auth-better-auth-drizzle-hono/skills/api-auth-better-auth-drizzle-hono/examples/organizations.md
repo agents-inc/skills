@@ -42,8 +42,6 @@ export const auth = betterAuth({
     }),
   ],
 });
-
-export { auth };
 ```
 
 ---
@@ -59,8 +57,6 @@ export const authClient = createAuthClient({
   baseURL: process.env.APP_URL || "http://localhost:3000",
   plugins: [organizationClient()],
 });
-
-export { authClient };
 ```
 
 ---
@@ -113,8 +109,6 @@ export function useCreateOrg() {
 
   return { createOrg, isPending, error };
 }
-
-export { useCreateOrg };
 ```
 
 ---
@@ -166,8 +160,6 @@ export function useInviteMember() {
 
   return { inviteMember, isPending, error };
 }
-
-export { useInviteMember };
 ```
 
 **Why good:** organizationLimit prevents abuse, invitation emails customizable, setActive switches org context for session

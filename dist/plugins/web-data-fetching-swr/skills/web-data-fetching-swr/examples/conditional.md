@@ -324,7 +324,7 @@ export { ProductWithDetails };
 ```typescript
 // components/protected-data.tsx
 import useSWR from "swr";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 
 interface ProtectedData {
   sensitiveInfo: string;
@@ -374,7 +374,7 @@ export { ProtectedDataView };
 ```typescript
 // components/my-profile.tsx
 import useSWR from "swr";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 
 interface UserProfile {
   name: string;
@@ -422,7 +422,7 @@ export { MyProfile };
 ```typescript
 // components/feature-gated-data.tsx
 import useSWR from "swr";
-import { useFeatureFlag } from "@/hooks/use-feature-flags";
+import { useFeatureFlag } from "../hooks/use-feature-flags";
 
 interface BetaFeatureData {
   newDashboard: unknown;

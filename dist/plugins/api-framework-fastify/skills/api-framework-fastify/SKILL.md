@@ -420,6 +420,8 @@ it("should list users", async () => {
 - **preHandler order:** Route-level runs AFTER plugin-level hooks
 - **onResponse timing:** Runs after response sent, cannot modify response
 - **Schema compilation:** Happens at startup, errors surface during `server.ready()`
+- **v5 redirect order:** `reply.redirect(url, statusCode)` not `reply.redirect(statusCode, url)` (reversed from v4)
+- **v5 reply.sent:** Use `reply.hijack()` instead of setting `reply.sent = true`
 
 </red_flags>
 

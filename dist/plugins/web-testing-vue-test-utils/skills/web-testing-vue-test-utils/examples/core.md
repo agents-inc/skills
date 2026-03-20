@@ -283,7 +283,7 @@ test("fills out registration form", async () => {
   await wrapper.get(DATA_TEST_EMAIL).setValue(VALID_EMAIL);
   await wrapper.get(DATA_TEST_PASSWORD).setValue(VALID_PASSWORD);
 
-  // Checkbox - use setChecked() or trigger('change')
+  // Checkbox - setValue(true/false) handles checkboxes
   await wrapper.get(DATA_TEST_TERMS).setValue(true);
 
   // Select dropdown

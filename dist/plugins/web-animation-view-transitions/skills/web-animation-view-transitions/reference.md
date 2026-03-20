@@ -148,43 +148,9 @@ view-transition-name: item/detail; /* Contains slash */
 
 ---
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing feature detection** - Calling `startViewTransition()` without checking support crashes in older browsers
-- **Duplicate view-transition-name values** - Two visible elements with the same name breaks the transition entirely
-- **Not cleaning up dynamic names** - Leftover names cause conflicts in subsequent transitions
-- **Ignoring prefers-reduced-motion** - Mandatory for accessibility; always provide reduced or no animation
-- **Magic numbers for timing** - All duration/delay values must be named constants
-
-### Medium Priority Issues
-
-- **Using obsolete meta tag syntax** - `<meta name="view-transition">` is deprecated; use `@view-transition` CSS
-- **Not awaiting transition.ready for custom animations** - Web Animations API must wait for pseudo-elements to exist
-- **Missing @view-transition on both MPA pages** - Cross-document transitions require opt-in on source AND destination
-- **Setting view-transition-name in CSS for dynamic elements** - Causes conflicts; use JavaScript assignment
-
-### Common Mistakes
-
-- **Expecting instant DOM updates** - The callback runs during snapshot capture; DOM updates are batched
-- **Using view-transition-name on hidden elements** - Hidden elements don't participate in transitions
-- **Forgetting pagereveal must be registered early** - Put in `<head>` or use `blocking="render"`
-- **Using reserved names** (auto, inherit, none, unset) - These are CSS keywords, not valid custom identifiers
-
-### Gotchas & Edge Cases
-
-- **Old state is a screenshot** - Videos, animations freeze in the old snapshot
-- **New state is "live"** - Videos, GIFs continue playing in the new snapshot
-- **Transition names are global** - Same name on different page sections will conflict
-- **Navigation types not in Firefox** - `:active-view-transition-type()` needs Chrome 126+, Safari 18.2+; not yet in Firefox
-- **match-element is Chrome 137+/Safari 18.4+** - Auto-naming not available in Firefox yet
-- **Cross-document needs same-origin** - Different origins cannot share transitions
-- **Animations block interaction** - User cannot interact until transition completes
-
----
-
 ## Anti-Patterns
+
+> For the full RED FLAGS list, see [SKILL.md](SKILL.md) `<red_flags>` section.
 
 ### No Feature Detection
 
@@ -359,7 +325,7 @@ function shouldEnableTransitions(): boolean {
 
 | Feature                        | Chrome | Safari | Firefox | Edge |
 | ------------------------------ | ------ | ------ | ------- | ---- |
-| Same-document transitions      | 111+   | 18+    | 133+    | 111+ |
+| Same-document transitions      | 111+   | 18+    | 144+    | 111+ |
 | Cross-document transitions     | 126+   | 18.2+  | No      | 126+ |
 | view-transition-class          | 125+   | 18+    | 144+    | 125+ |
 | match-element                  | 137+   | 18.4+  | No      | 137+ |

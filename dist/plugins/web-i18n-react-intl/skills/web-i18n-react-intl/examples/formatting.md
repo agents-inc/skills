@@ -140,7 +140,7 @@ export function MeetingTime({ startTime, endTime, showTimezone = false }: Props)
 
 ```typescript
 // src/components/timestamp.tsx
-import { FormattedDate, FormattedTime } from "react-intl";
+import { FormattedMessage } from "react-intl";
 
 type Props = {
   date: Date;
@@ -150,32 +150,29 @@ type Props = {
 export function Timestamp({ date, showTime = true }: Props) {
   return (
     <time dateTime={date.toISOString()}>
-      <FormattedDate
-        value={date}
-        month="short"
-        day="numeric"
-        year="numeric"
-      />
-      {showTime && (
-        <>
-          {" at "}
-          <FormattedTime
-            value={date}
-            hour="numeric"
-            minute="numeric"
-          />
-        </>
+      {showTime ? (
+        <FormattedMessage
+          id="timestamp.dateAndTime"
+          defaultMessage="{date, date, medium} at {date, time, short}"
+          values={{ date }}
+        />
+      ) : (
+        <FormattedMessage
+          id="timestamp.dateOnly"
+          defaultMessage="{date, date, medium}"
+          values={{ date }}
+        />
       )}
     </time>
   );
 }
 
 // Output (en-US): "Jan 15, 2024 at 3:30 PM"
-// Output (de-DE): "15. Jan. 2024 um 15:30"
+// Translators can reorder: "15. Jan. 2024 um 15:30" (de-DE)
 
 ```
 
-**Why good:** semantic time element, optional time display, combines date and time formatting
+**Why good:** semantic time element, "at" is part of the translation (not hardcoded English), translators control word order between date and time
 
 ### Good Example - FormattedDateTimeRange Component
 

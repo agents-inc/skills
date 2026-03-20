@@ -1,6 +1,6 @@
 {
   "name": "web-styling-cva",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Class Variance Authority - type-safe component variant styling with cva(), compound variants, and VariantProps",
   "author": {

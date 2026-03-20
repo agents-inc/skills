@@ -134,4 +134,6 @@ export const baseConfig = [
 
 **Why good:** ESLint warns when env vars are used but not declared in turbo.json, prevents cache invalidation bugs at development time
 
+**Alternative:** Biome 2.3.10+ includes a native `noUndeclaredEnvVars` rule in its Turborepo domain, eliminating the ESLint dependency for this check.
+
 ---

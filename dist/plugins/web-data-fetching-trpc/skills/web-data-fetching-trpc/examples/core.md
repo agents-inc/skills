@@ -262,7 +262,8 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
 function getBaseUrl() {
   if (typeof window !== "undefined") return ""; // Browser - relative URL
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  // Use your deployment URL env var (e.g., VERCEL_URL, RAILWAY_URL, etc.)
+  if (process.env.DEPLOY_URL) return `https://${process.env.DEPLOY_URL}`;
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 

@@ -47,8 +47,6 @@ setupListeners(store.dispatch);
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export type AppStore = typeof store;
-
-export { store };
 ```
 
 **Why good:** Types inferred from store (no manual typing), DevTools enabled via named constant, RTK Query middleware configured correctly, setupListeners enables automatic refetch behaviors, named exports follow project conventions

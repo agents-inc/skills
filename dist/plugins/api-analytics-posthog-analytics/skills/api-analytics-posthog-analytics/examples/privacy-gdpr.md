@@ -14,7 +14,7 @@
 // ✅ Good Example - GDPR-compliant initialization
 import posthog from "posthog-js";
 
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
+const POSTHOG_KEY = process.env.POSTHOG_KEY!;
 
 // Initialize with consent-aware settings
 posthog.init(POSTHOG_KEY, {
@@ -94,7 +94,7 @@ Since posthog-js v1.187.0, you can use `before_send` to filter, amend, or redact
 // ✅ Good Example - Redact PII and filter internal traffic
 import posthog from "posthog-js";
 
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
+const POSTHOG_KEY = process.env.POSTHOG_KEY!;
 const INTERNAL_DOMAINS = ["@mycompany.com", "@test.com"];
 
 posthog.init(POSTHOG_KEY, {

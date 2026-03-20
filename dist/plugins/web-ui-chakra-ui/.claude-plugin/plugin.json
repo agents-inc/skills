@@ -1,0 +1,9 @@
+{
+  "name": "web-ui-chakra-ui",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Accessible React component library with style props and theming",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -189,7 +189,7 @@ const total = useWatch({
 });
 ```
 
-See [examples/v7-advanced.md](examples/v7-advanced.md) Pattern 7 for complete compute example.
+See [examples/v7-advanced.md](examples/v7-advanced.md) Pattern 6 for complete compute example.
 
 ---
 
@@ -306,7 +306,7 @@ See [examples/performance.md](examples/performance.md) for a complete large form
 - `shouldUnregister: true` removes unmounted field values -- keep `false` (default) for wizard forms
 - `useWatch` returns `defaultValue` on first render before subscription kicks in
 - `setValue` does not directly update `useFieldArray` -- use `replace()` API instead
-- `FormStateSubscribe` requires `FormProvider` wrapping the form
+- `FormStateSubscribe` works with `control` prop directly or via `FormProvider` (both are valid)
 - `values` prop (reactive external data) vs `defaultValues` (static initial values) -- do not mix their use cases
 
 </red_flags>

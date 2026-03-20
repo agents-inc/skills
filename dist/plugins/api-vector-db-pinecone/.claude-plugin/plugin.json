@@ -1,0 +1,9 @@
+{
+  "name": "api-vector-db-pinecone",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Pinecone serverless vector database -- index management, vector operations, metadata filtering, namespaces, hybrid search, inference API",
+  "author": {
+    "name": "@vince"
+  }
+}

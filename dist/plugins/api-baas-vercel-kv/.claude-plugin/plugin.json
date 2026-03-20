@@ -1,0 +1,9 @@
+{
+  "name": "api-baas-vercel-kv",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Serverless Redis-compatible key-value store via Upstash REST API -- edge-compatible, automatic JSON serialization, TTL-based caching",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -262,7 +262,7 @@ jobs:
             type=sha
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
@@ -317,7 +317,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build image for scanning
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true

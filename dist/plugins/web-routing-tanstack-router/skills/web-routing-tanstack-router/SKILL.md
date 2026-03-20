@@ -358,7 +358,7 @@ What does the logic do?
   +-- Fetch data for the component?
   |   -> loader (runs in parallel with siblings)
   +-- Prefetch data for an external cache?
-  |   -> loader (e.g. ensureQueryData in parallel)
+  |   -> loader (prefetch via context-injected client, runs in parallel)
 ```
 
 ### Data Loading Strategy
@@ -385,8 +385,8 @@ Validating search params?
   |   -> Plain validateSearch function
   +-- Need shared schema with forms?
   |   -> Zod adapter (share schema between route and form)
-  +-- Zod 3.24.0+ with Standard Schema?
-  |   -> Can use Zod directly without adapter
+  +-- Zod 3.24.0+ / Zod 4+ with Standard Schema?
+  |   -> Can use Zod directly without adapter (use `.catch()` for defaults)
 ```
 
 ### Layout Strategy

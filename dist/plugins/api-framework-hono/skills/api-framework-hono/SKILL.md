@@ -239,6 +239,7 @@ See [examples/middleware.md](examples/middleware.md) for complete auth middlewar
 - `contextStorage()` middleware must be registered before any code calls `getContext()`
 - Use `tryGetContext()` (v4.11.0+) in code that may run outside request context (tests, background jobs)
 - Middleware `next()` never throws in Hono -- wrapping `await next()` in try/catch is unnecessary
+- `getConnInfo` is adapter-specific -- import from `hono/bun`, `hono/deno`, `@hono/node-server/conninfo`, etc. (NOT from `hono/ip-restriction`)
 
 </red_flags>
 

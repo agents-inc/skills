@@ -1,0 +1,9 @@
+{
+  "name": "api-database-sequelize",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Sequelize ORM, model definitions, associations, queries, transactions, migrations",
+  "author": {
+    "name": "@vince"
+  }
+}

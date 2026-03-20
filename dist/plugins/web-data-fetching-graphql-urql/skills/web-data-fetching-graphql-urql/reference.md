@@ -265,50 +265,6 @@ if (error && data) {
 
 ---
 
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- **fetchExchange before cacheExchange** - Cache is bypassed, all requests hit network
-- **Missing Provider wrapper** - All hooks throw runtime errors (v4+)
-- **Missing `__typename` in optimistic responses** - Graphcache normalization fails
-
-**Medium Priority Issues:**
-
-- **mapExchange after authExchange** - Auth refresh failures not caught
-- **Missing `pause` for conditional queries** - Unnecessary network requests
-- **Not using `cache-and-network`** - Missing stale-while-revalidate UX
-- **Incomplete optimistic response fields** - Queries may not update correctly
-- **Not handling loading and error states** - Causes crashes and poor UX
-
-**Common Mistakes:**
-
-- Forgetting to run `graphql-codegen` after schema changes (if using codegen)
-- Retrying GraphQL errors (they won't succeed on retry - only retry network errors)
-- Using `network-only` for all queries (defeats caching benefits)
-- Mixing up `stale` (background refresh) with `fetching` (any request in progress)
-- Not using `reexecuteQuery` for user-triggered refresh
-
-**Gotchas & Edge Cases:**
-
-- `fetching` is true during both initial load AND background refresh - check `fetching && !data` for initial load only
-- `stale` indicates cached data is being revalidated - show "updating" indicator
-- Document cache uses query + variables hash - same query with different variables = different cache entry
-- Graphcache stores entities by `id` or `_id` by default - configure `keys` for custom identifiers
-- Optimistic responses are stored in separate layer - never pollute real cache
-- Subscriptions auto-unsubscribe on component unmount - no manual cleanup needed
-- `pollInterval` is not built-in - use `requestPolicyExchange` for TTL-based refresh
-- Exchange order determines data flow - sync exchanges process operations first
-- **v6.0.0 BREAKING:** Default behavior uses GET for queries under 2048 characters - set `preferGetMethod: false` if your server doesn't support GET (see [examples/v6-features.md](examples/v6-features.md))
-- **v6.0.1:** Fixed `preferGetMethod: false` handling - now properly uses POST when explicitly set to false
-- **v5.0.0 BREAKING:** `dedupExchange` was removed - deduplication is now built into the core client (no migration needed, just remove from exchanges array)
-
-</red_flags>
-
----
-
 ## Request Policy Reference
 
 | Policy              | Cache Read            | Network Request       | Use Case                  |

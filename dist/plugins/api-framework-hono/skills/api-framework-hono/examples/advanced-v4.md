@@ -287,7 +287,13 @@ app.use(
 ```typescript
 import { every } from "hono/combine";
 import { bearerAuth } from "hono/bearer-auth";
-import { ipRestriction, getConnInfo } from "hono/ip-restriction";
+import { ipRestriction } from "hono/ip-restriction";
+// getConnInfo is adapter-specific — import from your runtime:
+// import { getConnInfo } from "hono/bun";
+// import { getConnInfo } from "hono/deno";
+// import { getConnInfo } from "@hono/node-server/conninfo";
+// import { getConnInfo } from "hono/cloudflare-workers";
+import { getConnInfo } from "hono/bun";
 
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY!;
 const ALLOWED_ADMIN_IPS = ["192.168.1.100", "10.0.0.1"];
@@ -331,7 +337,8 @@ app.use(
 ```typescript
 import { some, every, except } from "hono/combine";
 import { bearerAuth } from "hono/bearer-auth";
-import { ipRestriction, getConnInfo } from "hono/ip-restriction";
+import { ipRestriction } from "hono/ip-restriction";
+import { getConnInfo } from "hono/bun"; // adapter-specific — see note above
 
 const INTERNAL_TOKEN = process.env.INTERNAL_TOKEN!;
 const EXTERNAL_TOKEN = process.env.EXTERNAL_TOKEN!;

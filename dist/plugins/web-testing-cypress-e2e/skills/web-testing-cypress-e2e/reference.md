@@ -344,30 +344,32 @@ cy.url().should("include", "/dashboard");
 
 **Why required:** Chrome deprecated `document.domain`, which Cypress previously used for cross-origin testing.
 
-### Removed in Cypress 14
+### Removed
 
-| Removed                          | Replacement            | Notes                                 |
-| -------------------------------- | ---------------------- | ------------------------------------- |
-| `delayMs` on `cy.intercept()`    | Use `delay` instead    | Deprecated since 6.4.0, removed in 14 |
-| 3-argument `cy.stub()` signature | Use 2-argument form    | Removed in 15                         |
-| `cypress open-ct` / `run-ct`     | Use `--component` flag | `npx cypress run --component`         |
+| Removed                          | Replacement                         | Version |
+| -------------------------------- | ----------------------------------- | ------- |
+| `delayMs` on `cy.intercept()`    | Use `delay` instead                 | 14.0    |
+| `cypress open-ct` / `run-ct`     | Use `--component` flag              | 14.0    |
+| 3-argument `cy.stub()` signature | `cy.stub(obj, method).returns(val)` | 15.0    |
 
 ### Deprecated (Still Functional)
 
-| Deprecated                                 | Replacement                             | Notes                                                                    |
-| ------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------ |
-| `resourceType` on `cy.intercept()`         | Use route matching instead              | Deprecated in v14.0.0, may be removed in future                          |
-| `Cypress.env()`                            | Use `cy.env()` command                  | Deprecated in Cypress 15, `cy.env()` is async and secure                 |
-| `Cypress.Commands.overwrite()` for queries | Use `Cypress.Commands.overwriteQuery()` | Queries include .get(), .find(), .contains(), cy.location(), cy.window() |
+| Deprecated                                 | Replacement                                           | Notes                                                                    |
+| ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| `resourceType` on `cy.intercept()`         | Use route matching instead                            | Deprecated in v14.0.0, may be removed in future                          |
+| `Cypress.env()`                            | `cy.env()` for secrets, `Cypress.expose()` for public | Deprecated in v15.10.0, removed in 16. `cy.env()` is async               |
+| `Cypress.Commands.overwrite()` for queries | Use `Cypress.Commands.overwriteQuery()`               | Queries include .get(), .find(), .contains(), cy.location(), cy.window() |
 
-### New in Cypress 15
+### New / Changed in Cypress 15
 
-| Feature                | Description                                                          |
-| ---------------------- | -------------------------------------------------------------------- |
-| `cy.env()`             | Async, secure environment variable access (replaces `Cypress.env()`) |
-| `Cypress.expose()`     | Public configuration API for non-sensitive values                    |
-| `--pass-with-no-tests` | CLI flag to pass when no test files match                            |
-| Angular 21 support     | Including zoneless mode for component testing                        |
+| Feature                        | Version | Description                                                                   |
+| ------------------------------ | ------- | ----------------------------------------------------------------------------- |
+| `cy.exec()` returns `exitCode` | 15.0    | Renamed from `code` - update `.its('code')` to `.its('exitCode')`             |
+| `Cypress.ElementSelector`      | 15.0    | Renamed from `Cypress.SelectorPlayground`                                     |
+| `--pass-with-no-tests`         | 15.0    | CLI flag to pass when no test files match                                     |
+| `cy.env(keys)`                 | 15.10   | Async, secure env var access - only exposes explicitly requested variables    |
+| `Cypress.expose(key, value)`   | 15.10   | Public configuration API for non-sensitive values (feature flags, env labels) |
+| Angular 21 support             | 15.x    | Including zoneless mode for component testing                                 |
 
 ### Minimum Requirements (Cypress 15)
 

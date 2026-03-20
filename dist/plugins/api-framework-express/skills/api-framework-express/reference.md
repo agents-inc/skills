@@ -76,50 +76,6 @@ How to handle async route handlers?
 
 </decision_framework>
 
----
-
-<red_flags>
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Error handler has only 3 arguments** - Express won't recognize it as error middleware, errors silently ignored
-- **Error handler registered before routes** - Never catches route errors, useless middleware
-- **Missing `next(error)` in async handlers (Express 4)** - Unhandled promise rejection, request hangs
-- **Not using `express.json()` middleware** - `req.body` is undefined for JSON requests
-- **Magic HTTP status codes** - Use named constants (HTTP_OK = 200, HTTP_NOT_FOUND = 404)
-
-### Medium Priority Issues
-
-- **All routes in single file** - Creates unmaintainable God file, use express.Router()
-- **Not checking `res.headersSent` in error handler** - Causes "headers already sent" crashes
-- **Default exports on route modules** - Violates project conventions, use named exports
-- **Wildcard CORS with credentials** - Security violation, browsers reject this
-- **Missing rate limiting on public APIs** - Vulnerable to abuse and DDoS
-
-### Common Mistakes
-
-- **Not calling `next()` in middleware** - Request hangs indefinitely
-- **Calling `next()` after sending response** - Unpredictable behavior
-- **Using `parseInt()` without radix** - `parseInt("08")` may fail, always use `parseInt(str, 10)`
-- **Not validating route parameters** - Allows injection or invalid data
-- **Logging full request body** - May contain passwords or PII
-
-### Gotchas & Edge Cases
-
-- **Middleware order matters** - helmet first, then cors, then rate limit, then body parsing
-- **`next('route')` vs `next(error)`** - `'route'` skips to next route, anything else triggers error handler
-- **`req.query` values are always strings** - Parse numbers explicitly with `parseInt`
-- **Express 5: `req.body` is `undefined` when unparsed** - was `{}` in Express 4, may break existing guards
-- **Express 5: wildcard routes require names** - `/*` must be `/{*splat}`
-- **`express.static` without auth** - Files publicly accessible unless guarded
-- **Router `mergeParams` option** - Required to access parent route params in nested routers
-
-</red_flags>
-
----
-
 <anti_patterns>
 
 ## Anti-Patterns to Avoid

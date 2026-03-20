@@ -1,0 +1,9 @@
+{
+  "name": "api-baas-neon",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Serverless PostgreSQL with branching, autoscaling, and edge-compatible driver",
+  "author": {
+    "name": "@vince"
+  }
+}

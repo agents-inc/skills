@@ -114,7 +114,7 @@ try {
 // CORRECT - Explicit error handling
 const result = FormSchema.safeParse(data);
 if (!result.success)
-  return { success: false, errors: result.error.flatten().fieldErrors };
+  return { success: false, errors: z.flattenError(result.error).fieldErrors };
 return { success: true, data: result.data };
 ```
 
@@ -220,7 +220,7 @@ function processDateInput(dateStr: DateInput): DateOutput {
 | `z.input`           | Extract input type                | `type T = z.input<typeof schema>`                         |
 | `z.output`          | Extract output type (alias)       | `type T = z.output<typeof schema>`                        |
 
-### ISO String Validators (Zod 3.23+)
+### ISO String Validators
 
 | Method        | Purpose                       | Example                                             |
 | ------------- | ----------------------------- | --------------------------------------------------- |
@@ -254,11 +254,13 @@ z.string().duration()                 z.iso.duration()
 
 ```typescript
 // v3                                  // v4
-result.error.flatten()                 z.treeifyError(result.error)
+result.error.flatten()                 z.flattenError(result.error)
 result.error.format()                  z.treeifyError(result.error)
 z.ZodErrorMap                         Use `error` param instead of `errorMap`
-ctx.addIssue()                        err.issues.push(...)
+invalid_type_error / required_error   Use `error` function param
 ```
+
+Note: `ctx.addIssue()` in `.superRefine()` still works in v4. `ctx.path` was removed for performance.
 
 **Object schema changes:**
 
@@ -273,20 +275,26 @@ schema.deepPartial()                   Removed (use z.partial recursion)
 **Other breaking changes:**
 
 - `z.number()` rejects Infinity (was accepted in v3)
-- `z.number().safe()` removed; `.int()` only accepts safe integers
+- `z.number().safe()` now identical to `.int()`; both only accept safe integers
 - `z.uuid()` now enforces RFC 9562/4122; use `z.guid()` for permissive
-- `z.record()` requires explicit key schema (no single-argument form)
+- `z.record()` requires two arguments: `z.record(keySchema, valueSchema)` (single-arg form dropped)
+- `z.record()` with enum keys now enforces exhaustiveness; use `z.partialRecord()` for optional keys
 - `z.nativeEnum()` deprecated; `z.enum()` handles enum-like objects
 - Refinement type predicates no longer narrow types
+- `.refine()` function as second argument removed; use `.superRefine()` for dynamic error messages
+- `ctx.path` removed from `.superRefine()` for performance; `ctx.addIssue()` still works
 - Schema-level error maps take precedence over parse-time maps (reversed from v3)
+- `.default()` now requires value matching output type (not input type); use `.prefault()` for old behavior
 
 ### New v4 Features
 
 - **`z.file()`**: File validation with `.min()`, `.max()`, `.mime()`
-- **`z.stringbool()`**: Parses "true", "yes", "1" to boolean
+- **`z.stringbool()`**: Parses "true"/"yes"/"1"/"on" to boolean, "false"/"no"/"0"/"off" to false
 - **`z.templateLiteral()`**: Type-safe string patterns
 - **`z.toJSONSchema()`**: Native JSON Schema export
 - **`z.int32()`, `z.float32()`, `z.int64()`**: Numeric format schemas
+- **`z.prettifyError()`**: Human-readable error string for debugging/logging
+- **`z.partialRecord()`**: Record with optional keys (for non-exhaustive enum key records)
 - **Recursive types**: Direct recursive definitions without type casting in v4
 
 ### Version Import Strategy

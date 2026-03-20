@@ -36,8 +36,6 @@ export const auth = betterAuth({
     },
   },
 });
-
-export { auth };
 ```
 
 **Why good:** Environment variables protect secrets, accessType: "offline" ensures refresh tokens from Google, prompt: "consent" forces token refresh
@@ -93,7 +91,6 @@ export function OAuthButtons() {
   );
 }
 
-export { OAuthButtons };
 ```
 
 **Why good:** callbackURL handles post-auth redirect, social provider string is type-safe from Better Auth types

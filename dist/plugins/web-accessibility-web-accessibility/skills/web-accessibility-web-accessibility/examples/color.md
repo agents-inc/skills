@@ -122,7 +122,7 @@ function BadStatusBadge({ status }: { status: 'success' | 'error' }) {
 ### Example: Token Definitions with Contrast Ratios
 
 ```scss
-// packages/ui/src/styles/variables.scss
+// Design tokens - define in your global styles
 :root {
   // Text colors with sufficient contrast
   --color-text-default: var(--gray-12); // #1a1a1a - 16.1:1 on white

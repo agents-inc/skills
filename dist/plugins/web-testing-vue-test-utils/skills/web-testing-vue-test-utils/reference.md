@@ -117,8 +117,7 @@ What selector to use?
 | ---------------------- | ------------------------- | ------- | ---------- |
 | `trigger(event)`       | Triggers DOM event        | Promise | **Yes**    |
 | `setValue(value)`      | Sets input/select value   | Promise | **Yes**    |
-| `setChecked(checked?)` | Sets checkbox/radio state | Promise | **Yes**    |
-| `setSelected()`        | Selects option element    | Promise | **Yes**    |
+| `setValue(true/false)` | Sets checkbox/radio state | Promise | **Yes**    |
 
 ### Wrapper Properties
 

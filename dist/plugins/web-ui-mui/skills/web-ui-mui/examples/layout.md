@@ -170,34 +170,24 @@ export { ActionBar };
 
 ## Box: Flex Container with sx
 
+See [styling.md](styling.md) for sx prop patterns including theme-aware values, responsive breakpoints, and callback syntax.
+
 ```typescript
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-function ProfileCard() {
-  return (
-    <Box
-      component="section"
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 2,
-        p: 3,
-        bgcolor: "background.paper",
-        borderRadius: 1,
-        boxShadow: 3,
-        "&:hover": {
-          boxShadow: 6,
-          transform: "translateY(-2px)",
-        },
-      }}
-    >
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Profile
-      </Typography>
-    </Box>
-  );
-}
-
-export { ProfileCard };
+// Box is a div with full sx prop support -- use for flex containers, wrappers, sections
+<Box
+  component="section"
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    gap: 2,
+    p: 3,
+    bgcolor: "background.paper",
+    borderRadius: 1,
+  }}
+>
+  <Typography variant="h6">Content</Typography>
+</Box>
 ```

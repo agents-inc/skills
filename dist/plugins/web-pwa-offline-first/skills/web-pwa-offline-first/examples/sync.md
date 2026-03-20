@@ -689,9 +689,8 @@ async function registerBackgroundSync(collection: string): Promise<void> {
 
   try {
     await self.registration.sync.register(tag);
-    console.log(`Background sync registered: ${tag}`);
-  } catch (error) {
-    console.error("Failed to register background sync:", error);
+  } catch {
+    // Background sync registration failed - fallback will handle sync
   }
 }
 
@@ -1094,17 +1093,23 @@ function AppSyncStatus({
   );
 }
 
+const MS_PER_MINUTE = 60_000;
+const MS_PER_HOUR = 3_600_000;
+const MS_PER_DAY = 86_400_000;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+
 function formatRelativeTime(timestamp: number): string {
   const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
   const diff = timestamp - Date.now();
-  const diffMinutes = Math.round(diff / 60000);
-  const diffHours = Math.round(diff / 3600000);
-  const diffDays = Math.round(diff / 86400000);
+  const diffMinutes = Math.round(diff / MS_PER_MINUTE);
+  const diffHours = Math.round(diff / MS_PER_HOUR);
+  const diffDays = Math.round(diff / MS_PER_DAY);
 
-  if (Math.abs(diffMinutes) < 60) {
+  if (Math.abs(diffMinutes) < MINUTES_PER_HOUR) {
     return rtf.format(diffMinutes, "minute");
   }
-  if (Math.abs(diffHours) < 24) {
+  if (Math.abs(diffHours) < HOURS_PER_DAY) {
     return rtf.format(diffHours, "hour");
   }
   return rtf.format(diffDays, "day");

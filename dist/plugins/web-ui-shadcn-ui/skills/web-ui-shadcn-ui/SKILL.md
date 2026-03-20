@@ -103,6 +103,9 @@ npx shadcn@latest add button --path=packages/ui/src/components
 
 # Project info (useful for AI agents)
 npx shadcn@latest info
+
+# View component docs from CLI (v4)
+npx shadcn@latest docs combobox
 ```
 
 Components go in `components/ui/`. The `cn()` utility goes in `lib/utils.ts`. Both are created automatically.
@@ -305,6 +308,30 @@ Recent additions that solve common patterns:
 
 These components work across Radix and Base UI primitives.
 
+---
+
+### Pattern 8: Recent Platform Changes
+
+**Unified Radix UI package (Feb 2026):** Individual `@radix-ui/react-*` packages are now a single `radix-ui` package. Migrate with `npx shadcn@latest migrate radix`.
+
+```tsx
+// Old (pre-Feb 2026)
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+
+// New (unified package)
+import { Dialog as DialogPrimitive } from "radix-ui";
+```
+
+**CLI v4 (March 2026):**
+
+- `npx shadcn@latest docs [component]` - View component docs from CLI (useful for AI agents)
+- `npx shadcn@latest init --template` - Full project scaffolding for Next.js, Vite, Astro, React Router, TanStack Start, Laravel
+- `--preset` flag packs entire design system config (colors, fonts, radius, icons) into a shareable code
+- `shadcn/skills` - AI agent context for component patterns and registry workflows
+- `registry:base` - Distribute entire design systems as single payloads
+
+**RTL support (Jan 2026):** First-class right-to-left layout support. The CLI transforms physical CSS classes to logical equivalents at install time.
+
 </patterns>
 
 ---
@@ -351,6 +378,7 @@ These components work across Radix and Base UI primitives.
 - **`suppressHydrationWarning`** - Required on `<html>` when using theme provider to prevent hydration mismatch
 - **Old Form components** - `Form/FormField/FormItem/FormControl/FormMessage` are legacy; prefer `Field` component for new code
 - **Base UI option** - Since Feb 2026, you can choose between Radix and Base UI as the primitive library (`--base radix` or `--base base`)
+- **Unified Radix package** - Since Feb 2026, import from `radix-ui` (not individual `@radix-ui/react-*` packages). Migrate with `npx shadcn@latest migrate radix`
 
 </red_flags>
 

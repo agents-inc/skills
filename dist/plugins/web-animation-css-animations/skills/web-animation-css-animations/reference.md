@@ -55,11 +55,9 @@
 | -------------------------- | ------ | ---- | ------- | ------ |
 | CSS Transitions            | Full   | Full | Full    | Full   |
 | CSS Animations             | Full   | Full | Full    | Full   |
-| @property                  | 85+    | 85+  | 128+    | 15.4+  |
-| scroll-timeline            | 115+   | 115+ | Flag    | 18+    |
-| animation-timeline: view() | 115+   | 115+ | Flag    | 18+    |
-| View Transitions (SPA)     | 111+   | 111+ | 144+    | 18+    |
-| View Transitions (MPA)     | 126+   | 126+ | -       | 18.2+  |
+| @property                  | 85+    | 85+  | 128+    | 16.4+  |
+| scroll-timeline            | 115+   | 115+ | Flag    | 26+    |
+| animation-timeline: view() | 115+   | 115+ | Flag    | 26+    |
 | linear() easing            | 113+   | 113+ | 112+    | 17.4+  |
 
 ---

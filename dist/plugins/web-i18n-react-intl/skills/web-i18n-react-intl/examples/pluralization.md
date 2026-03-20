@@ -308,17 +308,7 @@ export function ExpirationNotice({ daysRemaining, expirationDate }: Props) {
 
 ## Language-Specific Plural Rules
 
-### Reference: Plural Categories by Language
-
-| Language | Categories                       |
-| -------- | -------------------------------- |
-| English  | one, other                       |
-| German   | one, other                       |
-| French   | one, many, other                 |
-| Russian  | one, few, many, other            |
-| Arabic   | zero, one, two, few, many, other |
-| Polish   | one, few, many, other            |
-| Japanese | other (no plural forms)          |
+> See [reference.md](../reference.md) for the full plural categories by language table.
 
 ### Good Example - Language-Aware Pluralization
 

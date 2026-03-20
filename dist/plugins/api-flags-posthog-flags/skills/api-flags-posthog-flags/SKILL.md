@@ -181,7 +181,7 @@ Use `posthog-node` with the Feature Flags Secure API Key (`phs_*`) for local eva
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY, // phs_* key
-  featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS, // default 30s
+  featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS, // default 5 min
 });
 ```
 

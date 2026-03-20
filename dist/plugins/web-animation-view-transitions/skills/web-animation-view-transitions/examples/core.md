@@ -71,7 +71,7 @@ function updatePage(content: string): void {
 }
 ```
 
-**Why bad:** No feature detection causes runtime errors in Firefox < 133, Safari < 18, older browsers
+**Why bad:** No feature detection causes runtime errors in Firefox < 144, Safari < 18, older browsers
 
 ---
 

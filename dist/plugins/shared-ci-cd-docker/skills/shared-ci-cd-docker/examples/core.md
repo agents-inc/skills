@@ -159,7 +159,7 @@ FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS pruner
 RUN npm install -g turbo
 WORKDIR /app
 COPY . .
-RUN turbo prune @repo/api --docker
+RUN turbo prune @myorg/api --docker
 
 # ============================================================
 # Stage 2: Install dependencies
@@ -180,7 +180,7 @@ WORKDIR /app
 
 COPY --from=deps /app/ .
 COPY --from=pruner /app/out/full/ .
-RUN npx turbo run build --filter=@repo/api
+RUN npx turbo run build --filter=@myorg/api
 
 # ============================================================
 # Stage 4: Production runtime

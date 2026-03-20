@@ -512,10 +512,10 @@ const SearchPage: Component = () => {
     return q.length >= MIN_QUERY_LENGTH ? q : null;
   });
 
-  const [results, { loading }] = createResource(searchSource, searchApi);
+  const [results] = createResource(searchSource, searchApi);
 
   const showResults = () =>
-    query().length >= MIN_QUERY_LENGTH && !loading && results();
+    query().length >= MIN_QUERY_LENGTH && !results.loading && results();
 
   return (
     <div class="search-page">
@@ -526,7 +526,7 @@ const SearchPage: Component = () => {
           onInput={(e) => setQuery(e.currentTarget.value)}
           placeholder="Search..."
         />
-        <Show when={loading}>
+        <Show when={results.loading}>
           <span class="spinner" />
         </Show>
       </div>

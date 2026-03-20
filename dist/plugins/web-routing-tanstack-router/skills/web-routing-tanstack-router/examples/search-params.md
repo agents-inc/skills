@@ -302,6 +302,6 @@ Validating search params?
   |   -> Plain validateSearch function
   +-- Need shared schema with forms?
   |   -> Zod adapter (share schema between route and form)
-  +-- Zod 3.24.0+ with Standard Schema?
-  |   -> Can use Zod directly without adapter
+  +-- Zod 3.24.0+ / Zod 4+ with Standard Schema?
+  |   -> Can use Zod directly without adapter (use `.catch()` for defaults)
 ```

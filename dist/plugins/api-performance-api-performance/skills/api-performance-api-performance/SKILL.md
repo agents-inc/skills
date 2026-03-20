@@ -32,7 +32,7 @@ description: Query optimization, caching, indexing, connection pooling, async pa
 - [examples/core.md](examples/core.md) - Database patterns: connection pooling, N+1 prevention, indexing, prepared statements, pagination
 - [examples/caching.md](examples/caching.md) - Cache-aside, write-through, invalidation, key strategies, TTL guidance
 - [examples/async.md](examples/async.md) - Event loop optimization, worker threads, chunked processing, concurrency control
-- [reference.md](reference.md) - Decision frameworks, monitoring, anti-patterns
+- [reference.md](reference.md) - Decision frameworks, performance monitoring
 
 ---
 

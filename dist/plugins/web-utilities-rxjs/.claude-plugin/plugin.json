@@ -1,0 +1,9 @@
+{
+  "name": "web-utilities-rxjs",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Reactive programming with RxJS - Observables, operators, Subjects, error handling, and memory leak prevention",
+  "author": {
+    "name": "@vince"
+  }
+}

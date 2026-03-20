@@ -606,9 +606,9 @@ canvas.getByTestId("custom-element");
 
 ---
 
-## Storybook 8 Migration Notes
+## Migration Notes
 
-### Removed Features
+### Storybook 8 Removed Features
 
 | Feature                      | Status            | Migration                                             |
 | ---------------------------- | ----------------- | ----------------------------------------------------- |
@@ -640,12 +640,19 @@ canvas.getByTestId("custom-element");
   - Limitation: Cannot extract types imported from other files
   - Use `react-docgen-typescript` if you need imported type support
 
-### CSF Factories (Storybook 10+)
+### Storybook 10 Breaking Changes
 
-CSF Factories is an alternative story format available in Storybook 10+ with better TypeScript ergonomics. CSF 3.0 remains fully supported and is not deprecated. Migration is optional and can be done incrementally. Currently React only.
+| Change               | Impact                          | Migration                                                          |
+| -------------------- | ------------------------------- | ------------------------------------------------------------------ |
+| ESM-only             | CommonJS no longer supported    | Ensure `"type": "module"` in package.json or use `.mjs` extensions |
+| Node 20.16+ required | Older Node versions unsupported | Upgrade Node to 20.16+, 22.19+, or 24+                             |
+
+### CSF Factories (Storybook 10)
+
+CSF Factories provide better TypeScript ergonomics with less boilerplate. Currently at **Preview** status and React-only. CSF 3.0 remains fully supported and is not deprecated. Migration is optional and can be done incrementally via `npx storybook automigrate csf-factories`.
 
 ```typescript
-// CSF Factories (Storybook 10+)
+// CSF Factories (Storybook 10 - Preview status)
 import preview from "#.storybook/preview";
 
 const meta = preview.meta({
@@ -657,4 +664,4 @@ export const Primary = meta.story({
 });
 ```
 
-> **Note:** CSF Factories are "preview" status in Storybook 10. No default export needed. Vue/Angular/Web Components support expected in 10.x releases.
+> **Note:** No default export needed with CSF Factories. Vue/Angular/Web Components support expected in 10.x releases. Expected to become the default in Storybook 11.

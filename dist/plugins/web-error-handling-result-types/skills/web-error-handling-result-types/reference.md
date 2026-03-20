@@ -6,43 +6,7 @@
 
 ## Decision Framework
 
-### When to Use Result vs Exceptions
-
-```
-Is this an expected, recoverable error?
-├─ YES → Use Result type
-│   ├─ User input validation → Result
-│   ├─ API call that might fail → Result
-│   ├─ Parsing untrusted data → Result
-│   ├─ Business rule violations → Result
-│   └─ File not found (expected) → Result
-└─ NO → Is it a programming bug?
-    ├─ YES → Use exceptions (let it crash)
-    │   ├─ Index out of bounds
-    │   ├─ Null pointer (missing check)
-    │   ├─ Invalid state (logic error)
-    │   └─ Type assertion failure
-    └─ NO → Is it unrecoverable?
-        ├─ YES → Use exceptions
-        │   ├─ Missing required config at startup
-        │   ├─ Database connection failed
-        │   └─ Out of memory
-        └─ NO → Evaluate case by case
-```
-
-### When to Use Result vs Nullable
-
-```
-Does failure carry information beyond "not found"?
-├─ NO → Use T | null or T | undefined
-│   ├─ Array.find() → T | undefined
-│   ├─ Map.get() → T | undefined
-│   └─ Optional config value → T | undefined
-└─ YES → Use Result<T, E>
-    ├─ Why did it fail? → Result
-    ├─ What can caller do? → Result
-    └─ Multiple failure modes? → Result
-```
+> Decision trees for Result vs Exceptions, Result vs Nullable, and choosing a Result library are in [SKILL.md](SKILL.md). Below are additional frameworks for error handling strategy and error type design.
 
 ### Choosing Error Handling Strategy
 
@@ -60,24 +24,6 @@ What kind of operation is this?
 └─ External library that throws
     └─ Wrap with tryCatch at boundary
 ```
-
-### Choosing a Result Library
-
-```
-What are your requirements?
-├─ Zero dependencies, full control → Custom implementation (recommended default)
-│   ├─ Covers 90% of use cases
-│   ├─ No maintenance risk
-│   └─ Full understanding of internals
-├─ Full effect system + typed error channel → Effect
-│   ├─ Active ecosystem (successor to fp-ts)
-│   ├─ Steeper learning curve
-│   └─ Best for complex systems with many error types
-└─ Learning the pattern → Custom implementation
-    └─ Understand internals before considering libraries
-```
-
-> **Note on deprecated options:** neverthrow is no longer actively maintained (unreviewed PRs). fp-ts development has stopped in favor of Effect. ts-results has unclear maintenance. Custom implementations are the safest default.
 
 ### Typed Error Design
 

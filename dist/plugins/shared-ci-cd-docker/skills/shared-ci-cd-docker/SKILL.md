@@ -333,7 +333,7 @@ See [examples/core.md](examples/core.md) for complete TypeScript graceful shutdo
 ```yaml
 # GitHub Actions - Cache Docker layers
 - uses: docker/setup-buildx-action@v3
-- uses: docker/build-push-action@v6
+- uses: docker/build-push-action@v7
   with:
     cache-from: type=gha
     cache-to: type=gha,mode=max
@@ -363,7 +363,7 @@ Which base image?
   +-- Need debugging tools? --> Full image (node:22, ~1GB)
   |     +-- Development only, never for production
   |
-  +-- Maximum security? --> Distroless (gcr.io/distroless/nodejs22)
+  +-- Maximum security? --> Distroless (gcr.io/distroless/nodejs22-debian12)
         +-- No shell, no package manager, smallest attack surface
 ```
 
@@ -404,7 +404,7 @@ What data needs to persist?
 
 **Works with:**
 
-- **GitHub Actions**: `docker/build-push-action@v6` for CI/CD builds, `docker/setup-buildx-action@v3` for BuildKit
+- **GitHub Actions**: `docker/build-push-action@v7` for CI/CD builds, `docker/setup-buildx-action@v3` for BuildKit
 - **GitHub Container Registry (ghcr.io)**: Free private image hosting for GitHub repos
 - **Kubernetes**: Production orchestration, pod security contexts, liveness/readiness probes
 - **Docker Scout**: `docker scout cves` for vulnerability scanning in CLI and CI

@@ -294,18 +294,18 @@ const sendNotFound = (res: Response, resource = "Resource"): void => {
 
 Express 5 is the default on npm since March 2025. Key changes from Express 4:
 
-| Change                | Express 4          | Express 5                   |
-| --------------------- | ------------------ | --------------------------- |
-| Async errors          | Manual `next(err)` | Auto-forwarded              |
-| `req.body` (unparsed) | `{}`               | `undefined`                 |
-| `req.query`           | Writable           | Read-only getter            |
-| Wildcard routes       | `/*`               | `/{*splat}` (must be named) |
-| Optional params       | `/:file.:ext?`     | `/:file{.:ext}`             |
-| `urlencoded` default  | `extended: true`   | `extended: false`           |
-| `req.host`            | Strips port        | Includes port               |
-| Minimum Node.js       | Any                | 18+                         |
+| Change                | Express 4          | Express 5                                      |
+| --------------------- | ------------------ | ---------------------------------------------- |
+| Async errors          | Manual `next(err)` | Auto-forwarded                                 |
+| `req.body` (unparsed) | `{}`               | `undefined`                                    |
+| `req.query`           | Writable           | Read-only getter                               |
+| Wildcard routes       | `/*`               | `/*splat` (no root) or `/{*splat}` (with root) |
+| Optional params       | `/:file.:ext?`     | `/:file{.:ext}`                                |
+| `urlencoded` default  | `extended: true`   | `extended: false`                              |
+| `req.host`            | Strips port        | Includes port                                  |
+| Minimum Node.js       | Any                | 18+                                            |
 
-**Removed in Express 5:** `req.param()`, `res.send(body, status)`, `res.json(obj, status)`, `res.redirect(url, status)`, `res.sendfile()` (use `res.sendFile()`).
+**Removed in Express 5:** `req.param()`, `res.send(body, status)`, `res.send(status)` (use `res.sendStatus()`), `res.json(obj, status)`, `res.redirect(url, status)`, `res.redirect('back')` (use `req.get('Referrer') || '/'`), `res.sendfile()` (use `res.sendFile()`), `app.del()` (use `app.delete()`).
 
 </patterns>
 

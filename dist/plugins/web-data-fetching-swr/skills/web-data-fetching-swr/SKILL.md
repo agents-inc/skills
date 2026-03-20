@@ -61,7 +61,7 @@ description: SWR data fetching patterns - useSWR, useSWRMutation, caching, reval
 - [examples/conditional.md](examples/conditional.md) -- Dependent queries, auth-gated fetching
 - [examples/error-handling.md](examples/error-handling.md) -- Retry config, error boundaries, network detection
 - [examples/suspense.md](examples/suspense.md) -- Suspense integration, SSR fallback patterns
-- [reference.md](reference.md) -- Decision frameworks, configuration tables, anti-patterns
+- [reference.md](reference.md) -- Decision frameworks, configuration tables
 
 ---
 

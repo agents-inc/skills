@@ -1,0 +1,9 @@
+{
+  "name": "api-baas-upstash",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Upstash serverless Redis -- REST-based client, auto-serialization, pipelines, rate limiting, QStash, edge compatibility, global replication",
+  "author": {
+    "name": "@vince"
+  }
+}

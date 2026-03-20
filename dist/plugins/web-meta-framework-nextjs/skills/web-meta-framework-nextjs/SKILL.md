@@ -1065,6 +1065,45 @@ export async function deletePost(postId: string) {
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+**High Priority:**
+
+- `"use client"` at the top of page.tsx - pages should be Server Components; push interactivity to child components
+- Missing `'use server'` directive - action runs on client, exposing secrets
+- No authorization check in Server Actions - anyone can invoke the action
+- No input validation in Server Actions - accepts any data, security risk
+- Missing `revalidatePath`/`revalidateTag` after mutation - stale UI
+- `redirect()` inside try/catch - redirect throws internally, won't work when caught
+- Secrets/API keys in Client Components - any `"use client"` code is exposed to the browser
+
+**Medium Priority:**
+
+- Large Client Components with minimal interactivity - split into Server parent + small Client child
+- `useFormStatus` in same component as form - must be in a NESTED child component
+- Throwing errors for validation failures - clears form state, use return values
+- Missing `loading.tsx` in data-heavy routes - users see blank pages
+- Using Server Actions for data fetching - use Server Components for reads
+
+**Gotchas & Edge Cases:**
+
+- `params` and `searchParams` are Promises in Next.js 15+ - must `await` them
+- error.tsx must be a Client Component (`"use client"` required)
+- Server Actions queue sequentially when called in parallel from client
+- `useFormStatus` only works in components nested WITHIN the form
+- In Next.js 15+, fetch requests are NOT cached by default for dynamic rendering
+- **Next.js 16:** `middleware.ts` deprecated, renamed to `proxy.ts` (export `proxy` function)
+- **Next.js 16:** `revalidateTag()` requires `cacheLife` profile as second argument
+- **Next.js 16:** `experimental_ppr` removed, use `cacheComponents: true` with `"use cache"` directive
+
+For complete decision frameworks and anti-patterns, see [reference.md](reference.md).
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

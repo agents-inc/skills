@@ -1,0 +1,9 @@
+{
+  "name": "api-baas-vercel-postgres",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Serverless PostgreSQL on Vercel with edge-compatible SDK",
+  "author": {
+    "name": "@vince"
+  }
+}

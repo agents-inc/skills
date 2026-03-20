@@ -69,7 +69,6 @@ export async function sendScheduledEmail(
   }
 }
 
-export { sendScheduledEmail };
 export type { ScheduledEmailOptions };
 ```
 
@@ -153,7 +152,6 @@ export async function sendIdempotentEmail(
   }
 }
 
-export { sendIdempotentEmail };
 export type { IdempotentEmailOptions };
 ```
 

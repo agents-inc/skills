@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Connection setup, error handling
+- [core.md](core.md) -- Connection setup, error handling
 - [caching.md](caching.md) -- Cache-aside and write-through patterns
 - [rate-limiting.md](rate-limiting.md) -- Rate limiting middleware integration
 
@@ -12,11 +12,13 @@
 
 ## Express Session with connect-redis
 
+> **Note:** connect-redis v9+ only supports node-redis (not ioredis). Use node-redis `createClient()` for session storage.
+
 ```typescript
 import express from "express";
 import session from "express-session";
-import RedisStore from "connect-redis";
-import Redis from "ioredis";
+import { RedisStore } from "connect-redis";
+import { createClient } from "redis";
 
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const SESSION_TTL_SECONDS = 86400; // 24 hours
@@ -27,10 +29,11 @@ if (!SESSION_SECRET) {
   throw new Error("SESSION_SECRET environment variable is required");
 }
 
-const redisClient = new Redis(process.env.REDIS_URL!);
+const redisClient = createClient({ url: process.env.REDIS_URL });
 redisClient.on("error", (err) => {
   console.error("Redis session store error:", err.message);
 });
+await redisClient.connect();
 
 const app = express();
 
@@ -56,7 +59,7 @@ app.use(
 export { app };
 ```
 
-**Why good:** `resave: false` prevents race conditions with parallel requests, `saveUninitialized: false` avoids empty sessions, secure cookie in production, httpOnly prevents XSS, sameSite prevents CSRF
+**Why good:** `resave: false` prevents race conditions with parallel requests, `saveUninitialized: false` avoids empty sessions, secure cookie in production, httpOnly prevents XSS, sameSite prevents CSRF, uses node-redis as required by connect-redis v9+
 
 ---
 

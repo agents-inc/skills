@@ -1,0 +1,9 @@
+{
+  "name": "api-search-meilisearch",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Meilisearch search engine patterns -- client setup, indexing, search, filtering, facets, geo search, multi-tenancy, task management",
+  "author": {
+    "name": "@vince"
+  }
+}

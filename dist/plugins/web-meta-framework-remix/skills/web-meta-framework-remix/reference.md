@@ -250,6 +250,7 @@ function LikeButton({ isLiked }: { isLiked: boolean }) {
 | `useSearchParams()`              | URL search params             |
 | `useLocation()`                  | Current location              |
 | `useNavigate()`                  | Programmatic navigation       |
+| `useSubmit()`                    | Imperative form submission    |
 | `useRevalidator()`               | Manual data revalidation      |
 
 ### Response Utilities

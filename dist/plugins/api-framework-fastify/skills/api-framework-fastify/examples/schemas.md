@@ -431,56 +431,11 @@ export type PostSummary = Static<typeof PostSummarySchema>;
 
 ---
 
-## Pattern 7: Validation Error Handling
+## Validation Error Handling
 
-### Good Example - Custom Validation Errors
+> See [core.md Pattern 3](core.md) for the full error handler with validation error mapping, custom error classes, and unexpected error handling.
 
-```typescript
-// src/plugins/error-handler.ts
-import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
-
-const HTTP_BAD_REQUEST = 400;
-const HTTP_INTERNAL_ERROR = 500;
-
-export const errorHandler = (
-  error: FastifyError,
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  // Fastify validation errors
-  if (error.validation) {
-    request.log.warn(
-      { validation: error.validation, path: request.url },
-      "Validation failed",
-    );
-
-    return reply.status(HTTP_BAD_REQUEST).send({
-      statusCode: HTTP_BAD_REQUEST,
-      error: "Bad Request",
-      message: "Validation failed",
-      details: error.validation.map((v) => ({
-        field: v.instancePath || v.params?.missingProperty || "unknown",
-        message: v.message,
-        keyword: v.keyword,
-      })),
-    });
-  }
-
-  // Other errors...
-  request.log.error(
-    { error: error.message, stack: error.stack },
-    "Request error",
-  );
-
-  return reply.status(HTTP_INTERNAL_ERROR).send({
-    statusCode: HTTP_INTERNAL_ERROR,
-    error: "Internal Server Error",
-    message: "An unexpected error occurred",
-  });
-};
-```
-
-**Why good:** Extracts validation details for client, transforms to consistent format, logs validation failures as warnings
+**Key point for schemas:** Fastify validation errors have a `.validation` array (not `.message`). Each entry contains `instancePath`, `message`, and `keyword` — use these to build client-friendly error details.
 
 ---
 

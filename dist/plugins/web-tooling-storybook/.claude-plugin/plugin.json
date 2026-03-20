@@ -1,6 +1,6 @@
 {
   "name": "web-tooling-storybook",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Storybook patterns - CSF 3.0, args, controls, autodocs, play functions, interaction testing, visual testing, addons configuration",
   "author": {

@@ -5,7 +5,7 @@
 **Related examples:**
 
 - [caching.md](caching.md) -- Cache-aside and write-through patterns
-- [setup.md](setup.md) -- Connection setup, pipelining, transactions
+- [core.md](core.md) -- Connection setup, pipelining, transactions
 - [rate-limiting.md](rate-limiting.md) -- Sorted sets for sliding window rate limiting
 
 ---
@@ -100,6 +100,8 @@ async function getTopPlayers(
   redis: Redis,
 ): Promise<Array<{ playerId: string; score: number }>> {
   // ZREVRANGE returns highest scores first
+  // Note: ZREVRANGE is deprecated since Redis 6.2 in favor of ZRANGE ... REV,
+  // but ioredis provides typed support for zrevrange
   const results = await redis.zrevrange(
     LEADERBOARD_KEY,
     0,

@@ -146,24 +146,25 @@ describe("init hook", () => {
     vi.mocked(fs.readFile).mockResolvedValue(
       JSON.stringify({ source: "https://example.com" }),
     );
-    const { result } = await runHook("init", { id: "list" });
-    expect(result.successes).toHaveLength(1);
+    // runHook returns { stdout, stderr } -- assert on captured output
+    const { stdout, stderr } = await runHook("init", { argv: ["list"] });
+    expect(stderr).toBe("");
   });
 
   it("warns when config missing for non-init commands", async () => {
     vi.mocked(fs.readFile).mockRejectedValue(new Error("ENOENT"));
-    const { stdout } = await runHook("init", { id: "list" });
+    const { stdout } = await runHook("init", { argv: ["list"] });
     expect(stdout).toContain("No configuration found");
   });
 
   it("skips warning for init command", async () => {
     vi.mocked(fs.readFile).mockRejectedValue(new Error("ENOENT"));
-    const { stdout } = await runHook("init", { id: "init" });
+    const { stdout } = await runHook("init", { argv: ["init"] });
     expect(stdout).not.toContain("No configuration found");
   });
 
   it("skips for help commands", async () => {
-    await runHook("init", { id: "help" });
+    await runHook("init", { argv: ["help"] });
     expect(fs.readFile).not.toHaveBeenCalled();
   });
 });

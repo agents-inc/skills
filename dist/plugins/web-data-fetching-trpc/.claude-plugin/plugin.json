@@ -1,6 +1,6 @@
 {
   "name": "web-data-fetching-trpc",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "tRPC type-safe API patterns, procedures, middleware, React Query integration",
   "author": {

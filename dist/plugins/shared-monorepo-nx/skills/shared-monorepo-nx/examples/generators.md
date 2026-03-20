@@ -158,6 +158,7 @@ function featureLibGenerator(tree: Tree, options: FeatureLibGeneratorSchema) {
 }
 
 export { featureLibGenerator };
+// Nx requires default export for generator entry points
 export default featureLibGenerator;
 ```
 

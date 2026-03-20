@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Firebase project setup, emulator suite
+- [core.md](core.md) -- Firebase project setup, emulator suite
 - [firestore.md](firestore.md) -- Firestore CRUD, queries, real-time listeners
 - [auth.md](auth.md) -- Authentication flows
 - [functions.md](functions.md) -- Cloud Functions v2, Admin SDK
@@ -214,7 +214,7 @@ import {
 const app = initializeApp(firebaseConfig);
 
 // Enable App Check with reCAPTCHA Enterprise
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
+const RECAPTCHA_SITE_KEY = process.env.RECAPTCHA_SITE_KEY!;
 
 // Enable debug token in development
 if (process.env.NODE_ENV === "development") {

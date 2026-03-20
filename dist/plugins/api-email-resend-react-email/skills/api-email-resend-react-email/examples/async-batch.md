@@ -32,8 +32,6 @@ export function sendEmailAsync(options: SendEmailOptions): void {
 export async function flushPendingEmails(): Promise<void> {
   await Promise.all(inFlightEmails);
 }
-
-export { sendEmailAsync, flushPendingEmails };
 ```
 
 ---
@@ -142,7 +140,6 @@ export async function sendBatchEmails(
   };
 }
 
-export { sendBatchEmails };
 export type { BatchEmailItem, BatchSendResult };
 ```
 

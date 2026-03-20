@@ -45,8 +45,9 @@
 
 ```json
 // apps/web/tsconfig.json
+// Use your workspace package name (e.g. @repo/typescript-config, @acme/tsconfig)
 {
-  "extends": "@repo/typescript-config/base.json",
+  "extends": "<workspace-pkg>/base.json",
   "compilerOptions": {
     "paths": { "@/*": ["./src/*"] }
   }
@@ -231,16 +232,16 @@ interface User {
   id: string;
   name: string;
 }
-const enum Direction {
-  Up,
-  Down,
-} // const enum is erasable
 
 // Bad - constructs with runtime behavior (will error)
 enum Direction {
   Up,
   Down,
-} // runtime enum object
+} // enum declaration
+const enum Dir {
+  Left,
+  Right,
+} // const enum also blocked
 namespace Utils {
   export function parse() {}
 } // runtime namespace
@@ -301,7 +302,7 @@ Stable module options tied to specific Node.js versions, unlike `nodenext` which
 | ------------------------------ | ------------------------ | -------------------- |
 | `strict`                       | `false`                  | `true`               |
 | `module`                       | `commonjs`               | `esnext`             |
-| `target`                       | `es5`                    | `es2025`             |
+| `target`                       | `es3`                    | `es2025`             |
 | `rootDir`                      | inferred                 | `.` (current dir)    |
 | `types`                        | auto-discover `@types/*` | `[]` (explicit only) |
 | `noUncheckedSideEffectImports` | `false`                  | `true`               |

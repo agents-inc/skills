@@ -1,6 +1,6 @@
 {
   "name": "web-server-state-react-query",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "React Query server state, hey-api OpenAPI codegen, type-safe data fetching",
   "author": {

@@ -222,6 +222,39 @@ This skill addresses the following [OWASP Top 10:2025](https://owasp.org/Top10/2
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Committing secrets to repository (.env files, API keys in code)
+- Injecting raw HTML with unsanitized user input (enables XSS attacks)
+- Storing authentication tokens in localStorage/sessionStorage (accessible to XSS)
+- No CSRF protection on state-changing operations (allows forged requests)
+- Critical/high vulnerabilities unpatched (exploit window open)
+
+**Medium Priority Issues:**
+
+- No Dependabot configuration (manual vulnerability detection only)
+- Missing CODEOWNERS for security-sensitive files (no automatic review)
+- No CSP headers configured (no script execution controls)
+- Individual CODEOWNERS instead of teams (single point of failure)
+
+**Gotchas & Edge Cases:**
+
+- `.env.local` is gitignored by default in some frameworks but not all - verify your `.gitignore`
+- DOMPurify's default config allows `<style>` and `<form>` tags - use explicit whitelist
+- SameSite=Strict blocks legitimate cross-site requests - use Lax for general session cookies
+- CSP nonces must be unique per request - generate fresh nonces server-side
+- X-XSS-Protection header is deprecated - set to "0" or omit, use CSP instead
+
+See [reference.md](reference.md) for the full red flags list, anti-patterns with code examples, and decision frameworks.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

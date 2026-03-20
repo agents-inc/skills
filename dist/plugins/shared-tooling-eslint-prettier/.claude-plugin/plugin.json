@@ -1,6 +1,6 @@
 {
   "name": "shared-tooling-eslint-prettier",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "ESLint 9/10 flat config with defineConfig(), Prettier v3.0+ shared config, eslint-config-prettier integration, typescript-eslint v8+ projectService",
   "author": {

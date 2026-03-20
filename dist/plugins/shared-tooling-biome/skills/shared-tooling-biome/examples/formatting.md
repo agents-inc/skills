@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Installation, biome.json config, editor integration
+- [core.md](core.md) -- Installation, biome.json config, editor integration
 - [linting.md](linting.md) -- Lint rules, domains, suppressions, overrides
 - [ci.md](ci.md) -- CI pipelines, git hooks, staged files
 - [migration.md](migration.md) -- Migrating from ESLint + Prettier
@@ -68,23 +68,7 @@
 
 ---
 
-## Prettier to Biome Option Name Mapping
-
-| Prettier          | Biome                     | Notes                |
-| ----------------- | ------------------------- | -------------------- |
-| `printWidth`      | `lineWidth`               |                      |
-| `tabWidth`        | `indentWidth`             |                      |
-| `useTabs`         | `indentStyle: "tab"`      |                      |
-| `semi`            | `semicolons: "always"`    | Different naming     |
-| `singleQuote`     | `quoteStyle: "single"`    | Different naming     |
-| `trailingComma`   | `trailingCommas`          | Plural in Biome      |
-| `bracketSpacing`  | `bracketSpacing`          | Same                 |
-| `bracketSameLine` | `bracketSameLine`         | Same                 |
-| `arrowParens`     | `arrowParentheses`        | Longer name in Biome |
-| `endOfLine`       | `lineEnding`              | Different naming     |
-| `jsxSingleQuote`  | `jsxQuoteStyle: "single"` | Different naming     |
-
-> For complete formatter option tables (global, JS/TS, JSON, CSS), see [reference.md](../reference.md#formatter-configuration-options).
+> For the Prettier-to-Biome option name mapping table, see [reference.md](../reference.md#biome-vs-prettier-option-name-mapping).
 
 ---
 

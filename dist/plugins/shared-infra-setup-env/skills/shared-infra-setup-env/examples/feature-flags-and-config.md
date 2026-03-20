@@ -40,13 +40,13 @@ export const { NEW_DASHBOARD, BETA_EDITOR, ANALYTICS } = FEATURES;
 
 ```typescript
 // Usage in components
-import { NEW_DASHBOARD } from "@/lib/feature-flags";
+import { NEW_DASHBOARD } from "./feature-flags";
 import { lazy } from "react";
 
 // Code splitting based on feature flag
 const Dashboard = NEW_DASHBOARD
-  ? lazy(() => import("@/features/dashboard-v2"))
-  : lazy(() => import("@/features/dashboard-v1"));
+  ? lazy(() => import("./features/dashboard-v2"))
+  : lazy(() => import("./features/dashboard-v1"));
 ```
 
 **Why good:** Type-safe flags prevent typos, centralized configuration makes flags discoverable, code splitting reduces bundle size for disabled features, no external dependencies reduces complexity
@@ -143,7 +143,7 @@ export const config = getConfig();
 
 ```typescript
 // Usage
-import { config } from "@/lib/config";
+import { config } from "./config";
 
 fetch(config.api.baseUrl, {
   signal: AbortSignal.timeout(config.api.timeout),

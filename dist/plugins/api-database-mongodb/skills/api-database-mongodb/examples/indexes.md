@@ -381,7 +381,7 @@ const explanation = await User.find({ role: "admin", isActive: true }).explain(
 ### Index Creation in Production
 
 ```typescript
-// Create indexes with { background: true } in production (MongoDB 4.2+ default)
+// Mongoose 9 removed the { background: true } option (MongoDB 4.2+ builds in background by default)
 // NOTE: In Mongoose, autoIndex should be disabled in production
 
 const schema = new Schema(

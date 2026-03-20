@@ -1,0 +1,9 @@
+{
+  "name": "api-baas-appwrite",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Appwrite backend-as-a-service — Auth, TablesDB, Storage, Functions, Realtime, permissions model, typed client",
+  "author": {
+    "name": "@vince"
+  }
+}

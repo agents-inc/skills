@@ -114,9 +114,8 @@ app.openapi(protectedRoute, async (c) => {
   const userId = c.get("userId");
   const userRole = c.get("userRole");
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-  });
+  // Use your database solution to find user by ID
+  const user = await findUserById(userId);
 
   return c.json(user, 200);
 });

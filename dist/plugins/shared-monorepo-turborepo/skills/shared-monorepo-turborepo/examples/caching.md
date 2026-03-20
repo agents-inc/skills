@@ -38,7 +38,7 @@
 ```json
 // turbo.json - Advanced caching configuration (Turborepo 2.x)
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turborepo.dev/schema.json",
   "globalDependencies": [".env", "tsconfig.json", "eslint.config.js"],
   "tasks": {
     "build": {

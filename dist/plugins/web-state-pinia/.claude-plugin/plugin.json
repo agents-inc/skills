@@ -1,6 +1,6 @@
 {
   "name": "web-state-pinia",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Pinia stores, Vue 3 state patterns. Use when managing client state in Vue applications, choosing between Options/Setup stores, composing stores, or implementing persistence.",
   "author": {

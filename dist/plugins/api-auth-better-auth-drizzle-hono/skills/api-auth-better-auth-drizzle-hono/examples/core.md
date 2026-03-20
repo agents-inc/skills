@@ -57,8 +57,6 @@ export function useSignUp() {
 
   return { signUp, isPending, error };
 }
-
-export { useSignUp };
 ```
 
 **Why good:** Handles loading and error states, callbackURL redirects after signup, error from Better Auth surfaced to UI
@@ -118,8 +116,6 @@ export function useSignIn() {
 
   return { signIn, isPending, error, requires2FA };
 }
-
-export { useSignIn };
 ```
 
 **Why good:** rememberMe extends session duration, twoFactorRedirect flag enables 2FA flow, structured return type for component handling
@@ -142,8 +138,6 @@ const pool = new Pool({
 });
 
 export const db = drizzle(pool, { schema });
-
-export { db };
 ```
 
 ### Auth Configuration
@@ -169,8 +163,6 @@ export const auth = betterAuth({
     joins: true,
   },
 });
-
-export { auth };
 ```
 
 ### Schema Generation Commands
@@ -206,8 +198,6 @@ import { createAuthClient } from "better-auth/react";
 export const authClient = createAuthClient({
   baseURL: process.env.APP_URL || "http://localhost:3000",
 });
-
-export { authClient };
 ```
 
 ### With Plugins
@@ -227,8 +217,6 @@ export const authClient = createAuthClient({
     organizationClient(),
   ],
 });
-
-export { authClient };
 ```
 
 ### useSession Hook
@@ -261,8 +249,6 @@ export function UserMenu() {
     </div>
   );
 }
-
-export { UserMenu };
 ```
 
 **Why good:** useSession is reactive and updates on auth changes, includes `refetch` method for manual refresh, signOut handles cookie cleanup
@@ -308,8 +294,6 @@ export function usePasswordReset() {
 
   return { requestReset, isPending, error, success };
 }
-
-export { usePasswordReset };
 ```
 
 ---

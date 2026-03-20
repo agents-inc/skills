@@ -1,0 +1,9 @@
+{
+  "name": "web-routing-react-router",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Client-side routing with data APIs — loaders, actions, error boundaries, search params, nested layouts, and code splitting",
+  "author": {
+    "name": "@vince"
+  }
+}

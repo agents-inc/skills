@@ -71,49 +71,9 @@ What kind of component are you integrating?
 
 ---
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **Using array index as key in useFieldArray** - Causes form state corruption when items are added/removed. Always use `field.id`.
-- **Missing TypeScript generics on useForm** - Loses type safety for field names, values, and errors. Always use `useForm<FormData>()`.
-- **Using `mode: "onChange"` without reason** - Validates on every keystroke which is noisy UX. Use `mode: "onBlur"` or `mode: "onTouched"`.
-- **Using register for controlled components** - register doesn't work with components that don't expose ref. Use Controller instead.
-- **Not providing defaultValues** - Can cause hydration mismatches and undefined value warnings. Always provide defaultValues.
-
-### Medium Priority Issues
-
-- **Destructuring many formState properties** - Subscribes to all of them, causing unnecessary re-renders. Only destructure what you need.
-- **Using watch() in render body** - Causes re-render on every field change. Use useWatch for isolated subscriptions.
-- **Calling setValue without shouldValidate** - May leave form in invalid state. Consider `setValue(name, value, { shouldValidate: true })`.
-- **Not using trigger() for step validation** - Multi-step forms need per-step validation. Use `trigger(fieldNames)`.
-- **Forgetting valueAsNumber on number inputs** - Values come as strings without it. Add `valueAsNumber: true` to register options.
-
-### Common Mistakes
-
-- **Stacking useFieldArray operations** - Don't call append then remove in sequence. Use useEffect for dependent operations.
-- **Not handling form reset after submission** - Form stays dirty after success. Call `reset(data)` to clear dirty state.
-- **Using defaultValue prop on registered inputs** - Conflicts with RHF's defaultValues. Only use defaultValues in useForm.
-- **Forgetting to pass control to useFieldArray** - Required unless using FormProvider. Always pass `control` prop.
-- **Not typing the resolver schema** - Loses type inference. Use `z.infer<typeof schema>` for Zod schemas.
-
-### Gotchas & Edge Cases
-
-- **reset() behavior varies** - `reset()` reverts to defaultValues, `reset(newData)` updates both values AND defaultValues.
-- **Controller re-renders on every form change** - By design. For expensive renders, wrap child in React.memo.
-- **useFieldArray requires complete objects** - append/prepend/insert need full objects, not partial data.
-- **Errors object structure** - Array errors are at `errors.arrayName[index].fieldName`, array-level errors at `errors.arrayName.root`.
-- **shouldUnregister removes data** - When true, unmounted fields lose their values. Keep false (default) for multi-step forms.
-- **resolver validation runs async** - May cause flash of invalid state. Use `isValid` from formState for button states.
-- **values vs defaultValues** - Use `values` for reactive external data (v7.x+), `defaultValues` for static initial values.
-- **useWatch initial value** - Returns `defaultValue` or `defaultValues` from useForm on first render before subscription.
-- **setValue and useFieldArray** - `setValue` no longer directly updates useFieldArray. Use `replace()` API instead.
-- **FormStateSubscribe requires FormProvider** - Must wrap form with FormProvider to use FormStateSubscribe component.
-- **handleSubmit does not catch errors** - Errors thrown in your onSubmit callback are not caught by handleSubmit. Use try/catch in your callback.
-
----
-
 ## Anti-Patterns
+
+> See [SKILL.md](SKILL.md) RED FLAGS section for the full list of issues and gotchas.
 
 ### Using Index as Key in useFieldArray
 

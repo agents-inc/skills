@@ -1,0 +1,9 @@
+{
+  "name": "web-utilities-vueuse",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "VueUse composable utility collection for Vue 3 - browser, sensor, network, state, animation, and component utilities",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -502,10 +502,9 @@ export function useS3Upload(options: UseS3UploadOptions) {
           abortSignal: abortControllerRef.current.signal,
         });
 
-        // Step 3: Complete
-        const finalUrl = `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${key}`;
-        setState({ status: "success", progress: 100, url: finalUrl });
-        onSuccess?.(finalUrl);
+        // Step 3: Complete - use key from presign response
+        setState({ status: "success", progress: 100, url: key });
+        onSuccess?.(key);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           setState({ status: "idle", progress: 0 });

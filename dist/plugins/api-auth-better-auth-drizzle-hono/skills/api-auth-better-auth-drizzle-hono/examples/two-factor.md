@@ -32,8 +32,6 @@ export const auth = betterAuth({
     }),
   ],
 });
-
-export { auth };
 ```
 
 After adding the plugin, run:
@@ -66,8 +64,6 @@ export const authClient = createAuthClient({
     }),
   ],
 });
-
-export { authClient };
 ```
 
 ---
@@ -112,7 +108,6 @@ export function Enable2FA() {
   );
 }
 
-export { Enable2FA };
 ```
 
 ---
@@ -165,7 +160,6 @@ export function Verify2FA() {
   );
 }
 
-export { Verify2FA };
 ```
 
 **Why good:** trustDevice reduces friction for trusted devices, backup codes stored for recovery, TOTP secrets encrypted in database

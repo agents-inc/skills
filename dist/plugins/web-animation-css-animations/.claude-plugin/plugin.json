@@ -1,8 +1,8 @@
 {
   "name": "web-animation-css-animations",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
-  "description": "CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion",
+  "description": "CSS Animation patterns - transitions, keyframes, scroll-driven animations, @property, GPU-accelerated properties, accessibility with prefers-reduced-motion",
   "author": {
     "name": "@vince"
   }

@@ -57,12 +57,12 @@ export const usePreferencesStore = defineStore("preferences", {
     key: PREFERENCES_STORAGE_KEY,
     storage: localStorage,
     // Only persist user preferences, NOT transient state
-    paths: ["theme", "locale", "sidebarCollapsed"],
+    pick: ["theme", "locale", "sidebarCollapsed"],
   },
 });
 ```
 
-**Why good:** Named constants for defaults and storage key, `paths` option only persists preferences not transient state, TypeScript types throughout
+**Why good:** Named constants for defaults and storage key, `pick` option only persists preferences not transient state, TypeScript types throughout
 
 ---
 
@@ -104,4 +104,4 @@ export const useBadStore = defineStore("bad", {
 });
 ```
 
-**Why bad:** Persists server data that will become stale, no storage key specified, no selective persistence with paths
+**Why bad:** Persists server data that will become stale, no storage key specified, no selective persistence with pick

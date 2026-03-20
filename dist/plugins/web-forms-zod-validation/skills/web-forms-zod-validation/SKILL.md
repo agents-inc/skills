@@ -307,7 +307,9 @@ const ProfileSchema = z.object({
 - **Extend with refinements**: `.extend()` on a schema with `.refine()` throws; apply refinements after extending instead
 - **Date parsing**: `z.coerce.date()` uses `new Date()` which accepts many formats; use `.datetime()` for strict ISO format
 - **`z.union` vs `z.discriminatedUnion`**: Union tries all schemas and reports combined errors; discriminatedUnion uses discriminator for targeted validation and better errors
-- **v4 deprecations**: `.flatten()` and `.format()` deprecated in v4 - use `z.treeifyError()` instead; `.merge()` deprecated - use `.extend()` instead
+- **v4: `.refine()` function second arg removed**: `z.string().refine(fn, (val) => ({ message: ... }))` no longer works; use `superRefine()` for dynamic messages
+- **v4: `ctx.path` removed in `.superRefine()`**: No longer available for performance reasons; `ctx.addIssue()` still works
+- **v4 deprecations**: `.flatten()` deprecated - use `z.flattenError()` instead; `.format()` deprecated - use `z.treeifyError()` instead; `.merge()` deprecated - use `.extend()` instead
 
 </red_flags>
 

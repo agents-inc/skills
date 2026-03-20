@@ -112,7 +112,7 @@ Expandable sections?
 
 ### Gotchas & Edge Cases
 
-- `onOpenChange` in controlled mode fires on close, not open (you set open yourself)
+- `onOpenChange` fires on every user interaction (Trigger click, Escape, click outside) -- in controlled mode you still need it as the sole way to learn the user wants to open/close
 - CSS animations must use `@keyframes`, not `transition`, for unmount detection
 - `--radix-accordion-content-height` and similar CSS variables are only available during animation
 - Portal content renders in document.body by default, may need custom container for micro-frontends

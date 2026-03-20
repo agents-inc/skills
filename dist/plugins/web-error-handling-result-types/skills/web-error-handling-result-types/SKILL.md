@@ -528,6 +528,37 @@ What information does failure carry?
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Ignoring Result return values - defeats entire purpose of Result types
+- Mixing throw and Result in same function - signature lies about error contract
+- Using generic `Error` or `string` as error type - loses type safety benefits
+- Unwrapping Result without checking `ok` - runtime crash waiting to happen
+- Not wrapping throwable operations (`JSON.parse`) - hidden exceptions in Result code
+
+**Medium Priority Issues:**
+
+- Deep nesting instead of flatMap - hard to read, doesn't compose
+- Creating new error objects in hot paths - pre-create static error constants
+- Error type too generic for domain - caller can't handle specifically
+
+**Gotchas & Edge Cases:**
+
+- `flatMap` unions error types - can grow large with long chains
+- TypeScript narrowing requires checking `result.ok` (not just truthy check on the result object)
+- Error objects are usually not `instanceof Error` - custom comparison needed
+- Result of `void` operation: use `Result<void, E>` not `Result<undefined, E>`
+- Async Results: always await before checking `ok` property
+- Pre-created error constants help performance but lose dynamic context
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

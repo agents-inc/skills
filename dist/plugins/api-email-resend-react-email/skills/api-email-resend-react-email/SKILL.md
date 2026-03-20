@@ -273,6 +273,7 @@ See [examples/preferences.md](examples/preferences.md) for preference schema, ch
 
 **Gotchas & Edge Cases:**
 
+- Resend SDK accepts a `react` prop directly (renders internally), but pre-rendering with `await render()` + `html` gives you control over the output and works outside the Resend SDK
 - `render()` is async in React Email 5.0+ (`renderAsync` deprecated)
 - Batch API limited to 100 emails, does NOT support `attachments` or `scheduledAt`
 - Webhooks require raw request body - JSON parsing breaks signature verification

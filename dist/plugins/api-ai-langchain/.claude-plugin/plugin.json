@@ -1,0 +1,9 @@
+{
+  "name": "api-ai-langchain",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "LangChain.js patterns for building LLM applications — chat models, LCEL chains, prompt templates, structured output, agents, tools, RAG, streaming, and LangSmith tracing",
+  "author": {
+    "name": "@vince"
+  }
+}

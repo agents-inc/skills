@@ -68,7 +68,7 @@ URQL follows the principle of **progressive enhancement**. The core package prov
 
 **Core Principles:**
 
-1. **Minimal by Default**: Start with ~10KB, add features as needed
+1. **Minimal by Default**: Start with ~12KB core, add features as needed
 2. **Exchange-Based Architecture**: Middleware-style plugins for extensibility
 3. **Stream-Based Operations**: All operations are Observable streams via Wonka
 4. **Document Caching Default**: Simple query+variables hash caching, opt-in normalized cache

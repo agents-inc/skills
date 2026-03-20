@@ -80,13 +80,13 @@ export default defineConfig({
   plugins: [
     "@hey-api/typescript",
     "@hey-api/sdk",
-    "@hey-api/client-fetch",
     "@tanstack/react-query",
+    // "@hey-api/client-fetch" -- optional, Fetch is the default client since v0.73
   ],
 });
 ```
 
-**Key points:** `@hey-api/typescript` generates types (renamed from `@hey-api/types`), `@hey-api/sdk` generates service functions (renamed from `@hey-api/services`). Run generation via `npx openapi-ts` or add as a build script.
+**Key points:** `@hey-api/typescript` generates types (renamed from `@hey-api/types`), `@hey-api/sdk` generates service functions (renamed from `@hey-api/services`). Fetch client is bundled by default since v0.73 -- only add `@hey-api/client-fetch` explicitly to customize its options. Run generation via `npx openapi-ts` or add as a build script.
 
 See [examples/core.md](examples/core.md) Pattern 1 for generated output structure and usage.
 

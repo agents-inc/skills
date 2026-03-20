@@ -63,8 +63,8 @@ await posthogServer.shutdown();
 
 ```typescript
 // Good Example - Server-side tracking in an API route handler
-import { posthogServer } from "@/lib/analytics/posthog-server";
-import { POSTHOG_EVENTS } from "@/lib/analytics/constants";
+import { posthogServer } from "../lib/analytics/posthog-server";
+import { POSTHOG_EVENTS } from "../lib/analytics/constants";
 
 // Inside your route handler:
 async function handleCreateProject(user: AuthUser, body: CreateProjectBody) {
@@ -111,8 +111,8 @@ posthogServer.capture({
 
 ```typescript
 // lib/auth-events.ts
-import { posthogServer } from "@/lib/analytics/posthog-server";
-import { POSTHOG_EVENTS } from "@/lib/analytics/constants";
+import { posthogServer } from "../lib/analytics/posthog-server";
+import { POSTHOG_EVENTS } from "../lib/analytics/constants";
 
 interface AuthEventUser {
   id: string;

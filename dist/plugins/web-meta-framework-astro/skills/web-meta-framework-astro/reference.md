@@ -128,7 +128,11 @@ How many pages need on-demand rendering?
 - **Astro 6 requires Node.js 22.12.0+** - Earlier Node versions are not supported
 - **Live collections (`defineLiveCollection`) have no MDX support** - MDX cannot be rendered at runtime
 - **`Astro.glob()` is removed in Astro 6** - Use `import.meta.glob()` instead
-- **`z` from `astro:content` is deprecated in Astro 6** - Import `z` from `astro/zod` instead
+- **`z` from `astro:content` is removed in Astro 6** - Import `z` from `astro/zod` instead
+- **Astro 6 uses Zod 4** - Some Zod 3 patterns changed (e.g., `z.string().email()` becomes `z.email()`)
+- **`getStaticPaths()` params must be strings in Astro 6** - Number params are no longer allowed; use `String(id)` to convert
+- **`import.meta.env` values are inlined at build time in Astro 6** - Use `process.env` for runtime secrets in live collections and SSR code
+- **Live collections use `src/live.config.ts`** - Separate from `src/content.config.ts` for build-time collections
 - **Rest parameter routes (`[...slug]`) can match the root** - Pass `undefined` as param to match the base path
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "cli-framework-cli-commander",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Node.js CLI development with Commander.js and @clack/prompts - command structure, interactive prompts, wizard state machines, config hierarchies, exit codes, cancellation handling",
   "author": {

@@ -356,7 +356,7 @@ user:123:preferences                -- User preferences
 | TypeScript      | Written in TypeScript     | TypeScript support                          |
 | Cluster         | Built-in `Redis.Cluster`  | `createCluster()`                           |
 | Sentinel        | Built-in                  | Built-in                                    |
-| Auto-pipelining | `enableAutoPipelining`    | Not available                               |
+| Auto-pipelining | `enableAutoPipelining`    | Automatic (same-tick batching)              |
 | Lua scripting   | `defineCommand()`         | `client.eval()`                             |
 | Pub/Sub         | Event-based (`message`)   | `client.subscribe()` returns async iterator |
 | Streams         | Full support              | Full support                                |

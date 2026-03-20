@@ -107,7 +107,6 @@ export function generateUnsubscribeUrl(
   return `${process.env.APP_URL}/api/email/unsubscribe?token=${token}`;
 }
 
-export { generateUnsubscribeUrl };
 export type { EmailCategory };
 ```
 
@@ -176,22 +175,6 @@ export async function sendNotificationEmail(
 
   return { sent: result.success, reason: result.error };
 }
-
-export { sendNotificationEmail };
 ```
 
 **Why good:** Respects user preferences, includes proper unsubscribe link, returns reason if not sent
-
----
-
-## Email Category Decision Tree
-
-```
-What type of email is this?
-+-- Transactional (verification, password reset)
-|   --> Always send, no unsubscribe needed
-+-- Notification (mentions, comments)
-|   --> Check preferences, include unsubscribe
-+-- Marketing (promotions, newsletters)
-    --> Require explicit opt-in, include unsubscribe
-```

@@ -1,6 +1,6 @@
 {
   "name": "web-testing-cypress-e2e",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Cypress E2E testing patterns - test structure, data-cy selectors, cy.intercept() mocking, custom commands, fixtures, component testing, accessibility testing with cypress-axe, and CI/CD integration",
   "author": {

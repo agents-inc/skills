@@ -263,27 +263,14 @@ For CI pipeline examples with affected commands, see [examples/ci.md](examples/c
 
 ### Pattern 6: Generators (Code Scaffolding)
 
-Generators create and modify code from templates. Use defaults in nx.json to enforce consistency:
-
-```json
-{
-  "generators": {
-    "@nx/react:library": {
-      "bundler": "vite",
-      "unitTestRunner": "vitest",
-      "style": "scss"
-    }
-  }
-}
-```
+Generators create and modify code from templates. Set defaults in nx.json `"generators"` to enforce organizational standards (bundler, test runner, style format). Use `npx nx g <plugin>:<generator>` to scaffold projects, libraries, and components.
 
 ```bash
 npx nx g @nx/react:library my-lib --directory=libs/shared/my-lib
-npx nx g @nx/next:application my-app --directory=apps/my-app
 npx nx g @nx/workspace:move --project=my-lib --destination=packages/shared/my-lib
 ```
 
-For built-in and custom generator examples, see [examples/generators.md](examples/generators.md).
+For built-in generators, custom generator implementation, and generator defaults, see [examples/generators.md](examples/generators.md).
 
 ---
 
@@ -355,7 +342,7 @@ For module federation examples, see [examples/ci.md](examples/ci.md).
 - **Set `outputs` precisely** to only cache what is needed (exclude framework caches)
 - **Enable Nx Cloud** for remote caching — one developer's cache hit benefits the team
 - **Use `nx affected`** in CI to skip unchanged projects entirely
-- **Configure `parallel`** in nx.json to control concurrency (default: 3)
+- **Configure `parallel`** in nx.json to control concurrency
 - **Use `maxCacheSize`** to prevent unbounded cache growth
 
 ```bash

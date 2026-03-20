@@ -1,6 +1,6 @@
 {
   "name": "api-database-prisma",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Prisma ORM, type-safe queries, migrations, relations",
   "author": {

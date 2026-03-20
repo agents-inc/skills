@@ -485,7 +485,7 @@ const TZ_NEW_YORK = "America/New_York";
 const scanStart = new TZDate(2026, 0, 1, TZ_NEW_YORK);
 const scanEnd = new TZDate(2026, 11, 31, TZ_NEW_YORK);
 
-const transitions = tzScan(TZ_NEW_YORK, scanStart, scanEnd);
+const transitions = tzScan(TZ_NEW_YORK, { start: scanStart, end: scanEnd });
 // Returns array of DST transition objects
 
 // Each transition contains:
@@ -508,7 +508,7 @@ function isNearDSTTransition(
   hoursThreshold: number = DST_WARNING_HOURS,
 ): { isNear: boolean; nextTransition: Date | null } {
   const scanEnd = new Date(date.getTime() + hoursThreshold * 60 * 60 * 1000);
-  const transitions = tzScan(timezone, date, scanEnd);
+  const transitions = tzScan(timezone, { start: date, end: scanEnd });
 
   if (transitions.length > 0) {
     return { isNear: true, nextTransition: transitions[0].date };
@@ -544,7 +544,7 @@ const utcDate = new UTCDate(2026, 0, 15, 10, 30, 0);
 console.log(utcDate.toISOString()); // "2026-01-15T10:30:00.000Z"
 
 // Get current time in UTC
-const nowUTC = UTCDate.now();
+const nowUTC = new UTCDate();
 
 // Arithmetic preserves UTCDate type
 const nextWeekUTC = addDays(utcDate, 7);

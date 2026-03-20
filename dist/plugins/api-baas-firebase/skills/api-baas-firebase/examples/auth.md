@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Firebase project setup, emulator suite
+- [core.md](core.md) -- Firebase project setup, emulator suite
 - [firestore.md](firestore.md) -- Firestore CRUD, queries, real-time listeners
 - [functions.md](functions.md) -- Cloud Functions v2, Admin SDK
 - [storage.md](storage.md) -- File upload, download, delete

@@ -326,13 +326,11 @@ export { UserStore };
 
 ```typescript
 // stores/project-store.ts
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, flowResult } from "mobx";
+import type { CancellablePromise } from "mobx";
 import type { ApiClient } from "../api-client";
 
 const INITIAL_LOADING_STATE = false;
-
-// CancellablePromise is not publicly exported from MobX - define inline
-type CancellablePromise<T> = Promise<T> & { cancel(): void };
 
 interface Project {
   id: string;
@@ -383,15 +381,15 @@ class ProjectStore {
   // Start fetch with cancellation support
   startFetch(): void {
     this.cancelFetch(); // Cancel any previous fetch
-    this.currentFetch =
-      this.fetchProjects() as unknown as CancellablePromise<void>;
+    // flowResult casts generator return to CancellablePromise for TypeScript
+    this.currentFetch = flowResult(this.fetchProjects());
   }
 }
 
 export { ProjectStore };
 ```
 
-**Why good:** Generator function auto-inferred as `flow` by `makeAutoObservable`, no `runInAction` wrapping needed (flow handles it), `CancellablePromise` type defined inline (not a public MobX export), cancellable promise from flow for request cancellation, cleaner than async/await + runInAction for complex async operations
+**Why good:** Generator function auto-inferred as `flow` by `makeAutoObservable`, no `runInAction` wrapping needed (flow handles it), `CancellablePromise` imported from `"mobx"` for type-safe cancellation, `flowResult` casts generator return for TypeScript (avoids `as unknown as` double cast), cleaner than async/await + runInAction for complex async operations
 
 ### Bad Example - State Mutation After Await Without Wrapping
 

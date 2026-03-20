@@ -1,0 +1,9 @@
+{
+  "name": "web-meta-framework-qwik",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Qwik resumable framework - zero hydration, $ lazy boundaries, signals, Qwik City file-based routing, routeLoader$, routeAction$, server$ RPC, serialization rules",
+  "author": {
+    "name": "@vince"
+  }
+}

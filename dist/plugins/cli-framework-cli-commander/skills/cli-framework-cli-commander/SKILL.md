@@ -358,7 +358,7 @@ Check in order, first defined wins:
 - `optsWithGlobals()` needed to access parent command options (not just `opts()`)
 - Spinner must be stopped before any `console.log` / `p.log` output
 - `process.exit()` in async context may not wait for pending I/O — use `await` before exit-triggering operations
-- Commander v14+ defaults `allowExcessArguments` to false — extra positional args are now errors
+- Commander v13+ defaults `allowExcessArguments` to false — extra positional args are now errors
 - @clack/prompts spinner has `.isCancelled` property and `.cancel()` / `.error()` methods for richer feedback
 
 </red_flags>

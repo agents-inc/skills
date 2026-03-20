@@ -19,7 +19,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import * as onlyWarnPlugin from "eslint-plugin-only-warn";
 
 export const baseConfig = defineConfig(
-  globalIgnores(["dist/**", "generated/**", ".next/**"]),
+  globalIgnores(["dist/**", "generated/**", "build/**"]),
 
   js.configs.recommended,
   eslintConfigPrettier,
@@ -96,10 +96,7 @@ export const customRules = {
     // Enforce import type for type-only imports
     "@typescript-eslint/consistent-type-imports": [
       "warn",
-      {
-        prefer: "type-imports",
-        fixable: "code",
-      },
+      { prefer: "type-imports" },
     ],
 
     // Catch unused variables with underscore escape hatch
@@ -126,7 +123,7 @@ ESLint 10 was released February 6, 2026 and completely removes .eslintrc support
 2. **Remove .eslintignore** - Use `globalIgnores()` in config
 3. **Update CLI scripts** - Remove `--no-eslintrc`, `--env`, `--rulesdir` flags
 4. **Remove `/* eslint-env */` comments** - These now trigger errors in ESLint 10
-5. **Update Node.js** - Minimum Node.js 20.19.0 required for ESLint 10
+5. **Update Node.js** - ESLint 10 requires `^20.19.0 || ^22.13.0 || >=24`
 
 **Key ESLint 10 changes:**
 

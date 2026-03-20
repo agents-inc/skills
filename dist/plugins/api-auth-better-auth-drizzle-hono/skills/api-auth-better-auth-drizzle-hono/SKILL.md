@@ -15,7 +15,7 @@ description: Better Auth patterns, sessions, OAuth
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST mount Better Auth handler on `/api/auth/*` BEFORE any other middleware that depends on session)**
+**(You MUST mount Better Auth handler on the auth route BEFORE any other middleware that depends on session)**
 
 **(You MUST configure CORS middleware BEFORE auth routes when client and server are on different origins)**
 
@@ -268,13 +268,38 @@ See [examples/sessions.md](examples/sessions.md) for full configuration and revo
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+- Hardcoded secrets (clientId/clientSecret in source) - must use environment variables
+- CORS configured after auth routes - preflight requests will fail
+- Missing `BETTER_AUTH_SECRET` env var - sessions will not work
+- No schema generation after adding plugins - database errors at runtime
+- Untyped session middleware - loses TypeScript safety, `c.user` becomes `any`
+- Using `auth.migrate()` with Drizzle adapter - only works with Kysely, use `generate` + Drizzle Kit
+- Missing `c.req.raw` when calling `auth.handler()` - must pass the raw Web Standard Request
+
+**Gotchas & Edge Cases:**
+
+- Google only issues refresh tokens on first consent - use `accessType: "offline"` and `prompt: "consent"`
+- Stateless sessions cannot be revoked individually - increment `version` to invalidate all
+- Cookie cache revocation is delayed until `maxAge` expires on other devices
+- `authClient.forgotPassword` was renamed to `authClient.requestPasswordReset` in v1.4
+
+See [reference.md](reference.md) for full anti-patterns with code examples and the decision framework.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST mount Better Auth handler on `/api/auth/*` BEFORE any other middleware that depends on session)**
+**(You MUST mount Better Auth handler on the auth route BEFORE any other middleware that depends on session)**
 
 **(You MUST configure CORS middleware BEFORE auth routes when client and server are on different origins)**
 

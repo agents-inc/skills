@@ -1,6 +1,6 @@
 # OpenAI SDK -- Setup & Configuration Examples
 
-> Client initialization, environment config, production settings, Azure OpenAI, and per-request overrides. See [SKILL.md](../SKILL.md) for core patterns.
+> Client initialization, environment config, production settings, Azure OpenAI, error handling, and abort patterns. See [SKILL.md](../SKILL.md) for core patterns.
 
 **Related examples:**
 
@@ -59,23 +59,6 @@ const azureClient = new AzureOpenAI({
 });
 
 export { azureClient };
-```
-
----
-
-## Per-Request Overrides
-
-```typescript
-// Override retries, timeout, and headers for a single request
-await client.chat.completions.create(
-  { model: "gpt-4o", messages: [{ role: "user", content: "Hello" }] },
-  {
-    maxRetries: 5,
-    timeout: 60_000,
-    signal: abortController.signal,
-    headers: { "X-Custom-Header": "value" },
-  },
-);
 ```
 
 ---
@@ -185,24 +168,6 @@ await stream.finalContent();
 
 ---
 
-## Error Type Reference
-
-```typescript
-// Error class hierarchy:
-// OpenAI.APIError (base)
-//   +-- OpenAI.BadRequestError          (400)
-//   +-- OpenAI.AuthenticationError      (401)
-//   +-- OpenAI.PermissionDeniedError    (403)
-//   +-- OpenAI.NotFoundError            (404)
-//   +-- OpenAI.UnprocessableEntityError (422)
-//   +-- OpenAI.RateLimitError           (429)
-//   +-- OpenAI.InternalServerError      (>=500)
-//   +-- OpenAI.APIConnectionError       (network)
-//       +-- OpenAI.APIConnectionTimeoutError (timeout)
-```
-
----
-
 ## Request Cancellation with AbortController
 
 ```typescript
@@ -226,20 +191,4 @@ try {
 
 ---
 
-## Request ID Tracking
-
-```typescript
-// From response object
-completion._request_id;
-
-// From raw response headers
-const { data, response } = await client.chat.completions
-  .create({ model: "gpt-4o", messages: [{ role: "user", content: "Hello" }] })
-  .withResponse();
-
-response.headers.get("x-request-id");
-```
-
----
-
-_For core concepts, see [SKILL.md](../SKILL.md). For API reference tables, see [reference.md](../reference.md)._
+_For core concepts, see [SKILL.md](../SKILL.md). For per-request overrides, request ID tracking, and error type tables, see [reference.md](../reference.md)._

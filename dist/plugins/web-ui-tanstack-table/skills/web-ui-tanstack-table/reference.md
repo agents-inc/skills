@@ -1,6 +1,6 @@
 # TanStack Table Reference
 
-> Decision frameworks, anti-patterns, and red flags for TanStack Table development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, checklists, and anti-patterns for TanStack Table development. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
 
 **Version:** TanStack Table v8.21.3 (latest as of April 2025)
 
@@ -95,67 +95,9 @@ What kind of column is it?
 
 ---
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing useMemo on columns** - Columns defined inline without memoization cause infinite re-renders. Columns must be memoized or defined outside the component.
-
-- **Missing useMemo on data** - Passing an unstable data reference causes the table to re-render infinitely. Memoize data or define outside the component.
-
-- **accessorFn without id** - Using `accessorFn` without providing an `id` causes runtime errors. Every accessor function MUST have an explicit id.
-
-- **Missing manualPagination for server-side** - Forgetting to set `manualPagination: true` when using server-side pagination causes the table to try paginating already-paginated data.
-
-- **Returning JSX from accessorFn** - Accessors should return primitive values for sorting/filtering. Use the `cell` option for JSX rendering.
-
-### Medium Priority Issues
-
-- **Not providing rowCount for server-side** - Without `rowCount` or `pageCount`, the table cannot calculate the correct number of pages.
-
-- **Missing getRowId** - Without a custom `getRowId`, row selection uses array indices which break when data is re-ordered or filtered.
-
-- **Importing unused row models** - Importing row models you don't use increases bundle size. Import only what you need for tree-shaking.
-
-- **Not using flexRender** - Manually rendering header/cell values instead of using `flexRender` breaks when columnDef uses a function for header/cell.
-
-### Common Mistakes
-
-- **Inline column definitions** - Defining columns inside the render function without useMemo causes performance issues.
-
-- **Sorting enabled with manualSorting** - Using `getSortedRowModel` with `manualSorting: true` is redundant. Manual mode means you handle sorting server-side.
-
-- **Uncontrolled state for persistence** - Using default state without lifting it to component state makes it impossible to persist to URL or localStorage.
-
-- **Missing aria attributes** - Icon-only buttons (sort indicators, expand buttons) need aria-labels for accessibility.
-
-### Gotchas & Edge Cases
-
-- **Date sorting requires sortingFn** - JavaScript dates don't sort correctly by default. Use `sortingFn: "datetime"` for Date objects.
-
-- **Column filters are AND, not OR** - Multiple column filters combine with AND logic. For OR logic, use global filter or custom logic.
-
-- **pageIndex is 0-based** - TanStack Table uses 0-based page indices, but many APIs use 1-based. Add 1 when sending to server.
-
-- **autoResetPageIndex defaults true** - Page resets to 0 when data changes. Set `autoResetPageIndex: false` for server-side or manage manually.
-
-- **Visibility state hides by false** - A column is hidden if its ID maps to `false` in visibility state. Missing keys mean visible.
-
-- **getSortedRowModel needed for sort state** - Even if you just want to track sorting state without auto-sorting, you need a sorting row model or `manualSorting: true`.
-
-- **Column pinning requires sticky CSS** - TanStack Table provides pinning state, but you must apply `position: sticky` CSS yourself.
-
-- **Pinned column overlap** - Pinned cells need a background color, otherwise scrolling content shows through.
-
-- **Column resizing "onChange" mode performance** - Using `columnResizeMode: "onChange"` without CSS variables and memoization causes poor performance. Use CSS variables pattern.
-
-- **getResizeHandler needs both mouse and touch** - Attach handler to both `onMouseDown` and `onTouchStart` for mobile support.
-
-- **Column order: Pinning affects order** - There are 3 features that reorder columns: Column Pinning, Column Ordering, and Grouping. Pinning happens first.
-
----
-
 ## Anti-Patterns
+
+> See [SKILL.md](SKILL.md) `<red_flags>` for the full list of red flags and gotchas.
 
 ### Inline Column Definitions
 

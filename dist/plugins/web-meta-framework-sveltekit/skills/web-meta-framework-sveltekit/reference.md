@@ -110,6 +110,7 @@ Does the load function fetch multiple data sources?
 - **Using `+page.ts` for database access** — Universal loads run on client; use `+page.server.ts`
 - **Missing `use:enhance` on forms** — Forms reload the page without it
 - **Accessing `event.locals` without type declaration** — Define `App.Locals` in `app.d.ts`
+- **Exposing validation details in `handleValidationError`** — Validation failures are often security scans; return generic errors
 
 ### Medium Priority Issues
 
@@ -146,8 +147,9 @@ Does the load function fetch multiple data sources?
 - **SvelteKit uses `$app/state` in Svelte 5** — Replace `$app/stores` (`$page`, `$navigating`) with `$app/state` (`page`, `navigating`)
 - **`depends()` creates custom invalidation keys** — Use `app:` prefix for custom keys
 - **`init` hook runs once at server startup** — Use for database connections, env validation; errors here prevent the server from starting
-- **`reroute` runs before `handle`** — Rewrites URL before route matching; useful for i18n locale prefixes
+- **`reroute` runs before `handle`** — Rewrites URL before route matching; useful for i18n locale prefixes. Since 2.18+, it also receives `fetch` and can be async
 - **`transport` hook enables custom type serialization** — Classes returned from server loads survive the server-to-client boundary
+- **`handleValidationError` runs when remote function args fail schema validation** — Return `App.Error`; be careful not to expose validation details (security scans trigger this)
 
 ---
 
@@ -235,6 +237,7 @@ import type { PageProps, LayoutProps } from "./$types";
 // Hook types
 import type { Handle, HandleFetch, HandleServerError } from "@sveltejs/kit";
 import type { HandleClientError } from "@sveltejs/kit";
+import type { HandleValidationError } from "@sveltejs/kit";
 import type { ServerInit } from "@sveltejs/kit";
 import type { Reroute, Transport } from "@sveltejs/kit";
 ```

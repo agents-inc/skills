@@ -170,7 +170,7 @@ See [examples/error-boundaries.md](examples/error-boundaries.md) for full implem
 
 ### Pattern 6: useActionState for Form Submissions
 
-**Skip if using a meta-framework (Next.js, Remix, Astro) — use Server Actions instead.**
+**Skip if your framework provides its own server-side form handling (Server Actions) — use that instead.**
 
 Use `useActionState` for form submissions with automatic pending state and error handling. Replaces manual `useState` for loading/error.
 
@@ -242,9 +242,9 @@ const [optimisticItems, addOptimistic] = useOptimistic(
   (state, update: Item) => [...state, { ...update, pending: true }],
 );
 
-// In handler:
-addOptimistic(newItem);
+// In handler -- setter MUST be called inside startTransition:
 startTransition(async () => {
+  addOptimistic(newItem);
   await saveItem(newItem);
 });
 ```

@@ -1,6 +1,6 @@
 {
   "name": "shared-ci-cd-cloudflare-workers",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
   "author": {

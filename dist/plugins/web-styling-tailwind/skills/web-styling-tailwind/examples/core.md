@@ -1,6 +1,6 @@
-# Tailwind CSS v4 - Core Examples
+# Tailwind CSS v4+ - Core Examples
 
-> Essential patterns for Tailwind CSS v4. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Essential patterns for Tailwind CSS v4+. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
 
 **Additional Examples:**
 
@@ -100,6 +100,31 @@ module.exports = {
 ```
 
 **Why good:** automatic detection skips node_modules, `@source` ensures Tailwind scans those paths for class usage
+
+### Source Exclusion and Safelisting (v4.1)
+
+```css
+/* ✅ Good Example - exclude legacy paths and safelist dynamic classes */
+@import "tailwindcss";
+@source not "./src/legacy";
+@source inline("underline bg-red-500 bg-blue-500");
+```
+
+**Why good:** `@source not` prevents scanning legacy code that inflates output CSS, `@source inline()` safelists classes used via dynamic values (e.g., from CMS or database) that Tailwind cannot detect in source files
+
+### Scoped Styles with @reference
+
+```css
+/* ✅ Good Example - use @reference for scoped component styles */
+/* Works in Vue SFC <style> blocks, Svelte components, CSS Modules */
+@reference "../../app.css";
+
+.custom-widget {
+  @apply rounded-lg bg-surface p-4 text-on-surface;
+}
+```
+
+**Why good:** `@reference` imports theme variables and utilities for use in scoped styles without duplicating CSS output, required when using `@apply` in component-scoped stylesheets
 
 ---
 

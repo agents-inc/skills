@@ -270,7 +270,7 @@ export { createOrderWithTransaction };
 
 **Why good:** `transactionAsyncLocalStorage` eliminates manual session passing, cleaner code, no risk of forgetting `{ session }`
 
-**When to use:** Mongoose 8.4+ projects where all operations within a request flow through the same async context
+**When to use:** Mongoose 7.8+ projects where all operations within a request flow through the same async context (improved in 8.4)
 
 ---
 
@@ -335,13 +335,23 @@ userSchema.post("save", function (doc) {
 ```typescript
 const DUPLICATE_KEY_ERROR = 11000;
 
-userSchema.post("save", function (error: any, _doc: any, next: Function) {
-  if (error.name === "MongoServerError" && error.code === DUPLICATE_KEY_ERROR) {
-    next(new Error("Email already exists"));
-  } else {
-    next(error);
-  }
-});
+userSchema.post(
+  "save",
+  function (
+    error: Error & { code?: number },
+    _doc: unknown,
+    next: (err?: Error) => void,
+  ) {
+    if (
+      error.name === "MongoServerError" &&
+      error.code === DUPLICATE_KEY_ERROR
+    ) {
+      next(new Error("Email already exists"));
+    } else {
+      next(error);
+    }
+  },
+);
 ```
 
 **Why good:** Named constant for error code, transforms cryptic MongoDB error into user-friendly message, passes through other errors unchanged

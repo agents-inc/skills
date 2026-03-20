@@ -453,6 +453,34 @@ See [examples/stores.md](examples/stores.md) for complete Store + Context implem
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+- **Reading signal without parentheses** - `count` instead of `count()` doesn't read the value or track dependencies
+- **Destructuring props** - `const { name } = props` breaks reactivity; use `props.name` or `splitProps()`
+- **Using ternary instead of Show** - `{condition ? <A /> : <B />}` bypasses Solid's optimizations
+- **Using .map() instead of For** - `{items().map(...)}` doesn't get fine-grained list updates
+- **Missing onCleanup in effects** - Event listeners, timers, subscriptions will leak memory
+- **Async operations inside createEffect tracking scope** - Code after `await` loses tracking context
+- **Side effects in createMemo** - Memos should be pure; use createEffect for side effects
+- **Using createEffect for data fetching** - Use createResource or createAsync instead
+- **Direct mutation of store** - `store.field = x` bypasses proxy tracking; use setStore path syntax
+
+**Gotchas:**
+
+- Signals read outside reactive context (event handlers) aren't tracked
+- Stores only track property access (`store.field`), not the store object itself
+- Code after `await` in effects runs outside the tracking scope
+- `children` is a getter in Solid - use `children()` helper when iterating
+- Index provides values as signals - call `item()` inside Index, not in For
+
+See [reference.md](reference.md) for full anti-pattern examples and decision frameworks.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

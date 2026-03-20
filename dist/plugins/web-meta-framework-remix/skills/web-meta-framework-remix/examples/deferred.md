@@ -13,6 +13,8 @@ import { defer } from "@remix-run/node";
 import { Await, useLoaderData } from "@remix-run/react";
 import { Suspense } from "react";
 
+const HTTP_UNAUTHORIZED = 401;
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request);
 
@@ -22,7 +24,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   });
 
   if (!user) {
-    throw new Response("Unauthorized", { status: 401 });
+    throw new Response("Unauthorized", { status: HTTP_UNAUTHORIZED });
   }
 
   // Non-critical data - stream these

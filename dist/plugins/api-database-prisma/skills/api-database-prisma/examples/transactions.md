@@ -9,7 +9,7 @@
 ### Good Example - Create with Relations
 
 ```typescript
-import { prisma } from "@/lib/db/client";
+import { prisma } from "../lib/db/client";
 
 // All operations in a single atomic transaction
 const user = await prisma.user.create({
@@ -176,9 +176,10 @@ await prisma.$transaction(async (tx) => {
 ### Good Example - Configuring Transaction Behavior
 
 ```typescript
+import { Prisma } from "@prisma/client";
+
 const TRANSACTION_TIMEOUT_MS = 10000;
 const MAX_WAIT_MS = 5000;
-const ISOLATION_LEVEL = "Serializable";
 
 const result = await prisma.$transaction(
   async (tx) => {
@@ -199,12 +200,12 @@ const result = await prisma.$transaction(
   {
     maxWait: MAX_WAIT_MS, // Max time to wait for connection
     timeout: TRANSACTION_TIMEOUT_MS, // Max execution time
-    isolationLevel: ISOLATION_LEVEL, // Strictest isolation
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // Strictest isolation
   },
 );
 ```
 
-**Why good:** Named constants for timeouts, isolationLevel for consistency requirements, maxWait prevents indefinite waiting
+**Why good:** Named constants for timeouts, `Prisma.TransactionIsolationLevel` enum for type-safe isolation, maxWait prevents indefinite waiting
 
 ---
 

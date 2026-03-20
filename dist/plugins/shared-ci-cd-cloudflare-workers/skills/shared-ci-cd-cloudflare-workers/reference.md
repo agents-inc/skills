@@ -234,7 +234,13 @@ interface D1Database {
   prepare(query: string): D1PreparedStatement;
   batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
   exec(query: string): Promise<D1ExecResult>;
-  withSession(constraint?: string): D1Database;
+  withSession(constraint?: string): D1DatabaseSession;
+}
+
+interface D1DatabaseSession {
+  prepare(query: string): D1PreparedStatement;
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+  getBookmark(): string;
 }
 
 interface D1PreparedStatement {

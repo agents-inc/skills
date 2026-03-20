@@ -14,7 +14,7 @@ For complex wizards, separate state from UI. Use an external store or `useReduce
 
 ```typescript
 // src/stores/wizard-store.ts
-// Use your preferred state management solution (Zustand, Jotai, etc.)
+// Use your preferred state management solution.
 // This example shows the store interface -- adapt to your tool.
 
 type WizardStep = "approach" | "stack" | "skills" | "confirm" | "complete";

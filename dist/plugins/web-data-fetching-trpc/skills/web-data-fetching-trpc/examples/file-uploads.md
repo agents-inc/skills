@@ -69,19 +69,22 @@ export { uploadRouter };
 
 ```typescript
 // apps/client/components/avatar-upload.tsx
-import { trpc } from "@/lib/trpc";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "../lib/trpc";
 import { useState } from "react";
 
 const MAX_FILE_SIZE_MB = 5;
 
 export function AvatarUpload() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [preview, setPreview] = useState<string | null>(null);
-  const utils = trpc.useUtils();
 
-  const uploadMutation = trpc.upload.uploadAvatar.useMutation({
-    onSuccess: (data) => {
+  const uploadMutation = useMutation({
+    ...trpc.upload.uploadAvatar.mutationOptions(),
+    onSuccess: () => {
       toast.success("Avatar uploaded!");
-      utils.user.me.invalidate();
+      queryClient.invalidateQueries({ queryKey: trpc.user.me.queryKey() });
     },
     onError: (error) => {
       toast.error(error.message);

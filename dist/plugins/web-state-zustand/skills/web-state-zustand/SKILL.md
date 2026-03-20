@@ -10,7 +10,6 @@ description: Zustand stores, client state patterns. Use when deciding between Zu
 **Detailed Resources:**
 
 - [examples/core.md](examples/core.md) - Store setup, selectors, useShallow, Context anti-patterns, URL state
-- [reference.md](reference.md) - Anti-pattern code examples
 
 ---
 

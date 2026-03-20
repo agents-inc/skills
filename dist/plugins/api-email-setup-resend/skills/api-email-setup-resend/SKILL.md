@@ -195,27 +195,31 @@ return { success: true }; // May have silently failed!
 
 ### Pattern 5: Webhook Verification
 
-Always verify webhook signatures before processing events.
+Always verify webhook signatures before processing events. The `verify()` method **throws** on invalid signatures.
 
 ```typescript
 const payload = await request.text(); // Raw body, NOT parsed JSON
 
-const event = resend.webhooks.verify({
-  payload,
-  headers: {
-    id: request.headers.get("svix-id") ?? "",
-    timestamp: request.headers.get("svix-timestamp") ?? "",
-    signature: request.headers.get("svix-signature") ?? "",
-  },
-  webhookSecret: process.env.RESEND_WEBHOOK_SECRET!,
-});
+try {
+  const event = resend.webhooks.verify({
+    payload,
+    headers: {
+      id: request.headers.get("svix-id") ?? "",
+      timestamp: request.headers.get("svix-timestamp") ?? "",
+      signature: request.headers.get("svix-signature") ?? "",
+    },
+    webhookSecret: process.env.RESEND_WEBHOOK_SECRET!,
+  });
 
-// event.type: "email.sent" | "email.delivered" | "email.bounced" | etc.
+  // event.type: "email.sent" | "email.delivered" | "email.bounced" | etc.
+} catch {
+  return new Response("Invalid webhook signature", { status: 400 });
+}
 ```
 
-**Why good:** SDK's built-in verification, uses raw body (not parsed JSON which breaks signature), handles different event types
+**Why good:** SDK's built-in verification, uses raw body (not parsed JSON which breaks signature), try/catch handles invalid signatures
 
-**Gotcha:** You MUST use `request.text()` not `request.json()` -- parsing as JSON before verification breaks the cryptographic signature.
+**Gotcha:** You MUST use `request.text()` not `request.json()` -- parsing as JSON before verification breaks the cryptographic signature. The `verify()` method throws on failure (unlike `emails.send()` which returns `{ data, error }`).
 
 </patterns>
 
@@ -246,7 +250,7 @@ const event = resend.webhooks.verify({
 - React Email dev server creates a `.react-email` folder in your project
 - Using Grid, Flexbox, or `box-shadow` in email templates does not work in Gmail/Outlook
 - Use `px` units in emails -- `rem` renders inconsistently across email clients
-- In Resend SDK v6.1.0+, Turbopack may error on `@react-email/render` -- add `resend` to `serverExternalPackages` in your framework config
+- In Resend SDK v6.1.0+, some bundlers may error on `@react-email/render` -- add `resend` to your bundler's external packages config if you see resolution errors
 - `@react-email/components` is for UI components (Body, Button, etc.); `@react-email/render` is for the `render()` utility -- they are separate packages
 
 </red_flags>

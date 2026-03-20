@@ -1,4 +1,4 @@
-# Nuxt 3 - State Management Examples
+# Nuxt - State Management Examples
 
 > useState for SSR-safe shared state. See [SKILL.md](../SKILL.md) for core concepts.
 

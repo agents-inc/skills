@@ -255,7 +255,7 @@ See [examples/custom-commands.md](examples/custom-commands.md) Pattern 7 for reu
 - Tests that depend on previous tests - coupled tests fail randomly, each it() must be independent
 - Storing values in `const` for later use - Cypress commands are async, use aliases with `.as()` instead
 - Not using `cy.origin()` for multi-origin tests - required since Cypress 14 due to Chrome's deprecation of document.domain
-- Using deprecated `Cypress.env()` - replaced by `cy.env()` command in Cypress 15
+- Using deprecated `Cypress.env()` - use `cy.env()` for secrets, `Cypress.expose()` for public values (deprecated in v15.10.0, removed in 16)
 
 **Medium Priority Issues:**
 

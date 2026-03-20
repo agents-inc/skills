@@ -639,6 +639,7 @@ const meta = {
 - In Storybook 8.2+, use `initialGlobals` instead of deprecated `globals` in preview.ts
 - Built-in tags: `dev` (sidebar visibility), `test` (test inclusion), `autodocs` (docs generation) - use `!tag` to remove inherited tags
 - Storybook test addon (8.4+) is recommended over legacy test-runner for Vite projects - provides Storybook UI integration
+- Storybook 10 is ESM-only - requires `"type": "module"` in package.json and Node 20.16+
 
 </red_flags>
 

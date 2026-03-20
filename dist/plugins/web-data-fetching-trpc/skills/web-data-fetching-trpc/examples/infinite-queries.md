@@ -58,15 +58,18 @@ export { postRouter };
 
 ```typescript
 // apps/client/components/post-feed.tsx
-import { trpc } from "@/lib/trpc";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTRPC } from "../lib/trpc";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 
 const PAGE_SIZE = 20;
 
 export function PostFeed() {
+  const trpc = useTRPC();
   const { ref, inView } = useInView();
 
+  // v11: infiniteQueryOptions factory with standard useInfiniteQuery
   const {
     data,
     fetchNextPage,
@@ -74,11 +77,11 @@ export function PostFeed() {
     isFetchingNextPage,
     isPending,
     error,
-  } = trpc.post.infinite.useInfiniteQuery(
-    { limit: PAGE_SIZE },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+  } = useInfiniteQuery(
+    trpc.post.infinite.infiniteQueryOptions(
+      { limit: PAGE_SIZE },
+      { getNextPageParam: (lastPage) => lastPage.nextCursor },
+    ),
   );
 
   // Auto-fetch when scroll into view

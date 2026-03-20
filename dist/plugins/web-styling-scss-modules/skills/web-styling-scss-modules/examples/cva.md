@@ -375,7 +375,7 @@ export const { cva, cx, compose } = defineConfig({
 ```typescript
 // components/button.tsx
 // Import from your configured cva, not the package
-import { cva, type VariantProps } from "@/lib/cva";
+import { cva, type VariantProps } from "./lib/cva";
 import styles from "./button.module.scss";
 
 // All cva classes automatically go through your configured hook

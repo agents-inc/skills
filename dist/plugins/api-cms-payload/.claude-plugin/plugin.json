@@ -1,0 +1,9 @@
+{
+  "name": "api-cms-payload",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Payload CMS v3 — TypeScript-native headless CMS with code-first collections, hooks, access control, Local/REST/GraphQL APIs, admin panel, and database adapter pattern",
+  "author": {
+    "name": "@vince"
+  }
+}

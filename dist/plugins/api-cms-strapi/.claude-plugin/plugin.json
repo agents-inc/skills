@@ -1,0 +1,9 @@
+{
+  "name": "api-cms-strapi",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Open-source headless CMS — content type schemas, REST API, Document Service API, custom controllers, lifecycle hooks, authentication, TypeScript",
+  "author": {
+    "name": "@vince"
+  }
+}

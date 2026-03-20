@@ -7,7 +7,7 @@ description: ICU message format internationalization
 
 > **Quick Guide:** Use react-intl for internationalization with ICU Message Format. `FormattedMessage` for JSX content, `useIntl` for string attributes and programmatic use, `defineMessages` for extractable message descriptors. Wrap app with `IntlProvider` and configure `onError` for missing translations. Always include the `other` category in plurals and selects.
 >
-> **Version Note:** react-intl v7+ requires React 19+. For React 18 projects, use react-intl v6.x.
+> **Version Note:** react-intl v7.x supports React 16.6+/17/18/19. v8+ requires React 19 only (React 18 support dropped). Current latest: v10.x.
 
 ---
 
@@ -23,7 +23,7 @@ description: ICU message format internationalization
 
 **(You MUST use named constants for locale codes - NO inline locale strings)**
 
-**(You MUST verify React version compatibility: v7+ requires React 19+, use v6.x for React 18)**
+**(You MUST verify React version compatibility: v7.x supports React 16.6-19, v8+ requires React 19 only)**
 
 </critical_requirements>
 
@@ -323,11 +323,14 @@ Define messages outside components with `defineMessages` rather than passing inl
 **Gotchas & Edge Cases:**
 
 - `FormattedMessage` returns `ReactNode`, not `string` - cannot use for HTML attributes
+- `formatMessage` returns `string` for plain values, but `string | ReactNode[]` when rich text tag functions are in values
 - Rich text tag functions receive `chunks` array, not single element
 - `formatNumber` with `style: "percent"` expects decimal (0.25 for 25%), not percentage
 - `formatRelativeTime` value is relative to NOW - negative for past, positive for future
 - ICU escaping: single quote `'` escapes special characters, double single quote `''` produces literal apostrophe
 - Browser Intl support varies - consider polyfills for older browsers
+- `injectIntl` HOC was removed in v10 - use `useIntl` hook instead
+- Use `onWarn` prop on IntlProvider to suppress or handle `defaultRichTextElements` warnings when messages are not pre-compiled
 
 </red_flags>
 
@@ -345,7 +348,7 @@ Define messages outside components with `defineMessages` rather than passing inl
 
 **(You MUST use named constants for locale codes - NO inline locale strings)**
 
-**(You MUST verify React version compatibility: v7+ requires React 19+, use v6.x for React 18)**
+**(You MUST verify React version compatibility: v7.x supports React 16.6-19, v8+ requires React 19 only)**
 
 **Failure to follow these rules will cause runtime errors and broken internationalization.**
 

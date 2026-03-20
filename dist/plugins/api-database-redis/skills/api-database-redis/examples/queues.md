@@ -4,7 +4,7 @@
 
 **Related examples:**
 
-- [setup.md](setup.md) -- Connection setup (`maxRetriesPerRequest: null` for BullMQ)
+- [core.md](core.md) -- Connection setup (`maxRetriesPerRequest: null` for BullMQ)
 - [pub-sub.md](pub-sub.md) -- Fire-and-forget messaging (vs persistent queues)
 - [rate-limiting.md](rate-limiting.md) -- Lua scripts for atomic operations
 

@@ -88,8 +88,8 @@
 | `release`        | `object` | —                        | Release management configuration                  |
 | `nxCloudId`      | `string` | —                        | Nx Cloud workspace identifier                     |
 | `nxCloudUrl`     | `string` | `"https://cloud.nx.app"` | Nx Cloud URL (self-hosted)                        |
-| `parallel`       | `number` | `3`                      | Max concurrent task execution                     |
-| `maxCacheSize`   | `string` | `"10%"`                  | Local cache size limit (KB/MB/GB or %)            |
+| `parallel`       | `number` | —                        | Max concurrent task execution                     |
+| `maxCacheSize`   | `string` | 10% of disk, max 10GB    | Local cache size limit (B/KB/MB/GB)               |
 | `cacheDirectory` | `string` | `".nx/cache"`            | Local cache storage path                          |
 | `extends`        | `string` | —                        | Inherit from preset (e.g., `nx/presets/npm.json`) |
 | `conformance`    | `object` | —                        | Workspace compliance rules                        |

@@ -162,18 +162,19 @@ Hello, {name}!
 | `defaultLocale`           | string   | No       | Fallback locale      |
 | `defaultRichTextElements` | object   | No       | Default tag handlers |
 | `onError`                 | function | No       | Error handler        |
+| `onWarn`                  | function | No       | Warning handler      |
 
 ### useIntl Methods
 
-| Method                              | Returns | Use Case                 |
-| ----------------------------------- | ------- | ------------------------ |
-| `formatMessage(descriptor, values)` | string  | Attributes, programmatic |
-| `formatDate(value, options)`        | string  | Date formatting          |
-| `formatTime(value, options)`        | string  | Time formatting          |
-| `formatNumber(value, options)`      | string  | Number/currency          |
-| `formatRelativeTime(value, unit)`   | string  | Relative time            |
-| `formatList(values, options)`       | string  | List formatting          |
-| `formatDisplayName(code, options)`  | string  | Language/region names    |
+| Method                              | Returns                                       | Use Case                 |
+| ----------------------------------- | --------------------------------------------- | ------------------------ |
+| `formatMessage(descriptor, values)` | string (or ReactNode[] with rich text values) | Attributes, programmatic |
+| `formatDate(value, options)`        | string                                        | Date formatting          |
+| `formatTime(value, options)`        | string                                        | Time formatting          |
+| `formatNumber(value, options)`      | string                                        | Number/currency          |
+| `formatRelativeTime(value, unit)`   | string                                        | Relative time            |
+| `formatList(values, options)`       | string                                        | List formatting          |
+| `formatDisplayName(code, options)`  | string                                        | Language/region names    |
 
 ### Formatting Components
 

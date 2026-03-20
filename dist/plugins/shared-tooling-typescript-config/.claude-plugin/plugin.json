@@ -1,6 +1,6 @@
 {
   "name": "shared-tooling-typescript-config",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs",
   "author": {

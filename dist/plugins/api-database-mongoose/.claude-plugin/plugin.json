@@ -1,0 +1,9 @@
+{
+  "name": "api-database-mongoose",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "MongoDB ODM with schemas, validation, middleware, and TypeScript support",
+  "author": {
+    "name": "@vince"
+  }
+}

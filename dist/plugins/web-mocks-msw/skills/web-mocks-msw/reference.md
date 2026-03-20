@@ -60,58 +60,9 @@ Need API mocking?
 
 ## Anti-Patterns
 
-### Wrong MSW API for Environment
+Each anti-pattern below has a full good/bad code example in the linked example file.
 
-```typescript
-// ❌ setupServer in browser
-import { setupServer } from "msw/node";
-export const browserWorker = setupServer(...handlers);
-
-// ❌ setupWorker in Node tests
-import { setupWorker } from "msw/browser";
-export const server = setupWorker(...handlers);
-```
-
-**Why it's wrong:** `setupWorker` requires browser service worker APIs, `setupServer` requires Node APIs -- wrong API causes cryptic runtime errors.
-
----
-
-### Missing Handler Reset Between Tests
-
-```typescript
-// ❌ No resetHandlers
-beforeAll(() => server.listen());
-afterAll(() => server.close());
-// Missing: afterEach(() => server.resetHandlers());
-```
-
-**Why it's wrong:** Handler overrides from one test leak into subsequent tests causing flaky failures and order-dependent behavior.
-
----
-
-### Mock Data Embedded in Handlers
-
-```typescript
-// ❌ Data inside handler
-export const getFeaturesHandler = http.get("api/v1/features", () => {
-  return HttpResponse.json({
-    features: [{ id: "1", name: "Dark mode" }],
-  });
-});
-```
-
-**Why it's wrong:** Mock data cannot be reused in other tests or handlers, no type checking against API schema.
-
----
-
-### Rendering Before MSW Ready
-
-```typescript
-// ❌ Missing await
-if (import.meta.env.DEV) {
-  browserWorker.start({ onUnhandledRequest: "bypass" }); // No await!
-}
-createRoot(document.getElementById("root")!).render(<App />);
-```
-
-**Why it's wrong:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably.
+- **Wrong MSW API for environment** -- `setupWorker` in Node or `setupServer` in browser causes cryptic runtime errors. See [browser.md Pattern 7](examples/browser.md).
+- **Missing handler reset between tests** -- Omitting `afterEach(() => server.resetHandlers())` causes test pollution and order-dependent failures. See [core.md Pattern 3](examples/core.md).
+- **Mock data embedded in handlers** -- Data inside handlers cannot be reused or type-checked against API schema. See [core.md Pattern 1](examples/core.md).
+- **Rendering before MSW ready** -- Missing `await` on `browserWorker.start()` causes race conditions. See [browser.md Pattern 8](examples/browser.md).

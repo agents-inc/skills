@@ -22,8 +22,8 @@ export default defineConfig({
   plugins: [
     "@hey-api/typescript", // Generates types (types.gen.ts)
     "@hey-api/sdk", // Generates service functions (sdk.gen.ts)
-    "@hey-api/client-fetch", // Bundled fetch client (client.gen.ts)
-    "@tanstack/react-query", // React Query hooks (@tanstack/react-query.gen.ts)
+    "@tanstack/react-query", // React Query options (@tanstack/react-query.gen.ts)
+    // "@hey-api/client-fetch" -- optional, Fetch is the default client since v0.73
   ],
 });
 ```
@@ -32,7 +32,7 @@ export default defineConfig({
 
 ```
 src/api-client/
-├── client.gen.ts                       # Fetch client with setConfig()
+├── client.gen.ts                       # Fetch client with setConfig() (bundled by default)
 ├── sdk.gen.ts                          # Service functions (getFeatures, etc.)
 ├── types.gen.ts                        # TypeScript types from OpenAPI schemas
 └── @tanstack/react-query.gen.ts        # Query options (getFeaturesOptions, etc.)
@@ -100,7 +100,7 @@ function useFeatures() {
 
 ```typescript
 // lib/query-provider.tsx
-"use client";
+"use client"; // Required in RSC frameworks (Next.js, etc.) -- omit for SPA
 
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

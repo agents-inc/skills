@@ -1,6 +1,6 @@
 {
   "name": "shared-monorepo-nx",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
   "author": {

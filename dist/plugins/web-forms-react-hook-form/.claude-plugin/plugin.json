@@ -1,6 +1,6 @@
 {
   "name": "web-forms-react-hook-form",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "skills": "./skills/",
   "description": "React Hook Form patterns - useForm, Controller, useFieldArray, validation resolver, performance optimization",
   "author": {
