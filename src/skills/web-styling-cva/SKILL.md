@@ -355,8 +355,7 @@ function button(props: ButtonProps): string {
 - `compoundVariants` are applied AFTER regular variants -- order matters for class specificity
 - Empty variant values (`null` or empty string) are valid -- useful for "no additional styles" case
 - Base classes are always applied -- you cannot conditionally remove them via variants
-- Both `class` and `className` work in `compoundVariants` config -- `class` is the canonical property
-- Using `className` instead of `class` in `compoundVariants` works but `class` is preferred in official docs
+- Both `class` and `className` work in `compoundVariants` config -- pick one and be consistent (`class` in non-React contexts, `className` if you prefer React conventions)
 - Don't forget `import type` for `VariantProps`: `import { cva, type VariantProps }`
 
 </red_flags>

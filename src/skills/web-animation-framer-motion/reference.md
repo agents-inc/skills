@@ -1,6 +1,6 @@
 # Motion Reference
 
-> Decision frameworks, anti-patterns, and red flags for Motion (formerly Framer Motion) development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and quick reference for Motion (formerly Framer Motion) development. See [SKILL.md](SKILL.md) for core concepts and red flags, and [examples/](examples/) for code examples.
 
 ---
 
@@ -108,19 +108,19 @@ const containerVariants = {
 
 ## Decision Framework
 
-### When to Use Framer Motion vs CSS
+### When to Use Motion vs CSS
 
 ```
 Is this animation triggered by user interaction?
 ├─ YES → Is it complex (multi-step, physics-based)?
-│   ├─ YES → Use Framer Motion ✓
+│   ├─ YES → Use Motion ✓
 │   └─ NO → Is it hover/focus only?
 │       ├─ YES → CSS transitions work fine
-│       └─ NO → Use Framer Motion for consistency
+│       └─ NO → Use Motion for consistency
 └─ NO → Is it a simple infinite loop (pulse, spin)?
     ├─ YES → CSS animation is sufficient
     └─ NO → Does it need to animate on mount/unmount?
-        ├─ YES → Use Framer Motion (AnimatePresence) ✓
+        ├─ YES → Use Motion (AnimatePresence) ✓
         └─ NO → Either works, prefer consistency
 ```
 
@@ -214,44 +214,6 @@ const SYMMETRIC_EASE = { type: "tween", ease: "easeInOut", duration: 0.3 };
 // Custom cubic bezier - Material Design style
 const MATERIAL_EASE = { type: "tween", ease: [0.4, 0, 0.2, 1], duration: 0.3 };
 ```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing AnimatePresence for exit animations** - Exit animations will not play without AnimatePresence wrapper
-- **Missing unique key on AnimatePresence children** - AnimatePresence cannot track elements without unique keys
-- **Animating layout-triggering properties** (height, width, top, left, margin, padding) - These cause expensive reflows; use transform (x, y, scale) instead
-- **Magic numbers for timing values** - All durations, delays, distances must be named constants
-- **Ignoring reduced motion preferences** - Always use MotionConfig reducedMotion="user" or useReducedMotion hook
-
-### Medium Priority Issues
-
-- **Using index as key in animated lists** - Causes incorrect animations when list changes; use stable IDs
-- **Missing layout prop on children during parent layout animation** - Children will distort; add layout="position" to children
-- **Overusing willChange** - Creates GPU layers; only use when confirmed performance benefit
-- **Not cleaning up useAnimation in useEffect** - Can cause memory leaks; return cleanup function
-
-### Common Mistakes
-
-- **Wrapping non-motion components in AnimatePresence** - Only motion components support exit animations
-- **Using React Fragments inside AnimatePresence** - Each direct child must have a key; fragments break this
-- **Expecting CSS animations to work with AnimatePresence** - AnimatePresence only controls Framer Motion exit animations
-- **Setting animate on layout-animated elements** - Use style or className for layout changes; animate prop conflicts
-- **Nesting AnimatePresence without propagate** - Inner AnimatePresence components need propagate prop to inherit exit from parent
-
-### Gotchas & Edge Cases
-
-- **layoutId is global** - Use LayoutGroup with id prop to scope layoutId to component instances
-- **transform-origin affects scale animations** - Set transformOrigin for correct scaling behavior
-- **SVG animations require motion.path, motion.circle, etc.** - Regular SVG elements won't animate; use motion.\* versions
-- **useInView returns false on server** - Use conditional rendering or default to visible state for SSR
-- **Motion values don't trigger re-renders** - This is intentional for performance; use useMotionValueEvent for side effects
-- **AnimatePresence mode="wait" blocks enter until exit completes** - May cause perceived delay; test user experience
-- **drag with layout can conflict** - Disable layout during drag with layout={false} or use dragListener
-- **Spring animations can overshoot** - High stiffness + low damping causes overshoot; test with real content
 
 ---
 
@@ -385,11 +347,11 @@ willChange creates GPU layers. Too many layers waste memory and can hurt perform
   />
 ))}
 
-// CORRECT - only when needed, typically handled by Framer Motion automatically
+// CORRECT - only when needed, typically handled by Motion automatically
 {items.map((item) => (
   <motion.div
     key={item.id}
-    whileHover={{ scale: 1.05 }}  // Framer Motion handles optimization
+    whileHover={{ scale: 1.05 }}  // Motion handles optimization
   />
 ))}
 ```

@@ -504,6 +504,33 @@ n(0.15, "percent"); // "15%"
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+- **Missing `legacy: false`** -- defaults to deprecated Options API mode (removed in v12)
+- **Multiple `useI18n()` calls in same component** -- creates separate instances that desync
+- **Hardcoded locale strings** -- use named constants for type safety
+- **Missing `fallbackLocale`** -- missing translations cause visible errors instead of graceful fallback
+- **Using `v-html` with translations** -- XSS vulnerability, use `<i18n-t>` instead
+- **String concatenation** -- word order varies by language, use complete messages with interpolation
+- **Setting locale before messages load** -- shows raw keys, always await loading first
+- **Using `dateTimeFormats` instead of `datetimeFormats`** -- the config key uses lowercase 't'
+- **Using `$tc()`** -- removed in v11, use `t()` with count parameter
+- **Using `v-t` directive** -- deprecated in v11, removed in v12, use `t()` or `<i18n-t>`
+
+**Gotchas & Edge Cases:**
+
+- `locale.value` is a ref -- assign with `.value`, not direct assignment
+- `@:linked.message` syntax only works with global scope, not local scope
+- Custom `pluralRules` function returns an index into the array, not the form itself
+
+> See [reference.md](reference.md) for full anti-pattern code examples and decision frameworks.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

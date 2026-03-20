@@ -430,6 +430,33 @@ eventSource.onmessage = (event: MessageEvent) => {
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+- **No cleanup on unmount** - EventSource stays open, memory leaks, zombie connections
+- **Ignoring onerror event** - Connection failures are silent, users see stale data
+- **Not checking readyState in onerror** - Cannot distinguish reconnection from permanent failure
+- **Token in URL query string** - Security risk: visible in server logs, browser history
+- **Missing keep-alive comments** - Proxies may close "idle" connections after 60-120 seconds
+- **JSON.parse without try-catch** - Malformed messages crash the entire handler
+- **Creating new EventSource without closing old one** - Duplicate connections, duplicate messages
+- **Not handling buffer boundaries in fetch streaming** - Messages split across chunks are missed
+
+**Gotchas & Edge Cases:**
+
+- EventSource has no timeout - dead connections may not fire onerror for minutes
+- HTTP/1.1 browsers limit 6 connections per domain (SSE counts against this)
+- `retry:` field is in milliseconds, not seconds
+- Empty `data:\n\n` sends empty string, not undefined
+- `Connection: keep-alive` header is prohibited in HTTP/2+ (Safari rejects it)
+
+See [reference.md](reference.md) for full anti-pattern examples with code.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

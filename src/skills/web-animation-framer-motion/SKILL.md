@@ -70,7 +70,7 @@ description: Motion (formerly Framer Motion) animation patterns - motion compone
 - [examples/scroll.md](examples/scroll.md) - Scroll progress, reveal, parallax
 - [examples/sequences.md](examples/sequences.md) - Complex sequences, keyframes
 - [examples/svg.md](examples/svg.md) - SVG path animations
-- [reference.md](reference.md) - Decision frameworks, migration guide, anti-patterns, quick reference
+- [reference.md](reference.md) - Decision frameworks, migration guide, anti-patterns, performance, quick reference
 
 ---
 
@@ -325,8 +325,6 @@ const transition = {
 ```
 
 **Drag Controls** (v12+): `useDragControls` gains `.stop()` and `.cancel()` methods.
-
-**MotionConfig skipAnimations**: Globally disable animations for testing or during complex transitions.
 
 </patterns>
 

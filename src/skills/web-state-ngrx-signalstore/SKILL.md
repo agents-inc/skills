@@ -362,6 +362,39 @@ See [examples/testing.md](examples/testing.md) for patterns.
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Mutating state directly instead of using `patchState` - breaks reactivity and signal notifications
+- Using arrays instead of `withEntities` for entity collections - loses normalized state, O(1) lookups
+- Not wrapping async RxJS flows in `rxMethod` - loses cancellation and proper cleanup
+- Accessing store state outside computed/template - may not trigger updates
+
+**Medium Priority Issues:**
+
+- Missing error handling in `rxMethod` pipelines
+- Deeply nested state (flatten with multiple state slices)
+- Not using `entityConfig()` for custom entity IDs (v18+)
+- Using `signalMethod` for async operations with race conditions (use `rxMethod` with `switchMap`)
+
+**Gotchas & Edge Cases:**
+
+- `withHooks.onInit()` runs during store instantiation - be careful with side effects in tests
+- `patchState` with entity updaters requires `collection` option when using named collections
+- `rxMethod` auto-unsubscribes on destroy - do not manually unsubscribe
+- Protected state (v18+) prevents external `patchState` calls by default
+- Feature execution order matters - later features can access earlier ones
+- **v19+ Deep Freeze**: State values are recursively frozen with `Object.freeze` in dev mode - use `withProps()` for mutable objects like FormGroup
+
+See [reference.md](reference.md) for detailed anti-patterns with code examples.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

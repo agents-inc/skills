@@ -283,6 +283,8 @@ export { ProductStore };
 
 **Why good:** Subclass uses `makeObservable` (required for inheritance), calls `super()` for base class setup, adds its own annotations for new properties, named constant for stock threshold
 
+> **Note:** If a subclass _overrides_ a parent method/computed/flow, use the `override` annotation instead of `action`/`computed`/`flow`: e.g. `{ removeEntity: override }`. Only members with new implementations need `override`; new properties use normal annotations as shown above.
+
 ### Bad Example - makeAutoObservable on Subclass
 
 ```typescript

@@ -367,8 +367,9 @@ const THEME: ThemeConfig = {
   hashed: false, // Disable hash when only one antd version in the app
 };
 
-// v6 zero-runtime mode: pre-extract styles to static CSS
-// Requires importing 'antd/dist/antd.css' separately
+// v6 zero-runtime mode: no runtime style generation
+// Import 'antd/dist/antd.css' for default styles, or use
+// @ant-design/static-style-extract for custom themes
 const ZERO_RUNTIME_THEME: ThemeConfig = {
   zeroRuntime: true,
 };
@@ -520,6 +521,7 @@ How to customize appearance?
 - Virtual Table requires explicit column `width` values and both `scroll.x` and `scroll.y` as numbers -- without them, columns collapse or virtual mode fails
 - ProTable `request` must return `{ data, success, total }` -- missing `success: true` causes infinite loading
 - Nested ConfigProvider inherits unset tokens from parent -- set tokens explicitly if you want isolation
+- `@ant-design/icons@6` is NOT compatible with `antd@5` -- always upgrade both packages together
 
 </red_flags>
 

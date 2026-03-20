@@ -278,9 +278,7 @@ tests/
 - Async React updates require `waitFor()` or `findBy*` queries - `getBy*` immediately will cause flaky failures
 - Files named `*.test.ts` run with Vitest, `*.spec.ts` with Playwright - mixing causes wrong runner
 - **Vitest v3+:** Test options must be second argument: `test("name", { timeout: 10_000 }, () => {})` NOT `test("name", () => {}, { timeout: 10_000 })`
-- **Vitest v4:** `vi.fn().getMockName()` returns `"vi.fn()"` instead of `"spy"` - update snapshot assertions
-- **Vitest v4:** `vi.restoreAllMocks()` only affects manual spies, not automocks - use `vi.resetAllMocks()` for full reset
-- **Vitest v4:** Automocked getters return `undefined` by default instead of calling originals
+- **Vitest v4:** Multiple mock behavior changes (getMockName, restoreAllMocks, automocked getters) - see [reference.md](reference.md) for full v4 migration notes
 
 </red_flags>
 

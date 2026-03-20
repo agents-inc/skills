@@ -1,6 +1,6 @@
 # WebSocket Reference
 
-> Decision frameworks, anti-patterns, and red flags for WebSocket real-time communication. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and quick-reference tables for WebSocket real-time communication. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
 
 ---
 
@@ -85,161 +85,9 @@ Handling binary data?
 
 ---
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **No reconnection logic** - Connection drops are inevitable, users will see permanent disconnection
-- **Immediate reconnection without backoff** - Causes thundering herd, overwhelming server during recovery
-- **No heartbeat/ping-pong** - Dead connections go undetected, users think they're connected when they're not
-- **Untyped message handling** - Runtime errors when message shapes change, impossible to refactor safely
-- **Sending messages without readyState check** - Messages silently fail when connection is not open
-- **Missing cleanup on component unmount** - Memory leaks, zombie connections, duplicate handlers
-- **Using ws:// on HTTPS pages** - Modern browsers block insecure WebSocket on secure origins (except localhost)
-- **Not handling bfcache** - Open connections prevent back/forward cache, degrading navigation performance
-
-### Medium Priority Issues
-
-- **No message queuing during disconnection** - Messages lost during brief disconnects
-- **Token in WebSocket URL query string** - Security risk: token visible in server logs
-- **Using Blob binaryType for frequent binary messages** - Performance penalty from async processing
-- **Not handling all close event codes** - Missing opportunities for smart reconnection decisions
-- **Single retry interval without randomization** - All clients reconnect at same time after outage
-- **Not monitoring bufferedAmount** - Sending faster than network can handle causes memory issues
-
-### Common Mistakes
-
-- **Parsing JSON without try-catch** - Malformed messages crash the handler
-- **Not resetting retry count on successful connection** - Retry limits hit prematurely
-- **Forgetting to clear intervals/timeouts on close** - Memory leaks, phantom operations
-- **Sending before onopen fires** - Messages are lost or cause errors
-- **Not distinguishing intentional vs unintentional close** - Reconnecting when user explicitly disconnected
-
-### Gotchas & Edge Cases
-
-- **Close code 1000 is normal closure** - Don't reconnect for code 1000
-- **onerror is always followed by onclose** - Don't duplicate error handling logic
-- **WebSocket doesn't support custom HTTP headers** - Use query string or first message for auth
-- **Browser may not fire close event on page unload** - Use `pagehide` for cleanup (not `beforeunload`)
-- **Some proxies have WebSocket idle timeouts** - Heartbeats prevent proxy disconnects (20-30 second intervals recommended)
-- **readyState changes are not synchronous** - Check readyState before every send
-- **Binary messages need `instanceof ArrayBuffer` check** - Don't assume message type
-- **JSON.parse can throw** - Always wrap in try-catch for incoming messages
-- **wss:// required on HTTPS pages** - Modern browsers block ws:// on secure origins (except localhost)
-- **Open connections block bfcache** - Close on `pagehide`, reconnect on `pageshow` when `event.persisted`
-- **No built-in backpressure** - Check `bufferedAmount` before sending large data to avoid memory issues
-- **WebSocketStream is experimental** - New promise-based API with automatic backpressure, check browser support first
-
----
-
 ## Anti-Patterns
 
-### No Reconnection Logic
-
-WebSocket connections will drop. Without reconnection, users experience permanent disconnection until page refresh.
-
-```typescript
-// WRONG - No reconnection
-const socket = new WebSocket(url);
-socket.onclose = () => {
-  console.log("Disconnected"); // User is stuck
-};
-
-// CORRECT - Reconnection with backoff
-socket.onclose = (event) => {
-  if (event.code !== 1000 && retryCount < MAX_RETRIES) {
-    const delay = calculateBackoffWithJitter(retryCount);
-    setTimeout(() => connect(), delay);
-  }
-};
-```
-
-### Immediate Reconnection (Thundering Herd)
-
-When a server restarts, all clients reconnecting immediately overwhelms the server.
-
-```typescript
-// WRONG - All clients reconnect at same time
-socket.onclose = () => {
-  new WebSocket(url); // Thundering herd!
-};
-
-// CORRECT - Exponential backoff with jitter
-socket.onclose = () => {
-  const delay = baseDelay * Math.pow(2, attempt);
-  const jitter = delay * 0.5 * (Math.random() * 2 - 1);
-  setTimeout(() => connect(), delay + jitter);
-};
-```
-
-### Missing readyState Check
-
-Sending to a closed socket fails silently or throws errors.
-
-```typescript
-// WRONG - No readyState check
-function send(message: unknown) {
-  socket.send(JSON.stringify(message)); // May fail silently
-}
-
-// CORRECT - Check readyState
-function send(message: unknown) {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(message));
-  } else {
-    messageQueue.push(message); // Queue for later
-  }
-}
-```
-
-### Untyped Message Handling
-
-Without types, message handling is error-prone and impossible to refactor safely.
-
-```typescript
-// WRONG - Untyped, unsafe
-socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if (data.type === "mesage") {
-    // Typo! Never caught
-    console.log(data.content); // Could be undefined
-  }
-};
-
-// CORRECT - Discriminated union with exhaustive switch
-type ServerMessage =
-  | { type: "message"; content: string }
-  | { type: "error"; code: number };
-
-socket.onmessage = (event) => {
-  const data: ServerMessage = JSON.parse(event.data);
-  switch (data.type) {
-    case "message":
-      console.log(data.content); // TypeScript knows content exists
-      break;
-    case "error":
-      console.error(`Error ${data.code}`);
-      break;
-    default:
-      const exhaustive: never = data; // Compile error if case missing
-  }
-};
-```
-
-### Token in URL Query String
-
-Tokens in URLs are logged by servers and may be cached.
-
-```typescript
-// WRONG - Token visible in logs
-const socket = new WebSocket(`wss://api.example.com/ws?token=${token}`);
-
-// CORRECT - Token as first message
-const socket = new WebSocket("wss://api.example.com/ws");
-socket.onopen = () => {
-  socket.send(JSON.stringify({ type: "auth", token }));
-};
-```
+These anti-patterns cover scenarios not fully illustrated with code in the core examples.
 
 ### No Cleanup on Unmount
 
@@ -261,30 +109,6 @@ useEffect(() => {
     socket.close(1000, "Component unmounted");
   };
 }, []);
-```
-
-### Using Blob for Performance-Critical Binary Data
-
-Blob requires async processing, adding latency.
-
-```typescript
-// WRONG - Async Blob processing
-socket.binaryType = "blob"; // Default
-socket.onmessage = async (event) => {
-  if (event.data instanceof Blob) {
-    const buffer = await event.data.arrayBuffer(); // Async overhead
-    processBuffer(buffer);
-  }
-};
-
-// CORRECT - Synchronous ArrayBuffer processing
-socket.binaryType = "arraybuffer";
-socket.onmessage = (event) => {
-  if (event.data instanceof ArrayBuffer) {
-    const view = new DataView(event.data); // Synchronous
-    processData(view);
-  }
-};
 ```
 
 ### Not Handling Intentional Close
@@ -310,41 +134,6 @@ socket.onclose = (event) => {
     reconnect();
   }
 };
-```
-
-### Blocking bfcache
-
-Open WebSocket connections prevent pages from being cached in the browser's back/forward cache.
-
-```typescript
-// WRONG - Blocks bfcache, slower navigation
-useEffect(() => {
-  const socket = new WebSocket(url);
-  return () => socket.close();
-}, []);
-
-// CORRECT - Close on pagehide, reconnect on pageshow
-useEffect(() => {
-  let socket: WebSocket | null = new WebSocket(url);
-
-  const handlePageHide = () => {
-    socket?.close(1000, "Page hidden");
-    socket = null;
-  };
-
-  const handlePageShow = (e: PageTransitionEvent) => {
-    if (e.persisted) socket = new WebSocket(url);
-  };
-
-  window.addEventListener("pagehide", handlePageHide);
-  window.addEventListener("pageshow", handlePageShow);
-
-  return () => {
-    window.removeEventListener("pagehide", handlePageHide);
-    window.removeEventListener("pageshow", handlePageShow);
-    socket?.close();
-  };
-}, []);
 ```
 
 ### Ignoring bufferedAmount (Backpressure)

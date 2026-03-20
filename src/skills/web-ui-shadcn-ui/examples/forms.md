@@ -8,6 +8,10 @@
 
 The `Field` component provides accessible form field layout (labels, descriptions, errors) without coupling to any specific form library.
 
+**Sub-components:** `Field`, `FieldContent`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldTitle`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldSeparator`
+
+**Orientation prop:** `"vertical"` (default), `"horizontal"`, `"responsive"` (auto-switches via container queries)
+
 ```tsx
 import {
   Field,
@@ -30,9 +34,18 @@ import { Input } from "@/components/ui/input";
   <Input id="email" aria-invalid={!!error} />
   {error && <FieldError errors={[error]} />}
 </Field>
+
+// Horizontal field (label and control side-by-side)
+<Field orientation="horizontal">
+  <FieldContent>
+    <FieldLabel htmlFor="theme">Theme</FieldLabel>
+    <FieldDescription>Select your preferred theme.</FieldDescription>
+  </FieldContent>
+  <Select id="theme" />
+</Field>
 ```
 
-**Why good:** Form-library-agnostic, consistent accessibility attributes, replaces the old tightly-coupled Form/FormField/FormItem pattern
+**Why good:** Form-library-agnostic, consistent accessibility attributes, replaces the old tightly-coupled Form/FormField/FormItem pattern, `FieldError` supports Standard Schema validators (Zod, Valibot, ArkType) directly
 
 ---
 

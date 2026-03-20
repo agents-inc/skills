@@ -72,49 +72,6 @@ Does each item have a unique ID?
 
 ---
 
-## RED FLAGS
-
-**High Priority Issues:**
-
-- **Using legacy createStore instead of configureStore** - misses DevTools, development checks, and middleware defaults
-- **Switch statements in reducers** - use createSlice which generates action creators automatically
-- **Manual action type strings** - createSlice generates these from reducer names
-- **Mutating state outside Immer context** - only "mutate" inside createSlice/createReducer
-- **Default exports in Redux files** - violates project conventions, breaks tree-shaking
-- **Storing derived state** - compute in selectors, not in state
-- **RTK Query cache not blacklisted in redux-persist** - causes stale cache restoration
-- **RTK 2.0: Object syntax in extraReducers** - removed in v2, use builder callback
-- **RTK 2.0: Using AnyAction type** - deprecated, use UnknownAction with isAction() guard
-
-**Medium Priority Issues:**
-
-- Using untyped useDispatch/useSelector instead of typed hooks
-- Not using rejectWithValue for typed error handling in thunks
-- Deeply nested state structure (normalize with entity adapters)
-- Subscribing to entire store instead of specific slices
-- Not using createSelector for derived data (causes unnecessary recalculations)
-- Magic numbers for config values (timeouts, thresholds)
-
-**Common Mistakes:**
-
-- Defining typed hooks in the same file as store (causes circular imports)
-- Not calling setupListeners for RTK Query refetch behaviors
-- Forgetting to add RTK Query middleware to store configuration
-- Using any type for action payloads instead of PayloadAction<T>
-- Not handling all thunk lifecycle states (pending, fulfilled, rejected)
-- Accessing state in action creators without proper typing
-
-**Gotchas & Edge Cases:**
-
-- Immer mutations only work inside createSlice/createReducer - not in action creators
-- Entity adapter updateOne/updateMany perform shallow updates only - deep nested updates need manual handling
-- RTK Query cache tags are case-sensitive - "User" !== "user"
-- createAsyncThunk auto-dispatches pending/fulfilled/rejected - don't dispatch manually
-- getDefaultMiddleware() must be called - not referenced - in middleware config
-- TypeScript infers RootState from store.getState return type - keep slice types accurate
-
----
-
 ## Anti-Patterns
 
 ### Legacy Redux Patterns

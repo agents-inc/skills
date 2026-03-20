@@ -1,6 +1,6 @@
-# Tailwind CSS v4 - Advanced Examples
+# Tailwind CSS v4+ - Advanced Examples
 
-> Advanced patterns for Tailwind CSS v4. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Advanced patterns for Tailwind CSS v4+. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
 
 **Additional Examples:**
 
@@ -277,6 +277,26 @@ module.exports = {
 ```
 
 **Why bad:** JavaScript plugin API replaced by `@custom-variant` directive, no `tailwind.config.js` needed in v4
+
+### @variant for Inline Variant Application
+
+```css
+/* ✅ Good Example - apply variants inside custom CSS */
+.custom-card {
+  background: white;
+  padding: 1.5rem;
+
+  @variant dark {
+    background: oklch(0.15 0 0);
+  }
+
+  @variant hover {
+    box-shadow: 0 4px 12px oklch(0 0 0 / 0.1);
+  }
+}
+```
+
+**Why good:** `@variant` applies Tailwind variants inside custom CSS without `@apply`, useful for third-party library overrides or CSS-heavy components where utility classes cannot be used
 
 ---
 
@@ -558,6 +578,81 @@ export { ModernFeatures };
 ```
 
 **Why good:** `field-sizing-content` replaces JavaScript auto-resize, `color-scheme-dark` fixes ugly scrollbars in dark mode, `inert:` variant styles non-interactive elements, layered shadows without custom CSS
+
+### Text Shadows (v4.1)
+
+```tsx
+// ✅ Good Example - text shadow utilities
+function HeroHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h1 className="text-5xl font-bold text-white text-shadow-lg">{children}</h1>
+  );
+}
+
+export { HeroHeading };
+```
+
+```tsx
+// ✅ Good Example - colored text shadow with opacity
+function EmbossedButton({ children }: { children: React.ReactNode }) {
+  return (
+    <button className="rounded-lg bg-sky-600 px-6 py-3 text-sky-950 text-shadow-2xs text-shadow-sky-300">
+      {children}
+    </button>
+  );
+}
+
+export { EmbossedButton };
+```
+
+**Why good:** `text-shadow-lg` for large shadow, `text-shadow-sky-300` for colored shadow, `/50` opacity modifier also available, composable with all variants
+
+### Gradient Masks (v4.1)
+
+```tsx
+// ✅ Good Example - fade-out effects with mask utilities
+function FadeImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div>
+      {/* Fade from bottom */}
+      <img src={src} alt={alt} className="mask-b-from-50% w-full" />
+
+      {/* Fade from right */}
+      <img src={src} alt={alt} className="mask-r-from-30% w-full" />
+
+      {/* Radial fade from center */}
+      <img src={src} alt={alt} className="mask-radial-from-80% w-full" />
+    </div>
+  );
+}
+
+export { FadeImage };
+```
+
+**Why good:** `mask-b-from-50%` fades bottom 50%, `mask-r-from-30%` fades right edge, `mask-radial-from-80%` creates spotlight effect, composable for complex masking
+
+### Input Device Targeting (v4.1)
+
+```tsx
+// ✅ Good Example - touch-aware sizing
+function AdaptiveControl({ children }: { children: React.ReactNode }) {
+  return (
+    <button
+      className="
+        rounded-lg bg-blue-600 px-4 py-2 text-white
+        pointer-coarse:px-6 pointer-coarse:py-3 pointer-coarse:text-lg
+        pointer-fine:py-1.5 pointer-fine:text-sm
+      "
+    >
+      {children}
+    </button>
+  );
+}
+
+export { AdaptiveControl };
+```
+
+**Why good:** `pointer-coarse:` increases targets for touch devices, `pointer-fine:` refines for mouse users, avoids one-size-fits-all approach
 
 ---
 

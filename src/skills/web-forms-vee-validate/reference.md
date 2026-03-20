@@ -1,6 +1,6 @@
 # VeeValidate Reference
 
-> Decision frameworks, anti-patterns, and red flags for VeeValidate v4. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and API reference for VeeValidate v4. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
 
 ---
 
@@ -68,43 +68,6 @@ Where should validation logic live?
     ├─ YES → Schema with z.array() ✓
     └─ NO → Inline works
 ```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing toTypedSchema wrapper** - Raw Zod/Yup schemas won't work. Always use `toTypedSchema(schema)`.
-- **Using array index as key in useFieldArray** - Causes form state corruption when items are added/removed. Always use `field.key`.
-- **Direct prop access in useField** - `useField(props.name)` loses reactivity. Use `useField(() => props.name)` or `toRef()`.
-- **Missing initialValues for field arrays** - Undefined arrays cause errors. Always initialize with at least `[]`.
-- **Not initializing refine-dependent fields** - Zod refine/superRefine won't run if fields are undefined.
-
-### Medium Priority Issues
-
-- **Using validateOnValueUpdate everywhere** - Validates on every keystroke which is noisy UX. Disable for non-critical fields.
-- **Not handling async validation errors** - API validation failures need `setErrors()` or `setFieldError()`.
-- **Forgetting to reset form after submission** - Form stays dirty after success. Call `resetForm()` or `resetForm({ values })`.
-- **Multiple useForm calls in same component** - Creates conflicting form contexts. Use one useForm per logical form.
-- **Not using meta.touched for error display** - Shows errors before user interacts. Check `meta.touched && errorMessage`.
-
-### Common Mistakes
-
-- **Destructuring values.fieldName** - Loses reactivity. Use `values.fieldName` directly or `toRef(values, 'fieldName')`.
-- **Calling resetForm with wrong structure** - `resetForm({ values: data })` not `resetForm(data)`.
-- **Not typing useFieldArray generic** - Loses array item type inference. Use `useFieldArray<ItemType>('fieldName')`.
-- **Mixing Form component with useForm** - Pick one approach. Don't use `<Form>` component with `useForm()`.
-- **Forgetting v-bind for defineField attrs** - defineField returns `[model, attrs]`. Must use `v-bind="attrs"`.
-
-### Gotchas & Edge Cases
-
-- **errorBag vs errors** - `errors` has first error per field, `errorBag` has ALL errors per field as arrays.
-- **meta.valid timing** - May be false during initial render before validation runs. Use with `meta.touched`.
-- **Nested object dot notation** - Access nested fields with dots: `defineField('user.profile.name')`.
-- **Array field error paths** - Access with brackets: `errors['items[0].name']` not `errors.items[0].name`.
-- **setFieldValue vs v-model** - Both work, but `setFieldValue` can trigger validation with third param `{ validate: true }`.
-- **keepValuesOnUnmount** - When false (default), unmounted fields lose values. Set true for multi-step forms.
 
 ---
 
@@ -265,6 +228,7 @@ Shows errors immediately before user has interacted with field.
 | `setTouched`      | `function`     | Set multiple touched states at once            |
 | `resetForm`       | `function`     | Reset form to initial values                   |
 | `handleReset`     | `function`     | Reset handler for native form reset events     |
+| `submitForm`      | `function`     | Native form submission handler                 |
 | `validate`        | `function`     | Trigger form validation manually               |
 | `validateField`   | `function`     | Trigger single field validation                |
 
@@ -281,7 +245,10 @@ Shows errors immediately before user has interacted with field.
 | `validate`     | `function`      | Trigger validation                              |
 | `resetField`   | `function`      | Reset field to initial value                    |
 | `setTouched`   | `function`      | Mark field as touched                           |
+| `setErrors`    | `function`      | Set field error messages                        |
 | `setValue`     | `function`      | Set value programmatically                      |
+| `handleReset`  | `function`      | Safe event handler for resetting                |
+| `checked`      | `Computed`      | Checked state (checkbox/radio only)             |
 
 ### useFieldArray Return Values
 

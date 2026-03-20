@@ -94,44 +94,4 @@ export function AnimatedDialog() {
 
 ## Pattern 2: Accordion Height Animation
 
-CSS custom properties exposed by Radix enable smooth height animations.
-
-```css
-/* Animate accordion content height */
-.accordion-content {
-  overflow: hidden;
-}
-
-.accordion-content[data-state="open"] {
-  animation: slideDown 300ms ease-out;
-}
-
-.accordion-content[data-state="closed"] {
-  animation: slideUp 300ms ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--radix-accordion-content-height);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    height: var(--radix-accordion-content-height);
-  }
-  to {
-    height: 0;
-  }
-}
-
-/* Rotate chevron on open */
-.accordion-trigger[data-state="open"] > .accordion-chevron {
-  transform: rotate(180deg);
-}
-```
-
-**Why good:** --radix-accordion-content-height CSS variable provides actual content height for smooth animation, data-state on trigger enables icon rotation
+CSS custom properties exposed by Radix (`--radix-accordion-content-height`) enable smooth height animations. See [navigation.md](navigation.md) for the complete accordion example with height animation CSS.

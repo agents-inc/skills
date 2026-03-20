@@ -11,9 +11,9 @@
 ```tsx
 // components/ui/button.tsx (extended for React 19)
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot } from "radix-ui";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -74,7 +74,7 @@ function Button({
       data-slot="button"
       {...props}
     >
-      {isLoading && <Loader2 className="animate-spin" />}
+      {isLoading && <Spinner />}
       {children}
     </Comp>
   );
@@ -90,9 +90,7 @@ export { Button, buttonVariants };
 <Button isLoading={isSubmitting}>Submit</Button>
 ```
 
-**Why good:** Loading state built into component, disabled while loading prevents double-submission, spinner provides visual feedback
-
-> **Note:** For new projects, consider using the dedicated `Spinner` component (`npx shadcn@latest add spinner`) instead of importing Loader2 directly.
+**Why good:** Loading state built into component, disabled while loading prevents double-submission, Spinner component (`npx shadcn@latest add spinner`) provides visual feedback
 
 ---
 

@@ -76,7 +76,7 @@ export const useAuthStore = defineStore("auth", {
   },
 
   // Hydrate function for SSR
-  hydrate(storeState) {
+  hydrate(storeState, initialState) {
     // Called during client-side hydration
     // Can access browser APIs here safely
     if (typeof window !== "undefined") {

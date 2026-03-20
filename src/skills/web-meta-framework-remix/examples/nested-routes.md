@@ -12,6 +12,8 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
 
+const HTTP_FORBIDDEN = 403;
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request);
 
@@ -25,7 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   });
 
   if (user?.role !== "admin") {
-    throw new Response("Forbidden", { status: 403 });
+    throw new Response("Forbidden", { status: HTTP_FORBIDDEN });
   }
 
   return json({ user });

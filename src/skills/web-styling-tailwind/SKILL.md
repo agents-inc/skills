@@ -3,15 +3,15 @@ name: web-styling-tailwind
 description: Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration
 ---
 
-# Tailwind CSS v4 Patterns
+# Tailwind CSS v4+ Patterns
 
-> **Quick Guide:** Tailwind CSS v4 uses CSS-first configuration with `@import "tailwindcss"` and `@theme` directive (NOT `tailwind.config.js`). Define design tokens as CSS variables in `@theme`, create custom utilities with `@utility`, custom variants with `@custom-variant`. Automatic content detection (no `content` array). Use `@tailwindcss/vite` plugin for Vite projects. All colors use oklch. No Sass/Less/Stylus support.
+> **Quick Guide:** Tailwind CSS v4 uses CSS-first configuration with `@import "tailwindcss"` and `@theme` directive (NOT `tailwind.config.js`). Define design tokens as CSS variables in `@theme`, create custom utilities with `@utility`, custom variants with `@custom-variant`. Automatic content detection (no `content` array). Use `@tailwindcss/vite` for Vite, `@tailwindcss/webpack` for Webpack. All colors use oklch. v4.1 adds text shadows, masks, and input-device variants. No Sass/Less/Stylus support.
 
 **Detailed Resources:**
 
 - For code examples, see [examples/](examples/) folder:
-  - [core.md](examples/core.md) - Setup, responsive design, dark mode, state variants, theme customization
-  - [advanced.md](examples/advanced.md) - Custom utilities, custom variants, container queries, 3D transforms, animations, component extraction
+  - [core.md](examples/core.md) - Setup, source detection, responsive design, dark mode, state variants, theme customization
+  - [advanced.md](examples/advanced.md) - Custom utilities, custom variants, container queries, 3D transforms, text shadows, masks, input-device targeting, animations, component extraction
 
 ---
 
@@ -27,7 +27,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 
 **(You MUST use oklch or CSS variable references for custom colors in `@theme` - NEVER use hex/rgb for theme tokens)**
 
-**(You MUST use `@tailwindcss/vite` for Vite projects and `@tailwindcss/postcss` for others - NEVER use `tailwindcss` directly as PostCSS plugin)**
+**(You MUST use `@tailwindcss/vite` for Vite, `@tailwindcss/webpack` for Webpack, `@tailwindcss/postcss` for others - NEVER use `tailwindcss` directly as PostCSS plugin)**
 
 **(You MUST specify border colors explicitly - v4 defaults to `currentColor` not `gray-200`)**
 
@@ -35,7 +35,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 
 ---
 
-**Auto-detection:** Tailwind CSS, tailwindcss, @import "tailwindcss", @theme, @utility, @custom-variant, utility classes, bg-_, text-_, flex, grid, responsive design, dark:, hover:, focus:, @tailwindcss/vite, @tailwindcss/postcss, tailwind-merge, cn()
+**Auto-detection:** Tailwind CSS, tailwindcss, @import "tailwindcss", @theme, @utility, @custom-variant, utility classes, bg-_, text-_, flex, grid, responsive design, dark:, hover:, focus:, @tailwindcss/vite, @tailwindcss/postcss, @tailwindcss/webpack, tailwind-merge, cn()
 
 **When to use:**
 
@@ -59,6 +59,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 - Container queries (`@container`, `@sm:`, `@max-*:`)
 - 3D transforms (`rotate-x-*`, `perspective-*`, `transform-3d`)
 - Animation with `@starting-style` and `@keyframes`
+- Text shadows, masks, overflow-wrap (v4.1)
 - Component extraction with `cn()` (clsx + tailwind-merge)
 - Migration notes from v3 to v4
 
@@ -102,6 +103,8 @@ Tailwind CSS v4 follows a **utility-first, CSS-native** approach: style directly
 | Arbitrary vars     | `bg-[--var]`                          | `bg-(--var)`            |
 | Container queries  | Plugin required                       | Built-in                |
 | 3D transforms      | Not available                         | Built-in                |
+| Text shadows       | Not available                         | Built-in (v4.1)         |
+| Masks              | Not available                         | Built-in (v4.1)         |
 
 </philosophy>
 
@@ -118,6 +121,7 @@ Tailwind v4 replaces JavaScript config with CSS-first configuration. Use `@impor
 #### Installation Options
 
 **Vite projects** (recommended): Use `@tailwindcss/vite` for optimal performance.
+**Webpack projects**: Use `@tailwindcss/webpack` (added in v4.2).
 **Other bundlers**: Use `@tailwindcss/postcss` as PostCSS plugin.
 **CLI**: Use `@tailwindcss/cli` for standalone builds.
 
@@ -126,6 +130,9 @@ Tailwind v4 replaces JavaScript config with CSS-first configuration. Use `@impor
 - `@import "tailwindcss"` replaces the three `@tailwind` directives
 - `@theme` defines design tokens that generate utility classes AND CSS variables
 - `@source` adds paths not caught by automatic content detection
+- `@source not` excludes paths from scanning (v4.1)
+- `@source inline("...")` safelists specific utilities without source files (v4.1)
+- `@reference` imports theme/utilities for scoped styles (Vue SFC, CSS Modules) without duplicating output
 - No `content` array needed -- Tailwind auto-detects template files respecting `.gitignore`
 
 For implementation examples, see [examples/core.md](examples/core.md#pattern-1-css-first-setup-and-configuration).
@@ -177,7 +184,8 @@ Tailwind v4 provides comprehensive state variants for interactive styling. The `
 - **Pseudo-classes:** `hover:`, `focus:`, `active:`, `visited:`, `first:`, `last:`, `odd:`, `even:`, `disabled:`, `required:`, `invalid:`
 - **Group/Peer:** `group-hover:`, `group-focus:`, `peer-checked:`, `peer-invalid:`
 - **Data attributes:** `data-[state=active]:`, `data-current:`
-- **New in v4:** `not-hover:`, `not-focus:`, `inert:`, `starting:` (for `@starting-style`)
+- **New in v4.0:** `not-hover:`, `not-focus:`, `inert:`, `starting:` (for `@starting-style`)
+- **New in v4.1:** `pointer-fine:`, `pointer-coarse:`, `user-valid:`, `user-invalid:`, `noscript:`, `details-content:`, `inverted-colors:`
 - **Container queries:** `@sm:`, `@md:`, `@lg:`, `@max-sm:`
 
 #### Key v4 Changes
@@ -196,20 +204,26 @@ The `@theme` directive defines design tokens that generate both utility classes 
 
 #### Namespaces
 
-| Namespace         | Generates           | Example                          |
-| ----------------- | ------------------- | -------------------------------- |
-| `--color-*`       | Color utilities     | `bg-brand-500`, `text-brand-500` |
-| `--font-*`        | Font family         | `font-display`                   |
-| `--text-*`        | Font size           | `text-display`                   |
-| `--spacing-*`     | Spacing             | `px-compact`                     |
-| `--breakpoint-*`  | Responsive variants | `3xl:flex`                       |
-| `--radius-*`      | Border radius       | `rounded-card`                   |
-| `--shadow-*`      | Box shadows         | `shadow-card`                    |
-| `--ease-*`        | Timing functions    | `ease-fluid`                     |
-| `--animate-*`     | Animations          | `animate-fade-in`                |
-| `--blur-*`        | Blur filters        | `blur-card`                      |
-| `--perspective-*` | 3D perspective      | `perspective-card`               |
-| `--aspect-*`      | Aspect ratios       | `aspect-cinema`                  |
+| Namespace          | Generates                | Example                          |
+| ------------------ | ------------------------ | -------------------------------- |
+| `--color-*`        | Color utilities          | `bg-brand-500`, `text-brand-500` |
+| `--font-*`         | Font family              | `font-display`                   |
+| `--font-weight-*`  | Font weight              | `font-bold`                      |
+| `--text-*`         | Font size                | `text-display`                   |
+| `--tracking-*`     | Letter spacing           | `tracking-wide`                  |
+| `--leading-*`      | Line height              | `leading-tight`                  |
+| `--spacing-*`      | Spacing and sizing       | `px-compact`, `max-h-16`         |
+| `--breakpoint-*`   | Responsive variants      | `3xl:flex`                       |
+| `--container-*`    | Container query variants | `@sm:*`, `max-w-md`              |
+| `--radius-*`       | Border radius            | `rounded-card`                   |
+| `--shadow-*`       | Box shadows              | `shadow-card`                    |
+| `--inset-shadow-*` | Inset box shadows        | `inset-shadow-xs`                |
+| `--drop-shadow-*`  | Drop shadow filters      | `drop-shadow-md`                 |
+| `--ease-*`         | Timing functions         | `ease-fluid`                     |
+| `--animate-*`      | Animations               | `animate-fade-in`                |
+| `--blur-*`         | Blur filters             | `blur-card`                      |
+| `--perspective-*`  | 3D perspective           | `perspective-card`               |
+| `--aspect-*`       | Aspect ratios            | `aspect-cinema`                  |
 
 #### Key Concepts
 
@@ -246,13 +260,13 @@ For implementation examples, see [examples/advanced.md](examples/advanced.md#pat
 
 ### Pattern 7: Custom Variants with @custom-variant
 
-The `@custom-variant` directive replaces v3's `addVariant()` plugin API. Define conditional styling rules in CSS.
+The `@custom-variant` directive replaces v3's `addVariant()` plugin API. Define conditional styling rules in CSS. The `@variant` directive applies existing variants inline within CSS rules.
 
 #### Syntax Forms
 
-- **Shorthand:** `@custom-variant name (selector);`
-- **Block:** `@custom-variant name { /* rules with @slot */ }`
-- **Complex:** Supports `@media`, `@supports`, nested selectors with `@slot` placeholder
+- **@custom-variant shorthand:** `@custom-variant name (selector);`
+- **@custom-variant block:** `@custom-variant name { /* rules with @slot */ }`
+- **@variant (inline):** `@variant dark { /* styles */ }` -- apply a variant inside custom CSS
 
 For implementation examples, see [examples/advanced.md](examples/advanced.md#pattern-7-custom-variants).
 
@@ -293,6 +307,10 @@ Tailwind v4 adds first-class 3D transform utilities and leverages modern CSS fea
 - `field-sizing-content` for auto-resizing textareas
 - `color-scheme-dark` for native dark mode scrollbars
 - `inset-shadow-*` and `inset-ring-*` for layered box shadows
+- `text-shadow-*` for text shadows with color/opacity support (v4.1)
+- `mask-*` for gradient and image masking (v4.1)
+- `wrap-break-word` / `wrap-anywhere` for overflow-wrap control (v4.1)
+- `--alpha()` function for adjusting color opacity in custom CSS
 
 For implementation examples, see [examples/advanced.md](examples/advanced.md#pattern-9-3d-transforms-and-modern-css).
 
@@ -395,7 +413,8 @@ Is the project actively maintained?
 **Bundler Setup:**
 
 - Use `@tailwindcss/vite` for Vite-based projects (fastest)
-- Use `@tailwindcss/postcss` for all other bundlers
+- Use `@tailwindcss/webpack` for Webpack projects (v4.2+)
+- Use `@tailwindcss/postcss` for other bundlers
 - Use `@tailwindcss/cli` for standalone builds
 - `autoprefixer` and `postcss-import` are NOT needed with v4
 
@@ -473,7 +492,7 @@ Is the project actively maintained?
 
 **(You MUST use oklch or CSS variable references for custom colors in `@theme` - NEVER use hex/rgb for theme tokens)**
 
-**(You MUST use `@tailwindcss/vite` for Vite projects and `@tailwindcss/postcss` for others - NEVER use `tailwindcss` directly as PostCSS plugin)**
+**(You MUST use `@tailwindcss/vite` for Vite, `@tailwindcss/webpack` for Webpack, `@tailwindcss/postcss` for others - NEVER use `tailwindcss` directly as PostCSS plugin)**
 
 **(You MUST specify border colors explicitly - v4 defaults to `currentColor` not `gray-200`)**
 

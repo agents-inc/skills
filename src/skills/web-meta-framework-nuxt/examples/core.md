@@ -375,22 +375,3 @@ export default defineEventHandler(async (event) => {
 ```
 
 **Why good:** Private keys never reach client, public keys available everywhere, environment variable mapping
-
----
-
-## File Conventions Quick Reference
-
-| Directory            | Purpose                                       |
-| -------------------- | --------------------------------------------- |
-| `pages/`             | File-based routing (auto-generates routes)    |
-| `server/api/`        | API routes (prefixed with `/api`)             |
-| `server/routes/`     | Server routes (no prefix)                     |
-| `server/middleware/` | Server middleware (runs on every request)     |
-| `middleware/`        | Route middleware (client + server navigation) |
-| `layouts/`           | Page layouts (wrap pages via `<slot />`)      |
-| `components/`        | Vue components (auto-imported)                |
-| `composables/`       | Composables (auto-imported, `use*` prefix)    |
-| `plugins/`           | Nuxt plugins (run before app creation)        |
-| `utils/`             | Utility functions (auto-imported)             |
-| `assets/`            | Build-processed assets (styles, images)       |
-| `public/`            | Static assets (served as-is)                  |

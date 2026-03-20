@@ -187,10 +187,9 @@ export function TodoList({
       )
   );
 
-  const handleToggle = async (id: string, currentCompleted: boolean) => {
-    setOptimisticTodo({ id, completed: !currentCompleted });
-
+  const handleToggle = (id: string, currentCompleted: boolean) => {
     startTransition(async () => {
+      setOptimisticTodo({ id, completed: !currentCompleted });
       await toggleTodo(id);
     });
   };
@@ -396,7 +395,7 @@ function CommentList({ commentsPromise }: { commentsPromise: Promise<Comment[]> 
 
 export function CommentsSection({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
   return (
-    <ErrorBoundary fallback={<p>Failed to load comments.</p>}>
+    <ErrorBoundary fallback={() => <p>Failed to load comments.</p>}>
       <Suspense fallback={<p>Loading comments...</p>}>
         <CommentList commentsPromise={commentsPromise} />
       </Suspense>

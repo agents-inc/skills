@@ -153,7 +153,7 @@ export { CriticalData };
 ```typescript
 // components/user-data.tsx
 import useSWR from "swr";
-import type { FetchError } from "@/lib/fetcher";
+import type { FetchError } from "../lib/fetcher";
 
 interface User {
   id: string;

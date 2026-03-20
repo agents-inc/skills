@@ -260,16 +260,36 @@ const onSubmit = handleSubmit((values) => {
 
 ## Pattern 4: Conditional Schema Validation
 
-Schema changes based on form state.
+Two approaches: Zod `discriminatedUnion` for static conditional rules, or `computed` schema for reactive rules that change with form state.
+
+### Approach A: Zod discriminatedUnion (preferred for static conditions)
 
 ```vue
 <script setup lang="ts">
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
-import { computed } from "vue";
 
-const { handleSubmit, errors, defineField, values } = useForm({
+const MIN_PHONE_LENGTH = 10;
+
+// discriminatedUnion validates different shapes based on contactMethod
+const schema = toTypedSchema(
+  z.discriminatedUnion("contactMethod", [
+    z.object({
+      contactMethod: z.literal("email"),
+      email: z.string().email("Invalid email"),
+      phone: z.string().optional(),
+    }),
+    z.object({
+      contactMethod: z.literal("phone"),
+      email: z.string().optional(),
+      phone: z.string().min(MIN_PHONE_LENGTH, "Invalid phone number"),
+    }),
+  ]),
+);
+
+const { handleSubmit, errors, defineField } = useForm({
+  validationSchema: schema,
   initialValues: {
     contactMethod: "email" as "email" | "phone",
     email: "",
@@ -280,23 +300,6 @@ const { handleSubmit, errors, defineField, values } = useForm({
 const [contactMethod] = defineField("contactMethod");
 const [email] = defineField("email");
 const [phone] = defineField("phone");
-
-// Dynamic schema based on contactMethod
-const schema = computed(() =>
-  toTypedSchema(
-    z.object({
-      contactMethod: z.enum(["email", "phone"]),
-      email:
-        values.contactMethod === "email"
-          ? z.string().email("Invalid email")
-          : z.string().optional(),
-      phone:
-        values.contactMethod === "phone"
-          ? z.string().min(10, "Invalid phone number")
-          : z.string().optional(),
-    }),
-  ),
-);
 
 const onSubmit = handleSubmit(async (data) => {
   await saveContact(data);
@@ -331,7 +334,80 @@ const onSubmit = handleSubmit(async (data) => {
 </template>
 ```
 
-**Why good:** computed schema reacts to form value changes, optional fields skip validation when not required, z.enum validates contactMethod selection
+**Why good:** discriminatedUnion provides full type narrowing per branch, schema is static (no computed overhead), VeeValidate validates the correct branch based on contactMethod value
+
+### Approach B: Computed schema (for dynamic conditions)
+
+When the schema depends on runtime state that can't be expressed with discriminatedUnion, use a computed ref. Pass the computed directly (without `.value`) so VeeValidate tracks reactive updates.
+
+```vue
+<script setup lang="ts">
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
+import { z } from "zod";
+import { ref, computed } from "vue";
+
+const MIN_PHONE_LENGTH = 10;
+
+// Reactive ref drives schema changes
+const contactMethod = ref<"email" | "phone">("email");
+
+const schema = computed(() =>
+  toTypedSchema(
+    z.object({
+      email:
+        contactMethod.value === "email"
+          ? z.string().email("Invalid email")
+          : z.string().optional(),
+      phone:
+        contactMethod.value === "phone"
+          ? z.string().min(MIN_PHONE_LENGTH, "Invalid phone number")
+          : z.string().optional(),
+    }),
+  ),
+);
+
+// Pass computed ref directly — VeeValidate re-validates when schema changes
+const { handleSubmit, errors, defineField } = useForm({
+  validationSchema: schema,
+  initialValues: { email: "", phone: "" },
+});
+
+const [email] = defineField("email");
+const [phone] = defineField("phone");
+
+const onSubmit = handleSubmit(async (data) => {
+  await saveContact(data);
+});
+</script>
+
+<template>
+  <form @submit="onSubmit">
+    <div>
+      <label>
+        <input v-model="contactMethod" type="radio" value="email" /> Email
+      </label>
+      <label>
+        <input v-model="contactMethod" type="radio" value="phone" /> Phone
+      </label>
+    </div>
+
+    <div v-if="contactMethod === 'email'">
+      <input v-model="email" type="email" placeholder="Email" />
+      <span v-if="errors.email" role="alert">{{ errors.email }}</span>
+    </div>
+
+    <div v-if="contactMethod === 'phone'">
+      <input v-model="phone" type="tel" placeholder="Phone" />
+      <span v-if="errors.phone" role="alert">{{ errors.phone }}</span>
+    </div>
+
+    <button type="submit">Save</button>
+  </form>
+</template>
+```
+
+**Why good:** separate reactive ref avoids circular dependency with useForm, computed ref passed directly (not .value) lets VeeValidate track schema changes, re-validates only touched fields when schema updates
 
 ---
 

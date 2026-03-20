@@ -6,7 +6,7 @@
 
 ## Vitest v3/v4 Notes
 
-> **Current Stable:** Vitest 4.x (released December 2025). Requires Vite >= 6.0.0 and Node.js >= 20.0.0. v4 marks Browser Mode as stable and includes visual regression testing.
+> **Current Stable:** Vitest 4.x (released October 2025, latest 4.1.0). Requires Vite >= 6.0.0 and Node.js >= 20.0.0. v4 marks Browser Mode as stable and includes visual regression testing.
 
 **Test Options Syntax (v3+ breaking change):**
 
@@ -65,10 +65,10 @@ export default defineConfig({
 });
 ```
 
-**Pool Configuration (v4 breaking change):**
+**Pool Configuration (v4 breaking change - poolOptions removed entirely):**
 
 ```typescript
-// OLD (v3): maxThreads/maxForks
+// OLD (v3): nested poolOptions
 export default defineConfig({
   test: {
     poolOptions: {
@@ -77,10 +77,10 @@ export default defineConfig({
   },
 });
 
-// NEW (v4): maxWorkers (unified)
+// NEW (v4): poolOptions removed, all options are top-level
 export default defineConfig({
   test: {
-    maxWorkers: 4,
+    maxWorkers: 4, // replaces maxThreads/maxForks
     // For single-worker mode (replaces singleThread/singleFork):
     // maxWorkers: 1, isolate: false
   },
@@ -178,6 +178,7 @@ vi.mock("./module.js", () => ({
 - `verbose` reporter is now flat - use `tree` for hierarchical output
 - Default excludes simplified to only `node_modules` and `.git` - use `test.dir` for scoping
 - Shadow root now printed in snapshots - set `printShadowRoot: false` to restore old behavior
+- `vi.fn().mock.invocationCallOrder` starts at `1` instead of `0`
 - `deps.optimizer.web` renamed to `deps.optimizer.client`
 
 ---

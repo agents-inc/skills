@@ -80,45 +80,9 @@ Is it server data?
 
 ---
 
-## RED FLAGS
-
-**High Priority Issues:**
-
-- **Storing server/API data in Pinia** - causes stale data, no caching, manual sync complexity; use a data fetching solution instead
-- **Destructuring state without storeToRefs()** - breaks reactivity, UI won't update
-- **Private state in Setup stores** - not returning all refs breaks SSR, DevTools, and plugins
-- **Browser APIs in state initialization** - crashes SSR (localStorage, window, document)
-- **Default exports in store files** - violates project conventions, breaks tree-shaking
-- **Magic numbers in state logic** - makes values unclear, hard to maintain
-
-**Medium Priority Issues:**
-
-- Circular dependencies between stores through getters/actions
-- Persisting all state instead of selective paths
-- Persisting server data (becomes stale)
-- Using `this` in getters without `function` keyword (arrow functions have no `this`)
-- Not providing type annotations for state in TypeScript
-
-**Common Mistakes:**
-
-- Forgetting to call store function: `useStore` vs `useStore()`
-- Mutating state directly in components instead of through actions
-- Not using `markRaw()` for non-reactive objects added to stores
-- Overusing stores for simple component-local state
-- Not handling async action errors properly
-
-**Gotchas & Edge Cases:**
-
-- `storeToRefs()` only works for state and getters, not actions
-- Options store `$reset()` only resets to initial state function return
-- Setup stores don't have built-in `$reset()` - must implement manually
-- Store instances are singletons per Pinia instance
-- In SSR, each request needs its own Pinia instance to avoid state pollution
-- `$patch` with function allows accessing current state: `store.$patch(state => state.count++)`
-
----
-
 ## Anti-Patterns
+
+> For the complete red flags checklist, see [SKILL.md](SKILL.md#red-flags).
 
 ### Destructuring Store State Directly
 
@@ -239,7 +203,7 @@ persist: true
 
 // CORRECT - Selective persistence
 persist: {
-  paths: ['theme', 'locale', 'preferences'],  // Only user preferences
+  pick: ['theme', 'locale', 'preferences'],  // Only user preferences
 }
 ```
 

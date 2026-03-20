@@ -70,7 +70,8 @@ Adding colors beyond the defaults requires three things: CSS variables in `:root
 // providers.tsx
 "use client";
 
-// shadcn recommends next-themes for theme management
+// shadcn/ui docs recommend next-themes for Next.js projects
+// For other frameworks, see shadcn dark mode docs: ui.shadcn.com/docs/dark-mode
 import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {

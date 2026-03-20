@@ -593,90 +593,7 @@ export function useTypingIndicator({
 
 ---
 
-## Example 8: Heartbeat Implementation
-
-Keep connection alive through proxy timeouts with ping/pong.
-
-### Constants
-
-```typescript
-const HEARTBEAT_INTERVAL_MS = 25000;
-const HEARTBEAT_TIMEOUT_MS = 5000;
-```
-
-### Implementation
-
-```typescript
-// lib/heartbeat.ts
-import type { Socket } from "socket.io-client";
-
-export function setupHeartbeat(
-  socket: Socket,
-  onTimeout?: () => void,
-): () => void {
-  let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-  let heartbeatTimeout: ReturnType<typeof setTimeout> | null = null;
-
-  const clearTimers = (): void => {
-    if (heartbeatInterval) {
-      clearInterval(heartbeatInterval);
-      heartbeatInterval = null;
-    }
-    if (heartbeatTimeout) {
-      clearTimeout(heartbeatTimeout);
-      heartbeatTimeout = null;
-    }
-  };
-
-  const handleConnect = (): void => {
-    clearTimers();
-
-    heartbeatInterval = setInterval(() => {
-      // Send ping
-      socket.emit("ping");
-
-      // Set timeout for pong response
-      heartbeatTimeout = setTimeout(() => {
-        console.warn("Heartbeat timeout - connection may be dead");
-        onTimeout?.();
-        socket.disconnect();
-      }, HEARTBEAT_TIMEOUT_MS);
-    }, HEARTBEAT_INTERVAL_MS);
-  };
-
-  const handlePong = (): void => {
-    if (heartbeatTimeout) {
-      clearTimeout(heartbeatTimeout);
-      heartbeatTimeout = null;
-    }
-  };
-
-  const handleDisconnect = (): void => {
-    clearTimers();
-  };
-
-  socket.on("connect", handleConnect);
-  socket.on("pong", handlePong);
-  socket.on("disconnect", handleDisconnect);
-
-  // If already connected, start heartbeat
-  if (socket.connected) {
-    handleConnect();
-  }
-
-  // Return cleanup function
-  return () => {
-    clearTimers();
-    socket.off("connect", handleConnect);
-    socket.off("pong", handlePong);
-    socket.off("disconnect", handleDisconnect);
-  };
-}
-```
-
----
-
-## Example 9: Volatile Events
+## Example 8: Volatile Events
 
 Use volatile events for data that can be safely dropped (e.g., cursor positions, live updates).
 
@@ -706,7 +623,7 @@ export function emitImportantUpdate(socket: Socket, data: unknown): void {
 
 ---
 
-## Example 10: Multiplexing with Manager
+## Example 9: Multiplexing with Manager
 
 Share a single connection across multiple namespace sockets.
 

@@ -57,7 +57,7 @@ description: Atomic state management with auto-dependency tracking
 
 Jotai takes an **atomic, bottom-up approach** to state management. The core principle: **"Anything that can be derived from the application state should be derived automatically."**
 
-Think of atoms like cells in a spreadsheet:
+Consider atoms like cells in a spreadsheet:
 
 - Each atom is an independent cell holding a value
 - Derived atoms are formulas that reference other cells

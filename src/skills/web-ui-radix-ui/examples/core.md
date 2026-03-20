@@ -208,13 +208,13 @@ const BadButton = ({ children, onClick }) => {
 
 ## Pattern 3: Slot Component
 
-The `Slot` component from `@radix-ui/react-slot` enables building your own components with `asChild` support.
+The `Slot` component enables building your own components with `asChild` support.
 
 ### Good Example - Building Button with asChild Support
 
 ```typescript
 import { forwardRef } from "react";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot } from "radix-ui";
 
 export type ButtonProps = React.ComponentProps<"button"> & {
   asChild?: boolean;
@@ -260,7 +260,7 @@ Button.displayName = "Button";
 
 ```typescript
 import { forwardRef } from "react";
-import { Slot, Slottable } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "radix-ui";
 
 export type IconButtonProps = React.ComponentProps<"button"> & {
   asChild?: boolean;

@@ -169,6 +169,30 @@ For per-test override examples, see [examples/core.md](examples/core.md).
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+- ❌ Using `setupWorker` in Node tests or `setupServer` in browser -- wrong API for environment causes cryptic failures
+- ❌ Not resetting handlers between tests (`afterEach(() => server.resetHandlers())`) -- causes test pollution
+- ❌ Mixing handlers and mock data in same file -- reduces reusability and type safety
+- ❌ Missing `await` when starting browser worker before render -- race conditions cause intermittent failures
+- ⚠️ Only testing happy path (no empty/error variants) -- incomplete coverage
+- ⚠️ No `onUnhandledRequest` configuration -- unclear which requests are mocked vs real
+
+**Gotchas & Edge Cases:**
+
+- `delay()` with no arguments is automatically negated in Node.js -- use explicit duration if you need delay in tests
+- Handler overrides via `server.use()` persist until `resetHandlers()` -- they do NOT auto-reset between tests
+- `http.all()` matches any HTTP method on a path -- convenient but can mask bugs if overused
+- Dynamic imports are required for browser worker in SSR frameworks to avoid server bundling issues
+
+See [reference.md](reference.md) for detailed anti-pattern examples.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

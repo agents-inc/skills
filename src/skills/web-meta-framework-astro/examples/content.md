@@ -312,20 +312,28 @@ export const collections = { products };
 ### Good Example - Runtime Data Fetching
 
 ```typescript
-// src/content.config.ts
-import { defineCollection, defineLiveCollection } from "astro:content";
+// src/content.config.ts - build-time collections
+import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
-// Build-time collection (standard)
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
   schema: z.object({ title: z.string(), pubDate: z.coerce.date() }),
 });
 
-// Live collection - fetched at runtime per-request
+export const collections = { blog };
+```
+
+```typescript
+// src/live.config.ts - live collections (SEPARATE file from content.config.ts)
+import { defineLiveCollection } from "astro:content";
+import { z } from "astro/zod";
+
 const products = defineLiveCollection({
-  loader: myStoreLoader({ apiKey: import.meta.env.STORE_API_KEY }),
+  loader: myStoreLoader({
+    apiKey: process.env.STORE_API_KEY, // Use process.env for runtime secrets
+  }),
   schema: z.object({
     name: z.string(),
     price: z.number(),
@@ -333,7 +341,7 @@ const products = defineLiveCollection({
   }),
 });
 
-export const collections = { blog, products };
+export const collections = { products };
 ```
 
 ```astro

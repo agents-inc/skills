@@ -113,14 +113,14 @@ What does the logic do?
   +-- Fetch data for the component?
   |   -> loader (runs in parallel with siblings)
   +-- Prefetch data for an external cache?
-  |   -> loader (e.g. ensureQueryData in parallel)
+  |   -> loader (prefetch via context-injected client, runs in parallel)
 ```
 
 ---
 
 ## External Data Fetching Integration: Prefetch in Loader
 
-When using an external data fetching library with a cache (e.g. a query client), prefetch in the loader so data is cached before the component renders.
+When using an external data fetching library with a cache, prefetch in the loader so data is cached before the component renders. Inject the client via router context.
 
 ```typescript
 // src/routes/posts/index.tsx
@@ -130,15 +130,16 @@ export const Route = createFileRoute("/posts/")({
   loader: async ({ context }) => {
     // Prefetch ensures data is in cache before component renders
     // Use your data fetching library's prefetch method via context
-    await context.queryClient.ensureQueryData(postsQueryOptions);
+    await context.dataClient.prefetchData(postsQueryOptions);
   },
   component: PostsPage,
 });
 
 function PostsPage() {
-  // Component reads from cache (prefetched in loader)
-  // Also subscribes to background refetches and cache updates
-  const { data: posts } = useSuspenseQuery(postsQueryOptions);
+  // Component reads from the external cache (prefetched in loader)
+  // Use your data fetching library's hook to read cached data
+  // The data was already prefetched by the loader above
+  const posts = usePostsFromCache();
 
   return (
     <ul>
@@ -150,7 +151,7 @@ function PostsPage() {
 }
 ```
 
-**Why:** Prefetching in loaders ensures data is available before the component mounts. Shared query options between loader and component ensure cache key consistency. The loader uses context-injected clients (not direct imports) for testability.
+**Why:** Prefetching in loaders ensures data is available before the component mounts. The loader uses context-injected clients (not direct imports) for testability. The component reads from the shared cache, subscribing to background updates.
 
 ---
 
@@ -162,26 +163,25 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 export const Route = createFileRoute("/posts/$postId/")({
   loader: async ({ context, params }) => {
     // Critical: await this (blocks render until resolved)
-    const post = await context.queryClient.ensureQueryData(
+    const post = await context.dataClient.fetchData(
       postQueryOptions(params.postId),
     );
     if (!post) throw notFound();
 
-    // Non-critical: start fetch but don't block render
-    context.queryClient.prefetchQuery(commentsQueryOptions(params.postId));
+    // Non-critical: start fetch but don't block render (fire-and-forget)
+    context.dataClient.prefetchData(commentsQueryOptions(params.postId));
+
+    return { post };
   },
   component: PostDetailPage,
 });
 
 function PostDetailPage() {
-  const { postId } = Route.useParams();
-  // Critical data - available immediately from cache
-  const { data: post } = useSuspenseQuery(postQueryOptions(postId));
+  const { post } = Route.useLoaderData();
 
-  // Non-critical data - may still be loading
-  const { data: comments, isLoading } = useQuery(
-    commentsQueryOptions(postId),
-  );
+  // Non-critical data - use your data fetching library's hook
+  // This data was fire-and-forget prefetched in the loader
+  const { comments, isLoading } = useCommentsFromCache(post.id);
 
   return (
     <article>
@@ -205,7 +205,7 @@ function PostDetailPage() {
 }
 ```
 
-**Why:** Critical data blocks render ensuring it is available immediately. Non-critical data starts fetching in parallel without blocking. The component can show a loading state for non-critical data while critical data is immediate.
+**Why:** Critical data blocks render via `await` ensuring it is available immediately via `useLoaderData`. Non-critical data starts fetching in parallel without blocking. The component can show a loading state for non-critical data while critical data is immediate.
 
 ---
 

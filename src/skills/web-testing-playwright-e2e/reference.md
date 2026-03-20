@@ -571,7 +571,7 @@ npx playwright show-trace trace.zip
 
 ## Breaking Changes & Deprecations
 
-### v1.58 (Latest)
+### v1.58
 
 - **`_react` and `_vue` selectors removed**: Use `data-testid` or role-based locators instead
 - **`:light` selector engine suffix removed**: Use standard CSS selectors
@@ -584,6 +584,14 @@ npx playwright show-trace trace.zip
 - **`page.accessibility` removed**: Use external libraries like Axe for accessibility auditing
 - **`webServer.wait` option**: Wait for server regex pattern before running tests
 - **`testConfig.tag`**: Tag all tests in a run for merge-reports
+
+### v1.56
+
+- **`browserContext.on('backgroundpage')` deprecated**: `backgroundPages()` returns empty array
+
+### v1.55
+
+- **Chromium extension manifest v2 dropped**: Extensions must use manifest v3
 
 ### v1.54
 

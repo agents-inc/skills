@@ -1,116 +1,48 @@
 # Vite Reference
 
-> Decision frameworks and version-specific gotchas for Vite build tool configuration. See [examples/core.md](examples/core.md) for full code examples.
+> Quick-lookup tables, migration checklist, and external links. See [SKILL.md](SKILL.md) for decision frameworks and red flags. See [examples/core.md](examples/core.md) for full code examples.
 
 ---
 
-## Decision Frameworks
+## Quick Reference Tables
 
-### Vite Version Selection
+### Dev vs Production Settings
 
-```
-Which Vite version?
-├─ New project (March 2026+)?
-│   └─ Vite 8 (Rolldown bundler, fastest builds) ✓
-├─ Existing Vite 7 project?
-│   ├─ Build performance is a bottleneck (> 30 seconds)?
-│   │   └─ YES → Migrate to Vite 8 (10-30x faster)
-│   └─ NO → Stay on Vite 7 (stable, no migration needed)
-└─ Existing Vite 6 project?
-    └─ Plan upgrade to Vite 7 first, then Vite 8
-```
+| Setting                  | Development | Production                    | Notes                                               |
+| ------------------------ | ----------- | ----------------------------- | --------------------------------------------------- |
+| `sourcemap`              | `true`      | `false`                       | Use `'hidden'` for production error tracking        |
+| `minify`                 | `false`     | `true` (Oxc in Vite 8)        | Oxc minifier in Vite 8, esbuild in Vite 7           |
+| Chunk splitting          | `undefined` | Vendor splitting              | `manualChunks` (Vite 7) or `codeSplitting` (Vite 8) |
+| `modulePreload.polyfill` | `true`      | `true`                        | Disable for modern-only targets                     |
+| `target`                 | N/A         | `'baseline-widely-available'` | Vite 7+ default                                     |
 
-**Current recommendation:** Vite 8 for new projects (Rolldown is default, stable). Vite 7 for existing projects without build performance issues.
+### Build Target Defaults
 
----
-
-### Chunk Splitting Strategy
-
-```
-How to split vendor chunks?
-├─ Vite 8 (Rolldown is default)?
-│   ├─ Simple vendor separation?
-│   │   └─ codeSplitting.groups with regex patterns ✓
-│   └─ Complex splitting (size limits, shared modules)?
-│       └─ codeSplitting with maxSize/minSize/minShareCount
-├─ Vite 7 (standard Rollup)?
-│   ├─ Simple vendor separation?
-│   │   └─ manualChunks object form ✓
-│   └─ Complex splitting logic?
-│       └─ manualChunks function form
-└─ Vite 7 with rolldown-vite (experimental)?
-    └─ advancedChunks.groups (renamed to codeSplitting in Vite 8)
-```
+| Target                        | Browser Support                                    | Notes                                 |
+| ----------------------------- | -------------------------------------------------- | ------------------------------------- |
+| `'baseline-widely-available'` | Chrome 107+, Edge 107+, Firefox 104+, Safari 16+   | Vite 7 default                        |
+| (Vite 8 default)              | Chrome 111+, Edge 111+, Firefox 114+, Safari 16.4+ | Updated in Vite 8                     |
+| `'modules'`                   | **REMOVED**                                        | Was Vite 6 default; removed in Vite 7 |
+| `'esnext'`                    | Latest browsers only                               | Minimal transpilation                 |
+| `['chrome111', 'safari16.4']` | Custom browser list                                | Explicit control                      |
 
 ---
 
-### Path Alias Strategy
+## Vite 8 Migration Checklist
 
-```
-How to configure path aliases?
-├─ Vite 8?
-│   ├─ All aliases match tsconfig paths?
-│   │   └─ Use resolve.tsconfigPaths: true ✓
-│   └─ Need aliases beyond tsconfig paths?
-│       └─ Use resolve.alias (manual configuration)
-├─ Vite 7?
-│   └─ Use resolve.alias + sync with tsconfig.json manually ✓
-└─ Any version?
-    └─ ALWAYS keep tsconfig paths in sync with Vite aliases
-```
+1. **Rename `build.rollupOptions`** to `build.rolldownOptions`
+2. **Replace `manualChunks`** with `codeSplitting.groups` (object-form removed, function-form deprecated)
+3. **Update browser targets** if pinned (Chrome 107 to 111, Firefox 104 to 114, Safari 16.0 to 16.4)
+4. **Remove `build.commonjsOptions`** (now a no-op)
+5. **Remove `resolve.alias[].customResolver`** (removed)
+6. **Consider `resolve.tsconfigPaths: true`** to replace manual alias configuration
+7. **Migrate `esbuild` config to `oxc`** - auto-converted but not all options supported (no property mangling, no `supported` option)
+8. **Note install size increase** - ~15MB larger (lightningcss + Rolldown)
 
 ---
 
-### Build Target Selection
+## See Also
 
-```
-Choosing build.target?
-├─ Supporting legacy browsers (< Safari 16)?
-│   └─ Use @vitejs/plugin-legacy
-├─ Modern browsers only?
-│   ├─ Smallest possible bundle?
-│   │   └─ 'esnext'
-│   └─ Otherwise → 'baseline-widely-available' (default) ✓
-└─ Specific browser requirements?
-    └─ Use explicit array: ['chrome111', 'safari16.4']
-```
-
----
-
-## Gotchas & Edge Cases
-
-**Vite 8 (Rolldown):**
-
-- `build.rollupOptions` is a deprecated alias for `build.rolldownOptions` - works but will warn
-- Object-form `manualChunks` is removed entirely, function-form is deprecated
-- Rolldown generates a `runtime.js` chunk when using `codeSplitting.groups`
-- Default browser targets: Chrome 111+, Edge 111+, Firefox 114+, Safari 16.4+
-- `resolve.tsconfigPaths` disabled by default (performance cost)
-- Install size ~15MB larger (10MB lightningcss, 5MB Rolldown)
-- `build.commonjsOptions` is a no-op (Rolldown handles CJS natively)
-- CSS minification uses Lightning CSS (was esbuild), JS minification uses Oxc (was esbuild)
-- `esbuild` config option auto-converts to `oxc`
-
-**Vite 7:**
-
-- Node.js 18 dropped - requires Node.js 20.19+ or 22.12+
-- Sass legacy API completely removed
-- `splitVendorChunkPlugin` removed
-- Default target changed from `'modules'` to `'baseline-widely-available'`
-
-**Vite 6:**
-
-- Environment API is experimental - do not use `environments` config in production apps
-- `options.ssr` in plugin hooks deprecated - use `this.environment` instead
-
-**Rolldown-specific:**
-
-- `advancedChunks` renamed to `codeSplitting` in Vite 8
-- `codeSplitting.maxSize` is a target, not a strict limit - chunks may exceed it
-- `includeDependenciesRecursively` defaults to true - may pull in more than expected
-
-**General:**
-
-- `.env` files are loaded based on `--mode` flag, not `NODE_ENV`
-- `loadEnv()` third argument (`""`) loads all env vars, not just `VITE_`-prefixed ones
-- TypeScript path aliases must be configured in BOTH tsconfig and build tool (Vite 7) or use `resolve.tsconfigPaths` (Vite 8)
+- [Vite 8 Announcement](https://vite.dev/blog/announcing-vite8)
+- [Vite Migration Guide](https://vite.dev/guide/migration)
+- [Rolldown Code Splitting](https://rolldown.rs/reference/OutputOptions.codeSplitting)

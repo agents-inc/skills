@@ -375,37 +375,7 @@ For security-critical uploads, validate in this order:
 
 ## Quick Reference: Format Helpers
 
-```typescript
-const BYTES_PER_KB = 1024;
-const BYTES_PER_MB = BYTES_PER_KB * 1024;
-const BYTES_PER_GB = BYTES_PER_MB * 1024;
-
-export function formatBytes(bytes: number): string {
-  if (bytes < BYTES_PER_KB) return `${bytes} B`;
-  if (bytes < BYTES_PER_MB) return `${(bytes / BYTES_PER_KB).toFixed(1)} KB`;
-  if (bytes < BYTES_PER_GB) return `${(bytes / BYTES_PER_MB).toFixed(1)} MB`;
-  return `${(bytes / BYTES_PER_GB).toFixed(2)} GB`;
-}
-
-export function formatSpeed(bytesPerSecond: number): string {
-  return `${formatBytes(bytesPerSecond)}/s`;
-}
-
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
-
-export function formatRemainingTime(seconds: number): string {
-  if (seconds < SECONDS_PER_MINUTE) {
-    return `${Math.ceil(seconds)}s`;
-  }
-  if (seconds < SECONDS_PER_HOUR) {
-    return `${Math.ceil(seconds / SECONDS_PER_MINUTE)}m`;
-  }
-  const hours = Math.floor(seconds / SECONDS_PER_HOUR);
-  const minutes = Math.ceil((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
-  return `${hours}h ${minutes}m`;
-}
-```
+See [examples/progress.md](examples/progress.md) Pattern 3 for full implementations of `formatBytes()`, `formatSpeed()`, and `formatRemainingTime()`.
 
 ---
 

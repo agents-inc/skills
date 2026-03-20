@@ -350,7 +350,7 @@ if (!complete) return <Skeleton />;
 | Observable library            | `zen-observable`      | `rxjs` (peer dependency)                                   |
 | Link creation                 | `createHttpLink()`    | `new HttpLink()` (class-based)                             |
 | `from()`/`concat()`/`split()` | Standalone functions  | `ApolloLink.from()` static methods                         |
-| `connectToDevTools`           | Client option         | Removed (use browser extension)                            |
+| `connectToDevTools`           | Client option         | Replaced by `devtools: { enabled: true }`                  |
 | Local resolvers               | `resolvers` on client | Explicit `LocalState` class                                |
 
 ### New: `dataState` Property (v4)
@@ -393,6 +393,7 @@ See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/m
 - **Missing `id` in query responses** - Apollo cannot normalize data without identifiers
 - **Missing `keyArgs` in paginated type policies** - Different filters overwrite each other in cache
 - **(v4) Importing React hooks from `@apollo/client`** - Must use `@apollo/client/react` in v4
+- **(v4) Using `uri` option directly on ApolloClient** - Must use explicit `HttpLink` in v4
 
 **Medium Priority Issues:**
 
@@ -400,6 +401,15 @@ See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/m
 - **`refetchQueries` for simple updates** - Direct cache updates with `cache.modify` are more efficient
 - **`network-only` for all queries** - `cache-and-network` provides better UX (stale-while-revalidate)
 - **Not typing `useQuery`/`useMutation` generics** - Loses type safety benefits
+- **Missing loading/error state handling** - Causes crashes when data is undefined and poor UX
+
+**Common Mistakes:**
+
+- Forgetting to run `graphql-codegen` after schema changes
+- Not including all required fields in optimistic responses (every field the mutation returns must be present)
+- Using `cache.writeQuery` when `cache.modify` is more appropriate (writeQuery replaces entire query result)
+- Mixing up `update` callback (for cache updates) with `onCompleted` callback (for side effects like navigation)
+- Not using `notifyOnNetworkStatusChange` when showing refetch/fetchMore loading states
 
 **Gotchas & Edge Cases:**
 
@@ -413,8 +423,13 @@ See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/m
 - Subscriptions require separate WebSocket link with `split` - queries/mutations stay on HTTP
 - `useSuspenseQuery` has no `loading` state - it suspends; errors throw to Error Boundary
 - `queryRef` from `useLoadableQuery` must be passed to `useReadQuery` inside a Suspense boundary
+- `createQueryPreloader` must be called outside the React tree (e.g., router loaders)
 - (v4) `notifyOnNetworkStatusChange` defaults to `true` - may cause unexpected re-renders
 - (v4) `rxjs` is a required peer dependency - must install explicitly
+- (v4) `ApolloError` class removed - use `CombinedGraphQLErrors.is()` and `ServerError.is()` for type-checking
+- (v4) `from()`, `concat()`, `split()` are static methods on `ApolloLink`, not standalone functions
+- (v4) `createHttpLink()` removed - use `new HttpLink()` constructor instead
+- (v4) `useMutation` types now enforce required variables at the call site
 
 </red_flags>
 

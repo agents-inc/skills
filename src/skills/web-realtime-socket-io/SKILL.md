@@ -57,10 +57,10 @@ description: Socket.IO v4.x client patterns, connection lifecycle, reconnection,
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Socket factory, React hooks, event listeners, message queue, typing indicators, heartbeat, volatile events, namespace multiplexing
+- [examples/core.md](examples/core.md) - Socket factory, React hooks, event listeners, message queue, typing indicators, volatile events, namespace multiplexing
 - [examples/authentication.md](examples/authentication.md) - Token auth, cookie auth, token refresh, namespace auth, auth state machine
 - [examples/rooms.md](examples/rooms.md) - Room manager, room hooks, multi-room chat, namespace sockets, conditional namespace access
-- [reference.md](reference.md) - Decision frameworks, client options reference, anti-patterns, checklists
+- [reference.md](reference.md) - Decision frameworks, client options reference, checklists
 
 ---
 

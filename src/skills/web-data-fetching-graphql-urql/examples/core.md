@@ -36,7 +36,7 @@ export { client };
 "use client";
 
 import { Provider } from "urql";
-import { client } from "@/lib/urql-client";
+import { client } from "../lib/urql-client";
 import type { ReactNode } from "react";
 
 interface UrqlProviderProps {

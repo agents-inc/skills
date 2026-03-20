@@ -362,6 +362,8 @@ export const reroute: Reroute = ({ url }) => {
 
 **Why good:** Runs before `handle`, rewrites URL before route matching, locale prefix removed without duplicating route files, returns `void` to skip rewriting
 
+> **Note:** Since SvelteKit 2.18+, `reroute` also receives `fetch` and can be async (signature: `({ url, fetch }) => MaybePromise<string | void>`). Use the `fetch` parameter when locale detection requires a server call.
+
 ---
 
 ## Pattern 9: transport Hook

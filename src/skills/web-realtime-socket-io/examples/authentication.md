@@ -379,7 +379,7 @@ export function SocketAuthProvider({
     getToken,
     refreshToken,
     onAuthError: (error) => {
-      console.error("Socket auth error:", error);
+      // Handle auth error (log, display to user, etc.)
     },
   });
 

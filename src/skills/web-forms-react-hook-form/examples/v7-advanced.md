@@ -216,7 +216,7 @@ export function ContactForm() {
 }
 ```
 
-**Why good:** supports native form action for progressive enhancement, works with Next.js Server Actions, provides onSubmit and onError callbacks with typed data, validates before submission like handleSubmit
+**Why good:** supports native form action for progressive enhancement, works with SSR framework server actions, provides onSubmit and onError callbacks with typed data, validates before submission like handleSubmit
 
 ---
 
@@ -365,66 +365,7 @@ export function LoginForm() {
 
 ---
 
-## Pattern 5: reset with keepFieldsRef Option
-
-Use `keepFieldsRef` option when resetting to avoid re-registering input refs (v7.60.0+).
-
-### Good Example - Reset with preserved refs
-
-```typescript
-import { useForm } from "react-hook-form";
-import type { SubmitHandler } from "react-hook-form";
-
-interface FormData {
-  name: string;
-  email: string;
-}
-
-interface FormProps {
-  initialData: FormData;
-}
-
-export function FormWithPreservedRefs({ initialData }: FormProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { isSubmitting },
-  } = useForm<FormData>({
-    mode: "onBlur",
-    defaultValues: initialData,
-  });
-
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    await saveData(data);
-    // Reset with keepFieldsRef to avoid re-registering inputs
-    // Useful for performance in forms with many fields
-    reset(data, { keepFieldsRef: true });
-  };
-
-  const handleExternalDataUpdate = (newData: FormData) => {
-    // keepFieldsRef prevents DOM manipulation of input refs
-    reset(newData, { keepFieldsRef: true });
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register("name", { required: "Required" })} />
-      <input {...register("email", { required: "Required" })} type="email" />
-
-      <button type="submit" disabled={isSubmitting}>
-        Save
-      </button>
-    </form>
-  );
-}
-```
-
-**Why good:** `keepFieldsRef: true` avoids re-registering input refs after reset, improves performance in forms with many fields, prevents unnecessary DOM operations, useful when frequently resetting with new data
-
----
-
-## Pattern 6: useWatch with exact Option
+## Pattern 5: useWatch with exact Option
 
 Use the `exact` option with `useWatch` to match field names exactly (v7.47.0+).
 
@@ -485,7 +426,7 @@ export function ItemsForm() {
 
 ---
 
-## Pattern 7: useWatch with compute Option
+## Pattern 6: useWatch with compute Option
 
 Use the `compute` function for selective/computed subscriptions with conditional logic.
 
@@ -586,7 +527,6 @@ export function PricingForm() {
 | Option                   | Version | Description                       |
 | ------------------------ | ------- | --------------------------------- |
 | `keepIsSubmitSuccessful` | v7.47.0 | Preserve isSubmitSuccessful state |
-| `keepFieldsRef`          | v7.60.0 | Skip input ref re-registration    |
 
 ### New Components (v7.46+)
 

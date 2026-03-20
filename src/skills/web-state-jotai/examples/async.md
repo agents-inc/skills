@@ -172,7 +172,7 @@ function App() {
 
 ```typescript
 import { atom } from "jotai";
-import { atomFamily } from "jotai/utils";
+import { atomFamily } from "jotai-family"; // Use jotai-family, NOT jotai/utils
 
 interface User {
   id: string;

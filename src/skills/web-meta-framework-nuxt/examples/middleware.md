@@ -1,4 +1,4 @@
-# Nuxt 3 - Middleware Examples
+# Nuxt - Middleware Examples
 
 > Route middleware for authentication, authorization, and navigation guards. See [SKILL.md](../SKILL.md) for core concepts.
 

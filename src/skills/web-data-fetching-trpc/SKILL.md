@@ -255,7 +255,9 @@ throw new TRPCError({
 
 ```typescript
 // Client: typed error handling
-const deletePost = trpc.post.delete.useMutation({
+const trpc = useTRPC();
+const deletePost = useMutation({
+  ...trpc.post.delete.mutationOptions(),
   onError: (error) => {
     switch (error.data?.code) {
       case "NOT_FOUND":
@@ -278,20 +280,30 @@ See [reference.md](reference.md) for complete error code table with HTTP status 
 Cancel queries, snapshot state, optimistically update, rollback on error, invalidate on settle.
 
 ```typescript
-const toggleTodo = trpc.todo.toggle.useMutation({
+const trpc = useTRPC();
+const queryClient = useQueryClient();
+
+const toggleTodo = useMutation({
+  ...trpc.todo.toggle.mutationOptions(),
   onMutate: async ({ id }) => {
-    await utils.todo.list.cancel();
-    const previousTodos = utils.todo.list.getData();
-    utils.todo.list.setData(undefined, (old) =>
-      old?.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    await queryClient.cancelQueries({ queryKey: trpc.todo.list.queryKey() });
+    const previousTodos = queryClient.getQueryData(trpc.todo.list.queryKey());
+    queryClient.setQueryData(trpc.todo.list.queryKey(), (old: any) =>
+      old?.map((t: any) =>
+        t.id === id ? { ...t, completed: !t.completed } : t,
+      ),
     );
     return { previousTodos };
   },
   onError: (err, vars, context) => {
     if (context?.previousTodos)
-      utils.todo.list.setData(undefined, context.previousTodos);
+      queryClient.setQueryData(
+        trpc.todo.list.queryKey(),
+        context.previousTodos,
+      );
   },
-  onSettled: () => utils.todo.list.invalidate(),
+  onSettled: () =>
+    queryClient.invalidateQueries({ queryKey: trpc.todo.list.queryKey() }),
 });
 ```
 

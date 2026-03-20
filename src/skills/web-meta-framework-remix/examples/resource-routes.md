@@ -10,6 +10,7 @@
 // app/routes/api.health.ts (no default export = resource route)
 import { json } from "@remix-run/node";
 
+const HTTP_OK = 200;
 const HTTP_SERVICE_UNAVAILABLE = 503;
 
 export async function loader() {
@@ -17,7 +18,7 @@ export async function loader() {
   const cacheHealthy = await checkCacheConnection();
 
   const status = dbHealthy && cacheHealthy ? "healthy" : "unhealthy";
-  const statusCode = status === "healthy" ? 200 : HTTP_SERVICE_UNAVAILABLE;
+  const statusCode = status === "healthy" ? HTTP_OK : HTTP_SERVICE_UNAVAILABLE;
 
   return json(
     {
@@ -88,6 +89,7 @@ export async function action({ request }: ActionFunctionArgs) {
 // app/routes/api.reports.$reportId.download.ts
 import type { LoaderFunctionArgs } from "@remix-run/node";
 
+const HTTP_UNAUTHORIZED = 401;
 const HTTP_NOT_FOUND = 404;
 const HTTP_FORBIDDEN = 403;
 
@@ -95,7 +97,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const session = await getSession(request);
 
   if (!session.userId) {
-    throw new Response("Unauthorized", { status: 401 });
+    throw new Response("Unauthorized", { status: HTTP_UNAUTHORIZED });
   }
 
   const report = await db.report.findUnique({
@@ -133,6 +135,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 // app/routes/api.images.$imageId.ts
 import type { LoaderFunctionArgs } from "@remix-run/node";
 
+const HTTP_NOT_FOUND = 404;
 const CACHE_MAX_AGE_DAYS = 365;
 const SECONDS_PER_DAY = 86400;
 
@@ -147,7 +150,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   });
 
   if (!image) {
-    throw new Response("Image not found", { status: 404 });
+    throw new Response("Image not found", { status: HTTP_NOT_FOUND });
   }
 
   const transformedImage = await transformImage(image.url, {

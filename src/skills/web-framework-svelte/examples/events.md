@@ -305,7 +305,7 @@ Spread props can apply multiple handlers, or use explicit multiple handlers.
   onmouseleave={() => isHovered = false}
   onfocus={() => isFocused = true}
   onblur={() => isFocused = false}
-  class:active={isActive}
+  class={{ active: isActive }}
 >
   Interactive Button
 </button>

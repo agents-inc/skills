@@ -15,17 +15,18 @@ description: File-based routing, loaders, actions, defer streaming, useFetcher, 
 
 **Remix has merged into React Router v7.** What was planned as Remix v3 is now React Router v7 "framework mode".
 
-| Remix v2 (Deprecated)             | React Router v7 (Current)                    |
-| --------------------------------- | -------------------------------------------- |
-| `json(data)`                      | Return raw objects directly                  |
-| `json(data, { status, headers })` | `data(data, { status, headers })`            |
-| `defer({ key: promise })`         | Return `{ key: promise }` with Single Fetch  |
-| `@remix-run/node` imports         | `react-router` / `@react-router/node`        |
-| `LoaderFunctionArgs`              | `Route.LoaderArgs` (generated types)         |
-| `ActionFunctionArgs`              | `Route.ActionArgs` (generated types)         |
-| `useLoaderData<typeof loader>()`  | `loaderData` prop via `Route.ComponentProps` |
-| `RemixServer`                     | `ServerRouter` (from `react-router`)         |
-| `RemixBrowser`                    | `HydratedRouter` (from `react-router/dom`)   |
+| Remix v2 (Deprecated)             | React Router v7 (Current)                        |
+| --------------------------------- | ------------------------------------------------ |
+| `json(data)`                      | Return raw objects directly                      |
+| `json(data, { status, headers })` | `data(data, { status, headers })`                |
+| `defer({ key: promise })`         | Return `{ key: promise }` with Single Fetch      |
+| `@remix-run/node` imports         | `react-router` / `@react-router/node`            |
+| `LoaderFunctionArgs`              | `Route.LoaderArgs` (generated types)             |
+| `ActionFunctionArgs`              | `Route.ActionArgs` (generated types)             |
+| `useLoaderData<typeof loader>()`  | `loaderData` prop via `Route.ComponentProps`     |
+| `RemixServer`                     | `ServerRouter` (from `react-router`)             |
+| `RemixBrowser`                    | `HydratedRouter` (from `react-router/dom`)       |
+| File-based routing (automatic)    | `routes.ts` + optional `@react-router/fs-routes` |
 
 **This skill covers both Remix v2 and React Router v7 patterns.** Examples use Remix v2 imports by default with RR v7 equivalents documented in [examples/react-router-v7.md](examples/react-router-v7.md).
 
@@ -133,14 +134,16 @@ Files in `app/routes/` become URL paths. File naming conventions control nesting
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
+const HTTP_NOT_FOUND = 404;
+
 export async function loader({ params }: LoaderFunctionArgs) {
   const post = await db.post.findUnique({ where: { slug: params.slug } });
-  if (!post) throw new Response("Not Found", { status: 404 });
+  if (!post) throw new Response("Not Found", { status: HTTP_NOT_FOUND });
   return { post };
 }
 ```
 
-**Why good:** File names map directly to URLs, `$` prefix for dynamic segments, loader params are typed
+**Why good:** File names map directly to URLs, `$` prefix for dynamic segments, loader params are typed, named constant for status code
 
 See [examples/core.md](examples/core.md) for complete route examples and [examples/nested-routes.md](examples/nested-routes.md) for layout nesting patterns.
 
@@ -361,7 +364,7 @@ See [examples/nested-routes.md](examples/nested-routes.md) for admin layout and 
 - [examples/deferred.md](examples/deferred.md) - Streaming with defer/Promises
 - [examples/resource-routes.md](examples/resource-routes.md) - API endpoints, webhooks, file downloads
 - [examples/meta.md](examples/meta.md) - SEO meta tags, Open Graph, Twitter Cards
-- [examples/react-router-v7.md](examples/react-router-v7.md) - Migration: type generation, clientAction, Single Fetch
+- [examples/react-router-v7.md](examples/react-router-v7.md) - Migration: routes.ts, type generation, clientAction, Single Fetch
 - [reference.md](reference.md) - Decision frameworks, anti-patterns, route module exports
 
 ---

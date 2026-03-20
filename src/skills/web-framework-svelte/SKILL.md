@@ -479,7 +479,7 @@ Svelte 5 uses native event attributes (`onclick`, `onsubmit`) instead of Svelte 
 {#each COLORS as c}
   <button
     onclick={() => onchange?.(c)}
-    class:selected={color === c}
+    class={{ selected: color === c }}
   >
     {c}
   </button>
@@ -550,6 +550,41 @@ Svelte 5 uses native event attributes (`onclick`, `onsubmit`) instead of Svelte 
 - `ClassValue` type from `svelte/elements` for type-safe class props (Svelte 5.19+)
 
 </integration>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority:**
+
+- Using `export let` for props — use `$props()` instead
+- Using `$:` reactive statements — use `$derived` or `$effect`
+- Using `<slot>` or `<slot name="x">` — use `{#snippet}` and `{@render}`
+- Using `createEventDispatcher` — use callback props
+- Using `$effect` to sync state — use `$derived` for computed values
+- Destructuring `$state` objects — breaks reactivity (values captured at destructure time)
+
+**Medium Priority:**
+
+- Using `on:click` directive — use `onclick` attribute
+- Not using `$state.raw()` for large API responses — unnecessary proxy overhead
+- Using `setContext`/`getContext` with string keys — use `createContext` for type safety
+- Using `class:name={condition}` — use built-in `class` attribute object/array syntax (since 5.16)
+
+**Gotchas:**
+
+- `$state` proxies are not the original object — use `$state.snapshot()` to get a plain copy
+- Destructuring `$state` captures values, not references — access properties directly instead
+- `$derived` return values are NOT deeply reactive — only `$state` creates deep proxies
+- `$effect` runs after DOM update — use `$effect.pre()` for pre-update timing
+- Dependencies after `await` in `$effect` are not tracked
+- Context must be set during component init — cannot call `setContext` in event handlers or `$effect`
+
+> For complete decision frameworks and the full anti-patterns list, see [reference.md](reference.md).
+
+</red_flags>
 
 ---
 

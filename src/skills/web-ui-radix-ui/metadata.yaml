@@ -5,4 +5,7 @@ domain: web
 author: "@vince"
 displayName: Radix UI
 cliDescription: Accessible UI primitives
-usageGuidance: Use when building accessible UI with Radix primitives.
+usageGuidance: >-
+  Use when building accessible overlay components (dialogs, popovers, dropdowns,
+  tooltips), compound component APIs, keyboard navigation, focus management, or
+  polymorphic components with asChild and Slot patterns.

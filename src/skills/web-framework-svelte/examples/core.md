@@ -76,7 +76,7 @@
 
 <ul>
   {#each todos as todo (todo.id)}
-    <li class:done={todo.done}>
+    <li class={{ done: todo.done }}>
       <input
         type="checkbox"
         checked={todo.done}

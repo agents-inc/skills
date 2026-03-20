@@ -1,11 +1,11 @@
 ---
 name: web-animation-css-animations
-description: CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion
+description: CSS Animation patterns - transitions, keyframes, scroll-driven animations, @property, GPU-accelerated properties, accessibility with prefers-reduced-motion
 ---
 
 # CSS Animation Patterns
 
-> **Quick Guide:** Use CSS transitions for state changes (hover, focus), `@keyframes` for autonomous/looping animations, scroll-driven animations for scroll-linked effects, and View Transitions API for page transitions. Animate only `transform` and `opacity` for 60fps. Always respect `prefers-reduced-motion`.
+> **Quick Guide:** Use CSS transitions for state changes (hover, focus), `@keyframes` for autonomous/looping animations, scroll-driven animations for scroll-linked effects. Animate only `transform` and `opacity` for 60fps. Always respect `prefers-reduced-motion`.
 
 ---
 
@@ -29,14 +29,13 @@ description: CSS Animation patterns - transitions, keyframes, scroll-driven anim
 
 ---
 
-**Auto-detection:** CSS animation, CSS transition, @keyframes, transform, opacity, transition-duration, animation-duration, prefers-reduced-motion, scroll-timeline, view-transition, animation-timeline, will-change, cubic-bezier, ease-out, ease-in
+**Auto-detection:** CSS animation, CSS transition, @keyframes, transform, opacity, transition-duration, animation-duration, prefers-reduced-motion, scroll-timeline, animation-timeline, will-change, cubic-bezier, ease-out, ease-in, @property
 
 **When to use:**
 
 - Simple state change animations (hover, focus, active states)
 - Autonomous looping animations (spinners, pulses, attention grabbers)
 - Scroll-linked animations and parallax effects
-- Page/view transitions between routes or DOM states
 - Micro-interactions that don't need JavaScript control
 
 **When NOT to use:**
@@ -50,7 +49,7 @@ description: CSS Animation patterns - transitions, keyframes, scroll-driven anim
 
 - [examples/core.md](examples/core.md) - Token system, interactive states, shadows, loading, reduced motion
 - [examples/transitions.md](examples/transitions.md) - Multi-property transitions, accordions, color, links
-- [examples/keyframes.md](examples/keyframes.md) - Scroll-driven, view transitions, typewriter, stagger, shapes
+- [examples/keyframes.md](examples/keyframes.md) - Scroll-driven, @property gradients, typewriter, stagger, shapes
 - [reference.md](reference.md) - Decision frameworks, timing reference, browser support
 
 ---
@@ -205,7 +204,7 @@ Use `@keyframes` for animations that loop, auto-play on mount, or have more than
 - Use `ease-out` for enter, `ease-in` for exit
 - `linear` is only appropriate for continuous rotation (spinners)
 
-See [examples/core.md](examples/core.md) for spinners, pulses, skeleton loaders, and toast animations. See [examples/keyframes.md](examples/keyframes.md) for scroll-driven animations, view transitions, and complex sequences.
+See [examples/core.md](examples/core.md) for spinners, pulses, skeleton loaders, and toast animations. See [examples/keyframes.md](examples/keyframes.md) for scroll-driven animations, @property gradients, and complex sequences.
 
 ---
 
@@ -254,39 +253,13 @@ CSS `animation-timeline` allows scroll-linked animations without JavaScript.
 - `scroll()` -- progress based on scroll container position
 - `view()` -- progress based on element visibility in viewport
 
-**Browser support:** Chrome/Edge 115+, Safari 18+, Firefox behind flag
+**Browser support:** Chrome/Edge 115+, Safari 26+, Firefox behind flag
 
 See [examples/keyframes.md](examples/keyframes.md) for scroll progress, viewport reveal, and parallax patterns.
 
 ---
 
-### Pattern 7: View Transitions API
-
-Native browser-level transitions between DOM states.
-
-```css
-::view-transition-old(root) {
-  animation: slide-out-left 300ms var(--ease-in) forwards;
-}
-::view-transition-new(root) {
-  animation: slide-in-right 300ms var(--ease-out) forwards;
-}
-
-/* Named transitions for shared elements */
-.hero-image {
-  view-transition-name: hero;
-}
-```
-
-**SPA:** Trigger with `document.startViewTransition(() => { updateDOM() })`. Supported in Chrome/Edge 111+, Firefox 144+, Safari 18+.
-
-**MPA:** Use `@view-transition { navigation: auto; }` on both pages. Chrome/Edge 126+, Safari 18.2+, Firefox not yet.
-
-See [examples/keyframes.md](examples/keyframes.md) for full SPA and MPA view transition examples.
-
----
-
-### Pattern 8: @property for Custom Property Animation
+### Pattern 7: @property for Custom Property Animation
 
 CSS Houdini's `@property` enables animating custom properties like gradient angles that CSS cannot normally interpolate.
 
@@ -309,7 +282,7 @@ CSS Houdini's `@property` enables animating custom properties like gradient angl
 }
 ```
 
-**Browser support:** Chrome/Edge 85+, Safari 15.4+, Firefox 128+
+**Browser support:** Chrome/Edge 85+, Safari 16.4+, Firefox 128+
 
 </patterns>
 
@@ -394,6 +367,7 @@ Does the animation need...
 ├─ Physics-based springs? -> Your animation library
 ├─ Orchestrated staggering across many elements? -> JavaScript for complex, CSS for simple
 ├─ Scroll-linked progress? -> CSS scroll-driven animations
+├─ Page/view transitions? -> See the View Transitions skill
 └─ Simple state transitions? -> CSS Transitions
 ```
 

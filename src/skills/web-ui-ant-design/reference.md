@@ -279,7 +279,10 @@ Ant Design v6 was released November 2025 and is the current major version (6.3.x
 - IE support completely removed
 - DOM structure changes for better semantics -- some component tokens from the v4-to-v5 migration were cleaned up
 - `findDOMNode` compatibility logic removed
-- New components: Masonry, resizable Drawer, InputNumber spinner mode
+- New components: Masonry, resizable Drawer, InputNumber spinner mode, Tooltip panning
+- Logical positioning APIs use `start`/`end` instead of directional terms (better RTL support)
+- `@ant-design/icons@6` required (not compatible with antd@5 -- upgrade both together)
+- React Compiler enabled in bundled outputs for performance improvements
 
 **Upgrade path:** v6 is designed as a smooth upgrade from v5. Most component APIs remain compatible. Remove `@ant-design/v5-patch-for-react-19` if previously used. Check console for deprecation warnings on v5 before upgrading.
 

@@ -158,23 +158,3 @@ import Box from "@mui/material/Box";
   })}
 />
 ```
-
----
-
-## Correct Dark Mode Conditional Styling
-
-```typescript
-import { styled } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-
-// CORRECT: Use theme.applyStyles for dark mode
-const StyledBox = styled(Box)(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1a1a2e",
-    borderColor: "#16213e",
-  }),
-}));
-
-export { StyledBox };
-```

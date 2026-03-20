@@ -445,7 +445,7 @@ const { Content } = await render(post);
 
 #### Live Collections (Astro 6+)
 
-For data that changes frequently and needs to be fresh on every request, use `defineLiveCollection` instead of `defineCollection`. Query with `getLiveCollection()` and `getLiveEntry()` instead of `getCollection()`. Requires SSR (`prerender = false`). See [examples/content.md](examples/content.md) for full examples.
+For data that changes frequently and needs to be fresh on every request, use `defineLiveCollection` in a separate `src/live.config.ts` file (not `src/content.config.ts`). Query with `getLiveCollection()` and `getLiveEntry()` instead of `getCollection()`. Requires SSR (`prerender = false`). See [examples/content.md](examples/content.md) for full examples.
 
 ---
 
@@ -643,6 +643,46 @@ import { ClientRouter } from "astro:transitions";
 **Why good:** Smooth transitions between pages without SPA framework, paired elements morph naturally, persistent elements maintain state across navigation
 
 </patterns>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- **Adding `client:load` to every component** - Defeats islands architecture; only hydrate components that need interactivity
+- **Using framework components for static content** - Use `.astro` components for zero-JS static HTML
+- **Missing `getStaticPaths()` on dynamic routes in static mode** - Build will fail
+- **Using `<ViewTransitions />`** - Removed in Astro 6; use `<ClientRouter />` from `astro:transitions`
+- **No server adapter with `prerender = false`** - On-demand rendering requires an adapter
+
+**Medium Priority Issues:**
+
+- **Fetching data in `<script>` tags instead of frontmatter** - Frontmatter runs server-side; use it for data fetching
+- **Using `client:only` when `client:load` would work** - `client:only` skips SSR, hurting SEO
+- **Missing Zod schema on content collections** - Loses type safety and build-time validation
+- **Using `output: 'server'` for mostly static sites** - Default static mode with per-page SSR opt-in is more performant
+
+**Gotchas & Edge Cases:**
+
+- **Styles in `.astro` are scoped by default** - Use `<style is:global>` or `:global()` selector for global styles
+- **`client:visible` uses IntersectionObserver** - Component won't hydrate if always off-screen
+- **`Astro.redirect()` only works in on-demand rendered pages** - Static pages cannot redirect at request time
+- **Multiple framework islands share no state** - Each island is independent; use nanostores for cross-island communication
+- **`transition:persist` requires matching `transition:name`** - Elements must have the same name on both pages
+- **Astro 6 requires Node.js 22.12.0+** - Earlier Node versions are not supported
+- **`Astro.glob()` removed in Astro 6** - Use `import.meta.glob()` instead
+- **`z` from `astro:content` removed in Astro 6** - Import `z` from `astro/zod` instead
+- **Astro 6 uses Zod 4** - Some Zod 3 patterns changed (e.g., `z.string().email()` becomes `z.email()`)
+- **`getStaticPaths()` params must be strings** - Number params are no longer allowed in Astro 6
+- **Live collections use `src/live.config.ts`** - Not `src/content.config.ts` (separate config file)
+- **`import.meta.env` values are inlined at build time in Astro 6** - Use `process.env` for runtime secrets in live collections and SSR code
+
+For complete anti-patterns with code examples, see [reference.md](reference.md).
+
+</red_flags>
 
 ---
 

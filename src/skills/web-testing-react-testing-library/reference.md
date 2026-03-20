@@ -151,7 +151,7 @@ Testing a custom hook?
 
 | Option               | Default     | Description                                                 |
 | -------------------- | ----------- | ----------------------------------------------------------- |
-| `advanceTimers`      | `undefined` | Function to advance fake timers (required with fake timers) |
+| `advanceTimers`      | no-op async | Function to advance fake timers (required with fake timers) |
 | `delay`              | `0`         | Delay between events in ms (`null` = no delay)              |
 | `pointerEventsCheck` | `2`         | Pointer events validation (0=never, 1=once, 2=per API)      |
 | `skipHover`          | `false`     | Skip hover events on click                                  |
@@ -175,7 +175,7 @@ Testing a custom hook?
 | `alert`      | Elements with `role="alert"`            | `getByRole("alert")`                          |
 | `form`       | `<form>`                                | `getByRole("form")`                           |
 | `navigation` | `<nav>`                                 | `getByRole("navigation")`                     |
-| `search`     | `<input type="search">`                 | `getByRole("searchbox")`                      |
+| `searchbox`  | `<input type="search">`                 | `getByRole("searchbox")`                      |
 | `slider`     | `<input type="range">`                  | `getByRole("slider")`                         |
 | `switch`     | Toggle switches                         | `getByRole("switch")`                         |
 | `tab`        | Tab elements                            | `getByRole("tab")`                            |
@@ -586,6 +586,6 @@ When a test fails unexpectedly:
 | `toHaveAccessibleName(name)`        | Element has accessible name | `expect(button).toHaveAccessibleName("Submit")`       |
 | `toHaveAccessibleDescription(desc)` | Element has description     | `expect(input).toHaveAccessibleDescription(/error/i)` |
 | `toHaveErrorMessage(msg)`           | Element has error message   | `expect(input).toHaveErrorMessage(/required/i)`       |
-| `toBeEmpty()`                       | Element has no content      | `expect(container).toBeEmpty()`                       |
+| `toBeEmptyDOMElement()`             | Element has no content      | `expect(container).toBeEmptyDOMElement()`             |
 | `toContainElement(element)`         | Container includes element  | `expect(list).toContainElement(item)`                 |
 | `toContainHTML(html)`               | Container includes HTML     | `expect(div).toContainHTML("<span>")`                 |

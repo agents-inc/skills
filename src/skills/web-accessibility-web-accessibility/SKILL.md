@@ -400,6 +400,38 @@ Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- Removing focus outlines without replacement - keyboard users can't navigate, violates WCAG 2.4.7
+- Using `div` or `span` for buttons/links - no semantic meaning, no keyboard support
+- Click handlers on non-interactive elements without role/keyboard support - violates WCAG 2.1.1
+- Form inputs without labels - screen readers can't announce purpose, violates WCAG 1.3.1
+
+**Medium Priority Issues:**
+
+- Color-only error indicators - color-blind users can't distinguish
+- Placeholder text as label replacement - disappears on input
+- Auto-playing audio/video without controls - violates WCAG 1.4.2
+
+**Gotchas & Edge Cases:**
+
+- `:focus` vs `:focus-visible` - use `:focus-visible` to avoid focus rings on mouse clicks
+- Empty `alt=""` is correct for decorative images - don't skip the alt attribute entirely
+- `aria-hidden="true"` also hides from keyboard - don't use on focusable elements
+- `role="button"` on `<div>` doesn't add keyboard support - still need Enter/Space handlers
+- `prefers-reduced-motion: reduce` means minimize, not eliminate - essential animations can remain
+- Live regions announce ALL content - keep messages concise to avoid spam
+
+See [reference.md](reference.md) for full anti-patterns with code examples.
+
+</red_flags>
+
+---
+
 ## Resources
 
 **Official guidelines:**

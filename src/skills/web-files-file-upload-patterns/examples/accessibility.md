@@ -10,9 +10,14 @@
 
 ```typescript
 // accessible-file-input.tsx
-import { useId, useRef, forwardRef, useImperativeHandle } from 'react';
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import { useId, useRef, useImperativeHandle } from 'react';
+import type { ChangeEvent, KeyboardEvent, Ref } from 'react';
 import styles from './accessible-file-input.module.scss';
+
+export interface AccessibleFileInputHandle {
+  focus: () => void;
+  click: () => void;
+}
 
 interface AccessibleFileInputProps {
   label: string;
@@ -24,30 +29,21 @@ interface AccessibleFileInputProps {
   hint?: string;
   onFilesSelected: (files: File[]) => void;
   className?: string;
+  ref?: Ref<AccessibleFileInputHandle>;
 }
 
-export interface AccessibleFileInputHandle {
-  focus: () => void;
-  click: () => void;
-}
-
-export const AccessibleFileInput = forwardRef<
-  AccessibleFileInputHandle,
-  AccessibleFileInputProps
->(function AccessibleFileInput(
-  {
-    label,
-    accept,
-    multiple = false,
-    disabled = false,
-    required = false,
-    error,
-    hint,
-    onFilesSelected,
-    className,
-  },
-  ref
-) {
+export function AccessibleFileInput({
+  label,
+  accept,
+  multiple = false,
+  disabled = false,
+  required = false,
+  error,
+  hint,
+  onFilesSelected,
+  className,
+  ref,
+}: AccessibleFileInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const id = useId();
   const hintId = `${id}-hint`;
@@ -127,7 +123,7 @@ export const AccessibleFileInput = forwardRef<
       )}
     </div>
   );
-});
+}
 ```
 
 ```scss
@@ -200,7 +196,7 @@ export const AccessibleFileInput = forwardRef<
 }
 ```
 
-**Why good:** Proper label association, keyboard activation with Enter/Space, focus-visible styling, aria-describedby for hints/errors, role="alert" for error announcements, ref forwarding for external control
+**Why good:** Proper label association, keyboard activation with Enter/Space, focus-visible styling, aria-describedby for hints/errors, role="alert" for error announcements, ref as prop (React 19 pattern) for external control
 
 ---
 

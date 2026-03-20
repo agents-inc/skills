@@ -56,13 +56,15 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
   ];
 };
 
+const HTTP_NOT_FOUND = 404;
+
 export async function loader({ params }: LoaderFunctionArgs) {
   const product = await db.product.findUnique({
     where: { id: params.productId },
   });
 
   if (!product) {
-    throw new Response("Not Found", { status: 404 });
+    throw new Response("Not Found", { status: HTTP_NOT_FOUND });
   }
 
   return json({ product });

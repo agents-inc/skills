@@ -161,9 +161,6 @@ export function UserProfile() {
     <ErrorBoundary
       FallbackComponent={ProfileErrorFallback}
       resetKeys={[userId]}
-      onResetKeysChange={(prevKeys, currentKeys) => {
-        console.log("Reset triggered by key change:", prevKeys, "->", currentKeys);
-      }}
     >
       <ProfileContent userId={userId} />
     </ErrorBoundary>

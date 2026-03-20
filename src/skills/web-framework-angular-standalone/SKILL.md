@@ -726,6 +726,42 @@ const count$ = toObservable(this.count);
 
 ---
 
+<red_flags>
+
+## RED FLAGS
+
+**High Priority:**
+
+- **Using @Input/@Output decorators** - Legacy pattern; use `input()`, `output()`, `model()` signal functions
+- **Using *ngIf/*ngFor/\*ngSwitch** - Legacy directives; use `@if`, `@for`, `@switch` built-in control flow
+- **Missing `track` in @for** - Causes unnecessary DOM recreation and poor performance
+- **Constructor injection instead of inject()** - More boilerplate, less flexible
+- **Mutating signal values directly** - `signal().push(item)` doesn't trigger updates; use `.update()` with spread
+- **Manual signal sync instead of linkedSignal()** - Use `linkedSignal()` for writable derived state (v19+)
+- **Using resource() for mutations** - `resource()`/`rxResource()`/`httpResource()` are read-only; use HttpClient for POST/PUT/DELETE
+
+**Medium Priority:**
+
+- **@defer above the fold** - Hurts LCP and CLS Core Web Vitals
+- **effect() for derived state** - Use `computed()` or `linkedSignal()` instead
+- **effect() for DOM operations** - Use `afterRenderEffect()` with phases
+- **toSignal() without initialValue** - Can cause runtime errors if observable hasn't emitted
+- **Not checking resource hasValue()** - Use `hasValue()` as type guard before accessing `value()`
+
+**Gotchas & Edge Cases:**
+
+- `signal()` uses `Object.is()` equality by default; provide custom equality for objects
+- `inject()` must be called in constructor or field initializer, not in methods
+- `@defer` always renders `@placeholder` on server (SSR); triggers are ignored server-side
+- `linkedSignal()` value resets when source signal changes; use computation form to preserve previous
+- `afterRenderEffect()` without phase specification defaults to `mixedReadWrite` which can cause layout thrashing
+
+See [reference.md](reference.md) for complete decision frameworks, anti-patterns with code examples, and quick reference tables.
+
+</red_flags>
+
+---
+
 <critical_reminders>
 
 ## CRITICAL REMINDERS

@@ -61,7 +61,7 @@ description: Vite config, path aliases, vendor chunk splitting, environment-spec
 **Detailed resources:**
 
 - [examples/core.md](examples/core.md) - Full code examples for all patterns
-- [reference.md](reference.md) - Decision frameworks and version-specific gotchas
+- [reference.md](reference.md) - Quick-lookup tables, migration checklist, external links
 
 ---
 
@@ -262,11 +262,17 @@ Which Vite version?
 ```
 How to split chunks?
 ├─ Vite 8 (Rolldown)?
-│   └─ Use codeSplitting.groups with regex patterns ✓
+│   ├─ Simple vendor separation?
+│   │   └─ codeSplitting.groups with regex patterns ✓
+│   └─ Complex splitting (size limits, shared modules)?
+│       └─ codeSplitting with maxSize/minSize/minShareCount
 ├─ Vite 7 (Rollup)?
-│   └─ Use manualChunks object form ✓
+│   ├─ Simple vendor separation?
+│   │   └─ manualChunks object form ✓
+│   └─ Complex splitting logic?
+│       └─ manualChunks function form
 └─ Vite 7 with rolldown-vite (experimental)?
-    └─ Use advancedChunks.groups (renamed to codeSplitting in Vite 8)
+    └─ advancedChunks.groups (renamed to codeSplitting in Vite 8)
 ```
 
 ### Path Alias Strategy
@@ -274,12 +280,14 @@ How to split chunks?
 ```
 How to configure path aliases?
 ├─ Vite 8?
-│   ├─ Simple tsconfig paths only?
+│   ├─ All aliases match tsconfig paths?
 │   │   └─ Use resolve.tsconfigPaths: true ✓
-│   └─ Need aliases different from tsconfig?
+│   └─ Need aliases beyond tsconfig paths?
 │       └─ Use resolve.alias (manual configuration)
-└─ Vite 7 or earlier?
-    └─ Use resolve.alias + sync with tsconfig.json ✓
+├─ Vite 7 or earlier?
+│   └─ Use resolve.alias + sync with tsconfig.json manually ✓
+└─ Any version?
+    └─ ALWAYS keep tsconfig paths in sync with Vite aliases
 ```
 
 ### Build Target Selection
@@ -296,7 +304,7 @@ Choosing build.target?
     └─ Use explicit array: ['chrome111', 'safari16.4']
 ```
 
-See [reference.md](reference.md) for additional decision frameworks.
+See [reference.md](reference.md) for quick-lookup tables and migration checklist.
 
 </decision_framework>
 
@@ -340,6 +348,7 @@ See [reference.md](reference.md) for additional decision frameworks.
 - **Vite 8**: Install size ~15MB larger than Vite 7 (lightningcss + Rolldown)
 - **Vite 8**: `build.commonjsOptions` is a no-op (Rolldown handles CJS natively)
 - **Vite 8**: CSS minification uses Lightning CSS, JS minification uses Oxc (both replaced esbuild)
+- **Vite 8**: `esbuild` config option is deprecated - auto-converts to `oxc`, but not all options are supported (no property mangling, no `supported` option)
 - **Vite 7**: Node.js 18 dropped - requires Node.js 20.19+ or 22.12+
 - **Vite 7**: Sass legacy API completely removed
 - **Vite 7**: `splitVendorChunkPlugin` removed

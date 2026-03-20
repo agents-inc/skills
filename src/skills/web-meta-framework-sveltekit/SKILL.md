@@ -33,7 +33,7 @@ description: SvelteKit full-stack framework - file-based routing, load functions
 
 ---
 
-**Auto-detection:** SvelteKit, +page.svelte, +page.ts, +page.server.ts, +layout.svelte, +layout.ts, +layout.server.ts, +error.svelte, +server.ts, load function, form actions, use:enhance, hooks.server.ts, hooks.client.ts, hooks.ts, handle hook, handleFetch, handleError, init hook, reroute, transport hook, $app/navigation, $app/forms, $app/state, PageLoad, PageServerLoad, LayoutLoad, LayoutServerLoad, RequestHandler, fail, redirect, error, .remote.ts
+**Auto-detection:** SvelteKit, +page.svelte, +page.ts, +page.server.ts, +layout.svelte, +layout.ts, +layout.server.ts, +error.svelte, +server.ts, load function, form actions, use:enhance, hooks.server.ts, hooks.client.ts, hooks.ts, handle hook, handleFetch, handleError, handleValidationError, init hook, reroute, transport hook, $app/navigation, $app/forms, $app/state, PageLoad, PageServerLoad, LayoutLoad, LayoutServerLoad, RequestHandler, fail, redirect, error, .remote.ts
 
 **When to use:**
 
@@ -50,7 +50,7 @@ description: SvelteKit full-stack framework - file-based routing, load functions
 - Server load functions (`+page.server.ts`, `+layout.server.ts`)
 - Universal load functions (`+page.ts`, `+layout.ts`)
 - Form actions with validation and progressive enhancement
-- Server hooks (`handle`, `handleFetch`, `handleError`, `init`), universal hooks (`reroute`, `transport`)
+- Server hooks (`handle`, `handleFetch`, `handleError`, `handleValidationError`, `init`), universal hooks (`reroute`, `transport`)
 - API routes (`+server.ts`) and streaming responses
 - Page options (`prerender`, `ssr`, `csr`)
 - Data invalidation and rerunning load functions
@@ -683,6 +683,41 @@ export const prerender = false;
 - `adapter-vercel`, `adapter-netlify`, `adapter-cloudflare` — Platform-specific
 
 </integration>
+
+---
+
+<red_flags>
+
+## RED FLAGS
+
+**High Priority Issues:**
+
+- **Using API routes for form submissions** -- Use form actions for mutations; API routes are for external clients
+- **Throwing errors for validation** -- Use `fail()` to return errors without clearing form state
+- **Catching `redirect()` in try/catch** -- `redirect()` throws a special exception; don't catch it
+- **Missing auth checks in form actions** -- Actions are public POST endpoints; always verify `locals.user`
+- **Using `+page.ts` for database access** -- Universal loads run on the client; use `+page.server.ts`
+
+**Medium Priority Issues:**
+
+- **Missing `use:enhance` on forms** -- Forms reload the full page without it
+- **Not using `$types` for load function typing** -- Lose automatic type inference
+- **Fetching data in components instead of load functions** -- Creates client-side waterfalls
+- **Using `goto()` instead of `<a>` links** -- Lose prefetching and progressive enhancement
+
+**Gotchas & Edge Cases:**
+
+- **`redirect()` inside try/catch** -- Redirect throws internally; wrap only the mutation in try/catch, not the redirect
+- **Using `page` from `$app/stores` instead of `$app/state`** -- `$app/state` is the Svelte 5 pattern (SvelteKit 2.12+)
+- **Not returning from `fail()`** -- `fail()` doesn't exit the function; you must `return fail(...)`
+- **Using default action with named actions** -- A page with named actions cannot also have a default action
+- **Server load must return serializable data** -- No classes, functions, or component instances (unless you define a `transport` hook)
+- **`event.locals` is request-scoped** -- Safe for per-request data (auth), not for global state
+- **Remote functions (`.remote.ts`) are experimental** -- Enable via `kit.experimental.remoteFunctions` in config; API may change
+
+See [reference.md](reference.md) for the full red flags list and decision frameworks.
+
+</red_flags>
 
 ---
 

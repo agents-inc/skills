@@ -113,7 +113,7 @@ export const [getThemeContext, setThemeContext] = createContext<ThemeContext>();
   {#each THEMES as t}
     <button
       onclick={() => setTheme(t)}
-      class:active={theme === t}
+      class={{ active: theme === t }}
     >
       {t}
     </button>

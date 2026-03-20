@@ -1,6 +1,6 @@
 # Vue 3 Composition API Reference
 
-> Decision frameworks, anti-patterns, and red flags for Vue 3 Composition API development. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, checklists, and TypeScript patterns for Vue 3 Composition API. See [SKILL.md](SKILL.md) for core concepts, red flags, and [examples/](examples/) for code examples.
 
 ---
 
@@ -122,47 +122,7 @@ Need unique ID for form element or ARIA attribute?
 
 ---
 
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing cleanup in onUnmounted** - Timers, event listeners, subscriptions, and WebSocket connections must be cleaned up to prevent memory leaks
-- **Accessing ref.value outside script** - Template auto-unwraps refs, writing `.value` in templates is wrong
-- **Destructuring reactive() without toRefs()** - Loses reactivity, always use `toRefs(state)` when destructuring
-- **Missing `use` prefix on composables** - Convention violation, breaks discoverability and IDE support
-- **Not using `<script setup>`** - Adds unnecessary boilerplate, prefer script setup for all new components
-
-### Medium Priority Issues
-
-- **Using reactive() for primitives** - Verbose and error-prone, use ref() for primitives
-- **Watch without cleanup for async operations** - Can cause race conditions, use `onWatcherCleanup` or the cleanup callback
-- **Missing type annotations on refs** - `ref()` infers types, but complex types need explicit annotation
-- **Not handling loading/error states in async composables** - Always return isLoading and error refs
-- **Using provide without InjectionKey** - Loses type safety, always use typed InjectionKey symbols
-
-### Common Mistakes
-
-- **Modifying props directly** - Props are read-only, emit events to request changes
-- **Forgetting `immediate: true` on watch** - Watch is lazy by default, use immediate for initial run
-- **Using `this` in script setup** - No `this` context exists in script setup, use variables directly
-- **Reactive object reassignment** - Loses reactivity, mutate properties instead or use ref()
-- **Missing null checks on template refs** - Refs are null before mount, use optional chaining
-
-### Gotchas and Edge Cases
-
-- **Refs in reactive objects are auto-unwrapped** at root level, but NOT in arrays or Map/Set
-- **watchEffect runs immediately** unlike watch which is lazy by default
-- **computed values are read-only** by default, use getter/setter object for writable
-- **Template refs must match variable name** exactly with the `ref="name"` attribute (or use `useTemplateRef()` in Vue 3.5+)
-- **defineExpose is required** for parent to access script setup component's properties
-- **Top-level await makes component async** and requires Suspense in parent
-- **Provide values are not reactive by default** - wrap in ref() or reactive() if needed
-- **onUnmounted won't run if component errors** during setup - use error boundaries
-- **Destructured props require getter in watch** (Vue 3.5+) - `watch(() => count)` not `watch(count)`
-- **useId() must not be called in computed** - generates new ID each call, use in setup only
-- **defineModel returns a ref** - use `.value` in script, auto-unwrapped in template
-
----
+> For red flags and gotchas, see [SKILL.md](SKILL.md) `<red_flags>` section.
 
 ## Anti-Patterns
 
@@ -253,7 +213,7 @@ watch(searchQuery, async (query) => {
     });
     searchResults.value = await response.json();
   } catch (e) {
-    if (e.name !== "AbortError") throw e;
+    if (e instanceof Error && e.name !== "AbortError") throw e;
   }
 });
 ```

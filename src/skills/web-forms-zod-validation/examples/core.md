@@ -111,10 +111,10 @@ function validateContactForm(input: unknown): ValidationResult<ContactForm> {
   const result = ContactFormSchema.safeParse(input);
 
   if (!result.success) {
-    const flattened = result.error.flatten();
+    const { fieldErrors } = z.flattenError(result.error);
     return {
       success: false,
-      errors: flattened.fieldErrors as Record<string, string[]>,
+      errors: fieldErrors as Record<string, string[]>,
     };
   }
 
@@ -183,17 +183,21 @@ function formatZodErrors(error: z.ZodError): Record<string, string> {
   return errors;
 }
 
-// Custom error map for consistent messaging
-const customErrorMap: z.ZodErrorMap = (issue, ctx) => {
-  if (issue.code === z.ZodIssueCode.invalid_type) {
-    if (issue.expected === "string") {
-      return { message: "This field is required" };
-    }
-  }
-  return { message: ctx.defaultError };
-};
+// Custom error map for consistent messaging (v4 uses `error` param)
+// Per-schema:
+const NameSchema = z.string({
+  error: (issue) =>
+    issue.input === undefined ? "This field is required" : "Must be a string",
+});
 
-z.setErrorMap(customErrorMap);
+// Global error map (v4):
+z.config({
+  customError: (issue) => {
+    if (issue.code === "invalid_type" && issue.input === undefined) {
+      return "This field is required";
+    }
+  },
+});
 ```
 
 ---
@@ -426,7 +430,7 @@ async function validateRegistration(data: unknown) {
   const result = await RegistrationSchema.safeParseAsync(data);
 
   if (!result.success) {
-    return { success: false, errors: result.error.flatten().fieldErrors };
+    return { success: false, errors: z.flattenError(result.error).fieldErrors };
   }
 
   return { success: true, data: result.data };

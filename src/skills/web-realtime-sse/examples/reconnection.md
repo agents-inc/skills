@@ -344,21 +344,22 @@ class VisibilityAwareSSE {
   private lastEventId: string | null = null;
   private url: string;
   private onMessage: (data: unknown) => void;
+  private handleVisibilityChange: () => void;
 
   constructor(url: string, onMessage: (data: unknown) => void) {
     this.url = url;
     this.onMessage = onMessage;
-    this.setupVisibilityListener();
-  }
 
-  private setupVisibilityListener(): void {
-    document.addEventListener("visibilitychange", () => {
+    // Store bound reference so removeEventListener works
+    this.handleVisibilityChange = () => {
       if (document.hidden) {
         this.pause();
       } else {
         this.resume();
       }
-    });
+    };
+
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
   }
 
   connect(): void {
@@ -404,7 +405,7 @@ class VisibilityAwareSSE {
   disconnect(): void {
     document.removeEventListener(
       "visibilitychange",
-      this.setupVisibilityListener,
+      this.handleVisibilityChange,
     );
     this.eventSource?.close();
     this.eventSource = null;

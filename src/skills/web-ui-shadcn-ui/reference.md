@@ -96,42 +96,7 @@ Building a form field?
 
 ## RED FLAGS
 
-### High Priority Issues
-
-- **Not using CLI for installation** - Manual copy leads to missing dependencies and inconsistent setup
-- **Modifying CSS variables incorrectly** - Breaking OKLCH format (e.g., wrapping values in `hsl()` when they are already OKLCH)
-- **Not using cn() utility** - Direct className concatenation breaks Tailwind class merging
-- **Missing components.json** - CLI commands will fail without proper configuration
-- **Hardcoding colors in components** - Use CSS variables for theme consistency
-
-### Medium Priority Issues
-
-- **Not using semantic color names** - Using `--gray-500` instead of `--muted-foreground` in components
-- **Overriding styles with !important** - Use cn() and proper class ordering instead
-- **Not exposing className prop** - Custom components should accept className for customization
-- **Ignoring accessibility attributes** - Radix provides them, but custom extensions may break them
-- **Not updating both :root and .dark** - New colors need both light and dark mode definitions
-
-### Common Mistakes
-
-- **Forgetting suppressHydrationWarning** - Causes hydration mismatch with theme provider
-- **Using inline styles over CSS variables** - Breaks theming system
-- **Not providing default values for variants** - Causes undefined className issues
-- **Placing components outside ui/ directory** - Breaks CLI update commands
-- **Using old Form/FormField for new code** - Use Field component instead (form-library-agnostic)
-
-### Gotchas & Edge Cases
-
-- **CSS variable format (Tailwind v4)** - Store as `oklch()`: `--primary: oklch(0.205 0 0)`, use directly via `@theme inline` mapping: `bg-primary`
-- **Foreground convention** - `--primary-foreground` is text color ON `--primary` background, not the opposite
-- **Server components** - Some components need "use client" directive for interactivity
-- **Button asChild prop** - Use when wrapping with Link to avoid nested interactive elements
-- **Select component** - Requires both onValueChange and defaultValue for controlled usage
-- **Toast positioning** - Toaster component position affects all toasts globally
-- **React 19** - No forwardRef needed; ref is now a regular prop
-- **data-slot attributes** - shadcn/ui components now include `data-slot` for enhanced styling capabilities
-- **Chart config (Tailwind v4)** - Use `var(--chart-1)` directly, no `hsl()` wrapper needed
-- **Base UI option** - Since Feb 2026, init supports `--base radix` or `--base base` for primitive selection
+See [SKILL.md](SKILL.md) `<red_flags>` section for the complete list of red flags, gotchas, and edge cases.
 
 ---
 
@@ -260,14 +225,17 @@ Use asChild prop to compose with other components like Link.
 ### CLI Commands
 
 ```bash
-npx shadcn@latest init                    # Initialize project
-npx shadcn@latest init --base radix      # Specify primitive library
-npx shadcn@latest init --preset CODE     # Use design system preset
-npx shadcn@latest add [component]        # Add component(s)
-npx shadcn@latest add button --dry-run   # Preview changes
-npx shadcn@latest add button --diff      # Check for updates
-npx shadcn@latest info                   # Show project context
-npx shadcn@latest docs combobox          # View component docs
+npx shadcn@latest init                         # Initialize project
+npx shadcn@latest init --base radix           # Specify primitive library
+npx shadcn@latest init --preset CODE          # Use design system preset
+npx shadcn@latest init --template             # Scaffold full project
+npx shadcn@latest add [component]             # Add component(s)
+npx shadcn@latest add button --dry-run        # Preview changes
+npx shadcn@latest add button --diff           # Check for updates
+npx shadcn@latest add button --view           # Inspect payload
+npx shadcn@latest info                        # Show project context
+npx shadcn@latest docs combobox               # View component docs
+npx shadcn@latest migrate radix               # Migrate to unified radix-ui package
 ```
 
 ### Essential CSS Variables (Tailwind v4 OKLCH)
@@ -306,8 +274,10 @@ npx shadcn@latest docs combobox          # View component docs
 
 - [shadcn/ui Official Documentation](https://ui.shadcn.com/docs)
 - [shadcn/ui Theming Guide](https://ui.shadcn.com/docs/theming)
-- [shadcn/ui Forms Documentation](https://ui.shadcn.com/docs/forms)
+- [shadcn/ui Field Component](https://ui.shadcn.com/docs/components/radix/field)
 - [shadcn/ui CLI Reference](https://ui.shadcn.com/docs/cli)
 - [shadcn/ui Changelog](https://ui.shadcn.com/docs/changelog)
 - [October 2025 - New Components](https://ui.shadcn.com/docs/changelog/2025-10-new-components)
+- [January 2026 - RTL Support](https://ui.shadcn.com/docs/changelog/2026-01-rtl)
+- [February 2026 - Unified Radix UI Package](https://ui.shadcn.com/docs/changelog/2026-02-radix-ui)
 - [March 2026 - CLI v4](https://ui.shadcn.com/docs/changelog/2026-03-cli-v4)

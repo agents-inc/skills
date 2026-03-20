@@ -61,7 +61,7 @@ const withSeconds = formatDistanceToNow(recentDate, { includeSeconds: true });
 ### Good Example - formatRelative for Calendar Context
 
 ```typescript
-import { formatRelative } from "date-fns";
+import { formatRelative, differenceInDays, format } from "date-fns";
 import { enUS, de } from "date-fns/locale";
 
 const now = new Date(2026, 0, 15, 14, 0); // Wednesday, Jan 15, 2026

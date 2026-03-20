@@ -23,8 +23,6 @@ description: SCSS Modules, cva, design tokens
 
 **(You MUST use data-attributes for state styling - NOT className toggling)**
 
-**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
-
 **(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
 
 </critical_requirements>
@@ -235,8 +233,6 @@ For complete anti-patterns and red flags, see [reference.md](reference.md#red-fl
 **(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
 
 **(You MUST use data-attributes for state styling - NOT className toggling)**
-
-**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
 
 **(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
 

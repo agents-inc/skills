@@ -667,7 +667,7 @@ export function initializeNamespaces(options: NamespaceOptions): void {
 
   sockets.forEach(({ socket, name }) => {
     socket.on("connect_error", (error) => {
-      console.error(`[${name}] Connection error:`, error.message);
+      // Handle namespace connection error (log, display to user, etc.)
       onConnectionError?.(name, error);
     });
   });

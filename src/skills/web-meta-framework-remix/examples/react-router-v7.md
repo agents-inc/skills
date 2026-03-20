@@ -1,6 +1,68 @@
 # Remix → React Router v7 Migration Examples
 
-> Patterns for migrating from Remix v2 to React Router v7, including new type generation, clientAction, and Single Fetch.
+> Patterns for migrating from Remix v2 to React Router v7, including route configuration, type generation, clientAction, and Single Fetch.
+
+---
+
+## Route Configuration with routes.ts
+
+React Router v7 framework mode uses `app/routes.ts` as the route configuration entry point. File-based routing is optional via `@react-router/fs-routes`.
+
+### Config-Based Routes (Default)
+
+```typescript
+// app/routes.ts
+import {
+  type RouteConfig,
+  route,
+  index,
+  layout,
+  prefix,
+} from "@react-router/dev/routes";
+
+export default [
+  index("./home.tsx"),
+  route("about", "./about.tsx"),
+  layout("./auth/layout.tsx", [
+    route("login", "./auth/login.tsx"),
+    route("register", "./auth/register.tsx"),
+  ]),
+  ...prefix("admin", [
+    index("./admin/home.tsx"),
+    route("users", "./admin/users.tsx"),
+    route("users/:userId", "./admin/user-detail.tsx"),
+  ]),
+] satisfies RouteConfig;
+```
+
+**Why good:** Explicit route tree, full control over nesting/layout, type-safe with `satisfies RouteConfig`
+
+### File-Based Routes (Opt-In)
+
+```typescript
+// app/routes.ts -- use @react-router/fs-routes for Remix-style file conventions
+import { type RouteConfig } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default flatRoutes() satisfies RouteConfig;
+```
+
+**Why good:** Same flat route naming conventions from Remix v2 (`$param`, `_layout`, `_index`), opt-in rather than default, can be combined with config-based routes
+
+### Hybrid Approach
+
+```typescript
+// app/routes.ts -- combine config + file-based
+import { type RouteConfig, route } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default [
+  route("api/health", "./api/health.ts"),
+  ...(await flatRoutes()),
+] satisfies RouteConfig;
+```
+
+**Key change from Remix v2:** Remix v2 used file conventions by default. React Router v7 uses `routes.ts` as the entry point, with file-based routing as an explicit opt-in.
 
 ---
 
@@ -435,6 +497,7 @@ export async function loader() {
 // CORRECT - Use data() only when headers/status needed
 import { data } from "react-router";
 
+const HTTP_OK = 200;
 const CACHE_MAX_AGE = 3600;
 
 export async function loader() {
@@ -442,7 +505,7 @@ export async function loader() {
   return data(
     { result },
     {
-      status: 200,
+      status: HTTP_OK,
       headers: { "Cache-Control": `max-age=${CACHE_MAX_AGE}` },
     },
   );

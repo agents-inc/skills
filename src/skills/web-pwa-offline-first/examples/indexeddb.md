@@ -137,7 +137,6 @@ const db = new AppDatabase();
 async function initDatabase(): Promise<AppDatabase> {
   try {
     await db.open();
-    console.log("Database initialized, version:", db.verno);
     return db;
   } catch (error) {
     console.error("Failed to open database:", error);
@@ -681,6 +680,7 @@ Monitor and manage storage usage to prevent quota exceeded errors.
 
 ```typescript
 // db/storage-manager.ts
+import { useState, useEffect } from "react";
 
 // Constants
 const STORAGE_WARNING_THRESHOLD = 0.8; // 80%
@@ -779,17 +779,18 @@ function estimateObjectSize(obj: unknown): number {
   return new Blob([JSON.stringify(obj)]).size;
 }
 
-// Hook for React components (import useState, useEffect from 'react')
+// Hook for React components
+const STORAGE_POLL_INTERVAL_MS = 60_000;
+
 function useStorageInfo() {
   const [info, setInfo] = useState<StorageInfo | null>(null);
 
   useEffect(() => {
     getStorageInfo().then(setInfo);
 
-    // Refresh periodically
     const interval = setInterval(() => {
       getStorageInfo().then(setInfo);
-    }, 60000); // Every minute
+    }, STORAGE_POLL_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, []);

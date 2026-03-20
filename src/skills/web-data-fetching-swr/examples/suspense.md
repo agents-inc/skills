@@ -56,8 +56,7 @@ export { UserProfile };
 
 ```typescript
 // providers/suspense-swr-provider.tsx
-"use client";
-
+// Mark as client component if using an SSR framework
 import { SWRConfig } from "swr";
 import type { ReactNode } from "react";
 
@@ -223,8 +222,7 @@ SWR supports server-side data hydration through `fallbackData` (per-hook) and `S
 
 ```typescript
 // components/user-profile.tsx
-"use client";
-
+// Mark as client component if using an SSR framework
 import useSWR from "swr";
 
 interface User {
@@ -259,8 +257,7 @@ export { UserProfile };
 
 ```typescript
 // providers/swr-provider.tsx
-"use client";
-
+// Mark as client component if using an SSR framework
 import { SWRConfig } from "swr";
 import type { ReactNode } from "react";
 
@@ -297,7 +294,7 @@ export { SWRProvider };
 ```typescript
 // components/prefetch-link.tsx
 import { preload } from "swr";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher } from "../lib/fetcher";
 
 interface PrefetchLinkProps {
   href: string;
@@ -336,7 +333,7 @@ export { PrefetchLink, UserListItem };
 // components/prefetch-list.tsx
 import { preload } from "swr";
 import { useEffect } from "react";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher } from "../lib/fetcher";
 
 function PrefetchList({ userIds }: { userIds: string[] }) {
   useEffect(() => {

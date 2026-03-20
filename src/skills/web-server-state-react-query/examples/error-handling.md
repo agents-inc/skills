@@ -53,7 +53,7 @@ export function FeaturesPage() {
 > **v5 Pattern:** Use `QueryCache` and `MutationCache` for global error handling. The `onError` callback on queries was removed in v5, but mutations still support it.
 
 ```typescript
-"use client";
+"use client"; // Required in RSC frameworks (Next.js, etc.) -- omit for SPA
 
 import { useState } from "react";
 import {

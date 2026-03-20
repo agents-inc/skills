@@ -40,18 +40,7 @@ All Headless UI components expose `data-*` attributes for CSS-based state stylin
 
 **Why good:** Pure CSS styling (no JS re-renders), RSC-compatible, works with any styling solution via `className`, `group-data-[*]` propagates state to children
 
-### Available Data Attributes
-
-| Attribute       | Available On                                         | Meaning                           |
-| --------------- | ---------------------------------------------------- | --------------------------------- |
-| `data-open`     | Dialog, Menu, Popover, Disclosure, Listbox, Combobox | Component is open                 |
-| `data-closed`   | Components with `transition` prop                    | Closed state (for transitions)    |
-| `data-focus`    | MenuItem, ListboxOption, ComboboxOption, Tab, inputs | Has keyboard/mouse focus          |
-| `data-selected` | ListboxOption, ComboboxOption, Tab                   | Currently selected                |
-| `data-checked`  | Checkbox, Switch, Radio                              | Control is checked/on             |
-| `data-disabled` | All interactive components                           | Component is disabled             |
-| `data-hover`    | All interactive components                           | Mouse hover (NOT on touch)        |
-| `data-active`   | All interactive components                           | Mouse press (cleared on drag-off) |
+**Most used attributes:** `data-open`, `data-closed`, `data-focus`, `data-selected`, `data-checked`, `data-disabled`, `data-hover`, `data-active`. See [reference.md](../reference.md#data-attributes-reference) for the complete attribute table including per-component availability.
 
 ---
 
@@ -76,19 +65,7 @@ Floating panels (MenuItems, ListboxOptions, ComboboxOptions, PopoverPanel) accep
 
 **Why good:** Viewport-aware (auto-flips), no manual positioning code, CSS variables for fine-tuning, responsive via media queries
 
-### Position Values
-
-`"top"`, `"top start"`, `"top end"`, `"bottom"`, `"bottom start"`, `"bottom end"`, `"left"`, `"left start"`, `"left end"`, `"right"`, `"right start"`, `"right end"`
-
-### CSS Variables
-
-| Variable           | Purpose                             |
-| ------------------ | ----------------------------------- |
-| `--anchor-gap`     | Space between trigger and panel     |
-| `--anchor-offset`  | Horizontal offset from anchor point |
-| `--anchor-padding` | Minimum distance from viewport edge |
-| `--button-width`   | Width of trigger button             |
-| `--input-width`    | Width of input element              |
+**Position values:** `"top"`, `"top start"`, `"top end"`, `"bottom"`, `"bottom start"`, `"bottom end"`, `"left"`, `"left start"`, `"left end"`, `"right"`, `"right start"`, `"right end"`. **CSS variables:** `--anchor-gap`, `--anchor-offset`, `--anchor-padding`, `--button-width`, `--input-width`. See [reference.md](../reference.md#anchor-positioning-reference) for full details.
 
 ---
 
@@ -137,15 +114,17 @@ Every Headless UI component accepts `as` to change the rendered element.
 
 ```tsx
 // Render as a different element
-<Tab as="div" className="...">Custom tab</Tab>
+<Tab as="button" className="...">Custom tab</Tab>
 <MenuItem as="a" href="/settings">Settings</MenuItem>
 <CloseButton as="a" href="/analytics">Analytics</CloseButton>
 
-// Render as Fragment (component manages children directly)
-<Tab as={Fragment}>{/* children */}</Tab>
+// Some components default to Fragment (e.g. Tab) — use `as` to render a real element
+<Radio as="div" className="rounded-lg border p-4 data-[checked]:border-blue-500">
+  <Label>{option.name}</Label>
+</Radio>
 ```
 
-**Why good:** Semantic HTML without wrapper elements, enables links in Menus, Fragments avoid extra DOM nodes
+**Why good:** Semantic HTML without wrapper elements, enables links in Menus, `as="button"` on Tab gives it a clickable element (Tab defaults to Fragment)
 
 ---
 

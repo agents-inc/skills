@@ -221,9 +221,12 @@ For middleware configuration and custom middleware, see [examples/middleware.md]
 
 - Using legacy `createStore` instead of `configureStore` -- misses DevTools, development checks, and middleware defaults
 - Switch statements in reducers -- use `createSlice` which generates action creators automatically
+- Manual action type strings -- `createSlice` generates these from reducer names
 - Mutating state outside Immer context -- only "mutate" inside `createSlice`/`createReducer`
 - Not adding RTK Query middleware to store -- caching, polling, and invalidation silently fail
+- RTK Query cache not blacklisted in redux-persist -- causes stale cache restoration on rehydration
 - RTK 2.0: Object syntax in `extraReducers` -- removed in v2, use builder callback
+- RTK 2.0: `AnyAction` type deprecated -- use `UnknownAction` with `isAction()` guard
 
 **Medium Priority Issues:**
 
@@ -231,6 +234,8 @@ For middleware configuration and custom middleware, see [examples/middleware.md]
 - Defining typed hooks in the store file -- causes circular imports; put in separate `hooks.ts`
 - Storing derived state in the store -- compute in selectors instead
 - Not calling `setupListeners` for RTK Query -- refetchOnFocus/refetchOnReconnect will not work
+- Not using `rejectWithValue` in thunks -- loses typed error handling
+- Not using `createSelector` for derived data -- causes unnecessary recalculations on every render
 
 **Gotchas & Edge Cases:**
 
@@ -239,7 +244,7 @@ For middleware configuration and custom middleware, see [examples/middleware.md]
 - RTK Query cache tags are case-sensitive -- `"User"` !== `"user"`
 - `createAsyncThunk` auto-dispatches pending/fulfilled/rejected -- do not dispatch these manually
 - `getDefaultMiddleware()` must be called (not referenced) in middleware config
-- RTK 2.0: `AnyAction` replaced by `UnknownAction` -- use `isAction()` type guard before accessing `action.type`
+- TypeScript infers `RootState` from `store.getState` return type -- keep slice state types accurate
 
 </red_flags>
 

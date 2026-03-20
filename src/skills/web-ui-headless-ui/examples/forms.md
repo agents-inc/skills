@@ -111,8 +111,8 @@ export function ProfileForm() {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const data = new FormData(e.currentTarget);
-        console.log(Object.fromEntries(data));
+        const formData = new FormData(e.currentTarget);
+        // Handle form data submission
       }}
       className="max-w-lg space-y-8"
     >
