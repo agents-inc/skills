@@ -7,12 +7,12 @@
 </p>
 -->
 
-# Agents Inc skills
+# Agents Inc Skills: 150+ expert-level atomic skills for Claude Code
 
 The official skills marketplace for [Agents Inc](https://github.com/agents-inc/cli).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Skills: 154](https://img.shields.io/badge/Skills-154-green.svg)](./src/skills)
+[![Skills: 150+](https://img.shields.io/badge/Skills-150%2B-green.svg)](./src/skills)
 
 Curated skills that you can install and customize via the [Agents Inc CLI](https://github.com/agents-inc/cli). This repo is structured content, not code: YAML + markdown files with metadata, used to give subagents domain-specific knowledge. All of the logic (installation, compilation, validation) lives in the [CLI](https://github.com/agents-inc/cli).
 
@@ -24,21 +24,9 @@ npx @agents-inc/cli init
 
 The wizard walks you through selecting skills, then compiles subagents and generates a config file. See the [CLI repo](https://github.com/agents-inc/cli) for the full setup guide.
 
-## How skills work
-
-Skills are structured content, not code. The CLI compiles subagents by referencing skills from agent definitions using Liquid templates. Some skills are preloaded (embedded directly in the compiled agent), others are loaded dynamically at runtime:
-
-```
-agent definitions + skill references + Liquid templates
-  → CLI compile
-    → compiled subagents (.claude/agents/)
-```
-
-A `web-developer` subagent might reference React, Tailwind, and Vitest skills. A `web-tester` references Vitest, Playwright, and React Testing Library. Each subagent knows its domain deeply instead of knowing everything shallowly.
-
 ## Skill categories
 
-154 skills organized by domain:
+150+ skills organized by domain:
 
 **Web — Frameworks**<br>
 `React` `Vue Composition API` `Angular Standalone` `SolidJS` `Svelte`
@@ -149,15 +137,6 @@ A `web-developer` subagent might reference React, Tailwind, and Vitest skills. A
 `Code Reviewing` `CLI Reviewing` `Research Methodology`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
-
-## Repository structure
-
-```
-src/
-  skills/       # Source skills organized by category
-  agents/       # Agent definitions
-docs/           # Documentation
-```
 
 ## Contributing
 
