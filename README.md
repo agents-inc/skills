@@ -12,9 +12,9 @@
 The official skills marketplace for [Agents Inc](https://github.com/agents-inc/cli).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Skills: 87+](https://img.shields.io/badge/Skills-87%2B-green.svg)](./src/skills)
+[![Skills: 154](https://img.shields.io/badge/Skills-154-green.svg)](./src/skills)
 
-Curated skills and pre-built stacks that you can install and customize via the [Agents Inc CLI](https://github.com/agents-inc/cli). This repo is structured content, not code: YAML + markdown files with metadata, used to give subagents domain-specific knowledge. All of the logic (installation, compilation, validation) lives in the [CLI](https://github.com/agents-inc/cli).
+Curated skills that you can install and customize via the [Agents Inc CLI](https://github.com/agents-inc/cli). This repo is structured content, not code: YAML + markdown files with metadata, used to give subagents domain-specific knowledge. All of the logic (installation, compilation, validation) lives in the [CLI](https://github.com/agents-inc/cli).
 
 ## Quick start
 
@@ -22,7 +22,7 @@ Curated skills and pre-built stacks that you can install and customize via the [
 npx @agents-inc/cli init
 ```
 
-The wizard walks you through selecting a stack or individual skills, then compiles subagents and generates a config file. See the [CLI repo](https://github.com/agents-inc/cli) for the full setup guide.
+The wizard walks you through selecting skills, then compiles subagents and generates a config file. See the [CLI repo](https://github.com/agents-inc/cli) for the full setup guide.
 
 ## How skills work
 
@@ -38,13 +38,94 @@ A `web-developer` subagent might reference React, Tailwind, and Vitest skills. A
 
 ## Skill categories
 
-87+ skills organized by domain:
+154 skills organized by domain:
 
-**Web**<br>
-`React` `Vue` `Angular` `SolidJS` `Next.js` `Remix` `Nuxt` `SCSS Modules` `CVA` `Zustand` `Pinia` <br> `NgRx SignalStore` `Jotai` `React Query` `SWR` `tRPC` `GraphQL` `React Hook Form` `Zod` `shadcn/ui` <br> `Radix UI` `TanStack Table` `Vitest` `Playwright` `Cypress` `MSW` `Framer Motion` `Storybook` <br> `Accessibility`
+**Web — Frameworks**<br>
+`React` `Vue Composition API` `Angular Standalone` `SolidJS` `Svelte`
 
-**API**<br>
-`Hono` `Express` `Fastify` `Drizzle` `Prisma` `Better Auth` `PostHog` `Resend` `GitHub Actions` <br> `Axiom + Pino + Sentry`
+**Web — Meta Frameworks**<br>
+`Next.js` `Nuxt` `Remix` `Astro` `SvelteKit` `Qwik`
+
+**Web — State Management**<br>
+`Zustand` `Pinia` `NgRx SignalStore` `Jotai` `MobX` `Redux Toolkit`
+
+**Web — Data Fetching**<br>
+`React Query` `SWR` `tRPC` `GraphQL + Apollo` `GraphQL + urql`
+
+**Web — Routing**<br>
+`React Router` `TanStack Router`
+
+**Web — Forms & Validation**<br>
+`React Hook Form` `Vee Validate` `Zod`
+
+**Web — UI Libraries**<br>
+`shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI`
+
+**Web — Styling**<br>
+`Tailwind` `SCSS Modules` `CVA`
+
+**Web — Testing**<br>
+`Vitest` `Playwright` `Cypress` `React Testing Library` `Vue Test Utils` `MSW`
+
+**Web — Animation**<br>
+`Framer Motion` `CSS Animations` `View Transitions`
+
+**Web — Tooling**<br>
+`Storybook` `Vite`
+
+**Web — i18n**<br>
+`next-intl` `react-intl` `vue-i18n`
+
+**Web — Realtime**<br>
+`WebSockets` `Socket.IO` `SSE`
+
+**Web — PWA**<br>
+`Offline First` `Service Workers`
+
+**Web — Error Handling**<br>
+`Error Boundaries` `Result Types`
+
+**Web — Files**<br>
+`File Upload Patterns` `Image Handling`
+
+**Web — Performance & Accessibility**<br>
+`Web Performance` `Accessibility`
+
+**Web — Utilities**<br>
+`date-fns` `Native JS` `RxJS` `VueUse`
+
+**API — Frameworks**<br>
+`Hono` `Express` `Fastify` `NestJS` `Elysia`
+
+**API — Databases & ORMs**<br>
+`Drizzle` `Prisma` `TypeORM` `Sequelize` `Knex` `Mongoose` `MongoDB` `PostgreSQL` `MySQL` `Redis` <br> `CockroachDB` `EdgeDB` `SurrealDB`
+
+**API — BaaS & Managed**<br>
+`Supabase` `Firebase` `Appwrite` `Neon` `PlanetScale` `Turso` `Upstash` `Vercel KV` `Vercel Postgres`
+
+**API — Auth**<br>
+`Better Auth + Drizzle + Hono` `Clerk` `NextAuth`
+
+**API — AI & ML**<br>
+`Anthropic SDK` `OpenAI SDK` `Vercel AI SDK` `LangChain` `LlamaIndex` `Google Gemini SDK` <br> `Mistral SDK` `Cohere SDK` `Together AI` `Replicate` `Modal` `Ollama` `HuggingFace Inference` <br> `ElevenLabs` `OpenAI Whisper` `LiteLLM` `Langfuse` `Promptfoo` `Claude Vision` `Tool Use Patterns`
+
+**API — CMS**<br>
+`Payload` `Sanity` `Strapi`
+
+**API — Commerce**<br>
+`Stripe`
+
+**API — Email**<br>
+`Resend + React Email` `Resend Setup`
+
+**API — Search**<br>
+`Elasticsearch` `Meilisearch`
+
+**API — Vector DBs**<br>
+`Pinecone` `Qdrant` `Chroma` `Weaviate`
+
+**API — Analytics & Observability**<br>
+`PostHog Analytics` `PostHog Setup` `PostHog Flags` `Axiom + Pino + Sentry` `Axiom + Pino + Sentry Setup` <br> `API Performance`
 
 **Mobile**<br>
 `React Native` `Expo`
@@ -52,38 +133,28 @@ A `web-developer` subagent might reference React, Tailwind, and Vitest skills. A
 **CLI**<br>
 `Commander` `oclif + Ink`
 
-**Infra**<br>
-`Turborepo` `Tooling` `Env config`
+**Shared — CI/CD**<br>
+`GitHub Actions` `Docker` `Cloudflare Workers`
 
-**Security**<br>
-`Auth patterns` `XSS prevention` `Secrets management`
+**Shared — Monorepos**<br>
+`Turborepo` `Nx` `pnpm Workspaces`
 
-**Meta**<br>
-`Code reviewing` `Research methodology` `Investigation requirements` `Anti-over-engineering` <br> `Context management`
+**Shared — Tooling**<br>
+`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config` `Env Config`
+
+**Shared — Security**<br>
+`Auth Security`
+
+**Shared — Meta**<br>
+`Code Reviewing` `CLI Reviewing` `Research Methodology`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
-
-## Stacks
-
-Stacks bundle related skills with pre-configured agents. Instead of picking skills individually, grab a stack that matches your setup:
-
-- **nextjs-fullstack**: Next.js App Router + Hono + Drizzle + PostHog + Zustand + React Query
-- **angular-stack**: Angular 19 + Signals + NgRx SignalStore + Hono + Drizzle
-- **vue-stack**: Vue 3 Composition API + Pinia + Hono + Drizzle
-- **nuxt-stack**: Nuxt 3 + Vue 3 full-stack + Pinia + Hono + Drizzle
-- **remix-stack**: Remix + React + Hono + Drizzle
-- **solidjs-stack**: SolidJS + Hono + Drizzle
-- **react-native-stack**: React Native + Expo + Zustand + React Query
-- **meta-stack**: Agents for creating agents, skills, docs, and extracting patterns
-
-Each stack includes agents like `web-developer`, `api-developer`, `web-reviewer`, `web-tester`, `web-researcher`, `pattern-scout`, and `documentor`.
 
 ## Repository structure
 
 ```
 src/
   skills/       # Source skills organized by category
-  stacks/       # Stack configurations (skill bundles)
   agents/       # Agent definitions
 docs/           # Documentation
 ```
@@ -110,21 +181,6 @@ src/skills/<domain>-<subcategory>-<name>/
 └── examples/
     ├── core.md        # Core usage examples
     └── {topic}.md     # Topic-specific examples
-```
-
-### Stack config format
-
-Stacks are defined in `src/stacks/<name>/config.yaml`:
-
-```yaml
-name: "Stack Name"
-description: "What this stack covers"
-author: "@handle"
-version: "1.0.0"
-
-skills:
-  - id: web-framework-react
-  - id: api-framework-hono
 ```
 
 ## Development
