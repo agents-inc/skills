@@ -28,92 +28,110 @@ The wizard walks you through selecting skills, then compiles subagents and gener
 
 150+ skills organized by domain:
 
-**Web — Frameworks**<br>
+### Web
+
+**Frameworks**<br>
 `React` `Vue Composition API` `Angular Standalone` `SolidJS` `Svelte`
 
-**Web — Meta Frameworks**<br>
+**Meta Frameworks**<br>
 `Next.js` `Nuxt` `Remix` `Astro` `SvelteKit` `Qwik`
 
-**Web — State Management**<br>
+**State Management**<br>
 `Zustand` `Pinia` `NgRx SignalStore` `Jotai` `MobX` `Redux Toolkit`
 
-**Web — Data Fetching**<br>
+**Data Fetching**<br>
 `React Query` `SWR` `tRPC` `GraphQL + Apollo` `GraphQL + urql`
 
-**Web — Routing**<br>
+**Server State**<br>
+`React Query`
+
+**Routing**<br>
 `React Router` `TanStack Router`
 
-**Web — Forms & Validation**<br>
+**Forms & Validation**<br>
 `React Hook Form` `Vee Validate` `Zod`
 
-**Web — UI Libraries**<br>
+**UI Libraries**<br>
 `shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI`
 
-**Web — Styling**<br>
+**Styling**<br>
 `Tailwind` `SCSS Modules` `CVA`
 
-**Web — Testing**<br>
+**Testing**<br>
 `Vitest` `Playwright` `Cypress` `React Testing Library` `Vue Test Utils` `MSW`
 
-**Web — Animation**<br>
+**Animation**<br>
 `Framer Motion` `CSS Animations` `View Transitions`
 
-**Web — Tooling**<br>
+**Tooling**<br>
 `Storybook` `Vite`
 
-**Web — i18n**<br>
+**i18n**<br>
 `next-intl` `react-intl` `vue-i18n`
 
-**Web — Realtime**<br>
+**Realtime**<br>
 `WebSockets` `Socket.IO` `SSE`
 
-**Web — PWA**<br>
+**PWA**<br>
 `Offline First` `Service Workers`
 
-**Web — Error Handling**<br>
+**Error Handling**<br>
 `Error Boundaries` `Result Types`
 
-**Web — Files**<br>
+**Files**<br>
 `File Upload Patterns` `Image Handling`
 
-**Web — Performance & Accessibility**<br>
+**Performance & Accessibility**<br>
 `Web Performance` `Accessibility`
 
-**Web — Utilities**<br>
+**Utilities**<br>
 `date-fns` `Native JS` `RxJS` `VueUse`
 
-**API — Frameworks**<br>
+### API
+
+**Frameworks**<br>
 `Hono` `Express` `Fastify` `NestJS` `Elysia`
 
-**API — Databases & ORMs**<br>
+**Databases & ORMs**<br>
 `Drizzle` `Prisma` `TypeORM` `Sequelize` `Knex` `Mongoose` `MongoDB` `PostgreSQL` `MySQL` `Redis` <br> `CockroachDB` `EdgeDB` `SurrealDB`
 
-**API — BaaS & Managed**<br>
+**BaaS & Managed**<br>
 `Supabase` `Firebase` `Appwrite` `Neon` `PlanetScale` `Turso` `Upstash` `Vercel KV` `Vercel Postgres`
 
-**API — Auth**<br>
+**Auth**<br>
 `Better Auth + Drizzle + Hono` `Clerk` `NextAuth`
 
-**API — AI & ML**<br>
+**AI & ML**<br>
 `Anthropic SDK` `OpenAI SDK` `Vercel AI SDK` `LangChain` `LlamaIndex` `Google Gemini SDK` <br> `Mistral SDK` `Cohere SDK` `Together AI` `Replicate` `Modal` `Ollama` `HuggingFace Inference` <br> `ElevenLabs` `OpenAI Whisper` `LiteLLM` `Langfuse` `Promptfoo` `Claude Vision` `Tool Use Patterns`
 
-**API — CMS**<br>
+**CMS**<br>
 `Payload` `Sanity` `Strapi`
 
-**API — Commerce**<br>
+**Commerce**<br>
 `Stripe`
 
-**API — Email**<br>
+**Email**<br>
 `Resend + React Email` `Resend Setup`
 
-**API — Search**<br>
+**Search**<br>
 `Elasticsearch` `Meilisearch`
 
-**API — Vector DBs**<br>
+**Vector DBs**<br>
 `Pinecone` `Qdrant` `Chroma` `Weaviate`
 
-**API — Analytics & Observability**<br>
-`PostHog Analytics` `PostHog Setup` `PostHog Flags` `Axiom + Pino + Sentry` `Axiom + Pino + Sentry Setup` <br> `API Performance`
+**Analytics**<br>
+`PostHog Analytics` `PostHog Setup`
+
+**Feature Flags**<br>
+`PostHog Flags`
+
+**Observability**<br>
+`Axiom + Pino + Sentry` `Axiom + Pino + Sentry Setup`
+
+**Performance**<br>
+`API Performance`
+
+### Mobile/CLI
 
 **Mobile**<br>
 `React Native` `Expo`
@@ -121,19 +139,24 @@ The wizard walks you through selecting skills, then compiles subagents and gener
 **CLI**<br>
 `Commander` `oclif + Ink`
 
-**Shared — CI/CD**<br>
+### Shared
+
+**CI/CD**<br>
 `GitHub Actions` `Docker` `Cloudflare Workers`
 
-**Shared — Monorepos**<br>
+**Monorepos**<br>
 `Turborepo` `Nx` `pnpm Workspaces`
 
-**Shared — Tooling**<br>
-`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config` `Env Config`
+**Tooling**<br>
+`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config`
 
-**Shared — Security**<br>
+**Infra**<br>
+`Env Config`
+
+**Security**<br>
 `Auth Security`
 
-**Shared — Meta**<br>
+**Meta**<br>
 `Code Reviewing` `CLI Reviewing` `Research Methodology`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
