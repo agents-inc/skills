@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-provider
+slug: mistral-sdk
+domain: ai
+author: "@vince"
+displayName: Mistral SDK
+cliDescription: Official TypeScript SDK for Mistral AI with chat, embeddings, function calling, and code generation
+usageGuidance: >-
+  Use when integrating Mistral AI models — chat completions, streaming,
+  function calling, embeddings, JSON mode, structured outputs with Zod,
+  vision with Pixtral, and Codestral for code generation / FIM.

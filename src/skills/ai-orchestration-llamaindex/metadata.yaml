@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-orchestration
+slug: llamaindex
+domain: ai
+author: "@vince"
+displayName: LlamaIndex
+cliDescription: Data framework for LLM applications with indexing, retrieval, and query engines
+usageGuidance: >-
+  Use when building RAG and data-aware LLM applications — document loading,
+  text chunking, vector indexing, query engines, chat engines, and agentic
+  RAG with LlamaIndex.TS.

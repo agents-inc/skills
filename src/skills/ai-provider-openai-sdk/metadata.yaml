@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-provider
+slug: openai-sdk
+domain: ai
+author: "@vince"
+displayName: OpenAI SDK
+cliDescription: Official OpenAI SDK for TypeScript/Node.js
+usageGuidance: >-
+  Use when building applications with OpenAI's API — GPT models, chat
+  completions, Responses API, embeddings, function calling, structured
+  outputs, vision, audio, streaming, and batch processing.

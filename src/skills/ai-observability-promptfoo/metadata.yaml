@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-observability
+slug: promptfoo
+domain: ai
+author: "@vince"
+displayName: Promptfoo
+cliDescription: Testing and evaluation framework for LLM prompts and applications
+usageGuidance: >-
+  Use when testing LLM prompts and applications — promptfooconfig.yaml for test
+  definitions, assertion types, model-graded evals, red teaming, CI integration,
+  and comparative evaluation across providers.

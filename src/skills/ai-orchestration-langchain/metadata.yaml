@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-orchestration
+slug: langchain
+domain: ai
+author: "@vince"
+displayName: LangChain
+cliDescription: LLM application framework with chains, agents, RAG, and memory
+usageGuidance: >-
+  Use when building LLM-powered applications with LangChain.js — chat models,
+  prompt templates, output parsers, chains (LCEL), agents with tools, RAG
+  pipelines, vector stores, and memory.

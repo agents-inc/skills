@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-provider
+slug: claude-vision
+domain: ai
+author: "@vince"
+displayName: Claude Vision
+cliDescription: Image understanding and document analysis with Claude's multimodal capabilities
+usageGuidance: >-
+  Use when processing images and documents with Claude — image analysis,
+  document extraction, chart interpretation, multi-image comparison, and PDF
+  processing with the Anthropic API.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-provider
+slug: openai-whisper
+domain: ai
+author: "@vince"
+displayName: OpenAI Whisper
+cliDescription: Speech-to-text transcription and translation via OpenAI Audio API
+usageGuidance: >-
+  Use when transcribing or translating audio with OpenAI Whisper -- file
+  transcription, real-time transcription, translation to English, timestamp
+  generation, and custom vocabulary prompting.

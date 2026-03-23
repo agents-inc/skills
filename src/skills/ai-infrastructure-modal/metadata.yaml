@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-infrastructure
+slug: modal
+domain: ai
+author: "@vince"
+displayName: Modal
+cliDescription: Serverless GPU compute platform for AI model deployment and inference
+usageGuidance: >-
+  Use when deploying ML models or GPU workloads on Modal — web endpoints for
+  API access from TypeScript, serverless GPU functions, model serving, scheduled
+  jobs, and container-based deployments.

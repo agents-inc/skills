@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: ai-observability
+slug: langfuse
+domain: ai
+author: "@vince"
+displayName: Langfuse
+cliDescription: LLM observability platform with tracing, evaluations, and prompt management
+usageGuidance: >-
+  Use when adding observability to LLM applications — tracing LLM calls,
+  tracking costs, evaluations, prompt management, session tracking, user
+  feedback, and datasets for testing with Langfuse.
