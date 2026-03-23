@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-infra
+category: infra-config
 slug: setup-env
-domain: shared
+domain: infra
 author: "@vince"
 version: 1
 displayName: Environment

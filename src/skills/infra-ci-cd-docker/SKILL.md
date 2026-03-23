@@ -1,5 +1,5 @@
 ---
-name: shared-ci-cd-docker
+name: infra-ci-cd-docker
 description: Docker containerization patterns for Node.js/TypeScript development and production
 ---
 

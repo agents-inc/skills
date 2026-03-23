@@ -1,5 +1,5 @@
 ---
-name: shared-infra-setup-env
+name: infra-config-setup-env
 description: Environment configuration, Zod validation
 ---
 

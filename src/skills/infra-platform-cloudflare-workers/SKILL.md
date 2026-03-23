@@ -1,5 +1,5 @@
 ---
-name: shared-ci-cd-cloudflare-workers
+name: infra-platform-cloudflare-workers
 description: Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: shared-ci-cd-github-actions
+name: infra-ci-cd-github-actions
 description: GitHub Actions, pipelines, deployment
 ---
 
