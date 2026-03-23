@@ -1,5 +1,5 @@
 ---
-name: api-baas-upstash
+name: api-database-upstash
 description: Upstash serverless Redis -- REST-based client, auto-serialization, pipelines, rate limiting, QStash, edge compatibility, global replication
 ---
 

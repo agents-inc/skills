@@ -1,5 +1,5 @@
 ---
-name: api-baas-vercel-postgres
+name: api-database-vercel-postgres
 description: Serverless PostgreSQL on Vercel with edge-compatible SDK
 ---
 

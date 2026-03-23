@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/anthropics/claude-code/main/src/schemas/metadata.schema.json
-category: api-baas
+category: api-database
 slug: vercel-kv
 domain: api
 author: "@vince"

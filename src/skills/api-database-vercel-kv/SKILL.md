@@ -1,5 +1,5 @@
 ---
-name: api-baas-vercel-kv
+name: api-database-vercel-kv
 description: Serverless Redis-compatible key-value store via Upstash REST API -- edge-compatible, automatic JSON serialization, TTL-based caching
 ---
 
