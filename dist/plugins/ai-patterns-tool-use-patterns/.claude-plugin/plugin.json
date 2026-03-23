@@ -1,0 +1,9 @@
+{
+  "name": "ai-patterns-tool-use-patterns",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Provider-agnostic patterns for LLM function calling, tool loops, and agentic workflows",
+  "author": {
+    "name": "@vince"
+  }
+}

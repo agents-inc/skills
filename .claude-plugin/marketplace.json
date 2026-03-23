@@ -11,6 +11,186 @@
   },
   "plugins": [
     {
+      "name": "ai-infrastructure-huggingface-inference",
+      "source": "./dist/plugins/ai-infrastructure-huggingface-inference",
+      "description": "Hugging Face Inference SDK patterns for TypeScript/Node.js — InferenceClient setup, chat completion, text generation, streaming, embeddings, image generation, audio transcription, translation, summarization, and Inference Endpoints",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-infrastructure-litellm",
+      "source": "./dist/plugins/ai-infrastructure-litellm",
+      "description": "LiteLLM proxy server setup, TypeScript client patterns via OpenAI SDK, model routing, fallbacks, load balancing, spend tracking, virtual keys, and production deployment",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-infrastructure-modal",
+      "source": "./dist/plugins/ai-infrastructure-modal",
+      "description": "Serverless GPU compute platform for AI model deployment — web endpoints, GPU functions, model serving, and TypeScript client patterns",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-infrastructure-ollama",
+      "source": "./dist/plugins/ai-infrastructure-ollama",
+      "description": "Local LLM inference with the Ollama JavaScript client -- chat, streaming, tool calling, vision, embeddings, structured output, model management, and OpenAI-compatible endpoint",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-infrastructure-replicate",
+      "source": "./dist/plugins/ai-infrastructure-replicate",
+      "description": "Replicate SDK patterns for TypeScript/Node.js -- client setup, predictions, streaming, webhooks, file handling, model versioning, deployments, and training",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-infrastructure-together-ai",
+      "source": "./dist/plugins/ai-infrastructure-together-ai",
+      "description": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-observability-langfuse",
+      "source": "./dist/plugins/ai-observability-langfuse",
+      "description": "LLM observability with Langfuse — OpenTelemetry-based tracing, evaluations, prompt management, datasets, and production best practices",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-observability-promptfoo",
+      "source": "./dist/plugins/ai-observability-promptfoo",
+      "description": "Testing and evaluation framework for LLM prompts and applications -- promptfooconfig.yaml, assertions, model-graded evals, red teaming, CI/CD integration, custom providers, and comparative evaluation",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-orchestration-langchain",
+      "source": "./dist/plugins/ai-orchestration-langchain",
+      "description": "LangChain.js patterns for building LLM applications — chat models, LCEL chains, prompt templates, structured output, agents, tools, RAG, streaming, and LangSmith tracing",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-orchestration-llamaindex",
+      "source": "./dist/plugins/ai-orchestration-llamaindex",
+      "description": "LlamaIndex.TS data framework for RAG, indexing, retrieval, query engines, chat engines, and agentic workflows in TypeScript",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-orchestration-vercel-ai-sdk",
+      "source": "./dist/plugins/ai-orchestration-vercel-ai-sdk",
+      "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-patterns-tool-use-patterns",
+      "source": "./dist/plugins/ai-patterns-tool-use-patterns",
+      "description": "Provider-agnostic patterns for LLM function calling, tool loops, and agentic workflows",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-anthropic-sdk",
+      "source": "./dist/plugins/ai-provider-anthropic-sdk",
+      "description": "Official Anthropic SDK patterns for TypeScript/Node.js — client setup, Messages API, streaming, tool use, vision, extended thinking, structured outputs, prompt caching, batch API, and production best practices",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-claude-vision",
+      "source": "./dist/plugins/ai-provider-claude-vision",
+      "description": "Image understanding and document analysis with Claude's multimodal capabilities -- image input formats, PDF processing, multi-image patterns, structured extraction, and token cost estimation",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-cohere-sdk",
+      "source": "./dist/plugins/ai-provider-cohere-sdk",
+      "description": "Official Cohere TypeScript SDK patterns -- CohereClientV2, chat, embeddings, rerank, RAG with citations, tool use, streaming, and model selection",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-elevenlabs",
+      "source": "./dist/plugins/ai-provider-elevenlabs",
+      "description": "ElevenLabs voice AI SDK patterns for TypeScript/Node.js -- text-to-speech, streaming, voice cloning, speech-to-speech, pronunciation control, and conversational AI",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-google-gemini-sdk",
+      "source": "./dist/plugins/ai-provider-google-gemini-sdk",
+      "description": "Official TypeScript SDK for Google Gemini — client setup, text generation, multimodal input, function calling, structured output, streaming, embeddings, context caching, and chat sessions",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-mistral-sdk",
+      "source": "./dist/plugins/ai-provider-mistral-sdk",
+      "description": "Official Mistral AI TypeScript SDK patterns — client setup, chat completions, streaming, function calling, structured outputs, embeddings, vision, Codestral FIM, and production best practices",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-openai-sdk",
+      "source": "./dist/plugins/ai-provider-openai-sdk",
+      "description": "Official OpenAI SDK patterns for TypeScript/Node.js — client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "ai-provider-openai-whisper",
+      "source": "./dist/plugins/ai-provider-openai-whisper",
+      "description": "Speech-to-text transcription and translation via OpenAI Audio API -- models, response formats, timestamps, prompting, streaming, chunking, and diarization",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "api-ai-anthropic-sdk",
       "source": "./dist/plugins/api-ai-anthropic-sdk",
       "description": "Official Anthropic SDK patterns for TypeScript/Node.js — client setup, Messages API, streaming, tool use, vision, extended thinking, structured outputs, prompt caching, batch API, and production best practices",
@@ -531,6 +711,36 @@
       "category": "api"
     },
     {
+      "name": "api-database-upstash",
+      "source": "./dist/plugins/api-database-upstash",
+      "description": "Upstash serverless Redis -- REST-based client, auto-serialization, pipelines, rate limiting, QStash, edge compatibility, global replication",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "api"
+    },
+    {
+      "name": "api-database-vercel-kv",
+      "source": "./dist/plugins/api-database-vercel-kv",
+      "description": "Serverless Redis-compatible key-value store via Upstash REST API -- edge-compatible, automatic JSON serialization, TTL-based caching",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "api"
+    },
+    {
+      "name": "api-database-vercel-postgres",
+      "source": "./dist/plugins/api-database-vercel-postgres",
+      "description": "Serverless PostgreSQL on Vercel with edge-compatible SDK",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "api"
+    },
+    {
       "name": "api-email-resend-react-email",
       "source": "./dist/plugins/api-email-resend-react-email",
       "description": "Resend + React Email templates",
@@ -721,6 +931,36 @@
       "category": "cli"
     },
     {
+      "name": "infra-ci-cd-docker",
+      "source": "./dist/plugins/infra-ci-cd-docker",
+      "description": "Docker containerization patterns for Node.js/TypeScript development and production",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "infra"
+    },
+    {
+      "name": "infra-ci-cd-github-actions",
+      "source": "./dist/plugins/infra-ci-cd-github-actions",
+      "description": "GitHub Actions, pipelines, deployment",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "infra"
+    },
+    {
+      "name": "infra-config-setup-env",
+      "source": "./dist/plugins/infra-config-setup-env",
+      "description": "Environment configuration, Zod validation",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "infra"
+    },
+    {
       "name": "infra-env-setup-env",
       "source": "./dist/plugins/infra-env-setup-env",
       "description": "Environment configuration, Zod validation",
@@ -735,6 +975,16 @@
       "source": "./dist/plugins/infra-monorepo-turborepo",
       "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
       "version": "2.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "infra"
+    },
+    {
+      "name": "infra-platform-cloudflare-workers",
+      "source": "./dist/plugins/infra-platform-cloudflare-workers",
+      "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       },
@@ -774,6 +1024,16 @@
       "name": "meta-methodology-investigation-requirements",
       "source": "./dist/plugins/meta-methodology-investigation-requirements",
       "description": "Investigation requirement - never speculate about code you haven't read. List files, read completely, base analysis on evidence. Prevents hallucination in coding agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "methodology"
+    },
+    {
+      "name": "meta-methodology-research-methodology",
+      "source": "./dist/plugins/meta-methodology-research-methodology",
+      "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
       "version": "1.0.0",
       "author": {
         "name": "@vince"

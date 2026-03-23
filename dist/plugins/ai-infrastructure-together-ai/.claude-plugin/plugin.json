@@ -1,0 +1,9 @@
+{
+  "name": "ai-infrastructure-together-ai",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
+  "author": {
+    "name": "@vince"
+  }
+}

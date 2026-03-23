@@ -1,0 +1,9 @@
+{
+  "name": "ai-observability-promptfoo",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Testing and evaluation framework for LLM prompts and applications -- promptfooconfig.yaml, assertions, model-graded evals, red teaming, CI/CD integration, custom providers, and comparative evaluation",
+  "author": {
+    "name": "@vince"
+  }
+}

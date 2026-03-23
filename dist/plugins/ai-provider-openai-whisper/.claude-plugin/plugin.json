@@ -1,0 +1,9 @@
+{
+  "name": "ai-provider-openai-whisper",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Speech-to-text transcription and translation via OpenAI Audio API -- models, response formats, timestamps, prompting, streaming, chunking, and diarization",
+  "author": {
+    "name": "@vince"
+  }
+}

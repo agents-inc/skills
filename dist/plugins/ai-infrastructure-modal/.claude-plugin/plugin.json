@@ -1,0 +1,9 @@
+{
+  "name": "ai-infrastructure-modal",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Serverless GPU compute platform for AI model deployment — web endpoints, GPU functions, model serving, and TypeScript client patterns",
+  "author": {
+    "name": "@vince"
+  }
+}

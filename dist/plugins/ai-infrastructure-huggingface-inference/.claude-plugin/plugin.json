@@ -1,0 +1,9 @@
+{
+  "name": "ai-infrastructure-huggingface-inference",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Hugging Face Inference SDK patterns for TypeScript/Node.js — InferenceClient setup, chat completion, text generation, streaming, embeddings, image generation, audio transcription, translation, summarization, and Inference Endpoints",
+  "author": {
+    "name": "@vince"
+  }
+}

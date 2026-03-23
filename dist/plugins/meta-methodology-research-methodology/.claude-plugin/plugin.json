@@ -1,0 +1,9 @@
+{
+  "name": "meta-methodology-research-methodology",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
+  "author": {
+    "name": "@vince"
+  }
+}

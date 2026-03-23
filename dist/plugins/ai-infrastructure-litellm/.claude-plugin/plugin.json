@@ -1,0 +1,9 @@
+{
+  "name": "ai-infrastructure-litellm",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "LiteLLM proxy server setup, TypeScript client patterns via OpenAI SDK, model routing, fallbacks, load balancing, spend tracking, virtual keys, and production deployment",
+  "author": {
+    "name": "@vince"
+  }
+}
