@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: shared-meta
+category: meta-reviewing
 slug: cli-reviewing
-domain: shared
+domain: meta
 author: "@vince"
 displayName: CLI Reviewing
 cliDescription: CLI code review patterns for Commander.js and @clack/prompts

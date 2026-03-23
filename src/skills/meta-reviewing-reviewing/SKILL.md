@@ -1,5 +1,5 @@
 ---
-name: shared-meta-reviewing
+name: meta-reviewing-reviewing
 description: Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.
 ---
 
