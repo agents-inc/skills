@@ -31,7 +31,7 @@ The official skills marketplace for [Agents Inc](https://github.com/agents-inc/c
 npx @agents-inc/cli init
 ```
 
-Select your skills, and the CLI generates your config. See the [CLI repo](https://github.com/agents-inc/cli) for advanced options.
+Select your domains, skills and subagents, and configure everything in TypeScript. See the [Agents Inc CLI](https://github.com/agents-inc/cli).
 
 ## Web
 
