@@ -1,0 +1,9 @@
+{
+  "name": "meta-design-expressive-typescript",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Readable functional patterns — orchestrators, pure functions, named abstractions",
+  "author": {
+    "name": "@vince"
+  }
+}

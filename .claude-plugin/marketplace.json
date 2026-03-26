@@ -17,7 +17,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-infrastructure-litellm",
@@ -26,7 +27,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-infrastructure-modal",
@@ -35,7 +37,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-infrastructure-ollama",
@@ -44,7 +47,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-infrastructure-replicate",
@@ -53,7 +57,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-infrastructure-together-ai",
@@ -62,7 +67,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-observability-langfuse",
@@ -71,7 +77,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-observability-promptfoo",
@@ -80,7 +87,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-orchestration-langchain",
@@ -89,7 +97,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-orchestration-llamaindex",
@@ -98,7 +107,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-orchestration-vercel-ai-sdk",
@@ -107,7 +117,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-patterns-tool-use-patterns",
@@ -116,7 +127,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-anthropic-sdk",
@@ -125,7 +137,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-claude-vision",
@@ -134,7 +147,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-cohere-sdk",
@@ -143,7 +157,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-elevenlabs",
@@ -152,7 +167,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-google-gemini-sdk",
@@ -161,7 +177,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-mistral-sdk",
@@ -170,7 +187,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-openai-sdk",
@@ -179,7 +197,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "ai-provider-openai-whisper",
@@ -188,7 +207,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai"
     },
     {
       "name": "api-ai-anthropic-sdk",
@@ -991,6 +1011,16 @@
       "category": "infra"
     },
     {
+      "name": "meta-design-expressive-typescript",
+      "source": "./dist/plugins/meta-design-expressive-typescript",
+      "description": "Readable functional patterns — orchestrators, pure functions, named abstractions",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      },
+      "category": "meta"
+    },
+    {
       "name": "meta-methodology-anti-over-engineering",
       "source": "./dist/plugins/meta-methodology-anti-over-engineering",
       "description": "Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.",
@@ -998,7 +1028,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-methodology-context-management",
@@ -1008,7 +1038,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-methodology-improvement-protocol",
@@ -1018,7 +1048,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-methodology-investigation-requirements",
@@ -1028,7 +1058,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-methodology-research-methodology",
@@ -1038,7 +1068,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-methodology-success-criteria",
@@ -1048,7 +1078,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-methodology-write-verification",
@@ -1058,7 +1088,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-research-research-methodology",
@@ -1068,7 +1098,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-reviewing-cli-reviewing",
@@ -1078,7 +1108,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "meta-reviewing-reviewing",
@@ -1088,7 +1118,7 @@
       "author": {
         "name": "@vince"
       },
-      "category": "methodology"
+      "category": "meta"
     },
     {
       "name": "mobile-framework-expo",
@@ -1117,8 +1147,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "security"
+      }
     },
     {
       "name": "shared-ci-cd-cloudflare-workers",
@@ -1127,7 +1156,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-ci-cd-docker",
@@ -1136,7 +1166,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-ci-cd-github-actions",
@@ -1145,7 +1176,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-infra-setup-env",
@@ -1154,7 +1186,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-meta-cli-reviewing",
@@ -1163,7 +1196,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-meta-research-methodology",
@@ -1172,7 +1206,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-meta-reviewing",
@@ -1181,7 +1216,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-monorepo-nx",
@@ -1190,7 +1226,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-monorepo-pnpm-workspaces",
@@ -1199,7 +1236,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-monorepo-turborepo",
@@ -1208,7 +1246,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-security-auth-security",
@@ -1217,7 +1256,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-tooling-biome",
@@ -1226,7 +1266,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-tooling-eslint-prettier",
@@ -1235,7 +1276,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-tooling-git-hooks",
@@ -1244,7 +1286,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "shared-tooling-typescript-config",
@@ -1253,7 +1296,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared"
     },
     {
       "name": "web-accessibility-web-accessibility",
