@@ -14,7 +14,7 @@ The official skills marketplace for [Agents Inc](https://github.com/agents-inc/c
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Skills: 150+](https://img.shields.io/badge/Skills-150%2B-green.svg)](./src/skills)
 
-150+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `@agents-inc/cli` lets you choose between plugin or local mode, scoped to a single project or your entire machine.
+150+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `@agents-inc/cli` lets you choose between plugin or eject mode, scoped to a single project or your entire machine.
 
 ## Install
 
