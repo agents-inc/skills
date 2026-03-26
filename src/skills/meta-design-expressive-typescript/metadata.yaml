@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-design
+slug: expressive-typescript
+domain: meta
+author: "@vince"
+displayName: Expressive TypeScript
+cliDescription: Readable functional patterns — orchestrators, pure functions, named abstractions
+usageGuidance: Use when writing or refactoring TypeScript functions, data transformations, store actions, or any code that mixes logic levels. Apply the orchestrator pattern and extract until the code reads like prose.
