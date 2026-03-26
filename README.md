@@ -14,166 +14,181 @@ The official skills marketplace for [Agents Inc](https://github.com/agents-inc/c
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Skills: 150+](https://img.shields.io/badge/Skills-150%2B-green.svg)](./src/skills)
 
-Curated skills that you can install and customize via the [Agents Inc CLI](https://github.com/agents-inc/cli). This repo is structured content, not code: YAML + markdown files with metadata, used to give subagents domain-specific knowledge. All of the logic (installation, compilation, validation) lives in the [CLI](https://github.com/agents-inc/cli).
+150+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `@agents-inc/cli` lets you choose between plugin or local mode, scoped to a single project or your entire machine.
 
-## Quick start
+## Install
+
+**Via Claude Code:**
+
+```bash
+/plugin marketplace add agents-inc/skills
+/plugin install <skill-name>@agents-inc
+```
+
+**Via the Agents Inc CLI:**
 
 ```bash
 npx @agents-inc/cli init
 ```
 
-The wizard walks you through selecting skills, then compiles subagents and generates a config file. See the [CLI repo](https://github.com/agents-inc/cli) for the full setup guide.
+Select your skills, and the CLI generates your config. See the [CLI repo](https://github.com/agents-inc/cli) for advanced options.
 
-## Skill categories
+## Web
 
-150+ skills organized by domain:
-
-### Web
-
-**Frameworks**<br>
+Frameworks<br>
 `React` `Vue Composition API` `Angular Standalone` `SolidJS` `Svelte`
 
-**Meta Frameworks**<br>
+Meta Frameworks<br>
 `Next.js` `Nuxt` `Remix` `Astro` `SvelteKit` `Qwik`
 
-**State Management**<br>
+State Management<br>
 `Zustand` `Pinia` `NgRx SignalStore` `Jotai` `MobX` `Redux Toolkit`
 
-**Data Fetching**<br>
-`React Query` `SWR` `tRPC` `GraphQL + Apollo` `GraphQL + urql`
+Data Fetching<br>
+`SWR` `tRPC` `GraphQL + Apollo` `GraphQL + urql`
 
-**Server State**<br>
+Server State<br>
 `React Query`
 
-**Routing**<br>
+Routing<br>
 `React Router` `TanStack Router`
 
-**Forms & Validation**<br>
+Forms & Validation<br>
 `React Hook Form` `Vee Validate` `Zod`
 
-**UI Libraries**<br>
+UI Libraries<br>
 `shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI`
 
-**Styling**<br>
+Styling<br>
 `Tailwind` `SCSS Modules` `CVA`
 
-**Testing**<br>
-`Vitest` `Playwright` `Cypress` `React Testing Library` `Vue Test Utils` `MSW`
+Testing<br>
+`Vitest` `Playwright` `Cypress` `React Testing Library` `Vue Test Utils`
 
-**Animation**<br>
+Mocks<br>
+`MSW`
+
+Animation<br>
 `Framer Motion` `CSS Animations` `View Transitions`
 
-**Tooling**<br>
+Tooling<br>
 `Storybook` `Vite`
 
-**i18n**<br>
+i18n<br>
 `next-intl` `react-intl` `vue-i18n`
 
-**Realtime**<br>
+Realtime<br>
 `WebSockets` `Socket.IO` `SSE`
 
-**PWA**<br>
+PWA<br>
 `Offline First` `Service Workers`
 
-**Error Handling**<br>
+Error Handling<br>
 `Error Boundaries` `Result Types`
 
-**Files**<br>
+Files<br>
 `File Upload Patterns` `Image Handling`
 
-**Performance & Accessibility**<br>
+Performance & Accessibility<br>
 `Web Performance` `Accessibility`
 
-**Utilities**<br>
+Utilities<br>
 `date-fns` `Native JS` `RxJS` `VueUse`
 
-### API
+## API
 
-**Frameworks**<br>
+Frameworks<br>
 `Hono` `Express` `Fastify` `NestJS` `Elysia`
 
-**Databases & ORMs**<br>
-`Drizzle` `Prisma` `TypeORM` `Sequelize` `Knex` `Mongoose` `MongoDB` `PostgreSQL` `MySQL` `Redis` <br> `CockroachDB` `EdgeDB` `SurrealDB`
+Databases & ORMs<br>
+`Drizzle` `Prisma` `TypeORM` `Sequelize` `Knex` `Mongoose` `MongoDB` `PostgreSQL` `MySQL` `Redis` <br> `CockroachDB` `EdgeDB` `SurrealDB` `Upstash` `Vercel KV` `Vercel Postgres`
 
-**BaaS & Managed**<br>
-`Supabase` `Firebase` `Appwrite` `Neon` `PlanetScale` `Turso` `Upstash` `Vercel KV` `Vercel Postgres`
+BaaS<br>
+`Supabase` `Firebase` `Appwrite` `Neon` `PlanetScale` `Turso`
 
-**Auth**<br>
+Auth<br>
 `Better Auth + Drizzle + Hono` `Clerk` `NextAuth`
 
-**AI & ML**<br>
-`Anthropic SDK` `OpenAI SDK` `Vercel AI SDK` `LangChain` `LlamaIndex` `Google Gemini SDK` <br> `Mistral SDK` `Cohere SDK` `Together AI` `Replicate` `Modal` `Ollama` `HuggingFace Inference` <br> `ElevenLabs` `OpenAI Whisper` `LiteLLM` `Langfuse` `Promptfoo` `Claude Vision` `Tool Use Patterns`
-
-**CMS**<br>
+CMS<br>
 `Payload` `Sanity` `Strapi`
 
-**Commerce**<br>
+Commerce<br>
 `Stripe`
 
-**Email**<br>
+Email<br>
 `Resend + React Email` `Resend Setup`
 
-**Search**<br>
+Search<br>
 `Elasticsearch` `Meilisearch`
 
-**Vector DBs**<br>
+Vector DBs<br>
 `Pinecone` `Qdrant` `Chroma` `Weaviate`
 
-**Analytics**<br>
+Analytics<br>
 `PostHog Analytics` `PostHog Setup`
 
-**Feature Flags**<br>
+Feature Flags<br>
 `PostHog Flags`
 
-**Observability**<br>
+Observability<br>
 `Axiom + Pino + Sentry` `Axiom + Pino + Sentry Setup`
 
-**Performance**<br>
+Performance<br>
 `API Performance`
 
-### Mobile/CLI
+## AI
 
-**Mobile**<br>
-`React Native` `Expo`
+Providers<br>
+`Anthropic SDK` `OpenAI SDK` `Google Gemini SDK` `Mistral SDK` `Cohere SDK` `ElevenLabs` `OpenAI Whisper` `Claude Vision`
 
-**CLI**<br>
-`Commander` `oclif + Ink`
+Orchestration<br>
+`Vercel AI SDK` `LangChain` `LlamaIndex`
 
-### Shared
+Infrastructure<br>
+`HuggingFace Inference` `LiteLLM` `Modal` `Ollama` `Replicate` `Together AI`
 
-**CI/CD**<br>
-`GitHub Actions` `Docker` `Cloudflare Workers`
+Observability<br>
+`Langfuse` `Promptfoo`
 
-**Monorepos**<br>
-`Turborepo` `Nx` `pnpm Workspaces`
+Patterns<br>
+`Tool Use Patterns`
 
-**Tooling**<br>
-`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config`
+## Infra
 
-**Infra**<br>
+CI/CD<br>
+`GitHub Actions` `Docker`
+
+Platform<br>
+`Cloudflare Workers`
+
+Config<br>
 `Env Config`
 
-**Security**<br>
+## Meta
+
+Design<br>
+`Expressive TypeScript`
+
+Reviewing<br>
+`Code Reviewing` `CLI Reviewing`
+
+Methodology<br>
+`Research Methodology`
+
+## Shared
+
+Monorepos<br>
+`Turborepo` `Nx` `pnpm Workspaces`
+
+Security<br>
 `Auth Security`
 
-**Meta**<br>
-`Code Reviewing` `CLI Reviewing` `Research Methodology`
+Tooling<br>
+`Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
 
-## Contributing
-
-### Adding a skill
-
-1. Create a directory under `src/skills/<domain>-<subcategory>-<name>/`
-2. Add `SKILL.md` with the skill content
-3. Add `reference.md` for API reference
-4. Add an `examples/` directory with real code examples
-5. Run the CLI to compile and verify
-
-Each skill is a structured package. The naming convention is `<domain>-<subcategory>-<name>` (e.g., `web-framework-react`). All YAML files are validated against JSON schemas in the [CLI repository](https://github.com/agents-inc/cli), so malformed metadata or invalid references are caught immediately.
-
-### Skill structure
+## Skill structure
 
 ```
 src/skills/<domain>-<subcategory>-<name>/
@@ -184,21 +199,3 @@ src/skills/<domain>-<subcategory>-<name>/
     ├── core.md        # Core usage examples
     └── {topic}.md     # Topic-specific examples
 ```
-
-## Development
-
-```bash
-# Install dependencies (for prettier hooks)
-bun install
-
-# Format files
-bun run format
-```
-
-## Links
-
-- [Agents Inc CLI](https://github.com/agents-inc/cli): an agent composition framework that builds stacks and compiles specialized subagents for Claude Code
-
-## License
-
-MIT
