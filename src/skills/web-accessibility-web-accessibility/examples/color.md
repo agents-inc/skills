@@ -8,31 +8,31 @@
 
 ### Example: Checking Contrast Ratios
 
-```scss
-// Sufficient contrast
+```css
+/* Sufficient contrast */
 .button-primary {
-  background: #0066cc; // Blue
-  color: #ffffff; // White
-  // Contrast ratio: 7.37:1 (Passes AAA)
+  background: #0066cc; /* Blue */
+  color: #ffffff; /* White */
+  /* Contrast ratio: 7.37:1 (Passes AAA) */
 }
 
 .text-body {
-  color: #333333; // Dark gray
-  background: #ffffff; // White
-  // Contrast ratio: 12.6:1 (Passes AAA)
+  color: #333333; /* Dark gray */
+  background: #ffffff; /* White */
+  /* Contrast ratio: 12.6:1 (Passes AAA) */
 }
 
-// Insufficient contrast
+/* Insufficient contrast */
 .button-bad {
-  background: #ffeb3b; // Yellow
-  color: #ffffff; // White
-  // Contrast ratio: 1.42:1 (Fails AA - needs 4.5:1)
+  background: #ffeb3b; /* Yellow */
+  color: #ffffff; /* White */
+  /* Contrast ratio: 1.42:1 (Fails AA - needs 4.5:1) */
 }
 
 .text-bad {
-  color: #999999; // Light gray
-  background: #ffffff; // White
-  // Contrast ratio: 2.85:1 (Fails AA for normal text)
+  color: #999999; /* Light gray */
+  background: #ffffff; /* White */
+  /* Contrast ratio: 2.85:1 (Fails AA for normal text) */
 }
 ```
 
@@ -86,30 +86,26 @@ function BadStatusBadge({ status }: { status: 'success' | 'error' }) {
 
 ### Example: Underlined Links in Body Text
 
-```scss
-// GOOD: Underlined links in body text
-.content {
-  a {
-    color: var(--color-primary);
-    text-decoration: underline; // Color + underline
-
-    &:hover {
-      text-decoration-thickness: 2px;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-primary);
-      outline-offset: 2px;
-    }
-  }
+```css
+/* GOOD: Underlined links in body text */
+.content a {
+  color: var(--color-primary);
+  text-decoration: underline; /* Color + underline */
 }
 
-// BAD: Color-only links
-.bad-content {
-  a {
-    color: var(--color-primary);
-    text-decoration: none; // Only color distinguishes links
-  }
+.content a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.content a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* BAD: Color-only links */
+.bad-content a {
+  color: var(--color-primary);
+  text-decoration: none; /* Only color distinguishes links */
 }
 ```
 
@@ -121,18 +117,18 @@ function BadStatusBadge({ status }: { status: 'success' | 'error' }) {
 
 ### Example: Token Definitions with Contrast Ratios
 
-```scss
-// Design tokens - define in your global styles
+```css
+/* Design tokens - define in your global styles */
 :root {
-  // Text colors with sufficient contrast
-  --color-text-default: var(--gray-12); // #1a1a1a - 16.1:1 on white
-  --color-text-muted: var(--gray-10); // #4a4a4a - 9.7:1 on white
-  --color-text-subtle: var(--gray-8); // #6b6b6b - 5.7:1 on white
+  /* Text colors with sufficient contrast */
+  --color-text-default: var(--gray-12); /* #1a1a1a - 16.1:1 on white */
+  --color-text-muted: var(--gray-10); /* #4a4a4a - 9.7:1 on white */
+  --color-text-subtle: var(--gray-8); /* #6b6b6b - 5.7:1 on white */
 
-  // Surface colors
-  --color-surface-base: var(--gray-0); // #ffffff
-  --color-surface-subtle: var(--gray-2); // #f5f5f5
+  /* Surface colors */
+  --color-surface-base: var(--gray-0); /* #ffffff */
+  --color-surface-subtle: var(--gray-2); /* #f5f5f5 */
 
-  // Ensure all tokens meet WCAG AA minimum
+  /* Ensure all tokens meet WCAG AA minimum */
 }
 ```

@@ -31,23 +31,23 @@ export const browserWorker = setupServer(...handlers);
 ## Pattern 8: App Integration (SPA/Client-Side)
 
 ```typescript
-// main.tsx
-import { createRoot } from "react-dom/client";
+// main.ts (your app entry point)
 import { browserWorker } from "./browser-worker";
-import { App } from "./app";
 
 const UNHANDLED_REQUEST_STRATEGY = "bypass";
 
 async function enableMocking() {
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === "development") {
     await browserWorker.start({
       onUnhandledRequest: UNHANDLED_REQUEST_STRATEGY,
     });
   }
 }
 
+// Await mocking setup BEFORE rendering your app
 enableMocking().then(() => {
-  createRoot(document.getElementById("root")!).render(<App />);
+  // Initialize your app/framework here
+  renderApp();
 });
 ```
 
@@ -55,11 +55,12 @@ enableMocking().then(() => {
 
 ```typescript
 // BAD: Rendering before mocking ready
-if (import.meta.env.DEV) {
+if (process.env.NODE_ENV === "development") {
   browserWorker.start({ onUnhandledRequest: "bypass" }); // Missing await!
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// App renders before MSW is ready
+renderApp();
 ```
 
 **Why bad:** Race condition where app renders before MSW is ready causes first requests to fail unpredictably

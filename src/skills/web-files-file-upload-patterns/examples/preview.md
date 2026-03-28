@@ -113,7 +113,7 @@ function getImageDimensions(
 ```typescript
 // image-preview.tsx
 import { useEffect, useRef } from 'react';
-import styles from './image-preview.module.scss';
+// Apply your styling solution via className prop
 
 interface ImagePreviewProps {
   file: File;
@@ -168,13 +168,13 @@ export function ImagePreview({
 
   return (
     <div
-      className={`${styles.container} ${className ?? ''}`}
+      className={className}
       style={{ maxWidth, maxHeight }}
     >
       <img
         ref={imgRef}
         alt={alt}
-        className={styles.image}
+        className="image"
         onLoad={handleLoad}
         onError={handleError}
       />
@@ -183,27 +183,7 @@ export function ImagePreview({
 }
 ```
 
-```scss
-// image-preview.module.scss
-.container {
-  position: relative;
-  display: inline-block;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.image {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-```
-
-**Why good:** Object URL created in effect, cleaned up on unmount/file change, maintains aspect ratio with object-fit, callbacks for load/error handling
+**Why good:** Object URL created in effect, cleaned up on unmount/file change, maintains aspect ratio with object-fit, callbacks for load/error handling. Apply container and image styles via your styling solution.
 
 ---
 

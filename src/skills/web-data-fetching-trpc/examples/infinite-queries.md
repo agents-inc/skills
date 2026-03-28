@@ -60,14 +60,13 @@ export { postRouter };
 // apps/client/components/post-feed.tsx
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTRPC } from "../lib/trpc";
-import { useInView } from "react-intersection-observer";
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 const PAGE_SIZE = 20;
 
 export function PostFeed() {
   const trpc = useTRPC();
-  const { ref, inView } = useInView();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // v11: infiniteQueryOptions factory with standard useInfiniteQuery
   const {
@@ -84,12 +83,26 @@ export function PostFeed() {
     ),
   );
 
-  // Auto-fetch when scroll into view
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "100px" },
+    );
+    observer.observe(el);
+    return () => observer.unobserve(el);
+  }, [loadMore]);
 
   if (isPending) return <PostFeedSkeleton />;
   if (error) return <Error message={error.message} />;
@@ -100,8 +113,8 @@ export function PostFeed() {
         page.posts.map((post) => <PostCard key={post.id} post={post} />)
       )}
 
-      {/* Trigger element for infinite scroll */}
-      <div ref={ref}>
+      {/* Sentinel element triggers load when visible */}
+      <div ref={sentinelRef}>
         {isFetchingNextPage && <Spinner />}
         {!hasNextPage && <p>No more posts</p>}
       </div>

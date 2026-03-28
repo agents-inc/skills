@@ -21,8 +21,6 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
 
-**(You MUST use named exports only - NO default exports)**
-
 </critical_requirements>
 
 ---
@@ -446,8 +444,6 @@ See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/m
 **(You MUST configure type policies with appropriate `keyFields` for every entity type)**
 
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
-
-**(You MUST use named exports only - NO default exports)**
 
 **(For v4: You MUST import React hooks from `@apollo/client/react` - NOT from `@apollo/client`)**
 

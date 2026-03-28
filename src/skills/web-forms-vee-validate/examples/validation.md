@@ -19,6 +19,7 @@ import { z } from "zod";
 const MIN_PASSWORD_LENGTH = 8;
 const MIN_USERNAME_LENGTH = 3;
 const MAX_USERNAME_LENGTH = 20;
+const MIN_AGE = 18;
 
 // CRITICAL: Wrap schema with toTypedSchema
 const userSchema = toTypedSchema(
@@ -36,7 +37,7 @@ const userSchema = toTypedSchema(
         .regex(/[A-Z]/, "Must contain uppercase letter")
         .regex(/[0-9]/, "Must contain number"),
       confirmPassword: z.string(),
-      age: z.coerce.number().min(18, "Must be 18 or older"),
+      age: z.coerce.number().min(MIN_AGE, `Must be ${MIN_AGE} or older`),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: "Passwords do not match",
@@ -236,8 +237,8 @@ const { handleSubmit, errors, defineField } = useForm({
 const [email] = defineField("email");
 const [age] = defineField("age");
 
-const onSubmit = handleSubmit((values) => {
-  console.log(values);
+const onSubmit = handleSubmit(async (values) => {
+  await submitForm(values);
 });
 </script>
 
@@ -442,8 +443,8 @@ const { handleSubmit, errorBag, defineField } = useForm({
 
 const [password] = defineField("password");
 
-const onSubmit = handleSubmit((values) => {
-  console.log("Valid:", values);
+const onSubmit = handleSubmit(async (values) => {
+  await updatePassword(values);
 });
 </script>
 

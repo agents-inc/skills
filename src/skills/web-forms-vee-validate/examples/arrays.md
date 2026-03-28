@@ -124,7 +124,7 @@ const onSubmit = handleSubmit(async (values) => {
 </template>
 ```
 
-**Why good:** field.key ensures React-like correct reconciliation on add/remove, schema validates both individual items and array length, initialValues prevents undefined array errors, named constants for MIN_USERS and DEFAULT_USERS, error paths match nested structure `users[${index}].name`
+**Why good:** field.key ensures correct DOM reconciliation on add/remove, schema validates both individual items and array length, initialValues prevents undefined array errors, named constants for MIN_USERS and DEFAULT_USERS, error paths match nested structure `users[${index}].name`
 
 ### Bad Example - Using index as key
 
@@ -211,8 +211,8 @@ const {
   remove: removePerson,
 } = useFieldArray<Person>("people");
 
-const onSubmit = handleSubmit((values) => {
-  console.log(values);
+const onSubmit = handleSubmit(async (values) => {
+  await saveContacts(values);
 });
 </script>
 
@@ -344,8 +344,8 @@ const moveToPosition = (fromIndex: number, toIndex: number) => {
   move(fromIndex, toIndex);
 };
 
-const onSubmit = handleSubmit((values) => {
-  console.log("Tasks in order:", values.tasks);
+const onSubmit = handleSubmit(async (values) => {
+  await saveTasks(values);
 });
 </script>
 
@@ -454,9 +454,8 @@ const total = computed(() => {
   );
 });
 
-const onSubmit = handleSubmit((data) => {
-  console.log("Order total:", total.value);
-  console.log("Items:", data.items);
+const onSubmit = handleSubmit(async (data) => {
+  await placeOrder(data);
 });
 </script>
 

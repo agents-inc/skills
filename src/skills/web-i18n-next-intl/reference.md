@@ -284,10 +284,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
 - [ ] Pass `routing` configuration
 - [ ] Configure matcher to exclude:
   - `/api` routes
-  - `/trpc` routes
   - `/_next` system files
   - `/_vercel` system files
   - Files with extensions (`.*\\..*)`)
+  - Any additional API framework routes your project uses
 - [ ] If using Next.js 16+, ensure file is `proxy.ts` not `middleware.ts`
 
 ---

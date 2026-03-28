@@ -113,7 +113,7 @@ export function PasswordInput({
 
 ### Example: Headless Component Library Select
 
-Use your headless component library (Radix UI, Headless UI, React Aria, Ariakit) for select/listbox patterns. They handle all ARIA attributes and keyboard navigation automatically:
+Use your headless component library for select/listbox patterns. They handle all ARIA attributes and keyboard navigation automatically:
 
 - `aria-haspopup="listbox"` on trigger
 - `aria-expanded` state management

@@ -152,7 +152,7 @@ export function useUploadProgress(): UseUploadProgressResult {
 
 ```typescript
 // progress-bar.tsx
-import styles from './progress-bar.module.scss';
+// Apply your styling solution via className prop
 
 type ProgressSize = 'sm' | 'md' | 'lg';
 type ProgressStatus = 'uploading' | 'success' | 'error';
@@ -179,7 +179,7 @@ export function ProgressBar({
 
   return (
     <div
-      className={`${styles.progressBar} ${className ?? ''}`}
+      className={className}
       data-size={size}
       data-status={status}
       role="progressbar"
@@ -189,11 +189,11 @@ export function ProgressBar({
       aria-label={`Upload progress: ${displayLabel}`}
     >
       <div
-        className={styles.fill}
+        className="fill"
         style={{ width: `${clampedProgress}%` }}
       />
       {showLabel && (
-        <span className={styles.label} aria-hidden="true">
+        <span className="label" aria-hidden="true">
           {displayLabel}
         </span>
       )}
@@ -202,54 +202,7 @@ export function ProgressBar({
 }
 ```
 
-```scss
-// progress-bar.module.scss
-.progressBar {
-  position: relative;
-  width: 100%;
-  background: var(--color-surface);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-
-  &[data-size="sm"] {
-    height: 4px;
-  }
-  &[data-size="md"] {
-    height: 8px;
-  }
-  &[data-size="lg"] {
-    height: 16px;
-  }
-}
-
-.fill {
-  height: 100%;
-  transition: width 0.2s ease;
-}
-
-.progressBar[data-status="uploading"] .fill {
-  background: var(--color-primary);
-}
-.progressBar[data-status="success"] .fill {
-  background: var(--color-success);
-}
-.progressBar[data-status="error"] .fill {
-  background: var(--color-error);
-}
-
-.label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--color-white);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-```
-
-**Why good:** Accessible with role="progressbar" and aria attributes, variants via data attributes (style-agnostic), clamps progress to valid range, label hidden from screen readers (aria-hidden) since aria-label provides info
+**Why good:** Accessible with role="progressbar" and aria attributes, variants via `data-size` and `data-status` attributes (style-agnostic), clamps progress to valid range, label hidden from screen readers (aria-hidden) since aria-label provides info. Style using the data attributes via your styling solution.
 
 ---
 
@@ -311,7 +264,7 @@ export function formatProgress(loaded: number, total: number): string {
 // upload-progress-display.tsx
 import { ProgressBar } from './progress-bar';
 import { formatBytes, formatSpeed, formatRemainingTime } from './format-progress';
-import styles from './upload-progress-display.module.scss';
+// Apply your styling solution via className prop
 
 interface UploadProgress {
   loaded: number;
@@ -339,16 +292,16 @@ export function UploadProgressDisplay({
   onRetry,
 }: UploadProgressDisplayProps) {
   return (
-    <div className={styles.container} data-status={status}>
-      <div className={styles.header}>
-        <span className={styles.fileName} title={fileName}>
+    <div className="container" data-status={status}>
+      <div className="header">
+        <span className="file-name" title={fileName}>
           {fileName}
         </span>
 
         {status === 'uploading' && onAbort && (
           <button
             type="button"
-            className={styles.abortButton}
+            className="abort-button"
             onClick={onAbort}
             aria-label={`Cancel upload of ${fileName}`}
           >
@@ -359,7 +312,7 @@ export function UploadProgressDisplay({
         {status === 'error' && onRetry && (
           <button
             type="button"
-            className={styles.retryButton}
+            className="retry-button"
             onClick={onRetry}
             aria-label={`Retry upload of ${fileName}`}
           >
@@ -375,7 +328,7 @@ export function UploadProgressDisplay({
             status="uploading"
           />
 
-          <div className={styles.details}>
+          <div className="details">
             <span>
               {formatBytes(progress.loaded)} / {formatBytes(progress.total)}
             </span>
@@ -386,20 +339,20 @@ export function UploadProgressDisplay({
       )}
 
       {status === 'pending' && (
-        <div className={styles.pending} aria-live="polite">
+        <div className="pending" aria-live="polite">
           Waiting to upload...
         </div>
       )}
 
       {status === 'success' && (
-        <div className={styles.success} role="status">
+        <div className="success" role="status">
           <span aria-hidden="true">✓</span>
           Upload complete
         </div>
       )}
 
       {status === 'error' && error && (
-        <div className={styles.error} role="alert">
+        <div className="error" role="alert">
           <span aria-hidden="true">✗</span>
           {error}
         </div>
@@ -409,98 +362,7 @@ export function UploadProgressDisplay({
 }
 ```
 
-```scss
-// upload-progress-display.module.scss
-.container {
-  padding: var(--spacing-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-2);
-
-  &[data-status="success"] {
-    border-color: var(--color-success);
-    background: var(--color-success-light);
-  }
-
-  &[data-status="error"] {
-    border-color: var(--color-error);
-    background: var(--color-error-light);
-  }
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-2);
-}
-
-.fileName {
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  min-width: 0;
-}
-
-.abortButton,
-.retryButton {
-  padding: var(--spacing-1) var(--spacing-2);
-  font-size: var(--text-sm);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.abortButton {
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-
-  &:hover {
-    background: var(--color-error-light);
-    color: var(--color-error);
-  }
-}
-
-.retryButton {
-  background: var(--color-primary);
-  color: var(--color-white);
-
-  &:hover {
-    background: var(--color-primary-dark);
-  }
-}
-
-.details {
-  display: flex;
-  justify-content: space-between;
-  margin-top: var(--spacing-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.pending {
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-.success {
-  color: var(--color-success);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-}
-
-.error {
-  color: var(--color-error);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-}
-```
-
-**Why good:** Shows all progress details (bytes, speed, ETA), abort button during upload, retry button on error, accessible with aria-live and role attributes, visual state indication
+**Why good:** Shows all progress details (bytes, speed, ETA), abort button during upload, retry button on error, accessible with aria-live and role attributes, visual state indication via `data-status` attribute. Style using the data attributes via your styling solution.
 
 ---
 

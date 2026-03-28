@@ -162,11 +162,11 @@ import { routing } from "./i18n/routing";
 export default createMiddleware(routing);
 
 export const config = {
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
 };
 ```
 
-**Why good:** proxy/middleware handles locale detection from URL, cookies, and Accept-Language header, matcher excludes API routes, tRPC routes, and static files
+**Why good:** proxy/middleware handles locale detection from URL, cookies, and Accept-Language header, matcher excludes API routes and static files. Add additional exclusions for your API framework routes as needed.
 
 ---
 

@@ -17,7 +17,7 @@ description: Tailwind CSS v4 - utility-first CSS framework with CSS-first config
 
 <critical_requirements>
 
-## ⚠️ CRITICAL: Before Using This Skill
+## CRITICAL: Before Using This Skill
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
@@ -482,7 +482,7 @@ Is the project actively maintained?
 
 <critical_reminders>
 
-## ⚠️ CRITICAL REMINDERS
+## CRITICAL REMINDERS
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 

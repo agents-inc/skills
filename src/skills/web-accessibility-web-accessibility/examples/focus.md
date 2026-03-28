@@ -21,7 +21,7 @@ Use your headless component library for dialogs - they handle focus trapping, Es
 
 ```typescript
 // components/dialog.tsx
-// Use your headless component library (Radix UI, Headless UI, React Aria, Ariakit)
+// Use your headless component library
 // This shows the accessibility contract:
 
 import { useEffect, useRef, type ReactNode } from 'react';
@@ -102,41 +102,39 @@ export function Dialog({
 
 ### Example: Focus Styles with :focus-visible
 
-```scss
-// GOOD: Clear focus indicator using :focus-visible
+```css
+/* GOOD: Clear focus indicator using :focus-visible */
 .button {
   position: relative;
   outline: 2px solid transparent;
   outline-offset: 2px;
   transition: outline-color 150ms ease;
-
-  // Only show focus ring for keyboard navigation
-  &:focus-visible {
-    outline-color: var(--color-primary);
-  }
-
-  // Hide focus ring for mouse clicks
-  &:focus:not(:focus-visible) {
-    outline-color: transparent;
-  }
 }
 
-// GOOD: High-contrast focus indicator for links
-.link {
-  &:focus-visible {
-    outline: 3px solid var(--color-primary);
-    outline-offset: 3px;
-    border-radius: var(--radius-sm);
-  }
+/* Only show focus ring for keyboard navigation */
+.button:focus-visible {
+  outline-color: var(--color-primary);
 }
 
-// NEVER do this - removes focus indicator completely
+/* Hide focus ring for mouse clicks */
+.button:focus:not(:focus-visible) {
+  outline-color: transparent;
+}
+
+/* GOOD: High-contrast focus indicator for links */
+.link:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* NEVER do this - removes focus indicator completely */
 .bad-button {
-  outline: none; // Keyboard users can't see focus!
+  outline: none; /* Keyboard users can't see focus! */
+}
 
-  &:focus {
-    outline: none;
-  }
+.bad-button:focus {
+  outline: none;
 }
 ```
 

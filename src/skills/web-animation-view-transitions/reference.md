@@ -124,15 +124,21 @@ view-transition-name: item/detail; /* Contains slash */
 ### Styling Examples
 
 ```css
+:root {
+  --vt-duration: 400ms;
+  --hero-duration: 300ms;
+  --card-duration: 250ms;
+}
+
 /* Customize duration for all transitions */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 400ms;
+  animation-duration: var(--vt-duration);
 }
 
 /* Target specific named element */
 ::view-transition-group(hero-image) {
-  animation-duration: 300ms;
+  animation-duration: var(--hero-duration);
   animation-timing-function: ease-out;
 }
 
@@ -142,7 +148,7 @@ view-transition-name: item/detail; /* Contains slash */
 }
 
 ::view-transition-group(.card) {
-  animation-duration: 250ms;
+  animation-duration: var(--card-duration);
 }
 ```
 
@@ -217,9 +223,13 @@ transition.finished.then(() => {
 }
 
 /* CORRECT - respect user preferences */
+:root {
+  --vt-duration: 300ms;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 300ms;
+  animation-duration: var(--vt-duration);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -254,9 +264,13 @@ transition.finished.then(() => {
 }
 
 /* CORRECT - keep under 300ms for page transitions */
+:root {
+  --vt-page-duration: 200ms;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 200ms;
+  animation-duration: var(--vt-page-duration);
 }
 ```
 

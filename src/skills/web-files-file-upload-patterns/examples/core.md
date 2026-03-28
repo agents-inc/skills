@@ -21,7 +21,7 @@
 // simple-file-input.tsx
 import { useRef } from 'react';
 import type { ChangeEvent } from 'react';
-import styles from './simple-file-input.module.scss';
+// Apply your styling solution via className prop
 
 interface SimpleFileInputProps {
   onFileSelected: (file: File) => void;
@@ -48,17 +48,17 @@ export function SimpleFileInput({
   };
 
   return (
-    <div className={styles.container}>
+    <div className="container">
       <input
         ref={inputRef}
         type="file"
         accept={accept}
         onChange={handleChange}
         disabled={disabled}
-        className={styles.hiddenInput}
+        hidden
         id="file-input"
       />
-      <label htmlFor="file-input" className={styles.button} data-disabled={disabled || undefined}>
+      <label htmlFor="file-input" className="button" data-disabled={disabled || undefined}>
         {label}
       </label>
     </div>
@@ -66,50 +66,7 @@ export function SimpleFileInput({
 }
 ```
 
-```scss
-// simple-file-input.module.scss
-.container {
-  display: inline-block;
-}
-
-.hiddenInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing-2) var(--spacing-4);
-  background: var(--color-primary);
-  color: var(--color-white);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-weight: 500;
-
-  &:hover:not([data-disabled]) {
-    background: var(--color-primary-dark);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
-  }
-
-  &[data-disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-```
-
-**Why good:** Input is hidden but accessible, label triggers file dialog, proper focus styles, disabled state handling, resets input for re-selection
+**Why good:** Input is hidden but accessible, label triggers file dialog, proper focus styles, disabled state handling, resets input for re-selection. Style using `data-disabled` attribute via your styling solution.
 
 ---
 
@@ -121,7 +78,7 @@ export function SimpleFileInput({
 // file-dropzone.tsx
 import { useState, useRef, useCallback } from 'react';
 import type { DragEvent, ChangeEvent, ReactNode } from 'react';
-import styles from './file-dropzone.module.scss';
+// Apply your styling solution via className prop
 
 type DropzoneState = 'idle' | 'drag-over' | 'drag-reject';
 
@@ -257,7 +214,7 @@ export function FileDropzone({
 
   return (
     <div
-      className={`${styles.dropzone} ${className ?? ''}`}
+      className={className}
       data-state={state}
       data-disabled={disabled || undefined}
       onDragEnter={handleDragEnter}
@@ -278,20 +235,20 @@ export function FileDropzone({
         multiple={multiple}
         onChange={handleInputChange}
         disabled={disabled}
-        className={styles.hiddenInput}
+        hidden
         aria-hidden="true"
         tabIndex={-1}
       />
       {children ?? (
-        <div className={styles.content}>
-          <div className={styles.icon} aria-hidden="true">
+        <div className="content">
+          <div className="icon" aria-hidden="true">
             📁
           </div>
-          <p className={styles.text}>
+          <p className="text">
             Drag and drop files here, or click to browse
           </p>
           {accept.length > 0 && (
-            <p className={styles.hint}>
+            <p className="hint">
               Accepted: {accept.join(', ')}
             </p>
           )}
@@ -302,81 +259,7 @@ export function FileDropzone({
 }
 ```
 
-```scss
-// file-dropzone.module.scss
-.dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-8);
-  border: 2px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    background-color 0.2s;
-
-  &:hover:not([data-disabled]) {
-    border-color: var(--color-primary);
-    background: var(--color-surface-hover);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
-  }
-
-  &[data-state="drag-over"] {
-    border-color: var(--color-primary);
-    background: var(--color-primary-light);
-  }
-
-  &[data-state="drag-reject"] {
-    border-color: var(--color-error);
-    background: var(--color-error-light);
-  }
-
-  &[data-disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.hiddenInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.content {
-  text-align: center;
-}
-
-.icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-4);
-}
-
-.text {
-  font-size: var(--text-lg);
-  color: var(--color-text);
-  margin-bottom: var(--spacing-2);
-}
-
-.hint {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-```
-
-**Why good:** Tracks drag counter to handle nested elements, keyboard accessible with role="button", visual feedback for all states, hidden input for screen readers, accepts any children for customization
+**Why good:** Tracks drag counter to handle nested elements, keyboard accessible with role="button", visual feedback for all states via `data-state` and `data-disabled` attributes, hidden input for screen readers, accepts any children for customization. Apply styles via your styling solution using the data attributes.
 
 ---
 
@@ -387,7 +270,7 @@ export function FileDropzone({
 ```typescript
 // file-list.tsx
 import type { ReactNode } from 'react';
-import styles from './file-list.module.scss';
+// Apply your styling solution via className prop
 
 interface FileItem {
   id: string;
@@ -419,20 +302,20 @@ export function FileList({ files, onRemove, renderActions }: FileListProps) {
   }
 
   return (
-    <ul className={styles.list} role="list" aria-label="Selected files">
+    <ul className="list" role="list" aria-label="Selected files">
       {files.map((file) => (
-        <li key={file.id} className={styles.item} data-status={file.status}>
-          <div className={styles.info}>
-            <span className={styles.name} title={file.name}>
+        <li key={file.id} className="item" data-status={file.status}>
+          <div className="info">
+            <span className="name" title={file.name}>
               {file.name}
             </span>
-            <span className={styles.size}>{formatFileSize(file.size)}</span>
+            <span className="size">{formatFileSize(file.size)}</span>
           </div>
 
           {file.status === 'uploading' && file.progress !== undefined && (
-            <div className={styles.progressContainer}>
+            <div className="progress-container">
               <div
-                className={styles.progressBar}
+                className="progress-bar"
                 role="progressbar"
                 aria-valuenow={file.progress}
                 aria-valuemin={0}
@@ -440,31 +323,31 @@ export function FileList({ files, onRemove, renderActions }: FileListProps) {
                 aria-label={`Uploading ${file.name}`}
               >
                 <div
-                  className={styles.progressFill}
+                  className="progress-fill"
                   style={{ width: `${file.progress}%` }}
                 />
               </div>
-              <span className={styles.progressText}>{file.progress}%</span>
+              <span className="progress-text">{file.progress}%</span>
             </div>
           )}
 
           {file.status === 'error' && file.error && (
-            <span className={styles.error} role="alert">
+            <span className="error" role="alert">
               {file.error}
             </span>
           )}
 
           {file.status === 'success' && (
-            <span className={styles.success} aria-label="Upload complete">
+            <span className="success" aria-label="Upload complete">
               ✓
             </span>
           )}
 
-          <div className={styles.actions}>
+          <div className="actions">
             {renderActions?.(file)}
             <button
               type="button"
-              className={styles.removeButton}
+              className="remove-button"
               onClick={() => onRemove(file.id)}
               aria-label={`Remove ${file.name}`}
               disabled={file.status === 'uploading'}
@@ -479,114 +362,7 @@ export function FileList({ files, onRemove, renderActions }: FileListProps) {
 }
 ```
 
-```scss
-// file-list.module.scss
-.list {
-  list-style: none;
-  padding: 0;
-  margin: var(--spacing-4) 0;
-}
-
-.item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-2);
-
-  &[data-status="error"] {
-    border-color: var(--color-error);
-    background: var(--color-error-light);
-  }
-
-  &[data-status="success"] {
-    border-color: var(--color-success);
-  }
-}
-
-.info {
-  flex: 1;
-  min-width: 0;
-}
-
-.name {
-  display: block;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.size {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.progressContainer {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  flex: 0 0 150px;
-}
-
-.progressBar {
-  flex: 1;
-  height: 8px;
-  background: var(--color-surface);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--color-primary);
-  transition: width 0.2s;
-}
-
-.progressText {
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
-  min-width: 3ch;
-  text-align: right;
-}
-
-.error {
-  color: var(--color-error);
-  font-size: var(--text-sm);
-}
-
-.success {
-  color: var(--color-success);
-  font-weight: bold;
-}
-
-.actions {
-  display: flex;
-  gap: var(--spacing-1);
-}
-
-.removeButton {
-  padding: var(--spacing-1) var(--spacing-2);
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-size: var(--text-lg);
-
-  &:hover:not(:disabled) {
-    color: var(--color-error);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-```
-
-**Why good:** Shows status per file with appropriate ARIA, progress bar is accessible, error messages use role="alert", remove button disabled during upload, ellipsis for long filenames
+**Why good:** Shows status per file with appropriate ARIA, progress bar is accessible, error messages use role="alert", remove button disabled during upload, ellipsis for long filenames. Style items using `data-status` attribute via your styling solution.
 
 ---
 

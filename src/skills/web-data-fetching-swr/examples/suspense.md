@@ -289,67 +289,7 @@ export { SWRProvider };
 
 ## Preloading Data
 
-### Prefetch Before Navigation
-
-```typescript
-// components/prefetch-link.tsx
-import { preload } from "swr";
-import { fetcher } from "../lib/fetcher";
-
-interface PrefetchLinkProps {
-  href: string;
-  dataKey: string;
-  children: React.ReactNode;
-}
-
-function PrefetchLink({ href, dataKey, children }: PrefetchLinkProps) {
-  const handleMouseEnter = () => {
-    // Prefetch data when user hovers
-    preload(dataKey, fetcher);
-  };
-
-  return (
-    <a href={href} onMouseEnter={handleMouseEnter}>
-      {children}
-    </a>
-  );
-}
-
-// Usage
-function UserListItem({ user }: { user: { id: string; name: string } }) {
-  return (
-    <PrefetchLink href={`/users/${user.id}`} dataKey={`/api/users/${user.id}`}>
-      {user.name}
-    </PrefetchLink>
-  );
-}
-
-export { PrefetchLink, UserListItem };
-```
-
-### Prefetch on Mount
-
-```typescript
-// components/prefetch-list.tsx
-import { preload } from "swr";
-import { useEffect } from "react";
-import { fetcher } from "../lib/fetcher";
-
-function PrefetchList({ userIds }: { userIds: string[] }) {
-  useEffect(() => {
-    // Prefetch all user data on mount using official preload API
-    userIds.forEach((id) => {
-      preload(`/api/users/${id}`, fetcher);
-    });
-  }, [userIds]);
-
-  return <UserList userIds={userIds} />;
-}
-
-export { PrefetchList };
-```
-
-**Why good:** `preload` is the official SWR 2.0 prefetch API, hover prefetch makes navigation feel instant, batch prefetch prepares data before it's needed
+> See [caching.md](caching.md) for `preload()` prefetch patterns (hover prefetch, batch prefetch on mount).
 
 ---
 

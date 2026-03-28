@@ -132,13 +132,15 @@ import { motion, type Variants } from "motion/react";
 
 const STAGGER_DELAY_S = 0.1;
 
+const ITEM_DISTANCE_PX = 20;
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: STAGGER_DELAY_S } },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: ITEM_DISTANCE_PX },
   visible: { opacity: 1, y: 0 },
 };
 ```
@@ -156,13 +158,15 @@ AnimatePresence enables exit animations for components being removed from the Re
 ```typescript
 import { AnimatePresence, motion } from "motion/react";
 
+const MODAL_SCALE_HIDDEN = 0.95;
+
 <AnimatePresence>
   {isOpen && (
     <motion.div
       key="modal"
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: MODAL_SCALE_HIDDEN }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      exit={{ opacity: 0, scale: MODAL_SCALE_HIDDEN }}
     />
   )}
 </AnimatePresence>
@@ -220,16 +224,19 @@ See [examples/layout.md](examples/layout.md) for expandable cards and tab indica
 `whileInView` for scroll-triggered animations. `useScroll` + `useTransform` for scroll-linked effects.
 
 ```typescript
+const REVEAL_DISTANCE_PX = 50;
+const PARALLAX_RANGE_PX = 100;
+
 // Scroll-triggered (fires once)
 <motion.div
-  initial={{ opacity: 0, y: 50 }}
+  initial={{ opacity: 0, y: REVEAL_DISTANCE_PX }}
   whileInView={{ opacity: 1, y: 0 }}
   viewport={{ once: true, margin: "-100px" }}
 />
 
 // Scroll-linked (continuous)
 const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-const y = useTransform(scrollYProgress, [0, 1], [-100, 100]);
+const y = useTransform(scrollYProgress, [0, 1], [-PARALLAX_RANGE_PX, PARALLAX_RANGE_PX]);
 ```
 
 Motion values from `useScroll` update without React re-renders.
@@ -262,13 +269,16 @@ See [reference.md](reference.md) for full transition type reference with additio
 Use `useAnimation` when you need programmatic control over animations triggered by external events, complex sequences, or start/stop behavior.
 
 ```typescript
+const SHAKE_DISTANCE_PX = 10;
+const SHAKE_DURATION_S = 0.3;
+
 const controls = useAnimation();
 
 useEffect(() => {
   if (hasError) {
     controls.start({
-      x: [0, -10, 10, -10, 0],
-      transition: { duration: 0.3 },
+      x: [0, -SHAKE_DISTANCE_PX, SHAKE_DISTANCE_PX, -SHAKE_DISTANCE_PX, 0],
+      transition: { duration: SHAKE_DURATION_S },
     });
   }
 }, [hasError, controls]);
@@ -289,11 +299,15 @@ Always respect user preferences for reduced motion.
 <MotionConfig reducedMotion="user">{children}</MotionConfig>
 
 // Per-component: custom handling
+const FULL_DISTANCE_PX = 50;
+const FULL_DURATION_S = 0.5;
+const REDUCED_DURATION_S = 0.2;
+
 const shouldReduceMotion = useReducedMotion();
 <motion.div
-  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 50 }}
+  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : FULL_DISTANCE_PX }}
   animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: shouldReduceMotion ? 0.2 : 0.5 }}
+  transition={{ duration: shouldReduceMotion ? REDUCED_DURATION_S : FULL_DURATION_S }}
 />
 ```
 

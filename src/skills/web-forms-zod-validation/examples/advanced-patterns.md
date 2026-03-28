@@ -16,11 +16,17 @@ import { z } from "zod";
 const DEFAULT_THEME = "light";
 const DEFAULT_LOCALE = "en";
 const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
 
 const UserPreferencesSchema = z.object({
   theme: z.enum(["light", "dark", "system"]).catch(DEFAULT_THEME),
   locale: z.string().min(2).max(5).catch(DEFAULT_LOCALE),
-  pageSize: z.number().int().positive().max(100).catch(DEFAULT_PAGE_SIZE),
+  pageSize: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_PAGE_SIZE)
+    .catch(DEFAULT_PAGE_SIZE),
 });
 
 type UserPreferences = z.infer<typeof UserPreferencesSchema>;

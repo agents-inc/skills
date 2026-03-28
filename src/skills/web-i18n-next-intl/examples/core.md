@@ -59,11 +59,11 @@ import { routing } from "./i18n/routing";
 export default createMiddleware(routing);
 
 export const config = {
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
 };
 ```
 
-**Why good:** modular file structure separates concerns, named constants for locales enable type safety, Locale type exported for use throughout app, proxy/middleware matcher excludes appropriate routes including tRPC
+**Why good:** modular file structure separates concerns, named constants for locales enable type safety, Locale type exported for use throughout app, proxy/middleware matcher excludes API routes and static files. Add additional exclusions for your API framework routes as needed.
 
 ### Bad Example - Inline Configuration
 

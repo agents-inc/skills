@@ -152,11 +152,12 @@ export function App() {
 ```typescript
 // src/features/user-profile/user-profile.tsx
 import { ErrorBoundary } from "react-error-boundary";
-import { useParams } from "react-router-dom";
 
-export function UserProfile() {
-  const { userId } = useParams<{ userId: string }>();
+interface UserProfileProps {
+  userId: string;
+}
 
+export function UserProfile({ userId }: UserProfileProps) {
   return (
     <ErrorBoundary
       FallbackComponent={ProfileErrorFallback}

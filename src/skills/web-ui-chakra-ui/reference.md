@@ -6,23 +6,23 @@
 
 ## Decision Framework
 
-### When to Use Chakra UI vs Other Options
+### When to Use Chakra UI
 
 ```
 Need UI components?
 ├─ Do you want style props (CSS-in-JS via props)?
 │   ├─ YES → Chakra UI is ideal
-│   └─ NO → Consider utility-class libraries (shadcn/ui + Tailwind)
+│   └─ NO → Consider utility-class or headless approaches
 ├─ Do you need accessible, composable components?
 │   ├─ YES → Chakra UI (built on Ark UI)
 │   └─ NO → Consider lighter alternatives
 ├─ Do you need a design token system with recipes?
 │   ├─ YES → Chakra UI provides this out of the box
 │   └─ NO → Plain styling or utility classes may suffice
-├─ Are you already using Tailwind CSS?
-│   └─ YES → shadcn/ui integrates better with Tailwind
+├─ Are you already using a utility-class CSS framework?
+│   └─ YES → A utility-class-native component library may integrate better
 └─ Do you need maximum bundle-size control?
-    ├─ YES → Consider headless libraries (Radix, Ark UI) with your own CSS
+    ├─ YES → Consider headless primitives with your own CSS
     └─ NO → Chakra UI is fine
 ```
 

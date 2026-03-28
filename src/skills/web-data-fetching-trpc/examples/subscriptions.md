@@ -79,7 +79,7 @@ export { notificationRouter };
 
 ```typescript
 // apps/client/components/notification-listener.tsx
-import { useTRPC } from "@/lib/trpc";
+import { useTRPC } from "../lib/trpc";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
 export function NotificationListener() {

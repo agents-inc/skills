@@ -88,13 +88,22 @@ export type { User };
 ```typescript
 import { z } from "zod";
 
+const MIN_MESSAGE_LENGTH = 10;
+const MAX_MESSAGE_LENGTH = 1000;
+
 const ContactFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
   message: z
     .string()
-    .min(10, "Message must be at least 10 characters")
-    .max(1000, "Message cannot exceed 1000 characters"),
+    .min(
+      MIN_MESSAGE_LENGTH,
+      `Message must be at least ${MIN_MESSAGE_LENGTH} characters`,
+    )
+    .max(
+      MAX_MESSAGE_LENGTH,
+      `Message cannot exceed ${MAX_MESSAGE_LENGTH} characters`,
+    ),
   phone: z
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
@@ -215,8 +224,10 @@ const BaseEntitySchema = z.object({
 });
 
 // Article content schema
+const MAX_TITLE_LENGTH = 200;
+
 const ArticleContentSchema = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().min(1).max(MAX_TITLE_LENGTH),
   content: z.string().min(1),
   tags: z.array(z.string()).default([]),
   published: z.boolean().default(false),
@@ -271,6 +282,7 @@ import { z } from "zod";
 
 const CARD_NUMBER_LENGTH = 16;
 const CVV_LENGTH = 3;
+const MIN_EXPIRY_YEAR = 2024;
 
 const PaymentMethodSchema = z.discriminatedUnion("type", [
   z.object({
@@ -282,7 +294,7 @@ const PaymentMethodSchema = z.discriminatedUnion("type", [
         `Card number must be ${CARD_NUMBER_LENGTH} digits`,
       ),
     expiryMonth: z.number().int().min(1).max(12),
-    expiryYear: z.number().int().min(2024),
+    expiryYear: z.number().int().min(MIN_EXPIRY_YEAR),
     cvv: z.string().length(CVV_LENGTH),
     cardholderName: z.string().min(1),
   }),
@@ -326,6 +338,7 @@ function processPayment(payment: PaymentMethod) {
 import { z } from "zod";
 
 const MIN_QUANTITY = 1;
+const MAX_NOTES_LENGTH = 500;
 const MAX_QUANTITY = 99;
 
 const AddressSchema = z.object({
@@ -356,7 +369,7 @@ const OrderSchema = z
     shippingAddress: AddressSchema,
     billingAddress: AddressSchema.optional(),
     useSameAddressForBilling: z.boolean().default(true),
-    notes: z.string().max(500).optional(),
+    notes: z.string().max(MAX_NOTES_LENGTH).optional(),
     createdAt: z.string().datetime(),
   })
   .refine(
@@ -393,6 +406,7 @@ import { z } from "zod";
 
 const MIN_USERNAME_LENGTH = 3;
 const MAX_USERNAME_LENGTH = 30;
+const MIN_PASSWORD_LENGTH = 8;
 
 const UsernameSchema = z
   .string()
@@ -422,7 +436,7 @@ const UsernameSchema = z
 const RegistrationSchema = z.object({
   username: UsernameSchema,
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(MIN_PASSWORD_LENGTH),
 });
 
 // MUST use async parsing

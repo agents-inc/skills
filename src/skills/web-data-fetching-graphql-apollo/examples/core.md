@@ -121,7 +121,7 @@ export { ApolloWrapper, getClient };
 ```typescript
 // components/user-profile.tsx
 import { useQuery, gql } from "@apollo/client";
-import type { GetUserQuery, GetUserQueryVariables } from "@/generated/graphql";
+import type { GetUserQuery, GetUserQueryVariables } from "../generated/graphql";
 
 const GET_USER = gql`
   query GetUser($id: ID!) {
@@ -271,7 +271,7 @@ export { CreatePostForm, CREATE_POST };
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation, gql } from "@apollo/client";
-import type { Post } from "@/generated/graphql";
+import type { Post } from "../generated/graphql";
 
 const UPDATE_POST = gql`
   mutation UpdatePost($id: ID!, $input: UpdatePostInput!) {
@@ -393,7 +393,7 @@ const cache = new InMemoryCache({
 
 ```typescript
 // GOOD: Generated types from Codegen
-import type { User, GetUsersQuery } from "@/generated/graphql";
+import type { User, GetUsersQuery } from "../generated/graphql";
 
 // GOOD: Complete optimistic response with __typename
 const [createUser] = useMutation(CREATE_USER, {

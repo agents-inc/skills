@@ -126,7 +126,7 @@ export function FileDropzone({ onFilesSelected, accept, multiple, disabled }: Fi
 }
 ```
 
-See [examples/core.md](examples/core.md) for full implementation with SCSS.
+See [examples/core.md](examples/core.md) for full implementation.
 
 ---
 

@@ -158,6 +158,11 @@ Enable transitions between separate pages without JavaScript. Both pages must op
 Create hero animations by giving matching elements the same `view-transition-name`. See [examples/shared-elements.md](examples/shared-elements.md) for full product list-to-detail, multi-element, and MPA examples.
 
 ```css
+:root {
+  --hero-duration: 300ms;
+  --hero-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Same name on both pages/states creates shared element animation */
 .product-thumbnail {
   view-transition-name: product-hero;
@@ -167,8 +172,8 @@ Create hero animations by giving matching elements the same `view-transition-nam
 }
 
 ::view-transition-group(product-hero) {
-  animation-duration: 300ms;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: var(--hero-duration);
+  animation-timing-function: var(--hero-easing);
 }
 ```
 
@@ -270,6 +275,9 @@ See [examples/spa.md](examples/spa.md) for a full accessible transition wrapper 
 Advanced custom animation using Web Animations API. Must `await transition.ready` before animating pseudo-elements.
 
 ```typescript
+const REVEAL_DURATION_MS = 400;
+const REVEAL_EASING = "ease-in-out";
+
 const transition = document.startViewTransition(updateFn);
 await transition.ready;
 
@@ -278,8 +286,8 @@ document.documentElement.animate(
     clipPath: [`circle(0 at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`],
   },
   {
-    duration: 400,
-    easing: "ease-in-out",
+    duration: REVEAL_DURATION_MS,
+    easing: REVEAL_EASING,
     pseudoElement: "::view-transition-new(root)",
   },
 );

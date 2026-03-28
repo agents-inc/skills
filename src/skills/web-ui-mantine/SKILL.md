@@ -38,8 +38,8 @@ description: Mantine v7 component library — theming, styling, hooks, forms, no
 
 **When NOT to use:**
 
-- Projects committed to a different component library (MUI, Chakra, shadcn/ui)
-- Applications requiring Tailwind-first styling (Mantine uses CSS Modules, not Tailwind)
+- Projects committed to a different component library
+- Applications requiring utility-class-first styling (Mantine uses CSS Modules)
 - When only a few components are needed and a full library is overkill
 
 **Key patterns covered:**

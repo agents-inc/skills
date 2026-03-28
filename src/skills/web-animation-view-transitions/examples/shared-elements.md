@@ -389,6 +389,11 @@ function renderExpandedCard(cardId: string): void {
 <html>
   <head>
     <style>
+      :root {
+        --hero-duration: 300ms;
+        --hero-easing: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
       @view-transition {
         navigation: auto;
       }
@@ -398,8 +403,8 @@ function renderExpandedCard(cardId: string): void {
       }
 
       ::view-transition-group(product-hero) {
-        animation-duration: 300ms;
-        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        animation-duration: var(--hero-duration);
+        animation-timing-function: var(--hero-easing);
       }
     </style>
     <script>
@@ -439,6 +444,10 @@ function renderExpandedCard(cardId: string): void {
 ### Good Example - Auto-Naming for Lists (Chrome 137+)
 
 ```css
+:root {
+  --product-transition-duration: 300ms;
+}
+
 /* Browser generates unique internal names */
 .product-card {
   view-transition-name: match-element;
@@ -447,7 +456,7 @@ function renderExpandedCard(cardId: string): void {
 
 /* Style all product transitions together */
 ::view-transition-group(.product) {
-  animation-duration: 300ms;
+  animation-duration: var(--product-transition-duration);
   animation-timing-function: ease-out;
 }
 ```
@@ -468,7 +477,7 @@ function renderExpandedCard(cardId: string): void {
 }
 
 ::view-transition-group(.card) {
-  animation-duration: 300ms;
+  animation-duration: var(--product-transition-duration);
 }
 ```
 
