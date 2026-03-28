@@ -95,25 +95,24 @@ The `extends` property simplifies plugin composition by standardizing config mer
 // eslint.config.ts
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
-import reactPlugin from "eslint-plugin-react";
 
 export default defineConfig({
-  files: ["**/*.tsx"],
+  files: ["**/*.ts", "**/*.tsx"],
   extends: [
     // String references for standard configs
     "eslint/recommended",
     // Plugin configs (various formats supported)
     tseslint.configs.recommended,
-    reactPlugin.configs.flat.recommended,
+    // Add your framework plugin's flat config here
   ],
   rules: {
     // Override specific rules
-    "react/prop-types": "off",
+    "no-console": "warn",
   },
 });
 ```
 
-**Why good:** Standardizes config merging regardless of plugin format (object, array, or string), cleaner than spreading arrays manually, conditionally applies configs based on file patterns
+**Why good:** Standardizes config merging regardless of plugin format (object, array, or string), cleaner than spreading arrays manually, conditionally applies configs based on file patterns. Add your framework-specific plugins via `extends` as needed.
 
 ---
 

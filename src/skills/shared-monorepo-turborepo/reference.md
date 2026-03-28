@@ -56,24 +56,6 @@ Is this a monorepo?
 
 ---
 
-## Integration Guide
-
-**Works with:**
-
-- **Bun**: Package manager and task runner - `bun install`, `bun run build`
-- **ESLint**: Turborepo plugin validates env var declarations in turbo.json
-- **Syncpack**: Ensures consistent dependency versions across workspaces
-- **CI/CD**: GitHub Actions, GitLab CI, CircleCI with remote caching via `TURBO_TOKEN` and `TURBO_TEAM`
-- **Vercel**: Built-in support for Turborepo with automatic remote caching
-
-**Replaces / Conflicts with:**
-
-- **Lerna**: Turborepo provides better caching and task orchestration
-- **Nx**: Similar monorepo tool - choose one, not both
-- **Rush**: Microsoft's monorepo tool - Turborepo is simpler for JS/TS projects
-
----
-
 ## RED FLAGS
 
 ### High Priority Issues

@@ -172,28 +172,16 @@ Makes shared configs portable. `${configDir}` resolves to the directory of the *
 Path aliases must be configured in BOTH `tsconfig.json` AND your build tool. A mismatch causes either TypeScript errors or build-time import resolution failures.
 
 ```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "paths": {
-      "@/*": ["./src/*"],
-      "@components/*": ["./src/components/*"]
-    }
-  }
-}
-```
+// tsconfig.json -- paths here for TypeScript type checking
+{ "compilerOptions": { "paths": { "@/*": ["./src/*"] } } }
 
-```typescript
-// Build tool config - same aliases for bundler resolution
-resolve: {
-  alias: {
-    "@": path.resolve(__dirname, "./src"),
-    "@components": path.resolve(__dirname, "./src/components"),
-  }
-}
+// Build tool config -- SAME aliases for bundler resolution
+// resolve: { alias: { "@": path.resolve(__dirname, "./src") } }
 ```
 
 **Gotcha:** Forgetting to sync causes "module not found" errors. TypeScript resolves fine but the bundler fails (or vice versa). When adding a new alias, always update BOTH files.
+
+> See [examples/core.md](examples/core.md) for full tsconfig + build tool config examples.
 
 ---
 
@@ -225,36 +213,15 @@ export function getUser(id: string) {
 
 Prohibits TypeScript-specific constructs that have runtime behavior (enums, namespaces, parameter properties). Ensures compatibility with Node.js `--experimental-strip-types` for direct TS execution.
 
-```typescript
-// With erasableSyntaxOnly: true
+**Blocked constructs:** `enum`, `const enum`, runtime `namespace`, parameter properties (`constructor(public name: string)`)
 
-// Good - type-only constructs (safely erasable)
-type Status = "active" | "inactive";
-interface Config {
-  host: string;
-  port: number;
-}
-
-// Bad - constructs with runtime behavior (will error)
-enum Direction {
-  Up,
-  Down,
-} // enum declaration
-const enum Dir {
-  Left,
-  Right,
-} // const enum also blocked
-namespace Utils {
-  export function parse() {}
-} // runtime namespace
-class User {
-  constructor(public name: string) {}
-} // parameter property
-```
+**Allowed constructs:** `type`, `interface`, type-only imports -- anything that can be erased without changing runtime behavior
 
 **When to use:** Projects using Node.js direct TS execution, or targeting the types-only philosophy
 
 **When not to use:** Projects that rely heavily on enums, namespaces, or parameter properties
+
+> See [examples/core.md](examples/core.md) for full good/bad code examples.
 
 ---
 

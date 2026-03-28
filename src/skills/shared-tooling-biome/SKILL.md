@@ -37,6 +37,8 @@ description: Biome v2 unified linter, formatter, and import organizer — single
 
 - Setting up a unified linter + formatter for JavaScript/TypeScript projects
 - Replacing ESLint + Prettier with a single, faster tool
+- Greenfield projects wanting zero-config or minimal-config setup
+- Large codebases where linting/formatting speed matters
 - Configuring import organizing with custom group ordering
 - Migrating from ESLint and/or Prettier to Biome
 - Setting up CI pipelines with `biome ci`
@@ -45,6 +47,7 @@ description: Biome v2 unified linter, formatter, and import organizer — single
 **When NOT to use:**
 
 - Projects requiring ESLint plugins with no Biome equivalent (e.g., custom framework-specific plugins)
+- Projects heavily invested in custom ESLint rules that cannot be replicated
 - Projects needing Markdown, YAML, or TOML formatting (Biome does not support these yet)
 - Runtime code (this is build-time tooling only)
 - Git hooks framework setup (Husky/Lefthook configuration is a separate concern)
@@ -95,21 +98,6 @@ Biome unifies linting, formatting, and import organizing into a **single tool wi
 4. **Unified commands** — `biome check --write` runs everything in one pass (lint + format + organize imports)
 5. **Safe by default** — Safe fixes apply automatically; unsafe fixes require explicit `--unsafe` flag
 
-**When to use Biome:**
-
-- Greenfield projects wanting a single, fast tool
-- Projects where ESLint + Prettier configuration complexity is a burden
-- Large codebases where linting/formatting speed matters
-- Teams wanting zero-config or minimal-config setup
-- Projects needing JS/TS/JSX/TSX/JSON/CSS/GraphQL support
-
-**When NOT to use Biome:**
-
-- Projects requiring niche ESLint plugins with no Biome equivalent
-- Projects needing Markdown, YAML, or TOML formatting
-- Projects heavily invested in custom ESLint rules that cannot be replicated
-- Teams requiring ESLint's mature plugin ecosystem (accessibility plugins, framework-specific rules)
-
 </philosophy>
 
 ---
@@ -159,30 +147,7 @@ npx @biomejs/biome init
 
 ### Pattern 2: Linter Rules Configuration
 
-Biome provides 459+ rules across 8 groups. Rules default to `recommended` — a curated subset of safe, stable rules.
-
-#### Rule Groups
-
-| Group           | Purpose                              | Default            |
-| --------------- | ------------------------------------ | ------------------ |
-| `accessibility` | Prevents a11y problems               | recommended        |
-| `complexity`    | Simplifies overly complex code       | recommended        |
-| `correctness`   | Detects guaranteed errors            | recommended        |
-| `nursery`       | Experimental rules (opt-in required) | off                |
-| `performance`   | Catches inefficient patterns         | recommended        |
-| `security`      | Identifies security flaws            | recommended        |
-| `style`         | Enforces consistent code style       | recommended (warn) |
-| `suspicious`    | Flags likely incorrect patterns      | recommended        |
-
-#### Severity Levels
-
-| Level     | Behavior                           |
-| --------- | ---------------------------------- |
-| `"off"`   | Rule disabled                      |
-| `"on"`    | Default severity for that rule     |
-| `"info"`  | Informational, no CLI exit impact  |
-| `"warn"`  | Non-blocking diagnostic            |
-| `"error"` | Blocks CLI with non-zero exit code |
+Biome provides 459+ rules across 8 groups (`accessibility`, `complexity`, `correctness`, `nursery`, `performance`, `security`, `style`, `suspicious`). Rules default to `recommended` — a curated subset of safe, stable rules. Severity levels: `"off"`, `"on"`, `"info"`, `"warn"`, `"error"`. See [reference.md](reference.md#linter-rule-groups) for the full rule groups and severity tables.
 
 #### Domains (Technology-Specific Rules)
 
@@ -295,14 +260,7 @@ debugger;
 // biome-ignore-end lint/suspicious/noDoubleEquals: legacy section
 ```
 
-| Type        | Syntax                                 | Scope                        |
-| ----------- | -------------------------------------- | ---------------------------- |
-| Inline      | `// biome-ignore <spec>: reason`       | Next line                    |
-| File-wide   | `// biome-ignore-all <spec>: reason`   | Entire file (must be at top) |
-| Range start | `// biome-ignore-start <spec>: reason` | Until matching end           |
-| Range end   | `// biome-ignore-end <spec>: reason`   | Ends matching range          |
-
-> **Full examples:** See [examples/linting.md](examples/linting.md#suppression-comments) for inline, file-level, and range suppressions.
+See [reference.md](reference.md#suppression-comment-syntax) for the full suppression syntax table and specifier levels. See [examples/linting.md](examples/linting.md#suppression-comments) for inline, file-level, and range suppression examples.
 
 ---
 
@@ -439,7 +397,7 @@ How to configure Biome?
 
 **Works with:**
 
-- **React/Next.js/Remix**: Full JSX/TSX support, domain-specific rules for React
+- **JSX/TSX**: Full support with `react` domain for React-specific lint rules
 - **TypeScript**: Type-aware linting without tsc dependency (Biome v2+)
 - **CSS**: Linting enabled by default, formatting opt-in
 - **JSON/JSONC**: Full support including tsconfig.json, package.json

@@ -240,6 +240,8 @@ This skill addresses the following [OWASP Top 10:2025](https://owasp.org/Top10/2
 - Missing CODEOWNERS for security-sensitive files (no automatic review)
 - No CSP headers configured (no script execution controls)
 - Individual CODEOWNERS instead of teams (single point of failure)
+- Trusting client-side validation only (easily bypassed)
+- Exposing internal error details to users (information leakage)
 
 **Gotchas & Edge Cases:**
 
@@ -249,7 +251,7 @@ This skill addresses the following [OWASP Top 10:2025](https://owasp.org/Top10/2
 - CSP nonces must be unique per request - generate fresh nonces server-side
 - X-XSS-Protection header is deprecated - set to "0" or omit, use CSP instead
 
-See [reference.md](reference.md) for the full red flags list, anti-patterns with code examples, and decision frameworks.
+See [reference.md](reference.md) for common mistakes, anti-patterns with code examples, and decision frameworks.
 
 </red_flags>
 

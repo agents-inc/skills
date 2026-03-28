@@ -4,7 +4,7 @@
 
 ---
 
-## Pattern 1: Shared Strict Config
+## Pattern 1: Shared Strict Config (Base + Consumer)
 
 ### Base Config
 
@@ -56,7 +56,7 @@
 
 ---
 
-## Pattern 5: Specialized Configs
+## Pattern 2: Specialized Configs
 
 ```
 packages/typescript-config/
@@ -111,7 +111,7 @@ packages/typescript-config/
 
 ---
 
-## Pattern 2: verbatimModuleSyntax (TS 5.0+)
+## Pattern 3: verbatimModuleSyntax (TS 5.0+)
 
 ```typescript
 // With verbatimModuleSyntax: true
@@ -131,7 +131,7 @@ import { User, createUser } from "./api";
 
 ---
 
-## Pattern 3: ${configDir} Template Variable (TS 5.5+)
+## Pattern 4: ${configDir} Template Variable (TS 5.5+)
 
 ```json
 // packages/typescript-config/base.json
@@ -160,7 +160,7 @@ import { User, createUser } from "./api";
 
 ---
 
-## Pattern 4: Path Alias Sync
+## Pattern 5: Path Alias Sync
 
 ```json
 // tsconfig.json
@@ -252,7 +252,7 @@ class User {
 
 ---
 
-## Pattern 7b: rewriteRelativeImportExtensions (TS 5.8+)
+## Pattern 8: rewriteRelativeImportExtensions (TS 5.8+)
 
 Automatically rewrites `.ts` extensions to `.js` in emitted output:
 
@@ -266,7 +266,7 @@ import { helper } from "./utils.ts";
 
 ---
 
-## Pattern 7c: module: "node18" and "node20" (TS 5.8+ / 5.9+)
+## Pattern 9: module: "node18" and "node20" (TS 5.8+ / 5.9+)
 
 Stable module options tied to specific Node.js versions, unlike `nodenext` which floats with latest Node.js behavior.
 
@@ -294,7 +294,7 @@ Stable module options tied to specific Node.js versions, unlike `nodenext` which
 
 ---
 
-## Pattern 8: TypeScript 6.0 Defaults & Deprecations
+## Pattern 10: TypeScript 6.0 Defaults & Deprecations
 
 ### New Defaults (February 2026)
 
@@ -336,7 +336,7 @@ Use `"ignoreDeprecations": "6.0"` during migration to suppress warnings for depr
 
 ---
 
-## Pattern 9: NoInfer<T> Utility Type (TS 5.4+)
+## Pattern 11: NoInfer<T> Utility Type (TS 5.4+)
 
 ```typescript
 // Good - NoInfer ensures initial must be from states array

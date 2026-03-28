@@ -21,7 +21,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 **(You MUST set `cache: false` for tasks with side effects like dev servers and code generation)**
 
-**(You MUST use Bun workspaces protocol `workspace:*` for internal package dependencies)**
+**(You MUST use `workspace:*` protocol for internal package dependencies)**
 
 **(You MUST use `@repo/*` naming convention for ALL internal packages)**
 
@@ -58,7 +58,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 - Turborepo 2.x task pipeline (dependsOn, outputs, inputs, cache)
 - Local and remote caching strategies
-- Bun workspaces for package linking
+- Workspaces for package linking
 - Syncpack for dependency version consistency
 - Environment variable handling in turbo.json
 - Package structure and @repo/\* naming conventions
@@ -80,21 +80,7 @@ description: Turborepo, workspaces, package architecture, @repo/* naming, export
 
 ## Philosophy
 
-Turborepo is a high-performance build system designed for JavaScript/TypeScript monorepos. It provides intelligent task scheduling, caching, and remote cache sharing to dramatically reduce build times. Combined with Bun workspaces, it enables efficient package management with automatic dependency linking.
-
-**When to use Turborepo:**
-
-- Managing monorepos with multiple apps and shared packages
-- Teams need to share build cache across developers and CI
-- Build times are slow and need optimization through caching
-- Projects with complex task dependencies requiring topological ordering
-
-**When NOT to use Turborepo:**
-
-- Single application projects (use standard build tools)
-- Projects without shared packages (no monorepo needed)
-- Very small projects where setup overhead exceeds benefits
-- Polyrepo architecture is preferred over monorepo
+Turborepo is a high-performance build system designed for JavaScript/TypeScript monorepos. It provides intelligent task scheduling, caching, and remote cache sharing to dramatically reduce build times. Combined with workspaces, it enables efficient package management with automatic dependency linking.
 
 </philosophy>
 
@@ -143,7 +129,7 @@ Turborepo's caching system dramatically speeds up builds by reusing previous tas
 
 #### What Gets Cached
 
-- Build outputs (`dist/`, `.next/`)
+- Build outputs (`dist/`, `.next/`, framework-specific directories)
 - Test results (when `cache: true`)
 - Lint results
 
@@ -160,15 +146,15 @@ Turborepo's caching system dramatically speeds up builds by reusing previous tas
 - Environment variable changes (when in `env` array)
 - Global dependencies changes (`.env`, `tsconfig.json`)
 
-**Setup:** Link Vercel account, set `TURBO_TOKEN` and `TURBO_TEAM` environment variables to enable remote cache sharing.
+**Setup:** Link a Vercel account (or self-hosted cache), then set `TURBO_TOKEN` and `TURBO_TEAM` environment variables to enable remote cache sharing.
 
 See [examples/caching.md](examples/caching.md) for remote caching configuration and CI integration examples.
 
 ---
 
-### Pattern 3: Bun Workspaces for Package Management
+### Pattern 3: Workspaces for Package Management
 
-Configure Bun workspaces to enable package linking and dependency sharing across monorepo packages.
+Configure workspaces to enable package linking and dependency sharing across monorepo packages.
 
 #### Key Concepts
 
@@ -273,7 +259,7 @@ For detailed anti-patterns and checklists, see [reference.md](reference.md).
 
 **(You MUST set `cache: false` for tasks with side effects like dev servers and code generation)**
 
-**(You MUST use Bun workspaces protocol `workspace:*` for internal package dependencies)**
+**(You MUST use `workspace:*` protocol for internal package dependencies)**
 
 **(You MUST use `@repo/*` naming convention for ALL internal packages)**
 

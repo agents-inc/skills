@@ -43,8 +43,8 @@ export const baseConfig = defineConfig(
 ```typescript
 // apps/my-app/eslint.config.ts
 import { defineConfig } from "eslint/config";
-import { baseConfig } from "@repo/eslint-config";
-import { customRules } from "@repo/eslint-config/custom-rules";
+import { baseConfig } from "@company/eslint-config";
+import { customRules } from "@company/eslint-config/custom-rules";
 
 export default defineConfig(baseConfig, customRules, {
   // App-specific overrides
@@ -86,7 +86,7 @@ export const customRules = {
       {
         patterns: [
           {
-            group: ["@repo/*/src/**"],
+            group: ["@company/*/src/**"],
             message: "Import from package exports, not internal paths",
           },
         ],
