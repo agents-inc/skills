@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-framework
+slug: electron
+domain: desktop
+author: "@vince"
+displayName: Electron
+cliDescription: Cross-platform desktop apps with web technologies
+usageGuidance: Use when building desktop applications with Electron, configuring main/renderer process architecture, IPC communication, preload scripts, security hardening, native API integration, or packaging for distribution.
