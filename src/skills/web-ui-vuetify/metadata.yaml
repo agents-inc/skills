@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-ui-components
+slug: vuetify
+domain: web
+author: "@vince"
+displayName: Vuetify
+cliDescription: Material Design component library for Vue 3
+usageGuidance: >-
+  Use when building Vue 3 UIs with Vuetify — theming, global defaults,
+  data tables, form validation, SASS variable customization, composables,
+  and Material Design 3 patterns.
