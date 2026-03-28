@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-meta-framework
+slug: docusaurus
+domain: web
+author: "@vince"
+displayName: Docusaurus
+cliDescription: Docusaurus 3.x documentation site framework
+usageGuidance: Use when building or maintaining documentation sites with Docusaurus 3.x — configuring docs/blog plugins, sidebars, versioning, MDX content, swizzling theme components, or deploying static builds.
