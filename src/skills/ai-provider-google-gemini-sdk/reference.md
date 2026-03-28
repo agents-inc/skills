@@ -262,11 +262,12 @@ createPartFromUri(uri: string, mimeType: string);
 
 ## FunctionCallingConfigMode Values
 
-| Mode   | Description                                        |
-| ------ | -------------------------------------------------- |
-| `AUTO` | Model decides whether to call a function (default) |
-| `ANY`  | Model always calls a function from the list        |
-| `NONE` | Model never calls functions (text-only response)   |
+| Mode        | Description                                                       |
+| ----------- | ----------------------------------------------------------------- |
+| `AUTO`      | Model decides whether to call a function (default)                |
+| `ANY`       | Model always calls a function from the list                       |
+| `NONE`      | Model never calls functions (text-only response)                  |
+| `VALIDATED` | Like AUTO but guarantees function call schema adherence (Preview) |
 
 ---
 

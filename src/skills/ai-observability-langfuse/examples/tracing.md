@@ -166,6 +166,40 @@ async function processItem(item: WorkItem): Promise<void> {
 
 ---
 
+## Token Usage on Manual Generations
+
+When manually creating generation observations (not using `observeOpenAI`), report token counts via `usageDetails`:
+
+```typescript
+import { startObservation } from "@langfuse/tracing";
+
+const generation = startObservation(
+  "llm-call",
+  {
+    model: "gpt-4o",
+    input: [{ role: "user", content: "What is the capital of France?" }],
+  },
+  { asType: "generation" },
+);
+
+// ... perform LLM call ...
+
+generation.update({
+  output: { content: "The capital of France is Paris." },
+  usageDetails: {
+    input: 10,
+    output: 5,
+    total: 15,
+  },
+});
+
+generation.end();
+```
+
+**Note:** `total` is automatically calculated if omitted. You can also add custom token metrics (e.g., `cache_read_input_tokens`).
+
+---
+
 ## Observation Types
 
 Use `asType` to give semantic meaning to observations.

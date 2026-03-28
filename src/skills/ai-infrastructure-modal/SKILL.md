@@ -52,6 +52,8 @@ description: Serverless GPU compute platform for AI model deployment — web end
 - Pure Python ML workloads with no TypeScript consumer -- this skill focuses on the TypeScript interaction surface
 - Simple CPU-only tasks where a regular server or cloud function suffices
 - When you need persistent long-running servers (Modal scales to zero by default)
+- You need sub-100ms cold starts (Modal cold starts are 2-4 seconds)
+- You need persistent WebSocket connections beyond request/response
 
 ---
 
@@ -75,19 +77,6 @@ Modal eliminates infrastructure management for GPU workloads. Everything is code
 3. **Two interaction models for TypeScript** -- Call Modal via HTTP endpoints (most common) or via the `modal` npm SDK for direct function invocation without HTTP overhead.
 4. **Immutable deployments** -- `modal deploy` creates a named, persistent deployment with stable URLs. `modal serve` creates ephemeral dev endpoints.
 
-**When to use Modal:**
-
-- GPU inference endpoints that your TypeScript app calls via fetch
-- Batch processing jobs (fine-tuning, embeddings generation, data pipelines)
-- Model serving with auto-scaling (vLLM, TGI, custom PyTorch)
-- Scheduled GPU tasks (cron-based retraining, periodic inference)
-
-**When NOT to use:**
-
-- You need sub-100ms cold starts (Modal cold starts are 2-4 seconds)
-- You need persistent WebSocket connections beyond request/response
-- Your workload is CPU-only and doesn't benefit from GPU acceleration
-
 </philosophy>
 
 ---
@@ -108,7 +97,7 @@ import modal
 
 app = modal.App("my-inference-api")
 
-image = modal.Image.debian_slim().uv_pip_install(["transformers", "torch"])
+image = modal.Image.debian_slim().uv_pip_install(["fastapi[standard]", "transformers", "torch"])
 
 @app.function(image=image, gpu="A10G")
 @modal.fastapi_endpoint(method="POST")
@@ -122,51 +111,17 @@ def predict(payload: dict):
 #### TypeScript Side
 
 ```typescript
-// lib/modal-client.ts
-const MODAL_ENDPOINT =
-  "https://your-workspace--my-inference-api-predict.modal.run";
-const REQUEST_TIMEOUT_MS = 30_000;
-
-interface PredictionRequest {
-  text: string;
-}
-
-interface PredictionResponse {
-  prediction: string;
-}
-
-async function predict(input: PredictionRequest): Promise<PredictionResponse> {
-  const response = await fetch(MODAL_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Modal API error [${response.status}]: ${await response.text()}`,
-    );
-  }
-
-  return response.json() as Promise<PredictionResponse>;
-}
-
-export { predict };
-```
-
-**Why good:** Clean separation -- Python handles GPU compute, TypeScript handles the app. Named constants for config, typed request/response, timeout handling, proper error checking.
-
-```typescript
-// BAD: No timeout, no error handling, hardcoded URL in call site
-const res = await fetch("https://workspace--app-fn.modal.run", {
+const response = await fetch(MODAL_ENDPOINT, {
   method: "POST",
-  body: JSON.stringify({ text: "hello" }),
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(input),
+  signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS), // Essential for cold starts
 });
-const data = await res.json();
 ```
 
-**Why bad:** No Content-Type header (may fail), no timeout (hangs on cold start), no error checking, URL scattered across codebase
+**Key requirements:** Named constant for URL (not hardcoded at call sites), `Content-Type: application/json` header (FastAPI rejects without it), `AbortSignal.timeout()` to handle cold start delays, typed request/response interfaces.
+
+See [examples/core.md](examples/core.md) for a complete TypeScript client with error handling and typed interfaces.
 
 ---
 
@@ -186,45 +141,16 @@ def predict_secure(payload: dict):
 #### TypeScript Side
 
 ```typescript
-// lib/modal-client.ts
-const MODAL_KEY = process.env.MODAL_PROXY_KEY;
-const MODAL_SECRET = process.env.MODAL_PROXY_SECRET;
-
-async function predictSecure(
-  input: PredictionRequest,
-): Promise<PredictionResponse> {
-  if (!MODAL_KEY || !MODAL_SECRET) {
-    throw new Error("Missing MODAL_PROXY_KEY or MODAL_PROXY_SECRET env vars");
-  }
-
-  const response = await fetch(MODAL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Modal-Key": MODAL_KEY,
-      "Modal-Secret": MODAL_SECRET,
-    },
-    body: JSON.stringify(input),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (response.status === 401) {
-    throw new Error(
-      "Modal proxy auth failed -- check MODAL_PROXY_KEY and MODAL_PROXY_SECRET",
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Modal API error [${response.status}]: ${await response.text()}`,
-    );
-  }
-
-  return response.json() as Promise<PredictionResponse>;
-}
+headers: {
+  "Content-Type": "application/json",
+  "Modal-Key": process.env.MODAL_PROXY_KEY,     // Proxy auth token
+  "Modal-Secret": process.env.MODAL_PROXY_SECRET,
+},
 ```
 
-**Why good:** Auth handled at Modal's proxy layer (no container spin-up for bad requests), env vars for credentials, explicit 401 handling
+**Why good:** Auth handled at Modal's proxy layer (no container spin-up for bad requests), env vars for credentials. Add explicit 401 handling in your error logic.
+
+See [examples/core.md](examples/core.md) for a complete authenticated TypeScript client with error handling.
 
 ---
 

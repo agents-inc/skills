@@ -148,7 +148,7 @@ const fullResponse = chunks.join("");
 
 ## Abort Pattern
 
-Use `AbortController` to cancel a streaming request:
+Use `AbortController` to cancel a streaming request via the `config.abortSignal` option:
 
 ```typescript
 const controller = new AbortController();
@@ -161,6 +161,9 @@ try {
   const stream = await ai.models.generateContentStream({
     model: "gemini-2.5-flash",
     contents: "Write a very long essay about distributed systems.",
+    config: {
+      abortSignal: controller.signal,
+    },
   });
 
   for await (const chunk of stream) {

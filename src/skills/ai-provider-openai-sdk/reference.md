@@ -239,6 +239,7 @@ await client.batches.cancel("batch-abc123");
 import { zodResponseFormat } from "openai/helpers/zod";
 import { zodTextFormat } from "openai/helpers/zod";
 import { zodFunction } from "openai/helpers/zod";
+import { zodResponsesFunction } from "openai/helpers/zod";
 
 // Chat Completions structured output
 zodResponseFormat(zodSchema, "schema_name");
@@ -246,8 +247,11 @@ zodResponseFormat(zodSchema, "schema_name");
 // Responses API structured output
 zodTextFormat(zodSchema, "schema_name");
 
-// Function tool from Zod schema
+// Chat Completions function tool from Zod schema
 zodFunction({ name: "tool_name", parameters: zodSchema });
+
+// Responses API function tool from Zod schema
+zodResponsesFunction({ name: "tool_name", parameters: zodSchema });
 
 // File conversion helper
 import { toFile } from "openai";
@@ -281,17 +285,19 @@ All errors extend `OpenAI.APIError` with properties:
 
 ## Streaming Events (.stream() Helper)
 
-| Event                                 | Arguments               | Description                      |
-| ------------------------------------- | ----------------------- | -------------------------------- |
-| `connect`                             | `()`                    | Connection established           |
-| `chunk`                               | `(chunk, snapshot)`     | Raw API chunk received           |
-| `content`                             | `(delta, snapshot)`     | Text content delta               |
-| `content.delta`                       | `({ delta, snapshot })` | Content chunk with full snapshot |
-| `content.done`                        | `({ content })`         | Content generation complete      |
-| `tool_calls.function.arguments.delta` | `({ name, arguments })` | Tool argument streaming          |
-| `tool_calls.function.arguments.done`  | `({ name, arguments })` | Tool arguments complete          |
-| `error`                               | `(error)`               | Stream error                     |
-| `end`                                 | `()`                    | Stream finished                  |
+| Event                                 | Arguments                                                         | Description                      |
+| ------------------------------------- | ----------------------------------------------------------------- | -------------------------------- |
+| `connect`                             | `()`                                                              | Connection established           |
+| `chunk`                               | `(chunk, snapshot)`                                               | Raw API chunk received           |
+| `content`                             | `(delta, snapshot)`                                               | Text content delta               |
+| `content.delta`                       | `({ delta, snapshot, parsed })`                                   | Content chunk with full snapshot |
+| `content.done`                        | `({ content, parsed })`                                           | Content generation complete      |
+| `refusal.delta`                       | `({ delta, snapshot })`                                           | Refusal content delta            |
+| `refusal.done`                        | `({ refusal })`                                                   | Refusal content complete         |
+| `tool_calls.function.arguments.delta` | `({ name, index, arguments, arguments_delta, parsed_arguments })` | Tool argument streaming          |
+| `tool_calls.function.arguments.done`  | `({ name, index, arguments, parsed_arguments })`                  | Tool arguments complete          |
+| `error`                               | `(error)`                                                         | Stream error                     |
+| `end`                                 | `()`                                                              | Stream finished                  |
 
 ### Stream Methods
 

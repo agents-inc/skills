@@ -25,7 +25,7 @@ const MovieSchema = z.object({
 });
 
 const structuredModel = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-4.1",
 }).withStructuredOutput(MovieSchema);
 
 const movie = await structuredModel.invoke(
@@ -56,7 +56,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "Analyze this text: {text}"],
 ]);
 
-const model = new ChatOpenAI({ model: "gpt-4o" }).withStructuredOutput(
+const model = new ChatOpenAI({ model: "gpt-4.1" }).withStructuredOutput(
   AnalysisSchema,
 );
 
@@ -90,7 +90,7 @@ const PersonSchema = z.object({
   skills: z.array(z.string()).describe("Professional skills"),
 });
 
-const model = new ChatOpenAI({ model: "gpt-4o" }).withStructuredOutput(
+const model = new ChatOpenAI({ model: "gpt-4.1" }).withStructuredOutput(
   PersonSchema,
 );
 const person = await model.invoke(
@@ -113,7 +113,7 @@ const StrictSchema = z.object({
   sources: z.array(z.string()).min(1),
 });
 
-const model = new ChatOpenAI({ model: "gpt-4o" }).withStructuredOutput(
+const model = new ChatOpenAI({ model: "gpt-4.1" }).withStructuredOutput(
   StrictSchema,
   {
     // Use "functionCalling" (default) or "jsonSchema" method
@@ -211,7 +211,7 @@ const getTime = tool(
 );
 
 // Bind tools to model
-const modelWithTools = new ChatOpenAI({ model: "gpt-4o" }).bindTools([
+const modelWithTools = new ChatOpenAI({ model: "gpt-4.1" }).bindTools([
   getWeather,
   getTime,
 ]);
@@ -236,7 +236,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import type { AIMessage } from "@langchain/core/messages";
 
-const model = new ChatOpenAI({ model: "gpt-4o" }).bindTools([getWeather]);
+const model = new ChatOpenAI({ model: "gpt-4.1" }).bindTools([getWeather]);
 
 // Step 1: Get model's tool call request
 const messages = [new HumanMessage("What is the weather in Tokyo?")];

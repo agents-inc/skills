@@ -46,7 +46,7 @@ const calculator = tool(
 );
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [search, calculator],
   systemPrompt: "You are a helpful research assistant. Use tools when needed.",
 });
@@ -65,7 +65,7 @@ console.log(result.messages.at(-1));
 import { createAgent } from "langchain";
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [search],
   systemPrompt: "You are a helpful assistant.",
 });
@@ -95,7 +95,7 @@ for await (const step of stream) {
 import { createAgent } from "langchain";
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [search],
   systemPrompt: "You are a helpful assistant.",
 });
@@ -132,7 +132,7 @@ const CustomState = new StateSchema({
 });
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [search],
   stateSchema: CustomState,
   systemPrompt: "You are a personalized assistant.",
@@ -166,7 +166,7 @@ const loggingMiddleware = createMiddleware({
 });
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [search],
   middleware: [loggingMiddleware],
 });
@@ -193,7 +193,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4.1", temperature: 0 });
 const agent = createToolCallingAgent({ llm, tools: [search], prompt });
 const executor = new AgentExecutor({ agent, tools: [search] });
 

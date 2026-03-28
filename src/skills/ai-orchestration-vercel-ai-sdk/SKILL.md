@@ -38,7 +38,7 @@ description: Vercel AI SDK patterns - providers, text generation, streaming, str
 - Implementing tool calling / function calling with LLMs
 - Creating multi-provider AI applications (OpenAI, Anthropic, Google, etc.)
 - Building RAG pipelines with embeddings and vector similarity
-- Adding AI text completion or generation to any Node.js/React/Next.js app
+- Adding AI text completion or generation to any TypeScript app
 
 **Key patterns covered:**
 
@@ -83,7 +83,7 @@ The Vercel AI SDK provides a **unified TypeScript API** for building AI-powered 
 **When to use Vercel AI SDK:**
 
 - Multi-provider applications where you want to switch models easily
-- Streaming chat interfaces with React/Next.js
+- Streaming chat interfaces with React (or Svelte, Vue, Angular)
 - Structured data extraction from natural language
 - Agent-style applications with tool calling loops
 - RAG systems with embedding and retrieval
@@ -160,7 +160,7 @@ for await (const part of result.textStream) {
 }
 ```
 
-Use `result.toTextStreamResponse()` in route handlers. Use `result.fullStream` for granular event types (`text-delta`, `tool-call`, `error`, `finish`).
+Use `result.toUIMessageStreamResponse()` in route handlers serving `useChat`, or `result.toTextStreamResponse()` for plain text streaming. Use `result.fullStream` for granular event types (`text-delta`, `tool-call`, `error`, `finish`).
 
 ---
 
@@ -374,7 +374,7 @@ What is your primary concern?
 - `embed()` and `embedMany()` require embedding model strings (e.g., `'openai/text-embedding-3-small'`), not chat model strings
 - Zod schema support varies by provider -- complex unions and transforms may not work with all models
 - `useChat` v6 no longer manages input state -- you must use external `useState` for the input field and call `sendMessage({ text })` (not `{ role, content }`)
-- `convertToModelMessages()` is async in v6 (was sync as `convertToCoreMessages()` in v5)
+- `convertToModelMessages()` is async in v6 (was sync as `convertToCoreMessages()` in v5) -- converts `UIMessage[]` to `ModelMessage[]`
 - `fullStream` gives you all event types including `tool-call`, `tool-result`, `source`, and `error` -- `textStream` only gives text deltas
 - Token usage is available via `usage` property on results, including cache hit details in `usage.inputTokenDetails`
 

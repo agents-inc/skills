@@ -29,7 +29,7 @@ description: Official OpenAI SDK patterns for TypeScript/Node.js — client setu
 
 ---
 
-**Auto-detection:** OpenAI, openai, client.chat.completions, client.responses.create, client.embeddings, client.audio, zodResponseFormat, zodTextFormat, zodFunction, runTools, GPT-5, GPT-4o, o4-mini, gpt-5-mini, text-embedding-3, whisper, tts, OPENAI_API_KEY, toFile
+**Auto-detection:** OpenAI, openai, client.chat.completions, client.responses.create, client.responses.parse, client.embeddings, client.audio, zodResponseFormat, zodTextFormat, zodFunction, zodResponsesFunction, runTools, GPT-5, GPT-4o, o4-mini, gpt-5-mini, text-embedding-3, whisper, tts, OPENAI_API_KEY, toFile
 
 **When to use:**
 
@@ -473,7 +473,7 @@ Do you need multiple LLM providers (OpenAI + others)?
 - The SDK auto-retries on 429 (rate limit) and 5xx errors -- 2 retries by default. Disable with `maxRetries: 0` if you handle retries yourself.
 - `stream: true` returns raw SSE chunks. Use `.stream()` helper for a nicer event-based API.
 - `client.chat.completions.parse()` throws `LengthFinishReasonError` if `finish_reason` is `'length'` and `ContentFilterFinishReasonError` if `'content_filter'`.
-- Embedding responses return `Float64Array` typed arrays -- convert to regular arrays with `Array.from()` if needed.
+- Embedding responses return `Array<number>` (the SDK requests base64 by default and decodes via Float32 internally for performance). No conversion needed -- you get a plain number array.
 - File uploads support `ReadStream`, `File`, `fetch()` Response, and `toFile()` helper -- use whichever matches your data source.
 - The Responses API's `store: true` enables server-side state but also means OpenAI stores your conversations. Set `store: false` for sensitive data.
 - `developer` role replaces `system` role in newer models (gpt-4o and later).

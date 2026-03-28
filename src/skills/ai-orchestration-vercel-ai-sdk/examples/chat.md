@@ -132,7 +132,7 @@ function Chat() {
 
 ## Pattern 2: Server-Side Chat Route
 
-### Good Example -- Next.js App Router
+### Good Example -- Server Route Handler
 
 ```typescript
 // app/api/chat/route.ts
@@ -151,11 +151,11 @@ export async function POST(request: Request) {
     },
   });
 
-  return result.toTextStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
 ```
 
-**Why good:** System prompt defines behavior, `toTextStreamResponse()` creates proper streaming response, error logging
+**Why good:** System prompt defines behavior, `toUIMessageStreamResponse()` creates proper streaming response for `useChat`, error logging
 
 ### Good Example -- With Custom Headers and Body
 
@@ -163,7 +163,8 @@ export async function POST(request: Request) {
 // components/chat-with-context.tsx
 'use client';
 
-import { useChat, DefaultChatTransport } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
 
 interface ChatWithContextProps {

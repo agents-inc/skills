@@ -103,16 +103,7 @@ for (const hw of hardware) {
 }
 ```
 
-Common hardware SKUs:
-
-| SKU              | Description        |
-| ---------------- | ------------------ |
-| `cpu`            | CPU only           |
-| `gpu-t4-nano`    | Nvidia T4 (small)  |
-| `gpu-t4-small`   | Nvidia T4          |
-| `gpu-a40-small`  | Nvidia A40 (small) |
-| `gpu-a40-large`  | Nvidia A40 (large) |
-| `gpu-a100-large` | Nvidia A100 (80GB) |
+See [reference.md](../reference.md) for the full hardware SKU table.
 
 ---
 

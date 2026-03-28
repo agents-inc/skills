@@ -48,12 +48,12 @@ const client = new Anthropic({
 | `claude-opus-4-6`   | Most capable, complex reasoning | 1M             | 128K       |
 | `claude-sonnet-4-6` | General purpose, best value     | 1M             | 64K        |
 | `claude-haiku-4-5`  | Fast, cheap, high throughput    | 200K           | 64K        |
-| `claude-opus-4-5`   | Previous gen most capable       | 200K           | 32K        |
+| `claude-opus-4-5`   | Previous gen most capable       | 200K           | 64K        |
 | `claude-sonnet-4-5` | Previous gen general purpose    | 200K           | 64K        |
 
 ### Dated Model Variants
 
-Use dated variants for reproducibility: `claude-sonnet-4-6-20250220`, `claude-opus-4-6-20260205`.
+Use dated variants for reproducibility (e.g., `claude-sonnet-4-5-20250929`, `claude-opus-4-5-20251101`). Check the [Models API](https://docs.anthropic.com/en/docs/about-claude/models) for current dated variant IDs.
 
 ---
 

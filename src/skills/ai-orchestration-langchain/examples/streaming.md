@@ -16,7 +16,7 @@
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
 
-const model = new ChatOpenAI({ model: "gpt-4o" });
+const model = new ChatOpenAI({ model: "gpt-4.1" });
 
 const stream = await model.stream(
   "Explain how async generators work in TypeScript.",
@@ -37,7 +37,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const chain = ChatPromptTemplate.fromTemplate("Explain {topic} simply.")
-  .pipe(new ChatOpenAI({ model: "gpt-4o" }))
+  .pipe(new ChatOpenAI({ model: "gpt-4.1" }))
   .pipe(new StringOutputParser());
 
 const stream = await chain.stream({ topic: "quantum computing" });
@@ -93,7 +93,7 @@ for await (const event of eventStream) {
 import { createAgent } from "langchain";
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [searchTool],
   systemPrompt: "You are a helpful assistant.",
 });
@@ -135,7 +135,7 @@ const ragChain = RunnableSequence.from([
     question: new RunnablePassthrough(),
   },
   prompt,
-  new ChatOpenAI({ model: "gpt-4o" }),
+  new ChatOpenAI({ model: "gpt-4.1" }),
   new StringOutputParser(),
 ]);
 

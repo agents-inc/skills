@@ -82,19 +82,6 @@ Replicate provides **serverless GPU infrastructure** for running open-source ML 
 4. **Three execution modes** -- `replicate.run()` for synchronous wait, `replicate.stream()` for real-time SSE output, `replicate.predictions.create()` for fire-and-forget with webhooks.
 5. **File-first I/O** -- Many models accept and produce files (images, audio, video). The SDK handles file uploads automatically and returns `FileOutput` objects for file outputs.
 
-**When to use Replicate:**
-
-- You want to run open-source models without managing infrastructure
-- You need access to a wide variety of models (image gen, LLMs, audio, video)
-- You want pay-per-second pricing with no idle costs
-- You need to fine-tune models on custom data
-
-**When NOT to use:**
-
-- You need guaranteed sub-100ms latency (cold starts are unpredictable without deployments)
-- You want to use proprietary models (OpenAI, Anthropic) -- use their SDKs directly
-- You need to run models locally or in your own cloud -- consider self-hosting with Cog
-
 </philosophy>
 
 ---
@@ -300,7 +287,7 @@ Use `replicate.predictions.create()` for background jobs with webhook notificati
 
 ```typescript
 const prediction = await replicate.predictions.create({
-  version: "27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
+  model: "owner/model", // OR version: "sha256hash" for pinned version
   input: { prompt: "a painting of a cat" },
   webhook: "https://my.app/webhooks/replicate",
   webhook_events_filter: ["completed"],
@@ -503,7 +490,7 @@ Are you running open-source models on serverless GPUs?
 - Confusing `replicate.run()` (returns output directly) with `replicate.predictions.create()` (returns a prediction object with status/id)
 - Destructuring image output incorrectly: `const output = await replicate.run(...)` instead of `const [output] = await replicate.run(...)` (image models return arrays)
 - Using `replicate.stream()` with models that do not support streaming (only language models with SSE support)
-- Forgetting that `replicate.predictions.create()` requires a `version` hash, not just `owner/model` (use `replicate.run()` for the simpler format)
+- Forgetting that `replicate.predictions.create()` accepts either a `version` hash or a `model` string (`owner/model`) -- use `version` for pinned reproducibility, `model` for latest-version convenience
 - Not consuming the async iterator from `replicate.stream()` (events are lost)
 
 **Gotchas & Edge Cases:**

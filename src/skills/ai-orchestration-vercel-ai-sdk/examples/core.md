@@ -281,7 +281,7 @@ for await (const part of result.fullStream) {
 
 **Why good:** `fullStream` gives granular control over all event types, typed switch cases, handles tool calls and sources inline
 
-### Good Example -- Next.js Route Handler
+### Good Example -- Route Handler (Server)
 
 ```typescript
 // app/api/chat/route.ts
@@ -299,11 +299,12 @@ export async function POST(request: Request) {
     },
   });
 
-  return result.toTextStreamResponse();
+  // toUIMessageStreamResponse() for useChat, toTextStreamResponse() for plain text
+  return result.toUIMessageStreamResponse();
 }
 ```
 
-**Why good:** `toTextStreamResponse()` creates proper streaming Response, error logging, system prompt
+**Why good:** `toUIMessageStreamResponse()` creates proper streaming Response for `useChat`, error logging, system prompt
 
 ### Bad Example -- Not Consuming the Stream
 
@@ -323,7 +324,7 @@ function startStream() {
 }
 ```
 
-**Why bad:** `streamText` returns immediately, stream must be consumed via `textStream`, `fullStream`, or `toTextStreamResponse()`
+**Why bad:** `streamText` returns immediately, stream must be consumed via `textStream`, `fullStream`, `toUIMessageStreamResponse()`, or `toTextStreamResponse()`
 
 ---
 

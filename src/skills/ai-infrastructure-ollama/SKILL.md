@@ -86,20 +86,6 @@ The Ollama JavaScript library is a **thin client over Ollama's local REST API** 
 4. **Model-agnostic** -- The same API works with any Ollama-supported model (Llama, Mistral, Qwen, Gemma, Phi, DeepSeek, etc.). Model capabilities (vision, tool calling, structured output) depend on the model.
 5. **OpenAI-compatible** -- Ollama exposes `/v1/chat/completions` and `/v1/embeddings` endpoints, allowing the OpenAI SDK to connect with `baseURL: 'http://localhost:11434/v1'`.
 
-**When to use Ollama:**
-
-- Local development and testing without cloud costs
-- Privacy-sensitive workloads where data cannot leave your infrastructure
-- Prototyping AI features before choosing a cloud provider
-- Running open-source models (Llama, Mistral, etc.) on your own hardware
-- Offline or air-gapped environments
-
-**When NOT to use:**
-
-- Production workloads requiring high availability and SLAs
-- Applications needing proprietary models (GPT-5, Claude)
-- When you need a multi-provider abstraction layer
-
 </philosophy>
 
 ---
@@ -508,7 +494,7 @@ What is your task?
 
 - Confusing `ollama.chat()` and `ollama.generate()` parameters -- `chat` uses `messages[]`, `generate` uses `prompt` and `system`
 - Using `ollama.embeddings()` (deprecated) instead of `ollama.embed()` -- the newer `embed()` method supports batch inputs
-- Passing image URLs to `images` parameter -- Ollama expects `Uint8Array` or base64-encoded strings, not URLs
+- Passing HTTP/HTTPS URLs to `images` parameter -- Ollama accepts file paths, `Uint8Array`, or base64-encoded strings, but not remote URLs
 - Using tool calling with models that do not support it -- not all models handle tools; use Llama 3.1+, Qwen 3, or Mistral for reliable tool calling
 - Forgetting to `JSON.parse()` the response content when using structured output -- Ollama returns JSON as a string in `message.content`, not a parsed object
 
@@ -516,7 +502,7 @@ What is your task?
 
 - Ollama returns tool call arguments as already-parsed objects (not JSON strings like OpenAI) -- `toolCall.function.arguments` is an object, not a string
 - The `keep_alive` parameter accepts both duration strings (`'5m'`, `'1h'`) and numbers (seconds) -- `0` unloads immediately, `-1` keeps loaded indefinitely
-- `ollama.abort()` cancels ALL active streams for that client instance, not individual requests
+- `ollama.abort()` cancels ALL active streams for that client instance -- for individual stream cancellation, use `stream.abort()` on the returned stream object
 - Model names can include tags (`llama3.1:8b`, `llama3.1:70b`) -- omitting the tag uses the default (usually smallest)
 - The `think` parameter enables extended reasoning but only works with models that support it (Qwen 3, DeepSeek R1) -- it adds a `thinking` field to the response alongside `content`
 - Browser usage requires importing from `ollama/browser` instead of `ollama` -- the default import uses Node.js-specific APIs

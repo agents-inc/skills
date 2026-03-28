@@ -248,7 +248,17 @@ const client = new OpenAI();
 async function textToSpeech(
   text: string,
   outputPath: string,
-  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "alloy",
+  voice:
+    | "alloy"
+    | "ash"
+    | "ballad"
+    | "coral"
+    | "echo"
+    | "fable"
+    | "nova"
+    | "onyx"
+    | "sage"
+    | "shimmer" = "alloy",
 ): Promise<void> {
   const speech = await client.audio.speech.create({
     model: "tts-1",

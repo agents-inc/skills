@@ -5,7 +5,7 @@ description: Testing and evaluation framework for LLM prompts and applications -
 
 # Promptfoo Patterns
 
-> **Quick Guide:** Use promptfoo for systematic LLM evaluation. Define prompts, providers, and test cases in `promptfooconfig.yaml`. Use assertion types (`contains`, `is-json`, `llm-rubric`, `similar`, `cost`, `latency`) to validate outputs. Use `promptfoo eval` to run, `promptfoo view` for results UI. Use model-graded assertions (`llm-rubric`, `factuality`) for subjective quality. Use `promptfoo redteam run` for security scanning. Use `--share` flag or `promptfoo share` to share results. All provider API keys come from environment variables -- never hardcode them.
+> **Quick Guide:** Use promptfoo for systematic LLM evaluation. Define prompts, providers, and test cases in `promptfooconfig.yaml`. Use assertion types (`contains`, `is-json`, `llm-rubric`, `similar`, `cost`, `latency`) to validate outputs. Use `promptfoo eval` to run (exits with code 100 on test failures), `promptfoo view` for results UI. Use model-graded assertions (`llm-rubric`, `factuality`) for subjective quality. Use `promptfoo redteam run` for security scanning. Use `--share` flag or `promptfoo share` to share results. All provider API keys come from environment variables -- never hardcode them.
 
 ---
 
@@ -23,7 +23,7 @@ description: Testing and evaluation framework for LLM prompts and applications -
 
 **(You MUST use environment variables for all API keys -- never hardcode keys in promptfooconfig.yaml or provider configs)**
 
-**(You MUST run `promptfoo eval --fail-on-error` in CI pipelines -- bare `promptfoo eval` exits 0 even when assertions fail)**
+**(You MUST verify `promptfoo eval` exit code in CI pipelines -- it returns exit code 100 on test failures, exit code 1 on other errors)**
 
 </critical_requirements>
 
@@ -54,7 +54,7 @@ description: Testing and evaluation framework for LLM prompts and applications -
 **When NOT to use:**
 
 - Unit testing application code (use your test runner)
-- Load testing / benchmarking API throughput (use k6, Artillery, etc.)
+- Load testing / benchmarking API throughput (use a load testing tool)
 - Runtime monitoring of production LLM calls (use observability tooling)
 
 ---
@@ -80,22 +80,8 @@ Promptfoo brings **test-driven development to LLM applications**. Instead of man
 1. **Declarative test definitions** -- YAML config over imperative test scripts. Define prompts, providers, test cases, and assertions in `promptfooconfig.yaml`. No code required for standard evaluations.
 2. **Assertion-driven validation** -- Every test case should have assertions. Deterministic assertions (`contains`, `is-json`, `equals`) for structured output; model-graded assertions (`llm-rubric`, `factuality`) for subjective quality.
 3. **Comparative evaluation** -- Run the same tests across multiple providers or prompt variants simultaneously. The results matrix shows which combination performs best.
-4. **Shift-left LLM testing** -- Catch prompt regressions in CI before they reach production. Use `--fail-on-error` for quality gates.
+4. **Shift-left LLM testing** -- Catch prompt regressions in CI before they reach production. `promptfoo eval` exits with code 100 on test failures, making it a natural CI quality gate.
 5. **Red teaming as a first-class concern** -- Security scanning for prompt injection, PII leakage, harmful content, and jailbreak vulnerabilities is built in, not bolted on.
-
-**When to use promptfoo:**
-
-- Developing or iterating on LLM prompts
-- Comparing providers or models for a specific task
-- Validating that prompt changes don't cause regressions
-- Security-scanning LLM applications before deployment
-- Running model-graded evaluations at scale
-
-**When NOT to use:**
-
-- Unit testing non-LLM code (use Vitest, Jest, etc.)
-- Real-time production monitoring (use observability tools)
-- Load testing API endpoints (use k6, Artillery)
 
 </philosophy>
 
@@ -355,18 +341,10 @@ jobs:
       - name: Run eval
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: npx promptfoo@latest eval --fail-on-error -o results.json --share
+        run: npx promptfoo@latest eval -o results.json --share
 ```
 
-**Why good:** Caches LLM responses across runs, `--fail-on-error` fails the CI job on assertion failures, `--share` generates a shareable results URL
-
-```bash
-# BAD: CI without --fail-on-error
-npx promptfoo eval -c promptfooconfig.yaml
-# Always exits 0 -- CI never fails even with broken assertions
-```
-
-**Why bad:** Without `--fail-on-error`, promptfoo eval exits 0 regardless of assertion results, making the CI check meaningless
+**Why good:** Caches LLM responses across runs, `promptfoo eval` exits with code 100 on test failures (CI fails automatically), `--share` generates a shareable results URL
 
 **See:** [examples/custom-providers.md](examples/custom-providers.md) for npm scripts, quality gate thresholds, programmatic evaluation
 
@@ -439,7 +417,7 @@ How does your LLM integration work?
 **High Priority Issues:**
 
 - Tests without `assert` arrays (output is captured but never validated -- tests always "pass")
-- Missing `--fail-on-error` in CI (promptfoo eval exits 0 even when assertions fail)
+- Not checking `promptfoo eval` exit code in CI (`promptfoo eval` exits 100 on test failures -- ensure your CI pipeline treats non-zero exit codes as failures)
 - Hardcoded API keys in `promptfooconfig.yaml` (use environment variables)
 - Using `llm-rubric` for checks that `is-json` or `contains` can do deterministically (wastes money and adds non-determinism)
 - Red teaming without `purpose` (generic attacks miss application-specific vulnerabilities)
@@ -489,7 +467,7 @@ How does your LLM integration work?
 
 **(You MUST use environment variables for all API keys -- never hardcode keys in promptfooconfig.yaml or provider configs)**
 
-**(You MUST run `promptfoo eval --fail-on-error` in CI pipelines -- bare `promptfoo eval` exits 0 even when assertions fail)**
+**(You MUST verify `promptfoo eval` exit code in CI pipelines -- it returns exit code 100 on test failures, exit code 1 on other errors)**
 
 **Failure to follow these rules will produce untested, insecure, or falsely-passing LLM evaluation pipelines.**
 

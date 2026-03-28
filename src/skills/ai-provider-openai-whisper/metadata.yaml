@@ -7,5 +7,5 @@ displayName: OpenAI Whisper
 cliDescription: Speech-to-text transcription and translation via OpenAI Audio API
 usageGuidance: >-
   Use when transcribing or translating audio with OpenAI Whisper -- file
-  transcription, real-time transcription, translation to English, timestamp
+  transcription, streaming transcription, translation to English, timestamp
   generation, and custom vocabulary prompting.

@@ -194,7 +194,10 @@ const transcript = await client.speechToText.convert({
 | Format          | Sample Rate | Bitrate  | Notes                       |
 | --------------- | ----------- | -------- | --------------------------- |
 | `mp3_22050_32`  | 22.05 kHz   | 32 kbps  | Smallest file size          |
-| `mp3_44100_64`  | 44.1 kHz    | 64 kbps  | Low bandwidth               |
+| `mp3_24000_48`  | 24 kHz      | 48 kbps  | Low bandwidth               |
+| `mp3_44100_32`  | 44.1 kHz    | 32 kbps  | Low bitrate, high rate      |
+| `mp3_44100_64`  | 44.1 kHz    | 64 kbps  | Moderate bandwidth          |
+| `mp3_44100_96`  | 44.1 kHz    | 96 kbps  | Good quality                |
 | `mp3_44100_128` | 44.1 kHz    | 128 kbps | **Default** -- good balance |
 | `mp3_44100_192` | 44.1 kHz    | 192 kbps | Creator+ tier               |
 
@@ -206,16 +209,27 @@ const transcript = await client.speechToText.convert({
 | `pcm_16000` | 16 kHz      |
 | `pcm_22050` | 22.05 kHz   |
 | `pcm_24000` | 24 kHz      |
+| `pcm_32000` | 32 kHz      |
 | `pcm_44100` | 44.1 kHz    |
+| `pcm_48000` | 48 kHz      |
+
+### Opus
+
+| Format           | Bitrate  | Notes             |
+| ---------------- | -------- | ----------------- |
+| `opus_48000_32`  | 32 kbps  | Smallest Opus     |
+| `opus_48000_64`  | 64 kbps  | Low-bandwidth web |
+| `opus_48000_96`  | 96 kbps  | Balanced          |
+| `opus_48000_128` | 128 kbps | High quality      |
+| `opus_48000_192` | 192 kbps | Highest quality   |
 
 ### Other
 
-| Format           | Use Case           |
-| ---------------- | ------------------ |
-| `opus_48000_128` | Low-bandwidth web  |
-| `wav_44100`      | Uncompressed audio |
-| `ulaw_8000`      | Telephony          |
-| `alaw_8000`      | Telephony          |
+| Format      | Use Case           |
+| ----------- | ------------------ |
+| `wav_44100` | Uncompressed audio |
+| `ulaw_8000` | Telephony          |
+| `alaw_8000` | Telephony          |
 
 ---
 

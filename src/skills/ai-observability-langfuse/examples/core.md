@@ -225,9 +225,26 @@ configureGlobalLogger({ level: "DEBUG" });
 
 ## Serverless / Short-Lived Process Pattern
 
+For serverless environments, use `exportMode: "immediate"` on the span processor to export spans immediately rather than batching:
+
+```typescript
+// instrumentation.ts (serverless variant)
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { LangfuseSpanProcessor } from "@langfuse/otel";
+
+export const langfuseSpanProcessor = new LangfuseSpanProcessor({
+  exportMode: "immediate",
+});
+
+export const sdk = new NodeSDK({
+  spanProcessors: [langfuseSpanProcessor],
+});
+
+sdk.start();
+```
+
 ```typescript
 import { sdk } from "./instrumentation";
-import { LangfuseSpanProcessor } from "@langfuse/otel";
 import { startActiveObservation } from "@langfuse/tracing";
 import { LangfuseClient } from "@langfuse/client";
 

@@ -55,7 +55,7 @@ description: Together AI SDK patterns for TypeScript — client setup, chat comp
 **When NOT to use:**
 
 - You need OpenAI-specific features (Responses API, Batch API, Realtime API) -- use the OpenAI SDK directly
-- You want React-specific chat UI hooks -- use a framework-integrated AI SDK
+- You want framework-specific chat UI hooks -- use a framework-integrated AI SDK
 - You only use OpenAI models and never plan to use open-source models
 
 ---

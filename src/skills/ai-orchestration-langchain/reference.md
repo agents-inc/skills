@@ -86,7 +86,7 @@ If you see multiple versions, add `overrides` (npm) or `resolutions` (yarn) to y
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "gpt-4o", // Required: model ID
+  model: "gpt-4.1", // Required: model ID
   temperature: 0, // 0-2 (default: 1)
   maxTokens: 1000, // Max output tokens
   timeout: 30_000, // Request timeout in ms
@@ -97,14 +97,14 @@ const model = new ChatOpenAI({
 
 ### Common Model IDs
 
-| Provider  | Model ID                   | Notes                |
-| --------- | -------------------------- | -------------------- |
-| OpenAI    | `gpt-4o`                   | General purpose      |
-| OpenAI    | `gpt-4o-mini`              | Cost-optimized       |
-| OpenAI    | `o4-mini`                  | Reasoning model      |
-| Anthropic | `claude-sonnet-4-20250514` | General purpose      |
-| Anthropic | `claude-haiku-3-20250120`  | Fast, cost-optimized |
-| Google    | `gemini-2.5-flash-lite`    | Fast, cost-optimized |
+| Provider  | Model ID                     | Notes                |
+| --------- | ---------------------------- | -------------------- |
+| OpenAI    | `gpt-4.1`                    | General purpose      |
+| OpenAI    | `gpt-4.1-mini`               | Cost-optimized       |
+| OpenAI    | `o4-mini`                    | Reasoning model      |
+| Anthropic | `claude-sonnet-4-5-20250929` | General purpose      |
+| Anthropic | `claude-haiku-4-5-20251001`  | Fast, cost-optimized |
+| Google    | `gemini-2.5-flash`           | Fast, cost-optimized |
 
 ### Embedding Model IDs
 

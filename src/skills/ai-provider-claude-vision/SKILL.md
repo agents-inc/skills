@@ -53,7 +53,7 @@ description: Image understanding and document analysis with Claude's multimodal 
 
 **When NOT to use:**
 
-- General Claude API usage without images or documents -- use the Anthropic SDK skill instead
+- General Claude API usage without images or documents -- use the general Anthropic SDK patterns instead
 - Image generation or editing -- Claude is understanding-only, it cannot create or modify images
 - Identifying specific people in images -- Claude refuses to name people (Anthropic policy)
 - Medical diagnostic imaging (CTs, MRIs) -- not designed for clinical diagnosis
@@ -234,7 +234,7 @@ function estimateImageTokens(width: number, height: number): number {
 
 **Why good:** Named constants, accounts for auto-resize, documents the formula
 
-**See:** [reference.md](reference.md) for the complete size/token/cost table, [examples/core.md](examples/core.md) for `countTokens()` usage
+**See:** [examples/core.md](examples/core.md) for full `estimateImageTokens()` utility and `countTokens()` usage, [reference.md](reference.md) for the complete size/token/cost table
 
 ---
 
@@ -286,7 +286,7 @@ const receipt = response.parsed_output; // fully typed
 
 **Why good:** Zod schema for type-safe extraction, `messages.parse()` for auto-validation, image before text
 
-**See:** [examples/extraction.md](examples/extraction.md) for chart extraction, form extraction, multi-document extraction, PDF caching
+**See:** [examples/extraction.md](examples/extraction.md) for receipt, chart, form, comparison, and multi-document extraction patterns
 
 </patterns>
 

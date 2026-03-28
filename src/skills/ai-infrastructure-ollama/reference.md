@@ -90,7 +90,7 @@ const response = await ollama.generate({
   system: "", // System prompt override
   template: "", // Prompt template override
   suffix: "", // Text after generated content
-  images: [], // Uint8Array[] | string[] (base64)
+  images: [], // Uint8Array[] | string[] (file paths or base64)
   raw: false, // Bypass template processing
   format: undefined, // 'json' | JsonSchema object (plain object)
   stream: false, // Returns AsyncGenerator<GenerateResponse> when true
@@ -176,6 +176,14 @@ const version = await ollama.version();
 
 // Abort all active streams
 ollama.abort(); // Throws AbortError on listening threads
+
+// Abort a single stream
+const stream = await ollama.chat({
+  model: "llama3.1",
+  messages: [],
+  stream: true,
+});
+stream.abort(); // Cancels only this stream
 
 // Web search (requires API key / cloud access)
 const searchResults = await ollama.webSearch({

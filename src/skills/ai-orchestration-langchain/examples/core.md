@@ -21,7 +21,7 @@ const TIMEOUT_MS = 30_000;
 const MAX_RETRIES = 3;
 
 const model = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-4.1",
   temperature: 0,
   timeout: TIMEOUT_MS,
   maxRetries: MAX_RETRIES,
@@ -39,7 +39,7 @@ export { model };
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
-  model: "claude-sonnet-4-20250514",
+  model: "claude-sonnet-4-5-20250929",
   temperature: 0,
   maxTokens: 1024,
 });
@@ -49,16 +49,16 @@ const model = new ChatAnthropic({
 // Runtime provider selection with initChatModel
 import { initChatModel } from "langchain";
 
-const model = await initChatModel("openai:gpt-4o", {
+const model = await initChatModel("openai:gpt-4.1", {
   temperature: 0,
   maxTokens: 1000,
 });
 
 // Switch at runtime:
 const anthropicModel = await initChatModel(
-  "anthropic:claude-sonnet-4-20250514",
+  "anthropic:claude-sonnet-4-5-20250929",
 );
-const googleModel = await initChatModel("google-genai:gemini-2.5-flash-lite");
+const googleModel = await initChatModel("google-genai:gemini-2.5-flash");
 ```
 
 ---
@@ -69,7 +69,7 @@ const googleModel = await initChatModel("google-genai:gemini-2.5-flash-lite");
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-const model = new ChatOpenAI({ model: "gpt-4o" });
+const model = new ChatOpenAI({ model: "gpt-4.1" });
 
 // Simple string invoke
 const response = await model.invoke("What is TypeScript?");
@@ -96,7 +96,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 const prompt = ChatPromptTemplate.fromTemplate(
   "Translate the following to {language}: {text}",
 );
-const model = new ChatOpenAI({ model: "gpt-4o" });
+const model = new ChatOpenAI({ model: "gpt-4.1" });
 const parser = new StringOutputParser();
 
 const chain = prompt.pipe(model).pipe(parser);
@@ -121,7 +121,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const chain = RunnableSequence.from([
   ChatPromptTemplate.fromTemplate("Tell me a joke about {topic}"),
-  new ChatOpenAI({ model: "gpt-4o" }),
+  new ChatOpenAI({ model: "gpt-4.1" }),
   new StringOutputParser(),
 ]);
 
@@ -181,7 +181,7 @@ const chain = RunnableSequence.from([
   ChatPromptTemplate.fromTemplate(
     "Original: {text}\nUppercase: {upperText}\nSummarize both.",
   ),
-  new ChatOpenAI({ model: "gpt-4o" }),
+  new ChatOpenAI({ model: "gpt-4.1" }),
   new StringOutputParser(),
 ]);
 

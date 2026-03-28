@@ -8,4 +8,4 @@ cliDescription: Official TypeScript SDK for Mistral AI with chat, embeddings, fu
 usageGuidance: >-
   Use when integrating Mistral AI models — chat completions, streaming,
   function calling, embeddings, JSON mode, structured outputs with Zod,
-  vision with Pixtral, and Codestral for code generation / FIM.
+  vision with supported models, and Codestral for code generation / FIM.

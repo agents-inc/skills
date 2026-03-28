@@ -54,7 +54,7 @@ description: LiteLLM proxy server setup, TypeScript client patterns via OpenAI S
 
 - Calling a single LLM provider directly with no proxy layer -- use the provider's SDK directly
 - Building a Python application that calls LiteLLM as a library -- this skill covers the proxy server + TypeScript client pattern
-- When you need React-specific chat UI hooks -- use a framework-integrated AI SDK
+- When you need framework-specific chat UI hooks -- use a framework-integrated AI SDK
 
 ---
 
@@ -79,19 +79,6 @@ LiteLLM Proxy is an **AI gateway** -- a single OpenAI-compatible endpoint that r
 3. **Resilience via config** -- Fallbacks, retries, load balancing, and cooldowns are all declared in `config.yaml`. No application-level retry logic needed.
 4. **Spend governance** -- Virtual keys, per-key budgets, rate limits, and tag-based tracking give fine-grained cost control without changing client code.
 5. **OpenAI compatibility** -- Any client, SDK, or tool that works with OpenAI's API works with LiteLLM. No custom SDK required.
-
-**When to use LiteLLM Proxy:**
-
-- You call multiple LLM providers and want a single API surface
-- You need centralized spend tracking, budgets, and rate limiting
-- You want model fallbacks and load balancing without client-side logic
-- You need to distribute virtual API keys to teams with per-key controls
-
-**When NOT to use:**
-
-- Single-provider apps with no need for routing, budgets, or fallbacks -- use the provider SDK directly
-- Python-only applications -- consider using LiteLLM as a library instead of a proxy
-- You need sub-millisecond latency -- the proxy adds a network hop
 
 </philosophy>
 

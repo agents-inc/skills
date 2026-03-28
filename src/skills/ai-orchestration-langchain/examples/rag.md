@@ -158,7 +158,7 @@ const ragChain = RunnableSequence.from([
     question: new RunnablePassthrough(),
   },
   prompt,
-  new ChatOpenAI({ model: "gpt-4o" }),
+  new ChatOpenAI({ model: "gpt-4.1" }),
   new StringOutputParser(),
 ]);
 
@@ -193,7 +193,7 @@ const retrieveTool = tool(
 );
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [retrieveTool],
   systemPrompt:
     "You are a helpful assistant with access to a knowledge base. " +
