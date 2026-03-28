@@ -102,7 +102,7 @@ React Navigation 7+ API Choice:
 ├─ Simple app, TypeScript-first → Static API (less boilerplate)
 ├─ Complex dynamic navigation → Dynamic API (more flexible)
 ├─ Mix of both → Use static for top-level, dynamic for nested
-└─ Expo Router → Built on React Navigation, file-based routing
+└─ File-based routing → Use your managed workflow's router (built on React Navigation)
 
 Auth flow pattern?
 ├─ Switch between auth/main navigators based on auth state
@@ -132,7 +132,7 @@ Should I memoize this?
 
 ```
 src/
-├── app/                    # Expo Router routes (if using)
+├── app/                    # File-based routes (if using managed workflow)
 ├── screens/                # Screen components
 │   ├── home/
 │   │   ├── home-screen.tsx
@@ -286,17 +286,11 @@ type RenderItem<T> = ({
 ### CLI Commands
 
 ```bash
-# Expo
-npx expo start                    # Start dev server
-npx expo start --ios              # Start on iOS simulator
-npx expo start --android          # Start on Android emulator
-npx eas build --platform ios      # Build for iOS
-npx eas build --platform android  # Build for Android
-npx eas update                    # OTA update
-
-# Bare React Native
+# React Native CLI (bare workflow)
 npx react-native start            # Start Metro bundler
 npx react-native run-ios          # Run on iOS simulator
 npx react-native run-android      # Run on Android emulator
 cd ios && pod install             # Install iOS dependencies
 ```
+
+> For managed workflow CLI commands (start, build, update), see your managed workflow's skill documentation.

@@ -132,38 +132,18 @@ How to navigate?
 
 ---
 
-## RED FLAGS
+## SDK Gotchas and Edge Cases
 
-### High Priority Issues
+> Core red flags are in [SKILL.md](SKILL.md). These are additional SDK-specific gotchas for reference.
 
-- **Using Expo Go for production testing** - missing native modules, push notifications, accurate splash screens; always use development builds
-- **Not updating runtimeVersion after native changes** - OTA updates will crash apps with incompatible native code
-- **Storing secrets in `EXPO_PUBLIC_` variables** - these are embedded in JavaScript bundle, visible to anyone
-- **Manually editing android/ios in managed workflow** - changes lost on `prebuild --clean`; use config plugins instead
 - **Mixing version numbers incorrectly** - iOS buildNumber must be string, Android versionCode must be integer
-- **Using expo-av** - fully removed in SDK 55; migrate to `expo-video` and `expo-audio`
-- **Not handling edge-to-edge display (Android)** - mandatory in SDK 54, cannot be disabled; use react-native-safe-area-context (React Native's SafeAreaView is deprecated)
+- **Not handling edge-to-edge display (Android)** - mandatory in SDK 54, cannot be disabled; use react-native-safe-area-context
 - **Using expo-file-system without updating imports (SDK 54+)** - default imports changed; legacy API moved to `expo-file-system/legacy`
-
-### Medium Priority Issues
-
-- **Not using config plugins for native customization** - leads to maintenance burden when using prebuild
-- **Hardcoded values instead of environment variables** - impossible to have different configs per environment
 - **Missing SplashScreen.preventAutoHideAsync()** - flash of white/blank screen while fonts load
 - **Not handling update errors gracefully** - app crashes instead of continuing with current version
-- **Using synchronous environment variable patterns** - `const { VAR } = process.env` doesn't work with Metro
-
-### Common Mistakes
-
 - **Using `@expo/vector-icons` incorrectly in production** - prefer custom icon fonts for smaller bundle
 - **Not setting up iOS provisioning profiles for internal distribution** - preview builds fail to install
 - **Forgetting to configure EAS project ID** - updates and builds fail with cryptic errors
-- **Not testing on both platforms regularly** - expo-specific issues compound when ignored
-- **Assuming Expo Go has all capabilities** - many SDK features require development builds
-
-### Gotchas and Edge Cases
-
-- **Metro requires direct property access for env vars** - `process.env.EXPO_PUBLIC_*` only, not destructuring
 - **iOS simulator builds won't install on devices** - need separate device build profile
 - **runtimeVersion "fingerprint" can be too aggressive** - flags changes that don't affect native code
 - **EAS Update has ~50MB limit** - large assets should use CDN, not bundled
@@ -184,6 +164,8 @@ How to navigate?
 ---
 
 ## Anti-Patterns to Avoid
+
+> Detailed anti-patterns with code examples. See [SKILL.md](SKILL.md) for the summary red flags list.
 
 ### Anti-Pattern 1: Expo Go for Production Testing
 
