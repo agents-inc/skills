@@ -5,7 +5,7 @@ description: Supabase backend-as-a-service — Auth, Database, Realtime, Storage
 
 # Supabase Patterns
 
-> **Quick Guide:** Use Supabase as your backend-as-a-service for Postgres database, authentication, realtime subscriptions, file storage, and edge functions. Always use the typed client with `Database` generic, enable RLS on every table, and use `service_role` key only on the server.
+> **Quick Guide:** Use Supabase as your backend-as-a-service for Postgres database, authentication, realtime subscriptions, file storage, and edge functions. Always use the typed client with `Database` generic, enable RLS on every table, and use the secret key only on the server.
 
 ---
 
@@ -19,7 +19,7 @@ description: Supabase backend-as-a-service — Auth, Database, Realtime, Storage
 
 **(You MUST use the `Database` generic type with `createClient<Database>()` for type-safe queries)**
 
-**(You MUST NEVER expose the `service_role` key in client-side code — use `anon` key in browsers, `service_role` only on the server)**
+**(You MUST NEVER expose the secret key in client-side code — use the publishable key in browsers, the secret key only on the server)**
 
 **(You MUST use `(select auth.uid())` wrapped in a subquery inside RLS policies for performance)**
 
@@ -93,7 +93,7 @@ Supabase is an open-source Firebase alternative built on Postgres. It provides a
 
 1. **Postgres at the core** — Every feature is built on Postgres. RLS policies, auth, and realtime all leverage Postgres primitives. Understanding Postgres is understanding Supabase.
 2. **Type safety end-to-end** — Generate TypeScript types from your database schema with `supabase gen types`. Pass the `Database` generic to `createClient` for fully typed queries.
-3. **Security by default** — RLS must be enabled on every table. The `anon` key is safe for browsers (RLS enforces access). The `service_role` key bypasses RLS and must never leave the server.
+3. **Security by default** — RLS must be enabled on every table. The publishable key is safe for browsers (RLS enforces access). The secret key bypasses RLS and must never leave the server.
 4. **Error as values** — Every Supabase method returns `{ data, error }`. Never assume success. Always check `error` before using `data`.
 5. **Realtime built in** — Postgres changes stream over WebSockets via channels. No separate pub/sub infrastructure needed.
 6. **Edge-first functions** — Edge Functions run Deno at the edge, close to users. Design for short-lived, idempotent operations.
@@ -124,7 +124,10 @@ Supabase is an open-source Firebase alternative built on Postgres. It provides a
 Always pass the `Database` generic to `createClient` for full autocomplete on table names, column names, and return types. Use environment variables for URL and keys.
 
 ```typescript
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+);
 ```
 
 Without the generic, typos in table/column names are not caught at compile time. See [examples/core.md](examples/core.md) for browser, server, and admin client setup patterns.
@@ -242,10 +245,10 @@ See [examples/edge-functions.md](examples/edge-functions.md) for basic functions
 
 ```
 Where is the code running?
-├─ Browser / Client-side → anon key (RLS enforced)
-├─ Server / API route → anon key + user JWT (RLS enforced per user)
-└─ Admin / Migration script → service_role key (bypasses RLS)
-    └─ NEVER expose service_role in client bundles
+├─ Browser / Client-side → publishable key (RLS enforced)
+├─ Server / API route → publishable key + user JWT (RLS enforced per user)
+└─ Admin / Migration script → secret key (bypasses RLS)
+    └─ NEVER expose the secret key in client bundles
 ```
 
 ### Auth Method Selection
@@ -279,7 +282,7 @@ Who should access the files?
 ├─ Anyone (public assets, avatars) → Public bucket + getPublicUrl()
 ├─ Authenticated users only → Private bucket + createSignedUrl()
 ├─ Specific users (own files) → Private bucket + RLS on storage.objects
-└─ Server-only processing → service_role key for upload/download
+└─ Server-only processing → secret key for upload/download
 ```
 
 ### Edge Functions vs Client Queries
@@ -304,7 +307,7 @@ Does the operation need server-side logic?
 **High Priority Issues:**
 
 - **Missing RLS on tables** — Any table without RLS in an exposed schema is completely open to the public. In January 2025, 170+ apps were found with exposed databases due to missing RLS (CVE-2025-48757).
-- **service_role key in client code** — The service_role key bypasses all RLS. Exposing it in browser bundles gives every user full admin database access.
+- **Secret key in client code** — The secret key (formerly `service_role` key) bypasses all RLS. Exposing it in browser bundles gives every user full admin database access.
 - **Ignoring `{ data, error }` returns** — Accessing `data` without checking `error` leads to runtime crashes when operations fail.
 - **Using `auth.jwt() ->> 'user_metadata'` in RLS policies** — `user_metadata` is modifiable by authenticated users via `updateUser()`. Never use it for access control decisions.
 
@@ -350,7 +353,7 @@ Does the operation need server-side logic?
 
 **(You MUST use the `Database` generic type with `createClient<Database>()` for type-safe queries)**
 
-**(You MUST NEVER expose the `service_role` key in client-side code — use `anon` key in browsers, `service_role` only on the server)**
+**(You MUST NEVER expose the secret key in client-side code — use the publishable key in browsers, the secret key only on the server)**
 
 **(You MUST use `(select auth.uid())` wrapped in a subquery inside RLS policies for performance)**
 

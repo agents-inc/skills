@@ -138,9 +138,11 @@ See [examples/core.md](examples/core.md) for form validation and API response va
 Use `refine` for custom validation logic. Use `superRefine` when you need cross-field validation with specific error paths.
 
 ```typescript
+const MIN_PASSWORD_LENGTH = 8;
+
 const PasswordFormSchema = z
   .object({
-    password: z.string().min(8),
+    password: z.string().min(MIN_PASSWORD_LENGTH),
     confirmPassword: z.string(),
   })
   .superRefine((data, ctx) => {
@@ -239,9 +241,18 @@ See [examples/core.md](examples/core.md) for full CRUD schema composition exampl
 Use `z.coerce` for URL params and form data that arrive as strings. Simpler than manual parsing.
 
 ```typescript
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
 const PaginationSchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(MAX_LIMIT)
+    .default(DEFAULT_LIMIT),
 });
 
 // "3" -> 3, "50" -> 50, missing -> defaults

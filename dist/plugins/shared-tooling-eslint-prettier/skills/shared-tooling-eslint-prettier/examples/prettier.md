@@ -14,9 +14,9 @@ Reference a shared Prettier config from `package.json` to prevent per-package co
 // apps/my-app/package.json
 {
   "name": "my-app",
-  "prettier": "@repo/prettier-config",
+  "prettier": "@company/prettier-config",
   "devDependencies": {
-    "@repo/prettier-config": "*"
+    "@company/prettier-config": "*"
   }
 }
 ```
@@ -25,10 +25,10 @@ Reference a shared Prettier config from `package.json` to prevent per-package co
 
 ```json
 // BAD: Duplicated config in each package
-// apps/client-react/.prettierrc
+// apps/client/.prettierrc
 { "printWidth": 80, "semi": true, "singleQuote": true }
 
-// apps/client-next/.prettierrc
+// apps/dashboard/.prettierrc
 { "printWidth": 120, "semi": false, "singleQuote": true }
 ```
 

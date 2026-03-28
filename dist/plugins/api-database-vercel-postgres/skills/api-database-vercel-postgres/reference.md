@@ -11,19 +11,19 @@
 | Last version                 | 0.10.0                                   |
 | Status                       | Deprecated (December 2024)               |
 | Databases migrated to        | Neon (automatic, via Vercel Marketplace) |
-| Drop-in replacement          | `@neondatabase/vercel-postgres-compat`   |
 | Recommended for new projects | `@neondatabase/serverless`               |
 
 ---
 
 ## API Exports
 
-| Export         | Import                                            | Description                             |
-| -------------- | ------------------------------------------------- | --------------------------------------- |
-| `sql`          | `import { sql } from "@vercel/postgres"`          | Auto-connected tagged template (pooled) |
-| `createPool`   | `import { createPool } from "@vercel/postgres"`   | Custom connection pool                  |
-| `createClient` | `import { createClient } from "@vercel/postgres"` | Single direct connection                |
-| `db`           | `import { db } from "@vercel/postgres"`           | Alias for pool-based access             |
+| Export                     | Import                                                        | Description                                            |
+| -------------------------- | ------------------------------------------------------------- | ------------------------------------------------------ |
+| `sql`                      | `import { sql } from "@vercel/postgres"`                      | Auto-connected tagged template (pooled)                |
+| `createPool`               | `import { createPool } from "@vercel/postgres"`               | Custom connection pool                                 |
+| `createClient`             | `import { createClient } from "@vercel/postgres"`             | Single direct connection                               |
+| `db`                       | `import { db } from "@vercel/postgres"`                       | Alias for `sql` (pool-based access)                    |
+| `postgresConnectionString` | `import { postgresConnectionString } from "@vercel/postgres"` | Returns connection URL from env vars (`pool`/`direct`) |
 
 ---
 

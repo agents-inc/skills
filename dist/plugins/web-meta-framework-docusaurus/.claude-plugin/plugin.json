@@ -1,0 +1,9 @@
+{
+  "name": "web-meta-framework-docusaurus",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Docusaurus 3.x documentation framework — site configuration, docs/blog plugins, sidebars, versioning, MDX, swizzling, and deployment",
+  "author": {
+    "name": "@vince"
+  }
+}

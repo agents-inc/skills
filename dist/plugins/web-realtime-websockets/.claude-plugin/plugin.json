@@ -1,6 +1,6 @@
 {
   "name": "web-realtime-websockets",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks",
   "author": {

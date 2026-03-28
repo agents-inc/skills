@@ -38,7 +38,7 @@ description: Ant Design enterprise UI library for React
 
 **When NOT to use:**
 
-- Building a custom design system from scratch (use Radix UI or headless primitives)
+- Building a custom design system from scratch (use headless primitives)
 - Need minimal bundle size for a simple marketing site (Ant Design is large)
 - Want full control over styling without design opinions (use unstyled primitives)
 - Building non-React applications (Ant Design is React-specific)

@@ -101,9 +101,9 @@ export { createCloudPool, createMtlsPool };
 
 **Why good:** `rejectUnauthorized: true` validates the server certificate (prevents MITM), mTLS for mutual authentication, cert paths from environment variables
 
-**Gotcha:** If you set `ssl` in the Pool config AND include `sslmode=require` in the connection string, the connection string parameters overwrite your config object. Use one or the other.
+**Gotcha:** If the connection string contains any SSL parameters (`sslmode`, `sslcert`, `sslkey`, `sslrootcert`), the entire `ssl` config object is replaced and any additional options are lost. Use one or the other.
 
-**Gotcha:** `ssl: true` is equivalent to `ssl: { rejectUnauthorized: true }` in pg v8.x. For older versions, `ssl: true` might accept self-signed certs -- always use the object form to be explicit.
+**Gotcha:** `ssl: true` relies on Node.js TLS defaults (which reject unauthorized certs), but does not explicitly set `rejectUnauthorized`. Always use the object form (`ssl: { rejectUnauthorized: true }`) to be explicit about intent.
 
 ---
 

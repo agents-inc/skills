@@ -154,11 +154,11 @@ Don't manually implement complex ARIA patterns when headless component libraries
 // WRONG - Manual ARIA implementation (error-prone, incomplete)
 <div role="dialog" aria-modal="true" aria-labelledby="title">...</div>
 
-// CORRECT - Let your component library handle ARIA
-// Radix UI, Headless UI, React Aria, or Ariakit
-<Dialog.Root>
-  <Dialog.Content>...</Dialog.Content>
-</Dialog.Root>
+// CORRECT - Let your headless component library handle ARIA
+// It manages focus trapping, Escape to close, and all ARIA attributes
+<MyDialog open={open} onClose={handleClose}>
+  <DialogContent>...</DialogContent>
+</MyDialog>
 ```
 
 ---

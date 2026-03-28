@@ -247,7 +247,7 @@ export { TRPCProvider, useTRPC, useTRPCClient };
 
 ```typescript
 // apps/client/lib/trpc-provider.tsx
-"use client";
+// Mark as client component if using an SSR framework
 
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -433,7 +433,7 @@ function UserCard({ user }: { user: User }) {
 ```typescript
 // apps/client/components/user-list.tsx
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@/lib/trpc";
+import { useTRPC } from "../lib/trpc";
 
 export function UserList() {
   // useTRPC from createTRPCContext provides typed procedure access

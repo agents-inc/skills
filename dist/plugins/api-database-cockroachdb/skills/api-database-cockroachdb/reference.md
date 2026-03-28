@@ -82,37 +82,11 @@
 
 ## Detecting CockroachDB Retry Errors
 
-```typescript
-const CRDB_SERIALIZATION_FAILURE = "40001";
-const CRDB_STATEMENT_COMPLETION_UNKNOWN = "40003";
+See [examples/core.md](examples/core.md) for the full `isCrdbRetryError` type guard and `withCrdbRetry` helper. Key points:
 
-const RETRYABLE_CODES = new Set([
-  CRDB_SERIALIZATION_FAILURE,
-  CRDB_STATEMENT_COMPLETION_UNKNOWN,
-]);
-
-interface PgError extends Error {
-  code: string;
-}
-
-function isPgError(err: unknown): err is PgError {
-  return err instanceof Error && "code" in err;
-}
-
-function isCrdbRetryError(err: unknown): boolean {
-  if (!isPgError(err)) return false;
-  if (RETRYABLE_CODES.has(err.code)) return true;
-  // CockroachDB also signals retries via message prefix
-  return err.message.startsWith("restart transaction");
-}
-
-export {
-  isCrdbRetryError,
-  isPgError,
-  CRDB_SERIALIZATION_FAILURE,
-  CRDB_STATEMENT_COMPLETION_UNKNOWN,
-};
-```
+- Check for SQLSTATE `40001` (serialization failure) and `40003` (statement completion unknown)
+- Also check `err.message.startsWith("restart transaction")` for CockroachDB-specific retry signals
+- Constraint violations (`23xxx`) are application errors -- do NOT retry those
 
 ---
 

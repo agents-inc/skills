@@ -1,0 +1,9 @@
+{
+  "name": "desktop-framework-electron",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Electron process architecture, IPC patterns, preload security, native APIs, packaging and distribution",
+  "author": {
+    "name": "@vince"
+  }
+}

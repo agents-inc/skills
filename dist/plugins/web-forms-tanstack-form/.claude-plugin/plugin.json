@@ -1,0 +1,9 @@
+{
+  "name": "web-forms-tanstack-form",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "TanStack Form patterns - useForm, form.Field, validators, arrays, linked fields, createFormHook, type safety",
+  "author": {
+    "name": "@vince"
+  }
+}

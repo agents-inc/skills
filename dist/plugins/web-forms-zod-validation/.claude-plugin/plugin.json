@@ -1,6 +1,6 @@
 {
   "name": "web-forms-zod-validation",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions",
   "author": {

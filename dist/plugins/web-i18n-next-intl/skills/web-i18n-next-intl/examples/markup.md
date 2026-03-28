@@ -147,20 +147,19 @@ async function generateRssItem(
 
 ```typescript
 import { useTranslations } from "next-intl";
-import DOMPurify from "dompurify";
 
 function UserGeneratedContent({ userContent }: { userContent: string }) {
   const t = useTranslations("Content");
 
   const html = t.markup("userPost", {
-    content: () => DOMPurify.sanitize(userContent),
+    content: () => sanitize(userContent), // Use your HTML sanitization solution
   });
 
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 ```
 
-**Why good:** DOMPurify sanitizes user-generated content before interpolation, prevents XSS attacks
+**Why good:** sanitizing user-generated content before interpolation prevents XSS attacks
 
 ### Bad Example - Unsanitized User Content
 

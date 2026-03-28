@@ -85,19 +85,6 @@ The `@huggingface/inference` SDK provides a **unified TypeScript client** for ac
 4. **OpenAI-compatible chat** -- `chatCompletion()` uses the OpenAI message format (`role` + `content`), making migration between providers easy.
 5. **Streaming as async generators** -- `chatCompletionStream()` and `textGenerationStream()` return `AsyncGenerator`, consumed with `for await...of`.
 
-**When to use Hugging Face Inference:**
-
-- You want access to open-source models (Qwen, Mistral, Llama, FLUX, Whisper, etc.)
-- You need to run diverse ML tasks (NLP, vision, audio) from one SDK
-- You want to switch between inference providers without changing your code
-- You need dedicated GPU deployments via Inference Endpoints
-
-**When NOT to use:**
-
-- You only use OpenAI models -- use the OpenAI SDK
-- You need structured outputs with Zod schema validation -- use a higher-level AI SDK
-- You need complex agent tool-calling loops -- use an agent framework
-
 </philosophy>
 
 ---
@@ -426,7 +413,7 @@ Do you need access to 200k+ open-source models?
 
 - Hardcoding access tokens instead of using environment variables (security breach risk)
 - Using bare `catch` blocks without checking `InferenceClientError` types (hides API errors, loses debug info)
-- Omitting the `model` parameter -- every inference call requires an explicit model
+- Omitting the `model` parameter -- always specify the model explicitly for predictable behavior (the SDK can pick a recommended model if omitted, but this is unreliable for production)
 - Not consuming `chatCompletionStream()` / `textGenerationStream()` generators (tokens are silently lost)
 - Using `textGeneration()` for conversational tasks instead of `chatCompletion()` (wrong API shape)
 

@@ -1,6 +1,6 @@
 {
   "name": "api-auth-clerk",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Clerk managed authentication - ClerkProvider, middleware, pre-built components, hooks, server-side auth, organizations, webhooks",
   "author": {

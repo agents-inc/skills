@@ -130,11 +130,7 @@ my-org/
   "generators": {
     "@nx/react:library": {
       "bundler": "vite",
-      "unitTestRunner": "vitest",
-      "style": "scss"
-    },
-    "@nx/react:component": {
-      "style": "scss"
+      "unitTestRunner": "vitest"
     }
   },
   "nxCloudId": "your-nx-cloud-id",

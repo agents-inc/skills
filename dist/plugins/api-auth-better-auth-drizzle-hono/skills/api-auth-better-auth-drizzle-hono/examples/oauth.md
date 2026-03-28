@@ -80,7 +80,7 @@ export function OAuthButtons() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div>
       <button onClick={handleGitHubSignIn} type="button">
         Continue with GitHub
       </button>

@@ -1,0 +1,9 @@
+{
+  "name": "web-ui-vuetify",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Material Design component library for Vue 3",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -223,10 +223,10 @@ For complete workflow template, see [examples/ci-cd.md](examples/ci-cd.md#patter
 
 ### Pattern 8: Health Check Endpoint
 
-Add health check endpoints for monitoring and load balancer integration:
+Add health check endpoints that integrate with your observability stack:
 
-- **Shallow check** (`/health`) - Fast, for frequent LB checks
-- **Deep check** (`/health/deep`) - With dependency checks (database, etc.)
+- **Shallow check** - Fast response for load balancer probes, includes version for Sentry release correlation
+- **Deep check** - Verifies dependencies, logs failures via Pino for Axiom dashboard visibility
 
 For implementation examples, see [examples/health-check.md](examples/health-check.md#pattern-8-health-check-endpoint).
 

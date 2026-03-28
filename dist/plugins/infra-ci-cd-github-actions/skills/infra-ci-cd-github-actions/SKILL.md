@@ -5,7 +5,7 @@ description: GitHub Actions, pipelines, deployment
 
 # CI/CD Pipelines
 
-> **Quick Guide:** GitHub Actions for CI. Turborepo affected detection (`--affected` or `--filter=...[origin/main]`) for monorepo optimization. Remote cache for shared build artifacts. Quality gates: lint + type-check + test + build + coverage as required status checks. Multi-environment deployments with build promotion. OIDC authentication for cloud providers. Pin all action and runtime versions.
+> **Quick Guide:** GitHub Actions for CI/CD. Affected detection for monorepo optimization (e.g., Turborepo `--affected` or `--filter=...[origin/main]`). Dependency and build output caching for fast CI. Quality gates: lint + type-check + test + build + coverage as required status checks. Multi-environment deployments with build promotion. OIDC authentication for cloud providers. Pin all action and runtime versions.
 
 ---
 
@@ -15,9 +15,9 @@ description: GitHub Actions, pipelines, deployment
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST use Turborepo affected detection for PR builds - NEVER run full test suite on PRs)**
+**(You MUST use affected/changed-package detection for PR builds - NEVER run full test suite on PRs)**
 
-**(You MUST cache package manager dependencies and Turborepo `.turbo/` - CI without caching wastes 70% of runtime)**
+**(You MUST cache package manager dependencies and build outputs - CI without caching wastes 70% of runtime)**
 
 **(You MUST pin action versions (`actions/checkout@v6`, `oven-sh/setup-bun@v2`, `actions/cache@v5`) - NEVER use `@main` or unversioned)**
 
@@ -54,9 +54,8 @@ description: GitHub Actions, pipelines, deployment
 
 **When NOT to use:**
 
-- Single-package projects without monorepo architecture
-- Simple static sites with no build step
 - Projects not using GitHub (use your CI provider's native docs)
+- No automated testing or build step needed
 
 **Key patterns covered:**
 
@@ -64,7 +63,7 @@ description: GitHub Actions, pipelines, deployment
 - Affected detection (Turborepo `--affected` flag or `--filter=...[origin/main]`)
 - Quality gates (lint, type-check, test, build as parallel jobs with dependencies)
 - OIDC authentication (no static credentials for cloud providers)
-- Reusable workflows (`workflow_call`, up to 10 nested levels)
+- Reusable workflows (`workflow_call`, up to 10 levels total)
 - Composite actions (`using: composite`, shared setup logic)
 - Matrix builds (include/exclude, fail-fast, dynamic matrices)
 - Artifact attestations (SLSA v1.0 Build Level 2 provenance)
@@ -117,9 +116,9 @@ See [examples/core.md](examples/core.md) for complete workflow examples.
 
 ### Pattern 2: Affected Detection
 
-Only test and build changed packages using Turborepo.
+Only test and build changed packages in monorepos.
 
-**Two approaches (choose one):**
+**Turborepo example (two approaches, choose one):**
 
 ```bash
 # Modern: --affected flag (auto-detects CI environment)
@@ -177,12 +176,12 @@ See [examples/security.md](examples/security.md) for AWS OIDC and token-based au
 
 Centralize CI/CD logic across repositories.
 
-| Feature | Reusable Workflow         | Composite Action      |
-| ------- | ------------------------- | --------------------- |
-| Scope   | Multiple jobs             | Steps within a job    |
-| Secrets | Native `secrets` context  | Must pass via inputs  |
-| Nesting | Up to 10 levels, 50 total | N/A                   |
-| Use for | Full pipeline templates   | Shared setup/teardown |
+| Feature | Reusable Workflow                                            | Composite Action      |
+| ------- | ------------------------------------------------------------ | --------------------- |
+| Scope   | Multiple jobs                                                | Steps within a job    |
+| Secrets | Native `secrets` context                                     | Must pass via inputs  |
+| Nesting | Up to 10 levels total (caller + 9 nested), 50 unique per run | N/A                   |
+| Use for | Full pipeline templates                                      | Shared setup/teardown |
 
 See [examples/core.md](examples/core.md) for implementation examples.
 
@@ -245,11 +244,11 @@ See [examples/core.md](examples/core.md) for implementation examples.
 
 - `fetch-depth: 0` required for affected detection (shallow clone breaks git diff)
 - New packages have no git history so affected detection skips them
-- `actions/cache` limit is 10GB free per repo (configurable/pay-as-you-go beyond that)
+- `actions/cache` default limit is 10GB per repo (configurable up to 10TB, additional storage billed at $0.07/GiB/month)
 - OIDC requires `id-token: write` permission or token generation fails silently
 - Environment secrets override repository secrets with the same name
 - Artifact attestations require `attestations: write` AND `id-token: write` AND `contents: read`
-- Reusable workflows support 10 nested levels (increased from 4) and 50 total per run
+- Reusable workflows support 10 levels total (caller + 9 nested, increased from 4) and 50 unique per run
 - `actions/create-release` is deprecated - use `softprops/action-gh-release@v2` instead
 - `workflow_dispatch` now supports 25 inputs (increased from 10)
 
@@ -263,9 +262,9 @@ See [examples/core.md](examples/core.md) for implementation examples.
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST use Turborepo affected detection for PR builds - NEVER run full test suite on PRs)**
+**(You MUST use affected/changed-package detection for PR builds - NEVER run full test suite on PRs)**
 
-**(You MUST cache package manager dependencies and Turborepo `.turbo/` - CI without caching wastes 70% of runtime)**
+**(You MUST cache package manager dependencies and build outputs - CI without caching wastes 70% of runtime)**
 
 **(You MUST pin action versions (`actions/checkout@v6`, `oven-sh/setup-bun@v2`, `actions/cache@v5`) - NEVER use `@main` or unversioned)**
 

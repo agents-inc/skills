@@ -113,15 +113,18 @@ export async function sendIdempotentEmail(
   try {
     const html = await render(options.react);
 
-    const { data, error } = await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to: options.to,
-      subject: options.subject,
-      html,
-      headers: {
-        "Idempotency-Key": options.idempotencyKey,
+    // Idempotency key is passed as a second argument, not in the email payload
+    const { data, error } = await resend.emails.send(
+      {
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+        to: options.to,
+        subject: options.subject,
+        html,
       },
-    });
+      {
+        idempotencyKey: options.idempotencyKey,
+      },
+    );
 
     if (error) {
       const errorName = error.name?.toLowerCase() ?? "";

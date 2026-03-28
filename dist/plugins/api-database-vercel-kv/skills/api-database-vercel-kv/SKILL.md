@@ -213,7 +213,7 @@ How should I batch commands?
 - `automaticDeserialization: false` breaks many TypeScript types -- only disable if you need raw string responses and are prepared to handle typing manually
 - `set` with `ex` option resets TTL on overwrite (standard Redis behavior) -- if you `set` a key that already has a TTL, the new `ex` value replaces it
 - REST latency is per-request, not per-command -- a pipeline with 10 commands has the same HTTP overhead as a single command (one round-trip)
-- Free tier is limited to 10,000 commands/day and 256 MB storage -- monitor usage in production
+- Free tier is limited to 500K commands/month and 256 MB storage -- monitor usage in production
 - `nx` (set-if-not-exists) returns `null` on failure, `"OK"` on success -- check the return value explicitly
 
 </red_flags>

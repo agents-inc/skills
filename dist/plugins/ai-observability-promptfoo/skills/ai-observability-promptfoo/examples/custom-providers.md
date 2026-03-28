@@ -246,7 +246,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           npx promptfoo@latest eval \
-            --fail-on-error \
             -o results.json \
             -o report.html \
             --share
@@ -299,9 +298,9 @@ jobs:
 // package.json
 {
   "scripts": {
-    "test:llm": "promptfoo eval --fail-on-error",
+    "test:llm": "promptfoo eval",
     "test:llm:view": "promptfoo view",
-    "test:llm:redteam": "promptfoo redteam run --fail-on-error",
+    "test:llm:redteam": "promptfoo redteam run",
     "test:llm:share": "promptfoo eval --share"
   }
 }
@@ -309,7 +308,7 @@ jobs:
 
 ```bash
 # Quality gate with pass rate threshold
-RESULTS=$(npx promptfoo@latest eval -o results.json --fail-on-error 2>&1)
+RESULTS=$(npx promptfoo@latest eval -o results.json 2>&1)
 PASS_RATE=$(jq '.results.stats.successes / (.results.stats.successes + .results.stats.failures) * 100' results.json)
 
 MIN_PASS_RATE=95

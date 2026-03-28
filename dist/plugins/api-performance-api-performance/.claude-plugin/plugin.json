@@ -1,6 +1,6 @@
 {
   "name": "api-performance-api-performance",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Query optimization, caching, indexing, connection pooling, async patterns",
   "author": {

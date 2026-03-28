@@ -205,13 +205,13 @@ The `extends` property in flat config objects simplifies plugin composition — 
 
 ```typescript
 export default defineConfig({
-  files: ["**/*.tsx"],
+  files: ["**/*.ts", "**/*.tsx"],
   extends: [
     "eslint/recommended",
     tseslint.configs.recommended,
-    reactPlugin.configs.flat.recommended,
+    // Add your framework plugin's flat config here
   ],
-  rules: { "react/prop-types": "off" },
+  rules: { "no-console": "warn" },
 });
 ```
 
@@ -225,17 +225,17 @@ See [examples/core.md](examples/core.md) for the full extends pattern.
 
 ## Decision Framework
 
-### ESLint vs Biome
+### ESLint + Prettier vs Alternatives
 
 ```
 Need linting and formatting?
 ├─ Speed is critical bottleneck (1000+ files)?
-│   └─ YES → Consider Biome (20x faster)
+│   └─ YES → Consider a Rust-based unified linter/formatter (not this skill's scope)
 └─ Need mature plugin ecosystem?
     └─ YES → ESLint 9/10 + Prettier ✓
 ```
 
-**Current recommendation:** ESLint 9/10 + Prettier (mature, extensive plugin ecosystem)
+**ESLint + Prettier strengths:** Mature ecosystem, extensive plugin support, framework-specific plugins
 
 ### ESLint 9 vs ESLint 10
 

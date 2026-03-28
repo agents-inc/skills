@@ -104,12 +104,12 @@ type FormStep = 1 | 2 | 3 | 4;
 
 interface FormState {
   currentStep: FormStep;
-  direction: "forward" | "backward";
+  direction: "forwards" | "backwards";
 }
 
 let formState: FormState = {
   currentStep: 1,
-  direction: "forward",
+  direction: "forwards",
 };
 
 function getStepElement(step: FormStep): HTMLElement | null {
@@ -134,7 +134,7 @@ export async function goToStep(step: FormStep): Promise<void> {
   if (step === formState.currentStep) return;
 
   // Determine direction
-  formState.direction = step > formState.currentStep ? "forward" : "backward";
+  formState.direction = step > formState.currentStep ? "forwards" : "backwards";
 
   const updateFn = () => {
     formState.currentStep = step;
@@ -181,7 +181,7 @@ export function prevStep(): void {
 }
 
 /* Forward navigation */
-html:active-view-transition-type(forward) {
+html:active-view-transition-type(forwards) {
   &::view-transition-old(form-step) {
     animation: slide-out-left var(--form-slide-duration) ease-in;
   }
@@ -191,7 +191,7 @@ html:active-view-transition-type(forward) {
 }
 
 /* Backward navigation */
-html:active-view-transition-type(backward) {
+html:active-view-transition-type(backwards) {
   &::view-transition-old(form-step) {
     animation: slide-out-right var(--form-slide-duration) ease-in;
   }

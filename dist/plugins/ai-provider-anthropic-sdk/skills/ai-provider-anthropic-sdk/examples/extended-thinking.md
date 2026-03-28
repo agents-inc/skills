@@ -326,14 +326,14 @@ const response2 = await client.messages.create({
 ## Key Constraints Reference
 
 | Constraint           | Details                                                                                                        |
-| -------------------- | -------------------------------------------------------------------------------------------------------------- | ------ | -------- | ---------------------------------- |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Recommended mode     | `thinking: { type: "adaptive" }` on Opus 4.6 and Sonnet 4.6                                                    |
 | `budget_tokens`      | Deprecated on 4.6 models. Must be less than `max_tokens` on older models (except with interleaved thinking)    |
 | Tool choice          | Only `"auto"` and `"none"` supported with thinking                                                             |
 | Thinking toggle      | Cannot toggle thinking on/off mid-turn during tool use                                                         |
 | Thinking blocks      | Must be passed back unmodified in multi-turn history                                                           |
 | Display options      | `"summarized"` (default) or `"omitted"`                                                                        |
-| Effort parameter     | `output_config: { effort: "max"                                                                                | "high" | "medium" | "low" }`--`"max"` is Opus 4.6 only |
+| Effort parameter     | `output_config: { effort }` -- `"max"` (Opus 4.6 only), `"high"` (default), `"medium"`, `"low"`                |
 | Interleaved thinking | Automatic with adaptive mode. Manual mode on Sonnet 4.6 requires `interleaved-thinking-2025-05-14` beta header |
 | Max output           | Opus 4.6: 128K tokens; Sonnet 4.6 / Haiku 4.5: 64K tokens                                                      |
 | Billing              | Billed for full thinking tokens, not summarized output                                                         |

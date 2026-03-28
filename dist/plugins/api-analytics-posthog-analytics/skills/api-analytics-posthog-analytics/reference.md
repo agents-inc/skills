@@ -48,15 +48,15 @@ Is this a B2B product with multi-user accounts?
 
 <integration>
 
-## Integration Guide
+## Integration Points
 
-**Works with:**
+**Where analytics hooks into your app:**
 
-- **Authentication flows**: Call `identify()` on login/signup, `reset()` on logout
-- **API routes**: Server-side event tracking with posthog-node
-- **Feature flags**: Same PostHog instance handles both (separate concern from analytics)
+- **Authentication**: Call `identify()` on login/signup, `reset()` on logout
+- **Server routes**: Server-side event tracking with posthog-node for business events
+- **Feature flags**: PostHog's feature flag system uses the same instance (separate concern from analytics)
 
-**Replaces / Conflicts with:**
+**Conflicts with:**
 
 - Other product analytics platforms -- choose one primary analytics tool to avoid event duplication
 

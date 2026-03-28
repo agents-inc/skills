@@ -296,9 +296,13 @@ async function requireAuth(request: Request) {
 
   const token = authHeader.replace("Bearer ", "");
 
-  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const supabase = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
 
   // IMPORTANT: Use getUser() not getSession() for server-side verification
   const {

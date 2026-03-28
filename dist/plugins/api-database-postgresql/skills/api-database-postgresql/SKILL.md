@@ -398,7 +398,7 @@ How many rows will the query return?
 **Common Mistakes:**
 
 - Forgetting that `result.rows[0]` can be `undefined` when no rows match -- always check before accessing
-- Assuming `result.rowCount` tells you how many rows a `SELECT` returned -- for `SELECT`, check `result.rows.length` instead; `rowCount` is from the command tag
+- Relying on `result.rowCount` for `SELECT` emptiness checks -- use `result.rows.length` instead; `rowCount` is `null` for some commands (e.g., `LOCK`) and `rows.length` is universally reliable
 - Using `$1` inside string literals in SQL -- `'$1'` is a literal string, not a parameter; use `$1` outside quotes
 - Forgetting that PostgreSQL arrays in parameters are automatically converted -- `[1, 2, 3]` becomes `{1,2,3}` which works for `= ANY($1)` but not for `IN ($1)` (use `= ANY($1::int[])` instead of `IN`)
 - Calling `client.release(true)` routinely -- passing `true` destroys the client instead of returning it to the pool; only use after unrecoverable errors
@@ -411,7 +411,7 @@ How many rows will the query return?
 - PostgreSQL `numeric`/`decimal` types are returned as **strings** by default (to avoid JavaScript floating-point precision loss). Parse them explicitly if you need numbers.
 - `LISTEN` survives transactions -- if you `BEGIN`, `LISTEN channel`, `ROLLBACK`, the listener is still active. LISTEN is not transactional.
 - `pool.end()` waits for all checked-out clients to be released. If a client is leaked (never released), `pool.end()` hangs forever.
-- SSL connections: if you set `ssl: true` in the config AND pass `sslmode=require` in the connection string, the connection string's SSL parameters overwrite your config object.
+- SSL connections: if the connection string contains any SSL parameters (`sslmode`, `sslcert`, `sslkey`, `sslrootcert`), the entire `ssl` config object is replaced -- use one or the other, not both.
 
 </red_flags>
 

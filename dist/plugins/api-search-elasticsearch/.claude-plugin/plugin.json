@@ -1,6 +1,6 @@
 {
   "name": "api-search-elasticsearch",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Elasticsearch patterns -- client setup, index management, search DSL, aggregations, vector search, bulk operations, deep pagination",
   "author": {

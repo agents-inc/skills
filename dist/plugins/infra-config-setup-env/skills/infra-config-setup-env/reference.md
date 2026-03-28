@@ -31,9 +31,9 @@ Need a feature flag?
 ├─ Is it a simple boolean toggle?
 │   ├─ YES → Use environment variable
 │   └─ NO → Need gradual rollout (5% → 50% → 100%)?
-│       ├─ YES → Use external service (LaunchDarkly, PostHog)
+│       ├─ YES → Use an external feature flag service
 │       └─ NO → Need user targeting?
-│           ├─ YES → Use external service
+│           ├─ YES → Use an external feature flag service
 │           └─ NO → Use environment variable
 ```
 

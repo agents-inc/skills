@@ -11,7 +11,7 @@
 ## Cookieless Mode Configuration
 
 ```typescript
-// ✅ Good Example - GDPR-compliant initialization
+// Good Example - GDPR-compliant initialization
 import posthog from "posthog-js";
 
 const POSTHOG_KEY = process.env.POSTHOG_KEY!;
@@ -40,7 +40,7 @@ posthog.init(POSTHOG_KEY, {
 ## Consent Banner Integration
 
 ```typescript
-// ✅ Good Example - Consent management
+// Good Example - Consent management
 "use client";
 
 import { useState, useEffect } from "react";
@@ -88,10 +88,10 @@ export function useCookieConsent() {
 
 ## Filtering Events with `before_send` Hook
 
-Since posthog-js v1.187.0, you can use `before_send` to filter, amend, or redact events before they're sent:
+Use the `before_send` hook to filter, amend, or redact events before they're sent:
 
 ```typescript
-// ✅ Good Example - Redact PII and filter internal traffic
+// Good Example - Redact PII and filter internal traffic
 import posthog from "posthog-js";
 
 const POSTHOG_KEY = process.env.POSTHOG_KEY!;
@@ -131,7 +131,7 @@ posthog.init(POSTHOG_KEY, {
 ## What NOT to Track
 
 ```typescript
-// ❌ NEVER include PII in event properties
+// BAD - NEVER include PII in event properties
 const badProperties = {
   email: "user@example.com", // PII
   name: "John Doe", // PII
@@ -143,7 +143,7 @@ const badProperties = {
   ssn: "123-45-6789", // PII
 };
 
-// ✅ Safe properties to include
+// Good - Safe properties to include
 const goodProperties = {
   user_id: "user_abc123", // Pseudonymized ID
   plan: "pro", // Account metadata

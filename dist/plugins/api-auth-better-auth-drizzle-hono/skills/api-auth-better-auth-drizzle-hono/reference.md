@@ -1,6 +1,6 @@
 # Authentication Reference
 
-> Decision frameworks, anti-patterns, and red flags for Better Auth. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision frameworks, anti-patterns, and version notes for Better Auth. See [SKILL.md](SKILL.md) for core concepts and red flags, and [examples/](examples/) for code examples.
 
 ---
 
@@ -193,50 +193,16 @@ export const auth = betterAuth({
 
 ---
 
-<red_flags>
+<version_notes>
 
-## RED FLAGS
-
-**High Priority Issues:**
-
-- **Hardcoded secrets** - clientId/clientSecret must be in environment variables
-- **CORS after auth routes** - preflight requests will fail, users can't sign in
-- **Missing BETTER_AUTH_SECRET** - sessions won't work without this env variable
-- **No schema generation after plugins** - database errors at runtime
-- **Default exports** - should use named exports per project convention
-
-**Medium Priority Issues:**
-
-- **No session cookie caching** - every request hits database
-- **Magic numbers for timeouts** - use named constants for session config
-- **No type annotations on middleware** - loses TypeScript benefits
-- **Hardcoded URLs** - use environment variables for app URL
-- **Missing error handling** - authClient calls should handle errors
-
-**Common Mistakes:**
-
-- Forgetting `c.req.raw` when calling `auth.handler()` (must pass raw Request)
-- Using `migrate` command with Drizzle (only works with Kysely - use `generate` + Drizzle Kit)
-- Not running ORM migrations after `npx auth@latest generate`
-- Using `signIn.email` without handling `twoFactorRedirect` response
-- Not configuring `trustedOrigins` for production deployment
-- Missing `credentials: true` in CORS config for cookie authentication
-
-**Gotchas & Edge Cases:**
-
-- Google only issues refresh token on first consent - use `accessType: "offline"` and `prompt: "consent"`
-- GitHub OAuth apps don't issue refresh tokens (access tokens are long-lived)
-- Session cookies need `SameSite=None` + `Secure` for cross-domain deployments
-- `cookieCache` with `strategy: "jwe"` encrypts session data (largest but most secure)
-- Stateless sessions can't be revoked individually - increment `version` to invalidate all
-- Organization plugin requires invitation email callback for member invites
+## Version Notes
 
 **Better Auth v1.5 Breaking Changes (from v1.4):**
 
 - CLI changed: `npx @better-auth/cli` replaced by `npx auth@latest`
 - Database adapters extracted to separate packages (e.g. `@better-auth/drizzle-adapter`) - old import paths still work via re-exports
 - API key plugin extracted to `@better-auth/api-key` (separate install)
-- `InferUser` and `InferSession` types removed - use generic `User` and `Session` types
+- `InferUser` and `InferSession` types removed - use generic `User` and `Session` types from `better-auth`
 - All previously deprecated APIs removed (e.g. `createAdapter` -> `createAdapterFactory`)
 - `$ERROR_CODES` field on plugins now expects `Record<string, RawError>` not `Record<string, string>`
 - After hooks execute post-transaction instead of during
@@ -250,16 +216,4 @@ export const auth = betterAuth({
 - Plugin callbacks receive `ctx` instead of `request` (access via `ctx.request`)
 - Admin impersonation disabled by default (v1.4.9+) - must explicitly enable
 
-**Notable Features (v1.4-v1.5):**
-
-- Stateless auth (omit `database` option for full stateless)
-- Experimental database joins (2-3x faster) via `experimental: { joins: true }`
-- Generic OAuth plugin for any OAuth2/OIDC provider
-- OAuth 2.1 Provider plugin (replaces deprecated oidcProvider)
-- SCIM provisioning, Device Authorization (RFC 8628)
-- Non-destructive secret key rotation (multiple BETTER_AUTH_SECRET versions)
-- Electron desktop authentication support
-- i18n plugin with type-safe error translations
-- Seat-based Stripe billing for organizations
-
-</red_flags>
+</version_notes>

@@ -33,8 +33,6 @@ export { client };
 
 ```typescript
 // providers/urql-provider.tsx
-"use client";
-
 import { Provider } from "urql";
 import { client } from "../lib/urql-client";
 import type { ReactNode } from "react";

@@ -287,8 +287,8 @@ const { handleSubmit } = useForm({
   initialValues: { username: "", email: "" },
 });
 
-const onSubmit = handleSubmit((values) => {
-  console.log(values);
+const onSubmit = handleSubmit(async (values) => {
+  await submitForm(values);
 });
 </script>
 
@@ -330,10 +330,14 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
 
+const MIN_CONTENT_LENGTH = 10;
+
 const schema = toTypedSchema(
   z.object({
     title: z.string().min(1, "Required"),
-    content: z.string().min(10, "At least 10 characters"),
+    content: z
+      .string()
+      .min(MIN_CONTENT_LENGTH, `At least ${MIN_CONTENT_LENGTH} characters`),
   }),
 );
 

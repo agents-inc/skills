@@ -84,8 +84,12 @@ const response = await client.chat({
   tools: [], // Tool definitions
   documents: [], // Documents for RAG grounding
   citationOptions: { mode: "fast" }, // Citation generation mode
-  safetyMode: "CONTEXTUAL", // "CONTEXTUAL" | "STRICT" | "NONE"
+  safetyMode: "CONTEXTUAL", // "CONTEXTUAL" | "STRICT" | "OFF"
   stopSequences: [], // Stop generation at these strings
+  toolChoice: "REQUIRED", // "REQUIRED" | "NONE" (optional, command-r7b+ only)
+  strictTools: true, // Force tool calls to match schema exactly
+  responseFormat: { type: "json_object" }, // Force JSON output
+  thinking: { type: "enabled", tokenBudget: 4096 }, // Reasoning mode
 });
 
 // Response access

@@ -145,7 +145,7 @@ export const db = drizzle(pool, { schema });
 ```typescript
 // lib/auth.ts
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzleAdapter } from "better-auth/adapters/drizzle"; // or "@better-auth/drizzle-adapter" (v1.5+)
 
 import { db } from "@/lib/db";
 
@@ -187,13 +187,15 @@ npx drizzle-kit migrate
 
 ---
 
-## Client Configuration (React)
+## Client Configuration
+
+Better Auth provides framework-specific clients: `better-auth/react`, `better-auth/vue`, `better-auth/svelte`, `better-auth/solid`, and `better-auth/client` (vanilla). All share the same API -- only the import path differs. Examples below use the React client.
 
 ### Basic Client
 
 ```typescript
 // lib/auth-client.ts
-import { createAuthClient } from "better-auth/react";
+import { createAuthClient } from "better-auth/react"; // or /vue, /svelte, /solid, /client
 
 export const authClient = createAuthClient({
   baseURL: process.env.APP_URL || "http://localhost:3000",

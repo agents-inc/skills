@@ -196,11 +196,12 @@ const response = await ai.models.generateContent({
 });
 ```
 
-| Mode   | Behavior                                         |
-| ------ | ------------------------------------------------ |
-| `AUTO` | Model decides whether to call a function         |
-| `ANY`  | Model always calls a function from allowed list  |
-| `NONE` | Model never calls functions (text-only response) |
+| Mode        | Behavior                                                          |
+| ----------- | ----------------------------------------------------------------- |
+| `AUTO`      | Model decides whether to call a function                          |
+| `ANY`       | Model always calls a function from allowed list                   |
+| `NONE`      | Model never calls functions (text-only response)                  |
+| `VALIDATED` | Like AUTO but guarantees function call schema adherence (Preview) |
 
 ---
 

@@ -25,25 +25,25 @@ interface ChatMessage {
 const live = await db.live(new Table("chat_message"));
 
 // Callback-based subscription
-live.subscribe((action, result, recordId) => {
-  switch (action) {
+live.subscribe((message) => {
+  switch (message.action) {
     case "CREATE":
-      console.log("New message:", result);
+      console.log("New message:", message.value);
       break;
     case "UPDATE":
-      console.log("Message updated:", result);
+      console.log("Message updated:", message.value);
       break;
     case "DELETE":
-      console.log("Message deleted, id:", recordId);
+      console.log("Message deleted, id:", message.recordId);
       break;
   }
 });
 
 // Cleanup when done
-live.kill();
+await live.kill();
 ```
 
-**Why good:** SDK v2 `live()` returns a subscription object, typed callback with action/result/recordId, `kill()` for cleanup, action-based switch for different event types
+**Why good:** SDK v2 `live()` returns a subscription object, callback receives `LiveMessage` with `action`/`value`/`recordId`, `kill()` for cleanup, action-based switch for different event types
 
 ### Good Example -- Filtered Live Query (SurrealQL)
 
@@ -74,7 +74,7 @@ class RealtimeManager {
   async subscribe(
     db: Surreal,
     table: string,
-    callback: (action: string, result: unknown) => void,
+    callback: (message: LiveMessage) => void,
   ): Promise<void> {
     const live = await db.live(new Table(table));
     live.subscribe(callback);
@@ -97,9 +97,9 @@ export { RealtimeManager };
 ```typescript
 // BAD: Subscribing to ALL changes on a high-traffic table
 const live = await db.live(new Table("audit_log"));
-live.subscribe((action, result) => {
+live.subscribe((message) => {
   // Fires for EVERY insert into audit_log -- could be thousands per second
-  console.log(action, result);
+  console.log(message.action, message.value);
 });
 // No cleanup -- subscription leaks on disconnect
 ```

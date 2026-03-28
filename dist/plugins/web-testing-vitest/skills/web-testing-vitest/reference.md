@@ -186,24 +186,19 @@ vi.mock("./module.js", () => ({
 ## Decision Framework
 
 ```
-Is it a user-facing workflow?
-├─ YES → Write E2E test (Playwright)
-└─ NO → Is it a pure function with no side effects?
-    ├─ YES → Write unit test (Vitest)
-    └─ NO → Is it component behavior in isolation?
-        ├─ MAYBE → Integration test acceptable but E2E preferred
-        └─ NO → Is it a React component?
-            └─ YES → Write E2E test, NOT unit test
+What are you testing?
+├─ Pure function (no side effects)?
+│   └─ YES → Write unit test with Vitest (describe/it/expect)
+├─ Component behavior with API integration?
+│   └─ YES → Write integration test with Vitest + network-level mocking
+├─ User-facing workflow?
+│   └─ YES → Use your E2E testing tool (not Vitest's scope)
+└─ Third-party library behavior?
+    └─ NO → Don't test it (library already has tests)
 
 Test organization decision:
-├─ Is it an integration/unit test?
+├─ Is it a unit or integration test?
 │   └─ YES → Co-locate with code (direct or __tests__ subdirectory)
 └─ Is it an E2E test?
-    └─ YES → Place in tests/e2e/ organized by user journey
+    └─ YES → Separate directory (not Vitest's concern)
 ```
-
-**Migration Path for Existing Codebases:**
-
-1. Keep integration tests for component behavior
-2. Add E2E tests for user workflows
-3. Eventually: E2E tests primary, integration tests secondary

@@ -260,7 +260,7 @@ async function fetchPostBySlug(slug: string) {
 }
 ```
 
-**Why good:** `client.fetch` throws on network/GROQ errors (unlike Supabase's `{ data, error }` pattern), null check for `[0]` queries that may return no results, descriptive error messages with context
+**Why good:** `client.fetch` throws on network/GROQ errors (not a `{ data, error }` tuple), null check for `[0]` queries that may return no results, descriptive error messages with context
 
 ### Bad Example — No Null Handling
 

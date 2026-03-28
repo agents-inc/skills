@@ -57,7 +57,7 @@ description: Structured content platform — GROQ queries, schema definitions, @
 
 - GraphQL-only APIs (Sanity supports GROQ primarily; use GraphQL skill if needed)
 - Direct database access (Sanity is a hosted content lake, not a database)
-- Non-Sanity CMS platforms (use dedicated skills for Contentful, Strapi, etc.)
+- Non-Sanity CMS platforms (use the dedicated skill for your CMS)
 
 **Detailed Resources:**
 
@@ -119,434 +119,141 @@ Sanity is a structured content platform built around a real-time content lake, G
 
 ### Pattern 1: Client Setup with createClient
 
-Configure `@sanity/client` with your project ID, dataset, API version, and CDN preference.
+Configure `@sanity/client` with project ID, dataset, API version, and CDN preference. Always set `apiVersion` to a dated string and `useCdn` explicitly.
 
 ```typescript
-// lib/sanity-client.ts
 import { createClient } from "@sanity/client";
 
-const PROJECT_ID = process.env.SANITY_PROJECT_ID!;
-const DATASET = process.env.SANITY_DATASET!;
-const API_VERSION = "2025-02-19";
-
 export const client = createClient({
-  projectId: PROJECT_ID,
-  dataset: DATASET,
-  apiVersion: API_VERSION,
+  projectId: process.env.SANITY_PROJECT_ID!,
+  dataset: process.env.SANITY_DATASET!,
+  apiVersion: "2025-02-19", // Pin to a specific API version date
   useCdn: true, // true for public reads, false for authenticated/fresh data
 });
 ```
 
-**Why good:** `apiVersion` pins API behavior, `useCdn: true` for cached reads, named constants for environment variables, no hardcoded credentials
-
-```typescript
-// BAD: Missing apiVersion, hardcoded credentials
-import { createClient } from "@sanity/client";
-
-const client = createClient({
-  projectId: "abc123",
-  dataset: "production",
-  // No apiVersion — uses legacy API behavior
-});
-```
-
-**Why bad:** No `apiVersion` causes unpredictable API behavior across deployments, hardcoded project ID belongs in environment variables, no `useCdn` specified
+For dual client setup (public + preview with token), see [examples/core.md](examples/core.md).
 
 ---
 
 ### Pattern 2: GROQ Queries with Filters and Projections
 
-GROQ queries combine filters (what to fetch), projections (what shape to return), and ordering/slicing (how to sort and paginate).
-
-#### Basic Query Structure
+GROQ queries combine filters, projections, ordering, and slicing. Always use `defineQuery()` for TypeGen and `$param` for dynamic values.
 
 ```typescript
 import { defineQuery } from "groq";
 
-// Filter → Projection → Order → Slice
-const POSTS_QUERY = defineQuery(`
-  *[_type == "post" && published == true]{
-    _id,
-    title,
-    slug,
-    "authorName": author->name,
-    "categoryTitle": category->title,
-    publishedAt
-  } | order(publishedAt desc) [0...10]
-`);
-```
-
-#### Parameterized Queries
-
-```typescript
 const POST_BY_SLUG_QUERY = defineQuery(`
   *[_type == "post" && slug.current == $slug][0]{
-    _id,
-    title,
-    body,
-    "author": author->{name, image},
-    "categories": categories[]->title
+    _id, title, body, "author": author->{name, image}
   }
 `);
-
-// Always pass dynamic values as parameters
 const post = await client.fetch(POST_BY_SLUG_QUERY, { slug: "my-post" });
 ```
 
-**Why good:** `defineQuery()` enables TypeGen type inference, parameters prevent GROQ injection, projection returns only needed fields, `[0]` returns a single object instead of an array, reference joins via `->` operator
-
-```groq
-// BAD: String interpolation in GROQ
-const query = `*[_type == "post" && slug.current == "${userInput}"]`;
-// GROQ injection vulnerability!
-```
-
-**Why bad:** String interpolation allows GROQ injection attacks — always use `$param` parameters
+Never interpolate user input into GROQ strings -- always use `$param` parameters to prevent GROQ injection. For advanced queries (combined queries, conditional projections), see [examples/core.md](examples/core.md).
 
 ---
 
 ### Pattern 3: Schema Definitions with defineType and defineField
 
-Schemas define content structure, validation, and Studio UI. Use `defineType`, `defineField`, and `defineArrayMember` for type safety.
-
-#### Document Type
+Define content structure with `defineType`, `defineField`, and `defineArrayMember` from `"sanity"` for type safety and Studio UI.
 
 ```typescript
-// schemas/post.ts
-import { defineType, defineField, defineArrayMember } from "sanity";
+import { defineType, defineField } from "sanity";
 
 export const postType = defineType({
   name: "post",
-  title: "Post",
   type: "document",
   fields: [
     defineField({
       name: "title",
-      title: "Title",
       type: "string",
-      validation: (rule) => rule.required().min(5).max(100),
+      validation: (r) => r.required(),
     }),
-    defineField({
-      name: "slug",
-      title: "Slug",
-      type: "slug",
-      options: { source: "title", maxLength: 96 },
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: "author",
-      title: "Author",
-      type: "reference",
-      to: [{ type: "author" }],
-    }),
-    defineField({
-      name: "body",
-      title: "Body",
-      type: "array",
-      of: [
-        defineArrayMember({ type: "block" }),
-        defineArrayMember({ type: "image", options: { hotspot: true } }),
-      ],
-    }),
-    defineField({
-      name: "publishedAt",
-      title: "Published At",
-      type: "datetime",
-    }),
+    defineField({ name: "slug", type: "slug", options: { source: "title" } }),
   ],
-  preview: {
-    select: { title: "title", author: "author.name", media: "mainImage" },
-    prepare(selection) {
-      const { author } = selection;
-      return { ...selection, subtitle: author ? `by ${author}` : "" };
-    },
-  },
 });
 ```
 
-**Why good:** `defineType`/`defineField` provide IDE autocomplete and type checking, validation rules enforce content quality, slug generated from title, `hotspot: true` enables focal point cropping, preview customizes Studio list appearance
+For complete schemas (images with hotspot, arrays, references, previews, object types), see [examples/schemas.md](examples/schemas.md).
 
 ---
 
 ### Pattern 4: Portable Text Rendering
 
-Render Sanity's block content (Portable Text) using `@portabletext/react` with custom components for non-standard blocks and marks.
+Render block content with `@portabletext/react`. Define custom `PortableTextComponents` for non-standard blocks (images, code) and marks (links, highlights).
 
 ```tsx
 import { PortableText } from "@portabletext/react";
-import type { PortableTextComponents } from "@portabletext/react";
-
-const components: PortableTextComponents = {
-  types: {
-    image: ({ value }) => {
-      if (!value?.asset?._ref) return null;
-      return (
-        <figure>
-          <img src={urlFor(value).width(800).url()} alt={value.alt || ""} />
-          {value.caption && <figcaption>{value.caption}</figcaption>}
-        </figure>
-      );
-    },
-    code: ({ value }) => (
-      <pre data-language={value.language}>
-        <code>{value.code}</code>
-      </pre>
-    ),
-  },
-  marks: {
-    link: ({ children, value }) => {
-      const rel = value.href?.startsWith("/")
-        ? undefined
-        : "noopener noreferrer";
-      const target = value.href?.startsWith("/") ? undefined : "_blank";
-      return (
-        <a href={value.href} rel={rel} target={target}>
-          {children}
-        </a>
-      );
-    },
-    highlight: ({ children }) => <mark>{children}</mark>,
-  },
-  block: {
-    h2: ({ children }) => <h2 id={children?.toString()}>{children}</h2>,
-    blockquote: ({ children }) => <blockquote>{children}</blockquote>,
-  },
-};
-
-// Usage
-function ArticleBody({ body }: { body: PortableTextBlock[] }) {
-  return <PortableText value={body} components={components} />;
-}
-export { ArticleBody };
+<PortableText value={body} components={components} />;
 ```
 
-**Why good:** Custom components for image, code, link, and heading blocks; external links get `noopener noreferrer`; images use `urlFor` for optimized URLs; fallback for missing assets; named export
+Do not use the deprecated `@sanity/block-content-to-react` package. For full component examples, see [examples/rich-content.md](examples/rich-content.md).
 
 ---
 
 ### Pattern 5: Image URL Builder
 
-Use `@sanity/image-url` to generate optimized, responsive image URLs with automatic crop and hotspot support.
+Use `@sanity/image-url` to generate optimized, responsive image URLs with crop and hotspot support.
 
 ```typescript
-// lib/sanity-image.ts
 import { createImageUrlBuilder } from "@sanity/image-url";
-import type { SanityImageSource } from "@sanity/image-url";
-import { client } from "./sanity-client";
-
 const builder = createImageUrlBuilder(client);
-
 export function urlFor(source: SanityImageSource) {
   return builder.image(source);
 }
+// Usage: urlFor(image).width(800).auto("format").url()
 ```
 
-#### Responsive Images
-
-```tsx
-const WIDTHS = [400, 800, 1200] as const;
-
-function ResponsiveImage({
-  image,
-  alt,
-}: {
-  image: SanityImageSource;
-  alt: string;
-}) {
-  return (
-    <img
-      src={urlFor(image).width(800).auto("format").url()}
-      srcSet={WIDTHS.map(
-        (w) => `${urlFor(image).width(w).auto("format").url()} ${w}w`,
-      ).join(", ")}
-      sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
-      alt={alt}
-      loading="lazy"
-    />
-  );
-}
-export { ResponsiveImage };
-```
-
-**Why good:** `createImageUrlBuilder` initializes from client config, `urlFor` helper is reusable, `.auto("format")` serves WebP/AVIF when supported, responsive `srcSet` with named width constants, lazy loading for performance, crop/hotspot applied automatically from the full image field
+For responsive `srcSet` patterns and image transformations, see [examples/rich-content.md](examples/rich-content.md).
 
 ---
 
 ### Pattern 6: Mutations (Create, Patch, Delete)
 
-Use `@sanity/client` methods for creating, updating, and deleting documents.
-
-#### Create
+Use `@sanity/client` methods for document mutations. Always call `.commit()` on patches and transactions.
 
 ```typescript
-const newPost = await client.create({
-  _type: "post",
-  title: "New Post",
-  slug: { _type: "slug", current: "new-post" },
-  publishedAt: new Date().toISOString(),
-});
-```
-
-#### Create or Replace
-
-```typescript
-// Overwrites entirely if document exists, creates if it doesn't
-await client.createOrReplace({
-  _id: "singleton-settings",
-  _type: "siteSettings",
-  title: "My Site",
-  description: "Site description",
-});
-```
-
-#### Patch
-
-```typescript
-// Set fields
-await client.patch("post-123").set({ title: "Updated Title" }).commit();
-
-// Increment a number field
-await client.patch("post-123").inc({ viewCount: 1 }).commit();
-
-// Unset (remove) a field
-await client.patch("post-123").unset(["temporaryField"]).commit();
-
-// Insert into an array at a specific position
-await client
-  .patch("post-123")
-  .insert("after", "tags[-1]", [{ _key: "abc", label: "new-tag" }])
-  .commit();
-```
-
-#### Delete
-
-```typescript
+await client.create({ _type: "post", title: "New Post" });
+await client.patch("post-123").set({ title: "Updated" }).commit();
 await client.delete("post-123");
 ```
 
-#### Transaction (Atomic Multi-Mutation)
-
-```typescript
-await client
-  .transaction()
-  .create({ _type: "log", message: "Post archived" })
-  .patch("post-123", (p) => p.set({ archived: true }))
-  .commit();
-```
-
-**Why good:** `.commit()` required on patches and transactions, `createOrReplace` for singletons, `_key` required for array items, transactions group related mutations atomically
+For `createOrReplace`, `createIfNotExists`, transactions, array inserts, and visibility options, see [examples/mutations.md](examples/mutations.md).
 
 ---
 
 ### Pattern 7: Real-Time Listeners
 
-Subscribe to document changes with `client.listen()` using a GROQ filter.
+Subscribe to document changes with `client.listen()`. The listener only uses the filter portion of GROQ -- projections and ordering are ignored.
 
 ```typescript
-// Listen for new/updated published posts
-const LISTENER_QUERY = `*[_type == "post" && published == true]`;
-
-const subscription = client.listen(LISTENER_QUERY).subscribe({
+const subscription = client.listen(`*[_type == "post"]`).subscribe({
   next: (update) => {
-    if (update.type === "mutation") {
-      console.log(`Document ${update.documentId} was ${update.transition}`);
-      // update.transition: 'update' | 'appear' | 'disappear'
-      // update.result contains the document if it matched the filter
-    }
+    /* update.transition: 'update' | 'appear' | 'disappear' */
   },
-  error: (err) => {
-    console.error("Listener error:", err.message);
-  },
+  error: (err) => console.error(err),
 });
-
-// Cleanup: unsubscribe when done
-subscription.unsubscribe();
+subscription.unsubscribe(); // Cleanup when done
 ```
 
-**Why good:** GROQ filter scopes to relevant documents, observable-based subscription with error handling, cleanup via `unsubscribe()`, `transition` field indicates what happened to the document
-
-**When to use:** Preview mode, live dashboards, collaborative editing indicators. For production frontends, evaluate the newer Live Content API as a simpler alternative.
+For production frontends, evaluate the newer Live Content API as a simpler alternative. For listener options and caveats, see [examples/mutations.md](examples/mutations.md).
 
 ---
 
 ### Pattern 8: TypeGen for Type-Safe GROQ
 
-Use Sanity TypeGen to generate TypeScript types from schemas and GROQ queries.
-
-#### Configuration
+Configure TypeGen in `sanity.cli.ts` with `overloadClientMethods: true` for typed `client.fetch` results. Use `defineQuery()` from `"groq"` to make queries discoverable by TypeGen.
 
 ```typescript
-// sanity.cli.ts
-import { defineCliConfig } from "sanity/cli";
-
-// NOTE: default export required by Sanity CLI tooling
-export default defineCliConfig({
-  api: {
-    projectId: "your-project-id",
-    dataset: "production",
-  },
-  typegen: {
-    enabled: true,
-    path: "./src/**/*.{ts,tsx}",
-    schema: "schema.json",
-    generates: "./sanity.types.ts",
-    overloadClientMethods: true,
-  },
-});
+// sanity.cli.ts — set typegen.overloadClientMethods: true
+// queries/post-queries.ts — wrap queries with defineQuery()
+// sanity.types.ts — auto-generated result types
+const posts = await client.fetch(allPostsQuery); // Typed result
 ```
 
-#### Query with defineQuery
-
-```typescript
-// queries/post-queries.ts
-import { defineQuery } from "groq";
-
-export const allPostsQuery = defineQuery(`
-  *[_type == "post" && published == true]{
-    _id,
-    title,
-    slug,
-    publishedAt
-  } | order(publishedAt desc)
-`);
-
-export const postBySlugQuery = defineQuery(`
-  *[_type == "post" && slug.current == $slug][0]{
-    _id,
-    title,
-    body,
-    "author": author->{name, image}
-  }
-`);
-```
-
-#### Using Generated Types
-
-```typescript
-import type {
-  AllPostsQueryResult,
-  PostBySlugQueryResult,
-} from "./sanity.types";
-import { allPostsQuery, postBySlugQuery } from "./queries/post-queries";
-
-// Return type is automatically inferred when overloadClientMethods is true
-const posts = await client.fetch(allPostsQuery);
-// posts: AllPostsQueryResult
-
-const post = await client.fetch(postBySlugQuery, { slug: "my-post" });
-// post: PostBySlugQueryResult
-```
-
-**Why good:** `defineQuery()` enables TypeGen to find and type queries, `overloadClientMethods: true` makes `client.fetch` return typed results, queries in dedicated files for organization, generated types update automatically during `sanity dev`
-
-```typescript
-// BAD: Inline query without defineQuery
-const posts = await client.fetch(`*[_type == "post"]{ title }`);
-// TypeGen cannot generate types for inline queries
-// posts is typed as 'any'
-```
-
-**Why bad:** TypeGen requires queries assigned to variables using `defineQuery()` or the `groq` template literal — inline strings produce untyped results
+Inline query strings without `defineQuery()` produce untyped (`any`) results. For full TypeGen configuration and workflow, see [examples/core.md](examples/core.md).
 
 </patterns>
 

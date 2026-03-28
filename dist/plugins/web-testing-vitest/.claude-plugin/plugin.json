@@ -1,8 +1,8 @@
 {
   "name": "web-testing-vitest",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "skills": "./skills/",
-  "description": "Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests",
+  "description": "Vitest test runner - configuration, assertions, mocking (vi.fn, vi.mock, vi.spyOn), fake timers, snapshot testing, coverage, workspace projects",
   "author": {
     "name": "@vince"
   }

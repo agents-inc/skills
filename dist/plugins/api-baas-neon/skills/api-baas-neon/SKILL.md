@@ -131,6 +131,17 @@ const result = await sql(`SELECT * FROM posts WHERE id = ${id}`); // TYPE ERROR 
 
 **Why bad:** Since v1.0, calling the query function as a regular function (not a tagged template) is a runtime and type error -- this was changed specifically to prevent SQL injection from string interpolation
 
+#### `sql.query()` for Dynamic SQL
+
+When the query string is in a variable (not a template literal), use the `.query()` method with numbered placeholders:
+
+```typescript
+const q = "SELECT * FROM posts WHERE id = $1 AND status = $2";
+const posts = await sql.query(q, [postId, "published"]);
+```
+
+**When to use:** Dynamic SQL strings built at runtime, or queries stored in variables. Parameters are still safely parameterized via `$1`, `$2`, etc.
+
 ---
 
 ### Pattern 2: Composable Query Fragments
@@ -414,7 +425,7 @@ What do you need the branch for?
 **Common Mistakes:**
 
 - **Wrong package name** -- The package is `@neondatabase/serverless`, not `neon-serverless` or `pg-neon`.
-- **Missing `ws` package on Node.js <= v21** -- Node.js versions before v22 lack built-in WebSocket support. Set `neonConfig.webSocketConstructor = ws` when using Pool/Client.
+- **Missing `ws` package on Node.js <= v21** -- Node.js versions before v22 lack built-in WebSocket support. When using `Pool`/`Client`, install `ws` and set `neonConfig.webSocketConstructor = ws`. Node.js v22+ has native WebSocket and needs no extra setup.
 - **Calling `neon()` result as a function instead of tagged template** -- `sql("SELECT ...")` is a type error since v1.0. Use `` sql`SELECT ...` `` (tagged template).
 - **Expecting Pool to survive across serverless invocations** -- Each cold start creates a new execution context. Do not rely on global state for connection management.
 - **64MB request/response limit** -- HTTP mode has a 64MB payload limit. Large result sets or bulk inserts must be chunked.

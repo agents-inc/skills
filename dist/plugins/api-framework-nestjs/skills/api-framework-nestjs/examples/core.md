@@ -357,8 +357,7 @@ export class MailerService {
   ) {}
 
   async sendEmail(to: string, subject: string, body: string) {
-    // Use this.options.host, this.options.port, this.options.from
-    console.log(`Sending email from ${this.options.from} to ${to}`);
+    // Use this.options to send email via your mail transport
   }
 }
 ```

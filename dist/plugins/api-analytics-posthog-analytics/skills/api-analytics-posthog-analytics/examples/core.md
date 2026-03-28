@@ -178,27 +178,30 @@ export type PostHogEvent = (typeof POSTHOG_EVENTS)[keyof typeof POSTHOG_EVENTS];
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "../lib/auth-client";
+// Use your auth solution's session hook
+interface SessionUser {
+  id: string;
+  plan?: string;
+  createdAt: string;
+  emailVerified?: boolean;
+}
 
-export function useAnalyticsIdentify() {
+export function useAnalyticsIdentify(user: SessionUser | null) {
   const posthog = usePostHog();
-  const { data: session } = authClient.useSession();
 
   useEffect(() => {
-    if (!posthog) return;
+    if (!posthog || !user) return;
 
-    if (session?.user) {
-      // Only identify if not already identified
-      if (!posthog._isIdentified()) {
-        posthog.identify(session.user.id, {
-          // Safe properties only - no PII in properties
-          plan: session.user.plan ?? "free",
-          created_at: session.user.createdAt,
-          is_verified: session.user.emailVerified ?? false,
-        });
-      }
+    // Only identify if not already identified
+    if (!posthog._isIdentified()) {
+      posthog.identify(user.id, {
+        // Safe properties only - no PII in properties
+        plan: user.plan ?? "free",
+        created_at: user.createdAt,
+        is_verified: user.emailVerified ?? false,
+      });
     }
-  }, [posthog, session?.user]);
+  }, [posthog, user]);
 }
 ```
 
@@ -233,9 +236,7 @@ export function BadIdentify() {
 
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "../lib/auth-client";
-
-export function useLogout() {
+export function useLogout(signOut: () => Promise<void>) {
   const posthog = usePostHog();
 
   const handleLogout = async () => {
@@ -245,8 +246,8 @@ export function useLogout() {
     // Reset PostHog to unlink future events
     posthog?.reset();
 
-    // Then sign out
-    await authClient.signOut();
+    // Then sign out via your auth solution
+    await signOut();
   };
 
   return { logout: handleLogout };

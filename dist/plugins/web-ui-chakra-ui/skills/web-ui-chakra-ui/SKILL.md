@@ -39,9 +39,9 @@ description: Accessible React component library with style props and theming
 
 **When NOT to use:**
 
-- Projects already using another component library (MUI, Ant Design, shadcn/ui)
+- Projects already using another component library
 - Projects requiring zero-runtime CSS (Chakra uses Emotion at runtime)
-- Projects that need Tailwind CSS integration (use shadcn/ui instead)
+- Projects that need utility-class-first styling integration
 - Extremely bundle-size-sensitive applications
 
 **Key patterns covered:**

@@ -1,6 +1,6 @@
 {
   "name": "api-database-surrealdb",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "SurrealDB multi-model database - SurrealQL queries, record links, graph relations, live queries, schema definitions, authentication, TypeScript SDK",
   "author": {

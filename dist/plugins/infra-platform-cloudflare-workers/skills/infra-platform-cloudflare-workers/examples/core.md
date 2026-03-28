@@ -174,8 +174,8 @@ export default {
 npx wrangler secret put API_KEY
 npx wrangler secret put DATABASE_URL
 
-# Bulk upload from file
-npx wrangler deploy --secrets-file .env.production
+# Bulk upload secrets from JSON file ({"KEY": "value", ...})
+npx wrangler secret bulk secrets.json
 
 # Local development secrets
 # Create .dev.vars (gitignored)

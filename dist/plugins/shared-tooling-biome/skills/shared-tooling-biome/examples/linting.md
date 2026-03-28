@@ -174,7 +174,7 @@ Suppressions can target a category (`lint`), group (`lint/suspicious`), or indiv
       },
     },
     {
-      // Config files: allow default exports (Vite, etc.)
+      // Config files: allow default exports (bundler configs, etc.)
       "includes": ["*.config.ts", "*.config.mjs", "*.config.js"],
       "linter": {
         "rules": {
@@ -269,11 +269,11 @@ import { UserCard } from "./user-card";
 
 ```typescript
 import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { clsx } from "clsx";
 import { Button } from "./button";
 
 import type { User } from "../types/user";
-import type { ApiResponse } from "@company/api-client";
+import type { Config } from "@company/shared";
 ```
 
 ---

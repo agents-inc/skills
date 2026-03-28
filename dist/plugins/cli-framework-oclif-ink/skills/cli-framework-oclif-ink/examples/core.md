@@ -424,11 +424,14 @@ export const SetupWizard: React.FC<{
             {config.framework as string}?
           </Text>
           <ConfirmInput
-            onConfirm={() => {
-              setStep("saving");
-              onComplete(config);
+            onSubmit={(confirmed) => {
+              if (confirmed) {
+                setStep("saving");
+                onComplete(config);
+              } else {
+                setStep("name");
+              }
             }}
-            onCancel={() => setStep("name")}
           />
         </>
       )}

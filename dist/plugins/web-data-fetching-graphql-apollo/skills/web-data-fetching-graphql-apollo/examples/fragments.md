@@ -51,7 +51,7 @@ export { USER_FIELDS, POST_FIELDS, POST_WITH_AUTHOR };
 ```typescript
 // components/post-detail.tsx
 import { useQuery, gql } from "@apollo/client";
-import { POST_WITH_AUTHOR } from "@/graphql/fragments";
+import { POST_WITH_AUTHOR } from "../graphql/fragments";
 
 const GET_POST = gql`
   query GetPost($id: ID!) {

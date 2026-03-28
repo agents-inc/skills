@@ -64,6 +64,8 @@ AppDataSource.initialize(); // Unhandled promise, no shutdown
 // data-source.ts
 import { DataSource } from "typeorm";
 import type { DataSourceOptions } from "typeorm";
+import { User } from "./entities/user.entity";
+import { Post } from "./entities/post.entity";
 
 const BASE_POOL_SIZE = 10;
 const PRODUCTION_POOL_SIZE = 25;
@@ -75,8 +77,8 @@ const baseOptions: DataSourceOptions = {
   username: process.env.DB_USER ?? "postgres",
   password: process.env.DB_PASS ?? "postgres",
   database: process.env.DB_NAME ?? "myapp",
-  entities: [__dirname + "/entities/*.entity.{ts,js}"],
-  migrations: [__dirname + "/migrations/*.{ts,js}"],
+  entities: [User, Post],
+  migrations: ["./src/migrations/*.ts"],
   synchronize: false,
   logging:
     process.env.NODE_ENV === "development" ? ["query", "error"] : ["error"],
@@ -91,7 +93,7 @@ const baseOptions: DataSourceOptions = {
 export const AppDataSource = new DataSource(baseOptions);
 ```
 
-**Why good:** Named constants for pool sizes, conditional logging, `synchronize: false` always, pool size tuned per environment
+**Why good:** Named constants for pool sizes, explicit entity imports (no globs), conditional logging, `synchronize: false` always, pool size tuned per environment
 
 ---
 

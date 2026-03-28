@@ -1,6 +1,6 @@
 # mobile-framework-react-native
 
-React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, Expo SDK 53+, React 19 features
+React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, React 19 features
 
 ## Installation
 

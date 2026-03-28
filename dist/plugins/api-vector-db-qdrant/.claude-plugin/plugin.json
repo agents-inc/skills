@@ -1,6 +1,6 @@
 {
   "name": "api-vector-db-qdrant",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Qdrant vector database -- collection management, point operations, payload filtering, named vectors, quantization, recommendations, snapshots",
   "author": {

@@ -75,7 +75,7 @@ const response = await chat.sendMessage({
 console.log(response.text);
 ```
 
-**Note:** Chat history uses `role: "model"` (not `"assistant"`) for Gemini responses.
+**Note:** Chat history uses `role: "model"` (not `"assistant"`) for Gemini responses -- differs from other providers' convention.
 
 ---
 

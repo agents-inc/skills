@@ -7,6 +7,18 @@ description: WCAG, ARIA, keyboard navigation
 
 > **Quick Guide:** All interactive elements keyboard accessible. Use headless component libraries for ARIA patterns. WCAG AA minimum (4.5:1 text contrast). Proper form labels and error handling. Combine automated axe-core checks with manual keyboard and screen reader testing.
 
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
+- [examples/forms.md](examples/forms.md) - Form validation, error handling, accessible select
+- [examples/focus.md](examples/focus.md) - Modal dialogs, focus indicators
+- [examples/color.md](examples/color.md) - Contrast, color-independent indicators, tokens
+- [examples/tables.md](examples/tables.md) - Sortable data tables
+- [examples/touch-targets.md](examples/touch-targets.md) - Touch target sizing
+- [examples/screen-reader.md](examples/screen-reader.md) - sr-only, hiding decorative content
+- [examples/testing.md](examples/testing.md) - Accessibility testing with axe-core
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, WCAG quick reference
+
 ---
 
 <critical_requirements>
@@ -122,7 +134,7 @@ See [examples/core.md](examples/core.md) for full skip link implementation with 
 
 ### ARIA Patterns
 
-**Use headless component libraries** (Radix UI, Headless UI, React Aria, Ariakit) - they handle ARIA automatically for complex patterns like dialogs, selects, tabs, tooltips, and popovers.
+**Use headless component libraries** - they handle ARIA automatically for complex patterns like dialogs, selects, tabs, tooltips, and popovers.
 
 #### Component-Specific ARIA
 
@@ -376,27 +388,6 @@ Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million
 - [ ] Animations respect prefers-reduced-motion
 
 **Screen readers to test with:** NVDA (Windows, free), JAWS (Windows, paid), VoiceOver (macOS/iOS, built-in), TalkBack (Android, built-in)
-
----
-
-**Key patterns covered:**
-
-- Keyboard navigation standards (tab order, focus management, skip links, Escape to close)
-- ARIA patterns with headless component libraries (built-in accessibility)
-- WCAG 2.2 AA compliance minimum (contrast ratios, semantic HTML, touch targets 24x24px minimum)
-- Screen reader support (role-based queries, hidden content, live regions)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
-- [examples/forms.md](examples/forms.md) - Form validation, error handling, accessible select
-- [examples/focus.md](examples/focus.md) - Modal dialogs, focus indicators
-- [examples/color.md](examples/color.md) - Contrast, color-independent indicators, tokens
-- [examples/tables.md](examples/tables.md) - Sortable data tables
-- [examples/touch-targets.md](examples/touch-targets.md) - Touch target sizing
-- [examples/screen-reader.md](examples/screen-reader.md) - sr-only, hiding decorative content
-- [examples/testing.md](examples/testing.md) - Accessibility testing with axe-core
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, WCAG quick reference
 
 ---
 

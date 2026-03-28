@@ -30,7 +30,7 @@ export { client };
 import { createClient } from "gel";
 
 // In production, set GEL_DSN (or EDGEDB_DSN) environment variable:
-// edgedb://user:password@hostname:5656/dbname
+// gel://user:password@hostname:5656/dbname
 const client = createClient();
 
 // Or with explicit concurrency control
@@ -70,7 +70,7 @@ import { createClient } from "gel";
 
 // BAD: Credentials in source code, no auto-discovery
 const client = createClient({
-  dsn: "edgedb://admin:p@ssw0rd@db.example.com:5656/production",
+  dsn: "gel://admin:p@ssw0rd@db.example.com:5656/production",
 });
 export default client;
 ```

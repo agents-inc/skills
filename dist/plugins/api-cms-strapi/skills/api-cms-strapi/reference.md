@@ -38,20 +38,8 @@ npm run strapi ts:generate-types --debug
 ### Content Management
 
 ```bash
-# Generate a new API (content type + controller + service + route)
+# Interactive generator (select api, controller, service, content-type, policy, middleware, or migration)
 npm run strapi generate
-
-# Generate a new controller
-npm run strapi generate:controller article
-
-# Generate a new service
-npm run strapi generate:service article
-
-# Generate a new policy
-npm run strapi generate:policy is-owner
-
-# Generate a new middleware
-npm run strapi generate:middleware analytics
 ```
 
 ---

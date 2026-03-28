@@ -16,12 +16,15 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+);
 ```
 
-**Why good:** `Database` generic enables autocomplete for all table names, column names, and return types; `anon` key is safe for browsers (RLS enforces access); named constants for environment variables
+**Why good:** `Database` generic enables autocomplete for all table names, column names, and return types; publishable key is safe for browsers (RLS enforces access); named constants for environment variables
 
 ### Bad Example — Untyped Client with Hardcoded Credentials
 
@@ -49,11 +52,11 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
 
 // Create a server-side client that respects RLS using the user's JWT
 export function createServerClient(accessToken: string) {
-  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -63,7 +66,7 @@ export function createServerClient(accessToken: string) {
 }
 ```
 
-**Why good:** Passes user JWT for RLS enforcement on server, still uses `anon` key (not `service_role`), factory function creates per-request clients
+**Why good:** Passes user JWT for RLS enforcement on server, still uses publishable key (not secret key), factory function creates per-request clients
 
 ### Good Example — Admin Client (Bypasses RLS)
 
@@ -73,16 +76,16 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY!;
 
 // ONLY use on the server — bypasses all RLS policies
 export const supabaseAdmin = createClient<Database>(
   SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
+  SUPABASE_SECRET_KEY,
 );
 ```
 
-**Why good:** Explicit naming (`supabaseAdmin`) signals this bypasses RLS, server-only environment variable, typed with `Database` generic
+**Why good:** Explicit naming (`supabaseAdmin`) signals this bypasses RLS, server-only secret key, typed with `Database` generic
 
 **When to use:** Admin operations, migrations, seeding data, webhook handlers that need full access. NEVER import this in client-side code.
 
@@ -217,7 +220,10 @@ async function createPost(post: PostInsert): Promise<Post> {
 ```typescript
 // SINGLETON (browser): One client for the entire app
 // lib/supabase.ts
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+);
 
 // PER-REQUEST (server): New client per request with user's token
 // api/route.ts
@@ -228,9 +234,13 @@ export async function GET(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const supabase = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
 
   const { data, error } = await supabase.from("posts").select("id, title");
 

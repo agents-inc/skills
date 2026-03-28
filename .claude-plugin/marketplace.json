@@ -14,191 +14,172 @@
       "name": "ai-infrastructure-huggingface-inference",
       "source": "./dist/plugins/ai-infrastructure-huggingface-inference",
       "description": "Hugging Face Inference SDK patterns for TypeScript/Node.js — InferenceClient setup, chat completion, text generation, streaming, embeddings, image generation, audio transcription, translation, summarization, and Inference Endpoints",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-infrastructure-litellm",
       "source": "./dist/plugins/ai-infrastructure-litellm",
       "description": "LiteLLM proxy server setup, TypeScript client patterns via OpenAI SDK, model routing, fallbacks, load balancing, spend tracking, virtual keys, and production deployment",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-infrastructure-modal",
       "source": "./dist/plugins/ai-infrastructure-modal",
       "description": "Serverless GPU compute platform for AI model deployment — web endpoints, GPU functions, model serving, and TypeScript client patterns",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-infrastructure-ollama",
       "source": "./dist/plugins/ai-infrastructure-ollama",
       "description": "Local LLM inference with the Ollama JavaScript client -- chat, streaming, tool calling, vision, embeddings, structured output, model management, and OpenAI-compatible endpoint",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-infrastructure-replicate",
       "source": "./dist/plugins/ai-infrastructure-replicate",
       "description": "Replicate SDK patterns for TypeScript/Node.js -- client setup, predictions, streaming, webhooks, file handling, model versioning, deployments, and training",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-infrastructure-together-ai",
       "source": "./dist/plugins/ai-infrastructure-together-ai",
       "description": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-observability-langfuse",
       "source": "./dist/plugins/ai-observability-langfuse",
       "description": "LLM observability with Langfuse — OpenTelemetry-based tracing, evaluations, prompt management, datasets, and production best practices",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-observability-promptfoo",
       "source": "./dist/plugins/ai-observability-promptfoo",
       "description": "Testing and evaluation framework for LLM prompts and applications -- promptfooconfig.yaml, assertions, model-graded evals, red teaming, CI/CD integration, custom providers, and comparative evaluation",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-orchestration-langchain",
       "source": "./dist/plugins/ai-orchestration-langchain",
       "description": "LangChain.js patterns for building LLM applications — chat models, LCEL chains, prompt templates, structured output, agents, tools, RAG, streaming, and LangSmith tracing",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-orchestration-llamaindex",
       "source": "./dist/plugins/ai-orchestration-llamaindex",
       "description": "LlamaIndex.TS data framework for RAG, indexing, retrieval, query engines, chat engines, and agentic workflows in TypeScript",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-orchestration-vercel-ai-sdk",
       "source": "./dist/plugins/ai-orchestration-vercel-ai-sdk",
       "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-patterns-tool-use-patterns",
       "source": "./dist/plugins/ai-patterns-tool-use-patterns",
       "description": "Provider-agnostic patterns for LLM function calling, tool loops, and agentic workflows",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-anthropic-sdk",
       "source": "./dist/plugins/ai-provider-anthropic-sdk",
       "description": "Official Anthropic SDK patterns for TypeScript/Node.js — client setup, Messages API, streaming, tool use, vision, extended thinking, structured outputs, prompt caching, batch API, and production best practices",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-claude-vision",
       "source": "./dist/plugins/ai-provider-claude-vision",
       "description": "Image understanding and document analysis with Claude's multimodal capabilities -- image input formats, PDF processing, multi-image patterns, structured extraction, and token cost estimation",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-cohere-sdk",
       "source": "./dist/plugins/ai-provider-cohere-sdk",
       "description": "Official Cohere TypeScript SDK patterns -- CohereClientV2, chat, embeddings, rerank, RAG with citations, tool use, streaming, and model selection",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-elevenlabs",
       "source": "./dist/plugins/ai-provider-elevenlabs",
       "description": "ElevenLabs voice AI SDK patterns for TypeScript/Node.js -- text-to-speech, streaming, voice cloning, speech-to-speech, pronunciation control, and conversational AI",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-google-gemini-sdk",
       "source": "./dist/plugins/ai-provider-google-gemini-sdk",
       "description": "Official TypeScript SDK for Google Gemini — client setup, text generation, multimodal input, function calling, structured output, streaming, embeddings, context caching, and chat sessions",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-mistral-sdk",
       "source": "./dist/plugins/ai-provider-mistral-sdk",
       "description": "Official Mistral AI TypeScript SDK patterns — client setup, chat completions, streaming, function calling, structured outputs, embeddings, vision, Codestral FIM, and production best practices",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-openai-sdk",
       "source": "./dist/plugins/ai-provider-openai-sdk",
       "description": "Official OpenAI SDK patterns for TypeScript/Node.js — client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "ai-provider-openai-whisper",
@@ -207,8 +188,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "ai"
+      }
     },
     {
       "name": "api-ai-anthropic-sdk",
@@ -217,8 +197,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-claude-vision",
@@ -227,8 +206,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-cohere-sdk",
@@ -237,8 +215,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-elevenlabs",
@@ -247,8 +224,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-google-gemini-sdk",
@@ -257,8 +233,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-huggingface-inference",
@@ -267,8 +242,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-langchain",
@@ -277,8 +251,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-langfuse",
@@ -287,8 +260,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-litellm",
@@ -297,8 +269,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-llamaindex",
@@ -307,8 +278,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-mistral-sdk",
@@ -317,8 +287,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-modal",
@@ -327,8 +296,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-ollama",
@@ -337,8 +305,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-openai-sdk",
@@ -347,8 +314,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-openai-whisper",
@@ -357,8 +323,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-promptfoo",
@@ -367,8 +332,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-replicate",
@@ -377,8 +341,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-together-ai",
@@ -387,8 +350,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-tool-use-patterns",
@@ -397,8 +359,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ai-vercel-ai-sdk",
@@ -407,58 +368,52 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-analytics-posthog-analytics",
       "source": "./dist/plugins/api-analytics-posthog-analytics",
       "description": "PostHog event tracking, user identification, group analytics for B2B, GDPR consent patterns. Use when implementing product analytics, tracking user behavior, setting up funnels, or configuring privacy-compliant tracking.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-analytics-setup-posthog",
       "source": "./dist/plugins/api-analytics-setup-posthog",
       "description": "PostHog analytics and feature flags setup",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-auth-better-auth-drizzle-hono",
       "source": "./dist/plugins/api-auth-better-auth-drizzle-hono",
       "description": "Better Auth patterns, sessions, OAuth",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-auth-clerk",
       "source": "./dist/plugins/api-auth-clerk",
       "description": "Clerk managed authentication - ClerkProvider, middleware, pre-built components, hooks, server-side auth, organizations, webhooks",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-auth-nextauth",
       "source": "./dist/plugins/api-auth-nextauth",
       "description": "Auth.js (NextAuth v5) authentication patterns - configuration, providers, session strategies, middleware, database adapters, role-based access, Edge compatibility",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-appwrite",
@@ -467,58 +422,52 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-firebase",
       "source": "./dist/plugins/api-baas-firebase",
       "description": "Firebase backend-as-a-service — Firestore, Authentication, Cloud Functions v2, Storage, Hosting, Admin SDK, security rules, emulator suite",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-neon",
       "source": "./dist/plugins/api-baas-neon",
       "description": "Serverless PostgreSQL with branching, autoscaling, and edge-compatible driver",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-planetscale",
       "source": "./dist/plugins/api-baas-planetscale",
       "description": "Serverless MySQL platform with branching, deploy requests, and edge-compatible driver",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-supabase",
       "source": "./dist/plugins/api-baas-supabase",
       "description": "Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-turso",
       "source": "./dist/plugins/api-baas-turso",
       "description": "Edge-hosted SQLite database with libSQL driver and embedded replicas",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-upstash",
@@ -527,8 +476,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-vercel-kv",
@@ -537,8 +485,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-baas-vercel-postgres",
@@ -547,8 +494,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-ci-cd-github-actions",
@@ -557,148 +503,133 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-cms-payload",
       "source": "./dist/plugins/api-cms-payload",
       "description": "Payload CMS v3 — TypeScript-native headless CMS with code-first collections, hooks, access control, Local/REST/GraphQL APIs, admin panel, and database adapter pattern",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-cms-sanity",
       "source": "./dist/plugins/api-cms-sanity",
       "description": "Structured content platform — GROQ queries, schema definitions, @sanity/client, Portable Text, image handling, real-time listeners, mutations, TypeGen",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-cms-strapi",
       "source": "./dist/plugins/api-cms-strapi",
       "description": "Open-source headless CMS — content type schemas, REST API, Document Service API, custom controllers, lifecycle hooks, authentication, TypeScript",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-commerce-stripe",
       "source": "./dist/plugins/api-commerce-stripe",
       "description": "Stripe payment processing — Checkout Sessions, Payment Intents, subscriptions, webhooks, Connect, customer management, error handling",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-cockroachdb",
       "source": "./dist/plugins/api-database-cockroachdb",
       "description": "CockroachDB distributed SQL -- transaction retries, multi-region, online schema changes, follower reads, PostgreSQL compatibility gaps",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-drizzle",
       "source": "./dist/plugins/api-database-drizzle",
       "description": "Drizzle ORM, queries, migrations",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-edgedb",
       "source": "./dist/plugins/api-database-edgedb",
       "description": "Graph-relational database with EdgeQL query language, code-first schema, link-based relations, computed properties, and fully typed TypeScript query builder",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-knex",
       "source": "./dist/plugins/api-database-knex",
       "description": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL -- fluent queries, schema builder, migrations, seeds, transactions, raw queries",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-mongodb",
       "source": "./dist/plugins/api-database-mongodb",
       "description": "MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-mongoose",
       "source": "./dist/plugins/api-database-mongoose",
       "description": "MongoDB ODM with schemas, validation, middleware, and TypeScript support",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-mysql",
       "source": "./dist/plugins/api-database-mysql",
       "description": "Direct MySQL database access with mysql2 driver -- connection pools, prepared statements, transactions, streaming, typed queries, error handling",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-postgresql",
       "source": "./dist/plugins/api-database-postgresql",
       "description": "Direct PostgreSQL access with node-postgres (pg) -- connection pools, parameterized queries, transactions, streaming, LISTEN/NOTIFY, error handling",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-prisma",
       "source": "./dist/plugins/api-database-prisma",
       "description": "Prisma ORM, type-safe queries, migrations, relations",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-redis",
       "source": "./dist/plugins/api-database-redis",
       "description": "Redis in-memory data store patterns with ioredis and node-redis -- caching, sessions, rate limiting, pub/sub, streams, queues, transactions, cluster",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-sequelize",
@@ -707,28 +638,25 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-surrealdb",
       "source": "./dist/plugins/api-database-surrealdb",
       "description": "SurrealDB multi-model database - SurrealQL queries, record links, graph relations, live queries, schema definitions, authentication, TypeScript SDK",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-typeorm",
       "source": "./dist/plugins/api-database-typeorm",
       "description": "Decorator-based ORM for TypeScript with Active Record and Data Mapper patterns",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-upstash",
@@ -737,68 +665,61 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-vercel-kv",
       "source": "./dist/plugins/api-database-vercel-kv",
       "description": "Serverless Redis-compatible key-value store via Upstash REST API -- edge-compatible, automatic JSON serialization, TTL-based caching",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-database-vercel-postgres",
       "source": "./dist/plugins/api-database-vercel-postgres",
       "description": "Serverless PostgreSQL on Vercel with edge-compatible SDK",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-email-resend-react-email",
       "source": "./dist/plugins/api-email-resend-react-email",
       "description": "Resend + React Email templates",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-email-setup-resend",
       "source": "./dist/plugins/api-email-setup-resend",
       "description": "Resend email setup, domain verification",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-flags-posthog-flags",
       "source": "./dist/plugins/api-flags-posthog-flags",
       "description": "PostHog feature flags, rollouts, A/B testing. Use when implementing gradual rollouts, A/B tests, kill switches, remote configuration, beta features, or user targeting with PostHog.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-framework-elysia",
       "source": "./dist/plugins/api-framework-elysia",
       "description": "Bun-native HTTP framework — routing, TypeBox validation, Eden Treaty, plugins, lifecycle hooks",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-framework-express",
@@ -807,98 +728,88 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-framework-fastify",
       "source": "./dist/plugins/api-framework-fastify",
       "description": "Fastify routes, JSON Schema validation, plugin system, TypeScript type providers",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-framework-hono",
       "source": "./dist/plugins/api-framework-hono",
       "description": "Hono routes, OpenAPI, Zod validation",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-framework-nestjs",
       "source": "./dist/plugins/api-framework-nestjs",
       "description": "NestJS backend framework - modules, controllers, services, DI, guards, pipes, interceptors, exception filters, middleware, DTOs with class-validator",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-observability-axiom-pino-sentry",
       "source": "./dist/plugins/api-observability-axiom-pino-sentry",
       "description": "Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-observability-setup-axiom-pino-sentry",
       "source": "./dist/plugins/api-observability-setup-axiom-pino-sentry",
       "description": "Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-performance-api-performance",
       "source": "./dist/plugins/api-performance-api-performance",
       "description": "Query optimization, caching, indexing, connection pooling, async patterns",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-search-elasticsearch",
       "source": "./dist/plugins/api-search-elasticsearch",
       "description": "Elasticsearch patterns -- client setup, index management, search DSL, aggregations, vector search, bulk operations, deep pagination",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-search-meilisearch",
       "source": "./dist/plugins/api-search-meilisearch",
       "description": "Meilisearch search engine patterns -- client setup, indexing, search, filtering, facets, geo search, multi-tenancy, task management",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-vector-db-chroma",
       "source": "./dist/plugins/api-vector-db-chroma",
       "description": "Chroma vector database -- collection management, automatic embedding, metadata filtering, document storage, query patterns",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-vector-db-pinecone",
@@ -907,78 +818,88 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-vector-db-qdrant",
       "source": "./dist/plugins/api-vector-db-qdrant",
       "description": "Qdrant vector database -- collection management, point operations, payload filtering, named vectors, quantization, recommendations, snapshots",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "api-vector-db-weaviate",
       "source": "./dist/plugins/api-vector-db-weaviate",
       "description": "Weaviate vector database patterns with weaviate-client v3 -- collection management, vectorizer modules, hybrid search, filtering, generative search (RAG), multi-tenancy, batch imports",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "api"
+      }
     },
     {
       "name": "cli-framework-cli-commander",
       "source": "./dist/plugins/cli-framework-cli-commander",
       "description": "Node.js CLI development with Commander.js and @clack/prompts - command structure, interactive prompts, wizard state machines, config hierarchies, exit codes, cancellation handling",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "cli"
+      }
     },
     {
       "name": "cli-framework-oclif-ink",
       "source": "./dist/plugins/cli-framework-oclif-ink",
       "description": "Modern CLI development combining oclif's command framework with Ink's React-based terminal rendering",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "cli"
+      }
+    },
+    {
+      "name": "desktop-framework-electron",
+      "source": "./dist/plugins/desktop-framework-electron",
+      "description": "Electron process architecture, IPC patterns, preload security, native APIs, packaging and distribution",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-framework-tauri",
+      "source": "./dist/plugins/desktop-framework-tauri",
+      "description": "Tauri 2.x commands, IPC bridge, permission system, plugins, window management, system tray, packaging",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
     },
     {
       "name": "infra-ci-cd-docker",
       "source": "./dist/plugins/infra-ci-cd-docker",
       "description": "Docker containerization patterns for Node.js/TypeScript development and production",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "infra"
+      }
     },
     {
       "name": "infra-ci-cd-github-actions",
       "source": "./dist/plugins/infra-ci-cd-github-actions",
       "description": "GitHub Actions, pipelines, deployment",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "infra"
+      }
     },
     {
       "name": "infra-config-setup-env",
       "source": "./dist/plugins/infra-config-setup-env",
       "description": "Environment configuration, Zod validation",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "infra"
+      }
     },
     {
       "name": "infra-env-setup-env",
@@ -987,8 +908,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "infra"
+      }
     },
     {
       "name": "infra-monorepo-turborepo",
@@ -997,28 +917,25 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "infra"
+      }
     },
     {
       "name": "infra-platform-cloudflare-workers",
       "source": "./dist/plugins/infra-platform-cloudflare-workers",
       "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "infra"
+      }
     },
     {
       "name": "meta-design-expressive-typescript",
       "source": "./dist/plugins/meta-design-expressive-typescript",
       "description": "Readable functional patterns — orchestrators, pure functions, named abstractions",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-anti-over-engineering",
@@ -1027,8 +944,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-context-management",
@@ -1037,8 +953,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-improvement-protocol",
@@ -1047,8 +962,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-investigation-requirements",
@@ -1057,18 +971,16 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-research-methodology",
       "source": "./dist/plugins/meta-methodology-research-methodology",
       "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-success-criteria",
@@ -1077,8 +989,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-methodology-write-verification",
@@ -1087,8 +998,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-research-research-methodology",
@@ -1097,8 +1007,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-reviewing-cli-reviewing",
@@ -1107,38 +1016,34 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "meta-reviewing-reviewing",
       "source": "./dist/plugins/meta-reviewing-reviewing",
       "description": "Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "meta"
+      }
     },
     {
       "name": "mobile-framework-expo",
       "source": "./dist/plugins/mobile-framework-expo",
       "description": "Expo managed workflow",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "mobile"
+      }
     },
     {
       "name": "mobile-framework-react-native",
       "source": "./dist/plugins/mobile-framework-react-native",
-      "description": "React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, Expo SDK 53+, React 19 features",
-      "version": "3.0.0",
+      "description": "React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, React 19 features",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "mobile"
+      }
     },
     {
       "name": "security-auth-security",
@@ -1156,8 +1061,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-ci-cd-docker",
@@ -1166,8 +1070,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-ci-cd-github-actions",
@@ -1176,8 +1079,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-infra-setup-env",
@@ -1186,8 +1088,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-meta-cli-reviewing",
@@ -1196,8 +1097,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-meta-research-methodology",
@@ -1206,8 +1106,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-meta-reviewing",
@@ -1216,98 +1115,88 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-monorepo-nx",
       "source": "./dist/plugins/shared-monorepo-nx",
       "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-monorepo-pnpm-workspaces",
       "source": "./dist/plugins/shared-monorepo-pnpm-workspaces",
       "description": "pnpm workspace protocol, filtering, catalogs, shared dependencies, publishing, and CI/CD for monorepo management",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-monorepo-turborepo",
       "source": "./dist/plugins/shared-monorepo-turborepo",
       "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-security-auth-security",
       "source": "./dist/plugins/shared-security-auth-security",
       "description": "Secrets management, XSS prevention, CSRF protection, dependency scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-tooling-biome",
       "source": "./dist/plugins/shared-tooling-biome",
       "description": "Biome v2 unified linter, formatter, and import organizer — single Rust-powered tool replacing ESLint + Prettier with 97% Prettier compatibility and 20x faster performance",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-tooling-eslint-prettier",
       "source": "./dist/plugins/shared-tooling-eslint-prettier",
       "description": "ESLint 9/10 flat config with defineConfig(), Prettier v3.0+ shared config, eslint-config-prettier integration, typescript-eslint v8+ projectService",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-tooling-git-hooks",
       "source": "./dist/plugins/shared-tooling-git-hooks",
       "description": "Husky v9 setup, lint-staged v16 patterns, commitlint with conventional commits, CI/production handling, monorepo setup, migration from v8",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "shared-tooling-typescript-config",
       "source": "./dist/plugins/shared-tooling-typescript-config",
       "description": "TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "shared"
+      }
     },
     {
       "name": "web-accessibility-web-accessibility",
       "source": "./dist/plugins/web-accessibility-web-accessibility",
       "description": "WCAG, ARIA, keyboard navigation",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-animation-css-animations",
@@ -1316,78 +1205,70 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-animation-framer-motion",
       "source": "./dist/plugins/web-animation-framer-motion",
       "description": "Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-animation-view-transitions",
       "source": "./dist/plugins/web-animation-view-transitions",
       "description": "View Transitions API patterns - same-document transitions, cross-document MPA transitions, shared element animations, pseudo-element styling, accessibility",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-data-fetching-graphql-apollo",
       "source": "./dist/plugins/web-data-fetching-graphql-apollo",
       "description": "Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-data-fetching-graphql-urql",
       "source": "./dist/plugins/web-data-fetching-graphql-urql",
       "description": "URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-data-fetching-swr",
       "source": "./dist/plugins/web-data-fetching-swr",
       "description": "SWR data fetching patterns - useSWR, useSWRMutation, caching, revalidation, infinite scroll",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-data-fetching-trpc",
       "source": "./dist/plugins/web-data-fetching-trpc",
       "description": "tRPC type-safe API patterns, procedures, middleware, React Query integration",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-error-handling-error-boundaries",
       "source": "./dist/plugins/web-error-handling-error-boundaries",
       "description": "Error boundary patterns, fallback UI, reset/retry, react-error-boundary library, React 19 createRoot error hooks",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-error-handling-result-types",
@@ -1396,18 +1277,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-files-file-upload-patterns",
       "source": "./dist/plugins/web-files-file-upload-patterns",
       "description": "File upload patterns - drag-drop dropzones, chunked/resumable uploads, S3 presigned URLs, file validation (MIME type, magic bytes), progress tracking, image preview, accessibility (ARIA)",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-files-image-handling",
@@ -1416,8 +1295,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-forms-react-hook-form",
@@ -1426,28 +1304,34 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
+    },
+    {
+      "name": "web-forms-tanstack-form",
+      "source": "./dist/plugins/web-forms-tanstack-form",
+      "description": "TanStack Form patterns - useForm, form.Field, validators, arrays, linked fields, createFormHook, type safety",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
     },
     {
       "name": "web-forms-vee-validate",
       "source": "./dist/plugins/web-forms-vee-validate",
       "description": "VeeValidate v4 patterns - useForm, useField, defineField, useFieldArray, schema validation with Composition API",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-forms-zod-validation",
       "source": "./dist/plugins/web-forms-zod-validation",
       "description": "Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-framework-angular-standalone",
@@ -1456,8 +1340,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-framework-nextjs-app-router",
@@ -1476,8 +1359,7 @@
         "ssr",
         "ssg",
         "routing"
-      ],
-      "category": "web"
+      ]
     },
     {
       "name": "web-framework-nextjs-server-actions",
@@ -1494,8 +1376,7 @@
         "revalidation",
         "forms",
         "app-router"
-      ],
-      "category": "web"
+      ]
     },
     {
       "name": "web-framework-react",
@@ -1504,8 +1385,7 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-framework-solidjs",
@@ -1514,8 +1394,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-framework-svelte",
@@ -1524,8 +1403,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-framework-vue-composition-api",
@@ -1534,18 +1412,16 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-i18n-next-intl",
       "source": "./dist/plugins/web-i18n-next-intl",
       "description": "Type-safe i18n for Next.js App Router",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-i18n-react-intl",
@@ -1554,18 +1430,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-i18n-vue-i18n",
       "source": "./dist/plugins/web-i18n-vue-i18n",
       "description": "Type-safe i18n for Vue 3 Composition API",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-meta-framework-astro",
@@ -1574,8 +1448,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
+    },
+    {
+      "name": "web-meta-framework-docusaurus",
+      "source": "./dist/plugins/web-meta-framework-docusaurus",
+      "description": "Docusaurus 3.x documentation framework — site configuration, docs/blog plugins, sidebars, versioning, MDX, swizzling, and deployment",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
     },
     {
       "name": "web-meta-framework-nextjs",
@@ -1584,8 +1466,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-meta-framework-nuxt",
@@ -1594,8 +1475,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-meta-framework-qwik",
@@ -1604,8 +1484,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-meta-framework-remix",
@@ -1614,8 +1493,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-meta-framework-sveltekit",
@@ -1624,18 +1502,25 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
+    },
+    {
+      "name": "web-meta-framework-vitepress",
+      "source": "./dist/plugins/web-meta-framework-vitepress",
+      "description": "VitePress 1.x — Vue-powered static site generator for documentation sites, built on Vite",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
     },
     {
       "name": "web-mocks-msw",
       "source": "./dist/plugins/web-mocks-msw",
       "description": "MSW handlers, browser/server workers, test data. Use when setting up API mocking for development or testing, creating mock handlers with variants, or sharing mocks between browser and Node environments.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-performance-web-performance",
@@ -1644,8 +1529,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-pwa-offline-first",
@@ -1654,18 +1538,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-pwa-service-workers",
       "source": "./dist/plugins/web-pwa-service-workers",
       "description": "Service Worker lifecycle, caching strategies, offline patterns, update handling, precaching, runtime caching",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-realtime-socket-io",
@@ -1674,8 +1556,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-realtime-sse",
@@ -1684,18 +1565,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-realtime-websockets",
       "source": "./dist/plugins/web-realtime-websockets",
       "description": "Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-routing-react-router",
@@ -1704,8 +1583,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-routing-tanstack-router",
@@ -1714,8 +1592,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-server-state-react-query",
@@ -1724,8 +1601,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-state-jotai",
@@ -1734,8 +1610,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-state-mobx",
@@ -1744,8 +1619,7 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-state-ngrx-signalstore",
@@ -1754,8 +1628,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-state-pinia",
@@ -1764,8 +1637,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-state-redux-toolkit",
@@ -1774,8 +1646,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-state-zustand",
@@ -1784,8 +1655,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-styling-cva",
@@ -1794,8 +1664,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-styling-scss-modules",
@@ -1804,18 +1673,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-styling-tailwind",
       "source": "./dist/plugins/web-styling-tailwind",
       "description": "Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-testing-cypress-e2e",
@@ -1824,8 +1691,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-testing-playwright-e2e",
@@ -1834,8 +1700,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-testing-react-testing-library",
@@ -1844,18 +1709,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-testing-vitest",
       "source": "./dist/plugins/web-testing-vitest",
-      "description": "Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests",
-      "version": "6.0.0",
+      "description": "Vitest test runner - configuration, assertions, mocking (vi.fn, vi.mock, vi.spyOn), fake timers, snapshot testing, coverage, workspace projects",
+      "version": "7.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-testing-vue-test-utils",
@@ -1864,8 +1727,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-tooling-storybook",
@@ -1874,8 +1736,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-tooling-vite",
@@ -1884,48 +1745,43 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-ant-design",
       "source": "./dist/plugins/web-ui-ant-design",
       "description": "Ant Design enterprise UI library for React",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-chakra-ui",
       "source": "./dist/plugins/web-ui-chakra-ui",
       "description": "Accessible React component library with style props and theming",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-headless-ui",
       "source": "./dist/plugins/web-ui-headless-ui",
       "description": "Unstyled accessible UI components by Tailwind Labs",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-mantine",
       "source": "./dist/plugins/web-ui-mantine",
       "description": "Mantine v7 component library — theming, styling, hooks, forms, notifications",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-mui",
@@ -1934,8 +1790,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-radix-ui",
@@ -1944,18 +1799,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-shadcn-ui",
       "source": "./dist/plugins/web-ui-shadcn-ui",
       "description": "shadcn/ui component library patterns, CLI usage, theming, customization",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-ui-tanstack-table",
@@ -1964,8 +1817,16 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
+    },
+    {
+      "name": "web-ui-vuetify",
+      "source": "./dist/plugins/web-ui-vuetify",
+      "description": "Material Design component library for Vue 3",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
     },
     {
       "name": "web-utilities-date-fns",
@@ -1974,8 +1835,7 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-utilities-native-js",
@@ -1984,8 +1844,7 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-utilities-rxjs",
@@ -1994,8 +1853,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     },
     {
       "name": "web-utilities-vueuse",
@@ -2004,8 +1862,7 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      },
-      "category": "web"
+      }
     }
   ],
   "description": "Community skills and stacks for Claude Code"

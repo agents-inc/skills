@@ -19,8 +19,7 @@
 npx nx g @nx/react:library shared-ui \
   --directory=libs/shared/ui \
   --bundler=vite \
-  --unitTestRunner=vitest \
-  --style=scss
+  --unitTestRunner=vitest
 
 # Create a publishable TypeScript library
 npx nx g @nx/js:library utils \
@@ -37,10 +36,9 @@ npx nx g @nx/react:library feature-auth \
 ### Creating Applications
 
 ```bash
-# Create a Next.js application
-npx nx g @nx/next:application web \
-  --directory=apps/web \
-  --style=scss
+# Create a React application
+npx nx g @nx/react:application web \
+  --directory=apps/web
 
 # Create a Node API application
 npx nx g @nx/node:application api \
@@ -48,8 +46,7 @@ npx nx g @nx/node:application api \
 
 # Create an Angular application
 npx nx g @nx/angular:application admin \
-  --directory=apps/admin \
-  --style=scss
+  --directory=apps/admin
 ```
 
 ### Creating Components
@@ -58,8 +55,7 @@ npx nx g @nx/angular:application admin \
 # Create a React component in a library
 npx nx g @nx/react:component button \
   --project=shared-ui \
-  --directory=libs/shared/ui/src/lib/button \
-  --style=scss
+  --directory=libs/shared/ui/src/lib/button
 
 # Dry run to preview generated files
 npx nx g @nx/react:component button \
@@ -74,11 +70,7 @@ npx nx g @nx/react:component button \
   "generators": {
     "@nx/react:library": {
       "bundler": "vite",
-      "unitTestRunner": "vitest",
-      "style": "scss"
-    },
-    "@nx/react:component": {
-      "style": "scss"
+      "unitTestRunner": "vitest"
     },
     "@nx/js:library": {
       "buildable": true,

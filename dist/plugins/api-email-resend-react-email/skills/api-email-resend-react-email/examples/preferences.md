@@ -12,7 +12,7 @@ Store user email preferences in database.
 
 ```typescript
 // lib/db/schema/email-preferences.ts
-// Adapt to your database solution (Drizzle, Prisma, Kysely, etc.)
+// Adapt to your database solution
 
 // Schema concept - implement with your ORM:
 // table: email_preferences

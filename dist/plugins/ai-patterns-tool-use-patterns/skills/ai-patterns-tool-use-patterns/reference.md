@@ -12,7 +12,7 @@ All providers use JSON Schema for parameters. The wrapping structure differs:
 | --------- | ------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
 | OpenAI    | `{ type: "function", function: { name, description, parameters } }` | `parameters`   | `message.tool_calls[]` with `function.arguments` (JSON string)        | `{ role: "tool", tool_call_id, content }`                     |
 | Anthropic | `{ name, description, input_schema }`                               | `input_schema` | Content block `{ type: "tool_use", id, name, input }` (parsed object) | Content block `{ type: "tool_result", tool_use_id, content }` |
-| Google    | `FunctionDeclaration { name, description, parameters }`             | `parameters`   | `function_call { name, args }` (parsed object)                        | `function_response { name, response }`                        |
+| Google    | `FunctionDeclaration { name, description, parameters }`             | `parameters`   | `function_call { name, id, args }` (parsed object)                    | `function_response { name, id, response }`                    |
 
 **Key differences:**
 

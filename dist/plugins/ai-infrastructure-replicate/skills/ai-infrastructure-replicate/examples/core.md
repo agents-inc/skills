@@ -145,8 +145,9 @@ console.log(version.openapi_schema); // Model's input/output schema
 
 ```typescript
 // Create a prediction (returns immediately, does not wait for completion)
+// Use `version` for pinned reproducibility, or `model` for latest-version convenience
 const prediction = await replicate.predictions.create({
-  version: "27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
+  model: "owner/model", // OR version: "sha256hash" for pinned version
   input: {
     prompt: "a painting of a cat in the style of Van Gogh",
   },

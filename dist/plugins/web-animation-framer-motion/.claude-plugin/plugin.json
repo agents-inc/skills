@@ -1,6 +1,6 @@
 {
   "name": "web-animation-framer-motion",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility",
   "author": {

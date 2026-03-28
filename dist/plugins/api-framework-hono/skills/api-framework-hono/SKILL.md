@@ -38,7 +38,7 @@ description: Hono routes, OpenAPI, Zod validation
 
 **When NOT to use:**
 
-- Simple CRUD with no external consumers (Server Actions are simpler)
+- Simple CRUD with no external consumers (framework-native endpoints are simpler)
 - Internal-only APIs without documentation requirements
 - Single-use endpoints with no schema reuse (over-engineering)
 

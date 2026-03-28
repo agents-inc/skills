@@ -117,7 +117,7 @@ Initialize chat models from any provider. They all share the same interface.
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-4.1",
   temperature: 0,
 });
 
@@ -139,11 +139,11 @@ const model = new ChatOpenAI({ apiKey: "sk-1234..." });
 
 ```typescript
 import { ChatAnthropic } from "@langchain/anthropic";
-const model = new ChatAnthropic({ model: "claude-sonnet-4-20250514" });
+const model = new ChatAnthropic({ model: "claude-sonnet-4-5-20250929" });
 
 // Or use initChatModel for runtime provider selection
 import { initChatModel } from "langchain";
-const model = await initChatModel("openai:gpt-4o", { temperature: 0 });
+const model = await initChatModel("openai:gpt-4.1", { temperature: 0 });
 ```
 
 **See:** [examples/core.md](examples/core.md) for full provider examples and configuration options
@@ -162,7 +162,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 const prompt = ChatPromptTemplate.fromTemplate(
   "Summarize this in one sentence: {text}",
 );
-const model = new ChatOpenAI({ model: "gpt-4o" });
+const model = new ChatOpenAI({ model: "gpt-4.1" });
 const parser = new StringOutputParser();
 
 const chain = prompt.pipe(model).pipe(parser);
@@ -199,7 +199,7 @@ const MovieSchema = z.object({
 });
 
 const structuredModel = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-4.1",
 }).withStructuredOutput(MovieSchema);
 const movie = await structuredModel.invoke("Tell me about Inception.");
 // movie is typed: { title: string; year: number; genres: string[] }
@@ -277,7 +277,7 @@ const search = tool(async ({ query }) => `Results for: ${query}`, {
 });
 
 const agent = createAgent({
-  model: "openai:gpt-4o",
+  model: "openai:gpt-4.1",
   tools: [search],
   systemPrompt: "You are a helpful research assistant.",
 });
@@ -469,8 +469,8 @@ Are you writing new code?
 - `withStructuredOutput()` uses function calling under the hood, not JSON mode. Not all models support it -- check provider docs. If the model does not support function calling, use `JsonOutputParser` with a prompt instead.
 - `ChatPromptTemplate.fromMessages()` uses tuple syntax `["system", "..."]` or `["human", "..."]` -- the role names are `system`, `human`, `ai`, not `developer`, `user`, `assistant`.
 - `tool()` from `@langchain/core/tools` vs `tool()` from `langchain` -- both exist. The `langchain` re-export is a convenience wrapper. Use whichever matches your import pattern but be consistent.
-- `initChatModel()` requires the provider package to be installed. If you call `initChatModel("anthropic:claude-sonnet-4-20250514")` without `@langchain/anthropic` installed, you get a confusing module resolution error, not a clear "package not installed" message.
-- Zod v4 is NOT fully supported by `withStructuredOutput()` as of early 2026 -- stick with Zod v3.x for now.
+- `initChatModel()` requires the provider package to be installed. If you call `initChatModel("anthropic:claude-sonnet-4-5-20250929")` without `@langchain/anthropic` installed, you get a confusing module resolution error, not a clear "package not installed" message.
+- Zod v4 works with `StateSchema` and `createAgent`, but `withStructuredOutput()` may have partial Zod v4 support -- test with your version and fall back to Zod v3.x if schema validation fails.
 - `RecursiveCharacterTextSplitter` now lives in `@langchain/textsplitters` (separate package), not `langchain/text_splitter`.
 - When using streaming with `createAgent()`, use `streamMode: "values"` to get full state at each step, or omit for incremental updates.
 

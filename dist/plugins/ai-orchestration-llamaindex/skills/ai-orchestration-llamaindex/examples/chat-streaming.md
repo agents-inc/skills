@@ -169,38 +169,39 @@ for await (const chunk of response) {
 
 ---
 
-## Express API with Streaming Chat
+## Server-Sent Events (SSE) Streaming Pattern
 
 ```typescript
-// routes/chat.ts
+// Integrate with your HTTP framework's request/response API
 import { ContextChatEngine } from "llamaindex";
-import type { Request, Response } from "express";
 
-// Pre-initialized chat engine (created at startup)
+// Pre-initialize chat engine at startup (not per-request)
 let chatEngine: ContextChatEngine;
 
-async function handleChat(req: Request, res: Response) {
-  const { message } = req.body;
+async function handleChatStream(message: string): Promise<ReadableStream> {
+  return new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      const stream = await chatEngine.chat({ message, stream: true });
 
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-
-  const stream = await chatEngine.chat({ message, stream: true });
-
-  for await (const chunk of stream) {
-    const content = chunk.message.content;
-    if (content) {
-      res.write(`data: ${JSON.stringify({ content })}\n\n`);
-    }
-  }
-
-  res.write("data: [DONE]\n\n");
-  res.end();
+      for await (const chunk of stream) {
+        const content = chunk.message.content;
+        if (content) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content })}\n\n`),
+          );
+        }
+      }
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
 }
+
+// Return ReadableStream with Content-Type: text/event-stream from your route handler
 ```
 
-**Why good:** SSE-compatible streaming, pre-initialized engine avoids per-request overhead, proper headers
+**Why good:** Framework-agnostic ReadableStream, SSE-compatible format, pre-initialized engine avoids per-request overhead
 
 ---
 

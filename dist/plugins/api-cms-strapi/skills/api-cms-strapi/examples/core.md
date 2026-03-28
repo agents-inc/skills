@@ -1,12 +1,106 @@
 # Strapi Core Examples
 
-> REST API querying, Document Service API, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
+> Content type schemas, REST API querying, Document Service API, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
 
 **Backend customization:** See [backend.md](backend.md). **Authentication:** See [auth.md](auth.md).
 
 ---
 
-## Pattern 1: REST API -- Fetching with qs
+## Pattern 1: Content Type Schemas
+
+### Good Example -- Collection Type
+
+```json
+{
+  "kind": "collectionType",
+  "collectionName": "articles",
+  "info": {
+    "singularName": "article",
+    "pluralName": "articles",
+    "displayName": "Article",
+    "description": "Blog articles"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title"
+    },
+    "body": {
+      "type": "richtext"
+    },
+    "cover": {
+      "type": "media",
+      "allowedTypes": ["images"],
+      "multiple": false
+    },
+    "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::author.author",
+      "inversedBy": "articles"
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category",
+      "inversedBy": "articles"
+    },
+    "seo": {
+      "type": "component",
+      "component": "shared.seo",
+      "required": false
+    },
+    "blocks": {
+      "type": "dynamiczone",
+      "components": ["blocks.hero", "blocks.rich-text", "blocks.gallery"]
+    }
+  }
+}
+```
+
+**Why good:** `draftAndPublish: true` enables draft/publish workflow, `uid` auto-generates slugs from `targetField`, `media` restricts to images, relation types define cardinality with `inversedBy`, component and dynamic zone fields compose reusable blocks
+
+### Good Example -- Single Type
+
+```json
+{
+  "kind": "singleType",
+  "collectionName": "site_settings",
+  "info": {
+    "singularName": "site-setting",
+    "pluralName": "site-settings",
+    "displayName": "Site Settings"
+  },
+  "attributes": {
+    "siteName": {
+      "type": "string",
+      "required": true
+    },
+    "logo": {
+      "type": "media",
+      "allowedTypes": ["images"]
+    },
+    "defaultSeo": {
+      "type": "component",
+      "component": "shared.seo"
+    }
+  }
+}
+```
+
+**Why good:** `singleType` creates a single-document endpoint (`GET /api/site-setting`) for global config like site settings, navigation, or footer content
+
+---
+
+## Pattern 2: REST API -- Fetching with qs
 
 ### Good Example -- Typed Fetch with Filters, Populate, and Pagination
 
@@ -95,7 +189,7 @@ const data = await fetch(url).then((r) => r.json());
 
 ---
 
-## Pattern 2: REST API -- Complex Filters
+## Pattern 3: REST API -- Complex Filters
 
 ### Good Example -- Logical Operators with qs
 
@@ -130,7 +224,7 @@ const query = qs.stringify(
 
 ---
 
-## Pattern 3: REST API -- Fetching Single Document by Slug
+## Pattern 4: REST API -- Fetching Single Document by Slug
 
 ### Good Example -- Find by Slug with Deep Population
 
@@ -173,7 +267,7 @@ async function fetchArticleBySlug(slug: string): Promise<Article | null> {
 
 ---
 
-## Pattern 4: REST API -- Creating and Updating
+## Pattern 5: REST API -- Creating and Updating
 
 ### Good Example -- Create a Document
 
@@ -250,7 +344,7 @@ await fetch(`${STRAPI_URL}/api/articles`, {
 
 ---
 
-## Pattern 5: REST API -- Delete and Media Upload
+## Pattern 6: REST API -- Delete and Media Upload
 
 ### Good Example -- Delete Document
 
@@ -310,7 +404,7 @@ async function setArticleCover(
 
 ---
 
-## Pattern 6: Document Service API -- Server-Side CRUD
+## Pattern 7: Document Service API -- Server-Side CRUD
 
 ### Good Example -- Service with Document Service API
 
@@ -362,7 +456,7 @@ const articles = await strapi.entityService.findMany("api::article.article", {
 
 ---
 
-## Pattern 7: Error Handling
+## Pattern 8: Error Handling
 
 ### Good Example -- Consistent Error Handling for REST API
 

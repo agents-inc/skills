@@ -1,6 +1,6 @@
 {
   "name": "ai-orchestration-llamaindex",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "LlamaIndex.TS data framework for RAG, indexing, retrieval, query engines, chat engines, and agentic workflows in TypeScript",
   "author": {

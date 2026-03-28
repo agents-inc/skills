@@ -31,7 +31,7 @@ description: Auth.js (NextAuth v5) authentication patterns - configuration, prov
 
 ---
 
-**Auto-detection:** Auth.js, NextAuth, next-auth, authjs, auth.ts, auth.config.ts, NextAuth(), signIn, signOut, auth(), handlers, SessionProvider, useSession, AUTH_SECRET, OAuth provider, credentials provider, database adapter, @auth/prisma-adapter, @auth/drizzle-adapter, authorized callback, jwt callback, session callback, middleware auth
+**Auto-detection:** Auth.js, NextAuth, next-auth, authjs, auth.ts, auth.config.ts, NextAuth(), signIn, signOut, auth(), handlers, SessionProvider, useSession, AUTH_SECRET, OAuth provider, credentials provider, database adapter, @auth/prisma-adapter, @auth/drizzle-adapter, authorized callback, jwt callback, session callback, proxy auth, middleware auth
 
 **When to use:**
 
@@ -44,9 +44,9 @@ description: Auth.js (NextAuth v5) authentication patterns - configuration, prov
 **When NOT to use:**
 
 - Building a custom auth system from scratch (Auth.js is opinionated)
-- Need fine-grained organization/team management (consider Better Auth)
-- Mobile-only apps without web frontend (consider Firebase Auth)
-- Need self-hosted auth with plugin architecture (consider Better Auth)
+- Need fine-grained organization/team management out of the box
+- Mobile-only apps without web frontend
+- Need self-hosted auth with plugin architecture
 
 **Key patterns covered:**
 
@@ -83,26 +83,11 @@ Auth.js (v5) consolidates authentication into a **single, unified API**. The `au
 **Core principles:**
 
 1. **Framework-agnostic** - Works with Next.js, SvelteKit, Express, Qwik
-2. **Unified API** - Single `auth()` function for all contexts
+2. **Unified API** - Single `auth()` function for all server-side contexts
 3. **Provider ecosystem** - 80+ built-in OAuth providers with auto-detection of `AUTH_*` env vars
 4. **JWT by default** - Stateless sessions in encrypted cookies, no database required
-5. **Edge-compatible** - Middleware runs on Edge runtime with split configuration
+5. **Edge-compatible** - Middleware runs on Edge runtime with split configuration (Next.js 16 proxy runs on Node.js)
 6. **Progressive complexity** - Start with OAuth, add database adapter, then customize callbacks
-
-**When to use Auth.js:**
-
-- Need quick OAuth/social login setup with many providers
-- Building Next.js apps where middleware route protection is important
-- Want JWT sessions without managing a session store
-- Need magic link / email authentication
-- Multi-framework teams (Next.js + SvelteKit sharing auth patterns)
-
-**When NOT to use Auth.js:**
-
-- Need organization/team management out of the box (Better Auth)
-- Need stateful sessions with full audit trail by default (Better Auth)
-- Building a pure API without web framework (use passport.js or custom)
-- Need 2FA / TOTP built-in (Auth.js requires custom implementation; Better Auth has plugins)
 
 </philosophy>
 
@@ -127,7 +112,7 @@ import Google from "next-auth/providers/google";
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: [
     GitHub, // Auto-detects AUTH_GITHUB_ID and AUTH_GITHUB_SECRET
-    Google, // Auto-detects AUTH_GOOGLE_CLIENT_ID and AUTH_GOOGLE_CLIENT_SECRET
+    Google, // Auto-detects AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET
   ],
 });
 ```
@@ -148,8 +133,8 @@ export const { GET, POST } = handlers;
 AUTH_SECRET="generate-with-npx-auth-secret"  # Required
 AUTH_GITHUB_ID="your-github-client-id"       # Auto-detected by GitHub provider
 AUTH_GITHUB_SECRET="your-github-secret"      # Auto-detected by GitHub provider
-AUTH_GOOGLE_CLIENT_ID="your-google-id"       # Auto-detected by Google provider
-AUTH_GOOGLE_CLIENT_SECRET="your-google-secret"
+AUTH_GOOGLE_ID="your-google-id"       # Auto-detected by Google provider
+AUTH_GOOGLE_SECRET="your-google-secret"
 ```
 
 **Why good:** `AUTH_` prefix is standardized in v5, `AUTH_SECRET` replaces deprecated `NEXTAUTH_SECRET`, providers auto-detect credentials
@@ -223,7 +208,7 @@ The unified `auth()` function replaces `getServerSession`, `getSession`, and `ge
 | Server Component | `const session = await auth()`                            |
 | Route Handler    | `export const GET = auth(function GET(req) { req.auth })` |
 | Server Action    | `const session = await auth()`                            |
-| Middleware       | `export { auth as middleware }` or `authorized` callback  |
+| Middleware/Proxy | `export { auth as middleware }` or `authorized` callback  |
 | Client Component | `useSession()` (requires `SessionProvider` in layout)     |
 
 **Key rules:** Server-side imports come from `@/auth`, client-side imports from `next-auth/react`. Never call `auth()` in Client Components. See [examples/session.md](examples/session.md) for complete implementations.
@@ -286,8 +271,8 @@ Extend session and JWT types via declaration merging in `types/next-auth.d.ts`. 
 - **Using `NEXTAUTH_SECRET` or `NEXTAUTH_URL`** -- deprecated; use `AUTH_SECRET` (URL is auto-detected)
 - **Credentials provider without rate limiting** -- vulnerable to brute-force attacks
 - **Exposing OAuth tokens to client via session callback** -- keep `accessToken`/`refreshToken` server-side only
-- **Middleware as sole authorization** -- middleware runs before rendering but does not replace per-route checks in Server Actions/API routes
-- **Database adapter imported in middleware** -- database ORMs can't run on Edge runtime; split config into `auth.config.ts` + `auth.ts`
+- **Middleware/proxy as sole authorization** -- runs before rendering but does not replace per-route checks in Server Actions/API routes
+- **Database adapter imported in middleware** -- database ORMs can't run on Edge runtime (Next.js 14/15); split config into `auth.config.ts` + `auth.ts`
 - **Wrapping `signIn()` in try/catch** -- it throws a NEXT_REDIRECT exception internally (this is intentional)
 - **JWT callback querying database on every call** -- runs on EVERY `auth()` invocation; keep it lightweight
 

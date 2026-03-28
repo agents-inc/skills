@@ -57,7 +57,7 @@ Need to reuse CI/CD logic across repos?
 │   ├─ YES → Reusable Workflow (workflow_call)
 │   │   - Supports multiple jobs
 │   │   - Native secrets context
-│   │   - Up to 10 nested, 50 total per run
+│   │   - Up to 10 levels total (caller + 9 nested), 50 unique per run
 │   └─ NO → Need step-level reuse within a job?
 │       ├─ YES → Composite Action
 │       │   - Bundle steps into single action
@@ -89,7 +89,7 @@ Testing multiple configurations?
 - **Vercel remote cache free tier is per-user** not per-organization (each developer needs individual Vercel account linked)
 - **OIDC tokens now include `check_run_id` claim (Nov 2025)** - enables tracing tokens to exact job/compute for compliance
 - **M2 macOS runners available** - use `macos-latest-xlarge`, `macos-15-xlarge` for Apple Silicon with GPU
-- **Reusable workflow limits increased (Nov 2025)** - now supports 10 nested levels (was 4) and 50 total workflows (was 20)
+- **Reusable workflow limits increased (Nov 2025)** - now supports 10 levels total (caller + 9 nested, was 4) and 50 unique workflows per run (was 20)
 
 ---
 
@@ -136,7 +136,7 @@ jobs:
 jobs:
   deploy:
     steps:
-      - uses: aws-actions/configure-aws-credentials@v4 # v4 is still current
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

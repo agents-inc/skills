@@ -1,6 +1,6 @@
 {
   "name": "api-framework-hono",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Hono routes, OpenAPI, Zod validation",
   "author": {

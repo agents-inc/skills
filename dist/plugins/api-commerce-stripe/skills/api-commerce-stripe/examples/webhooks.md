@@ -110,7 +110,7 @@ async function handleWebhook(
 }
 ```
 
-**Why good:** Works with any HTTP framework (Hono, Fastify, Koa, serverless functions), accepts raw body as parameter, returns status and body for the framework to send
+**Why good:** Works with any HTTP framework or serverless runtime, accepts raw body as parameter, returns status and body for the caller to send
 
 ---
 

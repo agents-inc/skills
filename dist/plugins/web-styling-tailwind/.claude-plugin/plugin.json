@@ -1,6 +1,6 @@
 {
   "name": "web-styling-tailwind",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "skills": "./skills/",
   "description": "Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration",
   "author": {

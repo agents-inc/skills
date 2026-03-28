@@ -10,11 +10,9 @@ Prepare query plans once, execute many times with different parameters.
 
 ```typescript
 // Good Example - Prepared statement for repeated queries
-import { sql } from "drizzle-orm";
-
 const DEFAULT_LIMIT = 50;
 
-// Define prepared statement once at module level
+// Define prepared statement once at module level (ORM syntax varies)
 const getActiveJobsByCountry = db
   .select()
   .from(jobs)

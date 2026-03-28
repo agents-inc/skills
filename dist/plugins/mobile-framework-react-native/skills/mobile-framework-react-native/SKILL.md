@@ -1,11 +1,11 @@
 ---
 name: mobile-framework-react-native
-description: React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, Expo SDK 53+, React 19 features
+description: React Native mobile development patterns - New Architecture (Fabric, TurboModules, JSI), component architecture, React Navigation 7+, FlashList v2 optimization, gestures with Reanimated 4, platform-specific code, React 19 features
 ---
 
 # React Native Development Patterns
 
-> **Quick Guide:** Build cross-platform mobile apps with React Native's New Architecture (default since 0.76). Use Expo for most projects (faster development, OTA updates). Use FlashList for performant lists (or FlatList with proper optimization). Use React Navigation 7+ with type-safe hooks or static API. Keep components small, memoize callbacks passed to lists, and test on both platforms from day one.
+> **Quick Guide:** Build cross-platform mobile apps with React Native's New Architecture (default since 0.76). Use FlashList for performant lists (or FlatList with proper optimization). Use type-safe navigation hooks with static or dynamic API. Keep components small, memoize callbacks passed to lists, and test on both platforms from day one.
 
 ---
 
@@ -31,7 +31,7 @@ description: React Native mobile development patterns - New Architecture (Fabric
 
 ---
 
-**Auto-detection:** React Native, react-native, Expo, expo-router, React Navigation, @react-navigation, StyleSheet, FlatList, FlashList, ScrollView, View, Text, Pressable, TouchableOpacity, Platform.OS, Platform.select, SafeAreaView, KeyboardAvoidingView, Reanimated, Gesture Handler, TurboModules, Fabric, JSI, New Architecture
+**Auto-detection:** React Native, react-native, React Navigation, @react-navigation, StyleSheet, FlatList, FlashList, ScrollView, View, Text, Pressable, TouchableOpacity, Platform.OS, Platform.select, SafeAreaView, KeyboardAvoidingView, Reanimated, Gesture Handler, TurboModules, Fabric, JSI, New Architecture
 
 **When to use:**
 
@@ -274,7 +274,7 @@ function Input({ ref, placeholder, onChangeText }: InputProps) {
 - New Architecture enabled by default in 0.76+ - some older libraries may need updates
 - FlashList v2 is New Architecture only - use v1 or FlatList if on old architecture
 - React Native 0.78+ uses React 19 - propTypes removed, forwardRef optional
-- Expo SDK 53+ uses React 19 - check for breaking changes in your dependencies
+- React 19 adoption in recent SDK versions - check for breaking changes in your dependencies
 - Android 15/16 enforces edge-to-edge - must handle safe areas properly
 - Reanimated 4 requires react-native-worklets - Reanimated 3 will not work with it installed
 - boxShadow and filter props are New Architecture only - not available on legacy architecture

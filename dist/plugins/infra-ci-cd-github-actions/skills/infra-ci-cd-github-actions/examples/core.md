@@ -331,8 +331,8 @@ jobs:
 
 **Limits (as of Nov 2025):**
 
-- Up to 10 nested reusable workflows (increased from 4)
-- Up to 50 total workflows per run (increased from 20)
+- Up to 10 levels total (caller + 9 nested, increased from 4)
+- Up to 50 unique reusable workflows per run (increased from 20)
 
 ---
 
@@ -443,7 +443,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -483,7 +483,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
 

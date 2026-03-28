@@ -1,4 +1,4 @@
-# Core Patterns
+# Expressive TypeScript - Core Patterns
 
 > Two-tier orchestrator pattern, guard clauses, named predicates, named constants, discriminated unions, async orchestrators, and pure function extraction. See [SKILL.md](../SKILL.md) for decision frameworks and [reference.md](../reference.md) for quick lookup tables.
 

@@ -58,7 +58,7 @@ description: Provider-agnostic patterns for LLM function calling, tool loops, an
 
 - Simple text generation without tool calling -- no tools needed
 - Structured output / JSON extraction -- use your provider's structured output feature instead
-- Provider-specific SDK patterns -- use the provider-specific skill (OpenAI SDK, Vercel AI SDK, etc.)
+- Provider-specific SDK patterns -- use your provider's SDK skill for SDK-specific APIs
 
 **Detailed Resources:**
 
@@ -282,12 +282,12 @@ const response = await callLLM({
 
 ### Pattern 5: Type-Safe Tool Definitions in TypeScript
 
-Use a typed registry pattern to get compile-time safety for tool definitions and execution.
+Use a typed registry pattern with Zod schemas to get compile-time safety for tool definitions and runtime validation for execution. See [examples/core.md](examples/core.md) for the complete `ToolRegistry` class implementation.
 
 ```typescript
 import { z } from "zod";
 
-// Define tool with schema + execute function
+// Define tool with schema + execute function -- TypeScript infers argument types
 function defineTool<T extends z.ZodType>(config: {
   name: string;
   description: string;
@@ -296,45 +296,9 @@ function defineTool<T extends z.ZodType>(config: {
 }) {
   return config;
 }
-
-// Usage
-const searchTool = defineTool({
-  name: "search_database",
-  description: "Search for records matching a query string.",
-  schema: z.object({
-    query: z.string().min(1).describe("Search query text"),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .default(10)
-      .describe("Maximum results to return"),
-  }),
-  execute: async ({ query, limit }) => {
-    // TypeScript knows: query is string, limit is number
-    return db.search(query, limit);
-  },
-});
 ```
 
-**Why good:** Schema validates input at runtime, TypeScript infers argument types at compile time, `defineTool` creates a consistent shape for all tools, Zod `.describe()` generates better JSON Schema descriptions for the model
-
-#### Converting Zod to JSON Schema
-
-```typescript
-import { zodToJsonSchema } from "zod-to-json-schema";
-
-function toolToDefinition(tool: ReturnType<typeof defineTool>): ToolDefinition {
-  return {
-    name: tool.name,
-    description: tool.description,
-    parameters: zodToJsonSchema(tool.schema, { target: "openApi3" }),
-  };
-}
-```
-
-**When to use:** Any TypeScript project implementing tool calling -- type safety catches schema/handler mismatches at compile time
+**When to use:** Any TypeScript project implementing tool calling -- Zod validates at runtime, TypeScript catches schema/handler mismatches at compile time
 
 </patterns>
 

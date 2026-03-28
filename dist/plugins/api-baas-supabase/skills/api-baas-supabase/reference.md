@@ -89,8 +89,8 @@ npx supabase secrets list
 ```bash
 # .env.local
 SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=eyJ...                  # Safe for client-side
-SUPABASE_SERVICE_ROLE_KEY=eyJ...          # SERVER ONLY — never expose to client
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...  # Safe for client-side (formerly ANON_KEY)
+SUPABASE_SECRET_KEY=sb_secret_...            # SERVER ONLY — never expose to client (formerly SERVICE_ROLE_KEY)
 ```
 
 ---
@@ -162,11 +162,11 @@ type PostStatus = Enums<"post_status">;
 | `USING (condition)`      | Filter which rows are visible/affected | SELECT, UPDATE (existing row), DELETE |
 | `WITH CHECK (condition)` | Validate new/modified data             | INSERT, UPDATE (new row values)       |
 
-| Role            | Description                           |
-| --------------- | ------------------------------------- |
-| `anon`          | Unauthenticated requests (public API) |
-| `authenticated` | Logged-in users                       |
-| `service_role`  | Server-side admin (bypasses all RLS)  |
+| Role            | Description                                         |
+| --------------- | --------------------------------------------------- |
+| `anon`          | Unauthenticated requests (public API)               |
+| `authenticated` | Logged-in users                                     |
+| `service_role`  | Server-side admin via secret key (bypasses all RLS) |
 
 ---
 

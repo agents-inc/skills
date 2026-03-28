@@ -39,7 +39,7 @@ description: Modern CLI development combining oclif's command framework with Ink
 **When NOT to use:**
 
 - Simple one-off scripts (plain Node.js suffices)
-- Basic prompts only (use @clack/prompts or inquirer -- lighter weight)
+- Basic prompts only (a lightweight prompt library suffices)
 - Performance-critical startup under 100ms (oclif adds ~200ms overhead)
 
 **Key patterns covered:**
@@ -337,7 +337,7 @@ src/
 **Gotchas & Edge Cases:**
 
 - oclif hooks run in **parallel**, not sequence -- don't depend on execution order between hooks
-- `useInput` fires **once** for pasted text, not per-character -- use `usePaste` for paste handling
+- `useInput` fires **once** for pasted text, not per-character -- handle multi-character input strings explicitly
 - Ink v5 requires **React 18+**, Ink v6 requires **React 19+** -- check your Ink version's peer dependencies
 - `enableJsonFlag` makes `run()` return value the JSON output -- ensure the return type matches what consumers expect
 - oclif's `this.error()` throws (exits the process) -- it does not return

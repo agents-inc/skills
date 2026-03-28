@@ -147,7 +147,8 @@ result.partialOutputStream; // AsyncIterable<PartialObject> -- structured output
 result.elementStream; // AsyncIterable<Element> -- array output
 
 // Response helpers:
-result.toTextStreamResponse(); // Response object for route handlers
+result.toUIMessageStreamResponse(); // Response for useChat routes
+result.toTextStreamResponse(); // Response for plain text streaming routes
 ```
 
 ### Output Types
@@ -221,10 +222,10 @@ const similarity = cosineSimilarity(embedding1, embedding2); // -1 to 1
 
 ## Edge Runtime Compatibility
 
-The AI SDK is fully compatible with Vercel Edge Runtime and Cloudflare Workers:
+The AI SDK is fully compatible with edge runtimes (Vercel Edge, Cloudflare Workers):
 
 ```typescript
-// app/api/chat/route.ts
+// route handler with edge runtime
 export const runtime = "edge";
 
 import { streamText } from "ai";
@@ -237,7 +238,7 @@ export async function POST(request: Request) {
     messages,
   });
 
-  return result.toTextStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
 ```
 

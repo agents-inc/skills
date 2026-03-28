@@ -250,7 +250,7 @@ Which Git hook?
 | Task                            | Time  | Pre-commit? |
 | ------------------------------- | ----- | ----------- |
 | lint-staged (staged files only) | < 5s  | Yes         |
-| Prettier format                 | < 2s  | Yes         |
+| Code formatting                 | < 2s  | Yes         |
 | Type check (--noEmit)           | < 10s | Yes         |
 | Full test suite                 | > 30s | No (CI)     |
 | E2E tests                       | > 60s | No (CI)     |

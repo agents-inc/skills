@@ -65,7 +65,7 @@ description: Better Auth patterns, sessions, OAuth
 - [examples/two-factor.md](examples/two-factor.md) - TOTP setup, enable, verify
 - [examples/organizations.md](examples/organizations.md) - Multi-tenancy, invitations
 - [examples/sessions.md](examples/sessions.md) - Session config, cookie caching, stateless
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, red flags
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, version notes
 
 ---
 
@@ -283,11 +283,14 @@ See [examples/sessions.md](examples/sessions.md) for full configuration and revo
 **Gotchas & Edge Cases:**
 
 - Google only issues refresh tokens on first consent - use `accessType: "offline"` and `prompt: "consent"`
+- GitHub OAuth apps don't issue refresh tokens (access tokens are long-lived)
 - Stateless sessions cannot be revoked individually - increment `version` to invalidate all
 - Cookie cache revocation is delayed until `maxAge` expires on other devices
+- Session cookies need `SameSite=None` + `Secure` for cross-domain deployments
 - `authClient.forgotPassword` was renamed to `authClient.requestPasswordReset` in v1.4
+- `InferUser`/`InferSession` removed in v1.5 - use generic `User` and `Session` types from `better-auth`
 
-See [reference.md](reference.md) for full anti-patterns with code examples and the decision framework.
+See [reference.md](reference.md) for anti-patterns with code examples, decision frameworks, and version notes.
 
 </red_flags>
 

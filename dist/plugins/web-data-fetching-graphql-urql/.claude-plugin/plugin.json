@@ -1,6 +1,6 @@
 {
   "name": "web-data-fetching-graphql-urql",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions",
   "author": {

@@ -8,22 +8,20 @@
 
 ## Decision Framework
 
-### When to Use URQL vs Alternatives
+### When to Use URQL
 
 ```
 Is your API GraphQL?
 ├─ NO → Use your REST data fetching solution
 └─ YES → Consider these factors:
-    ├─ Bundle size critical? (~12KB core vs ~30KB+)
-    │   └─ YES → URQL is lighter
+    ├─ Bundle size critical? (~12KB core)
+    │   └─ YES → URQL is lightweight
     ├─ Need highly customizable middleware?
-    │   └─ YES → URQL exchanges are more flexible
-    ├─ Team already experienced with Apollo?
-    │   └─ YES → Apollo may be faster to adopt
+    │   └─ YES → URQL exchanges are flexible
     ├─ Want to start simple, add complexity later?
     │   └─ YES → URQL's progressive enhancement fits
     └─ Need normalized caching from day one?
-        └─ YES → Apollo has this by default (URQL needs Graphcache)
+        └─ URQL needs Graphcache add-on (~8KB extra)
 ```
 
 ### Request Policy Selection
@@ -315,37 +313,34 @@ if (error?.graphQLErrors.length) {
 
 ---
 
-## URQL vs Apollo Quick Comparison
+## URQL Key Characteristics
 
-| Feature            | URQL                               | Apollo Client            |
-| ------------------ | ---------------------------------- | ------------------------ |
-| Bundle size        | ~12KB (core), ~20KB (+ Graphcache) | ~30KB+                   |
-| Default cache      | Document (hash-based)              | Normalized               |
-| Architecture       | Exchange-based middleware          | Monolithic with links    |
-| Philosophy         | Start simple, add features         | Full-featured from start |
-| Normalized cache   | Opt-in via Graphcache              | Built-in                 |
-| Offline support    | Graphcache offlineExchange         | Apollo Offline           |
-| Suspense support   | First-class                        | Experimental             |
-| Framework bindings | React, Vue, Svelte, Solid          | React (primary)          |
+| Feature            | URQL                               |
+| ------------------ | ---------------------------------- |
+| Bundle size        | ~12KB (core), ~20KB (+ Graphcache) |
+| Default cache      | Document (hash-based)              |
+| Architecture       | Exchange-based middleware          |
+| Philosophy         | Start simple, add features         |
+| Normalized cache   | Opt-in via Graphcache              |
+| Offline support    | Graphcache offlineExchange         |
+| Suspense support   | First-class                        |
+| Framework bindings | React, Vue, Svelte, Solid          |
 
 ---
 
-## Hook Comparison: URQL vs Apollo
+## URQL Hook Return Shape
 
 ```typescript
-// Apollo
-const { data, loading, error, refetch } = useQuery(QUERY);
-
-// URQL
+// URQL hooks return a tuple: [result, reexecuteFunction]
 const [{ data, fetching, error, stale }, reexecuteQuery] = useQuery({
   query: QUERY,
 });
 
-// Key differences:
-// - URQL uses tuple return [result, reexecute]
-// - URQL uses `fetching` instead of `loading`
-// - URQL adds `stale` for cache-and-network
-// - Apollo uses `refetch`, URQL uses `reexecuteQuery`
+// Key API notes:
+// - Tuple return: [result, reexecute]
+// - `fetching` for loading state (not `loading`)
+// - `stale` indicates cache-and-network background refresh
+// - `reexecuteQuery` for manual refetch
 ```
 
 ---
@@ -360,4 +355,3 @@ const [{ data, fetching, error, stale }, reexecuteQuery] = useQuery({
 - [Server-Side Rendering Guide](https://nearform.com/open-source/urql/docs/advanced/server-side-rendering/)
 - [Testing Guide](https://nearform.com/open-source/urql/docs/advanced/testing/)
 - [Authoring Exchanges Guide](https://nearform.com/open-source/urql/docs/advanced/authoring-exchanges/)
-- [Exploring GraphQL Clients: Apollo vs Relay vs URQL (Hasura)](https://hasura.io/blog/exploring-graphql-clients-apollo-client-vs-relay-vs-urql)

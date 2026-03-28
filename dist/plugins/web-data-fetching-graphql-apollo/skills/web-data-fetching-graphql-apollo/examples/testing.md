@@ -46,7 +46,7 @@ export type { ApolloRenderOptions };
 // components/user-profile.test.tsx
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { renderWithApollo } from "@/test/apollo-test-utils";
+import { renderWithApollo } from "../test/apollo-test-utils";
 import { UserProfile, GET_USER } from "./user-profile";
 import type { MockedResponse } from "@apollo/client/testing";
 
@@ -142,7 +142,7 @@ describe("UserProfile", () => {
 // components/create-post-form.test.tsx
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { renderWithApollo } from "@/test/apollo-test-utils";
+import { renderWithApollo } from "../test/apollo-test-utils";
 import { CreatePostForm, CREATE_POST } from "./create-post-form";
 import type { MockedResponse } from "@apollo/client/testing";
 
@@ -392,7 +392,7 @@ export { testSchema, schemaFetch, createTestSchema };
 // components/user-list.test.tsx
 import { render, screen, waitFor } from "@testing-library/react";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-import { schemaFetch, testSchema } from "@/test/schema-test-utils";
+import { schemaFetch, testSchema } from "../test/schema-test-utils";
 import { UserList } from "./user-list";
 
 describe("UserList with schema-based testing", () => {

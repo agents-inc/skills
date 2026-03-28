@@ -54,7 +54,7 @@ description: Open-source headless CMS — content type schemas, REST API, Docume
 
 **When NOT to use:**
 
-- Non-Strapi CMS platforms (use dedicated skills for Sanity, Contentful, etc.)
+- Non-Strapi CMS platforms (use the dedicated skill for your CMS)
 - Direct database queries bypassing Strapi's API layer (use Strapi's Document Service)
 - Complex transactional logic requiring raw SQL (Strapi abstracts the database)
 
@@ -64,11 +64,11 @@ description: Open-source headless CMS — content type schemas, REST API, Docume
 
 **Core & REST API:**
 
-- [examples/core.md](examples/core.md) -- REST API querying, Document Service API, error handling
+- [examples/core.md](examples/core.md) -- Content type schemas, REST API querying, Document Service API, error handling
 
 **Backend Customization:**
 
-- [examples/backend.md](examples/backend.md) -- Custom controllers, services, routes, policies, middlewares, lifecycle hooks
+- [examples/backend.md](examples/backend.md) -- Custom controllers, services, routes, policies, middlewares, lifecycle hooks, Document Service middleware
 
 **Authentication:**
 
@@ -91,19 +91,6 @@ Strapi is an open-source headless CMS built on Node.js (Koa) that auto-generates
 5. **Permission-first** -- All content type endpoints are private by default. Access must be explicitly granted via the admin panel (Users & Permissions plugin) or API tokens.
 6. **Backend customization** -- Controllers, services, routes, policies, and middlewares can all be customized. Strapi follows an MVC-like pattern built on Koa.
 
-**When to use Strapi:**
-
-- Content-driven websites and applications (blogs, marketing sites, e-commerce catalogs)
-- Projects needing a visual admin panel for content editors
-- APIs where auto-generated CRUD endpoints cover most use cases
-- Teams wanting an open-source, self-hosted CMS with full control
-
-**When NOT to use:**
-
-- Real-time applications requiring WebSocket-first architecture (Strapi is REST/GraphQL)
-- Projects needing complex relational queries with JOINs (Strapi abstracts the database)
-- Microservice architectures where a CMS is one of many small services (Strapi is a monolithic application)
-
 </philosophy>
 
 ---
@@ -114,257 +101,90 @@ Strapi is an open-source headless CMS built on Node.js (Koa) that auto-generates
 
 ### Pattern 1: Content Type Schema
 
-Content types are defined in `schema.json` files at `./src/api/[api-name]/content-types/[content-type-name]/schema.json`. The schema defines fields, relations, and the API identifier.
-
-#### Collection Type
+Content types are defined in `schema.json` files at `./src/api/[api-name]/content-types/[content-type-name]/schema.json`. Use `collectionType` for multi-document content (articles, products) and `singleType` for single-document content (site settings, homepage).
 
 ```json
 {
   "kind": "collectionType",
-  "collectionName": "articles",
   "info": {
     "singularName": "article",
     "pluralName": "articles",
-    "displayName": "Article",
-    "description": "Blog articles"
+    "displayName": "Article"
   },
-  "options": {
-    "draftAndPublish": true
-  },
+  "options": { "draftAndPublish": true },
   "attributes": {
-    "title": {
-      "type": "string",
-      "required": true,
-      "maxLength": 120
-    },
-    "slug": {
-      "type": "uid",
-      "targetField": "title"
-    },
-    "body": {
-      "type": "richtext"
-    },
-    "cover": {
-      "type": "media",
-      "allowedTypes": ["images"],
-      "multiple": false
-    },
+    "title": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "title" },
     "author": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::author.author",
       "inversedBy": "articles"
     },
-    "categories": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::category.category",
-      "inversedBy": "articles"
-    },
-    "seo": {
-      "type": "component",
-      "component": "shared.seo",
-      "required": false
-    },
     "blocks": {
       "type": "dynamiczone",
-      "components": ["blocks.hero", "blocks.rich-text", "blocks.gallery"]
+      "components": ["blocks.hero", "blocks.rich-text"]
     }
   }
 }
 ```
 
-**Why good:** `draftAndPublish: true` enables the draft/publish workflow, `uid` type auto-generates slugs from `targetField`, `media` field restricts to images, relation types clearly define cardinality with `inversedBy`, component and dynamic zone fields compose content from reusable blocks
-
-#### Single Type
-
-```json
-{
-  "kind": "singleType",
-  "collectionName": "site_settings",
-  "info": {
-    "singularName": "site-setting",
-    "pluralName": "site-settings",
-    "displayName": "Site Settings"
-  },
-  "attributes": {
-    "siteName": {
-      "type": "string",
-      "required": true
-    },
-    "logo": {
-      "type": "media",
-      "allowedTypes": ["images"]
-    },
-    "defaultSeo": {
-      "type": "component",
-      "component": "shared.seo"
-    }
-  }
-}
-```
-
-**Why good:** `singleType` creates a single-document endpoint (`GET /api/site-setting`) for global config like site settings, navigation, or footer content
+**Key fields:** `uid` auto-generates slugs from `targetField`, `relation` types define cardinality with `inversedBy`/`mappedBy`, `component` embeds reusable blocks, `dynamiczone` allows mixed component types. See [examples/core.md](examples/core.md) for full collection and single type examples.
 
 ---
 
 ### Pattern 2: REST API Querying with `qs`
 
-The REST API accepts complex query parameters for filtering, population, sorting, and pagination. Use the `qs` library to build query strings.
-
-#### Filtering
+The REST API accepts complex query parameters for filtering, population, sorting, and pagination. Always use the `qs` library to build query strings.
 
 ```typescript
 import qs from "qs";
 
-const API_URL = process.env.STRAPI_URL;
-
-// Filter articles by published status and category
 const query = qs.stringify(
   {
-    filters: {
-      publishedAt: { $notNull: true },
-      categories: { slug: { $eq: "technology" } },
-    },
-  },
-  { encodeValuesOnly: true },
-);
-
-const response = await fetch(`${API_URL}/api/articles?${query}`);
-const { data, meta } = await response.json();
-```
-
-#### Population
-
-```typescript
-// Populate relations with field selection
-const query = qs.stringify(
-  {
+    filters: { publishedAt: { $notNull: true } },
     populate: {
-      author: { fields: ["name", "email"] },
+      author: { fields: ["name"] },
       categories: { fields: ["name", "slug"] },
-      cover: { fields: ["url", "alternativeText", "width", "height"] },
     },
+    sort: ["publishedAt:desc"],
+    pagination: { page: 1, pageSize: 25 },
   },
   { encodeValuesOnly: true },
 );
-
-const response = await fetch(`${API_URL}/api/articles?${query}`);
-```
-
-#### Sort and Pagination
-
-```typescript
-const DEFAULT_PAGE_SIZE = 25;
-
-const query = qs.stringify(
-  {
-    sort: ["publishedAt:desc", "title:asc"],
-    pagination: { page: 1, pageSize: DEFAULT_PAGE_SIZE },
-    populate: { author: { fields: ["name"] } },
-  },
-  { encodeValuesOnly: true },
-);
-
-const response = await fetch(`${API_URL}/api/articles?${query}`);
+const response = await fetch(`${STRAPI_URL}/api/articles?${query}`);
 const { data, meta } = await response.json();
-// meta.pagination: { page, pageSize, pageCount, total }
 ```
 
-**Why good:** `qs.stringify` with `encodeValuesOnly` handles nested parameter encoding, filters use operator syntax (`$eq`, `$notNull`), population targets specific fields to avoid over-fetching, named constant for page size, destructured response gives data and pagination meta
-
-```typescript
-// BAD: Manual query string construction
-const url = `/api/articles?filters[title][$contains]=${userInput}&populate=*`;
-// Breaks with special characters, XSS risk, populate=* over-fetches
-```
-
-**Why bad:** Manual string construction breaks with special characters, `populate=*` fetches all relations (over-fetching and potential permission issues), user input not encoded
+**Key points:** `encodeValuesOnly` prevents bracket encoding issues, filters use operators (`$eq`, `$notNull`, `$containsi`, `$or`, `$and`), targeted `populate` with `fields` avoids over-fetching (never use `populate=*` in production), dynamic zone components use `on` syntax. See [examples/core.md](examples/core.md) for full filtering, population, and pagination examples.
 
 ---
 
 ### Pattern 3: Document Service API (Back-End)
 
-The Document Service API is used in custom controllers, services, lifecycle hooks, and plugins to access content from the server side. It replaces v4's Entity Service.
-
-#### Find, Create, Update, Delete
+The Document Service API is used in custom controllers, services, lifecycle hooks, and plugins to access content from the server side. It replaces v4's Entity Service (removed in v5).
 
 ```typescript
-// In a custom controller or service
 const CONTENT_TYPE_UID = "api::article.article";
 
-// Find many with filters
+// Find published content (default is 'draft')
 const articles = await strapi.documents(CONTENT_TYPE_UID).findMany({
   status: "published",
   filters: { categories: { slug: { $eq: "news" } } },
-  sort: [{ publishedAt: "desc" }],
-  populate: { author: true, categories: true },
-  pagination: { page: 1, pageSize: 10 },
-});
-
-// Find one by documentId
-const article = await strapi.documents(CONTENT_TYPE_UID).findOne({
-  documentId: "a1b2c3d4e5f6g7h8i9j0klm",
   populate: { author: true },
 });
 
-// Create (creates as draft by default)
-const newArticle = await strapi.documents(CONTENT_TYPE_UID).create({
-  data: {
-    title: "New Article",
-    body: "Article content...",
-    author: authorDocumentId,
-  },
-});
-
-// Update (updates draft version)
-const updated = await strapi.documents(CONTENT_TYPE_UID).update({
-  documentId: "a1b2c3d4e5f6g7h8i9j0klm",
-  data: { title: "Updated Title" },
-});
-
-// Delete
-await strapi.documents(CONTENT_TYPE_UID).delete({
-  documentId: "a1b2c3d4e5f6g7h8i9j0klm",
-});
+// CRUD uses documentId (not database id)
+const article = await strapi
+  .documents(CONTENT_TYPE_UID)
+  .findOne({ documentId });
+const created = await strapi
+  .documents(CONTENT_TYPE_UID)
+  .create({ data: { title: "New" } });
+await strapi.documents(CONTENT_TYPE_UID).publish({ documentId });
 ```
 
-**Why good:** `strapi.documents(uid)` is the v5 API for back-end data access, `documentId` is the persistent identifier (not database `id`), `status: 'published'` explicitly requests published content (default is `'draft'`), named constant for content type UID
-
-#### Publish and Unpublish
-
-```typescript
-// Publish a draft
-await strapi.documents(CONTENT_TYPE_UID).publish({
-  documentId: "a1b2c3d4e5f6g7h8i9j0klm",
-});
-
-// Unpublish (moves back to draft)
-await strapi.documents(CONTENT_TYPE_UID).unpublish({
-  documentId: "a1b2c3d4e5f6g7h8i9j0klm",
-});
-
-// Discard draft changes (revert to published version)
-await strapi.documents(CONTENT_TYPE_UID).discardDraft({
-  documentId: "a1b2c3d4e5f6g7h8i9j0klm",
-});
-
-// Count published documents
-const count = await strapi.documents(CONTENT_TYPE_UID).count({
-  status: "published",
-});
-```
-
-**Why good:** Dedicated `publish()`, `unpublish()`, `discardDraft()` methods replace v4's `publicationState` parameter, `count()` accepts same filters as `findMany()`
-
-```typescript
-// BAD: Using v4 Entity Service API (removed in v5)
-const articles = await strapi.entityService.findMany("api::article.article", {
-  filters: { publishedAt: { $notNull: true } },
-});
-```
-
-**Why bad:** `strapi.entityService` is removed in Strapi v5, use `strapi.documents()` instead, `publicationState` parameter replaced by `status` and explicit `publish()`/`unpublish()` methods
+**Key points:** `strapi.documents(uid)` replaces `strapi.entityService` (removed in v5), `documentId` is the persistent identifier across locales and draft/published versions, default status is `'draft'` (pass `status: 'published'` explicitly), dedicated `publish()`/`unpublish()`/`discardDraft()` methods. See [examples/core.md](examples/core.md) for full CRUD and publish/unpublish examples.
 
 ---
 
@@ -443,6 +263,8 @@ export default {
 ```
 
 **Why good:** Hooks fire automatically on Document Service operations, `beforeXxx` can mutate `event.params.data`, `afterXxx` has `event.result`
+
+**Note:** For cross-cutting concerns in v5 (audit logging, cache invalidation), prefer Document Service middleware (`strapi.documents.use((ctx, next) => { ... })`) registered in `src/index.ts`. Lifecycle hooks are still available for content-type-specific side effects.
 
 See [examples/backend.md](examples/backend.md) for full lifecycle examples including slug generation, programmatic subscription, and audit logging.
 
@@ -595,8 +417,9 @@ Who is consuming the API?
 **Gotchas & Edge Cases:**
 
 - **v5 response format is flat** -- v4 nested data in `data.attributes`; v5 puts fields directly on the data object. Existing frontend code from v4 will break.
-- **`uid` field type stores slugs** -- The `uid` field type auto-generates URL-safe slugs from a target field. Query it directly (not via `.current` like Sanity).
+- **`uid` field type stores slugs** -- The `uid` field type auto-generates URL-safe slugs from a target field. Query slug fields directly as top-level attributes (no nested accessor needed).
 - **Bulk lifecycle hooks never fire from Document Service** -- `beforeCreateMany`, `afterDeleteMany`, etc. are database-level hooks. Document Service operations trigger single-document hooks only.
+- **Lifecycle hooks are database-level in v5** -- Lifecycle hooks fire on the database layer, so a single Document Service operation (e.g., `publish()`) may trigger multiple database-level hooks. For cross-cutting concerns like logging, validation, and cache invalidation, prefer Document Service middleware (`strapi.documents.use()`) which operates at the Document Service abstraction level.
 - **Dynamic zone `populate` uses `on` syntax** -- To populate specific components in a dynamic zone, use `populate: { blocks: { on: { 'blocks.hero': { populate: '*' } } } }`.
 - **Media fields are relations internally** -- Media uploads are stored in the `upload` plugin and referenced via relations. They follow the same populate rules as other relations.
 - **Draft changes are invisible to REST API by default** -- The REST API returns published content. To see drafts, you need a token with appropriate permissions and the `status=draft` parameter.

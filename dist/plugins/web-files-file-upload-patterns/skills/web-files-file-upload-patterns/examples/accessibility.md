@@ -12,7 +12,7 @@
 // accessible-file-input.tsx
 import { useId, useRef, useImperativeHandle } from 'react';
 import type { ChangeEvent, KeyboardEvent, Ref } from 'react';
-import styles from './accessible-file-input.module.scss';
+// Apply your styling solution via className prop
 
 export interface AccessibleFileInputHandle {
   focus: () => void;
@@ -76,19 +76,18 @@ export function AccessibleFileInput({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className={styles.label}>
+      <label htmlFor={id}>
         {label}
         {required && <span aria-hidden="true"> *</span>}
       </label>
 
       {hint && (
-        <p id={hintId} className={styles.hint}>
+        <p id={hintId}>
           {hint}
         </p>
       )}
 
       <div
-        className={styles.inputWrapper}
         data-disabled={disabled || undefined}
         data-error={error ? true : undefined}
         role="button"
@@ -96,6 +95,9 @@ export function AccessibleFileInput({
         onKeyDown={handleKeyDown}
         onClick={() => inputRef.current?.click()}
         aria-label={`${label}. ${multiple ? 'Multiple files allowed.' : ''} Press Enter or Space to browse.`}
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
+        aria-required={required || undefined}
       >
         <input
           ref={inputRef}
@@ -104,20 +106,17 @@ export function AccessibleFileInput({
           accept={accept}
           multiple={multiple}
           disabled={disabled}
-          required={required}
           onChange={handleChange}
-          aria-describedby={describedBy}
-          aria-invalid={error ? true : undefined}
-          className={styles.hiddenInput}
+          hidden
           tabIndex={-1}
         />
-        <span className={styles.buttonText}>
+        <span>
           Choose {multiple ? 'files' : 'file'}
         </span>
       </div>
 
       {error && (
-        <p id={errorId} className={styles.error} role="alert" aria-live="polite">
+        <p id={errorId} role="alert" aria-live="polite">
           {error}
         </p>
       )}
@@ -126,77 +125,7 @@ export function AccessibleFileInput({
 }
 ```
 
-```scss
-// accessible-file-input.module.scss
-.label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: var(--spacing-xs);
-}
-
-.hint {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  margin-bottom: var(--spacing-xs);
-}
-
-.inputWrapper {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-
-  &:hover:not([data-disabled]) {
-    border-color: var(--color-primary);
-  }
-
-  &:focus-visible {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-alpha);
-  }
-
-  &[data-disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &[data-error] {
-    border-color: var(--color-error);
-  }
-}
-
-.hiddenInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.buttonText {
-  font-weight: 500;
-}
-
-.error {
-  color: var(--color-error);
-  font-size: var(--font-size-sm);
-  margin-top: var(--spacing-xs);
-}
-```
-
-**Why good:** Proper label association, keyboard activation with Enter/Space, focus-visible styling, aria-describedby for hints/errors, role="alert" for error announcements, ref as prop (React 19 pattern) for external control
+**Why good:** Proper label association, keyboard activation with Enter/Space, focus-visible styling, aria-describedby for hints/errors, role="alert" for error announcements, ref as prop (React 19 pattern) for external control. Style the wrapper with `data-disabled` and `data-error` attributes via your styling solution.
 
 ---
 
@@ -208,7 +137,7 @@ export function AccessibleFileInput({
 // accessible-dropzone.tsx
 import { useState, useRef, useCallback, useId } from 'react';
 import type { DragEvent, KeyboardEvent } from 'react';
-import styles from './accessible-dropzone.module.scss';
+// Apply your styling solution via className prop
 
 interface AccessibleDropzoneProps {
   label: string;
@@ -345,11 +274,10 @@ export function AccessibleDropzone({
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className={styles.srOnly}
+        className="sr-only"
       />
 
       <div
-        className={styles.dropzone}
         data-state={state}
         data-disabled={disabled || undefined}
         role="button"
@@ -376,20 +304,20 @@ export function AccessibleDropzone({
               e.target.value = '';
             }
           }}
-          className={styles.hiddenInput}
+          hidden
           tabIndex={-1}
           aria-hidden="true"
         />
 
         {children ?? (
-          <div className={styles.content}>
-            <p className={styles.label}>{label}</p>
+          <div>
+            <p>{label}</p>
             {description && (
-              <p id={descriptionId} className={styles.description}>
+              <p id={descriptionId}>
                 {description}
               </p>
             )}
-            <p className={styles.hint}>Drag and drop or click to browse</p>
+            <p>Drag and drop or click to browse</p>
           </div>
         )}
       </div>
@@ -398,87 +326,7 @@ export function AccessibleDropzone({
 }
 ```
 
-```scss
-// accessible-dropzone.module.scss
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: var(--spacing-xl);
-  border: 2px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    background-color 0.2s;
-
-  &:hover:not([data-disabled]) {
-    border-color: var(--color-primary);
-    background: var(--color-primary-alpha);
-  }
-
-  &:focus-visible {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-alpha);
-  }
-
-  &[data-state="drag-over"] {
-    border-color: var(--color-primary);
-    background: var(--color-primary-alpha);
-  }
-
-  &[data-disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.hiddenInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-}
-
-.content {
-  text-align: center;
-}
-
-.label {
-  font-weight: 600;
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--spacing-xs);
-}
-
-.description {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.hint {
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-sm);
-}
-```
-
-**Why good:** Live region announces file selections to screen readers, keyboard navigation with Enter/Space, descriptive aria-label includes file constraints, visual and ARIA disabled states, click alternative to drag-drop
+**Why good:** Live region announces file selections to screen readers, keyboard navigation with Enter/Space, descriptive aria-label includes file constraints, visual and ARIA disabled states, click alternative to drag-drop. Style the dropzone using `data-state` and `data-disabled` attributes via your styling solution.
 
 ---
 
@@ -489,7 +337,7 @@ export function AccessibleDropzone({
 ```typescript
 // accessible-file-list.tsx
 import { useId } from 'react';
-import styles from './accessible-file-list.module.scss';
+// Apply your styling solution via className prop
 
 interface FileItem {
   id: string;
@@ -540,23 +388,23 @@ export function AccessibleFileList({
   };
 
   return (
-    <div className={styles.container}>
-      <h3 id={listId} className={styles.heading}>
+    <div className="container">
+      <h3 id={listId} className="heading">
         {label} ({files.length})
       </h3>
 
-      <ul className={styles.list} aria-labelledby={listId} role="list">
+      <ul className="list" aria-labelledby={listId} role="list">
         {files.map((file) => (
-          <li key={file.id} className={styles.item} data-status={file.status}>
-            <div className={styles.info}>
-              <span className={styles.name}>{file.name}</span>
-              <span className={styles.size}>{formatSize(file.size)}</span>
+          <li key={file.id} className="item" data-status={file.status}>
+            <div className="info">
+              <span className="name">{file.name}</span>
+              <span className="size">{formatSize(file.size)}</span>
             </div>
 
-            <div className={styles.status} role="status" aria-live="polite">
+            <div className="status" role="status" aria-live="polite">
               {file.status === 'uploading' && file.progress !== undefined && (
                 <div
-                  className={styles.progressBar}
+                  className="progress-bar"
                   role="progressbar"
                   aria-valuenow={file.progress}
                   aria-valuemin={0}
@@ -564,17 +412,17 @@ export function AccessibleFileList({
                   aria-label={`${file.name} upload progress`}
                 >
                   <div
-                    className={styles.progressFill}
+                    className="progress-fill"
                     style={{ width: `${file.progress}%` }}
                   />
                 </div>
               )}
-              <span className={styles.statusText}>{getStatusLabel(file)}</span>
+              <span className="status-text">{getStatusLabel(file)}</span>
             </div>
 
             <button
               type="button"
-              className={styles.removeButton}
+              className="remove-button"
               onClick={() => onRemove(file.id)}
               aria-label={`Remove ${file.name} from upload list`}
               disabled={file.status === 'uploading'}
@@ -589,122 +437,7 @@ export function AccessibleFileList({
 }
 ```
 
-```scss
-// accessible-file-list.module.scss
-.container {
-  margin-top: var(--spacing-md);
-}
-
-.heading {
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  margin-bottom: var(--spacing-sm);
-}
-
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-xs);
-
-  &[data-status="success"] {
-    border-color: var(--color-success);
-    background: var(--color-success-alpha);
-  }
-
-  &[data-status="error"] {
-    border-color: var(--color-error);
-    background: var(--color-error-alpha);
-  }
-}
-
-.info {
-  flex: 1;
-  min-width: 0;
-}
-
-.name {
-  display: block;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.size {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.status {
-  flex-shrink: 0;
-  min-width: 120px;
-}
-
-.progressBar {
-  height: 8px;
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--spacing-xs);
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--color-primary);
-  transition: width 0.2s ease-out;
-}
-
-.statusText {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.removeButton {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: var(--font-size-lg);
-  transition:
-    background-color 0.15s,
-    color 0.15s;
-
-  &:hover:not(:disabled) {
-    background: var(--color-error-alpha);
-    color: var(--color-error);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-```
-
-**Why good:** role="progressbar" with aria-valuenow/min/max, role="status" with aria-live for progress updates, descriptive aria-label on remove buttons, disabled state during upload prevents accidental removal
+**Why good:** role="progressbar" with aria-valuenow/min/max, role="status" with aria-live for progress updates, descriptive aria-label on remove buttons, disabled state during upload prevents accidental removal. Style items using `data-status` attribute via your styling solution.
 
 ---
 
@@ -959,7 +692,7 @@ const handleUpload = async (file: File) => {
 };
 
 // ANTI-PATTERN: Progress without ARIA
-<div className={styles.progress}>
+<div className="progress">
   <div style={{ width: `${progress}%` }} />
 </div>
 // Screen readers have no idea what's happening
@@ -995,12 +728,12 @@ useEffect(() => {
 
 ---
 
-## SCSS Utilities for Accessibility
+## CSS Utilities for Accessibility
 
 ### Screen Reader Only Class
 
-```scss
-// _accessibility.scss
+```css
+/* Apply via your styling solution */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1012,43 +745,16 @@ useEffect(() => {
   white-space: nowrap;
   border: 0;
 }
-
-// Allow focus to show element (for skip links)
-.sr-only-focusable {
-  &:focus,
-  &:focus-visible {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: inherit;
-    margin: inherit;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-}
 ```
 
 ### Focus Styles
 
-```scss
-// _focus.scss
-@mixin focus-ring {
-  &:focus {
-    outline: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-}
-
-@mixin focus-within-ring {
-  &:focus-within {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
+```css
+/* Apply via your styling solution */
+.dropzone:focus-visible,
+.file-input-wrapper:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 ```
 

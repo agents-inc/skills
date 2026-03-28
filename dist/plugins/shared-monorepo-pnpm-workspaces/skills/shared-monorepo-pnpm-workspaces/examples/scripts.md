@@ -29,7 +29,7 @@ pnpm --filter "...[origin/main]" test
 pnpm --filter "!@repo/docs" --filter "@repo/*" lint
 
 # Add a dependency to a specific package
-pnpm --filter @repo/api-server add hono
+pnpm --filter @repo/api-server add some-package
 
 # Add a workspace dependency
 pnpm --filter @repo/web-app add @repo/ui --workspace

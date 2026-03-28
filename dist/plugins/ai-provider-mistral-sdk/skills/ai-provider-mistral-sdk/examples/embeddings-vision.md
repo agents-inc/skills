@@ -1,6 +1,6 @@
 # Mistral SDK -- Embeddings & Vision Examples
 
-> Embeddings for semantic search and vision/image inputs with Pixtral-capable models. See [SKILL.md](../SKILL.md) for core patterns.
+> Embeddings for semantic search and vision/image inputs with vision-capable models. See [SKILL.md](../SKILL.md) for core patterns.
 
 **Related examples:**
 

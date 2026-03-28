@@ -8,24 +8,7 @@
 
 ## Decision Framework
 
-**Hono + OpenAPI:** Public/multi-client APIs, need docs, complex validation, type generation with OpenAPI client generators
-
-**Server Actions:** Simple forms, internal-only, no external API consumers, no complex validation
-
-### When to Use Hono + OpenAPI
-
-- Building type-safe REST APIs with auto-generated OpenAPI specs
-- Defining OpenAPI specifications with automatic Zod validation
-- Creating standardized error responses with proper status codes
-- Implementing filtering, pagination, and sorting patterns
-- Public or multi-client APIs needing formal documentation
-- Production APIs requiring rate limiting, CORS, health checks
-
-### When NOT to Use Hono + OpenAPI
-
-- Simple CRUD with no external consumers (Server Actions are simpler)
-- Internal-only APIs without documentation requirements
-- Single-use endpoints with no schema reuse (over-engineering)
+See [SKILL.md](SKILL.md) for when to use / when NOT to use Hono + OpenAPI.
 
 ### Pagination Decision
 

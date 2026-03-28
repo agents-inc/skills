@@ -214,7 +214,7 @@ export const FeaturesStep: React.FC<StepProps> = ({ onNext, onBack }) => {
           { label: "Prettier", value: "prettier" },
           { label: "Testing", value: "testing" },
         ]}
-        onChange={(values) => onNext({ features: values })}
+        onSubmit={(values) => onNext({ features: values })}
       />
     </Box>
   );

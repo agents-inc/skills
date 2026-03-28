@@ -65,11 +65,11 @@ description: Weaviate vector database patterns with weaviate-client v3 -- collec
 
 **When NOT to use:**
 
-- Relational data with complex joins (use PostgreSQL)
-- Full-text search without vector component (use Elasticsearch/Meilisearch)
-- Key-value caching (use Redis)
-- Time-series data (use TimescaleDB/InfluxDB)
-- Graph traversal queries (use Neo4j)
+- Relational data with complex joins (use a relational database)
+- Full-text search without vector component (use a dedicated search engine)
+- Key-value caching (use a key-value store)
+- Time-series data (use a time-series database)
+- Graph traversal queries (use a graph database)
 - Browser-side applications (v3 client is Node.js only)
 
 ---

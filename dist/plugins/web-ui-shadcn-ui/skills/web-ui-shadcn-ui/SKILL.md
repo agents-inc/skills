@@ -39,7 +39,7 @@ description: shadcn/ui component library patterns, CLI usage, theming, customiza
 
 **When NOT to use:**
 
-- Projects requiring a specific opinionated design system (Material, Ant Design)
+- Projects requiring a specific opinionated design system
 - Applications where you cannot control the component source
 - Projects not using Tailwind CSS
 

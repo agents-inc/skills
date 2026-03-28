@@ -85,19 +85,6 @@ Langfuse provides **open-source LLM observability** built on OpenTelemetry. The 
 4. **Context-first** -- `startActiveObservation()` automatically propagates parent-child relationships. Nested observations inherit context without manual ID threading.
 5. **Observation types** -- LLM-specific types (`generation`, `agent`, `tool`, `retriever`, `evaluator`, `embedding`) provide semantic meaning to traces, enabling richer dashboard views and filtering.
 
-**When to use Langfuse:**
-
-- You need production-grade LLM observability with tracing, cost tracking, and evaluations
-- You want prompt management with versioning, A/B testing via labels, and variable compilation
-- You need dataset-driven testing and experiment tracking for LLM quality assurance
-- You want an open-source, self-hostable alternative to proprietary LLM observability platforms
-
-**When NOT to use:**
-
-- Simple debugging -- `console.log` is sufficient for local development
-- Infrastructure monitoring -- use Datadog, Grafana, etc. for APM
-- You need a complete AI agent framework -- Langfuse is observability, not orchestration
-
 </philosophy>
 
 ---
@@ -139,7 +126,7 @@ import { startActiveObservation } from "@langfuse/tracing";
 import "./instrumentation"; // TOO LATE -- tracing won't capture earlier imports
 ```
 
-**Why bad:** OpenAI/LangChain auto-instrumentation requires OTel to be initialized before those SDKs are imported
+**Why bad:** Auto-instrumentation of LLM SDKs requires OTel to be initialized before those modules are imported
 
 **See:** [examples/core.md](examples/core.md) for environment variables, sampling, masking, and production configuration
 

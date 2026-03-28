@@ -152,7 +152,7 @@ export function FileUploader({ socket }: FileUploaderProps) {
         </div>
       )}
 
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      {error && <div data-status="error">{error}</div>}
     </div>
   );
 }

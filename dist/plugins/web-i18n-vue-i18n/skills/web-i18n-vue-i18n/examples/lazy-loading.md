@@ -36,11 +36,8 @@ export async function loadLocaleMessages(
   }
 
   try {
-    // Dynamic import with webpack/vite chunk naming
-    const messages = await import(
-      /* webpackChunkName: "locale-[request]" */
-      `../locales/${locale}.json`
-    );
+    // Dynamic import for code splitting
+    const messages = await import(`../locales/${locale}.json`);
 
     i18n.global.setLocaleMessage(locale, messages.default);
     loadedLocales.add(locale);
@@ -245,7 +242,7 @@ const switchLocale = (newLocale: SupportedLocale) => {
 
 ### Good Example - Build Plugin and Feature Flags
 
-Use `@intlify/unplugin-vue-i18n` (supports Vite, Webpack, Rollup) for message pre-compilation. Key options:
+Use `@intlify/unplugin-vue-i18n` for message pre-compilation. Key options:
 
 ```typescript
 // unplugin options (adapt to your bundler)

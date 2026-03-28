@@ -1,6 +1,6 @@
 {
   "name": "api-database-mysql",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Direct MySQL database access with mysql2 driver -- connection pools, prepared statements, transactions, streaming, typed queries, error handling",
   "author": {

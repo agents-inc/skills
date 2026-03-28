@@ -1,11 +1,11 @@
 ---
 name: web-testing-vitest
-description: Playwright E2E, Vitest, React Testing Library - E2E for user flows, unit tests for pure functions only, network-level API mocking - inverted testing pyramid prioritizing E2E tests
+description: Vitest test runner - configuration, assertions, mocking (vi.fn, vi.mock, vi.spyOn), fake timers, snapshot testing, coverage, workspace projects
 ---
 
-# Testing Standards
+# Vitest Test Runner Patterns
 
-> **Quick Guide:** E2E for user flows (Playwright). Unit for pure functions (Vitest). Integration tests okay but not primary (Vitest + RTL + network-level mocking). Current app uses integration tests with network-level API mocking.
+> **Quick Guide:** Vitest is a fast, Vite-native test runner. Use `describe`/`it`/`expect` for test structure, `vi.fn()` for mocks, `vi.mock()` for module mocking, `vi.spyOn()` for spying. Co-locate tests with code. Use network-level API mocking over module-level mocks. Vitest v4 is current stable (requires Vite 6+, Node 20+).
 
 ---
 
@@ -15,46 +15,51 @@ description: Playwright E2E, Vitest, React Testing Library - E2E for user flows,
 
 > **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
 
-**(You MUST write E2E tests for ALL critical user workflows - NOT unit tests for React components)**
-
-**(You MUST use Playwright for E2E tests and organize by user journey - NOT by component)**
-
-**(You MUST only write unit tests for pure functions - NOT for components, hooks, or side effects)**
-
 **(You MUST co-locate tests with code in feature-based structure - NOT in separate test directories)**
 
-**(You MUST use network-level API mocking - NOT module-level mocks)**
+**(You MUST use network-level API mocking - NOT module-level mocks where possible)**
+
+**(You MUST use named constants for test data - no magic strings or numbers in test files)**
+
+**(You MUST use `vi.fn()` for mocks and `vi.spyOn()` for spying - NEVER manually replace functions)**
+
+**(You MUST use the v3+ test options syntax: `test("name", { timeout: 10_000 }, () => {})` - NOT as third argument)**
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** E2E testing, Playwright, test-driven development (Tester), Vitest, React Testing Library, test organization
+**Auto-detection:** Vitest, vi.fn, vi.mock, vi.spyOn, describe, it, expect, test, beforeEach, afterEach, vi.useFakeTimers, vitest.config, defineConfig, coverage, snapshot, mockResolvedValue, mockRejectedValue
 
 **When to use:**
 
-- Writing E2E tests for user workflows (primary approach with Playwright)
-- Unit testing pure utility functions with Vitest
-- Setting up network-level mocking for integration tests (current codebase approach)
-- Organizing tests in feature-based structure (co-located tests)
+- Configuring and running tests with Vitest
+- Writing unit tests for pure functions
+- Writing integration tests with network-level mocking
+- Mocking modules, functions, and timers
+- Snapshot testing
+- Configuring coverage, workspaces, and projects
 
 **When NOT to use:**
 
-- Unit testing React components (use E2E tests instead)
-- Unit testing hooks with side effects (use E2E tests or integration tests)
+- E2E browser testing (use your E2E testing tool)
+- Component rendering and querying (use your component testing library)
 - Testing third-party library behavior (library already has tests)
 - Testing TypeScript compile-time guarantees (TypeScript already enforces)
 
 **Key patterns covered:**
 
-- E2E tests for user workflows (primary - inverted testing pyramid)
-- Unit tests for pure functions only (not components)
-- Integration tests with Vitest + React Testing Library + network-level mocking (acceptable, not ideal)
+- Test structure and organization (describe, it, expect)
+- Mocking (vi.fn, vi.mock, vi.spyOn, vi.mockObject)
+- Fake timers (vi.useFakeTimers, vi.advanceTimersByTime)
+- Network-level API mocking for integration tests
 - Feature-based test organization (co-located with code)
+- Configuration (vitest.config, projects, coverage)
+- Vitest v3/v4 migration and breaking changes
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - E2E and unit test examples
+- [examples/core.md](examples/core.md) - Unit test examples, pure functions
 - [examples/integration.md](examples/integration.md) - Integration tests with network-level mocking
 - [examples/anti-patterns.md](examples/anti-patterns.md) - What NOT to test
 - [reference.md](reference.md) - Vitest v3/v4 migration notes, decision frameworks
@@ -63,52 +68,29 @@ description: Playwright E2E, Vitest, React Testing Library - E2E for user flows,
 
 <philosophy>
 
-## Testing Philosophy
+## Philosophy
 
-**PRIMARY: E2E tests for most scenarios**
+Vitest is a Vite-native test runner designed for speed and developer experience. It provides Jest-compatible APIs with native ESM support, TypeScript out of the box, and Vite's transform pipeline.
 
-E2E tests verify actual user workflows through the entire stack. They test real user experience, catch integration issues, and provide highest confidence.
+**Core Principles:**
 
-**SECONDARY: Unit tests for pure functions**
+1. **Co-locate tests with code** - Tests live next to the code they test for discoverability and maintenance
+2. **Network-level mocking over module mocking** - Mock at the HTTP boundary, not at import boundaries
+3. **Named constants for all test data** - No magic strings or numbers in test files
+4. **Test behavior, not implementation** - Focus on inputs and outputs, not internal state
+5. **Fast feedback loops** - Leverage Vitest's HMR-based watch mode for instant re-runs
 
-Pure utilities, business logic, algorithms, data transformations, edge cases.
+**When to use Vitest:**
 
-**Integration tests acceptable but not primary**
+- Unit testing pure functions (business logic, utilities, formatters)
+- Integration testing with network-level API mocking
+- Snapshot testing for serializable outputs
+- Any test that doesn't require a real browser
 
-React Testing Library + network-level mocking useful for component behavior when E2E too slow. Don't replace E2E for user workflows.
+**When NOT to use Vitest:**
 
-**Testing Pyramid Inverted:**
-
-```
-        E2E Tests (Most) - Test real user workflows
-        Integration Tests (Some, acceptable) - Component behavior
-        Unit Tests (Pure functions only) - Utilities, algorithms
-```
-
-**When to use E2E tests:**
-
-- All critical user-facing workflows (login, checkout, data entry)
-- Multi-step user journeys (signup -> verify email -> complete profile)
-- Cross-browser compatibility needs
-- Testing real integration with backend APIs
-
-**When NOT to use E2E tests:**
-
-- Pure utility functions (use unit tests instead)
-- Individual component variants in isolation (use story files for documentation)
-
-**When to use unit tests:**
-
-- Pure functions with clear input -> output
-- Business logic calculations (pricing, taxes, discounts)
-- Data transformations and formatters
-- Edge cases and boundary conditions
-
-**When NOT to use unit tests:**
-
-- React components (use E2E tests)
-- Hooks with side effects (use E2E tests or integration tests)
-- API calls or external integrations (use E2E tests)
+- Browser-based E2E testing (use your E2E testing tool)
+- Visual regression testing (use your visual testing tool)
 
 </philosophy>
 
@@ -118,37 +100,9 @@ React Testing Library + network-level mocking useful for component behavior when
 
 ## Core Patterns
 
-### Pattern 1: E2E Testing with Playwright (PRIMARY)
+### Pattern 1: Unit Testing Pure Functions
 
-E2E tests verify complete user workflows through the entire application stack, providing the highest confidence that features work correctly.
-
-**What to test end-to-end:**
-
-- ALL critical user flows (login, checkout, data entry)
-- ALL user-facing features (forms, navigation, interactions)
-- Multi-step workflows (signup -> verify email -> complete profile)
-- Error states users will encounter
-- Happy paths AND error paths
-- Cross-browser compatibility (Playwright makes this easy)
-
-**What NOT to test end-to-end:**
-
-- Pure utility functions (use unit tests)
-- Individual component variants in isolation (use story files for visual documentation)
-
-**Test Organization:**
-
-- `tests/e2e/` directory at root or in each app
-- Test files: `*.spec.ts` or `*.e2e.ts`
-- Group by user journey, not by component
-
-See [examples/core.md](examples/core.md) for complete E2E test examples.
-
----
-
-### Pattern 2: Unit Testing Pure Functions
-
-Only write unit tests for pure functions with no side effects. Never unit test React components - use E2E tests instead.
+Write unit tests for pure functions with no side effects. Focus on clear input/output behavior.
 
 **What to test:**
 
@@ -157,52 +111,32 @@ Only write unit tests for pure functions with no side effects. Never unit test R
 - Data transformations and formatters
 - Edge cases and boundary conditions
 
-**What NOT to test:**
-
-- React components (use E2E tests)
-- Hooks with side effects (use E2E tests or integration tests)
-- API calls or external integrations (use E2E tests)
-
 See [examples/core.md](examples/core.md) for pure function test examples.
 
 ---
 
-### Pattern 3: Integration Testing with Network-Level Mocking (Current Approach)
+### Pattern 2: Integration Testing with Network-Level Mocking
 
-The current codebase uses Vitest + React Testing Library + network-level mocking for integration tests. This is acceptable but not ideal compared to E2E tests.
+Use Vitest with network-level API mocking to test components with their API integration layer.
 
 **When Integration Tests Make Sense:**
 
 - Component behavior in isolation (form validation, UI state)
-- When E2E tests are too slow for rapid feedback
 - Testing edge cases that are hard to reproduce in E2E
 - Development workflow (faster than spinning up full stack)
 
-**Current Pattern:**
+**Key Pattern:**
 
 - Tests in `__tests__/` directories co-located with code
 - Network-level API mocking (intercepts HTTP requests)
 - Centralized mock data in shared package
 - Test all states: loading, empty, error, success
 
-**Benefits:**
-
-- Tests component with API integration (via network-level mocking)
-- Tests all states: loading, empty, error, success
-- Centralized mock handlers in shared package
-- Shared between tests and development
-
-**Limitations:**
-
-- Doesn't test real API (mocks can drift)
-- Doesn't test full user workflow
-- Requires maintaining mock parity with API
-
 See [examples/integration.md](examples/integration.md) for integration test examples.
 
 ---
 
-### Pattern 4: Feature-Based Test Organization
+### Pattern 3: Feature-Based Test Organization
 
 Co-locate tests with code in feature-based structure. Tests live next to what they test.
 
@@ -244,8 +178,7 @@ tests/
 
 **File Naming Convention:**
 
-- `*.test.tsx` / `*.test.ts` for unit and integration tests (Vitest)
-- `*.spec.ts` for E2E tests (Playwright)
+- `*.test.tsx` / `*.test.ts` for unit and integration tests
 
 **Choose one pattern and be consistent across the codebase.**
 
@@ -259,26 +192,23 @@ tests/
 
 **High Priority Issues:**
 
-- No E2E tests for critical user flows - production bugs reach users before you discover them
-- Unit testing React components - wastes time testing implementation details, breaks on refactoring
 - Module-level mocking (`vi.mock`) instead of network-level - breaks when import structure changes, doesn't test serialization
 - Only testing happy paths - error states go untested until users report them
+- Not using named constants for test data - magic strings and numbers make tests unreadable
 
 **Medium Priority Issues:**
 
 - Mocks that don't match real API - tests pass but production fails because mocks drifted
-- Complex mocking setup - sign you should use E2E tests instead of fighting with mocks
-- Running E2E tests only in CI - need local runs too for fast feedback
+- Complex mocking setup - simplify or test at a higher level
+- Not resetting mocks between tests - causes cross-test pollution
 
 **Gotchas & Edge Cases:**
 
-- E2E tests don't show up in coverage metrics (that's okay - they provide more value than coverage numbers suggest)
-- Playwright `toBeVisible()` waits for element but `toBeInTheDocument()` doesn't - use visibility checks to avoid flaky tests
 - Network mock handlers are typically global - reset handlers after each test to prevent pollution
-- Async React updates require `waitFor()` or `findBy*` queries - `getBy*` immediately will cause flaky failures
-- Files named `*.test.ts` run with Vitest, `*.spec.ts` with Playwright - mixing causes wrong runner
 - **Vitest v3+:** Test options must be second argument: `test("name", { timeout: 10_000 }, () => {})` NOT `test("name", () => {}, { timeout: 10_000 })`
 - **Vitest v4:** Multiple mock behavior changes (getMockName, restoreAllMocks, automocked getters) - see [reference.md](reference.md) for full v4 migration notes
+- `vi.fn().mock.invocationCallOrder` starts at `1` in v4 instead of `0`
+- `vi.restoreAllMocks()` only affects manual spies in v4, not automocks - use `vi.resetAllMocks()` for full reset
 
 </red_flags>
 
@@ -290,16 +220,16 @@ tests/
 
 > **All code must follow project conventions in CLAUDE.md**
 
-**(You MUST write E2E tests for ALL critical user workflows - NOT unit tests for React components)**
-
-**(You MUST use Playwright for E2E tests and organize by user journey - NOT by component)**
-
-**(You MUST only write unit tests for pure functions - NOT for components, hooks, or side effects)**
-
 **(You MUST co-locate tests with code in feature-based structure - NOT in separate test directories)**
 
-**(You MUST use network-level API mocking - NOT module-level mocks)**
+**(You MUST use network-level API mocking - NOT module-level mocks where possible)**
 
-**Failure to follow these rules will result in fragile tests that break on refactoring, untested critical user paths, and false confidence from high coverage of low-value tests.**
+**(You MUST use named constants for test data - no magic strings or numbers in test files)**
+
+**(You MUST use `vi.fn()` for mocks and `vi.spyOn()` for spying - NEVER manually replace functions)**
+
+**(You MUST use the v3+ test options syntax: `test("name", { timeout: 10_000 }, () => {})` - NOT as third argument)**
+
+**Failure to follow these rules will result in fragile tests that break on refactoring and false confidence from poorly structured test suites.**
 
 </critical_reminders>

@@ -417,6 +417,9 @@ Rerank (speed)              -> rerank-v4.0-fast (32K context, latency-optimized)
 - **Check `finish_reason === "MAX_TOKENS"`** -- detect truncated output
 - **Use `temperature: 0`** for deterministic output (enables caching)
 - **Use embed-v4 `int8`/`binary` types** for compressed storage with minimal quality loss
+- **Use `strictTools: true`** to force tool calls to follow the schema exactly (structured outputs)
+- **Use `thinking: { type: "enabled" }`** with reasoning models for complex multi-step tasks
+- **Use `toolChoice: "REQUIRED"`** when you always want the model to call a tool (command-r7b+ only)
 
 </performance>
 
@@ -525,6 +528,10 @@ Do you need grounded answers with citations?
 - V2 uses `system` role for instructions (V1 used `preamble` parameter)
 - Citation `sources` in tool use responses reference `tool_call_id` values, not document indices
 - The `clientName` constructor parameter is for logging/analytics, not authentication
+- `responseFormat: { type: "json_object" }` is NOT supported in RAG mode (with `documents`, `tools`, or `toolResults`)
+- `toolChoice` is only supported on `command-r7b-12-2024` and newer models
+- First requests with `strictTools: true` and a new tool set take longer (schema compilation)
+- `thinking` (reasoning mode) is only available on reasoning-capable models like `command-a-reasoning-08-2025`
 
 </red_flags>
 

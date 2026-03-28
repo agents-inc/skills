@@ -91,7 +91,7 @@ Payload is a TypeScript-native headless CMS that treats your schema as code. Ins
 2. **Three APIs from one config** -- Every collection automatically gets a Local API (server-only, zero-latency), REST API (`/api/{slug}`), and GraphQL API. The Local API is the primary interface for server-side operations.
 3. **Access control is mandatory** -- Every collection should have explicit `access` functions. By default, Payload denies access to unauthenticated users, but you must define who can do what. Access functions can return a boolean or a `Where` query to scope results.
 4. **Hooks for side effects** -- Lifecycle hooks (beforeChange, afterChange, etc.) let you run logic at specific points in the document lifecycle. Keep hooks focused and avoid blocking operations unnecessarily.
-5. **Database-agnostic** -- Payload uses database adapters (Postgres via Drizzle, MongoDB via Mongoose). Your collections and fields are defined once and work with any supported database.
+5. **Database-agnostic** -- Payload uses database adapters (Postgres or MongoDB). Your collections and fields are defined once and work with any supported database.
 6. **Type generation** -- Run `payload generate:types` to produce TypeScript interfaces from your config. This gives you end-to-end type safety from config to API responses.
 
 **When to use Payload:**
@@ -101,12 +101,6 @@ Payload is a TypeScript-native headless CMS that treats your schema as code. Ins
 - Projects requiring a typed CMS with version control over the schema
 - Multi-tenant applications using access control to scope data per tenant
 - Headless CMS backing a frontend framework
-
-**When NOT to use:**
-
-- Pure API servers without content editing needs (use a plain API framework)
-- Applications with extremely simple data models (a database + ORM may suffice)
-- Client-heavy SPAs where you only need a thin API layer
 
 </philosophy>
 
@@ -118,533 +112,133 @@ Payload is a TypeScript-native headless CMS that treats your schema as code. Ins
 
 ### Pattern 1: payload.config.ts Setup
 
-The Payload config is the entry point for your entire CMS. It defines the database adapter, collections, globals, editor, and admin settings.
+The config is the entry point. It defines the database adapter, collections, globals, editor, and admin settings. Always use env vars for credentials.
 
 ```typescript
-// payload.config.ts
-import { buildConfig } from "payload";
-import { postgresAdapter } from "@payloadcms/db-postgres";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import { Posts } from "./collections/posts";
-import { Users } from "./collections/users";
-import { Media } from "./collections/media";
-import { SiteSettings } from "./globals/site-settings";
-
 const config = buildConfig({
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL,
-    },
-  }),
+  db: postgresAdapter({ pool: { connectionString: process.env.DATABASE_URL } }),
   editor: lexicalEditor(),
   collections: [Posts, Users, Media],
   globals: [SiteSettings],
-  admin: {
-    user: Users.slug,
-  },
-  typescript: {
-    outputFile: "./src/payload-types.ts",
-  },
+  admin: { user: Users.slug },
+  typescript: { outputFile: "./src/payload-types.ts" },
   secret: process.env.PAYLOAD_SECRET!,
 });
-
-export { config as default };
 ```
 
-**Why good:** Database adapter configured via environment variable, editor declared once at top level, collections imported from separate files for maintainability, admin user collection specified, TypeScript output path configured, secret from env var
-
-```typescript
-// BAD: Everything inline, hardcoded values
-import { buildConfig } from "payload";
-import { mongooseAdapter } from "@payloadcms/db-mongodb";
-
-export default buildConfig({
-  db: mongooseAdapter({ url: "mongodb://localhost/mydb" }), // Hardcoded
-  secret: "my-super-secret-key", // Hardcoded secret
-  collections: [
-    {
-      slug: "posts",
-      fields: [
-        /* 200 lines of inline fields... */
-      ],
-    },
-  ],
-});
-```
-
-**Why bad:** Hardcoded database URL and secret are security risks, inline collection definitions become unmaintainable at scale, no TypeScript output configured
+Never hardcode database URLs or secrets. Import collections from separate files. See [examples/core.md](examples/core.md) for full Postgres and MongoDB adapter configs.
 
 ---
 
 ### Pattern 2: Collection Config
 
-Collections are the primary data model in Payload. Each collection generates a database table/collection, admin UI, and API endpoints.
+Collections are the primary data model. Each generates a database table, admin UI, and API endpoints. Define access control per operation, use `useAsTitle` for admin display, and keep each collection in its own file.
 
 ```typescript
-// collections/posts.ts
-import type { CollectionConfig } from "payload";
-
 const Posts: CollectionConfig = {
   slug: "posts",
-  admin: {
-    useAsTitle: "title",
-    defaultColumns: ["title", "status", "createdAt"],
-  },
+  admin: { useAsTitle: "title" },
   access: {
     read: () => true,
     create: ({ req: { user } }) => Boolean(user),
-    update: ({ req: { user } }) => Boolean(user),
-    delete: ({ req: { user } }) => Boolean(user),
+    update: isAdminOrAuthor,
+    delete: isAdmin,
   },
+  hooks: {
+    beforeChange: [setAuthorOnCreate],
+    afterChange: [revalidatePostCache],
+  },
+  versions: { drafts: true },
   fields: [
-    {
-      name: "title",
-      type: "text",
-      required: true,
-    },
-    {
-      name: "content",
-      type: "richText",
-    },
-    {
-      name: "status",
-      type: "select",
-      defaultValue: "draft",
-      options: [
-        { label: "Draft", value: "draft" },
-        { label: "Published", value: "published" },
-      ],
-    },
+    { name: "title", type: "text", required: true },
+    { name: "content", type: "richText" },
     {
       name: "author",
       type: "relationship",
       relationTo: "users",
       required: true,
     },
-    {
-      name: "featuredImage",
-      type: "upload",
-      relationTo: "media",
-    },
-    {
-      name: "publishedDate",
-      type: "date",
-      admin: {
-        date: {
-          pickerAppearance: "dayOnly",
-        },
-      },
-    },
   ],
 };
-
-export { Posts };
 ```
 
-**Why good:** Separate file per collection, `useAsTitle` configures admin list display, access control defined per operation, named export, fields use specific types with validation
+See [examples/core.md](examples/core.md) for full collection config with all field types, sidebar positioning, and SEO tabs.
 
 ---
 
-### Pattern 3: Access Control Functions
+### Pattern 3: Access Control
 
-Access control functions receive `{ req }` with the authenticated user. They return `true`/`false` or a `Where` query to scope results.
-
-#### Collection-Level Access
+Access functions receive `{ req }` with the authenticated user. They return `true`/`false` or a `Where` query to scope results. Define reusable functions in a shared `access/` directory.
 
 ```typescript
-// access/is-admin.ts
-import type { Access } from "payload";
+// Return boolean for simple checks
+const isAdmin: Access = ({ req: { user } }) => user?.role === "admin";
 
-const isAdmin: Access = ({ req: { user } }) => {
-  if (!user) return false;
-  return user.role === "admin";
-};
-
-export { isAdmin };
-
-// access/is-admin-or-self.ts
-import type { Access } from "payload";
-
+// Return Where query for scoped access — users see only their own documents
 const isAdminOrSelf: Access = ({ req: { user } }) => {
   if (!user) return false;
   if (user.role === "admin") return true;
-  // Return a Where query — user can only access their own documents
-  return {
-    author: {
-      equals: user.id,
-    },
-  };
-};
-
-export { isAdminOrSelf };
-```
-
-```typescript
-// Usage in collection config
-const Posts: CollectionConfig = {
-  slug: "posts",
-  access: {
-    read: () => true, // Public read
-    create: ({ req: { user } }) => Boolean(user), // Any logged-in user
-    update: isAdminOrSelf, // Admin or document owner
-    delete: isAdmin, // Admin only
-  },
-  // ...
+  return { author: { equals: user.id } };
 };
 ```
 
-**Why good:** Access functions are reusable across collections, returning a `Where` query scopes results instead of denying access entirely, clear separation between admin-only and self-service operations
-
-#### Field-Level Access
-
-```typescript
-const Posts: CollectionConfig = {
-  slug: "posts",
-  fields: [
-    {
-      name: "internalNotes",
-      type: "textarea",
-      access: {
-        read: ({ req: { user } }) => user?.role === "admin",
-        update: ({ req: { user } }) => user?.role === "admin",
-      },
-    },
-  ],
-};
-```
-
-**Why good:** Field-level access hides sensitive fields from non-admin users, works independently of collection-level access
+Field-level access uses the same pattern on individual fields. See [examples/core.md](examples/core.md) for reusable access functions and field-level access examples.
 
 ---
 
 ### Pattern 4: Collection Hooks
 
-Hooks run at specific points in the document lifecycle. They receive typed arguments and can modify data or trigger side effects.
+Hooks run at specific points in the document lifecycle. `beforeChange` returns modified `data`, `afterChange` is for non-blocking side effects. Use `req.payload` to access the Local API within hooks. Hooks receive a `context` object to prevent infinite loops when hooks trigger other operations.
 
 ```typescript
-// collections/posts.ts
-import type { CollectionConfig } from "payload";
-
-const Posts: CollectionConfig = {
-  slug: "posts",
-  hooks: {
-    beforeChange: [
-      ({ data, operation, req }) => {
-        // Auto-set author on create
-        if (operation === "create" && req.user) {
-          data.author = req.user.id;
-        }
-        return data;
-      },
-    ],
-    afterChange: [
-      ({ doc, operation, req }) => {
-        if (operation === "create") {
-          // Trigger notification, revalidate cache, etc.
-          req.payload.logger.info(`Post created: ${doc.title}`);
-        }
-      },
-    ],
-    beforeRead: [
-      ({ doc, req }) => {
-        // Runs before the document is returned
-        // All locales and hidden fields are available here
-        return doc;
-      },
-    ],
-    afterRead: [
-      ({ doc, req }) => {
-        // Runs after all transforms (locale flattening, field hiding)
-        // Last chance to modify before returning to the client
-        return doc;
-      },
-    ],
-    beforeDelete: [
-      ({ id, req }) => {
-        req.payload.logger.info(`Deleting document ${id}`);
-      },
-    ],
+beforeChange: [
+  ({ data, operation, req }) => {
+    if (operation === "create" && req.user) data.author = req.user.id;
+    return data;
   },
-  fields: [
-    /* ... */
-  ],
-};
-
-export { Posts };
+],
+afterChange: [
+  ({ doc, operation, req, context }) => {
+    if (context.skipRevalidation) return;
+    if (operation === "create") req.payload.logger.info(`Post created: ${doc.title}`);
+  },
+],
 ```
 
-**Why good:** Hooks are arrays (multiple hooks per lifecycle event), `operation` distinguishes create vs update in beforeChange, `req.payload` provides access to the Local API within hooks, data is returned from beforeChange to pass modifications forward
-
-```typescript
-// BAD: Blocking hook with external API call and no error handling
-hooks: {
-  beforeChange: [
-    async ({ data }) => {
-      const response = await fetch("https://external-api.com/validate", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      // If external API is down, ALL saves fail
-      const result = await response.json();
-      data.externalId = result.id;
-      return data;
-    },
-  ],
-}
-```
-
-**Why bad:** External API call in beforeChange blocks every save operation, no error handling means a network failure prevents all document saves, consider using afterChange for non-critical side effects
+Never put blocking external API calls in `beforeChange` -- use `afterChange` for non-critical side effects. See [examples/core.md](examples/core.md) for hook patterns and [examples/advanced.md](examples/advanced.md) for cross-collection hooks.
 
 ---
 
-### Pattern 5: Field Types Overview
+### Pattern 5: Field Types
 
-Payload provides a comprehensive set of field types. Each field has a `name`, `type`, and optional properties like `required`, `unique`, `defaultValue`, `admin`, `access`, and `hooks`.
+Payload provides typed fields: `text`, `richText`, `number`, `select`, `checkbox`, `date`, `email`, `textarea`, `relationship`, `upload`, `json`, `code`, `point`, `radio`. Structural fields compose to model any content shape:
 
-#### Common Field Types
+- **group** -- nested object with sub-fields
+- **array** -- repeatable rows of same-shape fields
+- **blocks** -- flexible content with multiple block types (use `interfaceName` for custom TypeScript interface names)
+- **tabs**, **row**, **collapsible** -- admin-only layout helpers that do not affect data shape
 
-```typescript
-const fields = [
-  // Text
-  { name: "title", type: "text", required: true, unique: true },
-
-  // Rich Text (Lexical editor)
-  { name: "content", type: "richText" },
-
-  // Number
-  { name: "price", type: "number", min: 0 },
-
-  // Select (single value)
-  {
-    name: "status",
-    type: "select",
-    options: [
-      { label: "Draft", value: "draft" },
-      { label: "Published", value: "published" },
-    ],
-  },
-
-  // Checkbox
-  { name: "featured", type: "checkbox", defaultValue: false },
-
-  // Date
-  { name: "publishedAt", type: "date" },
-
-  // Email
-  { name: "contactEmail", type: "email" },
-
-  // Textarea
-  { name: "excerpt", type: "textarea", maxLength: 300 },
-
-  // Relationship (to another collection)
-  { name: "author", type: "relationship", relationTo: "users" },
-
-  // Upload (to a media collection)
-  { name: "image", type: "upload", relationTo: "media" },
-
-  // JSON (arbitrary JSON data)
-  { name: "metadata", type: "json" },
-
-  // Code (code editor in admin)
-  { name: "customCSS", type: "code", admin: { language: "css" } },
-
-  // Point (geographic coordinates)
-  { name: "location", type: "point" },
-
-  // Radio (single choice, displayed as radio buttons)
-  {
-    name: "priority",
-    type: "radio",
-    options: [
-      { label: "Low", value: "low" },
-      { label: "High", value: "high" },
-    ],
-  },
-];
-```
-
-#### Structural Field Types
-
-```typescript
-const structuralFields = [
-  // Group — nested object
-  {
-    name: "seo",
-    type: "group",
-    fields: [
-      { name: "title", type: "text" },
-      { name: "description", type: "textarea" },
-    ],
-  },
-
-  // Array — repeatable set of fields
-  {
-    name: "tags",
-    type: "array",
-    minRows: 1,
-    maxRows: 10,
-    fields: [
-      { name: "label", type: "text", required: true },
-      { name: "color", type: "text" },
-    ],
-  },
-
-  // Blocks — flexible content areas with multiple block types
-  {
-    name: "layout",
-    type: "blocks",
-    blocks: [
-      {
-        slug: "hero",
-        fields: [
-          { name: "heading", type: "text", required: true },
-          { name: "backgroundImage", type: "upload", relationTo: "media" },
-        ],
-      },
-      {
-        slug: "content",
-        fields: [{ name: "richText", type: "richText" }],
-      },
-      {
-        slug: "cta",
-        fields: [
-          { name: "label", type: "text", required: true },
-          { name: "url", type: "text", required: true },
-        ],
-      },
-    ],
-  },
-
-  // Tabs — visual grouping in admin UI (does not affect data shape)
-  {
-    type: "tabs",
-    tabs: [
-      {
-        label: "Content",
-        fields: [
-          { name: "title", type: "text" },
-          { name: "body", type: "richText" },
-        ],
-      },
-      {
-        label: "SEO",
-        fields: [
-          { name: "metaTitle", type: "text" },
-          { name: "metaDescription", type: "textarea" },
-        ],
-      },
-    ],
-  },
-
-  // Row — side-by-side fields in admin UI (does not affect data shape)
-  {
-    type: "row",
-    fields: [
-      { name: "firstName", type: "text" },
-      { name: "lastName", type: "text" },
-    ],
-  },
-
-  // Collapsible — collapsible section in admin UI (does not affect data shape)
-  {
-    type: "collapsible",
-    label: "Advanced Settings",
-    fields: [
-      { name: "customClass", type: "text" },
-      { name: "htmlId", type: "text" },
-    ],
-  },
-];
-```
-
-**Why good:** Fields are strongly typed, structural fields (group, array, blocks) compose to model any content shape, tabs/row/collapsible are admin-only layout helpers that do not affect the data schema
-
-**When to use blocks vs array:** Use **blocks** when content editors need to choose from multiple block types (hero, content, CTA) to build flexible page layouts. Use **array** when every row has the same fields (tags, FAQ items, team members).
+Use **blocks** when editors choose from multiple block types for flexible page layouts. Use **array** when every row has the same fields. See [examples/core.md](examples/core.md) for block definitions and [reference.md](reference.md) for the complete field type table.
 
 ---
 
 ### Pattern 6: Local API
 
-The Local API is the primary way to query Payload on the server. It is zero-latency (no HTTP overhead), fully typed, and executes hooks and access control.
+The Local API is the primary server-side interface -- zero-latency, fully typed, and executes hooks and access control. Always pass `overrideAccess: false` when operating on behalf of a user.
 
 ```typescript
-// Server-side usage (API route, server component, script)
-import { getPayload } from "payload";
-import config from "@payload-config";
-
-async function getPublishedPosts() {
-  const payload = await getPayload({ config });
-
-  const PAGE_SIZE = 20;
-
-  const result = await payload.find({
-    collection: "posts",
-    where: {
-      status: { equals: "published" },
-    },
-    sort: "-createdAt",
-    limit: PAGE_SIZE,
-    depth: 1,
-    overrideAccess: false, // Respect access control
-  });
-
-  return result.docs; // Typed as Post[]
-}
-
-async function createPost(data: {
-  title: string;
-  content: object;
-  author: string;
-}) {
-  const payload = await getPayload({ config });
-
-  const post = await payload.create({
-    collection: "posts",
-    data,
-    overrideAccess: false,
-  });
-
-  return post; // Typed as Post
-}
-
-async function updatePost(
-  id: string,
-  data: Partial<{ title: string; status: string }>,
-) {
-  const payload = await getPayload({ config });
-
-  const post = await payload.update({
-    collection: "posts",
-    id,
-    data,
-    overrideAccess: false,
-  });
-
-  return post;
-}
-
-async function deletePost(id: string) {
-  const payload = await getPayload({ config });
-
-  await payload.delete({
-    collection: "posts",
-    id,
-    overrideAccess: false,
-  });
-}
-```
-
-**Why good:** `overrideAccess: false` enforces access control (default is `true` which bypasses it), `depth: 1` controls relationship population depth, `sort: "-createdAt"` sorts descending, results are fully typed when types are generated
-
-```typescript
-// BAD: Using Local API without access control
-const posts = await payload.find({
+const payload = await getPayload({ config });
+const result = await payload.find({
   collection: "posts",
-  // overrideAccess defaults to true — bypasses ALL access control!
+  where: { status: { equals: "published" } },
+  sort: "-createdAt",
+  limit: 20,
+  depth: 1,
+  overrideAccess: false,
 });
 ```
 
-**Why bad:** Without `overrideAccess: false`, access control functions are completely skipped, every user gets admin-level access to all documents
+Without `overrideAccess: false`, access control is completely bypassed (the default is `true`). See [examples/advanced.md](examples/advanced.md) for full CRUD operations, bulk updates, and globals API.
 
 </patterns>
 

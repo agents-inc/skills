@@ -38,9 +38,9 @@ description: Resend email setup, domain verification
 
 **When NOT to use:**
 
-- Marketing email campaigns (use dedicated marketing tools)
+- Marketing email campaigns (use a dedicated marketing email platform)
 - SMS or push notifications (different service)
-- Non-JavaScript backends (consider Postmark, SendGrid)
+- Non-JavaScript backends (this skill covers React Email templates, which require Node.js)
 - Need SMTP relay (Resend is API-only)
 
 **Detailed Resources:**
@@ -62,19 +62,6 @@ Resend is a **developer-first email API** built by the creators of React Email. 
 3. **Monorepo separation** - Email templates in dedicated package, not mixed with app code
 4. **`react` prop over `render()`** - Resend SDK renders components internally when you pass them via the `react` prop
 
-**When to use Resend:**
-
-- Transactional emails (verification, password reset, notifications)
-- React/TypeScript stack wanting best DX
-- Need reliable deliverability without managing email infrastructure
-
-**When NOT to use Resend:**
-
-- Marketing campaigns with complex analytics (use Mailchimp, SendGrid Marketing)
-- Very high volume (>1M emails/month) without enterprise plan
-- Non-JavaScript backend (consider Postmark, SendGrid)
-- Need SMTP relay (Resend is API-only)
-
 </philosophy>
 
 ---
@@ -88,37 +75,19 @@ Resend is a **developer-first email API** built by the creators of React Email. 
 The Resend SDK accepts React components directly via the `react` prop -- no manual HTML rendering needed.
 
 ```typescript
-import { Resend } from "resend";
-import { WelcomeEmail } from "./templates/welcome-email";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Pass the component call directly -- SDK handles rendering
 const { data, error } = await resend.emails.send({
   from: "Your App <noreply@yourdomain.com>",
   to: ["user@example.com"],
   subject: "Welcome!",
   react: WelcomeEmail({ userName: "John" }),
 });
-
-if (error) {
-  console.error("[Email] Send failed:", error);
-}
 ```
 
 **Why good:** No manual `render()` call, SDK handles conversion internally, cleaner code
 
-```typescript
-// BAD: Unnecessary manual render step
-import { render } from "@react-email/render";
+**When to use `render()` instead:** Only when sending via a non-Resend email provider that needs an HTML string. Import from `@react-email/render`, not `@react-email/components`.
 
-const html = await render(WelcomeEmail({ userName: "John" }));
-await resend.emails.send({ html, from, to, subject });
-```
-
-**Why bad:** Extra dependency and await when Resend handles it natively
-
-**When to use `render()` instead:** Only when sending via a non-Resend email provider (e.g., Nodemailer, SendGrid) that needs an HTML string. Import from `@react-email/render`, not `@react-email/components`.
+See [examples/core.md](examples/core.md) for full sending and rendering examples.
 
 ---
 
@@ -181,15 +150,7 @@ if (error) {
 return { success: true, id: data?.id };
 ```
 
-**Why good:** Explicit error checking, structured logging, returns typed result
-
-```typescript
-// BAD: Ignoring the error response
-await resend.emails.send(emailOptions);
-return { success: true }; // May have silently failed!
-```
-
-**Why bad:** No error detection, reports success even on failure, no debugging info
+**Why good:** Explicit error checking, structured logging, returns typed result. Never ignore the error response -- the SDK does not throw on send failures.
 
 ---
 

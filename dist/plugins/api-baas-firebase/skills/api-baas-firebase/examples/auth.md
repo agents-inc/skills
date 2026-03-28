@@ -1,6 +1,6 @@
 # Firebase -- Authentication Examples
 
-> Email/password auth, OAuth providers, auth state management, React context pattern, and token handling. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for quick lookups.
+> Email/password auth, OAuth providers, auth state management, and token handling. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for quick lookups.
 
 **Related examples:**
 
@@ -119,19 +119,12 @@ async function fetchFromApi(endpoint: string): Promise<Response> {
 
 ---
 
-## Authentication with React Context
+## Auth Service with User Profile Sync
 
-A complete auth context pattern using Firebase Authentication with React.
+A complete auth service that manages sign-up with Firestore profile creation, OAuth with profile sync, and auth state observation.
 
 ```typescript
-// contexts/auth-context.tsx
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+// services/auth-service.ts
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -140,128 +133,81 @@ import {
   GoogleAuthProvider,
   signOut,
   type User,
+  type Unsubscribe,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
-
-// --- Types ---
-
-interface AuthContextValue {
-  user: User | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  logOut: () => Promise<void>;
-}
 
 // --- Constants ---
 
 const USERS_COLLECTION = "users";
 
-// --- Context ---
+// --- Auth State Observer ---
 
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-
-  return context;
+export function subscribeToAuthState(
+  callback: (user: User | null) => void,
+): Unsubscribe {
+  return onAuthStateChanged(auth, callback);
 }
 
-// --- Provider ---
+// --- Sign Up with Profile Creation ---
 
 const googleProvider = new GoogleAuthProvider();
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export async function signUp(
+  email: string,
+  password: string,
+  displayName: string,
+): Promise<User> {
+  const credential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
+  // Create user profile document in Firestore
+  await setDoc(doc(db, USERS_COLLECTION, credential.user.uid), {
+    email,
+    displayName,
+    createdAt: serverTimestamp(),
+  });
 
-    return unsubscribe;
-  }, []);
-
-  async function signIn(email: string, password: string): Promise<void> {
-    await signInWithEmailAndPassword(auth, email, password);
-  }
-
-  async function signUp(
-    email: string,
-    password: string,
-    displayName: string
-  ): Promise<void> {
-    const credential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
-    // Create user profile document in Firestore
-    await setDoc(doc(db, USERS_COLLECTION, credential.user.uid), {
-      email,
-      displayName,
-      createdAt: serverTimestamp(),
-    });
-  }
-
-  async function signInWithGoogle(): Promise<void> {
-    const result = await signInWithPopup(auth, googleProvider);
-
-    // Create/update user profile on first OAuth sign-in
-    await setDoc(
-      doc(db, USERS_COLLECTION, result.user.uid),
-      {
-        email: result.user.email,
-        displayName: result.user.displayName,
-        photoURL: result.user.photoURL,
-        lastLoginAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-  }
-
-  async function logOut(): Promise<void> {
-    await signOut(auth);
-  }
-
-  const value: AuthContextValue = {
-    user,
-    loading,
-    signIn,
-    signUp,
-    signInWithGoogle,
-    logOut,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return credential.user;
 }
 
-// --- Usage ---
-// function ProtectedPage() {
-//   const { user, loading, logOut } = useAuth();
-//
-//   if (loading) return <div>Loading...</div>;
-//   if (!user) return <Navigate to="/login" />;
-//
-//   return (
-//     <div>
-//       <p>Welcome, {user.displayName}</p>
-//       <button onClick={logOut}>Sign Out</button>
-//     </div>
-//   );
-// }
+// --- OAuth with Profile Sync ---
+
+export async function signInWithGoogle(): Promise<User> {
+  const result = await signInWithPopup(auth, googleProvider);
+
+  // Create/update user profile on first OAuth sign-in
+  await setDoc(
+    doc(db, USERS_COLLECTION, result.user.uid),
+    {
+      email: result.user.email,
+      displayName: result.user.displayName,
+      photoURL: result.user.photoURL,
+      lastLoginAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  return result.user;
+}
+
+// --- Sign In / Sign Out ---
+
+export async function signIn(email: string, password: string): Promise<User> {
+  const credential = await signInWithEmailAndPassword(auth, email, password);
+  return credential.user;
+}
+
+export async function logOut(): Promise<void> {
+  await signOut(auth);
+}
 ```
 
-**Key patterns:** Auth state in React context, `loading` state for initial auth check, `onAuthStateChanged` cleanup in `useEffect`, user profile creation on sign-up, `merge: true` for OAuth profile updates (don't overwrite existing data), typed context value
+**Key patterns:** Framework-agnostic auth service (wire into your framework's state/context layer), `subscribeToAuthState` returns `Unsubscribe` for cleanup, profile creation on sign-up with `serverTimestamp()`, `merge: true` for OAuth profile updates (don't overwrite existing data), typed `User` return values
 
 ---
 

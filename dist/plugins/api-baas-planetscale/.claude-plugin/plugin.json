@@ -1,6 +1,6 @@
 {
   "name": "api-baas-planetscale",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Serverless MySQL platform with branching, deploy requests, and edge-compatible driver",
   "author": {

@@ -102,14 +102,15 @@ const redis = new Redis({
 
 ## Plan Limits (Upstash)
 
-| Limit            | Free   | Pay-as-you-go | Fixed plans   |
-| ---------------- | ------ | ------------- | ------------- |
-| Max commands/day | 10,000 | Unlimited     | Unlimited     |
-| Max storage      | 256 MB | 10 GB+        | 1-100 GB      |
-| Max request size | 1 MB   | 1 MB          | Up to 10 MB   |
-| Max record size  | 100 MB | 100 MB        | Up to 5 GB    |
-| Max ops/sec      | 1,000  | 1,000         | 10,000-16,000 |
-| Databases (free) | 10     | 10            | Plan-specific |
+| Limit             | Free   | Pay-as-you-go | Fixed plans     |
+| ----------------- | ------ | ------------- | --------------- |
+| Monthly commands  | 500K   | Per-command   | Unlimited       |
+| Max storage       | 256 MB | 100 GB        | 250 MB - 500 GB |
+| Max request size  | 10 MB  | 10 MB         | Up to 100 MB    |
+| Max record size   | 100 MB | 100 MB        | Up to 5 GB      |
+| Max ops/sec       | 10,000 | 10,000        | 10,000 - 16,000 |
+| Monthly bandwidth | 10 GB  | 200 GB free   | 50 GB - 20 TB   |
+| Databases (free)  | 10     | 10            | Plan-specific   |
 
 ---
 

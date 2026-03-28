@@ -47,7 +47,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export default async function AdminPage() {
   // Redirects to sign-in if unauthenticated, returns 404 if unauthorized
-  await (await auth()).protect({ role: "org:admin" });
+  await auth.protect({ role: "org:admin" });
 
   return (
     <main>
@@ -463,7 +463,7 @@ export function ExternalApiCaller() {
 
     try {
       // Fetch a JWT using a custom template configured in Clerk Dashboard
-      const token = await getToken({ template: "supabase" });
+      const token = await getToken({ template: "my-external-api" });
 
       const response = await fetch(EXTERNAL_API_URL, {
         headers: { Authorization: `Bearer ${token}` },
@@ -484,7 +484,7 @@ export function ExternalApiCaller() {
 }
 ```
 
-**Why good:** Custom JWT template for external services (Supabase, Hasura, etc.), named constant for URL, try/catch for offline handling, configured in Clerk Dashboard under JWT Templates
+**Why good:** Custom JWT template for external services, named constant for URL, try/catch for offline handling, configured in Clerk Dashboard under JWT Templates
 
 ---
 

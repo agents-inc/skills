@@ -100,12 +100,9 @@ After `pnpm publish`:
 catalog:
   react: ^19.0.0
   react-dom: ^19.0.0
-  next: ^15.0.0
   typescript: ^5.7.0
   vitest: ^3.0.0
   zod: ^3.24.0
-  drizzle-orm: ^0.38.0
-  hono: ^4.7.0
 ```
 
 ```json
@@ -114,7 +111,6 @@ catalog:
   "dependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
-    "next": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

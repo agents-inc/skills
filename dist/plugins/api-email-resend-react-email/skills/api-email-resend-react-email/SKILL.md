@@ -196,10 +196,9 @@ See [examples/webhooks.md](examples/webhooks.md) for full handler with event pro
 // Scheduled (up to 30 days, NOT supported in batch)
 await resend.emails.send({ ...payload, scheduledAt: futureDate.toISOString() });
 
-// Idempotency (256 char limit, expires 24h)
-await resend.emails.send({
-  ...payload,
-  headers: { "Idempotency-Key": orderId },
+// Idempotency (256 char limit, expires 24h) — second argument to send()
+await resend.emails.send(payload, {
+  idempotencyKey: `order-confirmation-${orderId}`,
 });
 
 // Tags (ASCII alphanumeric, underscores, dashes only)
@@ -279,6 +278,7 @@ See [examples/preferences.md](examples/preferences.md) for preference schema, ch
 - Webhooks require raw request body - JSON parsing breaks signature verification
 - Webhook verify uses `webhookSecret` parameter (not `secret`)
 - Webhook headers object uses short keys: `id`, `timestamp`, `signature`
+- Idempotency keys are passed as a second argument to `resend.emails.send()`, not in the email payload headers
 - Idempotency keys expire after 24 hours, max 256 characters
 - Tags: ASCII alphanumeric, underscores, dashes only, max 256 chars per key/value
 - Tailwind in emails requires `@react-email/tailwind` wrapper (Tailwind 4 supported in React Email 5.0+)

@@ -1,6 +1,6 @@
 {
   "name": "api-database-edgedb",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Graph-relational database with EdgeQL query language, code-first schema, link-based relations, computed properties, and fully typed TypeScript query builder",
   "author": {

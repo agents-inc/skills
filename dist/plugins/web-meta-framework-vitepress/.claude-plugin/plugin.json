@@ -1,0 +1,9 @@
+{
+  "name": "web-meta-framework-vitepress",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "VitePress 1.x — Vue-powered static site generator for documentation sites, built on Vite",
+  "author": {
+    "name": "@vince"
+  }
+}

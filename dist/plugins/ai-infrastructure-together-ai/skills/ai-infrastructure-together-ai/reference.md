@@ -228,8 +228,8 @@ const completion = await client.chat.completions.create({
 
 ## Response Format Options
 
-| Type          | Shape                                                    | Use Case               |
-| ------------- | -------------------------------------------------------- | ---------------------- | ------------ | ----------------------- |
-| `json_schema` | `{ type: "json_schema", json_schema: { name, schema } }` | Structured JSON output |
-| `json_object` | `{ type: "json_object" }`                                | Freeform JSON          |
-| `regex`       | `{ type: "regex", pattern: "(positive                    | negative               | neutral)" }` | Constrained text output |
+| Type          | Shape                                                         | Use Case                |
+| ------------- | ------------------------------------------------------------- | ----------------------- |
+| `json_schema` | `{ type: "json_schema", json_schema: { name, schema } }`      | Structured JSON output  |
+| `json_object` | `{ type: "json_object" }`                                     | Freeform JSON           |
+| `regex`       | `{ type: "regex", pattern: "(positive\|negative\|neutral)" }` | Constrained text output |

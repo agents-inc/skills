@@ -36,7 +36,7 @@ description: URQL GraphQL client patterns - useQuery, useMutation, exchange arch
 **When NOT to use:**
 
 - REST APIs (use your data fetching solution instead)
-- When team already has Apollo Client expertise and no bundle concerns
+- When team already has deep expertise in another GraphQL client and no bundle concerns
 - Simple APIs without caching needs (consider fetch directly)
 
 **Key patterns covered:**

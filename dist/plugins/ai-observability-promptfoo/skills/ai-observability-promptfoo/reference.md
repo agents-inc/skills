@@ -21,21 +21,20 @@ npm install --save-dev promptfoo
 
 ## CLI Commands
 
-| Command                                 | Description                       |
-| --------------------------------------- | --------------------------------- |
-| `promptfoo init`                        | Create a new promptfooconfig.yaml |
-| `promptfoo eval`                        | Run evaluation                    |
-| `promptfoo eval --fail-on-error`        | Run and exit non-zero on failures |
-| `promptfoo eval -c path/to/config.yaml` | Use specific config file          |
-| `promptfoo eval --no-cache`             | Skip cache, force fresh LLM calls |
-| `promptfoo eval -o results.json`        | Output results to file            |
-| `promptfoo eval --share`                | Generate shareable URL            |
-| `promptfoo view`                        | Open results web UI               |
-| `promptfoo share`                       | Share most recent results         |
-| `promptfoo cache clear`                 | Clear cached LLM responses        |
-| `promptfoo redteam run`                 | Run red team security scan        |
-| `promptfoo redteam generate`            | Generate red team test cases only |
-| `promptfoo redteam report`              | View red team results             |
+| Command                                 | Description                                 |
+| --------------------------------------- | ------------------------------------------- |
+| `promptfoo init`                        | Create a new promptfooconfig.yaml           |
+| `promptfoo eval`                        | Run evaluation (exits 100 on test failures) |
+| `promptfoo eval -c path/to/config.yaml` | Use specific config file                    |
+| `promptfoo eval --no-cache`             | Skip cache, force fresh LLM calls           |
+| `promptfoo eval -o results.json`        | Output results to file                      |
+| `promptfoo eval --share`                | Generate shareable URL                      |
+| `promptfoo view`                        | Open results web UI                         |
+| `promptfoo share`                       | Share most recent results                   |
+| `promptfoo cache clear`                 | Clear cached LLM responses                  |
+| `promptfoo redteam run`                 | Run red team security scan                  |
+| `promptfoo redteam generate`            | Generate red team test cases only           |
+| `promptfoo redteam report`              | View red team results                       |
 
 ### Common Flags
 
@@ -44,7 +43,6 @@ npm install --save-dev promptfoo
 | `-c, --config`            | Path to config file (default: `promptfooconfig.yaml`) |
 | `-o, --output`            | Output file path (supports `.json`, `.html`, `.xml`)  |
 | `--no-cache`              | Disable response caching                              |
-| `--fail-on-error`         | Exit non-zero when assertions fail                    |
 | `--share`                 | Upload results and print shareable URL                |
 | `-j, --max-concurrency`   | Max parallel provider calls                           |
 | `--table-cell-max-length` | Max chars in table output cells                       |

@@ -57,9 +57,9 @@ description: Official TypeScript SDK for Google Gemini — client setup, text ge
 
 **When NOT to use:**
 
-- Multi-provider applications (OpenAI + Anthropic + Google) -- use a unified provider SDK
+- Multi-provider applications requiring provider switching -- use a unified provider SDK
 - React-specific chat UI hooks (`useChat`) -- use a framework-integrated AI SDK
-- When you need OpenAI-specific features (Responses API, Batch API) -- use the OpenAI SDK
+- When you need features unique to another provider's API -- use that provider's SDK directly
 
 ---
 
@@ -100,9 +100,9 @@ The `@google/genai` SDK is Google's **unified client** for the Gemini API and Ve
 
 **When NOT to use:**
 
-- You need to switch between providers (OpenAI, Anthropic, Google) -- use a unified SDK
+- You need to switch between multiple providers -- use a unified SDK
 - You want React-specific chat hooks -- use a framework-integrated AI SDK
-- You need features unique to other providers (OpenAI Batch API, Anthropic Extended Thinking)
+- You need features unique to another provider's API -- use that provider's SDK directly
 
 </philosophy>
 
@@ -512,7 +512,7 @@ Are you sending the same large prefix repeatedly?
 - Embedding dimensions default to 3,072 -- use `config.outputDimensionality` to reduce for cost/speed
 - Gemini embedding models are NOT compatible with each other -- switching models requires re-embedding all data
 - `FunctionCallingConfigMode.ANY` forces the model to always call a function -- use `AUTO` to let the model decide
-- Chat history uses `role: "model"` (not `"assistant"`) for Gemini responses -- differs from OpenAI convention
+- Chat history uses `role: "model"` (not `"assistant"`) for Gemini responses -- differs from other providers' convention
 - Safety filter defaults changed: Gemini 2.5+ and 3.x models default to `OFF` (no blocking) unlike earlier models
 - The `sendMessage()` method takes `{ message: string }` (object with `message` key), not a plain string
 - When function calling returns multiple calls, process ALL of them before sending results back -- partial responses cause errors

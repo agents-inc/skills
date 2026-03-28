@@ -68,6 +68,7 @@ export { app };
 ```typescript
 import type Redis from "ioredis";
 import { createMiddleware } from "hono/factory";
+import { getCookie, setCookie } from "hono/cookie";
 import crypto from "node:crypto";
 
 const SESSION_PREFIX = "session:";
@@ -76,7 +77,7 @@ const SESSION_COOKIE_NAME = "sid";
 
 function sessionMiddleware(redis: Redis) {
   return createMiddleware(async (c, next) => {
-    const sessionId = c.req.cookie(SESSION_COOKIE_NAME) ?? crypto.randomUUID();
+    const sessionId = getCookie(c, SESSION_COOKIE_NAME) ?? crypto.randomUUID();
 
     const key = `${SESSION_PREFIX}${sessionId}`;
     const raw = await redis.get(key);
@@ -97,11 +98,13 @@ function sessionMiddleware(redis: Redis) {
     );
 
     // Set cookie if new session
-    if (!c.req.cookie(SESSION_COOKIE_NAME)) {
-      c.header(
-        "Set-Cookie",
-        `${SESSION_COOKIE_NAME}=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}`,
-      );
+    if (!getCookie(c, SESSION_COOKIE_NAME)) {
+      setCookie(c, SESSION_COOKIE_NAME, sessionId, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "Lax",
+        maxAge: SESSION_TTL_SECONDS,
+      });
     }
   });
 }

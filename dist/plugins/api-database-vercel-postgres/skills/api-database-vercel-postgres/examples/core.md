@@ -259,4 +259,42 @@ async function runMigration() {
 
 ---
 
+## Pattern 7: Migration to `@neondatabase/serverless`
+
+### Good Example -- Full Migration
+
+```typescript
+// Before (@vercel/postgres)
+import { sql } from "@vercel/postgres";
+const { rows } = await sql`SELECT id, name FROM users WHERE status = ${status}`;
+
+// After (@neondatabase/serverless)
+import { neon } from "@neondatabase/serverless";
+const sql = neon(process.env.DATABASE_URL!);
+const rows = await sql`SELECT id, name FROM users WHERE status = ${status}`;
+```
+
+**Key differences:**
+
+- `neon()` requires an explicit connection string (typically `DATABASE_URL`) -- no auto-read from env
+- `neon()` returns rows directly by default -- not `{ rows, rowCount, ... }`. Use `{ fullResults: true }` option to get the full result object
+- `@neondatabase/serverless` supports HTTP transactions via `sql.transaction([...])` and composable SQL fragments
+
+### WebSocket Pool Migration (Transactions)
+
+```typescript
+// Before (@vercel/postgres)
+import { sql } from "@vercel/postgres";
+const client = await sql.connect();
+
+// After (@neondatabase/serverless)
+import { Pool } from "@neondatabase/serverless";
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const client = await pool.connect();
+```
+
+**Why good:** `Pool` from `@neondatabase/serverless` provides the same `connect()` / `release()` pattern. Transactions work identically with `BEGIN`/`COMMIT`/`ROLLBACK` on the client.
+
+---
+
 _For decision frameworks and API reference, see [reference.md](../reference.md)._

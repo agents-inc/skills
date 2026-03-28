@@ -23,6 +23,7 @@ app = modal.App("text-classifier")
 classifier_image = (
     modal.Image.debian_slim(python_version="3.11")
     .uv_pip_install([
+        "fastapi[standard]",
         "transformers==4.47.0",
         "torch==2.5.0",
         "accelerate==1.2.0",
@@ -181,7 +182,7 @@ PORT = 8000
 
 vllm_image = (
     modal.Image.debian_slim(python_version="3.11")
-    .uv_pip_install(["vllm==0.6.4"])
+    .uv_pip_install(["vllm==0.8.5"])
 )
 
 vol = modal.Volume.from_name("llm-cache", create_if_missing=True)

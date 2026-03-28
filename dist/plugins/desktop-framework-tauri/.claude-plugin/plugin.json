@@ -1,0 +1,9 @@
+{
+  "name": "desktop-framework-tauri",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Tauri 2.x commands, IPC bridge, permission system, plugins, window management, system tray, packaging",
+  "author": {
+    "name": "@vince"
+  }
+}

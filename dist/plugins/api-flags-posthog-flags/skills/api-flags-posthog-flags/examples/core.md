@@ -28,7 +28,7 @@ export const FLAG_BETA_DASHBOARD = "beta-dashboard";
 // components/checkout-button.tsx
 import { useFeatureFlagEnabled } from "posthog-js/react";
 
-import { FLAG_NEW_CHECKOUT } from "@/lib/feature-flags";
+import { FLAG_NEW_CHECKOUT } from "../lib/feature-flags";
 
 export const CheckoutButton = () => {
   const isNewCheckout = useFeatureFlagEnabled(FLAG_NEW_CHECKOUT);
@@ -98,7 +98,7 @@ import {
   VARIANT_CONTROL,
   VARIANT_SIMPLE,
   VARIANT_DETAILED,
-} from "@/lib/feature-flags";
+} from "../lib/feature-flags";
 
 export const PricingPage = () => {
   const variant = useFeatureFlagVariantKey(FLAG_PRICING_PAGE);
@@ -134,7 +134,7 @@ Use the `PostHogFeature` component for automatic exposure tracking and cleaner c
 ```typescript
 import { PostHogFeature } from "posthog-js/react";
 
-import { FLAG_BETA_DASHBOARD } from "@/lib/feature-flags";
+import { FLAG_BETA_DASHBOARD } from "../lib/feature-flags";
 
 export const Dashboard = () => {
   return (
@@ -156,7 +156,7 @@ export const Dashboard = () => {
 ```typescript
 import { PostHogFeature } from "posthog-js/react";
 
-import { FLAG_PRICING_PAGE, VARIANT_SIMPLE } from "@/lib/feature-flags";
+import { FLAG_PRICING_PAGE, VARIANT_SIMPLE } from "../lib/feature-flags";
 
 export const PricingSection = () => {
   return (
@@ -200,7 +200,7 @@ export const DEFAULT_BANNER_CONFIG = {
 // components/homepage-banner.tsx
 import { useFeatureFlagEnabled, useFeatureFlagPayload } from "posthog-js/react";
 
-import { FLAG_BANNER_CONFIG, DEFAULT_BANNER_CONFIG } from "@/lib/feature-flags";
+import { FLAG_BANNER_CONFIG, DEFAULT_BANNER_CONFIG } from "../lib/feature-flags";
 
 interface BannerConfig {
   title: string;
@@ -283,7 +283,7 @@ import {
   VARIANT_CONTROL,
   VARIANT_STREAMLINED,
   VARIANT_SOCIAL_FIRST,
-} from "@/lib/feature-flags";
+} from "../lib/feature-flags";
 
 export const SignupFlow = () => {
   const variant = useFeatureFlagVariantKey(FLAG_SIGNUP_EXPERIMENT);
@@ -364,7 +364,7 @@ export const FLAG_NEW_PAYMENT_FLOW = "new-payment-flow";
 // components/payment-form.tsx
 import { useFeatureFlagEnabled } from "posthog-js/react";
 
-import { FLAG_NEW_PAYMENT_FLOW } from "@/lib/feature-flags";
+import { FLAG_NEW_PAYMENT_FLOW } from "../lib/feature-flags";
 
 export const PaymentForm = () => {
   const isNewFlow = useFeatureFlagEnabled(FLAG_NEW_PAYMENT_FLOW);

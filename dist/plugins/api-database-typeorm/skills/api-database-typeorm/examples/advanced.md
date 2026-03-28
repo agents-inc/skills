@@ -326,7 +326,7 @@ const userWithPassword = await userRepo
 
 ## Virtual/Computed Columns
 
-### Good Example - Using @VirtualColumn (v0.3.17+)
+### Good Example - Using @VirtualColumn (v0.3.11+)
 
 ```typescript
 @Entity("users")

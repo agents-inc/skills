@@ -39,7 +39,7 @@ description: Official Mistral AI TypeScript SDK patterns — client setup, chat 
 - Extracting structured data with `client.chat.parse()` and Zod schemas
 - Implementing function calling / tool use
 - Creating embeddings for RAG pipelines or semantic search
-- Processing images with Pixtral / vision-capable models
+- Processing images with vision-capable models (Mistral Small, Medium, Large, Ministral)
 - Using Mistral Agents API for pre-configured agent completions
 
 **Key patterns covered:**
@@ -49,7 +49,7 @@ description: Official Mistral AI TypeScript SDK patterns — client setup, chat 
 - Structured outputs with `chat.parse()` and Zod schemas
 - Function calling / tool use with tool call loop
 - Embeddings (`embeddings.create`) with `mistral-embed`
-- Vision (image URL / base64 with Pixtral models)
+- Vision (image URL / base64 with vision-capable models)
 - Codestral FIM (`fim.complete`) for code completion
 - Error handling, retry configuration, and production patterns
 
@@ -67,7 +67,7 @@ description: Official Mistral AI TypeScript SDK patterns — client setup, chat 
 - [Chat & Streaming](examples/chat.md) -- Chat completions, streaming with async iteration, multi-turn
 - [Structured Output](examples/structured-output.md) -- `chat.parse()` with Zod, JSON mode, typed responses
 - [Function Calling](examples/function-calling.md) -- Tool definitions, tool call loop, streaming tools
-- [Embeddings & Vision](examples/embeddings-vision.md) -- Semantic search, image analysis with Pixtral
+- [Embeddings & Vision](examples/embeddings-vision.md) -- Semantic search, image analysis with vision-capable models
 - [Codestral FIM](examples/codestral.md) -- Fill-in-middle code completion, code generation
 - [Quick API Reference](reference.md) -- Model IDs, method signatures, error types, configuration options
 
@@ -337,7 +337,7 @@ const result = await client.embeddings.create({
 
 ---
 
-### Pattern 7: Vision (Pixtral)
+### Pattern 7: Vision
 
 Send images to vision-capable models using multi-part content arrays.
 

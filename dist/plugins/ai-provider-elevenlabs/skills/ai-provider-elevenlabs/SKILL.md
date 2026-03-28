@@ -85,20 +85,6 @@ The ElevenLabs SDK provides **direct access to the most advanced voice AI API** 
 4. **Two packages for two use cases** -- `@elevenlabs/elevenlabs-js` for server-side TTS/voice management, `@elevenlabs/client` for browser-side conversational AI agents.
 5. **Built-in resilience** -- The SDK retries on 408, 409, 429, and 5xx errors (2 retries by default) with configurable timeouts.
 
-**When to use ElevenLabs:**
-
-- You need the highest-quality AI voice synthesis available
-- You need real-time streaming with sub-75ms latency
-- You need voice cloning from audio samples
-- You need speech-to-speech voice conversion
-- You need conversational AI agents with voice interaction
-
-**When NOT to use:**
-
-- You need to switch between multiple TTS providers -- use a unified abstraction
-- You need only text generation, not audio -- this is a voice-specific SDK
-- Browser-only playback without server-side generation -- use the Web Audio API directly
-
 </philosophy>
 
 ---

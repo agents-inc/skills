@@ -1,6 +1,6 @@
 {
   "name": "api-observability-axiom-pino-sentry",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting",
   "author": {

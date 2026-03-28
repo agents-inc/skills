@@ -20,11 +20,12 @@ The only difference is the `-pooler` suffix on the endpoint ID.
 
 ## `neon()` Configuration Options
 
-| Option         | Default | Description                                            |
-| -------------- | ------- | ------------------------------------------------------ |
-| `arrayMode`    | `false` | Return rows as arrays instead of objects               |
-| `fullResults`  | `false` | Include metadata (fields, rowCount, command) in result |
-| `fetchOptions` | `{}`    | Custom fetch config (signal, priority, cache, etc.)    |
+| Option         | Default     | Description                                                     |
+| -------------- | ----------- | --------------------------------------------------------------- |
+| `arrayMode`    | `false`     | Return rows as arrays instead of objects                        |
+| `fullResults`  | `false`     | Include metadata (fields, rowCount, command) in result          |
+| `fetchOptions` | `{}`        | Custom fetch config (signal, priority, cache, etc.)             |
+| `authToken`    | `undefined` | JWT string or async function returning a JWT for Neon Authorize |
 
 ---
 

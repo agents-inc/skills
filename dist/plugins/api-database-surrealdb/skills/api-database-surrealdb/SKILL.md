@@ -91,21 +91,6 @@ SurrealDB is a multi-model database combining document, graph, and relational pa
 5. **Real-time by default** -- `LIVE SELECT` pushes changes to subscribers as they commit. No polling, no message broker.
 6. **Parameterize everything** -- SurrealQL variables (`$email`, `$limit`) prevent injection and improve query plan caching.
 
-**When to use SurrealDB:**
-
-- Applications needing both document flexibility and graph traversal
-- Multi-tenant SaaS (namespace/database isolation)
-- Real-time collaborative features (live queries)
-- Social graphs, recommendation engines, knowledge graphs
-- Projects wanting database-level auth without a separate auth service
-
-**When NOT to use:**
-
-- Heavy OLAP/analytics (use a columnar warehouse)
-- Legacy systems requiring strict SQL standard compliance
-- Simple key-value workloads (use a dedicated KV store)
-- Workloads requiring battle-tested ORMs with decades of ecosystem
-
 </philosophy>
 
 ---
@@ -116,199 +101,89 @@ SurrealDB is a multi-model database combining document, graph, and relational pa
 
 ### Pattern 1: SDK Connection
 
-Establish connection with namespace and database selection. SDK v2 uses `new Surreal()` with engine configuration.
+SDK v2 uses `new Surreal()` -- always set namespace/database at connection time and use `127.0.0.1` (not `localhost`, which can fail with IPv6 on Node.js 18+).
 
 ```typescript
 import Surreal from "surrealdb";
-import { RecordId, Table } from "surrealdb";
 
 const db = new Surreal();
-
 await db.connect("http://127.0.0.1:8000", {
   namespace: "myapp",
   database: "production",
 });
-
-// Authenticate as root (development only)
-await db.signin({
-  username: "root",
-  password: "root",
-});
-
-export { db };
+await db.signin({ username: "root", password: "root" });
 ```
 
-**Why good:** Uses `127.0.0.1` (not `localhost`), namespace/database set at connection, explicit root signin separated from connection
-
-```typescript
-// BAD: Missing namespace/database, string interpolation for credentials
-const db = new Surreal();
-await db.connect("http://localhost:8000");
-await db.query(`SIGNIN AS user:${username} PASSWORD '${password}'`);
-```
-
-**Why bad:** No namespace/database selection causes silent failures, `localhost` can fail with IPv6, string interpolation enables injection, credentials should use `signin()` method
+Full connection patterns (production config, event monitoring, graceful shutdown): [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 2: CRUD with RecordId
 
-SDK v2 requires `RecordId` objects for record identification -- plain strings are not automatically parsed.
+SDK v2 requires `RecordId` objects -- plain strings are NOT automatically parsed as record IDs. Use `Table` for table-scoped operations, `RecordId` for specific records.
 
 ```typescript
-import Surreal, { RecordId, Table } from "surrealdb";
+import { RecordId, Table } from "surrealdb";
 
-interface User {
-  id: RecordId;
-  name: string;
-  email: string;
-  role: "admin" | "user";
-}
-
-// Create with auto-generated ID
 const created = await db.create<User>(new Table("user"), {
   name: "Alice",
-  email: "alice@example.com",
   role: "user",
 });
-
-// Create with specific ID
-const specific = await db.create<User>(new RecordId("user", "alice"), {
-  name: "Alice",
-  email: "alice@example.com",
-  role: "admin",
-});
-
-// Select by ID
 const user = await db.select<User>(new RecordId("user", "alice"));
-
-// Partial update (merge)
-await db.merge(new RecordId("user", "alice"), {
-  role: "admin",
-});
-// Or chainable: await db.update(new RecordId("user", "alice")).merge({ role: "admin" });
-
-// Delete
+await db.merge(new RecordId("user", "alice"), { role: "admin" });
 await db.delete(new RecordId("user", "alice"));
 ```
 
-**Why good:** `RecordId` objects for type-safe record access, TypeScript generics for return type, `merge()` for partial update (or chainable `update().merge()`), `Table` for table-scoped operations
-
-```typescript
-// BAD: Using plain strings as record IDs
-const user = await db.select("user:alice"); // v2 does not auto-parse
-await db.query(`DELETE user:${userId}`); // Injection risk
-```
-
-**Why bad:** SDK v2 requires `RecordId` objects (plain strings not auto-parsed), string interpolation in queries enables injection
+Full CRUD patterns (create, select, update, delete, bulk operations): [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 3: Parameterized Queries
 
-Always bind user input as parameters. SurrealQL parameters use `$name` syntax.
+Always bind user input as `$parameters` -- never interpolate strings into SurrealQL. Multi-statement queries return typed tuples.
 
 ```typescript
-const PAGE_SIZE = 20;
-const MIN_AGE = 18;
-
-// Parameterized query -- safe from injection
 const users = await db.query<[User[]]>(
-  `SELECT * FROM user WHERE age >= $min_age AND role = $role ORDER BY name LIMIT $limit`,
-  { min_age: MIN_AGE, role: "admin", limit: PAGE_SIZE },
+  `SELECT * FROM user WHERE role = $role LIMIT $limit`,
+  { role: "admin", limit: 20 },
 );
 
-// Multiple statements return tuple of results
-const [users2, count] = await db.query<[User[], [{ count: number }]]>(
-  `SELECT * FROM user WHERE active = true LIMIT $limit;
-   SELECT count() AS count FROM user WHERE active = true GROUP ALL;`,
-  { limit: PAGE_SIZE },
-);
-
-// Parameterized record ID lookup
-const record = await db.query<[User[]]>(`SELECT * FROM $record_id`, {
-  record_id: new RecordId("user", "alice"),
-});
+// BAD: enables SurrealQL injection
+await db.query(`SELECT * FROM user WHERE email = '${userInput}'`);
 ```
 
-**Why good:** Named constants for all numeric values, parameters prevent injection, tuple typing for multi-statement queries, `RecordId` used even in parameterized queries
-
-```typescript
-// BAD: String interpolation with user input
-const users = await db.query(`SELECT * FROM user WHERE email = '${userInput}'`);
-```
-
-**Why bad:** Direct string interpolation enables SurrealQL injection -- attacker can escape string and execute arbitrary queries
+Full query patterns (pagination, multi-statement, RecordId parameters): [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 4: Record Links (Lightweight Pointers)
 
-Record links are direct field-level pointers to other records. SurrealDB fetches linked records via dot notation without explicit JOINs.
+Record links are field-level pointers fetched via dot notation -- no JOINs required. Use for simple, unidirectional references without relationship metadata.
 
-```typescript
-// Create records with record link fields
-await db.query(`
-  CREATE person:alice SET
-    name = "Alice",
-    best_friend = person:bob,
-    friends = [person:bob, person:carol];
-`);
-
-// Dot notation traverses links automatically
-const result = await db.query<[{ name: string; friend_name: string }[]]>(
-  `SELECT name, best_friend.name AS friend_name FROM person:alice`,
-);
-
-// Multi-level traversal
-const deep = await db.query<[{ fof: string[] }[]]>(
-  `SELECT friends.friends.name AS fof FROM person:alice`,
-);
+```surql
+CREATE person:alice SET best_friend = person:bob, friends = [person:bob, person:carol];
+SELECT best_friend.name AS friend_name FROM person:alice;
 ```
 
-**Why good:** Record links are direct disk lookups (no table scan), dot notation traverses links transparently, multi-level traversal in a single query
+**When NOT to use:** When you need relationship metadata, bidirectional traversal, or relationship-level permissions -- use graph edges instead.
 
-**When to use:** Simple, unidirectional references without relationship metadata (author of a post, parent category, user preferences).
-
-**When not to use:** When you need relationship metadata (timestamps, weights), bidirectional traversal, or relationship-level permissions. Use graph edges instead.
+Full record link patterns: [examples/graph-relations.md](examples/graph-relations.md)
 
 ---
 
 ### Pattern 5: Graph Edges with RELATE
 
-Graph edges are full records in a relation table, created with `RELATE`. They support metadata, bidirectional traversal, and schema constraints.
+Graph edges are full records in a relation table, supporting metadata, bidirectional traversal (`<->`), and schema constraints via `DEFINE TABLE TYPE RELATION`.
 
-```typescript
-// Create a graph edge with metadata
-await db.query(`
-  RELATE person:alice->follows->person:bob
-    SET followed_at = time::now(), strength = "close";
-`);
-
-// Forward traversal: who does Alice follow?
-const following = await db.query<[{ following: string[] }[]]>(
-  `SELECT ->follows->person.name AS following FROM person:alice`,
-);
-
-// Reverse traversal: who follows Bob?
-const followers = await db.query<[{ followers: string[] }[]]>(
-  `SELECT <-follows<-person.name AS followers FROM person:bob`,
-);
-
-// Edge metadata query
-const edges = await db.query<
-  [{ in: RecordId; out: RecordId; strength: string }[]]
->(`SELECT in, out, strength FROM follows WHERE out = person:bob`);
-
-// Bidirectional (undirected) traversal
-const friends = await db.query<[{ friends: string[] }[]]>(
-  `SELECT <->knows<->person.name AS friends FROM person:alice`,
-);
+```surql
+RELATE person:alice->follows->person:bob SET followed_at = time::now(), strength = "close";
+SELECT ->follows->person.name AS following FROM person:alice;  -- forward
+SELECT <-follows<-person.name AS followers FROM person:bob;    -- reverse
 ```
 
-**Why good:** `RELATE` creates typed edges with metadata, forward/reverse/bidirectional traversal syntax, edges are queryable records themselves
+**When to use:** Relationships needing metadata, bidirectional queries, social graphs, access control graphs.
 
-**When to use:** Relationships needing metadata (followed_at, role, weight), bidirectional queries, social graphs, access control graphs.
+Full graph patterns (typed relations, edge metadata, recursive traversal): [examples/graph-relations.md](examples/graph-relations.md)
 
 </patterns>
 

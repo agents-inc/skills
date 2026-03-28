@@ -111,13 +111,6 @@ if (process.env.NODE_ENV !== "production") {
 
 **Why good:** `globalThis` persists across hot reloads, conditional logging avoids production noise
 
-```typescript
-// BAD: New client every import
-export const prisma = new PrismaClient(); // New instance on every hot reload
-```
-
-**Why bad:** Exhausts database connections (default 100 for PostgreSQL) after repeated hot reloads
-
 > See [examples/core.md](examples/core.md) for serverless connection patterns.
 
 ---
@@ -225,30 +218,18 @@ const userSummary = await prisma.user.findUnique({
 });
 ```
 
-**Why good:** Single query avoids N+1, `include` fetches all fields, `select` reduces payload
+**Why good:** Single query avoids N+1, `include` fetches all fields, `select` reduces payload. Never loop queries per record — use `include` or `select` instead.
 
-```typescript
-// BAD: N+1 query pattern
-const users = await prisma.user.findMany();
-for (const user of users) {
-  const posts = await prisma.post.findMany({
-    where: { authorId: user.id },
-  }); // N additional queries!
-}
-```
-
-**Why bad:** 1 query for users + N queries for posts, extremely slow at scale
-
-> See [examples/relations.md](examples/relations.md) for relation filters, many-to-many, self-relations, and include vs select patterns.
+> See [examples/relations.md](examples/relations.md) for relation filters, many-to-many, self-relations, include vs select, and N+1 anti-patterns.
 
 ---
 
 ### Pattern 5: Transactions
 
-Ensure atomic operations across multiple writes.
+Ensure atomic operations across multiple writes. Three types available:
 
 ```typescript
-// Nested writes - implicit transaction
+// Nested writes - implicit transaction (cleanest for related records)
 const user = await prisma.user.create({
   data: {
     email: "alice@example.com",
@@ -259,38 +240,21 @@ const user = await prisma.user.create({
   include: { profile: true, posts: true },
 });
 
-// Interactive transaction - complex logic with rollback
-const MINIMUM_BALANCE = 0;
-
-const transferFunds = async (fromId: string, toId: string, amount: number) => {
-  return await prisma.$transaction(async (tx) => {
-    const sender = await tx.account.update({
-      where: { id: fromId },
-      data: { balance: { decrement: amount } },
-    });
-
-    if (sender.balance < MINIMUM_BALANCE) {
-      throw new Error("Insufficient funds"); // Rolls back everything
-    }
-
-    return await tx.account.update({
-      where: { id: toId },
-      data: { balance: { increment: amount } },
-    });
+// Interactive transaction - ALWAYS use tx, never prisma
+return await prisma.$transaction(async (tx) => {
+  const sender = await tx.account.update({
+    where: { id: fromId },
+    data: { balance: { decrement: amount } },
   });
-};
-```
-
-**Why good:** Nested writes are cleanest for related records, interactive transactions enable business logic with automatic rollback
-
-```typescript
-// BAD: Using prisma instead of tx
-await prisma.$transaction(async (tx) => {
-  await prisma.post.create({ data: { title: "Post" } }); // Uses prisma, not tx!
+  if (sender.balance < MINIMUM_BALANCE) throw new Error("Insufficient funds");
+  return await tx.account.update({
+    where: { id: toId },
+    data: { balance: { increment: amount } },
+  });
 });
 ```
 
-**Why bad:** Operations using `prisma` bypass transaction context, won't rollback on failure
+**Why good:** Nested writes for related records, interactive transactions enable business logic with automatic rollback. Using `prisma` instead of `tx` inside the callback bypasses transaction context.
 
 > See [examples/transactions.md](examples/transactions.md) for batch transactions, error handling, optimistic concurrency, and transaction options.
 
@@ -298,23 +262,9 @@ await prisma.$transaction(async (tx) => {
 
 ### Pattern 6: Connection Management
 
-Handle connections properly for different environments.
+Handle `$disconnect()` on `beforeExit` to prevent connection leaks. For serverless environments, use a connection pooler (PgBouncer, Prisma Accelerate) via a separate `DATABASE_URL_WITH_POOLER` environment variable.
 
-```typescript
-// Graceful shutdown
-process.on("beforeExit", async () => {
-  await prisma.$disconnect();
-});
-
-// Serverless: use connection pooler (PgBouncer, Prisma Accelerate)
-export const prisma = new PrismaClient({
-  datasources: {
-    db: { url: process.env.DATABASE_URL_WITH_POOLER },
-  },
-});
-```
-
-**Why good:** Graceful shutdown prevents connection leaks, connection pooler handles serverless connection management
+> See [examples/core.md](examples/core.md) for graceful shutdown and serverless connection patterns.
 
 </patterns>
 
@@ -341,7 +291,7 @@ export const prisma = new PrismaClient({
 **Gotchas & Edge Cases:**
 
 - `createMany` doesn't return created records (use `createManyAndReturn` on PostgreSQL/CockroachDB/SQLite)
-- `updateMany` and `deleteMany` don't trigger `@updatedAt` hooks
+- `updateMany` and `deleteMany` don't automatically update `@updatedAt` fields
 - Implicit many-to-many tables can't have extra fields - use explicit join model
 - `Json` fields are typed as `JsonValue` - need runtime validation at parse boundary
 - `Decimal` fields return `Prisma.Decimal` type - convert with `.toNumber()`

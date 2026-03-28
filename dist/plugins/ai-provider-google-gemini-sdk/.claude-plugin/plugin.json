@@ -1,6 +1,6 @@
 {
   "name": "ai-provider-google-gemini-sdk",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Official TypeScript SDK for Google Gemini — client setup, text generation, multimodal input, function calling, structured output, streaming, embeddings, context caching, and chat sessions",
   "author": {

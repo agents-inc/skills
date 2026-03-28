@@ -135,7 +135,7 @@ async function createUser(
 export { createUser };
 ```
 
-**Why good:** `ResultSetHeader` provides typed access to `insertId`, `affectedRows`, `changedRows`
+**Why good:** `ResultSetHeader` provides typed access to `insertId` and `affectedRows`
 
 ---
 

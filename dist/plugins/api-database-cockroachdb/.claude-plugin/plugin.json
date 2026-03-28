@@ -1,6 +1,6 @@
 {
   "name": "api-database-cockroachdb",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "CockroachDB distributed SQL -- transaction retries, multi-region, online schema changes, follower reads, PostgreSQL compatibility gaps",
   "author": {

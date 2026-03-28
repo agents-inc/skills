@@ -83,7 +83,7 @@ How should I handle this error?
 
 - **Pino is async by default** - Logs may appear out of order in development
 - **Child loggers inherit context** - Don't add conflicting keys; if parent and child use the same key, both appear in JSON output (last value wins when parsed)
-- **Sentry has 250 character limit** - Some fields truncated
+- **Sentry `maxValueLength` defaults to 250** - String values in event data get truncated; tags have a separate 200-character limit
 - **Edge runtime limitations** - Not all Node.js logging features work; redaction is NOT supported in browser environments
 - **OpenTelemetry spans must be ended** - Forgetting to call `span.end()` leaks resources
 - **Pino v10 breaking change** - Only dropped Node 18 support (Node 20+ required); otherwise API-compatible with v9

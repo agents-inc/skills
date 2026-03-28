@@ -38,29 +38,45 @@ export { loggingMiddleware };
 // packages/api/src/trpc/middleware/rate-limit.ts
 import { TRPCError } from "@trpc/server";
 import { middleware } from "../index";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 
 const RATE_LIMIT_REQUESTS = 100;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(
-    RATE_LIMIT_REQUESTS,
-    `${RATE_LIMIT_WINDOW_SECONDS} s`,
-  ),
-});
+// Use your rate limiting solution (e.g., in-memory, Redis-backed, or a managed service)
+// This example uses a simple in-memory store for illustration
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(identifier: string): {
+  success: boolean;
+  resetAt: number;
+} {
+  const now = Date.now();
+  const entry = requestCounts.get(identifier);
+
+  if (!entry || now > entry.resetAt) {
+    requestCounts.set(identifier, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_SECONDS * 1000,
+    });
+    return { success: true, resetAt: now + RATE_LIMIT_WINDOW_SECONDS * 1000 };
+  }
+
+  entry.count++;
+  if (entry.count > RATE_LIMIT_REQUESTS) {
+    return { success: false, resetAt: entry.resetAt };
+  }
+
+  return { success: true, resetAt: entry.resetAt };
+}
 
 export const rateLimitMiddleware = middleware(async ({ ctx, next }) => {
   const identifier = ctx.user?.id ?? ctx.ip ?? "anonymous";
-  const { success, limit, remaining, reset } =
-    await ratelimit.limit(identifier);
+  const { success, resetAt } = checkRateLimit(identifier);
 
   if (!success) {
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
-      message: `Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds`,
+      message: `Rate limit exceeded. Try again in ${Math.ceil((resetAt - Date.now()) / 1000)} seconds`,
     });
   }
 

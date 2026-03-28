@@ -20,7 +20,7 @@
 // Sighted users see: Only the trash icon
 ```
 
-```scss
+```css
 .sr-only {
   position: absolute;
   width: 1px;

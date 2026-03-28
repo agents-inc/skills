@@ -103,24 +103,13 @@ How to handle GraphQL errors?
 
 ## Integration Guide
 
-**Works with:**
-
-- **GraphQL Codegen**: Generates TypeScript types from your schema and operations, providing end-to-end type safety from server to UI
-- **graphql-ws**: WebSocket library for GraphQL subscriptions, required for real-time features
-- **React**: Apollo's hooks (useQuery, useMutation, useSubscription) integrate with React lifecycle
-- **Testing libraries**: MockedProvider enables isolated component testing without network
-
 **Domain boundaries:**
 
 - **GraphQL schema design**: Defer to backend skills for schema definition, resolvers, and server implementation
 - **REST APIs**: Use your REST data fetching solution - Apollo Client is specifically for GraphQL
 - **Complex client state**: For state that doesn't map to GraphQL queries, use your client state management solution
-
-**Not a replacement for:**
-
-- Client state management solutions (for complex non-GraphQL state)
-- Form libraries (for form state and validation)
-- Error tracking services (Apollo's error link integrates with them)
+- **Form state**: Use your form solution for form state and validation
+- **Error tracking**: Apollo's error link integrates with your monitoring solution
 
 </integration>
 

@@ -92,121 +92,48 @@ Chroma is a **lightweight, developer-friendly embedding database** designed for 
 
 ### Pattern 1: Client Initialization
 
-Create a ChromaClient connected to a running Chroma server. See [examples/core.md](examples/core.md) for full examples.
+Always pass the server URL explicitly from an environment variable -- never rely on the implicit `http://localhost:8000` default. See [examples/core.md](examples/core.md) for HTTP, Cloud, and token-authenticated client examples.
 
 ```typescript
-// Good Example
-import { ChromaClient } from "chromadb";
-
-function createChromaClient(): ChromaClient {
-  const chromaUrl = process.env.CHROMA_URL;
-  if (!chromaUrl) {
-    throw new Error("CHROMA_URL environment variable is required");
-  }
-  return new ChromaClient({ path: chromaUrl });
-}
-
-export { createChromaClient };
+const chromaUrl = process.env.CHROMA_URL;
+if (!chromaUrl) throw new Error("CHROMA_URL environment variable is required");
+return new ChromaClient({ path: chromaUrl });
 ```
-
-**Why good:** Server URL from environment variable, validation before construction, named export
-
-```typescript
-// Bad Example
-import { ChromaClient } from "chromadb";
-const client = new ChromaClient(); // Silently defaults to http://localhost:8000
-```
-
-**Why bad:** Implicit default URL makes deployment-specific bugs hard to trace, no validation
 
 ---
 
 ### Pattern 2: Collection with Distance Metric
 
-Create a collection with a specific distance metric via the `configuration` parameter. See [examples/core.md](examples/core.md).
+Use the `configuration` parameter for HNSW settings -- never the deprecated `metadata: { "hnsw:space": "cosine" }` approach. See [examples/core.md](examples/core.md).
 
 ```typescript
-// Good Example
-import { ChromaClient } from "chromadb";
-
-const COLLECTION_NAME = "documents";
-
-async function createCosineCollection(client: ChromaClient) {
-  const collection = await client.createCollection({
-    name: COLLECTION_NAME,
-    configuration: {
-      hnsw: { space: "cosine" },
-    },
-  });
-  return collection;
-}
-
-export { createCosineCollection };
-```
-
-**Why good:** Uses `configuration` parameter (not deprecated metadata approach), named constant for collection name, `cosine` metric for most embedding models
-
-```typescript
-// Bad Example -- deprecated metadata approach
 const collection = await client.createCollection({
-  name: "docs",
-  metadata: { "hnsw:space": "cosine" }, // DEPRECATED: use configuration instead
+  name: COLLECTION_NAME,
+  configuration: { hnsw: { space: "cosine" } },
 });
 ```
-
-**Why bad:** `metadata` prefix for HNSW settings is deprecated in v3; use `configuration: { hnsw: { space } }` instead
 
 ---
 
 ### Pattern 3: Add Documents with Automatic Embedding
 
-Add documents and let Chroma embed them automatically. See [examples/core.md](examples/core.md).
+Pass `documents` and `ids` -- Chroma embeds automatically. Either `documents` or `embeddings` must be provided; metadata alone is insufficient. See [examples/core.md](examples/core.md).
 
 ```typescript
-// Good Example
-const COLLECTION_NAME = "articles";
-
-async function addArticles(
-  client: ChromaClient,
-  articles: Array<{ id: string; text: string; category: string }>,
-): Promise<void> {
-  const collection = await client.getOrCreateCollection({
-    name: COLLECTION_NAME,
-  });
-
-  await collection.add({
-    ids: articles.map((a) => a.id),
-    documents: articles.map((a) => a.text),
-    metadatas: articles.map((a) => ({ category: a.category })),
-  });
-}
-
-export { addArticles };
-```
-
-**Why good:** `getOrCreateCollection` is idempotent, documents auto-embedded, structured metadata for filtering
-
-```typescript
-// Bad Example
 await collection.add({
-  ids: ["1"],
-  // Neither documents nor embeddings provided -- throws error
-  metadatas: [{ category: "tutorial" }],
+  ids: articles.map((a) => a.id),
+  documents: articles.map((a) => a.text),
+  metadatas: articles.map((a) => ({ category: a.category })),
 });
 ```
-
-**Why bad:** Either `documents` or `embeddings` must be provided; metadata alone is insufficient
 
 ---
 
 ### Pattern 4: Query with Metadata and Document Filters
 
-Query using both metadata filtering (`where`) and document content filtering (`whereDocument`). See [examples/metadata-filtering.md](examples/metadata-filtering.md) for all operators.
+Combine `where` (metadata) and `whereDocument` (content) filters. Results are nested arrays -- always access `[0]` for single-query results. See [examples/metadata-filtering.md](examples/metadata-filtering.md) for all operators.
 
 ```typescript
-// Good Example
-const N_RESULTS = 10;
-
 const results = await collection.query({
   queryTexts: ["machine learning fundamentals"],
   nResults: N_RESULTS,
@@ -216,86 +143,37 @@ const results = await collection.query({
   whereDocument: { $contains: "neural network" },
   include: ["documents", "metadatas", "distances"],
 });
-
-// Results are nested arrays -- access [0] for first query
-for (let i = 0; i < results.ids[0].length; i++) {
-  console.log(results.ids[0][i], results.distances?.[0][i]);
-}
+// results.ids[0] -- nested array, access [0] for first query
 ```
-
-**Why good:** Combined metadata + document filter, named constant for nResults, correct nested array access `[0]`, explicit `include` to control response payload
-
-```typescript
-// Bad Example
-const results = await collection.query({
-  queryTexts: ["query"],
-  nResults: 5,
-});
-// BUG: treats results.ids as flat array
-for (const id of results.ids) {
-  console.log(id); // Prints the inner array, not individual IDs!
-}
-```
-
-**Why bad:** `results.ids` is `string[][]` not `string[]`; must access `results.ids[0]` for the first query's results
 
 ---
 
 ### Pattern 5: Get with Pagination
 
-Retrieve documents by ID or metadata filter with pagination. See [examples/core.md](examples/core.md).
+Use `get()` with `limit`/`offset` for non-similarity retrieval. Unlike `query()`, `get()` returns flat arrays. See [examples/core.md](examples/core.md).
 
 ```typescript
-// Good Example
-const PAGE_SIZE = 50;
-
-async function getDocumentsByCategory(
-  collection: Awaited<ReturnType<ChromaClient["getCollection"]>>,
-  category: string,
-  offset: number = 0,
-) {
-  const results = await collection.get({
-    where: { category: { $eq: category } },
-    limit: PAGE_SIZE,
-    offset,
-    include: ["documents", "metadatas"],
-  });
-
-  return results;
-}
-
-export { getDocumentsByCategory };
+const results = await collection.get({
+  where: { category: { $eq: category } },
+  limit: PAGE_SIZE,
+  offset,
+  include: ["documents", "metadatas"],
+});
 ```
-
-**Why good:** Pagination via `limit`/`offset`, metadata filtering without vector query, explicit include
 
 ---
 
 ### Pattern 6: Upsert for Idempotent Operations
 
-Upsert creates new records or updates existing ones by ID. See [examples/core.md](examples/core.md).
+Use `upsert()` instead of `add()` for create-or-update semantics -- safer for pipelines that run multiple times. See [examples/core.md](examples/core.md).
 
 ```typescript
-// Good Example
-async function upsertDocuments(
-  collection: Awaited<ReturnType<ChromaClient["getCollection"]>>,
-  docs: Array<{
-    id: string;
-    text: string;
-    metadata: Record<string, string | number | boolean>;
-  }>,
-): Promise<void> {
-  await collection.upsert({
-    ids: docs.map((d) => d.id),
-    documents: docs.map((d) => d.text),
-    metadatas: docs.map((d) => d.metadata),
-  });
-}
-
-export { upsertDocuments };
+await collection.upsert({
+  ids: docs.map((d) => d.id),
+  documents: docs.map((d) => d.text),
+  metadatas: docs.map((d) => d.metadata),
+});
 ```
-
-**Why good:** Idempotent -- creates or updates depending on ID existence, re-embeds documents automatically
 
 </patterns>
 

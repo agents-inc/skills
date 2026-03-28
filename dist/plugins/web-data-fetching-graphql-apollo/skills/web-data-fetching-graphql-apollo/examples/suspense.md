@@ -16,7 +16,7 @@ Use `useSuspenseQuery` when you want the component to suspend while loading data
 // components/user-profile-suspense.tsx
 import { Suspense } from "react";
 import { useSuspenseQuery, gql } from "@apollo/client";
-import type { GetUserQuery, GetUserQueryVariables } from "@/generated/graphql";
+import type { GetUserQuery, GetUserQueryVariables } from "../generated/graphql";
 
 const GET_USER = gql`
   query GetUser($id: ID!) {
@@ -257,7 +257,7 @@ export { preloadQuery };
 import { Suspense } from "react";
 import { useReadQuery, gql } from "@apollo/client";
 import type { QueryRef } from "@apollo/client";
-import { preloadQuery } from "@/lib/apollo-preloader";
+import { preloadQuery } from "../lib/apollo-preloader";
 
 const GET_USER_PROFILE = gql`
   query GetUserProfile($id: ID!) {

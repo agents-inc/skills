@@ -1,6 +1,6 @@
 {
   "name": "web-data-fetching-graphql-apollo",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "skills": "./skills/",
   "description": "Apollo Client GraphQL patterns - useQuery, useMutation, cache management, optimistic updates, subscriptions",
   "author": {

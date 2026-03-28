@@ -44,6 +44,13 @@ description: Service Worker lifecycle, caching strategies, offline patterns, upd
 - When browser HTTP caching is sufficient
 - For real-time data that must always be fresh (use network-only)
 
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) - Registration, lifecycle template, caching strategy implementations, types
+- [examples/caching.md](examples/caching.md) - Advanced caching (expiration, selective API, storage cleanup, navigation preload)
+- [examples/updates.md](examples/updates.md) - Version tracking, update strategies (aggressive, deferred, idle, rollout, migration)
+- [reference.md](reference.md) - Decision frameworks, anti-patterns, lifecycle reference, checklists
+
 ---
 
 <philosophy>
@@ -282,15 +289,6 @@ navigator.serviceWorker.addEventListener("controllerchange", () => {
 See [examples/updates.md](examples/updates.md) for version tracking, aggressive updates, deferred updates, idle-time updates, progressive rollout, and data migration patterns.
 
 </patterns>
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Registration, lifecycle template, caching strategy implementations, types
-- [examples/caching.md](examples/caching.md) - Advanced caching (expiration, selective API, storage cleanup, navigation preload)
-- [examples/updates.md](examples/updates.md) - Version tracking, update strategies (aggressive, deferred, idle, rollout, migration)
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, lifecycle reference, checklists
 
 ---
 

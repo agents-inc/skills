@@ -84,8 +84,10 @@ const result = await replicate.wait(prediction);
 
 ```typescript
 // Create (async, returns immediately)
+// Specify EITHER model OR version (not both)
 const prediction = await replicate.predictions.create({
-  version: "sha256hash",                    // Required: model version hash
+  model: "owner/name",                      // Use for latest version
+  // OR: version: "sha256hash",             // Use for pinned reproducibility
   input: { prompt: "..." },                 // Required: model inputs
   webhook?: "https://...",                   // Optional: webhook URL
   webhook_events_filter?: ["completed"],     // Optional: event filter
