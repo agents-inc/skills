@@ -29,7 +29,7 @@ description: Node.js CLI development with Commander.js and @clack/prompts - comm
 
 ---
 
-**Auto-detection:** Commander.js, commander, @clack/prompts, picocolors, p.spinner, p.select, p.confirm, p.text, p.isCancel, p.tasks, p.progress, process.exit, exit codes, SIGINT handling, interactive prompts, wizard state machine, config hierarchy, CLI error handling, parseAsync, subcommand
+**Auto-detection:** Commander.js, commander, @clack/prompts, picocolors, p.spinner, p.select, p.confirm, p.text, p.isCancel, p.tasks, p.multiselect, p.group, process.exit, exit codes, SIGINT handling, interactive prompts, wizard state machine, config hierarchy, CLI error handling, parseAsync, subcommand
 
 **When to use:**
 
