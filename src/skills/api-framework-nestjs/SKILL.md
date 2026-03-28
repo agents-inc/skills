@@ -5,7 +5,7 @@ description: NestJS backend framework - modules, controllers, services, DI, guar
 
 # NestJS Patterns
 
-> **Quick Guide:** NestJS is an opinionated, modular Node.js framework built on TypeScript. Use modules to organize features, controllers for HTTP routing, services for business logic with dependency injection, DTOs with class-validator for validation, guards for auth, and exception filters for error handling. Key gotchas: always register services in module `providers`, always enable `ValidationPipe` globally with `whitelist: true`, never put business logic in controllers, never instantiate services with `new`. NestJS 11 is the current stable version (SWC default compiler, Express v5, reversed termination hooks).
+> **Quick Guide:** NestJS is an opinionated, modular Node.js framework built on TypeScript. Use modules to organize features, controllers for HTTP routing, services for business logic with dependency injection, DTOs with class-validator for validation, guards for auth, and exception filters for error handling. Key gotchas: always register services in module `providers`, always enable `ValidationPipe` globally with `whitelist: true`, never put business logic in controllers, never instantiate services with `new`. NestJS 11 is the current stable version (opt-in SWC compiler, Express v5, reversed termination hooks).
 
 ---
 
@@ -364,7 +364,7 @@ Is this a cross-cutting concern (auth, config, logging)?
 - `IntrinsicException` (NestJS 11) throws without framework auto-logging — useful for expected flow control
 - NestJS 11: Termination lifecycle hooks (`OnModuleDestroy`, `OnApplicationShutdown`) now execute in reverse order
 - NestJS 11: Express v5 requires named wildcards (`/*splat` instead of `/*`)
-- NestJS 11: SWC is the default compiler (20x faster builds)
+- NestJS 11: SWC is a supported opt-in compiler via `nest-cli.json` (`"builder": "swc"`) — 20x faster builds than tsc
 - NestJS 11: `ParseDatePipe` is now built-in — no need for custom date parsing pipes
 - Request-scoped providers (`Scope.REQUEST`) affect performance — use only when needed
 - `forwardRef()` should be a last resort — circular deps usually signal a design issue

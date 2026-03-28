@@ -428,7 +428,7 @@ app.use("*", async (c, next) => {
 });
 ```
 
-**Why bad:** Logging PII = GDPR violation, no correlation = can't trace user's request across microservices, unstructured = grep only (not searchable in Datadog/Splunk)
+**Why bad:** Logging PII = GDPR violation, no correlation = can't trace user's request across microservices, unstructured = grep only (not searchable in log aggregators)
 
 ---
 

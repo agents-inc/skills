@@ -51,7 +51,7 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 - Structured logging with required fields
 - Correlation IDs: generating, propagating, attaching to logs
 - Custom traces/spans with OpenTelemetry
-- Sentry error boundaries in React (App Router compatible)
+- Sentry error boundaries in React
 - Attaching user context to Sentry after auth
 - Creating Axiom monitors and alerts
 - Filtering noise (expected errors like 404s)
@@ -178,14 +178,14 @@ For code examples, see [examples/tracing.md](examples/tracing.md).
 
 ---
 
-### Pattern 5: Sentry Error Boundaries in React (App Router)
+### Pattern 5: Sentry Error Boundaries in React
 
 Catch and report React component errors with recovery capability.
 
 **Key Components:**
 
 1. **ErrorBoundary** - Class component for catching render errors
-2. **global-error.tsx** - App Router global error handler
+2. **global-error.tsx** - SSR framework global error handler
 3. **Feature-level boundaries** - Wrap feature sections with custom fallbacks
 
 For implementation examples, see [examples/error-boundaries.md](examples/error-boundaries.md).

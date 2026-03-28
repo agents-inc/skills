@@ -88,7 +88,8 @@ export function initPostHogWithCallback() {
     api_host: process.env.POSTHOG_PUBLIC_HOST,
     loaded: (posthog) => {
       // Called when PostHog SDK is loaded
-      posthog.onFeatureFlags((flagVariants, { errorsLoading }) => {
+      posthog.onFeatureFlags((flags, flagVariants, { errorsLoading }) => {
+        // flags: string[] - list of flag keys
         // flagVariants: Record<string, string | boolean>
         // errorsLoading: boolean | undefined - true if request failed/timed out
 

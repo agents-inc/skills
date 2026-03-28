@@ -240,16 +240,9 @@ await someOtherEmailProvider.send({ html, to, from, subject });
 }
 ```
 
-```json
-// Root package.json (workspace script)
-{
-  "scripts": {
-    "email:dev": "bun --cwd packages/emails run dev"
-  }
-}
-```
+Add a workspace-level script to run the preview server from the project root. The exact syntax depends on your package manager's workspace support.
 
-Run `bun run email:dev` to start the preview server at `http://localhost:3001`. Templates with `PreviewProps` will render with sample data.
+Run the email dev script to start the preview server at `http://localhost:3001`. Templates with `PreviewProps` will render with sample data.
 
 ---
 

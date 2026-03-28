@@ -1,6 +1,6 @@
 # Observability Setup - Health Check Examples
 
-> Health check endpoints for monitoring and load balancer integration.
+> Health check endpoints that integrate with your observability stack.
 
 **Navigation:** [Back to SKILL.md](../SKILL.md) | [core.md](core.md) | [sentry-config.md](sentry-config.md) | [pino-logger.md](pino-logger.md) | [axiom-integration.md](axiom-integration.md) | [ci-cd.md](ci-cd.md)
 
@@ -8,103 +8,39 @@
 
 ## Pattern 8: Health Check Endpoint
 
-### Next.js Health Check
+Health checks should report version info (tied to Sentry releases) and log results via your logger for Axiom dashboards.
 
-**File: `app/api/health/route.ts`**
+### Shallow Check (for Load Balancers)
 
 ```typescript
-// Good Example - Health check endpoint
-import { NextResponse } from "next/server";
-
+// Good Example - Shallow health check
 const HTTP_STATUS_OK = 200;
 
-export async function GET() {
-  return NextResponse.json(
+export async function handleHealthCheck(): Promise<Response> {
+  return Response.json(
     {
       status: "healthy",
       timestamp: new Date().toISOString(),
-      version: process.env.NEXT_PUBLIC_APP_VERSION || "unknown",
+      version: process.env.APP_VERSION || "unknown",
     },
     { status: HTTP_STATUS_OK },
   );
 }
 ```
 
----
-
-### Hono Health Check with Dependency Checks
-
-**File: `src/routes/health.ts`**
+### Deep Check (with Dependency Verification)
 
 ```typescript
-// Good Example - Hono health check with dependency checks
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-
-import { db } from "@/lib/db";
+// Good Example - Deep health check logging failures via Pino
+import { logger } from "./logger"; // Your Pino logger instance
 
 const HTTP_STATUS_OK = 200;
 const HTTP_STATUS_SERVICE_UNAVAILABLE = 503;
 const HEALTH_CHECK_TIMEOUT_MS = 5000;
 
-const HealthStatusSchema = z
-  .object({
-    status: z.enum(["healthy", "unhealthy"]),
-    timestamp: z.string(),
-    version: z.string(),
-    dependencies: z
-      .object({
-        database: z.enum(["connected", "disconnected"]),
-      })
-      .optional(),
-  })
-  .openapi("HealthStatus");
-
-const app = new OpenAPIHono();
-
-// Shallow health check (fast, for load balancers)
-const healthRoute = createRoute({
-  method: "get",
-  path: "/health",
-  operationId: "getHealth",
-  tags: ["Health"],
-  responses: {
-    200: {
-      description: "Service is healthy",
-      content: { "application/json": { schema: HealthStatusSchema } },
-    },
-  },
-});
-
-app.openapi(healthRoute, async (c) => {
-  return c.json(
-    {
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      version: process.env.APP_VERSION || "unknown",
-    },
-    HTTP_STATUS_OK,
-  );
-});
-
-// Deep health check (with dependency checks)
-const healthDeepRoute = createRoute({
-  method: "get",
-  path: "/health/deep",
-  operationId: "getHealthDeep",
-  tags: ["Health"],
-  responses: {
-    200: {
-      description: "Service and dependencies healthy",
-      content: { "application/json": { schema: HealthStatusSchema } },
-    },
-    503: {
-      description: "Service unhealthy",
-      content: { "application/json": { schema: HealthStatusSchema } },
-    },
-  },
-});
-
-app.openapi(healthDeepRoute, async (c) => {
+export async function handleDeepHealthCheck(
+  checkDatabase: () => Promise<void>,
+): Promise<Response> {
   let dbStatus: "connected" | "disconnected" = "disconnected";
 
   try {
@@ -112,28 +48,25 @@ app.openapi(healthDeepRoute, async (c) => {
       setTimeout(() => reject(new Error("Timeout")), HEALTH_CHECK_TIMEOUT_MS),
     );
 
-    await Promise.race([db.execute("SELECT 1"), timeoutPromise]);
+    await Promise.race([checkDatabase(), timeoutPromise]);
     dbStatus = "connected";
-  } catch {
+  } catch (error) {
+    logger.warn({ error }, "Health check: database unreachable");
     dbStatus = "disconnected";
   }
 
   const isHealthy = dbStatus === "connected";
 
-  return c.json(
+  return Response.json(
     {
       status: isHealthy ? "healthy" : "unhealthy",
       timestamp: new Date().toISOString(),
       version: process.env.APP_VERSION || "unknown",
-      dependencies: {
-        database: dbStatus,
-      },
+      dependencies: { database: dbStatus },
     },
-    isHealthy ? HTTP_STATUS_OK : HTTP_STATUS_SERVICE_UNAVAILABLE,
+    { status: isHealthy ? HTTP_STATUS_OK : HTTP_STATUS_SERVICE_UNAVAILABLE },
   );
-});
-
-export { app as healthRoutes };
+}
 ```
 
-**Why good:** Two endpoints - shallow for frequent LB checks, deep for thorough monitoring, timeout prevents health check from hanging indefinitely, returns 503 when unhealthy so LB routes traffic elsewhere
+**Why good:** Version field ties to Sentry releases for correlation, failures logged via Pino (visible in Axiom dashboards), framework-agnostic using standard `Response` API, database check injected as dependency for testability

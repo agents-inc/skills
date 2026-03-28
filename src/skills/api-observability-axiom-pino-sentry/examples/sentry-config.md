@@ -26,7 +26,7 @@
 // Import from your framework-specific Sentry package
 import * as Sentry from "@sentry/react";
 
-import type { User } from "@/types/user";
+import type { User } from "../types/user";
 
 /**
  * Call after successful authentication
@@ -62,8 +62,8 @@ export function setSentryContext(key: string, data: Record<string, unknown>) {
 
 ```typescript
 import { useEffect } from "react";
-import { useSession } from "@/lib/auth";
-import { setSentryUser, clearSentryUser } from "@/lib/sentry-user";
+import { useSession } from "./auth";
+import { setSentryUser, clearSentryUser } from "./sentry-user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useSession();

@@ -14,7 +14,7 @@ Use `posthog-node` for server-side evaluation. Use local evaluation for performa
 // lib/posthog-server.ts
 import { PostHog } from "posthog-node";
 
-const POSTHOG_POLL_INTERVAL_MS = 300_000; // 5 minutes (SDK default)
+const POSTHOG_POLL_INTERVAL_MS = 30_000; // 30 seconds (SDK default)
 
 // Initialize with local evaluation
 // Use Feature Flags Secure API Key (phs_*) from project settings > Feature Flags tab
@@ -23,7 +23,7 @@ export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
   // Enable local evaluation with feature flags secure key (phs_*)
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
-  // Poll for flag definition updates (default: 300000ms / 5 minutes)
+  // Poll for flag definition updates (default: 30000ms / 30 seconds)
   featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS,
 });
 ```
@@ -34,8 +34,8 @@ export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
 
 ```typescript
 // api/dashboard.ts (adapt to your server framework)
-import { posthog } from "@/lib/posthog-server";
-import { FLAG_BETA_DASHBOARD } from "@/lib/feature-flags";
+import { posthog } from "../lib/posthog-server";
+import { FLAG_BETA_DASHBOARD } from "../lib/feature-flags";
 
 export async function handleGetDashboard(request: Request) {
   const userId = request.headers.get("x-user-id");
@@ -173,7 +173,6 @@ const createRedisCache = (redisUrl: string): FlagDefinitionCacheProvider => {
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
-  enableLocalEvaluation: true,
   // Use Redis for shared flag definitions across instances
   flagDefinitionCacheProvider: createRedisCache(process.env.REDIS_URL!),
 });

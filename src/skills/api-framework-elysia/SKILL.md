@@ -72,19 +72,6 @@ description: Bun-native HTTP framework — routing, TypeBox validation, Eden Tre
 
 **Plugins are Elysia instances.** Every `new Elysia()` is a plugin. There is no separate plugin API -- you compose by chaining `.use()`. The `name` property deduplicates plugins across the tree.
 
-**Use Elysia when:**
-
-- Building on Bun runtime with type safety as a priority
-- Want RPC-style client without code generation (Eden Treaty)
-- Need high-performance validation (TypeBox AOT)
-- Building real-time features (native WebSocket support)
-
-**Use a different framework when:**
-
-- Need OpenAPI-first design workflow (Zod-OpenAPI integration is more mature in other frameworks)
-- Deploying exclusively to Node.js
-- Team needs framework with larger ecosystem/community
-
 </philosophy>
 
 ---

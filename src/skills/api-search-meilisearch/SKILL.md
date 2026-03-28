@@ -64,8 +64,8 @@ description: Meilisearch search engine patterns -- client setup, indexing, searc
 
 **When NOT to use:**
 
-- Full-text search on a relational database (use PostgreSQL full-text search for simple cases)
-- Log aggregation or analytics queries (use Elasticsearch/OpenSearch)
+- Full-text search on a relational database (use your database's built-in full-text search for simple cases)
+- Log aggregation or analytics queries (use a dedicated log/analytics search engine)
 - Vector-only semantic search without keyword component (use a dedicated vector database)
 - Searching fewer than ~1,000 documents (client-side filtering is simpler)
 

@@ -181,7 +181,7 @@ Use `posthog-node` with the Feature Flags Secure API Key (`phs_*`) for local eva
 export const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
   personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY, // phs_* key
-  featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS, // default 5 min
+  featureFlagsPollingInterval: POSTHOG_POLL_INTERVAL_MS, // default 30s
 });
 ```
 
@@ -245,7 +245,7 @@ See [examples/core.md](examples/core.md#pattern-7-flag-cleanup-and-lifecycle-man
 - GeoIP targeting uses server IP by default in posthog-node v3+
 - Experiments need minimum 50 exposures per variant for results
 - Stale flag = 100% rollout + not evaluated in 30 days
-- `onFeatureFlags` callback receives `{ errorsLoading?: boolean }` as second parameter
+- `onFeatureFlags` callback receives three parameters: `flags`, `flagVariants`, `{ errorsLoading }` (third parameter)
 - External cache providers (Redis, KV) are experimental - Node.js/Python SDKs only
 
 </red_flags>

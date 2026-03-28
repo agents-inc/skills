@@ -9,7 +9,7 @@
 Security-focused template with expiry messaging.
 
 ```typescript
-// packages/emails/src/templates/password-reset.tsx
+// templates/password-reset.tsx
 import { Button, Heading, Text } from "@react-email/components";
 
 import { BaseLayout } from "../layouts/base-layout";
@@ -82,7 +82,7 @@ export type { PasswordResetEmailProps };
 Template with required CAN-SPAM unsubscribe link.
 
 ```typescript
-// packages/emails/src/templates/notification-email.tsx
+// templates/notification-email.tsx
 import { Button, Heading, Link, Text } from "@react-email/components";
 
 import { BaseLayout } from "../layouts/base-layout";

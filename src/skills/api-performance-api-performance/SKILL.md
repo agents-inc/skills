@@ -182,7 +182,7 @@ See [examples/core.md](examples/core.md) for DataLoader batching pattern.
 Indexes speed up queries by avoiding full table scans. Index columns used in WHERE, JOIN, and ORDER BY clauses.
 
 ```typescript
-// Strategic indexes -- array return format (Drizzle v0.36+)
+// Strategic indexes on a table definition
 export const jobs = pgTable(
   "jobs",
   {

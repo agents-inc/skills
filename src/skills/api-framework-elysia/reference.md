@@ -35,7 +35,7 @@
 
 - Sharing schemas between Bun backend and non-Bun frontend
 - Team already has Zod schemas and doesn't want to rewrite
-- Need Zod ecosystem (zod-to-json-schema, trpc integration)
+- Need Zod ecosystem (zod-to-json-schema, shared schema libraries)
 
 **Mix validators in same route (1.4+):**
 

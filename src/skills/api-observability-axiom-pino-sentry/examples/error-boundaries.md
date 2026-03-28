@@ -188,8 +188,8 @@ export default function GlobalError({
 ## Pattern: Using Error Boundaries
 
 ```typescript
-import { ErrorBoundary } from "@/components/error-boundary";
-import { JobList } from "@/components/job-list";
+import { ErrorBoundary } from "./error-boundary";
+import { JobList } from "./job-list";
 
 export function JobsPage() {
   return (

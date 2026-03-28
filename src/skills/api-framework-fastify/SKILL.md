@@ -76,19 +76,6 @@ description: Fastify routes, JSON Schema validation, plugin system, TypeScript t
 
 **Performance without sacrifice.** Fastify achieves 2-3x throughput over Express while maintaining developer ergonomics through TypeScript integration and comprehensive hook system.
 
-**Use Fastify when:**
-
-- Building production APIs requiring high throughput
-- Need schema validation at the framework level
-- Want plugin architecture for large codebases
-- Require fine-grained lifecycle control
-
-**Use alternatives when:**
-
-- Simple internal endpoints (your existing patterns)
-- Edge deployments with bundle size constraints
-- Need Express middleware ecosystem compatibility
-
 </philosophy>
 
 ---

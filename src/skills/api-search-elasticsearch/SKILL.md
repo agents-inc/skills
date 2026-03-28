@@ -324,7 +324,9 @@ while (true) {
   const hits = result.hits.hits;
   if (hits.length === 0) break;
 
-  allHits = allHits.concat(hits.map((h) => h._source!));
+  allHits = allHits.concat(
+    hits.filter((h) => h._source !== undefined).map((h) => h._source!),
+  );
   searchAfter = hits[hits.length - 1].sort as Array<string | number>;
 }
 

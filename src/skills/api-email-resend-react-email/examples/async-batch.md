@@ -196,6 +196,6 @@ async function notifyTeamMembers(
 **Supported in Batch:**
 
 - `tags` - for analytics and tracking
-- `headers` (including Idempotency-Key)
+- `headers` (custom email headers)
 - `cc` and `bcc` recipients
 - Up to 50 recipients per email (`to` field)

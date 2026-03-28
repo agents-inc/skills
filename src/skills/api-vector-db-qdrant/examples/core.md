@@ -230,7 +230,7 @@ export { getArticles };
 
 **Why good:** Retrieves by ID without vector search, `with_vector: false` reduces response size, explicit payload inclusion
 
-**Gotcha:** Unlike Pinecone's `fetch()` which returns an object keyed by ID, Qdrant's `retrieve()` returns an array. Missing IDs are silently omitted (no error thrown).
+**Gotcha:** `retrieve()` returns an array, not an object keyed by ID. Missing IDs are silently omitted (no error thrown) -- always check the returned array length if you need to confirm all IDs were found.
 
 ---
 
