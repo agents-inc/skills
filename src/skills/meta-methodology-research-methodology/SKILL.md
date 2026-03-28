@@ -114,29 +114,11 @@ For detailed code examples, see [examples/core.md](examples/core.md#pattern-1-in
 
 ### Pattern 2: Evidence-Based Claims
 
-Every claim in research findings must have supporting evidence with file paths and line numbers.
-
-#### Claim Structure
-
-````markdown
-## Pattern: [Pattern Name]
-
-**File:** `/path/to/file.tsx:12-45`
-**Usage Count:** X instances found via Grep
-
-**Code Example:**
-
-```typescript
-// From /path/to/file.tsx:15-25
-[Actual code from the file]
-```
-
-**Verification:** Read file confirmed pattern exists at stated location
-````
+Every claim in research findings must have supporting evidence with file paths and line numbers. Include the file path, line range, usage count, actual code snippet, and verification status.
 
 **Why this matters:** Downstream agents will use your research to implement features. Inaccurate or unverified claims will lead them astray.
 
-For good/bad comparison examples, see [examples/core.md](examples/core.md#pattern-2-evidence-based-claims).
+For the claim structure template and good/bad comparison examples, see [examples/core.md](examples/core.md#pattern-2-evidence-based-claims).
 
 ---
 
@@ -144,26 +126,9 @@ For good/bad comparison examples, see [examples/core.md](examples/core.md#patter
 
 Research findings follow a consistent structure for AI consumption. Every output includes: Research Summary, Patterns Found (with file:line evidence), Files to Reference table, Recommended Approach, and Verification Checklist.
 
-```markdown
-## Research Summary
-
-- Topic: [What was researched]
-- Type: [Pattern Discovery | Inventory | Implementation Research]
-- Files Examined: [count]
-- Paths Verified: [Yes/No]
-
-## Patterns Found
-
-### Pattern 1: [Name]
-
-- File: [path:lines]
-- Description: [Brief explanation]
-  ...
-```
-
 **Why structured:** Other AI agents parse this output. Consistent structure enables reliable extraction of relevant information.
 
-For the complete output template, see [examples/core.md - Pattern 3](examples/core.md#pattern-3-structured-output-format).
+For the complete output template, see [examples/core.md](examples/core.md#pattern-3-structured-output-format).
 
 </patterns>
 

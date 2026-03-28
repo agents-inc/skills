@@ -155,15 +155,15 @@ All feedback should follow these principles for maximum effectiveness.
 
 #### Be Specific
 
-Every issue needs a precise location. Vague feedback wastes time. Specific feedback can be acted on immediately.
+Every issue needs a precise location and actionable detail.
 
 #### Explain Why
 
-Don't just say what's wrong - explain the impact. Understanding impact helps authors learn and prevents repeat mistakes.
+Don't just say what's wrong -- explain the impact so authors learn.
 
 #### Suggest Solutions
 
-Point to existing patterns when possible. Solutions (especially referencing existing code) make fixes faster and maintain consistency.
+Point to existing patterns when possible.
 
 #### Distinguish Severity
 
@@ -177,9 +177,9 @@ Use clear markers to communicate priority:
 
 #### Acknowledge Good Work
 
-Always include positive feedback. Positive reinforcement teaches what to repeat. Reviews that only criticize demotivate and miss teaching opportunities.
+Always include positive feedback alongside issues.
 
-For detailed examples of each principle, see [examples/core.md](examples/core.md).
+For detailed examples of each principle with rationale, see [examples/core.md](examples/core.md).
 
 </patterns>
 

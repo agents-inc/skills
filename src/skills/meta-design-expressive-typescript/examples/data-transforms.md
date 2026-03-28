@@ -1,6 +1,8 @@
-# Data Transformation Patterns
+# Expressive TypeScript - Data Transformation Patterns
 
 > When to use plain JS, when utility libraries help, and how to keep data transformations readable. See [SKILL.md](../SKILL.md) for decision frameworks and [reference.md](../reference.md) for the use/don't-use table.
+
+**Prerequisites**: Understand the two-tier pattern, named abstractions, and the extraction decision framework from [core.md](core.md) first.
 
 ---
 
