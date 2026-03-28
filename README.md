@@ -39,7 +39,7 @@ Frameworks<br>
 `React` `Vue Composition API` `Angular Standalone` `SolidJS` `Svelte`
 
 Meta Frameworks<br>
-`Next.js` `Nuxt` `Remix` `Astro` `SvelteKit` `Qwik`
+`Next.js` `Nuxt` `Remix` `Astro` `SvelteKit` `Qwik` `Docusaurus` `VitePress`
 
 State Management<br>
 `Zustand` `Pinia` `NgRx SignalStore` `Jotai` `MobX` `Redux Toolkit`
@@ -54,10 +54,10 @@ Routing<br>
 `React Router` `TanStack Router`
 
 Forms & Validation<br>
-`React Hook Form` `Vee Validate` `Zod`
+`React Hook Form` `TanStack Form` `Vee Validate` `Zod`
 
 UI Libraries<br>
-`shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI`
+`shadcn/ui` `Radix UI` `TanStack Table` `MUI` `Chakra UI` `Ant Design` `Mantine` `Headless UI` `Vuetify`
 
 Styling<br>
 `Tailwind` `SCSS Modules` `CVA`
@@ -164,17 +164,6 @@ Platform<br>
 Config<br>
 `Env Config`
 
-## Meta
-
-Design<br>
-`Expressive TypeScript`
-
-Reviewing<br>
-`Code Reviewing` `CLI Reviewing`
-
-Methodology<br>
-`Research Methodology`
-
 ## Shared
 
 Monorepos<br>
@@ -185,6 +174,22 @@ Security<br>
 
 Tooling<br>
 `Biome` `ESLint + Prettier` `Git Hooks` `TypeScript Config`
+
+## Desktop
+
+Frameworks<br>
+`Electron` `Tauri`
+
+## Meta
+
+Design<br>
+`Expressive TypeScript`
+
+Reviewing<br>
+`Code Reviewing` `CLI Reviewing`
+
+Methodology<br>
+`Research Methodology`
 
 Each skill covers patterns, conventions, anti-patterns, edge cases, and real code examples for a single technology. Not surface-level docs, but the kind of knowledge you'd normally have to explain to Claude repeatedly.
 
