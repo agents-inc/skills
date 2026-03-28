@@ -55,42 +55,6 @@ description: Drizzle ORM, queries, migrations
 - Non-TypeScript projects (lose primary benefit of type safety)
 - Edge functions requiring WebSocket connections (not supported in edge runtime)
 
-**Key patterns covered:**
-
-- Neon serverless connection (HTTP and WebSocket)
-- Drizzle schema design (tables, relations, enums)
-- RQB v2 with `defineRelations()` and object-based syntax (NEW)
-- Relational queries with `.with()` (single SQL query)
-- Query builder for complex filters
-- Many-to-many with `.through()` (eliminates junction table boilerplate)
-- Transactions for atomic operations
-- Database migrations with Drizzle Kit
-- drizzle-seed for deterministic test data
-- Performance optimization (indexes, prepared statements, batch API)
-
----
-
-<philosophy>
-
-## Philosophy
-
-**Drizzle ORM** provides SQL-like queries with TypeScript safety and zero runtime overhead. **Neon Serverless** offers PostgreSQL over HTTP/WebSocket for edge compatibility.
-
-**When to use this stack:**
-
-- Serverless functions (Vercel, Cloudflare Workers, Edge)
-- Need type-safe database queries
-- Want schema-first development with migrations
-- Building server-rendered apps with API routes
-
-**When NOT to use:**
-
-- Simple apps using framework server actions directly
-- Apps needing traditional TCP connection pooling only
-- Non-TypeScript projects
-
-</philosophy>
-
 ---
 
 <patterns>
@@ -99,165 +63,67 @@ description: Drizzle ORM, queries, migrations
 
 ### Pattern 1: Database Connection (Neon HTTP)
 
-Configure Drizzle with Neon for serverless/edge compatibility.
-
-#### Configuration
+Configure Drizzle with Neon for serverless/edge compatibility. Key setup requirements:
 
 ```typescript
-// Good Example - Proper Neon HTTP setup
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "./db/schema";
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set");
-}
-
-// Use neon() for HTTP-based queries (edge-compatible)
-export const sql = neon(process.env.DATABASE_URL);
-
-// Initialize Drizzle with schema and snake_case mapping
 export const db = drizzle(sql, {
   schema,
   casing: "snake_case", // Maps camelCase JS to snake_case SQL
 });
-
-// Export tables for direct query access
-export const { jobs, companies, companyLocations, skills, jobSkills } = schema;
 ```
 
-**Why good:** Environment variable validation prevents runtime errors, `casing: "snake_case"` ensures JS camelCase maps correctly to SQL snake_case preventing field name mismatches, HTTP connection works in all serverless environments
+- Validate `DATABASE_URL` before use (throw on missing)
+- Always set `casing: "snake_case"` to prevent field name mismatches
+- Use `neon()` for HTTP (edge-compatible) or `Pool` for WebSocket (long queries)
 
-#### Drizzle Kit Configuration
-
-```typescript
-// drizzle.config.ts
-import { defineConfig } from "drizzle-kit";
-
-export default defineConfig({
-  schema: "./lib/db/schema.ts",
-  out: "./drizzle", // Migration files output
-  dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL!,
-  },
-});
-```
-
-For more connection examples (WebSocket, error handling), see [examples/core.md](examples/core.md).
+Full connection setup, WebSocket config, and Drizzle Kit config in [examples/core.md](examples/core.md).
 
 ---
 
 ### Pattern 2: Schema Definition
 
-Define tables with TypeScript types using Drizzle's schema builder.
-
-#### Constants and Enums
+Define tables with TypeScript types using Drizzle's schema builder:
 
 ```typescript
-import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  timestamp,
-  boolean,
-  integer,
-  pgEnum,
-} from "drizzle-orm/pg-core";
-
-// Define enums for constrained values
-export const employmentTypeEnum = pgEnum("employment_type", [
-  "full_time",
-  "part_time",
-  "contract",
-  "internship",
-  "freelance",
-]);
-
-export const seniorityLevelEnum = pgEnum("seniority_level", [
-  "intern",
-  "junior",
-  "mid",
-  "senior",
-  "lead",
-  "principal",
-]);
-```
-
-#### Table Definitions
-
-```typescript
-// Good Example - Well-structured table with constraints
 export const companies = pgTable("companies", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).unique(),
-  description: text("description"),
-  logoUrl: text("logo_url"),
-  websiteUrl: text("website_url"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"), // Soft delete
+  createdAt: timestamp("created_at").defaultNow(),
 });
 ```
 
-**Why good:** `uuid().defaultRandom()` generates secure unique IDs, `.notNull()` enforces required fields preventing null errors, enums constrain values to valid options, `deletedAt` enables soft deletes preserving data history, `createdAt`/`updatedAt` track record lifecycle
+- Use `pgEnum()` for constrained values instead of varchar
+- Always include `createdAt`/`updatedAt` timestamps
+- Add `deletedAt` for soft deletes
+- Set `onDelete: "cascade"` on foreign keys to prevent orphaned records
+- Use `uuid().defaultRandom()` or `integer().generatedAlwaysAsIdentity()` for primary keys
 
-For complete schema examples (relations, junction tables), see [examples/core.md](examples/core.md).
+Full schema examples (enums, relations, junction tables, identity columns) in [examples/core.md](examples/core.md).
 
 ---
 
 ### Pattern 3: Relational Queries with `.with()`
 
-Fetch related data efficiently in a single SQL query.
+Fetch related data efficiently in a single SQL query using `.with()`:
 
 ```typescript
-// Good Example - Efficient relational query
-import { and, eq, desc, asc, isNull } from "drizzle-orm";
-
 const job = await db.query.jobs.findFirst({
-  where: and(
-    eq(jobs.id, jobId),
-    eq(jobs.isActive, true),
-    isNull(jobs.deletedAt),
-  ),
+  where: and(eq(jobs.id, jobId), isNull(jobs.deletedAt)),
   with: {
-    company: {
-      with: {
-        locations: {
-          orderBy: [
-            desc(companyLocations.isHeadquarters),
-            asc(companyLocations.name),
-          ],
-        },
-      },
-    },
-    jobSkills: {
-      where: eq(jobSkills.isRequired, true),
-      with: {
-        skill: true,
-      },
-    },
+    company: { with: { locations: true } },
+    jobSkills: { with: { skill: true } },
   },
 });
-
-// Result is fully typed and nested
-if (job) {
-  console.log(job.title); // string
-  console.log(job.company.name); // string
-  console.log(job.company.locations); // CompanyLocation[]
-  console.log(job.jobSkills[0].skill.name); // string
-}
+// Result is fully typed: job.company.name, job.jobSkills[0].skill.name
 ```
 
-**Why good:** Single SQL query eliminates N+1 problem, nested `.with()` loads deep relations efficiently, soft delete check prevents returning deleted records, ordering nested results provides predictable output, fully typed results catch errors at compile time
+- **Use `db.query` with `.with()`** when fetching related data -- single SQL query, no N+1
+- **Use query builder (`db.select()`)** for custom column selection, complex JOINs, aggregations
+- Always include `isNull(deletedAt)` in WHERE conditions for soft-deleted tables
 
-**When to use:** Need related data across tables, want to avoid N+1 queries, prefer type-safe queries over raw SQL
-
-**When not to use:** Simple queries without relations (use `db.select()`), need custom JOINs with complex conditions (use query builder)
-
-For more query examples (N+1 anti-pattern, complex filtering), see [examples/queries.md](examples/queries.md).
+Full relational query examples, N+1 anti-patterns, and dynamic filtering in [examples/queries.md](examples/queries.md).
 
 </patterns>
 
@@ -293,7 +159,7 @@ Performance optimization (indexes, prepared statements, pagination) is documente
 - Neon HTTP has 30-second query timeout - long queries need WebSocket
 - Prepared statements created outside transactions cannot be used inside transactions
 - `enableRLS()` deprecated in v1.0.0-beta.1 - use `pgTable.withRLS()` instead
-- Validator packages consolidated: `drizzle-zod` is now `drizzle-orm/zod`
+- Validator packages consolidated: `drizzle-zod` is now `drizzle-orm/zod` (since v1 beta)
 
 For the complete list of anti-patterns and gotchas, see [reference.md](reference.md#red-flags).
 

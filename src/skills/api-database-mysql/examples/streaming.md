@@ -200,8 +200,8 @@ async function upsertUser(
   name: string,
 ): Promise<{ inserted: boolean }> {
   const [result] = await pool.execute<ResultSetHeader>(
-    `INSERT INTO users (email, name) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+    `INSERT INTO users (email, name) VALUES (?, ?) AS new_row
+     ON DUPLICATE KEY UPDATE name = new_row.name`,
     [email, name],
   );
 
@@ -214,7 +214,7 @@ export { upsertUser };
 
 **Why good:** Atomic upsert without separate SELECT + INSERT/UPDATE, `affectedRows` distinguishes insert from update
 
-**Gotcha:** `affectedRows` is `1` for a new insert, `2` for an update (MySQL counts the delete + insert internally), and `0` if the row exists but no values changed. `insertId` is `0` when an existing row was updated.
+**Gotcha:** `affectedRows` is `1` for a new insert, `2` for an update (MySQL counts the delete + insert internally), and `0` if the row exists but no values changed. `insertId` is `0` when an existing row was updated. The `VALUES()` function in `ON DUPLICATE KEY UPDATE` is deprecated since MySQL 8.0.20 -- use row alias syntax (`AS new_row`) instead.
 
 ---
 

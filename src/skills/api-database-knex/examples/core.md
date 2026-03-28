@@ -231,7 +231,7 @@ async function deleteUser(db: Knex, userId: number): Promise<void> {
   }
 }
 
-// Upsert (PostgreSQL, SQLite)
+// Upsert (PostgreSQL, MySQL, SQLite)
 async function upsertUser(
   db: Knex,
   data: NewUser & { id: number },

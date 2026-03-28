@@ -320,7 +320,7 @@ const userId = new RecordId("user", "alice");
 const postId = new RecordId("post", "first-post");
 
 // RecordId properties
-console.log(userId.tb); // "user"
+console.log(userId.table); // Table { name: "user" }
 console.log(userId.id); // "alice"
 
 // Use in queries as parameters
@@ -338,7 +338,7 @@ function toRecordId(table: string, id: string): RecordId {
 const weatherId = new RecordId("weather", ["London", "2025-01-15T08:00:00Z"]);
 ```
 
-**Why good:** `RecordId` class for type-safe record references, access `.tb` and `.id` properties, `RecordId.parse("user:alice")` for string-to-RecordId conversion, parameterized use in queries, array-based IDs for composite keys
+**Why good:** `RecordId` class for type-safe record references, access `.table` and `.id` properties, parameterized use in queries, array-based IDs for composite keys
 
 ---
 

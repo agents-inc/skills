@@ -191,7 +191,7 @@ const [updated] = await db("users")
 ```typescript
 // Bad Example -- Forgetting returning() on PostgreSQL
 await db("users").insert({ name: "Alice" });
-// Returns [0] on PostgreSQL -- the row count, not the inserted data
+// Returns [] (empty array) on PostgreSQL, not the inserted data
 // Developer expects the inserted row but gets a useless number
 ```
 
@@ -387,7 +387,7 @@ Which database are you targeting?
 **Medium Priority Issues:**
 
 - Using `select("*")` in production queries -- fetches unnecessary data, increases memory usage, breaks when columns are added
-- Forgetting `.returning()` on PostgreSQL inserts -- returns useless row count `[0]` instead of inserted data
+- Forgetting `.returning()` on PostgreSQL inserts -- returns empty array `[]` instead of inserted data
 - Not setting pool `min: 0` -- default `min: 2` keeps stale connections alive during low-traffic periods
 - Missing `WHERE` clause on `.update()` or `.del()` -- updates/deletes ALL rows in the table
 - Using `KEYS`-style patterns without pagination -- `db("table").select()` with no limit loads entire table into memory

@@ -4,5 +4,5 @@ slug: cockroachdb
 domain: api
 author: "@vince"
 displayName: CockroachDB
-cliDescription: Distributed SQL database with PostgreSQL compatibility and automatic replication
+cliDescription: Distributed SQL with PostgreSQL wire protocol
 usageGuidance: Use when working with CockroachDB -- PostgreSQL-compatible wire protocol, distributed transactions with serializable isolation, automatic sharding, multi-region locality, and transaction retry logic.

@@ -380,7 +380,7 @@ export { cacheAside };
 
 ```typescript
 // Works in Vercel Edge Runtime (no TCP, pure HTTP)
-// Route segment config varies by framework -- this example uses Next.js App Router
+// Works in any edge/serverless runtime -- export runtime config per your framework
 import { Redis } from "@upstash/redis";
 
 export const runtime = "edge";

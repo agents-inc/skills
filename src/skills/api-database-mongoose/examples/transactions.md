@@ -113,7 +113,7 @@ await session.withTransaction(async () => {
 
 ---
 
-## Pattern 2: transactionAsyncLocalStorage (Mongoose 8.4+)
+## Pattern 2: transactionAsyncLocalStorage (Mongoose 7.8+)
 
 ### Good Example -- Automatic Session Propagation
 
@@ -148,7 +148,7 @@ export { createOrderWithTransaction };
 
 **Why good:** Eliminates manual `{ session }` passing (the biggest source of transaction bugs), cleaner code, no risk of forgetting session, automatic rollback on error
 
-**When to use:** Mongoose 8.4+ projects. Especially valuable when operations span multiple functions/services where passing session through all parameters is cumbersome.
+**When to use:** Mongoose 7.8+ projects. Especially valuable when operations span multiple functions/services where passing session through all parameters is cumbersome.
 
 ### Good Example -- Connection.transaction() with Automatic State Reset
 

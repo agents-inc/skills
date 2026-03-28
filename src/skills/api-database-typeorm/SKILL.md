@@ -19,7 +19,7 @@ description: Decorator-based ORM for TypeScript with Active Record and Data Mapp
 
 **(You MUST use `insert()`/`update()` instead of `save()` when the operation type is known - `save()` always runs an extra SELECT query)**
 
-**(You MUST use the provided `transactionalEntityManager` or `queryRunner.manager` inside transactions - NEVER use the global entity manager or repository)**
+**(You MUST use the provided transaction `manager` parameter or `queryRunner.manager` inside transactions - NEVER use the global entity manager or repository)**
 
 **(You MUST define relations with explicit `@JoinColumn()` on the owning side of `@OneToOne` and optionally `@ManyToOne`, and `@JoinTable()` on one side of `@ManyToMany`)**
 
@@ -452,7 +452,7 @@ await AppDataSource.transaction(async (manager) => {
 
 **(You MUST use `insert()`/`update()` instead of `save()` when the operation type is known - `save()` always runs an extra SELECT query)**
 
-**(You MUST use the provided `transactionalEntityManager` or `queryRunner.manager` inside transactions - NEVER use the global entity manager or repository)**
+**(You MUST use the provided transaction `manager` parameter or `queryRunner.manager` inside transactions - NEVER use the global entity manager or repository)**
 
 **(You MUST define relations with explicit `@JoinColumn()` on the owning side of `@OneToOne` and optionally `@ManyToOne`, and `@JoinTable()` on one side of `@ManyToMany`)**
 

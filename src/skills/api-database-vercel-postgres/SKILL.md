@@ -76,10 +76,9 @@ description: Serverless PostgreSQL on Vercel with edge-compatible SDK
 
 **Deprecation context:**
 
-Vercel Postgres was sunset in December 2024. All databases were migrated to Neon. The `@vercel/postgres` npm package (v0.10.0) is no longer maintained. Two migration paths exist:
+Vercel Postgres was sunset in December 2024. All databases were migrated to Neon. The `@vercel/postgres` npm package (v0.10.0) is no longer maintained. Migration path:
 
-- **Drop-in replacement:** `@neondatabase/vercel-postgres-compat` (same API, maintained by Neon)
-- **Full migration:** `@neondatabase/serverless` (actively developed, richer API with HTTP transactions and composable fragments)
+- **Full migration (recommended):** `@neondatabase/serverless` (actively developed, richer API with HTTP transactions and composable fragments)
 
 </philosophy>
 
@@ -91,189 +90,66 @@ Vercel Postgres was sunset in December 2024. All databases were migrated to Neon
 
 ### Pattern 1: One-Shot Queries with `sql`
 
-The `sql` export is a tagged template that auto-connects from `POSTGRES_URL`. It handles pooling internally.
+The `sql` export is a tagged template that auto-connects from `POSTGRES_URL`. Values are auto-parameterized (preventing SQL injection). See [examples/core.md](examples/core.md) for full examples with good/bad comparisons.
 
 ```typescript
 import { sql } from "@vercel/postgres";
 
-// Tagged template -- values are auto-parameterized (safe from injection)
 const ACTIVE_STATUS = "active";
 const { rows } =
   await sql`SELECT id, name FROM users WHERE status = ${ACTIVE_STATUS}`;
 ```
 
-**Why good:** Zero-config (reads POSTGRES_URL automatically), auto-parameterized preventing SQL injection, connection pooling handled internally, named constant for status
-
-```typescript
-// BAD: String interpolation instead of tagged template
-const status = "active";
-const { rows } = await sql.query(
-  `SELECT * FROM users WHERE status = '${status}'`,
-);
-```
-
-**Why bad:** String interpolation bypasses parameterization -- SQL injection vulnerability, uses `.query()` with string instead of tagged template
-
 ---
 
 ### Pattern 2: Multi-Query Sessions with `sql.connect()`
 
-When you need multiple queries on the same connection (transactions, sequential operations), obtain a client.
+When you need multiple queries on the same connection (transactions, sequential operations), obtain a client. Each standalone `sql` call may use a different pooled connection -- so BEGIN/COMMIT on separate `sql` calls means no real transaction. See [examples/core.md](examples/core.md) for transaction patterns.
 
 ```typescript
-import { sql } from "@vercel/postgres";
-
-async function transferFunds(fromId: string, toId: string, amount: number) {
-  const client = await sql.connect();
-
-  try {
-    await client.sql`BEGIN`;
-    await client.sql`UPDATE accounts SET balance = balance - ${amount} WHERE id = ${fromId}`;
-    await client.sql`UPDATE accounts SET balance = balance + ${amount} WHERE id = ${toId}`;
-    await client.sql`COMMIT`;
-  } catch (error) {
-    await client.sql`ROLLBACK`;
-    throw error;
-  } finally {
-    client.release();
-  }
+const client = await sql.connect();
+try {
+  await client.sql`BEGIN`;
+  // ... queries on same client ...
+  await client.sql`COMMIT`;
+} catch (error) {
+  await client.sql`ROLLBACK`;
+  throw error;
+} finally {
+  client.release();
 }
 ```
-
-**Why good:** Client obtained from pool for multi-query, explicit BEGIN/COMMIT/ROLLBACK for transaction, `client.release()` in finally block prevents connection leaks, uses tagged template on client
-
-```typescript
-// BAD: Multiple sql calls without a shared client
-import { sql } from "@vercel/postgres";
-
-await sql`BEGIN`; // Gets connection A
-await sql`UPDATE accounts SET balance = balance - ${amount} WHERE id = ${fromId}`; // Gets connection B!
-await sql`COMMIT`; // Gets connection C -- BEGIN was on A, this COMMIT does nothing useful
-```
-
-**Why bad:** Each `sql` call may use a different connection from the pool -- BEGIN/COMMIT on different connections means the transaction is not atomic
 
 ---
 
-### Pattern 3: Custom Pool with `createPool()`
+### Pattern 3: Custom Pool and Client
 
-Use `createPool()` when you need custom configuration or a non-default connection string.
+`createPool()` for custom connection strings (secondary databases). `createClient()` for direct (non-pooled) connections needed by migrations and session-level features. See [examples/core.md](examples/core.md) for full examples.
 
 ```typescript
 import { createPool } from "@vercel/postgres";
-
-// Custom pool with explicit connection string
 const pool = createPool({
   connectionString: process.env.SECONDARY_POSTGRES_URL,
 });
-
 const { rows } =
   await pool.sql`SELECT id, title FROM posts WHERE published = true`;
 ```
-
-**Why good:** Useful for connecting to a secondary database, pool provides same `sql` tagged template interface, explicit connection string when POSTGRES_URL isn't appropriate
-
-#### Custom Client with `createClient()`
-
-```typescript
-import { createClient } from "@vercel/postgres";
-
-// Direct (non-pooled) connection -- reads POSTGRES_URL_NON_POOLING by default
-const client = createClient();
-await client.connect();
-
-try {
-  const { rows } = await client.sql`SELECT id, name FROM users LIMIT 10`;
-  return rows;
-} finally {
-  await client.end();
-}
-```
-
-**When to use:** Migrations, administrative operations, or scenarios requiring session-level features (SET, LISTEN/NOTIFY) that PgBouncer's transaction mode does not support.
 
 ---
 
 ### Pattern 4: Edge Runtime Considerations
 
-On edge runtimes, IO connections cannot be reused between requests. The SDK automatically sets `maxUses: 1`.
-
-```typescript
-// Edge function -- single query is fine with sql
-import { sql } from "@vercel/postgres";
-
-export const runtime = "edge";
-
-export async function GET() {
-  const { rows } =
-    await sql`SELECT id, title FROM posts ORDER BY created_at DESC LIMIT 10`;
-  return Response.json(rows);
-}
-```
-
-**Why good:** Single `sql` call works naturally on edge, no connection management needed
-
-```typescript
-// Edge function -- multiple queries need a shared client
-import { sql } from "@vercel/postgres";
-
-export const runtime = "edge";
-
-export async function GET() {
-  // sql.connect() gets a client from the pool -- reuse it for multiple queries
-  const client = await sql.connect();
-
-  try {
-    const { rows: posts } =
-      await client.sql`SELECT id, title FROM posts LIMIT 10`;
-    const { rows: counts } =
-      await client.sql`SELECT count(*)::int AS total FROM posts`;
-    return Response.json({ posts, total: counts[0].total });
-  } finally {
-    client.release();
-  }
-}
-```
-
-**Why good:** On edge with `maxUses: 1`, each `pool.connect()` opens a new connection -- reusing the client avoids opening multiple connections per request
+On edge runtimes, the SDK sets `maxUses: 1` -- connections cannot be reused between requests. Single `sql` calls work fine, but for multiple queries use `sql.connect()` to share one connection. See [examples/core.md](examples/core.md) for edge-specific patterns.
 
 ---
 
 ### Pattern 5: Migration to `@neondatabase/serverless`
 
-Since `@vercel/postgres` is deprecated, here are the migration paths.
+Since `@vercel/postgres` is deprecated, migrate to `@neondatabase/serverless`. See [examples/core.md](examples/core.md) for full migration examples.
 
-#### Drop-In Replacement (Minimal Changes)
+**Key differences to be aware of:**
 
-```typescript
-// Before
-import { sql } from "@vercel/postgres";
-
-// After -- same API, maintained by Neon
-import { sql } from "@neondatabase/vercel-postgres-compat";
-
-// Code stays the same
-const { rows } = await sql`SELECT id, name FROM users`;
-```
-
-**When to use:** Existing projects that need a quick fix without rewriting query code.
-
-#### Full Migration (Recommended for New Code)
-
-```typescript
-// Before (@vercel/postgres)
-import { sql } from "@vercel/postgres";
-const { rows } = await sql`SELECT id, name FROM users WHERE status = ${status}`;
-
-// After (@neondatabase/serverless)
-import { neon } from "@neondatabase/serverless";
-const sql = neon(process.env.DATABASE_URL!);
-const rows = await sql`SELECT id, name FROM users WHERE status = ${status}`;
-```
-
-**Key differences:**
-
-- `@vercel/postgres` returns `{ rows, rowCount, ... }` -- `@neondatabase/serverless` returns rows directly (unless `fullResults: true`)
+- `@vercel/postgres` returns `{ rows, rowCount, ... }` -- `@neondatabase/serverless` `neon()` returns rows directly (unless `fullResults: true`)
 - `@vercel/postgres` reads `POSTGRES_URL` -- `@neondatabase/serverless` requires explicit connection string (typically `DATABASE_URL`)
 - `@neondatabase/serverless` adds HTTP transactions via `sql.transaction()` and composable fragments
 

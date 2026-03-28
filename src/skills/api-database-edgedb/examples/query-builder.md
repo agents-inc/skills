@@ -14,14 +14,19 @@
 
 ```typescript
 import { createClient } from "gel";
-import e from "./dbschema/edgeql-js";
+import e, { type $infer } from "./dbschema/edgeql-js";
 
 const client = createClient();
+
+// Extract inferred result types from query expressions
+const usersQuery = e.select(e.User, () => ({ id: true, name: true }));
+type UsersResult = $infer<typeof usersQuery>;
+// => Array<{ id: string; name: string }>
 
 export { client, e };
 ```
 
-**Why good:** Query builder imported from generated directory, `e` is the conventional name for the query builder module, named exports
+**Why good:** Query builder imported from generated directory, `e` is the conventional name, `$infer` extracts compile-time result types from any query expression, named exports
 
 ### Generating the Query Builder
 
@@ -100,8 +105,8 @@ export { publishedPostsQuery };
 ```typescript
 import e from "./dbschema/edgeql-js";
 
-// Filtering on .id (exclusive) makes the query return a singleton
-const userByIdQuery = e.select(e.User, (user) => ({
+// Object shorthand -- preferred when filtering on exclusive properties
+const userByIdQuery = e.select(e.User, () => ({
   id: true,
   name: true,
   email: true,
@@ -110,14 +115,21 @@ const userByIdQuery = e.select(e.User, (user) => ({
     title: true,
     status: true,
   },
-  filter_single: e.op(user.id, "=", e.uuid("a1b2c3d4-...")),
+  filter_single: { id: "a1b2c3d4-..." },
+}));
+
+// Expression form -- use when you need e.op for complex filters
+const userByEmailQuery = e.select(e.User, (user) => ({
+  id: true,
+  name: true,
+  filter_single: e.op(user.email, "=", "alice@example.com"),
 }));
 
 // Result type: { id: string; name: string; ... } | null
 // (not an array -- filter_single changes cardinality)
 ```
 
-**Why good:** `filter_single` tells the query builder this returns zero or one result (not an array), filtering on `id` (exclusive constraint) is semantically correct for singleton
+**Why good:** Object shorthand `{ id: "..." }` is concise for exclusive properties, `e.op` form provides full expression flexibility, `filter_single` tells the query builder this returns zero or one result (not an array)
 
 ### Bad Example -- Missing Filter on Delete-All
 

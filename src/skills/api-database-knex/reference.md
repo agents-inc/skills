@@ -61,16 +61,16 @@
 
 ### MUTATION Methods
 
-| Method                          | Description        | Example                                                  |
-| ------------------------------- | ------------------ | -------------------------------------------------------- |
-| `.insert(data)`                 | Insert row(s)      | `db("users").insert({ name: "Alice" })`                  |
-| `.insert(data).returning(cols)` | Insert + return    | `db("users").insert({...}).returning(["id"])`            |
-| `.update(data)`                 | Update rows        | `db("users").where("id", 1).update({ name: "Bob" })`     |
-| `.increment(col, amount?)`      | Increment          | `db("users").where("id", 1).increment("login_count")`    |
-| `.decrement(col, amount?)`      | Decrement          | `db("inventory").where("id", 1).decrement("stock", 5)`   |
-| `.del()` / `.delete()`          | Delete rows        | `db("users").where("id", 1).del()`                       |
-| `.onConflict(col).merge()`      | Upsert (PG/SQLite) | `db("users").insert({...}).onConflict("email").merge()`  |
-| `.onConflict(col).ignore()`     | Insert or skip     | `db("users").insert({...}).onConflict("email").ignore()` |
+| Method                          | Description              | Example                                                  |
+| ------------------------------- | ------------------------ | -------------------------------------------------------- |
+| `.insert(data)`                 | Insert row(s)            | `db("users").insert({ name: "Alice" })`                  |
+| `.insert(data).returning(cols)` | Insert + return          | `db("users").insert({...}).returning(["id"])`            |
+| `.update(data)`                 | Update rows              | `db("users").where("id", 1).update({ name: "Bob" })`     |
+| `.increment(col, amount?)`      | Increment                | `db("users").where("id", 1).increment("login_count")`    |
+| `.decrement(col, amount?)`      | Decrement                | `db("inventory").where("id", 1).decrement("stock", 5)`   |
+| `.del()` / `.delete()`          | Delete rows              | `db("users").where("id", 1).del()`                       |
+| `.onConflict(col).merge()`      | Upsert (PG/MySQL/SQLite) | `db("users").insert({...}).onConflict("email").merge()`  |
+| `.onConflict(col).ignore()`     | Insert or skip           | `db("users").insert({...}).onConflict("email").ignore()` |
 
 ### UTILITY Methods
 
@@ -280,13 +280,13 @@ process.on("SIGTERM", async () => {
 
 ## .returning() Behavior by Database
 
-| Database     | `.returning()`          | Insert default return     | Notes                         |
-| ------------ | ----------------------- | ------------------------- | ----------------------------- |
-| PostgreSQL   | Returns `[{ id, ... }]` | `[{ id: 0 }]` (row count) | Full support                  |
-| MSSQL        | Returns `[{ id, ... }]` | `[{ id: 0 }]`             | Full support                  |
-| SQLite 3.35+ | Returns `[{ id, ... }]` | `[rowid]`                 | Requires SQLite 3.35+         |
-| MySQL        | **Silently ignored**    | `[insertId]`              | Use `result[0]` for insert ID |
-| Oracle       | Returns `[{ id, ... }]` | `[sequence]`              | Requires explicit sequence    |
+| Database     | `.returning()`          | Insert default return | Notes                         |
+| ------------ | ----------------------- | --------------------- | ----------------------------- |
+| PostgreSQL   | Returns `[{ id, ... }]` | `[]` (empty array)    | Full support                  |
+| MSSQL        | Returns `[{ id, ... }]` | `[]` (empty array)    | Full support                  |
+| SQLite 3.35+ | Returns `[{ id, ... }]` | `[rowid]`             | Requires SQLite 3.35+         |
+| MySQL        | **Silently ignored**    | `[insertId]`          | Use `result[0]` for insert ID |
+| Oracle       | Returns `[{ id, ... }]` | `[sequence]`          | Requires explicit sequence    |
 
 ---
 

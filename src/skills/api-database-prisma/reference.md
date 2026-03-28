@@ -107,43 +107,13 @@ model Post {
 
 ### Avoid N+1 Queries
 
-```typescript
-// WRONG: N+1 queries
-const users = await prisma.user.findMany();
-const usersWithPosts = await Promise.all(
-  users.map(async (user) => ({
-    ...user,
-    posts: await prisma.post.findMany({ where: { authorId: user.id } }),
-  })),
-);
+Never loop queries per record. Use `include` or `select` to fetch relations in a single query.
 
-// CORRECT: Single query with include
-const usersWithPosts = await prisma.user.findMany({
-  include: { posts: true },
-});
-```
+> See [examples/relations.md](examples/relations.md) for N+1 patterns, include vs select, and relation filtering.
 
 ### Use Select for Large Relations
 
-```typescript
-// WRONG: Fetching all fields when only need some
-const user = await prisma.user.findUnique({
-  where: { id: userId },
-  include: { posts: true }, // Returns all post fields
-});
-
-// CORRECT: Select only needed fields
-const user = await prisma.user.findUnique({
-  where: { id: userId },
-  select: {
-    id: true,
-    name: true,
-    posts: {
-      select: { id: true, title: true },
-    },
-  },
-});
-```
+When you only need specific fields, use `select` instead of `include` to reduce payload size and memory usage.
 
 ### Batch Operations
 
@@ -162,19 +132,9 @@ await prisma.item.createMany({
 
 ### Connection Pooling
 
-Configure connection pool for your workload:
+Configure pool via `DATABASE_URL` query parameters: `?connection_limit=5&pool_timeout=20`. For serverless, use a connection pooler (PgBouncer, Prisma Accelerate).
 
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-// In DATABASE_URL, add pool parameters:
-// ?connection_limit=5&pool_timeout=20
-```
-
-For serverless, use a connection pooler like PgBouncer or Prisma Accelerate.
+> See [examples/core.md](examples/core.md) for singleton and serverless connection patterns.
 
 </performance>
 

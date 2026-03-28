@@ -162,9 +162,9 @@ See [examples/advanced.md](examples/advanced.md) for full SSL/TLS code examples 
 | Self-signed / mTLS             | `{ ca, key, cert, rejectUnauthorized: true }` | Provide cert files via env vars |
 | Development only               | `{ rejectUnauthorized: false }`               | Never in production             |
 
-**Gotcha:** If you set `ssl` in the config AND include `sslmode=require` in the connection string, the connection string parameters overwrite your config object. Use one or the other, not both.
+**Gotcha:** If the connection string contains any SSL parameters (`sslmode`, `sslcert`, `sslkey`, `sslrootcert`), the entire `ssl` config object is replaced and any additional options are lost. Use one or the other, not both.
 
-**Gotcha:** `ssl: true` is equivalent to `ssl: { rejectUnauthorized: true }` in pg v8.x. Always use the object form to be explicit.
+**Gotcha:** `ssl: true` relies on Node.js TLS defaults (which reject unauthorized certs), but does not explicitly set `rejectUnauthorized`. Always use the object form (`ssl: { rejectUnauthorized: true }`) to be explicit about intent.
 
 ---
 

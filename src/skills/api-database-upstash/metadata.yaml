@@ -4,5 +4,5 @@ slug: upstash
 domain: api
 author: "@vince"
 displayName: Upstash
-cliDescription: Serverless Redis with REST API for edge and serverless functions
+cliDescription: Serverless Redis via REST for edge and serverless runtimes
 usageGuidance: Use when deploying Redis on Upstash -- REST-based Redis for edge/serverless compatibility, automatic JSON serialization, pipeline support, rate limiting with @upstash/ratelimit, and global replication.

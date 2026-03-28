@@ -73,7 +73,7 @@ CREATE INVERTED INDEX idx_users_metadata ON users (metadata);
 
 **Why good:** Index creation runs in the background without blocking reads or writes. Partial indexes reduce storage and improve write performance.
 
-**Gotcha:** CockroachDB uses `INVERTED INDEX` instead of PostgreSQL's `GIN INDEX` for JSONB/array indexes. The syntax differs but the functionality is equivalent.
+**Gotcha:** CockroachDB supports both `CREATE INVERTED INDEX` (CockroachDB-specific) and `CREATE INDEX ... USING GIN` (PostgreSQL-compatible) for JSONB/array indexes. Both are equivalent.
 
 ---
 

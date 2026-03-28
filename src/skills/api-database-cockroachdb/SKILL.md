@@ -250,7 +250,7 @@ const result = await pool.query<ProductRow>(
 
 **Why good:** `follower_read_timestamp()` automatically picks a safe staleness window, query can be served by any replica (nearest to the client), no leaseholder round-trip
 
-**When to use:** Read-heavy dashboards, product catalogs, search results -- anywhere slightly stale data (typically 4.8 seconds) is acceptable.
+**When to use:** Read-heavy dashboards, product catalogs, search results -- anywhere slightly stale data (at least 4.2 seconds) is acceptable.
 
 **When not to use:** Reads that must reflect the latest write (e.g., reading immediately after an INSERT to confirm it succeeded).
 
@@ -352,7 +352,7 @@ How to run DDL?
 +-- Single column add/drop? -> Run as individual statement (no transaction)
 +-- Multiple related changes? -> Run sequentially, one statement at a time
 +-- Need to roll back DDL? -> You cannot -- DDL is not transactional. Plan carefully.
-+-- Index creation on large table? -> Run with CONCURRENTLY (same as PostgreSQL)
++-- Index creation on large table? -> All indexes are created online by default (do NOT use CONCURRENTLY -- it errors)
 ```
 
 </decision_framework>
@@ -390,7 +390,7 @@ How to run DDL?
 - `40001` errors can occur on `COMMIT`, not just on individual statements. Your retry loop must catch errors from `COMMIT` too.
 - CockroachDB's `SAVEPOINT cockroach_restart` is a special savepoint name that enables the advanced retry protocol. Regular savepoints (`SAVEPOINT my_savepoint`) work normally for nested rollback.
 - Temporary tables exist but are experimental (`SET experimental_enable_temp_tables = 'on'`). Creating many temp objects degrades DDL performance.
-- `READ COMMITTED` isolation is available but is not the default. Transactions default to `SERIALIZABLE`. Set per-transaction with `BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED`.
+- `READ COMMITTED` isolation is GA and enabled by default (`sql.txn.read_committed_isolation.enabled = true`), but transactions still default to `SERIALIZABLE`. Set per-transaction with `BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED`, per-session with `SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED`, or per-database with `ALTER DATABASE db SET default_transaction_isolation = 'read committed'`.
 - CockroachDB's `pg_catalog` and `information_schema` are populated but may have differences from PostgreSQL -- some system tables have extra columns, some are missing columns.
 - `IMPORT INTO` takes the target table offline during the import. The table cannot serve reads or writes until the import completes.
 - Changefeed payload is limited. Complex JOINs or aggregations cannot be expressed directly in changefeed queries -- one table per changefeed.

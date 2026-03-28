@@ -124,122 +124,46 @@ Mongoose provides schema-based modeling for MongoDB. Its value is the **applicat
 
 ### Pattern 1: Connection Setup
 
-Establish a single connection at application startup. Use environment variables for credentials. Never hardcode connection strings.
+Establish a single connection at application startup. Use environment variables for credentials. Never hardcode connection strings. Use `127.0.0.1` instead of `localhost` (Node.js 18+ IPv6 preference causes timeouts).
 
 ```typescript
-import mongoose from "mongoose";
-
-const POOL_SIZE_MAX = 10;
-const POOL_SIZE_MIN = 2;
-const SERVER_SELECTION_TIMEOUT_MS = 5000;
-const SOCKET_TIMEOUT_MS = 45000;
-
-async function connectDatabase(): Promise<typeof mongoose> {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error("MONGODB_URI environment variable is required");
-  }
-
-  return mongoose.connect(uri, {
-    maxPoolSize: POOL_SIZE_MAX,
-    minPoolSize: POOL_SIZE_MIN,
-    serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
-    socketTimeoutMS: SOCKET_TIMEOUT_MS,
-    retryWrites: true,
-    retryReads: true,
-  });
-}
-
-export { connectDatabase };
+// Named constants for pool/timeout, env var for URI, typed return
+const connection = await mongoose.connect(process.env.MONGODB_URI!, {
+  maxPoolSize: POOL_SIZE_MAX,
+  serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+});
 ```
 
-**Why good:** Named constants for all numeric values, environment variable for URI, typed return, error on missing URI
-
-```typescript
-// BAD: Hardcoded URI, localhost, no options
-mongoose.connect("mongodb://localhost:27017/mydb");
-```
-
-**Why bad:** Hardcoded connection string leaks credentials, `localhost` fails on Node.js 18+ (IPv6 preference), no pool or timeout configuration
+See [examples/core.md](examples/core.md) Pattern 1 for production connection setup, event handling, graceful shutdown, and multi-database connections.
 
 ---
 
 ### Pattern 2: Schema Definition with TypeScript Inference
 
-Let Mongoose infer types from the schema definition. Only use explicit interfaces when adding methods, statics, or virtuals.
+Let Mongoose infer types from the schema definition. Only use explicit interfaces when adding methods, statics, or virtuals. Use `as const` on enum arrays to preserve literal types.
 
 ```typescript
-import { Schema, model } from "mongoose";
-
 const userSchema = new Schema(
   {
-    name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    role: {
-      type: String,
-      enum: ["admin", "user", "moderator"] as const,
-      default: "user",
-    },
-    age: { type: Number, min: 0, max: 150 },
-    isActive: { type: Boolean, default: true },
-    tags: [{ type: String }],
+    role: { type: String, enum: ["admin", "user"] as const, default: "user" },
   },
   { timestamps: true },
 );
-
-// TypeScript automatically infers the document type from schema
-const User = model("User", userSchema);
-export { User, userSchema };
+const User = model("User", userSchema); // TypeScript infers types from schema
 ```
 
-**Why good:** TypeScript infers types automatically, `as const` preserves enum literal types, timestamps via schema option, named exports
-
-```typescript
-// BAD: Duplicating interface and schema definition
-interface IUser {
-  name: string;
-  email: string;
-}
-const userSchema = new Schema({ name: String, email: String });
-// Types drift apart -- schema allows undefined, interface says required
-```
-
-**Why bad:** Manual interface duplicates schema, they drift out of sync, no validation constraints, no error messages
+See [examples/core.md](examples/core.md) Patterns 2-3 for complete schemas with validation, subdocuments, `InferSchemaType`, and full generic typing with methods/statics/virtuals.
 
 ---
 
 ### Pattern 3: Explicit Typing (Methods, Statics, Virtuals)
 
-When a model has instance methods, statics, or virtuals, use the full generic parameter set.
+When a model has instance methods, statics, or virtuals, use the full generic parameter set. Define separate interfaces for `IDoc`, `IDocMethods`, `IDocVirtuals`, and `IDocStatics`. Export `HydratedDocument<IDoc, IDocMethods & IDocVirtuals>` for consumers.
 
 ```typescript
-import {
-  Schema,
-  model,
-  type HydratedDocument,
-  type Model,
-  type Types,
-} from "mongoose";
-
-interface IUser {
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  role: "admin" | "user" | "moderator";
-}
-
-interface IUserMethods {
-  comparePassword(candidate: string): Promise<boolean>;
-}
-
-interface IUserVirtuals {
-  fullName: string;
-}
-
-type UserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
+type UserModel = Model<IUser, {}, IUserMethods, IUserVirtuals> & IUserStatics;
 type UserDocument = HydratedDocument<IUser, IUserMethods & IUserVirtuals>;
-
 const userSchema = new Schema<
   IUser,
   UserModel,
@@ -252,131 +176,39 @@ const userSchema = new Schema<
   },
   { toJSON: { virtuals: true } },
 );
-
-userSchema.methods.comparePassword = async function (candidate: string) {
-  // implementation
-  return false;
-};
-
-userSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
-
-// Middleware BEFORE model()
-userSchema.pre("save", async function () {
-  if (this.isModified("passwordHash")) {
-    // hash password
-  }
-});
-
-// model() AFTER all middleware and methods
-const User = model<IUser, UserModel>("User", userSchema);
-
-export { User, userSchema };
-export type { IUser, IUserMethods, UserDocument };
 ```
 
-**Why good:** Separate interfaces for document, methods, virtuals; correct generic parameter order; `HydratedDocument` exported for consumers; middleware before `model()`
-
-See [examples/core.md](examples/core.md) for the complete implementation with all generic parameters.
+See [examples/core.md](examples/core.md) Pattern 3 for the complete implementation with all interfaces, generic parameters, methods, virtuals, statics, and middleware ordering.
 
 ---
 
 ### Pattern 4: CRUD Operations
 
+Key rules: use `.lean()` for read-only queries (3x memory savings), `save()` when middleware must fire, `{ new: true, runValidators: true }` on direct updates. Never call `.save()` on a lean result (plain object, no methods).
+
 ```typescript
-// Create -- triggers save middleware
-const user = await User.create({ name: "Alice", email: "alice@example.com" });
-
-// Read with lean (read-only response)
-const PAGE_SIZE = 20;
-const users = await User.find({ isActive: true })
-  .select("name email role")
-  .sort({ createdAt: -1 })
-  .limit(PAGE_SIZE)
-  .lean();
-
-// Update with save() -- triggers pre('save') middleware
-const doc = await User.findById(id);
-if (!doc) throw new Error(`User not found: ${id}`);
-doc.name = "Updated";
-await doc.save();
-
-// Direct update -- does NOT trigger save middleware
+const users = await User.find({ isActive: true }).select("name email").lean();
 await User.findByIdAndUpdate(
   id,
-  { $set: { name: "Updated" } },
-  {
-    new: true, // return updated document
-    runValidators: true, // enforce schema validation
-  },
+  { $set: { name: "New" } },
+  { new: true, runValidators: true },
 );
 ```
 
-**Why good:** `.lean()` for read-only, `save()` when middleware matters, `{ new: true, runValidators: true }` on direct updates
-
-```typescript
-// BAD: lean() then trying to save
-const user = await User.findById(id).lean();
-user.name = "Updated";
-await user.save(); // TypeError: user.save is not a function
-```
-
-**Why bad:** `.lean()` returns plain objects without Mongoose methods -- `.save()` does not exist
+See [examples/core.md](examples/core.md) Pattern 5 for create, read, update, delete, bulk operations, and common mistakes.
 
 ---
 
 ### Pattern 5: Schema Validation
 
+Push validation into schema definitions: use `required` with messages, `min`/`max`/`minlength`/`maxlength` with messages, `match` for regex, `enum` with `as const` and `{VALUE}` message template, and custom `validate` functions. Use named constants for all numeric limits.
+
 ```typescript
-const MIN_NAME_LENGTH = 2;
-const MAX_NAME_LENGTH = 100;
-const SKU_PATTERN = /^[A-Z]{2}-\d{6}$/;
-
-const productSchema = new Schema({
-  name: {
-    type: String,
-    required: [true, "Product name is required"],
-    minlength: [
-      MIN_NAME_LENGTH,
-      `Name must be at least ${MIN_NAME_LENGTH} characters`,
-    ],
-    maxlength: [
-      MAX_NAME_LENGTH,
-      `Name must be at most ${MAX_NAME_LENGTH} characters`,
-    ],
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: [0, "Price cannot be negative"],
-    validate: {
-      validator: (v: number) => Number.isFinite(v),
-      message: "Price must be a finite number",
-    },
-  },
-  sku: {
-    type: String,
-    required: true,
-    unique: true,
-    match: [SKU_PATTERN, "SKU must match format XX-000000"],
-  },
-  status: {
-    type: String,
-    enum: {
-      values: ["draft", "active", "archived"] as const,
-      message: "{VALUE} is not a valid status",
-    },
-    default: "draft",
-  },
-});
-
-export { productSchema };
+name: { type: String, required: [true, "Name is required"], minlength: [MIN_LEN, "Too short"] },
+status: { type: String, enum: { values: ["draft", "active"] as const, message: "{VALUE} invalid" } },
 ```
 
-**Why good:** Named constants for validation limits, custom error messages on every validator, regex validation with descriptive message, enum with `as const` for TypeScript inference
-
-See [examples/core.md](examples/core.md) for subdocument schemas and array validation.
+See [examples/core.md](examples/core.md) Pattern 2 for complete validation schemas, subdocuments, and array validation.
 
 </patterns>
 

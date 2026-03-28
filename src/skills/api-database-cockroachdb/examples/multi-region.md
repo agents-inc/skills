@@ -147,7 +147,7 @@ async function getProducts(
 export { getProducts };
 ```
 
-**Why good:** `follower_read_timestamp()` automatically computes a safe staleness window (typically ~4.8 seconds). The query is served by any replica, avoiding leaseholder round-trip.
+**Why good:** `follower_read_timestamp()` automatically computes a safe staleness window (at least 4.2 seconds in the past). The query is served by any replica, avoiding leaseholder round-trip.
 
 ---
 
