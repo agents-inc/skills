@@ -52,7 +52,7 @@ description: PostHog analytics and feature flags setup
 
 - [examples/core.md](examples/core.md) - Provider setup, layout integration, user identification, env vars
 - [examples/server.md](examples/server.md) - Server client singleton, API routes, serverless patterns
-- [reference.md](reference.md) - Decision frameworks, red flags
+- [reference.md](reference.md) - Decision frameworks
 
 ---
 
@@ -140,17 +140,24 @@ See [examples/server.md](examples/server.md) for singleton setup, API route usag
 
 - Initializing posthog-js on the server (requires browser APIs - will crash)
 - No `flush()` or `captureImmediate()` after server-side capture in serverless environments (events silently lost)
+- Client-side env vars not exposed to the browser bundle (check your framework's prefix convention)
 - Hardcoding API keys in source code instead of environment variables
 - Missing `posthog.reset()` on sign out (user identity bleeds to next session)
 - Not using `defaults` date option (manual pageview tracking required, misses recommended behaviors)
 - Not calling `posthog.identify()` after authentication (anonymous and authenticated sessions remain unlinked)
+- No `person_profiles: 'identified_only'` option (unnecessary anonymous profiles created, higher costs)
+- Not wrapping app with PostHogProvider when using hooks (hooks return null)
+- Forgetting to add environment variables to deployment platform (events fail silently)
+- Using different PostHog projects for dev/prod without realizing (separate data)
 
 **Gotchas & Edge Cases:**
 
+- `posthog-js` must be initialized after `window` is available (hence useEffect or a client-side initialization hook)
 - Server-side SDK does NOT auto-flush like the client - you must explicitly call `flush()`, `shutdown()`, or use `captureImmediate()`
 - `captureImmediate()` is simpler for serverless but sends one HTTP request per event (no batching)
 - Free tier resets monthly (1M events then stops capturing until next month)
 - `person_profiles: 'identified_only'` reduces costs but means no anonymous user profiles are created
+- When using auto-initialization hooks, config values remain fixed for the session - bootstrapping only works if flags are evaluated on the server before render
 
 </red_flags>
 

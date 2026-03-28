@@ -2,7 +2,7 @@
 
 > Code examples for Auth.js route protection - middleware patterns, Edge compatibility, per-page checks. See [SKILL.md](../SKILL.md) for core concepts.
 
-> **Next.js 16 note:** `middleware.ts` is renamed to `proxy.ts` in Next.js 16+. The Auth.js integration pattern remains the same -- just rename the file. Examples below use `middleware.ts` (Next.js 14/15) but apply to both.
+> **Next.js 16 note:** `middleware.ts` is renamed to `proxy.ts` and the export is renamed to `proxy` in Next.js 16+. In Next.js 16, `proxy.ts` runs on **Node.js runtime** (not Edge), so the split config pattern is no longer required. Examples below use `middleware.ts` (Next.js 14/15). For Next.js 16+, rename to `proxy.ts` and export as `proxy`.
 
 ---
 
@@ -11,8 +11,9 @@
 ### Good Example - Protect All Routes with Exceptions
 
 ```typescript
-// middleware.ts
+// middleware.ts (Next.js 14/15) or proxy.ts (Next.js 16+)
 export { auth as middleware } from "@/auth";
+// Next.js 16+: export { auth as proxy } from "@/auth";
 
 export const config = {
   matcher: [
@@ -52,7 +53,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 ### Good Example - Role-Based Redirect
 
 ```typescript
-// middleware.ts
+// middleware.ts (Next.js 14/15) or proxy.ts (Next.js 16+)
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
@@ -152,31 +153,34 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 ```
 
 ```typescript
-// middleware.ts - Uses Edge-compatible config
+// middleware.ts (Next.js 14/15) - Uses Edge-compatible config
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 
 export const { auth: middleware } = NextAuth(authConfig);
+// Next.js 16+: export const { auth: proxy } = NextAuth(authConfig);
+// Note: In Next.js 16, proxy.ts runs on Node.js, so split config is optional
 
 export const config = {
   matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
 };
 ```
 
-**Why good:** `auth.config.ts` has no database imports (Edge-safe), `auth.ts` adds adapter for full Node.js runtime, middleware uses the slim Edge config
+**Why good:** `auth.config.ts` has no database imports (Edge-safe), `auth.ts` adds adapter for full Node.js runtime, middleware uses the slim Edge config. In Next.js 16+, `proxy.ts` runs on Node.js so you can use the full `auth.ts` directly.
 
-### Bad Example - Database Adapter in Middleware
+### Bad Example - Database Adapter in Middleware (Next.js 14/15)
 
 ```typescript
-// BAD: Importing Prisma in middleware breaks Edge runtime
+// BAD: Importing Prisma in middleware breaks Edge runtime (Next.js 14/15)
 // middleware.ts
 import { auth } from "@/auth"; // auth.ts imports PrismaAdapter
 
 export { auth as middleware };
 // ERROR: PrismaClient cannot run on Edge runtime
+// Note: This is NOT an issue in Next.js 16+ proxy.ts (runs on Node.js)
 ```
 
-**Why bad:** Prisma/Drizzle can't run on Edge runtime, middleware crashes at deploy time, must split config
+**Why bad:** Prisma/Drizzle can't run on Edge runtime, middleware crashes at deploy time, must split config. In Next.js 16+, `proxy.ts` runs on Node.js so this limitation no longer applies.
 
 ---
 

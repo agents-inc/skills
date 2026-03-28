@@ -155,7 +155,7 @@ export function Verify2FA() {
       <button onClick={handleVerify} type="button">
         Verify
       </button>
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p>{error}</p>}
     </div>
   );
 }

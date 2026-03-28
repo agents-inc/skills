@@ -441,4 +441,59 @@ export default factories.createCoreService(CONTENT_TYPE_UID, ({ strapi }) => ({
 
 ---
 
+## Pattern 8: Document Service Middleware
+
+Document Service middleware is the recommended v5 approach for intercepting content operations. It provides more predictable behavior than database lifecycle hooks, especially with draft/publish workflows.
+
+### Good Example -- Audit Logging Middleware
+
+```typescript
+// src/index.ts
+export default {
+  register({ strapi }) {
+    strapi.documents.use(async (ctx, next) => {
+      const result = await next();
+
+      if (
+        ["create", "update", "delete", "publish", "unpublish"].includes(
+          ctx.action,
+        )
+      ) {
+        strapi.log.info(
+          `[audit] ${ctx.action} on ${ctx.uid} by user ${ctx.params?.data?.updatedBy || "system"}`,
+        );
+      }
+
+      return result;
+    });
+  },
+};
+```
+
+**Why good:** Registered in `register()` (not `bootstrap()`), intercepts all Document Service operations, logs after the operation completes (uses `await next()`), filters by action type to avoid noisy find/count logs
+
+### Good Example -- Default Populate Middleware
+
+```typescript
+// src/index.ts
+export default {
+  register({ strapi }) {
+    strapi.documents.use(async (ctx, next) => {
+      if (ctx.uid === "api::article.article" && ctx.action === "findMany") {
+        ctx.params = {
+          ...ctx.params,
+          populate: ctx.params?.populate ?? { author: true, categories: true },
+        };
+      }
+
+      return next();
+    });
+  },
+};
+```
+
+**Why good:** Modifies params before the operation (`next()` called after), only applies to a specific content type and action, preserves explicitly-set populate params via nullish coalescing
+
+---
+
 _For REST API and Document Service patterns, see [core.md](core.md). For authentication, see [auth.md](auth.md)._

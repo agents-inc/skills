@@ -45,6 +45,23 @@ async function searchUsers(userInput: string) {
 
 **Why bad:** `sql.unsafe()` inserts raw SQL without parameterization -- user input can inject arbitrary SQL. Only use `sql.unsafe()` for hardcoded, trusted identifiers.
 
+### Good Example -- Dynamic SQL with `sql.query()`
+
+```typescript
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(DATABASE_URL);
+
+// Use sql.query() when the SQL string is in a variable
+async function findByColumn(column: "email" | "username", value: string) {
+  // Column name from trusted allowlist, user value parameterized via $1
+  const q = `SELECT id, name FROM users WHERE ${column} = $1`;
+  return await sql.query(q, [value]);
+}
+```
+
+**Why good:** `sql.query()` accepts numbered placeholders (`$1`, `$2`) for safe parameterization when the query is a string variable rather than a template literal, column name from a typed allowlist (not user input)
+
 ---
 
 ## Pattern 2: Full Results with Metadata

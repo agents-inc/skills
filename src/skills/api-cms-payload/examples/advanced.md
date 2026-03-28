@@ -145,7 +145,11 @@ const Pages: CollectionConfig = {
     useAsTitle: "title",
   },
   versions: {
-    drafts: true,
+    drafts: {
+      autosave: true, // Auto-save drafts in the admin panel
+      schedulePublish: true, // Enable scheduled publishing
+      validate: false, // Skip validation for drafts (allow incomplete content)
+    },
     maxPerDoc: 10, // Keep last 10 versions per document
   },
   access: {
@@ -171,7 +175,7 @@ const Pages: CollectionConfig = {
 export { Pages };
 ```
 
-**Why good:** `maxPerDoc` prevents unbounded version growth, access control returns `Where` query to filter drafts from public users, `_status` field is auto-added by Payload when `drafts: true`
+**Why good:** `maxPerDoc` prevents unbounded version growth, `autosave` for real-time draft saving in admin, `schedulePublish` enables future publishing, `validate: false` allows saving incomplete drafts, access control returns `Where` query to filter drafts from public users, `_status` field is auto-added by Payload when drafts are enabled
 
 ### Publishing via Local API
 
@@ -581,7 +585,11 @@ const createAuditLog: CollectionAfterChangeHook = async ({
   doc,
   operation,
   req,
+  context,
 }) => {
+  // Use context to prevent infinite loops (audit log creation triggering itself)
+  if (context.skipAuditLog) return;
+
   // Use req.payload to access the Local API within hooks
   await req.payload.create({
     collection: "audit-logs",
@@ -599,7 +607,7 @@ const createAuditLog: CollectionAfterChangeHook = async ({
 export { createAuditLog };
 ```
 
-**Why good:** `req.payload` provides the Local API within hooks, `overrideAccess: true` (default) is correct here because this is a system-level operation, runs after the primary operation so it does not block saves
+**Why good:** `req.payload` provides the Local API within hooks, `context` check prevents infinite loops when audit log creation might trigger other hooks, `overrideAccess: true` (default) is correct here because this is a system-level operation, runs after the primary operation so it does not block saves
 
 ### Good Example — Validate with Cross-Collection Lookup
 
@@ -624,6 +632,7 @@ const validateUniqueSlug: CollectionBeforeValidateHook = async ({
         : {}),
     },
     limit: 1,
+    req, // Pass req for transaction threading
   });
 
   if (existing.docs.length > 0) {

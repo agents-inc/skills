@@ -18,8 +18,8 @@ import Discord from "next-auth/providers/discord";
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: [
     GitHub, // Auto-detects AUTH_GITHUB_ID, AUTH_GITHUB_SECRET
-    Google, // Auto-detects AUTH_GOOGLE_CLIENT_ID, AUTH_GOOGLE_CLIENT_SECRET
-    Discord, // Auto-detects AUTH_DISCORD_CLIENT_ID, AUTH_DISCORD_CLIENT_SECRET
+    Google, // Auto-detects AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET
+    Discord, // Auto-detects AUTH_DISCORD_ID, AUTH_DISCORD_SECRET
   ],
   pages: {
     signIn: "/login", // Custom sign-in page
@@ -40,10 +40,10 @@ export const { GET, POST } = handlers;
 AUTH_SECRET="npx auth secret"
 AUTH_GITHUB_ID="..."
 AUTH_GITHUB_SECRET="..."
-AUTH_GOOGLE_CLIENT_ID="..."
-AUTH_GOOGLE_CLIENT_SECRET="..."
-AUTH_DISCORD_CLIENT_ID="..."
-AUTH_DISCORD_CLIENT_SECRET="..."
+AUTH_GOOGLE_ID="..."
+AUTH_GOOGLE_SECRET="..."
+AUTH_DISCORD_ID="..."
+AUTH_DISCORD_SECRET="..."
 ```
 
 **Why good:** Providers auto-detect env vars (zero config), custom pages override defaults, single route file handles all auth endpoints

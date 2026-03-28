@@ -199,11 +199,13 @@ async function purchaseItem(
   } catch (error) {
     await tx.rollback();
     throw error;
+  } finally {
+    tx.close();
   }
 }
 ```
 
-**Why good:** Interactive transaction because UPDATE amounts depend on SELECT results, `tx.batch()` groups non-dependent writes within the transaction, explicit rollback on error, named constant for stock threshold
+**Why good:** Interactive transaction because UPDATE amounts depend on SELECT results, `tx.batch()` groups non-dependent writes within the transaction, explicit rollback on error, `tx.close()` in finally block releases the lock, named constant for stock threshold
 
 **When to use:** When subsequent queries depend on results of earlier queries. If all statements are predetermined, use `client.batch()` instead.
 

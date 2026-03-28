@@ -11,29 +11,35 @@
 ## Group Identification (Client-Side)
 
 ```typescript
-// ✅ Good Example - Identify organization group
+// Good Example - Identify organization group
 "use client";
 
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
 
-import { authClient } from "../lib/auth-client";
+// Use your auth solution's hook to get the active organization
+interface ActiveOrg {
+  id: string;
+  name: string;
+  plan?: string;
+  memberCount: number;
+  createdAt: string;
+}
 
-export function useOrganizationAnalytics() {
+export function useOrganizationAnalytics(activeOrg: ActiveOrg | null) {
   const posthog = usePostHog();
-  const activeOrg = authClient.useActiveOrganization();
 
   useEffect(() => {
-    if (!posthog || !activeOrg.data) return;
+    if (!posthog || !activeOrg) return;
 
     // Identify the organization group
-    posthog.group("company", activeOrg.data.id, {
-      name: activeOrg.data.name,
-      plan: activeOrg.data.plan ?? "free",
-      member_count: activeOrg.data.memberCount,
-      created_at: activeOrg.data.createdAt,
+    posthog.group("company", activeOrg.id, {
+      name: activeOrg.name,
+      plan: activeOrg.plan ?? "free",
+      member_count: activeOrg.memberCount,
+      created_at: activeOrg.createdAt,
     });
-  }, [posthog, activeOrg.data]);
+  }, [posthog, activeOrg]);
 }
 ```
 
@@ -44,7 +50,7 @@ export function useOrganizationAnalytics() {
 ## Server-Side Group Events
 
 ```typescript
-// ✅ Good Example - Group event on server
+// Good Example - Group event on server
 import { posthogServer } from "../lib/analytics/posthog-server";
 
 interface InviteEventData {

@@ -111,169 +111,73 @@ PlanetScale is a serverless MySQL platform built on Vitess, the same technology 
 
 ### Pattern 1: Connection Setup
 
-The driver provides two connection methods: `connect()` for a single connection and `Client` for a connection factory.
+The driver provides two connection methods: `connect()` for a single connection and `Client` for a connection factory. Use `Client` in serverless (fresh connection per request), `connect()` for single long-lived connection objects.
 
 ```typescript
 import { connect } from "@planetscale/database";
 
-const DATABASE_HOST = process.env.DATABASE_HOST!;
-const DATABASE_USERNAME = process.env.DATABASE_USERNAME!;
-const DATABASE_PASSWORD = process.env.DATABASE_PASSWORD!;
-
 const conn = connect({
-  host: DATABASE_HOST,
-  username: DATABASE_USERNAME,
-  password: DATABASE_PASSWORD,
+  host: process.env.DATABASE_HOST!,
+  username: process.env.DATABASE_USERNAME!,
+  password: process.env.DATABASE_PASSWORD!,
 });
-
-const results = await conn.execute(
+const { rows } = await conn.execute(
   "SELECT id, name FROM users WHERE active = ?",
   [true],
 );
 ```
 
-**Why good:** Named constants for credentials, parameterized query prevents SQL injection, `connect()` returns a stateless HTTP connection
-
-```typescript
-// BAD: Hardcoded credentials and string interpolation
-const conn = connect({
-  host: "aws.connect.psdb.cloud",
-  username: "root",
-  password: "pscale_pw_abc123",
-});
-
-const name = userInput;
-const results = await conn.execute(
-  `SELECT * FROM users WHERE name = '${name}'`,
-);
-```
-
-**Why bad:** Hardcoded credentials leak in version control, string interpolation creates SQL injection vulnerability, `SELECT *` fetches unnecessary columns
-
-#### URL-Based Configuration
-
-```typescript
-import { connect } from "@planetscale/database";
-
-// Alternative: single DATABASE_URL for simpler config
-const conn = connect({ url: process.env.DATABASE_URL });
-// URL format: mysql://user:password@host/database
-```
-
-#### Client Factory for Serverless Handlers
-
-```typescript
-import { Client } from "@planetscale/database";
-
-// Client creates fresh connections per request -- ideal for serverless
-const client = new Client({
-  host: process.env.DATABASE_HOST!,
-  username: process.env.DATABASE_USERNAME!,
-  password: process.env.DATABASE_PASSWORD!,
-});
-
-export async function handleRequest(request: Request): Promise<Response> {
-  const conn = client.connection();
-  const { rows } = await conn.execute("SELECT id, title FROM posts LIMIT 10");
-  return new Response(JSON.stringify(rows));
-}
-```
-
-**When to use:** `Client` when you need to create multiple connections (e.g., per-request in serverless). `connect()` when you need a single long-lived connection object.
+See [examples/core.md](examples/core.md) for full connection patterns including `Client` factory, URL-based config, and custom fetch for HTTP/2.
 
 ---
 
 ### Pattern 2: Parameterized Queries
 
-The driver supports positional (`?`) and named (`:param`) parameter styles.
+The driver supports positional (`?`) and named (`:param`) parameter styles. Both are auto-escaped preventing SQL injection. Never mix styles in a single `execute()` call.
 
 ```typescript
-// Positional parameters
-const userId = "abc-123";
-const results = await conn.execute(
-  "SELECT id, name, email FROM users WHERE id = ? AND active = ?",
-  [userId, true],
-);
+// Positional: array of values
+await conn.execute("SELECT id, name FROM users WHERE id = ? AND active = ?", [
+  userId,
+  true,
+]);
 
-// Named parameters
-const results2 = await conn.execute(
-  "SELECT id, name FROM users WHERE role = :role AND org_id = :orgId",
-  { role: "admin", orgId: "org-456" },
-);
+// Named: object of values
+await conn.execute("SELECT id, name FROM users WHERE role = :role", {
+  role: "admin",
+});
 ```
 
-**Why good:** Both parameter styles are auto-escaped by the driver preventing SQL injection, named parameters improve readability for complex queries
-
-```typescript
-// BAD: Template literal interpolation
-const role = userInput;
-await conn.execute(`SELECT * FROM users WHERE role = '${role}'`);
-```
-
-**Why bad:** String interpolation bypasses parameterization, creating a SQL injection vulnerability -- always use `?` or `:param` placeholders
+See [examples/core.md](examples/core.md) for complex named parameter queries and bad examples to avoid.
 
 ---
 
 ### Pattern 3: Transactions
 
-Execute multiple queries atomically with automatic rollback on error.
+`conn.transaction()` executes multiple queries atomically with automatic rollback on error. Each `tx.execute()` is an HTTP round trip, but conditional logic runs client-side within the callback.
 
 ```typescript
-import { connect } from "@planetscale/database";
-
-const conn = connect({ url: process.env.DATABASE_URL });
-
-async function transferFunds(fromId: string, toId: string, amount: number) {
-  const MIN_TRANSFER = 0;
-
-  if (amount <= MIN_TRANSFER) {
-    throw new Error("Transfer amount must be positive");
-  }
-
-  const results = await conn.transaction(async (tx) => {
-    const debit = await tx.execute(
-      "UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?",
-      [amount, fromId, amount],
-    );
-
-    if (debit.rowsAffected === 0) {
-      throw new Error("Insufficient funds");
-    }
-
-    const credit = await tx.execute(
-      "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-      [amount, toId],
-    );
-
-    return { debit, credit };
-  });
-
-  return results;
-}
+const result = await conn.transaction(async (tx) => {
+  const debit = await tx.execute(
+    "UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?",
+    [amount, fromId, amount],
+  );
+  if (debit.rowsAffected === 0) throw new Error("Insufficient funds"); // triggers rollback
+  await tx.execute("UPDATE accounts SET balance = balance + ? WHERE id = ?", [
+    amount,
+    toId,
+  ]);
+  return debit;
+});
 ```
 
-**Why good:** Named constant for validation threshold, automatic rollback if any statement throws, balance check in SQL prevents race conditions, `rowsAffected` check detects insufficient funds without a separate SELECT
-
-```typescript
-// BAD: Separate queries without transaction
-const debit = await conn.execute(
-  "UPDATE accounts SET balance = balance - ? WHERE id = ?",
-  [amount, fromId],
-);
-const credit = await conn.execute(
-  "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-  [amount, toId],
-);
-// If credit fails, debit is already committed -- money vanishes
-```
-
-**Why bad:** Without a transaction, partial failures leave the database in an inconsistent state -- the debit succeeds but the credit can fail independently
+See [examples/core.md](examples/core.md) for full transaction examples with inventory checks and `FOR UPDATE` locking.
 
 ---
 
 ### Pattern 4: Custom Type Casting
 
-The built-in `cast` function automatically parses INT8-32 and FLOAT32/64 to numbers, and JSON fields. However, INT64/UINT64, DATETIME/TIMESTAMP, DECIMAL, and TINYINT(1) booleans remain as strings. Provide a custom `cast` for these.
+The built-in `cast` handles INT8-32 and FLOAT32/64 automatically. Provide a custom `cast` for INT64/UINT64 (BigInt), DATETIME/TIMESTAMP (Date), and TINYINT(1) (boolean) -- these remain as strings by default.
 
 ```typescript
 import { connect, cast } from "@planetscale/database";
@@ -281,172 +185,57 @@ import type { Field } from "@planetscale/database";
 
 function customCast(field: Field, value: any): any {
   if (value == null) return null;
-
-  // Convert INT64/UINT64 to BigInt (avoids precision loss for large IDs)
-  if (field.type === "INT64" || field.type === "UINT64") {
-    return BigInt(value);
-  }
-
-  // Convert DATETIME/TIMESTAMP to Date objects
-  if (field.type === "DATETIME" || field.type === "TIMESTAMP") {
-    return new Date(value + "Z"); // Append Z for UTC
-  }
-
-  // Convert tinyint(1) to boolean
-  if (field.type === "INT8" && field.columnLength === 1) {
-    return value === "1";
-  }
-
-  // Fall back to default casting for everything else
+  if (field.type === "INT64" || field.type === "UINT64") return BigInt(value);
+  if (field.type === "DATETIME" || field.type === "TIMESTAMP")
+    return new Date(value + "Z");
+  if (field.type === "INT8" && field.columnLength === 1) return value === "1";
   return cast(field, value);
 }
 
-const conn = connect({
-  url: process.env.DATABASE_URL,
-  cast: customCast,
-});
-
-// Now: integers are BigInt, dates are Date, tinyint(1) is boolean
-const { rows } = await conn.execute(
-  "SELECT id, created_at, is_active FROM users",
-);
+const conn = connect({ url: process.env.DATABASE_URL, cast: customCast });
 ```
 
-**Why good:** Handles the types the default cast leaves as strings (BigInt, dates, booleans), falls back to default `cast` for everything else, per-connection so different use cases can cast differently
-
-```typescript
-// BAD: No custom cast -- BigInt IDs, dates, and booleans are strings
-const conn = connect({ url: process.env.DATABASE_URL });
-const { rows } = await conn.execute(
-  "SELECT id, created_at, is_active FROM users WHERE id = ?",
-  ["abc"],
-);
-// rows[0].id is "9007199254740993" (string, INT64) -- BigInt not converted
-// rows[0].created_at is "2024-01-15 10:30:00" (string) -- Date not converted
-// rows[0].is_active is 1 (number, not boolean) -- TINYINT(1) parsed as int
-```
-
-**Why bad:** Without a custom cast, INT64/UINT64 values remain as strings (precision loss if parsed with parseInt for values > Number.MAX_SAFE_INTEGER), dates require manual parsing, and tinyint(1) booleans are numbers instead of true/false
-
-#### Per-Query Cast Override
-
-```typescript
-// Override cast for a single query
-const { rows } = await conn.execute("SELECT id, balance FROM accounts", [], {
-  cast: (field: Field, value: any) => {
-    if (field.name === "balance" && value != null) return parseFloat(value);
-    return cast(field, value);
-  },
-});
-```
+See [examples/core.md](examples/core.md) for per-query cast overrides and type-specific cast variants.
 
 ---
 
 ### Pattern 5: Deploy Request Workflow
 
-Schema changes on production branches with safe migrations must go through deploy requests. Direct DDL is rejected.
+Schema changes on production branches with safe migrations must go through deploy requests. Direct DDL is rejected. The workflow is: branch, modify schema, create deploy request, review diff, deploy.
 
 ```bash
-# 1. Create a development branch from main
-pscale branch create my-database add-user-roles
-
-# 2. Connect to the development branch and make schema changes
-pscale shell my-database add-user-roles
-# mysql> ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'member';
-# mysql> CREATE INDEX idx_users_role ON users (role);
-
-# 3. Create a deploy request to merge into main
-pscale deploy-request create my-database add-user-roles --into main
-
-# 4. Review the schema diff
-pscale deploy-request diff my-database 1
-
-# 5. Deploy (with auto-apply enabled by default)
-pscale deploy-request deploy my-database 1
-
-# 6. If something goes wrong, revert within 30 minutes
-pscale deploy-request revert my-database 1
+pscale branch create my-database add-user-roles          # 1. Create dev branch
+pscale shell my-database add-user-roles                  # 2. Make schema changes (DDL)
+pscale deploy-request create my-database add-user-roles --into main  # 3. Create DR
+pscale deploy-request diff my-database 1                 # 4. Review schema diff
+pscale deploy-request deploy my-database 1               # 5. Deploy (online DDL)
+pscale deploy-request revert my-database 1               # 6. Revert within 30 min if needed
 ```
 
-**Why good:** Branch isolates schema experiments, deploy request provides reviewable diff, zero-downtime deployment via online DDL, 30-minute revert window for safety
-
-#### Gated Deployments
-
-```bash
-# Create deploy request with manual cutover control
-pscale deploy-request create my-database add-user-roles --disable-auto-apply
-
-# Later, when ready to apply the cutover
-pscale deploy-request apply my-database 1
-```
-
-**When to use:** When you want to control exactly when the final table swap happens (e.g., coordinating with application deployments).
+See [examples/branching.md](examples/branching.md) for gated deployments, instant deployments, and CI/CD workflows.
 
 ---
 
 ### Pattern 6: Database Branching
 
-Branches are isolated copies of your database schema. Development branches do not contain production data by default.
+Branches are isolated copies of your database schema. Development branches allow direct DDL. Production branches require deploy requests when safe migrations is enabled.
 
 ```bash
-# Create a dev branch
-pscale branch create my-database dev-alice
-
-# Connect to the branch
-pscale shell my-database dev-alice
-
-# Get the branch connection credentials
-pscale connect my-database dev-alice --port 3306
-# Or get connection string for use in app
-pscale password create my-database dev-alice my-app-password
-
-# Delete when done
-pscale branch delete my-database dev-alice
+pscale branch create my-database dev-alice               # Create dev branch
+pscale shell my-database dev-alice                       # Interactive MySQL shell
+pscale password create my-database dev-alice my-password # Generate app credentials
+pscale branch delete my-database dev-alice               # Clean up when done
 ```
 
-**Why good:** Branch naming maps to developer or feature, `pscale connect` creates a local tunnel for MySQL clients, `pscale password` generates credentials for application use
-
-#### Branch Types
-
-- **Production branches**: High availability, safe migrations, extra replicas. Use for `main` and `staging`.
-- **Development branches**: For experimentation. Direct DDL allowed. No production traffic.
+See [examples/branching.md](examples/branching.md) for PR preview branches, safe column renames, FK setup, and branch cleanup scripts.
 
 ---
 
 ### Pattern 7: Vitess SQL Compatibility
 
-PlanetScale runs on Vitess, which introduces several SQL differences from standard MySQL.
+PlanetScale runs on Vitess, which introduces SQL differences from standard MySQL. Key constraints: no stored procedures/triggers/events, no `RENAME COLUMN` (use three-step add/migrate/drop pattern), no `:=` operator, no `LOAD DATA INFILE`, no `CREATE DATABASE`.
 
-```sql
--- SUPPORTED: Standard DML and most DDL
-SELECT, INSERT, UPDATE, DELETE, CREATE TABLE, ALTER TABLE, DROP TABLE
-CREATE INDEX, JSON functions (except JSON_TABLE), CTEs (non-recursive)
-WINDOW functions, subqueries, UNION, INTERSECT, EXCEPT
-
--- NOT SUPPORTED:
--- Stored procedures, functions, triggers, events
-CREATE PROCEDURE ... -- ERROR
-CREATE FUNCTION ... -- ERROR
-CREATE TRIGGER ... -- ERROR
-
--- RENAME COLUMN is destructive via deploy request -- use safe alternative
--- BAD: ALTER TABLE users RENAME COLUMN name TO full_name;
--- GOOD: Add new column, migrate data, drop old column (3 deploy requests)
-
--- := assignment operator
-SET @var := 1; -- ERROR: use SET @var = 1;
-
--- LOAD DATA INFILE
-LOAD DATA INFILE '/path/to/file.csv' INTO TABLE users; -- NOT SUPPORTED
-
--- CREATE DATABASE / DROP DATABASE
-CREATE DATABASE mydb; -- NOT SUPPORTED (use PlanetScale dashboard/API)
-
--- Recursive CTEs: experimental SELECT-only support (Vitess 21+)
-WITH RECURSIVE cte AS (...) SELECT ... -- Experimental
-```
-
-**Why good:** Understanding these constraints upfront prevents failed deploy requests and runtime errors
+See [reference.md](reference.md) for the full supported/unsupported SQL compatibility table.
 
 </patterns>
 

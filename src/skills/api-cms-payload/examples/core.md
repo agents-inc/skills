@@ -310,7 +310,11 @@ const revalidatePostCache: CollectionAfterChangeHook = ({
   doc,
   operation,
   req,
+  context,
 }) => {
+  // Use context to prevent infinite loops when hooks trigger other operations
+  if (context.skipRevalidation) return;
+
   if (operation === "create" || operation === "update") {
     // Non-blocking side effect — does not block the response
     req.payload.logger.info(`Cache revalidation triggered for post: ${doc.id}`);
@@ -321,7 +325,7 @@ const revalidatePostCache: CollectionAfterChangeHook = ({
 export { revalidatePostCache };
 ```
 
-**Why good:** `beforeChange` returns modified `data` to pass changes forward, `operation` check prevents overwriting author on updates, `afterChange` for non-blocking side effects, each hook in a separate file for testability
+**Why good:** `beforeChange` returns modified `data` to pass changes forward, `operation` check prevents overwriting author on updates, `afterChange` for non-blocking side effects, `context` prevents infinite loops when hooks trigger each other, each hook in a separate file for testability
 
 ### Good Example — beforeValidate for Computed Fields
 
@@ -377,6 +381,7 @@ import type { Block } from "payload";
 
 const HeroBlock: Block = {
   slug: "hero",
+  interfaceName: "HeroBlock", // Custom TypeScript interface name for generated types
   fields: [
     { name: "heading", type: "text", required: true },
     { name: "subheading", type: "textarea" },

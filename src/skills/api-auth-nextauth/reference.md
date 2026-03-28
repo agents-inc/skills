@@ -42,16 +42,16 @@ Where is the code running?
 ├─ Server Component → const session = await auth()
 ├─ Route Handler → export const GET = auth(function GET(req) { req.auth })
 ├─ Server Action → const session = await auth()
-├─ Middleware → export { auth as middleware } from "@/auth"
+├─ Middleware/Proxy → export { auth as middleware } from "@/auth"
 ├─ Client Component → useSession() (requires SessionProvider)
 └─ API Route (Pages Router) → const session = await auth(req, res)
 ```
 
-### Middleware vs Per-Page Protection
+### Middleware/Proxy vs Per-Page Protection
 
 ```
 What level of protection do you need?
-├─ Redirect unauthenticated users globally → Middleware
+├─ Redirect unauthenticated users globally → Middleware/proxy
 │   └─ Use matcher to exclude public routes
 ├─ Different behavior per page → Per-page auth() checks
 │   └─ More granular, handles authorization too
@@ -82,7 +82,7 @@ What ORM/database are you using?
 - **Using `NEXTAUTH_SECRET`** - Deprecated; use `AUTH_SECRET`
 - **Using `NEXTAUTH_URL`** - Usually unnecessary in v5; auto-detected in most deployments
 - **Missing `AUTH_SECRET` in production** - Auth will fail silently or throw cryptic errors
-- **Middleware as sole authorization** - Middleware runs before rendering but doesn't replace per-route authorization checks
+- **Middleware/proxy as sole authorization** - Runs before rendering but doesn't replace per-route authorization checks
 - **Credentials provider without rate limiting** - Vulnerable to brute-force attacks
 - **Storing passwords in plain text** - Always hash with bcrypt/argon2 in the `authorize` function
 
@@ -113,8 +113,8 @@ What ORM/database are you using?
 - **OAuth providers auto-detect env vars** - `AUTH_GITHUB_ID` is found automatically; explicit `clientId` overrides it
 - **Session expiry differs between strategies** - JWT: `maxAge` on the cookie (default 30 days); Database: `expires` column on session row
 - **`redirect` callback fires on both sign-in and sign-out** - Handle both cases
-- **Middleware runs on every request matching the matcher** - Keep it fast; avoid database calls
-- **`auth()` in middleware uses JWT only** - Even with database sessions, middleware reads the JWT (it can't access the database on Edge)
+- **Middleware/proxy runs on every request matching the matcher** - Keep it fast; avoid database calls in middleware (Next.js 14/15 Edge)
+- **`auth()` in middleware uses JWT only** - Even with database sessions, middleware reads the JWT (it can't access the database on Edge). Next.js 16 proxy runs on Node.js and can access the database.
 - **Account linking happens automatically** - Users with the same email across providers are linked; control via `allowDangerousEmailAccountLinking`
 
 ---

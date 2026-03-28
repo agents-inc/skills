@@ -35,37 +35,23 @@ description: Edge-hosted SQLite database with libSQL driver and embedded replica
 
 - Querying a Turso-hosted SQLite database from any runtime (Node.js, edge, serverless)
 - Setting up embedded replicas for zero-latency local reads synced from a remote primary
+- Multi-tenant SaaS with database-per-tenant (Turso supports millions of databases)
+- Serverless/edge functions needing a database without connection pooling complexity
 - Running atomic multi-statement operations with `batch()` or interactive `transaction()`
 - Managing database groups and multi-region placement via the Turso CLI
-- Choosing between `@libsql/client` (Node.js / has filesystem) and `@libsql/client/web` (edge / no filesystem)
-
-**Key patterns covered:**
-
-- Client setup with `createClient()` (remote, local, in-memory, embedded replica)
-- `execute()` with positional (`?`) and named (`:name`, `@name`, `$name`) parameters
-- `batch()` for atomic multi-statement operations in a single round trip
-- Interactive `transaction()` for conditional logic between queries
-- Embedded replicas: local file + `syncUrl`, `sync()`, read-your-writes semantics
-- Import paths: `@libsql/client` vs `@libsql/client/web`
-- Turso CLI: `turso db create`, `turso db shell`, `turso group create`
 
 **When NOT to use:**
 
 - Write-heavy workloads requiring strong multi-writer consistency (Turso is single-writer, writes forwarded to primary)
 - Complex relational queries needing PostgreSQL features (CTEs with mutating subqueries, stored procedures, advanced constraints)
+- Complex distributed transactions across multiple databases
 - Large analytical datasets (SQLite row-size and concurrency limitations apply)
 
 **Detailed Resources:**
 
-- For decision frameworks and quick lookup tables, see [reference.md](reference.md)
-
-**Client & Queries:**
-
 - [examples/core.md](examples/core.md) -- Client setup, execute, batch, transactions, import paths
-
-**Embedded Replicas:**
-
 - [examples/embedded-replicas.md](examples/embedded-replicas.md) -- Local replicas, sync, offline mode, encryption
+- [reference.md](reference.md) -- Decision frameworks, type definitions, CLI commands, lookup tables
 
 ---
 
@@ -83,20 +69,6 @@ Turso brings SQLite to the edge by hosting libSQL (a fork of SQLite) as a manage
 4. **Two import paths** -- `@libsql/client` includes native SQLite bindings for Node.js and supports `file:` URLs. `@libsql/client/web` is pure JS/WASM for edge runtimes (Cloudflare Workers, Vercel Edge Functions) and cannot open local files.
 5. **SQLite semantics** -- Turso is SQLite. No `ADD CONSTRAINT`, no stored procedures, no `LISTEN/NOTIFY`, single-writer WAL mode. Know SQLite's limitations before choosing Turso.
 
-**When to use Turso:**
-
-- Read-heavy workloads benefiting from edge-local reads (embedded replicas)
-- Multi-tenant SaaS with database-per-tenant (Turso supports millions of databases)
-- Serverless/edge functions needing a database without connection pooling complexity
-- Applications benefiting from SQLite's simplicity and zero-config nature
-
-**When NOT to use:**
-
-- Write-heavy workloads (single-writer bottleneck, all writes forwarded to primary)
-- Complex distributed transactions across multiple databases
-- Workloads requiring PostgreSQL-specific features (jsonb operators, array types, window functions with advanced frames)
-- Large datasets exceeding SQLite's practical limits (~281 TB theoretical, but performance degrades much earlier)
-
 </philosophy>
 
 ---
@@ -107,170 +79,77 @@ Turso brings SQLite to the edge by hosting libSQL (a fork of SQLite) as a manage
 
 ### Pattern 1: Client Setup
 
-Create a client with `createClient()`. The `url` determines the connection type.
+Create a client with `createClient()`. The `url` determines the connection type: `libsql://` for remote Turso, `file:` for local SQLite (Node.js only), `:memory:` for in-memory (tests). Always use environment variables for `authToken` -- never hardcode credentials.
 
-```typescript
-import { createClient } from "@libsql/client";
-
-// Remote Turso database
-const client = createClient({
-  url: "libsql://my-database-my-org.turso.io",
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
-
-// Local SQLite file (Node.js only -- not available in @libsql/client/web)
-const localClient = createClient({
-  url: "file:local.db",
-});
-
-// In-memory database (useful for tests)
-const memoryClient = createClient({
-  url: ":memory:",
-});
-```
-
-**Why good:** Single `createClient` API for all connection types, environment variable for auth token (not hardcoded), clear distinction between remote/local/memory
-
-```typescript
-// BAD: Hardcoded credentials
-const client = createClient({
-  url: "libsql://my-database-my-org.turso.io",
-  authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...", // Leaked credential
-});
-```
-
-**Why bad:** Auth token committed to source code, will be exposed in version control
+See [examples/core.md](examples/core.md) for full setup patterns including singleton modules and bad examples.
 
 ---
 
 ### Pattern 2: Executing Queries
 
-`execute()` runs a single SQL statement with automatic parameterization.
+`execute()` runs a single SQL statement. Always use parameterized queries with `args` -- never string interpolation.
 
 ```typescript
-// Positional parameters with ?
-const userId = "usr_123";
-const result = await client.execute({
-  sql: "SELECT id, name, email FROM users WHERE id = ?",
+// Positional: args as array
+await client.execute({
+  sql: "SELECT * FROM users WHERE id = ?",
   args: [userId],
 });
-// result.rows: Array<Row>, result.columns: ["id", "name", "email"]
-// result.rowsAffected: 0 (for SELECT), result.lastInsertRowid: undefined
 
-// Named parameters with : prefix
-const insertResult = await client.execute({
+// Named: args as object (bare names match :name, @name, $name in SQL)
+await client.execute({
   sql: "INSERT INTO users (name, email) VALUES (:name, :email)",
-  args: { name: "Alice", email: "alice@example.com" },
+  args: { name, email },
 });
-// insertResult.lastInsertRowid: bigint of the new row's rowid
 ```
 
-**Why good:** Parameterized queries prevent SQL injection, named parameters are self-documenting for inserts/updates, Row objects support both index and column-name access
-
-```typescript
-// BAD: String interpolation -- SQL injection
-const name = userInput;
-await client.execute(`SELECT * FROM users WHERE name = '${name}'`);
-```
-
-**Why bad:** User input interpolated directly into SQL string, trivial SQL injection vector
-
-#### Supported Parameter Prefixes
-
-Named parameters accept `:name`, `@name`, or `$name` syntax interchangeably. The args object uses the bare name without the prefix: `{ name: "Alice" }` matches `:name`, `@name`, and `$name`.
+Returns `ResultSet` with `rows` (Array\<Row\>), `columns`, `rowsAffected`, `lastInsertRowid` (bigint). See [examples/core.md](examples/core.md) for typed result mapping and bad examples.
 
 ---
 
 ### Pattern 3: Batch Operations
 
-`batch()` executes multiple statements atomically in a single round trip. All succeed or all roll back.
+`batch()` executes multiple statements atomically in a single round trip. All succeed or all roll back. Always specify the transaction mode as the second argument.
 
 ```typescript
-const ACTIVE_STATUS = "active";
-
 const results = await client.batch(
   [
+    { sql: "INSERT INTO users (name) VALUES (?)", args: ["Alice"] },
     {
-      sql: "INSERT INTO users (name, email, status) VALUES (?, ?, ?)",
-      args: ["Alice", "alice@example.com", ACTIVE_STATUS],
-    },
-    {
-      sql: "INSERT INTO audit_log (action, entity, entity_id) VALUES (?, ?, last_insert_rowid())",
-      args: ["user_created", "users"],
+      sql: "INSERT INTO audit_log (action, entity_id) VALUES (?, last_insert_rowid())",
+      args: ["user_created"],
     },
   ],
-  "write",
+  "write", // Required for INSERT/UPDATE/DELETE
 );
-// results[0].lastInsertRowid -- the new user's rowid
-// results[1].lastInsertRowid -- the new audit log entry's rowid
 ```
 
-**Why good:** Single round trip for multiple statements, implicit transaction (all-or-nothing), `"write"` mode required for INSERT/UPDATE/DELETE, `last_insert_rowid()` works across statements in the same batch
-
-```typescript
-// BAD: Multiple execute() calls instead of batch()
-await client.execute({ sql: "INSERT INTO users ...", args: [...] });
-await client.execute({ sql: "INSERT INTO audit_log ...", args: [...] });
-// Two round trips, NOT atomic -- if second fails, first is already committed
-```
-
-**Why bad:** Separate execute() calls are not atomic, each is a separate round trip with independent latency, partial failure leaves inconsistent data
-
-#### Transaction Modes for batch()
-
-Use `"write"` for any INSERT/UPDATE/DELETE, `"read"` for SELECT-only (allows parallel reads), `"deferred"` starts read-only and escalates. See [reference.md](reference.md) for the full comparison table.
+Use `"write"` for mutations, `"read"` for SELECT-only (allows parallel execution), `"deferred"` to start read-only and escalate. `last_insert_rowid()` works across statements in the same batch. See [examples/core.md](examples/core.md) for multi-insert and read-only batch patterns, and [reference.md](reference.md) for the transaction mode comparison table.
 
 ---
 
 ### Pattern 4: Interactive Transactions
 
-Use `transaction()` only when subsequent queries depend on results of earlier queries. It holds a database lock and requires multiple round trips.
+Use `transaction()` **only** when subsequent queries depend on results of earlier queries. It holds a database lock (5-second idle timeout) and requires multiple round trips. Always use try/catch/finally with `close()`.
 
 ```typescript
-async function transferCredits(fromId: string, toId: string, amount: number) {
-  const MIN_TRANSFER = 0;
-  if (amount <= MIN_TRANSFER) {
-    throw new Error("Amount must be positive");
-  }
-
-  const tx = await client.transaction("write");
-
-  try {
-    const { rows } = await tx.execute({
-      sql: "SELECT balance FROM accounts WHERE id = ?",
-      args: [fromId],
-    });
-
-    if (rows.length === 0) {
-      throw new Error("Account not found");
-    }
-
-    const balance = rows[0].balance as number;
-    if (balance < amount) {
-      throw new Error("Insufficient balance");
-    }
-
-    // These depend on the SELECT result above -- interactive transaction required
-    await tx.execute({
-      sql: "UPDATE accounts SET balance = balance - ? WHERE id = ?",
-      args: [amount, fromId],
-    });
-    await tx.execute({
-      sql: "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-      args: [amount, toId],
-    });
-
-    await tx.commit();
-  } catch (error) {
-    await tx.rollback();
-    throw error;
-  }
+const tx = await client.transaction("write");
+try {
+  const { rows } = await tx.execute({
+    sql: "SELECT balance FROM accounts WHERE id = ?",
+    args: [fromId],
+  });
+  // ... conditional logic based on results ...
+  await tx.commit();
+} catch (error) {
+  await tx.rollback();
+  throw error;
+} finally {
+  tx.close();
 }
 ```
 
-**Why good:** Interactive transaction needed because UPDATE depends on SELECT result, explicit commit/rollback, named constant for validation, proper error propagation
-
-**When to use:** Only when later statements depend on results of earlier statements within the same transaction. If all statements are known upfront, use `batch()` instead.
+If all statements are known upfront with no conditional logic, use `batch()` instead. See [examples/core.md](examples/core.md) for a complete purchase-with-stock-check example.
 
 ---
 
@@ -284,32 +163,7 @@ import { createClient } from "@libsql/client";
 import { createClient } from "@libsql/client/web";
 ```
 
-**Why good:** Correct import for the runtime, `@libsql/client/web` is pure JS/WASM and works in any environment, base package includes native SQLite bindings that fail in edge runtimes
-
-```typescript
-// BAD: Using base import in Cloudflare Worker
-import { createClient } from "@libsql/client"; // FAILS -- native bindings not available
-
-export default {
-  async fetch(request: Request, env: Env) {
-    const client = createClient({
-      url: env.TURSO_URL,
-      authToken: env.TURSO_TOKEN,
-    });
-    // Runtime error: native module not found
-  },
-};
-```
-
-**Why bad:** Base `@libsql/client` bundles native SQLite bindings via `libsql` (Rust compiled to native), which edge runtimes cannot load
-
-#### Quick Decision
-
-```
-Does your runtime have filesystem access and native module support?
-+-- YES --> @libsql/client (Node.js, Bun, Deno, VMs)
-+-- NO  --> @libsql/client/web (Cloudflare Workers, Vercel Edge, browsers)
-```
+The base `@libsql/client` bundles native SQLite bindings that fail in edge runtimes. `@libsql/client/web` is pure JS/WASM but cannot open local `file:` URLs. See [examples/core.md](examples/core.md) for a full Cloudflare Worker example.
 
 ---
 
@@ -335,31 +189,11 @@ Key points: `file:` URL for local replica, `syncUrl` for remote primary, call `s
 
 ### Pattern 7: Database Groups and Multi-Region
 
-Turso organizes databases into groups. Each group has a primary region and optional replica locations.
-
-```bash
-# Create a group with explicit primary location
-turso group create my-group --location iad
-
-# Add replica locations to the group
-turso group locations add my-group ord
-turso group locations add my-group lhr
-
-# Create a database in the group (inherits all group locations)
-turso db create my-app --group my-group
-
-# List databases
-turso db list
-
-# Get connection URL
-turso db show my-app --url
-```
-
-**Why good:** Groups define replication topology once, all databases in the group inherit locations, explicit primary location for predictable write latency
-
-#### How Writes Work with Groups
+Turso organizes databases into groups. Each group has a primary region and optional replica locations. All databases in a group inherit its locations.
 
 All writes go to the primary region regardless of which replica handles the read. Adding more locations improves read latency globally but does not reduce write latency. Write latency is determined by distance to the primary region.
+
+See [reference.md](reference.md) for the full Turso CLI command reference (`turso db create`, `turso group create`, `turso db shell`, etc.).
 
 </patterns>
 

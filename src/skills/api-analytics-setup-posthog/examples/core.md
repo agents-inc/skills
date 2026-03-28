@@ -8,7 +8,7 @@
 
 ## Pattern 1: Client-Side Initialization (Standalone)
 
-Initialize posthog-js in a client-side entry point. This is the simplest approach when your framework supports a client initialization hook (e.g., Next.js 15.3+ `instrumentation-client.js`).
+Initialize posthog-js in a client-side entry point. This is the simplest approach when your framework supports a client initialization hook (e.g., an instrumentation or bootstrap file that runs only in the browser).
 
 ```typescript
 // ✅ Good Example - Client-side init in entry point

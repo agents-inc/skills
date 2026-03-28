@@ -298,7 +298,7 @@ Where do you need auth data?
 |-- Server Component, Route Handler, Server Action
 |   |-- Need just userId/sessionId? --> auth()
 |   |-- Need full user object? --> currentUser()
-|   |-- Need to protect the route? --> auth().protect()
+|   |-- Need to protect the route? --> auth.protect()
 |   +-- Need org context? --> auth() returns orgId, orgRole
 |
 +-- Client Component (interactive UI)

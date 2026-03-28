@@ -66,7 +66,7 @@ description: Firebase backend-as-a-service — Firestore, Authentication, Cloud 
 
 - [Core Setup & Configuration](examples/core.md) -- App init, emulators, offline persistence
 - [Firestore Database](examples/firestore.md) -- CRUD, queries, real-time listeners, transactions
-- [Authentication](examples/auth.md) -- Email/password, OAuth, React context pattern
+- [Authentication](examples/auth.md) -- Email/password, OAuth, auth state, profile sync
 - [Cloud Functions & Admin SDK](examples/functions.md) -- HTTP, callable, triggers, scheduled, Admin SDK
 - [Cloud Storage](examples/storage.md) -- Upload with progress, validation, App Check
 - [Security Rules](examples/security-rules.md) -- Firestore and Storage rules patterns
@@ -99,7 +99,7 @@ Firebase is Google's Backend-as-a-Service platform providing a complete backend 
 **When NOT to use:**
 
 - Complex relational data with many-to-many relationships and JOINs (use a relational database)
-- Applications needing full-text search (Firestore has limited search -- integrate Algolia or Typesense)
+- Applications needing full-text search (Firestore has limited query capabilities -- use a dedicated search service)
 - High-write-throughput scenarios exceeding 10,000 writes/second to a single document
 - Applications requiring complex server-side transactions spanning multiple services
 
@@ -254,7 +254,7 @@ const token = await auth.currentUser?.getIdToken(/* forceRefresh */ true);
 
 **Why good:** Modular imports, typed `User` return values, `Unsubscribe` for cleanup
 
-> Full auth context with React: [examples/auth.md](examples/auth.md)
+> Full auth service with profile sync: [examples/auth.md](examples/auth.md)
 
 ---
 
@@ -496,9 +496,8 @@ What kind of files?
 
 **Replaces / Conflicts with:**
 
-- **Supabase**: Alternative BaaS -- don't use both for the same purpose
-- **AWS Amplify**: Alternative BaaS -- pick one platform
-- **Custom auth providers**: Firebase Auth can replace third-party auth, or vice versa -- don't mix auth providers
+- Other BaaS platforms -- don't use two BaaS solutions for the same purpose
+- Custom auth providers -- Firebase Auth can replace third-party auth, or vice versa -- don't mix auth providers
 
 </integration>
 

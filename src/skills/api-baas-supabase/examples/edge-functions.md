@@ -418,7 +418,7 @@ async function processFileInBackground(fileId: string) {
 // Secrets set via CLI: npx supabase secrets set MY_API_KEY=abc123
 
 Deno.serve(async (req) => {
-  // Auto-injected by Supabase
+  // Auto-injected by Supabase (new projects use SUPABASE_PUBLISHABLE_KEY / SUPABASE_SECRET_KEY)
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
