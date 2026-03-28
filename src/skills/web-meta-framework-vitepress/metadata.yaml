@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-meta-framework
+slug: vitepress
+domain: web
+author: "@vince"
+displayName: VitePress
+cliDescription: VitePress documentation site generator
+usageGuidance: Use when building documentation sites with VitePress — configuring navigation, extending themes, writing data loaders, and customizing markdown rendering.
