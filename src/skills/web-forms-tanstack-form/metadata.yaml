@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-forms
+slug: tanstack-form
+domain: web
+author: "@vince"
+displayName: TanStack Form
+cliDescription: Type-safe, headless form management
+usageGuidance: Use when building forms with TanStack Form — type-safe, framework-agnostic form state, validation, and submission.
