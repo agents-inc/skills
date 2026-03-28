@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-framework
+slug: tauri
+domain: desktop
+author: "@vince"
+displayName: Tauri
+cliDescription: Desktop and mobile apps with system webview and Rust backend
+usageGuidance: Use when building desktop or mobile applications with Tauri 2.x, defining Rust commands and IPC bridge, configuring the permission/capability system, using official plugins, system tray, window management, or packaging for distribution.
