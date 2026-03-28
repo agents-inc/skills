@@ -40,10 +40,10 @@ description: Environment configuration, Zod validation
 
 **When NOT to use:**
 
-- Runtime configuration changes (use external feature flag services like LaunchDarkly)
+- Runtime configuration changes (use an external feature flag service)
 - User-specific settings (use database or user preferences)
 - Frequently changing values (use configuration API or database)
-- Complex A/B testing with gradual rollouts (use dedicated feature flag services)
+- Complex A/B testing with gradual rollouts (use a dedicated feature flag service)
 
 **Key patterns covered:**
 
@@ -69,21 +69,7 @@ description: Environment configuration, Zod validation
 
 ## Philosophy
 
-Environment management follows the principle that **configuration is code** - it should be validated, typed, and versioned. The system uses per-app .env files with framework-specific prefixes, Zod validation at startup, and strict security practices to prevent secret exposure.
-
-**When to use this environment management approach:**
-
-- Managing environment-specific configuration (API URLs, feature flags, credentials)
-- Setting up type-safe environment variables with Zod validation
-- Securing secrets with .gitignore and CI/CD secret management
-- Implementing feature flags without external services
-- Documenting required environment variables for team onboarding
-
-**When NOT to use:**
-
-- Runtime configuration changes (use external feature flag services like LaunchDarkly)
-- User-specific settings (use database or user preferences)
-- Frequently changing values (use configuration API or database)
+Environment management follows the principle that **configuration is code** -- it should be validated, typed, and versioned. The system uses per-app .env files with framework-specific prefixes, Zod validation at startup, and strict security practices to prevent secret exposure.
 
 </philosophy>
 
@@ -241,22 +227,7 @@ See [examples/naming-and-templates.md](examples/naming-and-templates.md) for com
 
 ## Decision Framework
 
-```
-Need environment configuration?
-├─ Is it a secret (API key, password)?
-│   ├─ YES → Use .env.local (gitignored) + CI secrets
-│   └─ NO → Can it be public (embedded in client bundle)?
-│       ├─ YES → Use NEXT_PUBLIC_* or VITE_* prefix
-│       └─ NO → Server-side only (no prefix)
-├─ Does it change per environment?
-│   ├─ YES → Use .env.{environment} files
-│   └─ NO → Use .env with defaults
-└─ Is it app-specific or shared?
-    ├─ App-specific → Per-app .env file
-    └─ Shared → Declare in build tool's env configuration
-```
-
-See [reference.md](reference.md) for complete decision frameworks including feature flag decisions.
+See [reference.md](reference.md) for complete decision frameworks including environment configuration and feature flag decisions.
 
 </decision_framework>
 

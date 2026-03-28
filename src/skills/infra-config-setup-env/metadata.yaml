@@ -3,7 +3,6 @@ category: infra-config
 slug: setup-env
 domain: infra
 author: "@vince"
-version: 1
 displayName: Environment
 cliDescription: Environment variable management
 usageGuidance: Use when setting up environment variables, .env files, or Zod validation for config.

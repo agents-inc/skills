@@ -27,8 +27,8 @@ npx wrangler deploy
 # Deploy to specific environment
 npx wrangler deploy --env staging
 
-# Deploy with secrets file
-npx wrangler deploy --secrets-file .env.production
+# Bulk upload secrets from JSON file
+npx wrangler secret bulk secrets.json
 
 # Tail live logs
 npx wrangler tail
@@ -156,7 +156,7 @@ export default {
 ```typescript
 export default {
   async scheduled(
-    event: ScheduledEvent,
+    event: ScheduledController,
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
@@ -452,8 +452,8 @@ const WORKER_MEMORY_LIMIT_MB = 128;
 const KV_MAX_VALUE_SIZE = 25 * 1024 * 1024; // 25 MB
 const KV_MAX_KEY_SIZE = 512; // 512 bytes
 const KV_MAX_LIST_KEYS = 1_000;
-const R2_MAX_PUT_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB (multipart)
-const R2_MAX_SINGLE_PUT = 100 * 1024 * 1024; // 100 MB (single PUT)
+const R2_MAX_SINGLE_PUT_SIZE = 5 * 1024 * 1024 * 1024; // ~5 GiB (single PUT)
+const R2_MAX_MULTIPART_SIZE = 5 * 1024 * 1024 * 1024 * 1024; // ~5 TiB (multipart)
 const D1_MAX_DB_SIZE = 10 * 1024 * 1024 * 1024; // 10 GB
 const QUEUE_MAX_MESSAGE_SIZE = 128 * 1024; // 128 KB
 const QUEUE_MAX_BATCH_SIZE = 100;

@@ -78,7 +78,7 @@ jobs:
 
       # Upload build artifact (used by all environments)
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-${{ github.sha }}
           path: |
@@ -98,7 +98,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-${{ github.sha }}
 
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-${{ github.sha }}
 
@@ -148,7 +148,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-${{ github.sha }}
 
@@ -221,11 +221,12 @@ jobs:
             -H "Content-Type: application/json"
 
       - name: Notify team
-        uses: 8398a7/action-slack@v3
+        uses: slackapi/slack-github-action@v2
         with:
-          status: custom
-          text: "Warning: Production rolled back to deployment ${{ github.event.inputs.deployment-id }}"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Warning: Production rolled back to deployment ${{ github.event.inputs.deployment-id }}"
 ```
 
 **Why good:** Manual trigger (workflow_dispatch) prevents accidental rollbacks, deployment-id parameter allows rollback to any previous version, instant rollback via Vercel API no rebuild required, Slack notification alerts team immediately

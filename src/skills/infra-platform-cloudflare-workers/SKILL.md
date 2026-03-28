@@ -253,7 +253,7 @@ See [examples/routing.md](examples/routing.md) for all these patterns with full 
 
 ### Pattern 8: API Framework Integration
 
-For structured APIs, use a framework with typed bindings (Hono is the Workers ecosystem standard). Export the framework's `fetch` handler alongside scheduled/queue handlers.
+For structured APIs, use a routing framework with typed bindings. Export the framework's `fetch` handler alongside scheduled/queue handlers.
 
 ```typescript
 import { Hono } from "hono";
@@ -390,17 +390,11 @@ Do you need coordination between concurrent requests?
 
 **Framework & ORM Compatibility:**
 
-Workers are compatible with edge-optimized frameworks and ORMs that support the V8 runtime. Use `Hono<{ Bindings: Env }>` for type-safe binding access in the recommended framework. D1 works with any ORM that supports SQLite (check your ORM's Workers compatibility docs).
+Workers are compatible with edge-optimized frameworks and ORMs that support the V8 runtime. Any framework that exports a `fetch` handler works (Hono, itty-router, etc.). D1 works with any ORM that supports SQLite (check your ORM's Workers compatibility docs).
 
 **Testing:**
 
 Use `@cloudflare/vitest-pool-workers` to run tests inside the actual Workers runtime with real bindings (KV, D1, R2). See [examples/core.md](examples/core.md) for test configuration.
-
-**Comparable Platforms:**
-
-- AWS Lambda@Edge / CloudFront Functions
-- Vercel Edge Functions
-- Deno Deploy
 
 </integration>
 
@@ -449,7 +443,7 @@ Use `@cloudflare/vitest-pool-workers` to run tests inside the actual Workers run
 - Workers on the free plan have a 10ms CPU time limit per request (not wall-clock time — I/O waiting is free)
 - Cron trigger changes take up to 15 minutes to propagate globally
 - `.dev.vars` file is for local secrets only and must be gitignored
-- The `env` parameter from `cloudflare:workers` import creates a fresh reference; avoid caching binding derivatives at module scope
+- The `env` parameter is provided per-request by the runtime; avoid caching binding references or derived objects at module scope
 
 </red_flags>
 

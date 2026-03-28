@@ -143,9 +143,9 @@ CMD ["bun", "run", "dist/server.js"]
 
 ---
 
-## Example 3: Monorepo Dockerfile (Turborepo)
+## Example 3: Monorepo Dockerfile
 
-Building a single service from a Turborepo monorepo.
+Building a single service from a monorepo using prune-based Docker builds. This example uses Turborepo's `turbo prune --docker` but the multi-stage pattern applies to any monorepo tool with Docker-aware pruning.
 
 ```dockerfile
 # syntax=docker/dockerfile:1

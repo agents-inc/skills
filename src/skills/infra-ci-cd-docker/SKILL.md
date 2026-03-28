@@ -5,7 +5,7 @@ description: Docker containerization patterns for Node.js/TypeScript development
 
 # Docker Containerization Patterns
 
-> **Quick Guide:** Docker Engine 29 with BuildKit for containerizing Node.js/TypeScript applications. Multi-stage builds for minimal production images (1GB to under 100MB). Docker Compose v2 for development environments. BuildKit cache mounts for 10x faster dependency installs. Non-root users, health checks, and secret mounts for production security. Alpine for size, Debian slim for compatibility.
+> **Quick Guide:** Docker with BuildKit for containerizing Node.js/TypeScript applications. Multi-stage builds for minimal production images (1GB to under 100MB). Docker Compose v2 for development environments. BuildKit cache mounts for 10x faster dependency installs. Non-root users, health checks, and secret mounts for production security. Alpine for size, Debian slim for compatibility.
 
 ---
 
@@ -49,12 +49,16 @@ description: Docker containerization patterns for Node.js/TypeScript development
 - Implementing container security (non-root, secrets, read-only filesystem)
 - Setting up health checks for container orchestration
 - Building CI/CD pipelines that build and push Docker images
+- Teams needing consistent development environments across OS platforms
+- Microservice architectures requiring isolated services with dependencies
 
 **When NOT to use:**
 
 - Serverless deployments (AWS Lambda, Vercel Functions) that don't use containers
 - Static site hosting (Netlify, Vercel, Cloudflare Pages) with no server runtime
+- Simple scripts or CLI tools distributed via npm
 - Local development without containerization requirements
+- When added complexity outweighs the isolation benefit
 - Kubernetes-specific orchestration patterns (use a Kubernetes skill)
 
 **Key patterns covered:**
@@ -84,20 +88,6 @@ Containers provide reproducible, isolated environments that eliminate "works on 
 2. **Layer cache optimization** - Structure Dockerfiles so unchanged layers are reused, making rebuilds fast
 3. **Security by default** - Non-root users, no secrets in images, minimal attack surface
 4. **Development parity** - Docker Compose mirrors production topology locally
-
-**When to use Docker:**
-
-- Applications deploying to container orchestrators (Kubernetes, ECS, Cloud Run)
-- Teams needing consistent development environments across OS platforms
-- Microservice architectures requiring isolated services with dependencies
-- CI/CD pipelines building reproducible artifacts
-
-**When NOT to use Docker:**
-
-- Pure serverless (Lambda/Vercel Functions) where the platform manages containers
-- Static sites deployed to CDNs
-- Simple scripts or CLI tools distributed via npm
-- When added complexity outweighs the isolation benefit
 
 </philosophy>
 
@@ -341,6 +331,8 @@ See [examples/core.md](examples/core.md) for complete TypeScript graceful shutdo
 
 **Why good:** GitHub Actions cache (`type=gha`) persists layers across CI runs, `mode=max` caches all layers (not just final)
 
+See [examples/production.md](examples/production.md) for complete CI/CD pipeline examples.
+
 </performance>
 
 ---
@@ -402,20 +394,24 @@ What data needs to persist?
 
 ## Integration Guide
 
-**Works with:**
+**Docker ecosystem tools:**
 
-- **GitHub Actions**: `docker/build-push-action@v7` for CI/CD builds, `docker/setup-buildx-action@v3` for BuildKit
-- **GitHub Container Registry (ghcr.io)**: Free private image hosting for GitHub repos
-- **Kubernetes**: Production orchestration, pod security contexts, liveness/readiness probes
 - **Docker Scout**: `docker scout cves` for vulnerability scanning in CLI and CI
-- **Node.js**: Official `node:22-alpine` images, signal handling with tini
-- **PostgreSQL/Redis**: Official Alpine images with health checks in Compose
+- **BuildKit**: Default build engine since Docker Engine 23+, enables cache mounts, secret mounts, multi-platform builds
 
-**Replaces / Conflicts with:**
+**CI/CD integration:**
 
-- **Vagrant**: Docker Compose replaces VM-based development environments
-- **Manual server provisioning**: Dockerfiles codify environment setup
-- **nvm/fnm for Node versions**: Dockerfile pins exact Node version
+Docker images integrate with any CI/CD pipeline. See [examples/production.md](examples/production.md) for build-push patterns and vulnerability scanning workflows.
+
+**Container orchestration:**
+
+Production images work with any container orchestrator. Health checks (`HEALTHCHECK` instruction) and non-root users are universally required regardless of platform.
+
+**Replaces:**
+
+- VM-based development environments (Docker Compose provides lighter isolation)
+- Manual server provisioning (Dockerfiles codify environment setup)
+- Node version managers in containers (Dockerfile pins exact Node version via base image tag)
 
 </integration>
 
