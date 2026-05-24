@@ -803,6 +803,15 @@
       }
     },
     {
+      "name": "api-search-xquik",
+      "source": "./dist/plugins/api-search-xquik",
+      "description": "Xquik REST API patterns for X/Twitter search, user lookup, timelines, media download, monitors, webhooks, and approval-gated X actions",
+      "version": "1.0.0",
+      "author": {
+        "name": "@Xquik-dev"
+      }
+    },
+    {
       "name": "api-vector-db-chroma",
       "source": "./dist/plugins/api-vector-db-chroma",
       "description": "Chroma vector database -- collection management, automatic embedding, metadata filtering, document storage, query patterns",
