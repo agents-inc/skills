@@ -1,0 +1,9 @@
+{
+  "name": "api-search-xquik",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Xquik REST API patterns for X/Twitter search, user lookup, timelines, media download, monitors, webhooks, and approval-gated X actions",
+  "author": {
+    "name": "@Xquik-dev"
+  }
+}
