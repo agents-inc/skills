@@ -794,6 +794,15 @@
       }
     },
     {
+      "name": "api-search-getxapi",
+      "source": "./dist/plugins/api-search-getxapi",
+      "description": "GetXAPI REST patterns for X/Twitter tweet search, user lookup, profile tweets, replies, and media reads",
+      "version": "1.0.0",
+      "author": {
+        "name": "@getxapi"
+      }
+    },
+    {
       "name": "api-search-meilisearch",
       "source": "./dist/plugins/api-search-meilisearch",
       "description": "Meilisearch search engine patterns -- client setup, indexing, search, filtering, facets, geo search, multi-tenancy, task management",
