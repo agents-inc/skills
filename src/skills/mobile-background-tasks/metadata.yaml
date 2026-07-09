@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-background
+slug: tasks
+domain: mobile
+author: "@vince"
+displayName: Background Tasks
+cliDescription: Background fetch, processing, location
+usageGuidance: >-
+  Use when implementing background fetch, periodic sync, background location tracking,
+  headless JS tasks, or any work that must execute while the app is backgrounded or terminated.

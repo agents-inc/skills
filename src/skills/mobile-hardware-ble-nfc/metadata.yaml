@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-hardware
+slug: ble-nfc
+domain: mobile
+author: "@vince"
+displayName: BLE & NFC
+cliDescription: Bluetooth LE and NFC hardware access
+usageGuidance: >-
+  Use when implementing BLE scanning, connecting, reading/writing characteristics,
+  or NFC tag reading/writing with react-native-ble-plx and react-native-nfc-manager.
+  Not for classic Bluetooth, peripheral mode, or Wi-Fi Direct.

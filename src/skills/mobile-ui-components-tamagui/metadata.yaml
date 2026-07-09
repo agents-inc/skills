@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-ui-components
+slug: tamagui
+domain: mobile
+author: "@vince"
+displayName: Tamagui
+cliDescription: Universal UI for React Native and web
+usageGuidance: >-
+  Use when building universal React Native + web UIs with Tamagui styled components,
+  token system, themes, optimizing compiler, responsive media queries, animations,
+  or Tamagui UI kit components (Sheet, Dialog, Button, Input).

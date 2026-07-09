@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-camera
+slug: vision-camera
+domain: mobile
+author: "@vince"
+displayName: VisionCamera
+cliDescription: Camera capture, scanning, frame processing
+usageGuidance: >-
+  Use when implementing camera features with react-native-vision-camera:
+  photo/video capture, QR/barcode scanning, real-time frame processing,
+  zoom/focus/exposure controls, or HDR. Not for image picking from gallery.

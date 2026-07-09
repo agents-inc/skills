@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-navigation
+slug: expo-router
+domain: mobile
+author: "@vince"
+displayName: Expo Router
+cliDescription: File-based routing for React Native
+usageGuidance: >-
+  Use when implementing navigation with Expo Router: file-based routing,
+  layout routes, dynamic/catch-all routes, tab/stack navigation, modal
+  routes, authentication flows with Stack.Protected, API routes, typed
+  routes, deep linking, or static rendering for web.

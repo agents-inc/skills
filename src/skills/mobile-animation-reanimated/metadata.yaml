@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-animation
+slug: reanimated
+domain: mobile
+author: "@vince"
+displayName: Reanimated
+cliDescription: React Native animations and gestures
+usageGuidance: >-
+  Use when implementing animations in React Native with Reanimated 4 -
+  shared values, animated styles, spring/timing/decay animations,
+  layout animations, gesture-driven animations, scroll-driven animations,
+  interpolation, or worklet functions.

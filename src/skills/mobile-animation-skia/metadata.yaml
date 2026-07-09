@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-animation
+slug: skia
+domain: mobile
+author: "@vince"
+displayName: Skia
+cliDescription: GPU-accelerated 2D graphics with Skia
+usageGuidance: >-
+  Use when implementing custom 2D graphics, shaders, blur effects, path animations,
+  text layout with Paragraph API, sprite batch rendering with Atlas, or GPU-accelerated
+  drawing in React Native using @shopify/react-native-skia.

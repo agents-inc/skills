@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-notifications
+slug: push
+domain: mobile
+author: "@vince"
+displayName: Push Notifications
+cliDescription: Push notification patterns for React Native
+usageGuidance: >-
+  Use when implementing push notifications (remote or local), requesting notification
+  permissions, handling push tokens, listening for foreground/background/tap events,
+  scheduling local notifications, managing Android channels, or configuring notification
+  categories and actions in React Native.

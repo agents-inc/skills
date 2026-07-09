@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-testing
+slug: maestro
+domain: mobile
+author: "@vince"
+displayName: Maestro
+cliDescription: YAML-based mobile UI testing
+usageGuidance: >-
+  Use when writing or debugging Maestro YAML flows for mobile E2E testing,
+  working with selectors, flow control, environment variables, Maestro Studio,
+  Maestro Cloud CI, JavaScript expressions, or device interaction commands.
