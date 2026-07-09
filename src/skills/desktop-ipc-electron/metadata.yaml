@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-ipc
+slug: electron-ipc
+domain: desktop
+author: "@vince"
+displayName: Electron Type-Safe IPC
+cliDescription: Type-safe Electron IPC patterns
+usageGuidance: >-
+  Use when implementing type-safe IPC between Electron main and renderer
+  processes, setting up electron-trpc for end-to-end type safety, creating
+  typed channel maps with shared payload types, building typed preload
+  APIs with contextBridge, using MessagePort for high-throughput
+  communication, or implementing utility process IPC.

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-ui
+slug: electron-ui
+domain: desktop
+author: "@vince"
+displayName: Electron Desktop UI
+cliDescription: Frameless windows, custom title bars, tray, menus
+usageGuidance: >-
+  Use when customizing Electron window appearance (frameless, transparent,
+  vibrancy), building custom title bars with drag regions, positioning macOS
+  traffic lights, creating system tray icons, application/context menus,
+  dock badges, splash screens, kiosk mode, or persisting window state.

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-testing
+slug: electron-testing
+domain: desktop
+author: "@vince"
+displayName: Electron Testing
+cliDescription: E2E, unit, and IPC testing for Electron
+usageGuidance: >-
+  Use when writing E2E tests with Playwright for Electron apps (_electron.launch),
+  unit testing main process code, testing IPC handlers, mocking Electron modules
+  (dialog, BrowserWindow, ipcMain/ipcRenderer), testing preload scripts,
+  running Electron tests in CI (xvfb), or migrating from Spectron.

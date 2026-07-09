@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-packaging
+slug: electron-forge
+domain: desktop
+author: "@vince"
+displayName: Electron Forge
+cliDescription: Electron build toolchain, makers, publishers, signing
+usageGuidance: >-
+  Use when configuring Electron Forge (forge.config.ts), setting up makers for
+  platform-specific installers, configuring publishers for release distribution,
+  code signing and notarization, Electron Fuses, build hooks, or choosing
+  between Forge and electron-builder.

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-security
+slug: tauri-security
+domain: desktop
+author: "@vince"
+displayName: Tauri Capabilities & ACL
+cliDescription: Deny-by-default security, capabilities, permissions, scopes
+usageGuidance: >-
+  Use when configuring Tauri 2.x capabilities, permissions, or scopes.
+  Covers capability file structure, window-specific permissions,
+  allow/deny scopes, custom permission definitions, permission sets,
+  remote domain access, debugging permission errors, and migrating
+  from the Tauri 1.x allowlist. Not for Tauri commands, IPC, plugins,
+  or window management (use desktop-framework-tauri).

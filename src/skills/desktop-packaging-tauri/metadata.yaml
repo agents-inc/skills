@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-packaging
+slug: tauri-bundling
+domain: desktop
+author: "@vince"
+displayName: Tauri Bundling & Distribution
+cliDescription: Bundle config, signing, updater, CI/CD
+usageGuidance: >-
+  Use when configuring tauri.conf.json bundle settings, building platform-specific
+  installers (NSIS/MSI, DMG, deb/rpm/AppImage), setting up code signing or
+  notarization, configuring the auto-updater with signature verification,
+  optimizing app size, adding sidecar binaries, or creating CI/CD pipelines
+  for cross-platform Tauri builds.

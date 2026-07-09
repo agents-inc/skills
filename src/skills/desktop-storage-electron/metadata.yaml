@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-storage
+slug: electron-storage
+domain: desktop
+author: "@vince"
+displayName: Electron Storage & Credentials
+cliDescription: Persistent storage and credential management
+usageGuidance: >-
+  Use when persisting user preferences with electron-store, storing structured
+  data with better-sqlite3, encrypting secrets with safeStorage, choosing
+  between storage solutions, or working with app.getPath() storage directories.

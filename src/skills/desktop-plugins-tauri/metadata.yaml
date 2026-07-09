@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-plugins
+slug: tauri-plugins
+domain: desktop
+author: "@vince"
+displayName: Tauri Plugins
+cliDescription: Official plugin ecosystem and custom plugin development
+usageGuidance: >-
+  Use when installing, configuring, or using official Tauri 2.x plugins (fs, http, store,
+  dialog, notification, shell, updater, log, sql, stronghold, deep-link, global-shortcut,
+  autostart, clipboard, window-state, barcode-scanner, biometric, single-instance, os,
+  process), or when developing custom plugins with the Rust Builder pattern and optional
+  mobile (Swift/Kotlin) support.
