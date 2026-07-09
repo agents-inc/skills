@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: cli-prompts
+slug: clack
+domain: cli
+author: "@vince"
+displayName: Clack
+cliDescription: Beautiful interactive CLI prompts with @clack/prompts
+usageGuidance: >-
+  Use when building interactive CLI experiences with @clack/prompts — text
+  input, select, multiselect, confirm, spinner, group prompts, cancellation
+  handling, and themed output. Triggers: @clack/prompts, @clack/core, clack,
+  isCancel, intro, outro, spinner, group, text prompt, select prompt, confirm
+  prompt, multiselect, note, log, tasks, progress bar, taskLog.
