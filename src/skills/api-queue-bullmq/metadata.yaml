@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-queue
+slug: bullmq
+domain: api
+author: "@vince"
+displayName: BullMQ
+cliDescription: Job queues and background processing with BullMQ
+usageGuidance: >-
+  Use when implementing job queues, background processing, or task scheduling
+  with BullMQ -- queue creation, workers, job scheduling, rate limiting,
+  concurrency, flows, events, and Redis connection patterns.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-graphql
+slug: mercurius
+domain: api
+author: "@vince"
+displayName: Mercurius
+cliDescription: GraphQL server for Fastify with Mercurius
+usageGuidance: >-
+  Use when building GraphQL APIs on Fastify with Mercurius — schema definition,
+  resolvers, loaders (DataLoader-like batching), subscriptions, federation,
+  gateway, and Fastify plugin integration.

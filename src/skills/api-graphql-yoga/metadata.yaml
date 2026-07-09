@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-graphql
+slug: yoga
+domain: api
+author: "@vince"
+displayName: GraphQL Yoga
+cliDescription: GraphQL server with GraphQL Yoga v5 and Envelop plugin system
+usageGuidance: >-
+  Use when building GraphQL APIs with GraphQL Yoga — schema definition,
+  resolvers, Envelop plugins, subscriptions (SSE/WebSocket), file uploads,
+  error handling, and server framework integration.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-specs
+slug: openapi
+domain: api
+author: "@vince"
+displayName: OpenAPI
+cliDescription: OpenAPI specification, schema design, and client/server code generation
+usageGuidance: >-
+  Use when designing API contracts with OpenAPI (Swagger) — spec authoring
+  (YAML/JSON), schema definitions, path operations, request/response types,
+  code generation (client/server), validation, and documentation generation.

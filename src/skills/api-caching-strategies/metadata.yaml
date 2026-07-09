@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-caching
+slug: strategies
+domain: api
+author: "@vince"
+displayName: Caching
+cliDescription: Application-level caching strategies and cache invalidation patterns
+usageGuidance: >-
+  Use when implementing caching in backend applications — cache-aside,
+  write-through, write-behind, TTL strategies, cache invalidation, CDN caching
+  headers, HTTP caching, in-memory caching, and distributed cache patterns.
