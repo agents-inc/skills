@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-maps
+slug: mapbox
+domain: web
+author: "@vince"
+displayName: Mapbox GL JS
+cliDescription: Interactive maps with Mapbox GL JS
+usageGuidance: >-
+  Use when building interactive maps with Mapbox GL JS — map initialization,
+  markers, popups, layers, sources, expressions, geocoding, directions,
+  clustering, 3D terrain, and style customization.

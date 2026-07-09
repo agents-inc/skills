@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-maps
+slug: leaflet
+domain: web
+author: "@vince"
+displayName: Leaflet
+cliDescription: Lightweight interactive maps with Leaflet
+usageGuidance: >-
+  Use when building interactive maps with Leaflet -- map initialization, tile
+  layers, markers, popups, GeoJSON, custom controls, plugins, marker clustering,
+  and event handling.

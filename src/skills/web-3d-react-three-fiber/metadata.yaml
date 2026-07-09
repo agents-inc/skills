@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-3d
+slug: react-three-fiber
+domain: web
+author: "@vince"
+displayName: React Three Fiber
+cliDescription: 3D rendering with React Three Fiber and Three.js
+usageGuidance: >-
+  Use when building 3D experiences with React Three Fiber (R3F) — scene setup,
+  meshes, materials, lights, cameras, animations, physics (rapier),
+  post-processing, performance optimization, and interaction/events.

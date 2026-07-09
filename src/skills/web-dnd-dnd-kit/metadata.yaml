@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-dnd
+slug: dnd-kit
+domain: web
+author: "@vince"
+displayName: dnd-kit
+cliDescription: Drag and drop toolkit with @dnd-kit
+usageGuidance: >-
+  Use when implementing drag and drop with @dnd-kit — sortable lists, Kanban boards,
+  droppable containers, drag overlays, collision detection, keyboard/screen reader
+  accessibility, and multi-container sorting.
