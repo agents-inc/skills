@@ -1,0 +1,9 @@
+{
+  "name": "cli-prompts-clack",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Beautiful interactive CLI prompts with @clack/prompts and custom prompts with @clack/core",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "web-editor-lexical",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Extensible text editor framework by Meta",
+  "author": {
+    "name": "@vince"
+  }
+}

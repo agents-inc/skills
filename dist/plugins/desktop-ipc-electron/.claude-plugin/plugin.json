@@ -1,0 +1,9 @@
+{
+  "name": "desktop-ipc-electron",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Type-safe Electron IPC patterns with typed channels, electron-trpc, MessagePort, and utility process communication",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "infra-iac-pulumi",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "TypeScript-native Infrastructure as Code with Pulumi",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "infra-platform-netlify",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Netlify deployment platform — serverless functions, edge functions, redirects, forms, Blobs, build plugins",
+  "author": {
+    "name": "@vince"
+  }
+}

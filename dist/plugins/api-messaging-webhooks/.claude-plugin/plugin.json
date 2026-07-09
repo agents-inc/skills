@@ -1,0 +1,9 @@
+{
+  "name": "api-messaging-webhooks",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Webhook patterns — receiving, sending, signature verification, and retry logic",
+  "author": {
+    "name": "@vince"
+  }
+}

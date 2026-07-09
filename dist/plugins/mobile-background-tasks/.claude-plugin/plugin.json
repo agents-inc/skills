@@ -1,0 +1,9 @@
+{
+  "name": "mobile-background-tasks",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Background fetch, processing tasks, background location, headless JS, battery optimization - Expo and bare React Native",
+  "author": {
+    "name": "@vince"
+  }
+}

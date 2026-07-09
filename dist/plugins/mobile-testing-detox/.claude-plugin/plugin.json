@@ -1,0 +1,9 @@
+{
+  "name": "mobile-testing-detox",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Detox E2E gray-box testing for React Native - matchers, actions, expectations, waitFor, device API, synchronization, mocking, artifacts, CI integration",
+  "author": {
+    "name": "@vince"
+  }
+}

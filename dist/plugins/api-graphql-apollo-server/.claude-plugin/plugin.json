@@ -1,0 +1,9 @@
+{
+  "name": "api-graphql-apollo-server",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "GraphQL API server with Apollo Server — schema, resolvers, context, error handling, data sources, plugins",
+  "author": {
+    "name": "@vince"
+  }
+}

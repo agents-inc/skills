@@ -1,0 +1,9 @@
+{
+  "name": "web-maps-leaflet",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Leaflet interactive maps - map setup, tile layers, markers, popups, GeoJSON, custom controls, plugins, clustering, events",
+  "author": {
+    "name": "@vince"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mobile-ui-components-tamagui",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Tamagui universal UI - styled(), tokens, themes, optimizing compiler, responsive media queries, animations, Sheet/Dialog components",
+  "author": {
+    "name": "@vince"
+  }
+}

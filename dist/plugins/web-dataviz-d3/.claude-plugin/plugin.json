@@ -1,0 +1,9 @@
+{
+  "name": "web-dataviz-d3",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "D3.js data visualization — selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration",
+  "author": {
+    "name": "@vince"
+  }
+}

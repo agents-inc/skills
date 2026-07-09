@@ -1,0 +1,9 @@
+{
+  "name": "desktop-multiwindow-electron",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Multi-window management, WebContentsView, BaseWindow, window lifecycle, inter-window communication, state persistence",
+  "author": {
+    "name": "@vince"
+  }
+}

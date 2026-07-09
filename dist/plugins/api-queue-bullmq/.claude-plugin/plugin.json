@@ -1,0 +1,9 @@
+{
+  "name": "api-queue-bullmq",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Job queues, background processing, and task scheduling with BullMQ v5",
+  "author": {
+    "name": "@vince"
+  }
+}
