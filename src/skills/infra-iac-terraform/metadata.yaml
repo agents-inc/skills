@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-iac
+slug: terraform
+domain: infra
+author: "@vince"
+displayName: Terraform
+cliDescription: Infrastructure as Code with HashiCorp Terraform
+usageGuidance: >-
+  Use when writing Terraform/OpenTofu configurations — HCL syntax, resource
+  definitions, modules, state management, providers, workspaces, and
+  plan/apply workflows.

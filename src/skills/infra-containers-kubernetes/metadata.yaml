@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-containers
+slug: kubernetes
+domain: infra
+author: "@vince"
+displayName: Kubernetes
+cliDescription: Kubernetes manifests, Helm charts, and resource patterns
+usageGuidance: >-
+  Use when writing Kubernetes manifests, Helm charts, or Kustomize overlays —
+  deployments, services, ingress, configmaps, secrets, RBAC, health checks,
+  resource limits, and scaling patterns.

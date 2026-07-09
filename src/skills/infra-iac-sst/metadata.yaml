@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-iac
+slug: sst
+domain: infra
+author: "@vince"
+displayName: SST
+cliDescription: Serverless Stack (SST) for full-stack TypeScript on AWS
+usageGuidance: >-
+  Use when building with SST (Ion) — constructs for Lambda, API Gateway, S3,
+  DynamoDB, Aurora, queues, cron jobs, Next.js/Remix/Astro deployments, and
+  live Lambda dev mode.

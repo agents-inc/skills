@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-platform
+slug: vercel
+domain: infra
+author: "@vince"
+displayName: Vercel
+cliDescription: Vercel deployment platform, edge functions, and middleware
+usageGuidance: >-
+  Use when deploying to Vercel — project configuration (vercel.json/vercel.ts),
+  serverless and edge functions, Routing Middleware, cron jobs, environment
+  variables, monorepo setup, regions, headers, redirects, rewrites, and
+  deployment workflows.

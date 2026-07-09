@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-ci-cd
+slug: turborepo-ci
+domain: infra
+author: "@vince"
+displayName: Turborepo CI
+cliDescription: Turborepo CI pipelines with remote caching and affected detection
+usageGuidance: >-
+  Use when configuring CI/CD for Turborepo monorepos — remote caching, affected
+  detection, task pipelines, parallel execution, and CI provider integration.

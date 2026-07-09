@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-platform
+slug: netlify
+domain: infra
+author: "@vince"
+displayName: Netlify
+cliDescription: Netlify deployment platform, serverless functions, and edge functions
+usageGuidance: >-
+  Use when deploying to Netlify — site configuration, serverless functions,
+  edge functions, redirects/rewrites, forms, environment variables, build
+  plugins, and deployment workflows.

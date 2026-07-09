@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-iac
+slug: pulumi
+domain: infra
+author: "@vince"
+displayName: Pulumi
+cliDescription: TypeScript-native Infrastructure as Code with Pulumi
+usageGuidance: >-
+  Use when writing Pulumi programs in TypeScript — resource definitions,
+  component resources, stack references, config/secrets, providers,
+  automation API, and deployment workflows.

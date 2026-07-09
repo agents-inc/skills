@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: infra-platform
+slug: aws-sdk
+domain: infra
+author: "@vince"
+displayName: AWS SDK
+cliDescription: AWS SDK v3 for TypeScript — S3, DynamoDB, SQS, Lambda, and more
+usageGuidance: >-
+  Use when integrating AWS services via the AWS SDK v3 for JavaScript/TypeScript
+  — S3 operations, DynamoDB queries, SQS messaging, Lambda invocations, SNS
+  notifications, Secrets Manager, and IAM patterns.
