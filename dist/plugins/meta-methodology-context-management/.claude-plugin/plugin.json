@@ -1,9 +1,0 @@
-{
-  "name": "meta-methodology-context-management",
-  "version": "1.0.0",
-  "skills": "./skills/",
-  "description": "Long-term context management protocol - maintain project continuity across sessions through systematic documentation. Progress tracking, decision logging, insight preservation.",
-  "author": {
-    "name": "@vince"
-  }
-}

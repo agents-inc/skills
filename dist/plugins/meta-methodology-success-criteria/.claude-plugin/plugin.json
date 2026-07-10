@@ -1,9 +1,0 @@
-{
-  "name": "meta-methodology-success-criteria",
-  "version": "1.0.0",
-  "skills": "./skills/",
-  "description": "Success criteria template - every task needs explicit, measurable criteria defining \"done\". Specific, measurable, achievable, verifiable requirements with verification checklist.",
-  "author": {
-    "name": "@vince"
-  }
-}

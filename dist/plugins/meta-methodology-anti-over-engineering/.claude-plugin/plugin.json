@@ -1,9 +1,0 @@
-{
-  "name": "meta-methodology-anti-over-engineering",
-  "version": "1.0.0",
-  "skills": "./skills/",
-  "description": "Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.",
-  "author": {
-    "name": "@vince"
-  }
-}

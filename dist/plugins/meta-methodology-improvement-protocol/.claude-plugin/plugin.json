@@ -1,9 +1,0 @@
-{
-  "name": "meta-methodology-improvement-protocol",
-  "version": "1.0.0",
-  "skills": "./skills/",
-  "description": "Self-improvement protocol for agents modifying their own prompts/configurations. Evidence-based improvements, structured changes, proven patterns from research.",
-  "author": {
-    "name": "@vince"
-  }
-}

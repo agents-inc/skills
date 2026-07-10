@@ -1,9 +1,0 @@
-{
-  "name": "shared-ci-cd-github-actions",
-  "version": "2.0.0",
-  "skills": "./skills/",
-  "description": "GitHub Actions, pipelines, deployment",
-  "author": {
-    "name": "@vince"
-  }
-}
