@@ -204,3 +204,9 @@ src/skills/<domain>-<subcategory>-<name>/
     ├── core.md        # Core usage examples
     └── {topic}.md     # Topic-specific examples
 ```
+
+## Contributing a skill
+
+Use the [skill-summoner agent](./docs/contributing/skill-summoner.md) to create or improve a skill — it researches current best practices, matches this repo's conventions, and writes a fully-structured skill package to `src/skills/`. Drop the file into your `.claude/agents/` directory and invoke it; no `@agents-inc/cli` install required.
+
+In the `metadata.yaml` it generates, set `author` to your own handle (e.g. `"@your-github-username"`), not a placeholder or someone else's.
