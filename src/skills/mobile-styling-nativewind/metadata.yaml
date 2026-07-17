@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-styling
+slug: nativewind
+domain: mobile
+author: "@vince"
+displayName: NativeWind
+cliDescription: Tailwind CSS styling for React Native
+usageGuidance: >-
+  Use when styling React Native components with Tailwind CSS utility classes via NativeWind,
+  implementing dark mode, theming with CSS variables, platform-specific styles, or integrating
+  className support with third-party components.

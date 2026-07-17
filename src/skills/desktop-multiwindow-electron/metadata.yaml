@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-multiwindow
+slug: electron-multiwindow
+domain: desktop
+author: "@vince"
+displayName: Electron Multi-Window
+cliDescription: Multi-window, WebContentsView, window lifecycle
+usageGuidance: >-
+  Use when managing multiple windows or embedded views in Electron:
+  BaseWindow with WebContentsView for tabs/panels/split views,
+  parent/child and modal windows, window registries, inter-window
+  communication via MessagePort, window state persistence, or
+  multi-monitor placement with the screen API.

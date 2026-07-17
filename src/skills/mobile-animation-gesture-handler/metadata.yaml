@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-animation
+slug: gesture-handler
+domain: mobile
+author: "@vince"
+displayName: Gesture Handler
+cliDescription: Native gesture system for React Native
+usageGuidance: >-
+  Use when implementing touch gestures (pan, pinch, tap, rotation, long press, fling, hover),
+  composing multiple gestures on the same view, building swipeable list rows,
+  or replacing React Native's built-in Gesture Responder System.

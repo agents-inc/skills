@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-dataviz
+slug: d3
+domain: web
+author: "@vince"
+displayName: D3.js
+cliDescription: Data-driven visualizations with D3.js
+usageGuidance: >-
+  Use when building custom data visualizations with D3.js — selections, data
+  joins, scales, axes, shapes, transitions, force layouts, geographic
+  projections, and integrating D3 with component frameworks.

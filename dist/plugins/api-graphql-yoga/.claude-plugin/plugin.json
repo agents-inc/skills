@@ -1,0 +1,9 @@
+{
+  "name": "api-graphql-yoga",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "GraphQL Yoga v5 server, Envelop plugins, subscriptions, error masking",
+  "author": {
+    "name": "@vince"
+  }
+}

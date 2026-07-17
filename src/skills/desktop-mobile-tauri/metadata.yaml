@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-mobile
+slug: tauri-mobile
+domain: desktop
+author: "@vince"
+displayName: Tauri Mobile
+cliDescription: Mobile app development with Tauri 2.x
+usageGuidance: >-
+  Use when building iOS or Android mobile apps with Tauri 2.x, initializing mobile
+  targets, using mobile-specific plugins (biometric, barcode-scanner, NFC, haptics,
+  geolocation), writing platform-specific Swift/Kotlin plugin code, configuring
+  mobile permissions (AndroidManifest.xml, Info.plist), or debugging on mobile
+  devices and emulators.

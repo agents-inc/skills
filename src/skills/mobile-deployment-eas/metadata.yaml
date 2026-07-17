@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-deployment
+slug: eas
+domain: mobile
+author: "@vince"
+displayName: EAS
+cliDescription: EAS Build, Update, Submit patterns
+usageGuidance: >-
+  Use when configuring EAS Build profiles, publishing OTA updates with EAS Update,
+  submitting to app stores with EAS Submit, managing credentials, setting up CI/CD
+  with EAS Workflows, or configuring eas.json for any Expo project.

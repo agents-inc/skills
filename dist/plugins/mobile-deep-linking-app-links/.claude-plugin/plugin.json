@@ -1,0 +1,9 @@
+{
+  "name": "mobile-deep-linking-app-links",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Deep linking patterns - Universal Links (iOS), App Links (Android), URI schemes, expo-linking API, React Navigation linking config, Expo Router automatic linking, AASA/assetlinks.json setup, deferred deep links, testing",
+  "author": {
+    "name": "@vince"
+  }
+}

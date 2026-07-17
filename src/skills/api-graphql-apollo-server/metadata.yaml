@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-graphql
+slug: apollo-server
+domain: api
+author: "@vince"
+displayName: Apollo Server
+cliDescription: GraphQL API server with Apollo Server
+usageGuidance: >-
+  Use when building GraphQL APIs with Apollo Server — schema definition,
+  resolvers, context, data sources, error handling, subscriptions, caching,
+  and federation patterns.

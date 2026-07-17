@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-dataviz
+slug: recharts
+domain: web
+author: "@vince"
+displayName: Recharts
+cliDescription: Composable chart components with Recharts
+usageGuidance: >-
+  Use when building charts and data visualizations with Recharts — line charts,
+  bar charts, area charts, pie charts, scatter plots, composed charts,
+  responsive containers, custom tooltips, animations, and real-time data updates.

@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-deep-linking
+slug: app-links
+domain: mobile
+author: "@vince"
+displayName: Deep Linking & App Links
+cliDescription: Universal Links, App Links, URI schemes
+usageGuidance: >-
+  Use when implementing deep linking, Universal Links (iOS), App Links (Android),
+  custom URI schemes, or configuring navigation to handle incoming URLs in React Native.

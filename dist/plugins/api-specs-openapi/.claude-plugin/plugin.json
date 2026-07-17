@@ -1,0 +1,9 @@
+{
+  "name": "api-specs-openapi",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "OpenAPI 3.1 specification, schema design, code generation",
+  "author": {
+    "name": "@vince"
+  }
+}

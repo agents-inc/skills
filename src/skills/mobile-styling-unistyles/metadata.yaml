@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-styling
+slug: unistyles
+domain: mobile
+author: "@vince"
+displayName: Unistyles
+cliDescription: C++ powered React Native styling
+usageGuidance: >-
+  Use when styling React Native components with Unistyles 3.0: theming with
+  StyleSheet.configure, breakpoints and media queries, variants and compound
+  variants, dynamic functions, runtime values (insets, screen, fontScale),
+  scoped themes, or migrating from Unistyles 2.x.

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-security
+slug: react-native-security
+domain: mobile
+author: "@vince"
+displayName: React Native Security
+cliDescription: Mobile app security hardening
+usageGuidance: >-
+  Use when implementing secure storage, certificate pinning, biometric
+  authentication, jailbreak/root detection, code obfuscation, screenshot
+  prevention, or network security in React Native apps.

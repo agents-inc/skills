@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-storage
+slug: watermelondb
+domain: mobile
+author: "@vince"
+displayName: WatermelonDB
+cliDescription: Reactive local database for React Native
+usageGuidance: >-
+  Use when building offline-first React Native apps with WatermelonDB - schema
+  and model definitions, reactive queries with observe/withObservables,
+  relations, writer/reader actions, batch operations, migrations, or sync with
+  pullChanges/pushChanges.

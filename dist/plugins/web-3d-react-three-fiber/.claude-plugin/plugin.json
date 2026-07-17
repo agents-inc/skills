@@ -1,0 +1,9 @@
+{
+  "name": "web-3d-react-three-fiber",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "React Three Fiber (R3F) 3D rendering — Canvas, meshes, materials, lights, cameras, animations, events, physics, post-processing, performance",
+  "author": {
+    "name": "@vince"
+  }
+}

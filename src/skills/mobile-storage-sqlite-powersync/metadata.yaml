@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-storage
+slug: sqlite-powersync
+domain: mobile
+author: "@vince"
+displayName: SQLite + PowerSync
+cliDescription: Offline-first SQLite sync engine
+usageGuidance: >-
+  Use when building offline-first React Native apps with @powersync/react-native -
+  local SQLite database with cloud sync, schema definition, watched queries,
+  CRUD operations, backend connectors, conflict resolution, or attachment handling.

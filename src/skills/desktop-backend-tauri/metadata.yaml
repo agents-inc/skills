@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-backend
+slug: tauri-backend
+domain: desktop
+author: "@vince"
+displayName: Tauri Rust Backend
+cliDescription: Rust command patterns, state, error handling
+usageGuidance: >-
+  Use when writing Tauri Rust backend code: defining #[tauri::command] handlers
+  (sync and async), managing state with app.manage() and State<T>, implementing
+  error types with thiserror + serde::Serialize, emitting events from Rust,
+  streaming data via Channel<T>, or testing Rust commands with the mock runtime.

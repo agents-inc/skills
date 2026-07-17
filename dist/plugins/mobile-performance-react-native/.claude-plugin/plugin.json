@@ -1,0 +1,9 @@
+{
+  "name": "mobile-performance-react-native",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "React Native performance profiling, optimization, and monitoring - JS/UI thread analysis, re-render prevention, list optimization, image performance, bundle size, startup time, memory leaks, React Compiler, New Architecture benefits",
+  "author": {
+    "name": "@vince"
+  }
+}

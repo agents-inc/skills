@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-updates
+slug: electron-updater
+domain: desktop
+author: "@vince"
+displayName: Electron Auto-Updates
+cliDescription: Cross-platform auto-update with electron-updater
+usageGuidance: >-
+  Use when implementing auto-updates in Electron apps using electron-updater from the
+  electron-builder ecosystem. Covers update providers (GitHub, S3, generic server),
+  update channels (stable/beta/alpha), staged rollouts, differential downloads,
+  manual update control, error handling, and local testing.

@@ -1,0 +1,9 @@
+{
+  "name": "mobile-navigation-expo-router",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "File-based routing and navigation for Expo/React Native",
+  "author": {
+    "name": "@vince"
+  }
+}

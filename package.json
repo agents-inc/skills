@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/agents-inc/skills#readme",
   "scripts": {
-    "update-marketplace": "npx @agents-inc/cli build plugins && npx @agents-inc/cli build marketplace",
+    "update-marketplace": "npx @agents-inc/cli@0.141.5 build plugins && npx @agents-inc/cli@0.141.5 build marketplace --name agents-inc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"

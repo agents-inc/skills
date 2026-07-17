@@ -1,0 +1,9 @@
+{
+  "name": "api-caching-strategies",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Application-level caching strategies, HTTP caching, cache invalidation, and stampede prevention",
+  "author": {
+    "name": "@vince"
+  }
+}

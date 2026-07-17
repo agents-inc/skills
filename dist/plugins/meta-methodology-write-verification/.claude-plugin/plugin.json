@@ -1,9 +1,0 @@
-{
-  "name": "meta-methodology-write-verification",
-  "version": "1.0.0",
-  "skills": "./skills/",
-  "description": "Write verification protocol - never report success without verifying work was actually saved. Re-read files after edits, verify changes exist, only report success after verification passes.",
-  "author": {
-    "name": "@vince"
-  }
-}

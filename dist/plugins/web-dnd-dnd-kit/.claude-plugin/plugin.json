@@ -1,0 +1,9 @@
+{
+  "name": "web-dnd-dnd-kit",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Drag and drop with @dnd-kit - draggable, droppable, sortable, collision detection, sensors, accessibility",
+  "author": {
+    "name": "@vince"
+  }
+}

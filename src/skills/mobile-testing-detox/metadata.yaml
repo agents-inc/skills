@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-testing
+slug: detox
+domain: mobile
+author: "@vince"
+displayName: Detox
+cliDescription: React Native E2E gray-box testing
+usageGuidance: >-
+  Use when writing end-to-end tests for React Native apps with Detox,
+  configuring .detoxrc.js, using element matchers/actions/expectations,
+  waitFor polling, device API, mocking with Metro, or setting up CI artifacts.

@@ -3,8 +3,7 @@
   "name": "agents-inc",
   "version": "1.0.0",
   "owner": {
-    "name": "Agents Inc.",
-    "email": "hello@agents-inc.com"
+    "name": "Vincent Bollaert"
   },
   "metadata": {
     "pluginRoot": "./dist/plugins"
@@ -13,7 +12,7 @@
     {
       "name": "ai-infrastructure-huggingface-inference",
       "source": "./dist/plugins/ai-infrastructure-huggingface-inference",
-      "description": "Hugging Face Inference SDK patterns for TypeScript/Node.js — InferenceClient setup, chat completion, text generation, streaming, embeddings, image generation, audio transcription, translation, summarization, and Inference Endpoints",
+      "description": "Hugging Face Inference SDK patterns for TypeScript/Node.js - InferenceClient setup, chat completion, text generation, streaming, embeddings, image generation, audio transcription, translation, summarization, and Inference Endpoints",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -31,7 +30,7 @@
     {
       "name": "ai-infrastructure-modal",
       "source": "./dist/plugins/ai-infrastructure-modal",
-      "description": "Serverless GPU compute platform for AI model deployment — web endpoints, GPU functions, model serving, and TypeScript client patterns",
+      "description": "Serverless GPU compute platform for AI model deployment - web endpoints, GPU functions, model serving, and TypeScript client patterns",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -40,7 +39,7 @@
     {
       "name": "ai-infrastructure-ollama",
       "source": "./dist/plugins/ai-infrastructure-ollama",
-      "description": "Local LLM inference with the Ollama JavaScript client -- chat, streaming, tool calling, vision, embeddings, structured output, model management, and OpenAI-compatible endpoint",
+      "description": "Local LLM inference with the Ollama JavaScript client - chat, streaming, tool calling, vision, embeddings, structured output, model management, and OpenAI-compatible endpoint",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -49,7 +48,7 @@
     {
       "name": "ai-infrastructure-replicate",
       "source": "./dist/plugins/ai-infrastructure-replicate",
-      "description": "Replicate SDK patterns for TypeScript/Node.js -- client setup, predictions, streaming, webhooks, file handling, model versioning, deployments, and training",
+      "description": "Replicate SDK patterns for TypeScript/Node.js - client setup, predictions, streaming, webhooks, file handling, model versioning, deployments, and training",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -58,7 +57,7 @@
     {
       "name": "ai-infrastructure-together-ai",
       "source": "./dist/plugins/ai-infrastructure-together-ai",
-      "description": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
+      "description": "Together AI SDK patterns for TypeScript - client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -67,7 +66,7 @@
     {
       "name": "ai-observability-langfuse",
       "source": "./dist/plugins/ai-observability-langfuse",
-      "description": "LLM observability with Langfuse — OpenTelemetry-based tracing, evaluations, prompt management, datasets, and production best practices",
+      "description": "LLM observability with Langfuse - OpenTelemetry-based tracing, evaluations, prompt management, datasets, and production best practices",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -76,7 +75,7 @@
     {
       "name": "ai-observability-promptfoo",
       "source": "./dist/plugins/ai-observability-promptfoo",
-      "description": "Testing and evaluation framework for LLM prompts and applications -- promptfooconfig.yaml, assertions, model-graded evals, red teaming, CI/CD integration, custom providers, and comparative evaluation",
+      "description": "Testing and evaluation framework for LLM prompts and applications - promptfooconfig.yaml, assertions, model-graded evals, red teaming, CI/CD integration, custom providers, and comparative evaluation",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -85,7 +84,7 @@
     {
       "name": "ai-orchestration-langchain",
       "source": "./dist/plugins/ai-orchestration-langchain",
-      "description": "LangChain.js patterns for building LLM applications — chat models, LCEL chains, prompt templates, structured output, agents, tools, RAG, streaming, and LangSmith tracing",
+      "description": "LangChain.js patterns for building LLM applications - chat models, LCEL chains, prompt templates, structured output, agents, tools, RAG, streaming, and LangSmith tracing",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -121,7 +120,7 @@
     {
       "name": "ai-provider-anthropic-sdk",
       "source": "./dist/plugins/ai-provider-anthropic-sdk",
-      "description": "Official Anthropic SDK patterns for TypeScript/Node.js — client setup, Messages API, streaming, tool use, vision, extended thinking, structured outputs, prompt caching, batch API, and production best practices",
+      "description": "Official Anthropic SDK patterns for TypeScript/Node.js - client setup, Messages API, streaming, tool use, vision, extended thinking, structured outputs, prompt caching, batch API, and production best practices",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -130,7 +129,7 @@
     {
       "name": "ai-provider-claude-vision",
       "source": "./dist/plugins/ai-provider-claude-vision",
-      "description": "Image understanding and document analysis with Claude's multimodal capabilities -- image input formats, PDF processing, multi-image patterns, structured extraction, and token cost estimation",
+      "description": "Image understanding and document analysis with Claude's multimodal capabilities - image input formats, PDF processing, multi-image patterns, structured extraction, and token cost estimation",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -139,7 +138,7 @@
     {
       "name": "ai-provider-cohere-sdk",
       "source": "./dist/plugins/ai-provider-cohere-sdk",
-      "description": "Official Cohere TypeScript SDK patterns -- CohereClientV2, chat, embeddings, rerank, RAG with citations, tool use, streaming, and model selection",
+      "description": "Official Cohere TypeScript SDK patterns - CohereClientV2, chat, embeddings, rerank, RAG with citations, tool use, streaming, and model selection",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -148,7 +147,7 @@
     {
       "name": "ai-provider-elevenlabs",
       "source": "./dist/plugins/ai-provider-elevenlabs",
-      "description": "ElevenLabs voice AI SDK patterns for TypeScript/Node.js -- text-to-speech, streaming, voice cloning, speech-to-speech, pronunciation control, and conversational AI",
+      "description": "ElevenLabs voice AI SDK patterns for TypeScript/Node.js - text-to-speech, streaming, voice cloning, speech-to-speech, pronunciation control, and conversational AI",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -157,7 +156,7 @@
     {
       "name": "ai-provider-google-gemini-sdk",
       "source": "./dist/plugins/ai-provider-google-gemini-sdk",
-      "description": "Official TypeScript SDK for Google Gemini — client setup, text generation, multimodal input, function calling, structured output, streaming, embeddings, context caching, and chat sessions",
+      "description": "Official TypeScript SDK for Google Gemini - client setup, text generation, multimodal input, function calling, structured output, streaming, embeddings, context caching, and chat sessions",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -166,7 +165,7 @@
     {
       "name": "ai-provider-mistral-sdk",
       "source": "./dist/plugins/ai-provider-mistral-sdk",
-      "description": "Official Mistral AI TypeScript SDK patterns — client setup, chat completions, streaming, function calling, structured outputs, embeddings, vision, Codestral FIM, and production best practices",
+      "description": "Official Mistral AI TypeScript SDK patterns - client setup, chat completions, streaming, function calling, structured outputs, embeddings, vision, Codestral FIM, and production best practices",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -175,7 +174,7 @@
     {
       "name": "ai-provider-openai-sdk",
       "source": "./dist/plugins/ai-provider-openai-sdk",
-      "description": "Official OpenAI SDK patterns for TypeScript/Node.js — client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
+      "description": "Official OpenAI SDK patterns for TypeScript/Node.js - client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -184,188 +183,8 @@
     {
       "name": "ai-provider-openai-whisper",
       "source": "./dist/plugins/ai-provider-openai-whisper",
-      "description": "Speech-to-text transcription and translation via OpenAI Audio API -- models, response formats, timestamps, prompting, streaming, chunking, and diarization",
+      "description": "Speech-to-text transcription and translation via OpenAI Audio API - models, response formats, timestamps, prompting, streaming, chunking, and diarization",
       "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-anthropic-sdk",
-      "source": "./dist/plugins/api-ai-anthropic-sdk",
-      "description": "Official Anthropic SDK patterns for TypeScript/Node.js — client setup, Messages API, streaming, tool use, vision, extended thinking, structured outputs, prompt caching, batch API, and production best practices",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-claude-vision",
-      "source": "./dist/plugins/api-ai-claude-vision",
-      "description": "Image understanding and document analysis with Claude's multimodal capabilities -- image input formats, PDF processing, multi-image patterns, structured extraction, and token cost estimation",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-cohere-sdk",
-      "source": "./dist/plugins/api-ai-cohere-sdk",
-      "description": "Official Cohere TypeScript SDK patterns -- CohereClientV2, chat, embeddings, rerank, RAG with citations, tool use, streaming, and model selection",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-elevenlabs",
-      "source": "./dist/plugins/api-ai-elevenlabs",
-      "description": "ElevenLabs voice AI SDK patterns for TypeScript/Node.js -- text-to-speech, streaming, voice cloning, speech-to-speech, pronunciation control, and conversational AI",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-google-gemini-sdk",
-      "source": "./dist/plugins/api-ai-google-gemini-sdk",
-      "description": "Official TypeScript SDK for Google Gemini — client setup, text generation, multimodal input, function calling, structured output, streaming, embeddings, context caching, and chat sessions",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-huggingface-inference",
-      "source": "./dist/plugins/api-ai-huggingface-inference",
-      "description": "Hugging Face Inference SDK patterns for TypeScript/Node.js — InferenceClient setup, chat completion, text generation, streaming, embeddings, image generation, audio transcription, translation, summarization, and Inference Endpoints",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-langchain",
-      "source": "./dist/plugins/api-ai-langchain",
-      "description": "LangChain.js patterns for building LLM applications — chat models, LCEL chains, prompt templates, structured output, agents, tools, RAG, streaming, and LangSmith tracing",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-langfuse",
-      "source": "./dist/plugins/api-ai-langfuse",
-      "description": "LLM observability with Langfuse — OpenTelemetry-based tracing, evaluations, prompt management, datasets, and production best practices",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-litellm",
-      "source": "./dist/plugins/api-ai-litellm",
-      "description": "LiteLLM proxy server setup, TypeScript client patterns via OpenAI SDK, model routing, fallbacks, load balancing, spend tracking, virtual keys, and production deployment",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-llamaindex",
-      "source": "./dist/plugins/api-ai-llamaindex",
-      "description": "LlamaIndex.TS data framework for RAG, indexing, retrieval, query engines, chat engines, and agentic workflows in TypeScript",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-mistral-sdk",
-      "source": "./dist/plugins/api-ai-mistral-sdk",
-      "description": "Official Mistral AI TypeScript SDK patterns — client setup, chat completions, streaming, function calling, structured outputs, embeddings, vision, Codestral FIM, and production best practices",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-modal",
-      "source": "./dist/plugins/api-ai-modal",
-      "description": "Serverless GPU compute platform for AI model deployment — web endpoints, GPU functions, model serving, and TypeScript client patterns",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-ollama",
-      "source": "./dist/plugins/api-ai-ollama",
-      "description": "Local LLM inference with the Ollama JavaScript client -- chat, streaming, tool calling, vision, embeddings, structured output, model management, and OpenAI-compatible endpoint",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-openai-sdk",
-      "source": "./dist/plugins/api-ai-openai-sdk",
-      "description": "Official OpenAI SDK patterns for TypeScript/Node.js — client setup, Chat Completions, Responses API, streaming, structured outputs, function calling, embeddings, vision, audio, and production best practices",
-      "version": "3.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-openai-whisper",
-      "source": "./dist/plugins/api-ai-openai-whisper",
-      "description": "Speech-to-text transcription and translation via OpenAI Audio API -- models, response formats, timestamps, prompting, streaming, chunking, and diarization",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-promptfoo",
-      "source": "./dist/plugins/api-ai-promptfoo",
-      "description": "Testing and evaluation framework for LLM prompts and applications -- promptfooconfig.yaml, assertions, model-graded evals, red teaming, CI/CD integration, custom providers, and comparative evaluation",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-replicate",
-      "source": "./dist/plugins/api-ai-replicate",
-      "description": "Replicate SDK patterns for TypeScript/Node.js -- client setup, predictions, streaming, webhooks, file handling, model versioning, deployments, and training",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-together-ai",
-      "source": "./dist/plugins/api-ai-together-ai",
-      "description": "Together AI SDK patterns for TypeScript — client setup, chat completions, streaming, structured output, function calling, embeddings, image generation, fine-tuning, and OpenAI-compatible endpoints",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-tool-use-patterns",
-      "source": "./dist/plugins/api-ai-tool-use-patterns",
-      "description": "Provider-agnostic patterns for LLM function calling, tool loops, and agentic workflows",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ai-vercel-ai-sdk",
-      "source": "./dist/plugins/api-ai-vercel-ai-sdk",
-      "description": "Vercel AI SDK patterns - providers, text generation, streaming, structured output, tool calling, chat UI hooks, embeddings, and RAG",
-      "version": "4.0.0",
       "author": {
         "name": "@vince"
       }
@@ -418,7 +237,7 @@
     {
       "name": "api-baas-appwrite",
       "source": "./dist/plugins/api-baas-appwrite",
-      "description": "Appwrite backend-as-a-service — Auth, TablesDB, Storage, Functions, Realtime, permissions model, typed client",
+      "description": "Appwrite backend-as-a-service - Auth, TablesDB, Storage, Functions, Realtime, permissions model, typed client",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -427,7 +246,7 @@
     {
       "name": "api-baas-firebase",
       "source": "./dist/plugins/api-baas-firebase",
-      "description": "Firebase backend-as-a-service — Firestore, Authentication, Cloud Functions v2, Storage, Hosting, Admin SDK, security rules, emulator suite",
+      "description": "Firebase backend-as-a-service - Firestore, Authentication, Cloud Functions v2, Storage, Hosting, Admin SDK, security rules, emulator suite",
       "version": "4.0.0",
       "author": {
         "name": "@vince"
@@ -454,7 +273,7 @@
     {
       "name": "api-baas-supabase",
       "source": "./dist/plugins/api-baas-supabase",
-      "description": "Supabase backend-as-a-service — Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
+      "description": "Supabase backend-as-a-service - Auth, Database, Realtime, Storage, Edge Functions, RLS policies, typed client",
       "version": "5.0.0",
       "author": {
         "name": "@vince"
@@ -470,37 +289,10 @@
       }
     },
     {
-      "name": "api-baas-upstash",
-      "source": "./dist/plugins/api-baas-upstash",
-      "description": "Upstash serverless Redis -- REST-based client, auto-serialization, pipelines, rate limiting, QStash, edge compatibility, global replication",
+      "name": "api-caching-strategies",
+      "source": "./dist/plugins/api-caching-strategies",
+      "description": "Application-level caching strategies, HTTP caching, cache invalidation, and stampede prevention",
       "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-baas-vercel-kv",
-      "source": "./dist/plugins/api-baas-vercel-kv",
-      "description": "Serverless Redis-compatible key-value store via Upstash REST API -- edge-compatible, automatic JSON serialization, TTL-based caching",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-baas-vercel-postgres",
-      "source": "./dist/plugins/api-baas-vercel-postgres",
-      "description": "Serverless PostgreSQL on Vercel with edge-compatible SDK",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "api-ci-cd-github-actions",
-      "source": "./dist/plugins/api-ci-cd-github-actions",
-      "description": "GitHub Actions, pipelines, deployment",
-      "version": "2.0.0",
       "author": {
         "name": "@vince"
       }
@@ -508,7 +300,7 @@
     {
       "name": "api-cms-payload",
       "source": "./dist/plugins/api-cms-payload",
-      "description": "Payload CMS v3 — TypeScript-native headless CMS with code-first collections, hooks, access control, Local/REST/GraphQL APIs, admin panel, and database adapter pattern",
+      "description": "Payload CMS v3 - TypeScript-native headless CMS with code-first collections, hooks, access control, Local/REST/GraphQL APIs, admin panel, and database adapter pattern",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -517,7 +309,7 @@
     {
       "name": "api-cms-sanity",
       "source": "./dist/plugins/api-cms-sanity",
-      "description": "Structured content platform — GROQ queries, schema definitions, @sanity/client, Portable Text, image handling, real-time listeners, mutations, TypeGen",
+      "description": "Structured content platform - GROQ queries, schema definitions, @sanity/client, Portable Text, image handling, real-time listeners, mutations, TypeGen",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -526,7 +318,7 @@
     {
       "name": "api-cms-strapi",
       "source": "./dist/plugins/api-cms-strapi",
-      "description": "Open-source headless CMS — content type schemas, REST API, Document Service API, custom controllers, lifecycle hooks, authentication, TypeScript",
+      "description": "Open-source headless CMS - content type schemas, REST API, Document Service API, custom controllers, lifecycle hooks, authentication, TypeScript",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -535,7 +327,7 @@
     {
       "name": "api-commerce-stripe",
       "source": "./dist/plugins/api-commerce-stripe",
-      "description": "Stripe payment processing — Checkout Sessions, Payment Intents, subscriptions, webhooks, Connect, customer management, error handling",
+      "description": "Stripe payment processing - Checkout Sessions, Payment Intents, subscriptions, webhooks, Connect, customer management, error handling",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -544,7 +336,7 @@
     {
       "name": "api-database-cockroachdb",
       "source": "./dist/plugins/api-database-cockroachdb",
-      "description": "CockroachDB distributed SQL -- transaction retries, multi-region, online schema changes, follower reads, PostgreSQL compatibility gaps",
+      "description": "CockroachDB distributed SQL - transaction retries, multi-region, online schema changes, follower reads, PostgreSQL compatibility gaps",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -571,7 +363,7 @@
     {
       "name": "api-database-knex",
       "source": "./dist/plugins/api-database-knex",
-      "description": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL -- fluent queries, schema builder, migrations, seeds, transactions, raw queries",
+      "description": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL - fluent queries, schema builder, migrations, seeds, transactions, raw queries",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -598,7 +390,7 @@
     {
       "name": "api-database-mysql",
       "source": "./dist/plugins/api-database-mysql",
-      "description": "Direct MySQL database access with mysql2 driver -- connection pools, prepared statements, transactions, streaming, typed queries, error handling",
+      "description": "Direct MySQL database access with mysql2 driver - connection pools, prepared statements, transactions, streaming, typed queries, error handling",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -607,7 +399,7 @@
     {
       "name": "api-database-postgresql",
       "source": "./dist/plugins/api-database-postgresql",
-      "description": "Direct PostgreSQL access with node-postgres (pg) -- connection pools, parameterized queries, transactions, streaming, LISTEN/NOTIFY, error handling",
+      "description": "Direct PostgreSQL access with node-postgres (pg) - connection pools, parameterized queries, transactions, streaming, LISTEN/NOTIFY, error handling",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -625,7 +417,7 @@
     {
       "name": "api-database-redis",
       "source": "./dist/plugins/api-database-redis",
-      "description": "Redis in-memory data store patterns with ioredis and node-redis -- caching, sessions, rate limiting, pub/sub, streams, queues, transactions, cluster",
+      "description": "Redis in-memory data store patterns with ioredis and node-redis - caching, sessions, rate limiting, pub/sub, streams, queues, transactions, cluster",
       "version": "4.0.0",
       "author": {
         "name": "@vince"
@@ -661,7 +453,7 @@
     {
       "name": "api-database-upstash",
       "source": "./dist/plugins/api-database-upstash",
-      "description": "Upstash serverless Redis -- REST-based client, auto-serialization, pipelines, rate limiting, QStash, edge compatibility, global replication",
+      "description": "Upstash serverless Redis - REST-based client, auto-serialization, pipelines, rate limiting, QStash, edge compatibility, global replication",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -670,7 +462,7 @@
     {
       "name": "api-database-vercel-kv",
       "source": "./dist/plugins/api-database-vercel-kv",
-      "description": "Serverless Redis-compatible key-value store via Upstash REST API -- edge-compatible, automatic JSON serialization, TTL-based caching",
+      "description": "Serverless Redis-compatible key-value store via Upstash REST API - edge-compatible, automatic JSON serialization, TTL-based caching",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -715,7 +507,7 @@
     {
       "name": "api-framework-elysia",
       "source": "./dist/plugins/api-framework-elysia",
-      "description": "Bun-native HTTP framework — routing, TypeBox validation, Eden Treaty, plugins, lifecycle hooks",
+      "description": "Bun-native HTTP framework - routing, TypeBox validation, Eden Treaty, plugins, lifecycle hooks",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -758,6 +550,42 @@
       }
     },
     {
+      "name": "api-graphql-apollo-server",
+      "source": "./dist/plugins/api-graphql-apollo-server",
+      "description": "GraphQL API server with Apollo Server - schema, resolvers, context, error handling, data sources, plugins",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "api-graphql-mercurius",
+      "source": "./dist/plugins/api-graphql-mercurius",
+      "description": "GraphQL server for Fastify with Mercurius - loaders, subscriptions, federation, JIT compilation",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "api-graphql-yoga",
+      "source": "./dist/plugins/api-graphql-yoga",
+      "description": "GraphQL Yoga v5 server, Envelop plugins, subscriptions, error masking",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "api-messaging-webhooks",
+      "source": "./dist/plugins/api-messaging-webhooks",
+      "description": "Webhook patterns - receiving, sending, signature verification, and retry logic",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "api-observability-axiom-pino-sentry",
       "source": "./dist/plugins/api-observability-axiom-pino-sentry",
       "description": "Pino logging, Sentry error tracking, Axiom - structured logging with correlation IDs, error boundaries, performance monitoring, alerting",
@@ -785,9 +613,18 @@
       }
     },
     {
+      "name": "api-queue-bullmq",
+      "source": "./dist/plugins/api-queue-bullmq",
+      "description": "Job queues, background processing, and task scheduling with BullMQ v5",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "api-search-elasticsearch",
       "source": "./dist/plugins/api-search-elasticsearch",
-      "description": "Elasticsearch patterns -- client setup, index management, search DSL, aggregations, vector search, bulk operations, deep pagination",
+      "description": "Elasticsearch patterns - client setup, index management, search DSL, aggregations, vector search, bulk operations, deep pagination",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -796,7 +633,7 @@
     {
       "name": "api-search-meilisearch",
       "source": "./dist/plugins/api-search-meilisearch",
-      "description": "Meilisearch search engine patterns -- client setup, indexing, search, filtering, facets, geo search, multi-tenancy, task management",
+      "description": "Meilisearch search engine patterns - client setup, indexing, search, filtering, facets, geo search, multi-tenancy, task management",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -806,15 +643,24 @@
       "name": "api-search-xquik",
       "source": "./dist/plugins/api-search-xquik",
       "description": "Xquik REST API patterns for X/Twitter search, user lookup, timelines, media download, monitors, webhooks, and approval-gated X actions",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "@Xquik-dev"
       }
     },
     {
+      "name": "api-specs-openapi",
+      "source": "./dist/plugins/api-specs-openapi",
+      "description": "OpenAPI 3.1 specification, schema design, code generation",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "api-vector-db-chroma",
       "source": "./dist/plugins/api-vector-db-chroma",
-      "description": "Chroma vector database -- collection management, automatic embedding, metadata filtering, document storage, query patterns",
+      "description": "Chroma vector database - collection management, automatic embedding, metadata filtering, document storage, query patterns",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -823,7 +669,7 @@
     {
       "name": "api-vector-db-pinecone",
       "source": "./dist/plugins/api-vector-db-pinecone",
-      "description": "Pinecone serverless vector database -- index management, vector operations, metadata filtering, namespaces, hybrid search, inference API",
+      "description": "Pinecone serverless vector database - index management, vector operations, metadata filtering, namespaces, hybrid search, inference API",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -832,7 +678,7 @@
     {
       "name": "api-vector-db-qdrant",
       "source": "./dist/plugins/api-vector-db-qdrant",
-      "description": "Qdrant vector database -- collection management, point operations, payload filtering, named vectors, quantization, recommendations, snapshots",
+      "description": "Qdrant vector database - collection management, point operations, payload filtering, named vectors, quantization, recommendations, snapshots",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -841,7 +687,7 @@
     {
       "name": "api-vector-db-weaviate",
       "source": "./dist/plugins/api-vector-db-weaviate",
-      "description": "Weaviate vector database patterns with weaviate-client v3 -- collection management, vectorizer modules, hybrid search, filtering, generative search (RAG), multi-tenancy, batch imports",
+      "description": "Weaviate vector database patterns with weaviate-client v3 - collection management, vectorizer modules, hybrid search, filtering, generative search (RAG), multi-tenancy, batch imports",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -866,6 +712,24 @@
       }
     },
     {
+      "name": "cli-prompts-clack",
+      "source": "./dist/plugins/cli-prompts-clack",
+      "description": "Beautiful interactive CLI prompts with @clack/prompts and custom prompts with @clack/core",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-backend-tauri",
+      "source": "./dist/plugins/desktop-backend-tauri",
+      "description": "Tauri 2.x Rust command patterns, state management, error handling, events, channels, testing",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "desktop-framework-electron",
       "source": "./dist/plugins/desktop-framework-electron",
       "description": "Electron process architecture, IPC patterns, preload security, native APIs, packaging and distribution",
@@ -878,6 +742,123 @@
       "name": "desktop-framework-tauri",
       "source": "./dist/plugins/desktop-framework-tauri",
       "description": "Tauri 2.x commands, IPC bridge, permission system, plugins, window management, system tray, packaging",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-ipc-electron",
+      "source": "./dist/plugins/desktop-ipc-electron",
+      "description": "Type-safe Electron IPC patterns with typed channels, electron-trpc, MessagePort, and utility process communication",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-mobile-tauri",
+      "source": "./dist/plugins/desktop-mobile-tauri",
+      "description": "Tauri 2.x mobile development - iOS via WKWebView, Android via Android WebView, mobile plugins, Swift/Kotlin native code, permissions, debugging",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-multiwindow-electron",
+      "source": "./dist/plugins/desktop-multiwindow-electron",
+      "description": "Multi-window management, WebContentsView, BaseWindow, window lifecycle, inter-window communication, state persistence",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-multiwindow-tauri",
+      "source": "./dist/plugins/desktop-multiwindow-tauri",
+      "description": "Tauri 2.x multi-window creation, event system, window state persistence, parent/child and modal windows",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-packaging-electron-forge",
+      "source": "./dist/plugins/desktop-packaging-electron-forge",
+      "description": "Electron Forge build toolchain - makers, publishers, code signing, fuses, hooks, CI/CD packaging",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-packaging-tauri",
+      "source": "./dist/plugins/desktop-packaging-tauri",
+      "description": "Tauri 2.x bundling, code signing, auto-updater, platform installers, CI/CD",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-plugins-tauri",
+      "source": "./dist/plugins/desktop-plugins-tauri",
+      "description": "Tauri 2.x official plugin ecosystem, plugin APIs, permissions, and custom plugin development",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-security-electron",
+      "source": "./dist/plugins/desktop-security-electron",
+      "description": "Electron fuses, ASAR integrity, sandbox hardening, CSP, permission handling, navigation restrictions",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-security-tauri",
+      "source": "./dist/plugins/desktop-security-tauri",
+      "description": "Tauri 2.x deny-by-default security model, capabilities, permissions, scopes, ACL",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-storage-electron",
+      "source": "./dist/plugins/desktop-storage-electron",
+      "description": "Persistent storage, SQLite databases, and credential management in Electron apps",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-testing-electron",
+      "source": "./dist/plugins/desktop-testing-electron",
+      "description": "E2E testing with Playwright, main process unit testing, IPC testing, dialog/menu mocking, CI headless setup",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-ui-electron",
+      "source": "./dist/plugins/desktop-ui-electron",
+      "description": "Frameless windows, custom title bars, tray, menus, dock badges, vibrancy, kiosk mode, window state persistence",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "desktop-updates-electron-updater",
+      "source": "./dist/plugins/desktop-updates-electron-updater",
+      "description": "Cross-platform auto-update patterns with electron-updater (electron-builder ecosystem)",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -902,6 +883,15 @@
       }
     },
     {
+      "name": "infra-ci-cd-turborepo-ci",
+      "source": "./dist/plugins/infra-ci-cd-turborepo-ci",
+      "description": "Turborepo CI pipelines with remote caching and affected detection",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "infra-config-setup-env",
       "source": "./dist/plugins/infra-config-setup-env",
       "description": "Environment configuration, Zod validation",
@@ -911,19 +901,46 @@
       }
     },
     {
-      "name": "infra-env-setup-env",
-      "source": "./dist/plugins/infra-env-setup-env",
-      "description": "Environment configuration, Zod validation",
-      "version": "2.0.0",
+      "name": "infra-containers-kubernetes",
+      "source": "./dist/plugins/infra-containers-kubernetes",
+      "description": "Kubernetes manifests, Helm charts, Kustomize overlays, and resource patterns",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
     },
     {
-      "name": "infra-monorepo-turborepo",
-      "source": "./dist/plugins/infra-monorepo-turborepo",
-      "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
-      "version": "2.0.0",
+      "name": "infra-iac-pulumi",
+      "source": "./dist/plugins/infra-iac-pulumi",
+      "description": "TypeScript-native Infrastructure as Code with Pulumi",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "infra-iac-sst",
+      "source": "./dist/plugins/infra-iac-sst",
+      "description": "SST (Ion) infrastructure-as-code - TypeScript-first serverless on AWS with Pulumi, resource linking, and live Lambda dev",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "infra-iac-terraform",
+      "source": "./dist/plugins/infra-iac-terraform",
+      "description": "Infrastructure as Code with HashiCorp Terraform",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "infra-platform-aws-sdk",
+      "source": "./dist/plugins/infra-platform-aws-sdk",
+      "description": "AWS SDK v3 for TypeScript - modular clients, command pattern, S3, DynamoDB, SQS, Lambda, SNS, Secrets Manager",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
@@ -931,8 +948,26 @@
     {
       "name": "infra-platform-cloudflare-workers",
       "source": "./dist/plugins/infra-platform-cloudflare-workers",
-      "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
+      "description": "Cloudflare Workers edge compute platform - Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
       "version": "2.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "infra-platform-netlify",
+      "source": "./dist/plugins/infra-platform-netlify",
+      "description": "Netlify deployment platform - serverless functions, edge functions, redirects, forms, Blobs, build plugins",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "infra-platform-vercel",
+      "source": "./dist/plugins/infra-platform-vercel",
+      "description": "Vercel deployment platform - project configuration, serverless/edge functions, Routing Middleware, cron jobs, environment variables, monorepo setup",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
@@ -940,44 +975,8 @@
     {
       "name": "meta-design-expressive-typescript",
       "source": "./dist/plugins/meta-design-expressive-typescript",
-      "description": "Readable functional patterns — orchestrators, pure functions, named abstractions",
+      "description": "Readable functional patterns - orchestrators, pure functions, named abstractions",
       "version": "2.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-methodology-anti-over-engineering",
-      "source": "./dist/plugins/meta-methodology-anti-over-engineering",
-      "description": "Anti-over-engineering principles - surgical implementation, not architectural innovation. Use existing utilities, minimal changes, follow established conventions. No new abstractions.",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-methodology-context-management",
-      "source": "./dist/plugins/meta-methodology-context-management",
-      "description": "Long-term context management protocol - maintain project continuity across sessions through systematic documentation. Progress tracking, decision logging, insight preservation.",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-methodology-improvement-protocol",
-      "source": "./dist/plugins/meta-methodology-improvement-protocol",
-      "description": "Self-improvement protocol for agents modifying their own prompts/configurations. Evidence-based improvements, structured changes, proven patterns from research.",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-methodology-investigation-requirements",
-      "source": "./dist/plugins/meta-methodology-investigation-requirements",
-      "description": "Investigation requirement - never speculate about code you haven't read. List files, read completely, base analysis on evidence. Prevents hallucination in coding agents.",
-      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
@@ -985,33 +984,6 @@
     {
       "name": "meta-methodology-research-methodology",
       "source": "./dist/plugins/meta-methodology-research-methodology",
-      "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
-      "version": "2.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-methodology-success-criteria",
-      "source": "./dist/plugins/meta-methodology-success-criteria",
-      "description": "Success criteria template - every task needs explicit, measurable criteria defining \"done\". Specific, measurable, achievable, verifiable requirements with verification checklist.",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-methodology-write-verification",
-      "source": "./dist/plugins/meta-methodology-write-verification",
-      "description": "Write verification protocol - never report success without verifying work was actually saved. Re-read files after edits, verify changes exist, only report success after verification passes.",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "meta-research-research-methodology",
-      "source": "./dist/plugins/meta-research-research-methodology",
       "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
       "version": "2.0.0",
       "author": {
@@ -1037,6 +1009,69 @@
       }
     },
     {
+      "name": "mobile-animation-gesture-handler",
+      "source": "./dist/plugins/mobile-animation-gesture-handler",
+      "description": "React Native Gesture Handler - gesture types, GestureDetector, gesture composition, state machine, platform-specific gestures, swipeable rows, hover gestures",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-animation-reanimated",
+      "source": "./dist/plugins/mobile-animation-reanimated",
+      "description": "React Native Reanimated 4 - shared values, animated styles, spring/timing/decay, layout animations, gesture integration, scroll-driven animations, interpolation, worklets, CSS animations",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-animation-skia",
+      "source": "./dist/plugins/mobile-animation-skia",
+      "description": "React Native Skia GPU-accelerated 2D graphics - Canvas, declarative drawing, shaders, image filters, Paragraph text, Atlas batch rendering, Reanimated animations",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-background-tasks",
+      "source": "./dist/plugins/mobile-background-tasks",
+      "description": "Background fetch, processing tasks, background location, headless JS, battery optimization - Expo and bare React Native",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-camera-vision-camera",
+      "source": "./dist/plugins/mobile-camera-vision-camera",
+      "description": "VisionCamera v4+ - photo/video capture, QR/barcode scanning, real-time frame processors, zoom/focus/exposure, HDR, location metadata, format selection",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-deep-linking-app-links",
+      "source": "./dist/plugins/mobile-deep-linking-app-links",
+      "description": "Deep linking patterns - Universal Links (iOS), App Links (Android), URI schemes, expo-linking API, React Navigation linking config, Expo Router automatic linking, AASA/assetlinks.json setup, deferred deep links, testing",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-deployment-eas",
+      "source": "./dist/plugins/mobile-deployment-eas",
+      "description": "EAS Build, Update, Submit deployment patterns",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "mobile-framework-expo",
       "source": "./dist/plugins/mobile-framework-expo",
       "description": "Expo managed workflow",
@@ -1055,72 +1090,135 @@
       }
     },
     {
-      "name": "security-auth-security",
-      "source": "./dist/plugins/security-auth-security",
-      "description": "Secrets management, XSS prevention, CSRF protection, dependency scanning, DOMPurify sanitization, CSP headers, CODEOWNERS, HttpOnly cookies",
-      "version": "2.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "shared-ci-cd-cloudflare-workers",
-      "source": "./dist/plugins/shared-ci-cd-cloudflare-workers",
-      "description": "Cloudflare Workers edge compute platform — Wrangler CLI, KV, D1, R2, Durable Objects, Queues, Workers AI",
-      "version": "3.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "shared-ci-cd-docker",
-      "source": "./dist/plugins/shared-ci-cd-docker",
-      "description": "Docker containerization patterns for Node.js/TypeScript development and production",
-      "version": "3.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "shared-ci-cd-github-actions",
-      "source": "./dist/plugins/shared-ci-cd-github-actions",
-      "description": "GitHub Actions, pipelines, deployment",
-      "version": "2.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "shared-infra-setup-env",
-      "source": "./dist/plugins/shared-infra-setup-env",
-      "description": "Environment configuration, Zod validation",
-      "version": "2.0.0",
-      "author": {
-        "name": "@vince"
-      }
-    },
-    {
-      "name": "shared-meta-cli-reviewing",
-      "source": "./dist/plugins/shared-meta-cli-reviewing",
-      "description": "CLI code review patterns. Use when reviewing CLI applications built with Commander.js, @clack/prompts, picocolors. Covers exit codes, signal handling, error messages, user experience, testing adequacy.",
+      "name": "mobile-hardware-ble-nfc",
+      "source": "./dist/plugins/mobile-hardware-ble-nfc",
+      "description": "BLE scanning/connecting/GATT operations with react-native-ble-plx, NFC tag reading/writing with react-native-nfc-manager, permissions, background mode, battery-efficient patterns",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
     },
     {
-      "name": "shared-meta-research-methodology",
-      "source": "./dist/plugins/shared-meta-research-methodology",
-      "description": "Investigation flow (Glob -> Grep -> Read), evidence-based research with file:line references, structured output format for AI consumption. Use for pattern discovery, implementation research, and codebase investigation.",
-      "version": "2.0.0",
+      "name": "mobile-navigation-expo-router",
+      "source": "./dist/plugins/mobile-navigation-expo-router",
+      "description": "File-based routing and navigation for Expo/React Native",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
     },
     {
-      "name": "shared-meta-reviewing",
-      "source": "./dist/plugins/shared-meta-reviewing",
-      "description": "Code review patterns, feedback principles. Use when reviewing PRs, implementations, or making approval/rejection decisions. Covers self-correction, progress tracking, feedback principles, severity levels.",
+      "name": "mobile-navigation-react-navigation",
+      "source": "./dist/plugins/mobile-navigation-react-navigation",
+      "description": "React Navigation 7+ patterns - static and dynamic APIs, type-safe navigation, stack/tab/drawer navigators, deep linking, authentication flows, screen preloading, header customization",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-notifications-push",
+      "source": "./dist/plugins/mobile-notifications-push",
+      "description": "Push notification patterns - expo-notifications (Expo) and @react-native-firebase/messaging (bare RN), permission handling, token management, foreground/background/tap listeners, local scheduling, Android channels, notification categories and actions, badge management, rich notifications",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-performance-react-native",
+      "source": "./dist/plugins/mobile-performance-react-native",
+      "description": "React Native performance profiling, optimization, and monitoring - JS/UI thread analysis, re-render prevention, list optimization, image performance, bundle size, startup time, memory leaks, React Compiler, New Architecture benefits",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-security-react-native",
+      "source": "./dist/plugins/mobile-security-react-native",
+      "description": "Secure storage, certificate pinning, biometric auth, jailbreak detection, code obfuscation, network security, screenshot prevention for React Native",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-storage-mmkv",
+      "source": "./dist/plugins/mobile-storage-mmkv",
+      "description": "MMKV high-performance key-value storage for React Native - synchronous JSI-based reads/writes, encryption, typed hooks, multiple instances, listeners, persistence middleware adapters",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-storage-sqlite-powersync",
+      "source": "./dist/plugins/mobile-storage-sqlite-powersync",
+      "description": "PowerSync offline-first sync engine on SQLite for React Native - schema definition, watched queries, CRUD operations, backend connectors, sync rules, conflict resolution, attachments",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-storage-watermelondb",
+      "source": "./dist/plugins/mobile-storage-watermelondb",
+      "description": "WatermelonDB reactive local database for React Native - schema, models, decorators, reactive queries, relations, writers/readers, batch operations, migrations, sync",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-styling-nativewind",
+      "source": "./dist/plugins/mobile-styling-nativewind",
+      "description": "NativeWind v4+ - Tailwind CSS utility classes for React Native, className prop, CSS variables, dark mode, platform prefixes, animations, theming, third-party component integration",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-styling-unistyles",
+      "source": "./dist/plugins/mobile-styling-unistyles",
+      "description": "Unistyles 3.0 styling - C++ powered StyleSheet superset with zero re-renders, theming, breakpoints, variants, dynamic functions, runtime values",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-testing-detox",
+      "source": "./dist/plugins/mobile-testing-detox",
+      "description": "Detox E2E gray-box testing for React Native - matchers, actions, expectations, waitFor, device API, synchronization, mocking, artifacts, CI integration",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-testing-maestro",
+      "source": "./dist/plugins/mobile-testing-maestro",
+      "description": "Maestro mobile E2E testing - YAML flows, selectors, flow control, environment variables, JavaScript expressions, device interactions, Maestro Studio, Maestro Cloud CI, tags, test suites",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-ui-components-react-native-paper",
+      "source": "./dist/plugins/mobile-ui-components-react-native-paper",
+      "description": "React Native Paper v5+ - Material Design 3 theming, PaperProvider, key components, dynamic color, accessibility, tree-shaking, custom fonts, navigation integration",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "mobile-ui-components-tamagui",
+      "source": "./dist/plugins/mobile-ui-components-tamagui",
+      "description": "Tamagui universal UI - styled(), tokens, themes, optimizing compiler, responsive media queries, animations, Sheet/Dialog components",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -1129,7 +1227,7 @@
     {
       "name": "shared-monorepo-nx",
       "source": "./dist/plugins/shared-monorepo-nx",
-      "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
+      "description": "Nx monorepo build system - workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
       "version": "4.0.0",
       "author": {
         "name": "@vince"
@@ -1165,8 +1263,17 @@
     {
       "name": "shared-tooling-biome",
       "source": "./dist/plugins/shared-tooling-biome",
-      "description": "Biome v2 unified linter, formatter, and import organizer — single Rust-powered tool replacing ESLint + Prettier with 97% Prettier compatibility and 20x faster performance",
+      "description": "Biome v2 unified linter, formatter, and import organizer - single Rust-powered tool replacing ESLint + Prettier with 97% Prettier compatibility and 20x faster performance",
       "version": "4.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "shared-tooling-changesets",
+      "source": "./dist/plugins/shared-tooling-changesets",
+      "description": "Versioning and changelog management with @changesets/cli - adding changesets, version bumping, changelog generation, monorepo publishing, pre-release modes, and CI automation",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
@@ -1194,6 +1301,15 @@
       "source": "./dist/plugins/shared-tooling-typescript-config",
       "description": "TypeScript strict mode configs, TS 5.x+ options (verbatimModuleSyntax, module preserve, moduleDetection force, configDir), path alias sync, specialized configs",
       "version": "4.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-3d-react-three-fiber",
+      "source": "./dist/plugins/web-3d-react-three-fiber",
+      "description": "React Three Fiber (R3F) 3D rendering - Canvas, meshes, materials, lights, cameras, animations, events, physics, post-processing, performance",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
@@ -1266,6 +1382,51 @@
       "source": "./dist/plugins/web-data-fetching-trpc",
       "description": "tRPC type-safe API patterns, procedures, middleware, React Query integration",
       "version": "4.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-dataviz-d3",
+      "source": "./dist/plugins/web-dataviz-d3",
+      "description": "D3.js data visualization - selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-dataviz-recharts",
+      "source": "./dist/plugins/web-dataviz-recharts",
+      "description": "Recharts composable chart components - LineChart, BarChart, AreaChart, PieChart, ComposedChart, responsive sizing, custom tooltips, animations",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-dnd-dnd-kit",
+      "source": "./dist/plugins/web-dnd-dnd-kit",
+      "description": "Drag and drop with @dnd-kit - draggable, droppable, sortable, collision detection, sensors, accessibility",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-editor-lexical",
+      "source": "./dist/plugins/web-editor-lexical",
+      "description": "Extensible text editor framework by Meta",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-editor-tiptap",
+      "source": "./dist/plugins/web-editor-tiptap",
+      "description": "Rich text editor framework with TipTap and ProseMirror",
+      "version": "1.0.0",
       "author": {
         "name": "@vince"
       }
@@ -1352,42 +1513,6 @@
       }
     },
     {
-      "name": "web-framework-nextjs-app-router",
-      "source": "./dist/plugins/web-framework-nextjs-app-router",
-      "description": "Next.js 15 App Router patterns - file-based routing, Server/Client Components, streaming, Suspense, metadata API, parallel routes, Turbopack, async params",
-      "version": "1.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "nextjs",
-        "app-router",
-        "server-components",
-        "streaming",
-        "suspense",
-        "ssr",
-        "ssg",
-        "routing"
-      ]
-    },
-    {
-      "name": "web-framework-nextjs-server-actions",
-      "source": "./dist/plugins/web-framework-nextjs-server-actions",
-      "description": "Server Actions patterns for mutations, revalidation, and form handling in Next.js App Router",
-      "version": "2.0.0",
-      "author": {
-        "name": "@vince"
-      },
-      "keywords": [
-        "nextjs",
-        "server-actions",
-        "mutations",
-        "revalidation",
-        "forms",
-        "app-router"
-      ]
-    },
-    {
       "name": "web-framework-react",
       "source": "./dist/plugins/web-framework-react",
       "description": "Component architecture, hooks, patterns",
@@ -1451,6 +1576,24 @@
       }
     },
     {
+      "name": "web-maps-leaflet",
+      "source": "./dist/plugins/web-maps-leaflet",
+      "description": "Leaflet interactive maps - map setup, tile layers, markers, popups, GeoJSON, custom controls, plugins, clustering, events",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
+      "name": "web-maps-mapbox",
+      "source": "./dist/plugins/web-maps-mapbox",
+      "description": "Mapbox GL JS interactive maps - map initialization, markers, popups, sources, layers, expressions, clustering, 3D terrain, geocoding, directions",
+      "version": "1.0.0",
+      "author": {
+        "name": "@vince"
+      }
+    },
+    {
       "name": "web-meta-framework-astro",
       "source": "./dist/plugins/web-meta-framework-astro",
       "description": "Astro content-first framework - islands architecture, content collections, file-based routing, SSR/SSG hybrid rendering, View Transitions, server islands, multi-framework component support",
@@ -1462,7 +1605,7 @@
     {
       "name": "web-meta-framework-docusaurus",
       "source": "./dist/plugins/web-meta-framework-docusaurus",
-      "description": "Docusaurus 3.x documentation framework — site configuration, docs/blog plugins, sidebars, versioning, MDX, swizzling, and deployment",
+      "description": "Docusaurus 3.x documentation framework - site configuration, docs/blog plugins, sidebars, versioning, MDX, swizzling, and deployment",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -1516,7 +1659,7 @@
     {
       "name": "web-meta-framework-vitepress",
       "source": "./dist/plugins/web-meta-framework-vitepress",
-      "description": "VitePress 1.x — Vue-powered static site generator for documentation sites, built on Vite",
+      "description": "VitePress 1.x - Vue-powered static site generator for documentation sites, built on Vite",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -1588,7 +1731,7 @@
     {
       "name": "web-routing-react-router",
       "source": "./dist/plugins/web-routing-react-router",
-      "description": "Client-side routing with data APIs — loaders, actions, error boundaries, search params, nested layouts, and code splitting",
+      "description": "Client-side routing with data APIs - loaders, actions, error boundaries, search params, nested layouts, and code splitting",
       "version": "1.0.0",
       "author": {
         "name": "@vince"
@@ -1786,7 +1929,7 @@
     {
       "name": "web-ui-mantine",
       "source": "./dist/plugins/web-ui-mantine",
-      "description": "Mantine v7 component library — theming, styling, hooks, forms, notifications",
+      "description": "Mantine v7 component library - theming, styling, hooks, forms, notifications",
       "version": "2.0.0",
       "author": {
         "name": "@vince"
@@ -1874,5 +2017,5 @@
       }
     }
   ],
-  "description": "Community skills and stacks for Claude Code"
+  "description": "Skills, stacks, and agents for Agents Inc"
 }

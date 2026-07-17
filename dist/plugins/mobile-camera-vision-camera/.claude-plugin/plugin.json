@@ -1,0 +1,9 @@
+{
+  "name": "mobile-camera-vision-camera",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "VisionCamera v4+ - photo/video capture, QR/barcode scanning, real-time frame processors, zoom/focus/exposure, HDR, location metadata, format selection",
+  "author": {
+    "name": "@vince"
+  }
+}

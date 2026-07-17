@@ -1,0 +1,9 @@
+{
+  "name": "web-editor-tiptap",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Rich text editor framework with TipTap and ProseMirror",
+  "author": {
+    "name": "@vince"
+  }
+}

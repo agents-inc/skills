@@ -1,9 +1,0 @@
-{
-  "name": "infra-env-setup-env",
-  "version": "2.0.0",
-  "skills": "./skills/",
-  "description": "Environment configuration, Zod validation",
-  "author": {
-    "name": "@vince"
-  }
-}

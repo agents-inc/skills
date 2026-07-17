@@ -1,0 +1,9 @@
+{
+  "name": "desktop-multiwindow-tauri",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Tauri 2.x multi-window creation, event system, window state persistence, parent/child and modal windows",
+  "author": {
+    "name": "@vince"
+  }
+}

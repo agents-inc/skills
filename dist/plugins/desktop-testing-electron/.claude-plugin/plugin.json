@@ -1,0 +1,9 @@
+{
+  "name": "desktop-testing-electron",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "E2E testing with Playwright, main process unit testing, IPC testing, dialog/menu mocking, CI headless setup",
+  "author": {
+    "name": "@vince"
+  }
+}

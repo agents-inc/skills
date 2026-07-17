@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-editor
+slug: tiptap
+domain: web
+author: "@vince"
+displayName: TipTap
+cliDescription: Rich text editor framework with TipTap and ProseMirror
+usageGuidance: >-
+  Use when building rich text editors with TipTap — editor setup, extensions,
+  custom nodes/marks, menus (bubble/floating), collaborative editing, content
+  serialization, keyboard shortcuts, and schema customization.

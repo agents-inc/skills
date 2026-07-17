@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-storage
+slug: mmkv
+domain: mobile
+author: "@vince"
+displayName: MMKV
+cliDescription: High-performance key-value storage
+usageGuidance: >-
+  Use when persisting key-value data in React Native with react-native-mmkv -
+  synchronous reads/writes, encryption, multiple instances, hooks, or migrating
+  from AsyncStorage.

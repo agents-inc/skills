@@ -1,0 +1,9 @@
+{
+  "name": "infra-platform-vercel",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Vercel deployment platform — project configuration, serverless/edge functions, Routing Middleware, cron jobs, environment variables, monorepo setup",
+  "author": {
+    "name": "@vince"
+  }
+}

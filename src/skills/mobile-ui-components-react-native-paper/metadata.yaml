@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-ui-components
+slug: react-native-paper
+domain: mobile
+author: "@vince"
+displayName: React Native Paper
+cliDescription: Material Design 3 components for React Native
+usageGuidance: >-
+  Use when building Material Design UIs with React Native Paper v5+, configuring
+  PaperProvider theming (MD3 light/dark, custom themes, dynamic color), or using
+  Paper components (Button, Card, TextInput, FAB, Appbar, Dialog, Snackbar,
+  SegmentedButtons, BottomNavigation). Not for general React Native patterns.

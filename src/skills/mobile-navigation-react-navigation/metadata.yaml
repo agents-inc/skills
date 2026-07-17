@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-navigation
+slug: react-navigation
+domain: mobile
+author: "@vince"
+displayName: React Navigation
+cliDescription: Type-safe mobile navigation patterns
+usageGuidance: >-
+  Use when implementing navigation in React Native apps: stack/tab/drawer navigators,
+  deep linking, type-safe navigation with TypeScript, authentication flows, screen
+  preloading, or header customization. Covers both static and dynamic APIs.

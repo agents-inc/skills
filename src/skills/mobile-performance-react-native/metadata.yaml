@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: mobile-performance
+slug: react-native-performance
+domain: mobile
+author: "@vince"
+displayName: React Native Performance
+cliDescription: RN profiling, optimization, memory
+usageGuidance: >-
+  Use when profiling React Native performance, optimizing re-renders, improving
+  list scrolling, reducing bundle size, fixing memory leaks, or analyzing JS
+  thread vs UI thread bottlenecks. Not for general React Native component
+  architecture (use mobile-framework-react-native).

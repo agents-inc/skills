@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-multiwindow
+slug: tauri-multiwindow
+domain: desktop
+author: "@vince"
+displayName: Tauri Multi-Window & Events
+cliDescription: Multi-window management and event system
+usageGuidance: >-
+  Use when creating or managing multiple windows in a Tauri 2.x app,
+  communicating between windows via events (emit, emitTo, emit_filter),
+  handling close confirmation, persisting window state, or setting up
+  parent/child and modal window relationships.

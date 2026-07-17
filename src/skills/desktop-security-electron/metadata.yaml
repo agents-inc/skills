@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: desktop-security
+slug: electron-security
+domain: desktop
+author: "@vince"
+displayName: Electron Security & Fuses
+cliDescription: Electron fuses, ASAR integrity, sandbox hardening
+usageGuidance: >-
+  Use when hardening an Electron app's security posture: flipping fuses with @electron/fuses,
+  configuring ASAR integrity validation, enforcing sandbox and contextIsolation defaults,
+  setting Content Security Policy, restricting permissions, or validating deep link URLs.
