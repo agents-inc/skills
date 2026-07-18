@@ -2,7 +2,9 @@
 category: api-search
 slug: xquik
 domain: api
-author: "@Xquik-dev"
+author: "@kriptoburak"
 displayName: Xquik
-cliDescription: X/Twitter data API for tweet search, users, media, monitors, webhooks, and write workflows
-usageGuidance: Use when integrating Xquik for X/Twitter search, user lookup, timelines, media download, monitors, webhooks, or approval-gated X actions.
+cliDescription: X data and automation API
+usageGuidance: >-
+  Use when integrating Xquik REST endpoints for X post search, user lookup,
+  timelines, media download, monitors, signed webhooks, or approval-gated X actions.

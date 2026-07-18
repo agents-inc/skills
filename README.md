@@ -198,7 +198,7 @@ Each skill covers patterns, conventions, anti-patterns, edge cases, and real cod
 ```
 src/skills/<domain>-<subcategory>-<name>/
 ├── SKILL.md           # Main skill content
-├── metadata.yaml      # Version, compatibility, tags
+├── metadata.yaml      # Category, slug, author, display name, and usage guidance
 ├── reference.md       # API reference
 └── examples/
     ├── core.md        # Core usage examples

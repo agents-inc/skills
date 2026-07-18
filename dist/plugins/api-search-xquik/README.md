@@ -1,6 +1,6 @@
 # api-search-xquik
 
-Xquik REST API patterns for X/Twitter search, user lookup, timelines, media download, monitors, webhooks, and approval-gated X actions
+Xquik REST API patterns for X post search, user and timeline reads, cursor pagination, media downloads, monitors, signed webhooks, and approval-gated X actions
 
 ## Installation
 
