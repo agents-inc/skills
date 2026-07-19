@@ -640,6 +640,15 @@
       }
     },
     {
+      "name": "api-search-xquik",
+      "source": "./dist/plugins/api-search-xquik",
+      "description": "X data and automation API",
+      "version": "4.0.0",
+      "author": {
+        "name": "@kriptoburak"
+      }
+    },
+    {
       "name": "api-specs-openapi",
       "source": "./dist/plugins/api-specs-openapi",
       "description": "OpenAPI 3.1 specification, schema design, code generation",

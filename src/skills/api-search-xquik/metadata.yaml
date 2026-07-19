@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: api-search
+slug: xquik
+domain: api
+author: "@kriptoburak"
+displayName: Xquik
+cliDescription: X data and automation API
+usageGuidance: >-
+  Use when integrating Xquik REST endpoints for X post search, user lookup,
+  timelines, media download, monitors, signed webhooks, or approval-gated X actions.

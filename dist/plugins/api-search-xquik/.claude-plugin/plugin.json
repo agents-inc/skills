@@ -1,0 +1,9 @@
+{
+  "name": "api-search-xquik",
+  "version": "4.0.0",
+  "skills": "./skills/",
+  "description": "Xquik REST API patterns for X post search, user and timeline reads, cursor pagination, media downloads, monitors, signed webhooks, and approval-gated X actions",
+  "author": {
+    "name": "@kriptoburak"
+  }
+}
