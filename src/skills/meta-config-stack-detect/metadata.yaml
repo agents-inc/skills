@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: shared-tooling
+slug: stack-detect
+domain: shared
+author: "@vince"
+displayName: Stack Detection
+cliDescription: Detect a project's stack and propose a config
+usageGuidance: >-
+  Use when proposing an agents-inc configuration from what is actually in front of you — a codebase
+  to traverse, a stack the user describes in conversation, or nothing but a description of what they
+  want to build. Maps detected libraries to catalog skill ids, offers candidate built-in stacks for
+  the user to pick between when intent is all there is, marks how each assignment loads per the
+  product's preload mapping, surfaces conflicts, and emits a SeedPayload plus a human-readable
+  proposal report for the user to confirm.

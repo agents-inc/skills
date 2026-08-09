@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-planning
+slug: api-planning
+domain: meta
+author: "@vince"
+displayName: API Planning
+cliDescription: Endpoint contracts, schema design, auth and error catalogs
+usageGuidance: Use when a spec touches API endpoints, database schema, middleware, or auth. Carries the endpoint-contract, schema, middleware-pipeline, and error-catalog frameworks for backend specifications.

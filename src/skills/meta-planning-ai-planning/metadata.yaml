@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-planning
+slug: ai-planning
+domain: meta
+author: "@vince"
+displayName: AI Planning
+cliDescription: Prompt contracts, model selection, budgets, eval planning
+usageGuidance: Use when a spec touches model calls, prompts, retrieval, tool calling, agentic loops, or evals. Carries the approach-selection, output-contract, budget, failure-mode, and eval frameworks for AI specifications.

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-design
+slug: composable-components
+domain: meta
+author: "@vince"
+displayName: Composable Components
+cliDescription: Composable component APIs — parts, state, polymorphism
+usageGuidance: Use when designing a new React component API or aligning an existing one. Apply when a component is accumulating configuration props, booleans, or renderX props, and when adding controlled/uncontrolled duality, polymorphic rendering, data-attribute state, context scoping, or prop and ref forwarding.

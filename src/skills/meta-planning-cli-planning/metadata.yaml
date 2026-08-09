@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-planning
+slug: cli-planning
+domain: meta
+author: "@vince"
+displayName: CLI Planning
+cliDescription: Command-surface, flag, exit-code and output-mode planning
+usageGuidance: Use when a spec touches a command surface, an interactive flow, config precedence, exit codes, or output modes. Carries the contract frameworks and per-artifact spec tables for CLI specifications.

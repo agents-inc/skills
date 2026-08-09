@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-reviewing
+slug: web-reviewing
+domain: meta
+author: "@vince"
+displayName: Web Reviewing
+cliDescription: React hooks, accessibility, and render performance
+usageGuidance: Use when reviewing diffs that touch UI components - React/JSX files, hooks, props and state, styling, or accessibility. Covers rules of hooks, effect cleanup, render performance, list keys, and ARIA/keyboard patterns.

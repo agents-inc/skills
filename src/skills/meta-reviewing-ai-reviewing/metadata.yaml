@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-reviewing
+slug: ai-reviewing
+domain: meta
+author: "@vince"
+displayName: AI Reviewing
+cliDescription: Prompt injection, output validation, and cost control
+usageGuidance: Use when reviewing diffs that touch model API calls, prompt construction, LLM output handling, RAG pipelines, or tool-calling code. Covers injection call-chain tracing, output validation, token budgets, retry/timeout handling, streaming, and key/PII exposure.

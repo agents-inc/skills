@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: meta-reviewing
+slug: infra-reviewing
+domain: meta
+author: "@vince"
+displayName: Infra Reviewing
+cliDescription: Supply-chain pinning, secret exposure, container hygiene
+usageGuidance: Use when reviewing diffs that touch CI/CD workflows, Dockerfiles, deployment configs, or IaC. Covers action and base-image pinning, secret handling, non-root containers, layer caching, least-privilege permissions, and deployment safety.
