@@ -4,6 +4,19 @@
 
 ---
 
+## Exit codes used below
+
+Every snippet on this page assumes this constant. Where the CLI framework defines an exit-code table, use that table's cancellation constant instead -- it is the authority, and this value is the fallback for a standalone script that has no table.
+
+```typescript
+// 128 + SIGINT(2), the value a shell reports for an interrupted command.
+export const EXIT_CANCELLED = 130;
+```
+
+**Cancelling is not declining.** A cancellation is an interruption -- `isCancel()` is true, `p.cancel()` prints, and the exit is non-zero because the work never happened. A user answering "no" to a confirm has _completed_ the interaction; that path prints `p.outro()` and exits `0`, because nothing went wrong. Both appear below, and the `p.cancel()` / `p.outro()` split is what tells them apart.
+
+---
+
 ## Pattern 1: Individual Prompts with Cancellation
 
 Every prompt returns `value | symbol`. The symbol indicates the user pressed Ctrl+C. Always check before using the value.
@@ -21,7 +34,7 @@ const name = await p.text({
 
 if (p.isCancel(name)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // TypeScript now knows name is string
@@ -40,7 +53,7 @@ const token = await p.password({
 
 if (p.isCancel(token)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -60,7 +73,7 @@ const framework = await p.select({
 
 if (p.isCancel(framework)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // framework is typed as "react" | "vue" | "svelte"
@@ -83,7 +96,7 @@ const features = await p.multiselect({
 
 if (p.isCancel(features)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // features is string[]
@@ -100,7 +113,7 @@ const shouldContinue = await p.confirm({
 
 if (p.isCancel(shouldContinue)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // shouldContinue is boolean
@@ -126,7 +139,7 @@ const action = await p.selectKey({
 
 if (p.isCancel(action)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // User pressed the key and action resolved immediately
@@ -153,7 +166,7 @@ const plugins = await p.groupMultiselect({
 
 if (p.isCancel(plugins)) {
   p.cancel("Operation cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // plugins is string[] (flat array of selected values across all groups)
@@ -212,7 +225,7 @@ const project = await p.group(
   {
     onCancel: () => {
       p.cancel("Setup cancelled.");
-      process.exit(0);
+      process.exit(EXIT_CANCELLED);
     },
   },
 );

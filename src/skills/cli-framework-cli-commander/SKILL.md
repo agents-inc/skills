@@ -132,6 +132,14 @@ process.exit(EXIT_CODES.VALIDATION_ERROR);
 process.exit(1); // What does 1 mean?
 ```
 
+#### This table is the authority for the whole CLI
+
+Once a CLI defines this table, every exit in the process comes from it -- including the ones inside prompt handlers. A prompt library's own examples typically show a bare `process.exit(0)` after printing a cancellation message; those examples are making the point that you must exit at all, and they have no table to draw a value from. This CLI has one, so cancellation exits `EXIT_CODES.CANCELLED` wherever it happens.
+
+The one value that is wrong everywhere is `0`. Cancellation is not success: `0` makes `mycli init && mycli deploy` run the deploy against a project the user abandoned halfway through, and makes a CI step pass on a run that did nothing. Any non-zero code is recoverable by a caller; `0` destroys the information.
+
+**Choosing the number:** `2` for usage errors and `130` (128 + SIGINT) for interruption are the conventions callers are most likely to recognise. Beyond those, the specific integers matter far less than that they are named, distinct and documented in `--help` or the README, so scripts can branch on them.
+
 ---
 
 ### Pattern 3: Command Definition with Options
@@ -335,6 +343,7 @@ Check in order, first defined wins:
 
 - Missing `p.isCancel()` checks after prompts — causes undefined behavior on Ctrl+C
 - Using magic numbers for exit codes — makes debugging impossible
+- Exiting `0` on cancellation — reports success for work that never happened, so `mycli init && mycli deploy` deploys an abandoned setup. Use `EXIT_CODES.CANCELLED`, never `0`, wherever a prompt is cancelled
 - Not handling SIGINT — leaves processes in unknown state
 - Using `.parse()` instead of `.parseAsync()` with async actions — swallows errors silently
 

@@ -5,7 +5,7 @@ description: Beautiful interactive CLI prompts with @clack/prompts and custom pr
 
 # Clack CLI Prompts
 
-> **Quick Guide:** Use `@clack/prompts` for pre-styled interactive CLI prompts (text, select, multiselect, confirm, spinner, progress). Check `isCancel()` after EVERY prompt call -- users can Ctrl+C at any point. Use `group()` for multi-step flows with centralized cancellation. Use `@clack/core` only when building fully custom prompt UIs. ESM-only since v1.0.
+> **Quick Guide:** Use `@clack/prompts` for pre-styled interactive CLI prompts (text, select, multiselect, confirm, spinner, progress). Check `isCancel()` after EVERY prompt call -- users can Ctrl+C at any point. `cancel()` only prints; exit after it, with a non-zero code. Use `group()` for multi-step flows with centralized cancellation. Use `@clack/core` only when building fully custom prompt UIs. ESM-only since v1.0.
 
 ---
 
@@ -17,7 +17,9 @@ description: Beautiful interactive CLI prompts with @clack/prompts and custom pr
 
 **(You MUST check `isCancel()` after EVERY prompt call -- skipping this causes silent crashes when users press Ctrl+C)**
 
-**(You MUST call `process.exit(0)` after `cancel()` -- the cancel message prints but the process keeps running otherwise)**
+**(You MUST exit the process after `cancel()` -- the cancel message prints but execution continues otherwise)**
+
+**(You MUST exit with a NON-ZERO code on cancellation, taking the value from the CLI framework's exit-code table where one exists and using 130 where none does -- exiting 0 tells every caller the work succeeded)**
 
 **(You MUST use `group()` with `onCancel` for multi-step flows -- it handles cancellation centrally so you don't check each prompt individually)**
 
@@ -88,20 +90,24 @@ Every clack CLI flow starts with `intro()` and ends with `outro()`. The critical
 ```typescript
 import * as p from "@clack/prompts";
 
+// 128 + SIGINT(2), the value a shell reports for an interrupted command.
+// Use only when no CLI framework owns an exit-code table -- see below.
+const EXIT_CANCELLED = 130;
+
 p.intro("Project setup");
 
 const name = await p.text({ message: "Project name?" });
 
 if (p.isCancel(name)) {
   p.cancel("Setup cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // name is now narrowed to string (not symbol)
 p.outro(`Created ${name}`);
 ```
 
-**Why good:** isCancel check narrows the type from `string | symbol` to `string`, cancel prints a styled message, process.exit prevents dangling execution
+**Why good:** isCancel check narrows the type from `string | symbol` to `string`, cancel prints a styled message, the exit stops dangling execution, the non-zero code stops callers from reading an abandoned run as a completed one
 
 ```typescript
 // BAD: Missing isCancel check
@@ -110,6 +116,18 @@ console.log(`Created ${name}`); // name could be a symbol -- crashes or prints "
 ```
 
 **Why bad:** if user presses Ctrl+C, name is a symbol, not a string -- string operations on it will crash or produce garbage output
+
+#### Which code to exit with
+
+`cancel()` prints and returns; it never stops the process. What you exit _with_ is a separate decision, and it is not this library's to make:
+
+| Situation                                    | Exit with                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------- |
+| The CLI framework defines an exit-code table | That table's cancellation constant. It is the authority; do not override. |
+| A standalone script with no such table       | `130` -- 128 + SIGINT(2), what a shell reports for an interrupted command |
+| Never                                        | `0`                                                                       |
+
+**Why never 0:** `0` means success, and `cli && deploy`, `set -e`, CI steps and every other caller act on exactly that. A user who pressed Ctrl+C halfway through setup did not succeed, so a `0` exit hands the next command a half-configured project and no signal that anything went wrong. Upstream examples showing `process.exit(0)` are illustrating _that you must exit at all_ -- the point they make is about the missing exit, not about the value.
 
 ---
 
@@ -137,7 +155,7 @@ const project = await p.group(
   {
     onCancel: () => {
       p.cancel("Setup cancelled.");
-      process.exit(0);
+      process.exit(EXIT_CANCELLED);
     },
   },
 );
@@ -145,7 +163,7 @@ const project = await p.group(
 // project is typed: { name: string; framework: string; install: boolean }
 ```
 
-**Why good:** centralized onCancel eliminates per-prompt isCancel checks, results are typed as an object, each prompt can reference previous results via `results`
+**Why good:** centralized onCancel eliminates per-prompt isCancel checks, results are typed as an object, each prompt can reference previous results via `results`, the single exit point means the cancellation code is decided once for the whole flow
 
 See [examples/core.md](examples/core.md) for complete group patterns with validation and conditional prompts.
 
@@ -328,6 +346,7 @@ Need styled output?
 
 - **Missing `isCancel()` check after a prompt** -- the return value is `value | symbol`, and using the symbol as a string crashes or produces garbage. Always check before using the value.
 - **Missing `process.exit()` after `cancel()`** -- `cancel()` only prints a message, it does not stop execution. The process continues running.
+- **Exiting `0` after `cancel()`** -- a cancelled run reports success to every caller, so `cli && next-step` runs the next step against a half-finished state. Exit non-zero: the framework's cancellation constant, or `130` when there is no framework table.
 - **Calling another prompt while spinner is active** -- spinner output and prompt output overlap, corrupting the terminal display. Always call `spinner.stop()` first.
 - **Using `require()` with @clack/prompts v1.0+** -- the package is ESM-only since v1.0. Use `import` syntax.
 
@@ -363,7 +382,9 @@ Need styled output?
 
 **(You MUST check `isCancel()` after EVERY prompt call -- skipping this causes silent crashes when users press Ctrl+C)**
 
-**(You MUST call `process.exit(0)` after `cancel()` -- the cancel message prints but the process keeps running otherwise)**
+**(You MUST exit the process after `cancel()` -- the cancel message prints but execution continues otherwise)**
+
+**(You MUST exit with a NON-ZERO code on cancellation, taking the value from the CLI framework's exit-code table where one exists and using 130 where none does -- exiting 0 tells every caller the work succeeded)**
 
 **(You MUST use `group()` with `onCancel` for multi-step flows -- it handles cancellation centrally so you don't check each prompt individually)**
 

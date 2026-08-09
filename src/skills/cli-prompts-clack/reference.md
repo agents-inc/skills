@@ -104,11 +104,12 @@ updateSettings({
 
 ## Anti-Pattern Quick Reference
 
-| Anti-Pattern                            | Fix                                                |
-| --------------------------------------- | -------------------------------------------------- |
-| No `isCancel()` check                   | Always check after every prompt call               |
-| No `process.exit()` after `cancel()`    | Add `process.exit(0)` after `cancel()`             |
-| Output while spinner is active          | Call `spinner.stop()` before any other output      |
-| `require("@clack/prompts")`             | Use ESM `import` -- package is ESM-only since v1.0 |
-| `multiselect` without `required: false` | Add it when zero selections should be valid        |
-| Inline `isCancel` checks in long flows  | Use `group()` with `onCancel` instead              |
+| Anti-Pattern                            | Fix                                                            |
+| --------------------------------------- | -------------------------------------------------------------- |
+| No `isCancel()` check                   | Always check after every prompt call                           |
+| No `process.exit()` after `cancel()`    | Exit after `cancel()` -- it prints and returns, nothing more   |
+| `process.exit(0)` after `cancel()`      | Exit non-zero: the framework's cancellation constant, or `130` |
+| Output while spinner is active          | Call `spinner.stop()` before any other output                  |
+| `require("@clack/prompts")`             | Use ESM `import` -- package is ESM-only since v1.0             |
+| `multiselect` without `required: false` | Add it when zero selections should be valid                    |
+| Inline `isCancel` checks in long flows  | Use `group()` with `onCancel` instead                          |

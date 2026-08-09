@@ -4,6 +4,17 @@
 
 ---
 
+## Exit codes used below
+
+Every snippet on this page assumes the same constant as [core.md](core.md#exit-codes-used-below). Where the CLI framework defines an exit-code table, use that table's cancellation constant instead.
+
+```typescript
+// 128 + SIGINT(2), the value a shell reports for an interrupted command.
+export const EXIT_CANCELLED = 130;
+```
+
+---
+
 ## Pattern 1: Custom Prompts with @clack/core
 
 Use `@clack/core` when you need a prompt UI that `@clack/prompts` doesn't provide. Each core prompt has a `render()` function that returns the terminal output string.
@@ -38,7 +49,7 @@ const p = new TextPrompt({
 const result = await p.prompt();
 
 if (isCancel(result)) {
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -76,7 +87,7 @@ const p = new SelectPrompt({
 const result = await p.prompt();
 
 if (isCancel(result)) {
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -227,7 +238,7 @@ const deadline = await p.date({
 
 if (p.isCancel(deadline)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // deadline is a Date object
@@ -245,7 +256,7 @@ const configPath = await p.path({
 
 if (p.isCancel(configPath)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // configPath is a string (absolute or relative path)
@@ -287,7 +298,7 @@ const country = await p.autocomplete({
 
 if (p.isCancel(country)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -310,7 +321,7 @@ const packages = await p.autocompleteMultiselect({
 
 if (p.isCancel(packages)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
