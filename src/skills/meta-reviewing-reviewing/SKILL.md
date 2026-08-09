@@ -173,7 +173,7 @@ Use clear markers to communicate priority:
 | ---------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **Must Fix**     | Blockers - cannot approve until fixed | Security vulnerabilities, breaks functionality, missing required criteria, major convention violations  |
 | **Should Fix**   | Improvements - strongly recommended   | Performance optimizations, minor convention deviations, missing edge case handling, code simplification |
-| **Nice to Have** | Suggestions - optional enhancements   | Further refactoring, additional tests, documentation, future enhancements                               |
+| **Nice to Have** | Suggestions - optional enhancements   | Additional tests, documentation, future enhancements                                                    |
 
 #### Acknowledge Good Work
 
@@ -197,15 +197,18 @@ Is this a blocking issue?
 │   ├─ Missing required success criteria → MUST FIX
 │   └─ Major convention violation → MUST FIX
 └─ NO → Could this code be improved?
-    ├─ YES → Is it worth the author's time?
-    │   ├─ Performance impact → SHOULD FIX
-    │   ├─ Maintainability impact → SHOULD FIX
-    │   ├─ Minor convention deviation → SHOULD FIX
-    │   └─ Missing edge case → SHOULD FIX
+    ├─ YES → Is the churn worth the diff's purpose? Does the spec ask for it?
+    │   ├─ NO to either → DON'T MENTION
+    │   └─ YES → What is the impact?
+    │       ├─ Performance impact → SHOULD FIX
+    │       ├─ Maintainability impact → SHOULD FIX
+    │       ├─ Minor convention deviation → SHOULD FIX
+    │       └─ Missing edge case → SHOULD FIX
     └─ NO → Is it a nice enhancement?
         ├─ Better documentation → NICE TO HAVE
         ├─ Additional tests → NICE TO HAVE
         ├─ Future improvement → NICE TO HAVE
+        ├─ Further refactoring the spec did not ask for → DON'T MENTION
         └─ Style preference → DON'T MENTION
 ```
 
