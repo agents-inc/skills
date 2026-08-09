@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-tooling
+slug: component-library
+domain: web
+author: "@vince"
+displayName: Component Library Packaging
+cliDescription: Packaging React components as a library
+usageGuidance: >-
+  Use when shipping styled, client-interactive React components as a consumable
+  package — choosing a style delivery contract, marking styles side-effectful,
+  layering library CSS so consumer overrides win, preserving "use client" through
+  the build, declaring peer dependency ranges, and splitting server-safe from
+  client entries.

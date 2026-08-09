@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-ui-components
+slug: base-ui
+domain: web
+author: "@vince"
+displayName: Base UI
+cliDescription: Unstyled accessible React primitives
+usageGuidance: >-
+  Use when building accessible UI with Base UI (@base-ui/react) — part-based
+  anatomy (Portal, Positioner, Popup), the render prop for polymorphism,
+  useRender and mergeProps, data-attribute state styling, controlled state with
+  eventDetails cancelation, and Field/Fieldset/Form validation.

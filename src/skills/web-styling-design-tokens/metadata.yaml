@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
+category: web-styling
+slug: design-tokens
+domain: web
+author: "@vince"
+displayName: Design Tokens
+cliDescription: Token tiers, naming, and build pipeline
+usageGuidance: >-
+  Use when authoring or restructuring a design token system - defining primitive,
+  semantic and component tiers, naming tokens, delivering them as CSS custom
+  properties, or building them from DTCG source with a token pipeline.
