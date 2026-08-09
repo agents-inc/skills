@@ -1,0 +1,79 @@
+name: Dispatch catalog regen
+
+# The CLI monorepo (agents-inc/agents-inc) vendors a catalog generated from the
+# skills in this repository — TypeScript unions, JSON schema enums and a
+# vendored matrix package. It cannot notice a merge here on its own: nothing
+# lands in that repository when this one changes, so no event of its own ever
+# fires and its catalog goes quietly stale.
+#
+# So this workflow tells it. It POSTs a repository_dispatch; the monorepo's
+# .github/workflows/regenerate-catalog.yml receives it, regenerates, and opens a
+# pull request there for review. Nothing merges itself on either side.
+on:
+  push:
+    branches: [main]
+    # The generator reads src/skills/<skill>/metadata.yaml and SKILL.md and
+    # nothing else in this repository, so a change to docs/, scripts/ or the
+    # README has no catalog to regenerate.
+    #
+    # The filter is the whole directory rather than those two filenames on
+    # purpose: a skill's shape is allowed to grow, and the two failure modes are
+    # not symmetric. A missed regen is a stale catalog that says nothing; a
+    # redundant one costs a no-op run that finds no diff and closes its own
+    # pull request.
+    paths:
+      - "src/skills/**"
+  # So a regen can be asked for by hand — after fixing the token, or to recover
+  # from a dispatch that failed while the marketplace was already merged.
+  workflow_dispatch:
+
+# A superseded dispatch asks for exactly what the newer one asks for.
+concurrency:
+  group: dispatch-catalog-regen
+  cancel-in-progress: true
+
+# No GITHUB_TOKEN permissions at all. This job checks nothing out and reads
+# nothing from this repository; it authenticates to a *different* repository
+# with MONOREPO_DISPATCH_TOKEN, which GITHUB_TOKEN could never stand in for —
+# GITHUB_TOKEN is scoped to the repository the workflow runs in.
+permissions: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask the monorepo to regenerate its catalog
+        env:
+          GH_TOKEN: ${{ secrets.MONOREPO_DISPATCH_TOKEN }}
+          # Passed as environment rather than interpolated into the script
+          # below: ${{ }} substitution happens before bash ever sees the line,
+          # so an interpolated value is script, not data. These two are a SHA
+          # and a repository slug and could not carry a payload, but the habit
+          # is the point — the next field added here may not be so safe.
+          TRIGGER_SHA: ${{ github.sha }}
+          TRIGGER_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::MONOREPO_DISPATCH_TOKEN is not set, so the monorepo cannot be reached. Create it as a repository secret with contents:write on agents-inc/agents-inc."
+            exit 1
+          fi
+
+          # event_type must match the `types:` list in the monorepo's
+          # regenerate-catalog.yml. Changing one side alone silently stops every
+          # regen: the API accepts an unmatched event_type with 204 No Content
+          # and then runs no workflow at all, so this step still goes green.
+          #
+          # Built with jq rather than `gh api --field a[b]=c` so the request body
+          # is written out in full, and so every value arrives via --arg instead
+          # of being pasted into a shell word.
+          jq -n \
+            --arg sha "$TRIGGER_SHA" \
+            --arg repository "$TRIGGER_REPOSITORY" \
+            '{
+              event_type: "skills-updated",
+              client_payload: { sha: $sha, repository: $repository }
+            }' \
+            | gh api repos/agents-inc/agents-inc/dispatches --method POST --input -
+
+          echo "Asked agents-inc/agents-inc to regenerate from $TRIGGER_REPOSITORY@$TRIGGER_SHA" >> "$GITHUB_STEP_SUMMARY"
