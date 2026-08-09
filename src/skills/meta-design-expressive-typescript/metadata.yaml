@@ -4,5 +4,5 @@ slug: expressive-typescript
 domain: meta
 author: "@vince"
 displayName: Expressive TypeScript
-cliDescription: Readable functional patterns — orchestrators, pure functions, named abstractions
+cliDescription: Readable functional patterns and named abstractions
 usageGuidance: Use when writing or refactoring TypeScript functions, data transformations, store actions, or any code that mixes logic levels. Apply the orchestrator pattern and extract until the code reads like prose.

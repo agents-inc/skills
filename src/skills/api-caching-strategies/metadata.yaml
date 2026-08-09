@@ -4,7 +4,7 @@ slug: strategies
 domain: api
 author: "@vince"
 displayName: Caching
-cliDescription: Application-level caching strategies and cache invalidation patterns
+cliDescription: Application-level caching and cache invalidation patterns
 usageGuidance: >-
   Use when implementing caching in backend applications — cache-aside,
   write-through, write-behind, TTL strategies, cache invalidation, CDN caching

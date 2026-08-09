@@ -4,5 +4,5 @@ slug: qwik
 domain: web
 author: "@vince"
 displayName: Qwik
-cliDescription: Resumable framework with zero JS hydration and fine-grained lazy loading
+cliDescription: Resumable framework with zero hydration and lazy loading
 usageGuidance: Use when building web apps that need instant interactivity — resumability eliminates hydration, $ suffixed functions mark lazy boundaries, and Qwik City provides file-based routing with server loaders and actions.

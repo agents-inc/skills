@@ -4,7 +4,7 @@ slug: stripe
 domain: api
 author: "@vince"
 displayName: Stripe
-cliDescription: Payment processing with subscriptions, checkout, webhooks, and Connect
+cliDescription: Payments — subscriptions, checkout, webhooks, and Connect
 usageGuidance: >-
   Use when integrating payments with Stripe — Checkout Sessions, Payment Intents,
   subscriptions, webhooks, customer management, Connect for platforms, and Stripe Elements.

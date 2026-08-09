@@ -4,7 +4,7 @@ slug: anthropic-sdk
 domain: ai
 author: "@vince"
 displayName: Anthropic SDK
-cliDescription: Official TypeScript SDK for Claude API with messages, streaming, tool use, and vision
+cliDescription: Claude API — messages, streaming, tool use, and vision
 usageGuidance: >-
   Use when integrating Claude via the Anthropic API — messages API, streaming
   responses, tool use (function calling), vision (image input), extended

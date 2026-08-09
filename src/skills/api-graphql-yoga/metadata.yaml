@@ -4,7 +4,7 @@ slug: yoga
 domain: api
 author: "@vince"
 displayName: GraphQL Yoga
-cliDescription: GraphQL server with GraphQL Yoga v5 and Envelop plugin system
+cliDescription: GraphQL server with Yoga v5 and the Envelop plugin system
 usageGuidance: >-
   Use when building GraphQL APIs with GraphQL Yoga — schema definition,
   resolvers, Envelop plugins, subscriptions (SSE/WebSocket), file uploads,

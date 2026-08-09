@@ -4,7 +4,7 @@ slug: webhooks
 domain: api
 author: "@vince"
 displayName: Webhooks
-cliDescription: Webhook patterns — receiving, sending, signature verification, and retry logic
+cliDescription: Receiving, sending, signature verification, and retry logic
 usageGuidance: >-
   Use when implementing webhook endpoints or sending webhooks — signature
   verification (HMAC), idempotency, retry logic with exponential backoff,

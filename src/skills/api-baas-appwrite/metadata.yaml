@@ -4,7 +4,7 @@ slug: appwrite
 domain: api
 author: "@vince"
 displayName: Appwrite
-cliDescription: Open-source backend-as-a-service with auth, databases, storage, and functions
+cliDescription: Open-source BaaS — auth, databases, storage, and functions
 usageGuidance: >-
   Use when building with Appwrite — client/server SDKs for authentication,
   TablesDB (tables, rows, columns), file storage with buckets, serverless

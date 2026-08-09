@@ -4,7 +4,7 @@ slug: langchain
 domain: ai
 author: "@vince"
 displayName: LangChain
-cliDescription: LLM application framework with chains, agents, RAG, and memory
+cliDescription: LLM app framework with chains, agents, RAG, and memory
 usageGuidance: >-
   Use when building LLM-powered applications with LangChain.js — chat models,
   prompt templates, output parsers, chains (LCEL), agents with tools, RAG

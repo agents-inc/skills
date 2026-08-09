@@ -1,8 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: api-database
+category: api-document
 slug: mongodb
 domain: api
 author: "@vince"
 displayName: MongoDB
-cliDescription: MongoDB with Mongoose ODM
-usageGuidance: Use when building with MongoDB, Mongoose schemas, or document-based data models.
+cliDescription: Native MongoDB driver — the mongodb npm package, no ODM
+usageGuidance: >-
+  Use when talking to MongoDB through the official `mongodb` driver directly, with no schema layer in
+  between — MongoClient and pool lifecycle, typed collections, CRUD result shapes, cursors and
+  streaming reads, aggregation pipelines, index design and verification with explain, and multi
+  document transactions with sessions.

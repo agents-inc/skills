@@ -4,7 +4,7 @@ slug: sanity
 domain: api
 author: "@vince"
 displayName: Sanity
-cliDescription: Structured content platform with GROQ query language and real-time collaboration
+cliDescription: Structured content with GROQ queries and live collaboration
 usageGuidance: >-
   Use when building content-managed applications with Sanity — schema definitions,
   GROQ queries, @sanity/client for data fetching, image handling with @sanity/image-url,

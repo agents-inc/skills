@@ -4,7 +4,7 @@ slug: netlify
 domain: infra
 author: "@vince"
 displayName: Netlify
-cliDescription: Netlify deployment platform, serverless functions, and edge functions
+cliDescription: Deployment platform with serverless and edge functions
 usageGuidance: >-
   Use when deploying to Netlify — site configuration, serverless functions,
   edge functions, redirects/rewrites, forms, environment variables, build

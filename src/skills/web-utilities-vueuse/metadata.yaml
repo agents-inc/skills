@@ -4,7 +4,7 @@ slug: vueuse
 domain: web
 author: "@vince"
 displayName: Vueuse
-cliDescription: Vue Composition API utility collection with 250+ composable functions
+cliDescription: Vue Composition API utilities — 250+ composable functions
 usageGuidance: >-
   Use when building Vue apps with VueUse — browser APIs (useLocalStorage,
   useClipboard, useFetch), sensors (useMouse, useScroll), animations,

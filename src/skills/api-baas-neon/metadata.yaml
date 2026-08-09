@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: api-baas
+category: api-db-host
 slug: neon
 domain: api
 author: "@vince"
 displayName: Neon
-cliDescription: Serverless PostgreSQL with branching, autoscaling, and edge-compatible driver
+cliDescription: Serverless PostgreSQL — branching, autoscaling, edge driver
 usageGuidance: >-
   Use when deploying PostgreSQL on Neon — serverless driver for edge/serverless
   functions, database branching for dev/preview, autoscaling, connection pooling,

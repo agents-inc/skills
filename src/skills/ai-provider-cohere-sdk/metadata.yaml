@@ -4,7 +4,7 @@ slug: cohere-sdk
 domain: ai
 author: "@vince"
 displayName: Cohere SDK
-cliDescription: Official TypeScript SDK for Cohere with chat, embeddings, rerank, and RAG
+cliDescription: Cohere API — chat, embeddings, rerank, and RAG
 usageGuidance: >-
   Use when integrating Cohere AI -- chat completions with Command models,
   embeddings for semantic search, rerank for relevance scoring, RAG with

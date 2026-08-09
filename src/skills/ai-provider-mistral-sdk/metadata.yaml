@@ -4,7 +4,7 @@ slug: mistral-sdk
 domain: ai
 author: "@vince"
 displayName: Mistral SDK
-cliDescription: Official TypeScript SDK for Mistral AI with chat, embeddings, function calling, and code generation
+cliDescription: Mistral API — chat, embeddings, tools, code generation
 usageGuidance: >-
   Use when integrating Mistral AI models — chat completions, streaming,
   function calling, embeddings, JSON mode, structured outputs with Zod,

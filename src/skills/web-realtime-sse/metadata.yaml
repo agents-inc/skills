@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/agents-inc/cli/main/src/schemas/metadata.schema.json
-category: web-realtime
+category: web-streaming
 slug: sse
 domain: web
 author: "@vince"

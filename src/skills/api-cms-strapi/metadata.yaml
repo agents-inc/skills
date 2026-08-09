@@ -4,7 +4,7 @@ slug: strapi
 domain: api
 author: "@vince"
 displayName: Strapi
-cliDescription: Open-source headless CMS with content types, REST/GraphQL API, and admin panel
+cliDescription: Open-source headless CMS — content types, REST/GraphQL API
 usageGuidance: >-
   Use when building content-managed applications with Strapi — content type schemas,
   REST API (filters, populate, pagination), Document Service API (find, create, update,

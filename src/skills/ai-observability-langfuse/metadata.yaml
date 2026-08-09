@@ -4,7 +4,7 @@ slug: langfuse
 domain: ai
 author: "@vince"
 displayName: Langfuse
-cliDescription: LLM observability platform with tracing, evaluations, and prompt management
+cliDescription: LLM observability — tracing, evaluations, prompt management
 usageGuidance: >-
   Use when adding observability to LLM applications — tracing LLM calls,
   tracking costs, evaluations, prompt management, session tracking, user

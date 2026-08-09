@@ -4,7 +4,7 @@ slug: rxjs
 domain: web
 author: "@vince"
 displayName: RxJS
-cliDescription: Reactive programming with Observables, operators, and async stream composition
+cliDescription: Reactive programming — Observables, operators, streams
 usageGuidance: >-
   Use when handling complex async flows with RxJS — Observables, operators
   (map, filter, switchMap, mergeMap), Subjects, error handling,

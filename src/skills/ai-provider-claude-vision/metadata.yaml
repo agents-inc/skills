@@ -4,7 +4,7 @@ slug: claude-vision
 domain: ai
 author: "@vince"
 displayName: Claude Vision
-cliDescription: Image understanding and document analysis with Claude's multimodal capabilities
+cliDescription: Image understanding and document analysis with Claude
 usageGuidance: >-
   Use when processing images and documents with Claude — image analysis,
   document extraction, chart interpretation, multi-image comparison, and PDF
