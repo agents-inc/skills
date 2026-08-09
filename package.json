@@ -14,7 +14,9 @@
   },
   "homepage": "https://github.com/agents-inc/skills#readme",
   "scripts": {
-    "update-marketplace": "npx @agents-inc/cli build plugins && npx @agents-inc/cli build marketplace --name agents-inc",
+    "//update-marketplace": "The published package is `agents-inc`, not `@agents-inc/cli` — the scoped name this script used to call was never published, so every run failed at npx before reaching a build. The `--name agents-inc` argument is the marketplace name and is unrelated to the package name; they match by coincidence. To run the build against a local CLI checkout instead of the published one, substitute the path to its built entry point for both `npx agents-inc` calls: `node ../cli/packages/cli/dist/index.js build plugins` (adjust the path, and run the CLI's build first — dist is not checked in).",
+    "update-marketplace": "npx agents-inc build plugins && npx agents-inc build marketplace --name agents-inc",
+    "validate": "bun scripts/validate-metadata.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
@@ -25,6 +27,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^15.2.0",
-    "prettier": "^3.2.0"
+    "prettier": "^3.2.0",
+    "yaml": "^2.8.2"
   }
 }

@@ -14,7 +14,7 @@ The official skills marketplace for [Agents Inc](https://github.com/agents-inc/c
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Skills: 150+](https://img.shields.io/badge/Skills-150%2B-green.svg)](./src/skills)
 
-150+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `@agents-inc/cli` lets you choose between plugin or eject mode, scoped to a single project or your entire machine.
+150+ skills covering everything from React and Prisma to Redis, ElevenLabs, and infrastructure tooling. Pick the skills that match your stack and install them via Claude Code. Need more control? The `agents-inc` CLI lets you choose between plugin or eject mode, scoped to a single project or your entire machine.
 
 ## Install
 
@@ -28,7 +28,7 @@ The official skills marketplace for [Agents Inc](https://github.com/agents-inc/c
 **Via the Agents Inc CLI:**
 
 ```bash
-npx @agents-inc/cli init
+npx agents-inc init
 ```
 
 Select your domains, skills and subagents, and configure everything in TypeScript. See the [Agents Inc CLI](https://github.com/agents-inc/cli).
@@ -207,6 +207,6 @@ src/skills/<domain>-<subcategory>-<name>/
 
 ## Contributing a skill
 
-Use the [skill-summoner agent](./docs/contributing/skill-summoner.md) to create or improve a skill — it researches current best practices, matches this repo's conventions, and writes a fully-structured skill package to `src/skills/`. Drop the file into your `.claude/agents/` directory and invoke it; no `@agents-inc/cli` install required.
+Use the [skill-summoner agent](./docs/contributing/skill-summoner.md) to create or improve a skill — it researches current best practices, matches this repo's conventions, and writes a fully-structured skill package to `src/skills/`. Drop the file into your `.claude/agents/` directory and invoke it; no `agents-inc` install required.
 
 In the `metadata.yaml` it generates, set `author` to your own handle (e.g. `"@your-github-username"`), not a placeholder or someone else's.
