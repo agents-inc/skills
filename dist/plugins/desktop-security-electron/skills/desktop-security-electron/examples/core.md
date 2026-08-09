@@ -8,17 +8,17 @@
 
 Every fuse, its default, and the recommended production setting:
 
-| FuseV1Options Constant | Default | Recommended | Effect When Disabled/Enabled |
-|------------------------|---------|-------------|------------------------------|
-| `RunAsNode` | Enabled | **Disable** | Prevents `ELECTRON_RUN_AS_NODE` env var from turning app into a plain Node.js process |
-| `EnableCookieEncryption` | Disabled | **Enable** | Encrypts on-disk cookies with OS-level cryptography (matches Chrome behavior) |
-| `EnableNodeOptionsEnvironmentVariable` | Enabled | **Disable** | Prevents `NODE_OPTIONS` and `NODE_EXTRA_CA_CERTS` env vars from injecting options |
-| `EnableNodeCliInspectArguments` | Enabled | **Disable** | Prevents `--inspect` / `--inspect-brk` / SIGUSR1 from attaching a debugger |
-| `EnableEmbeddedAsarIntegrityValidation` | Disabled | **Enable** | Validates `app.asar` header hash at runtime (macOS 16+, Windows 30+) |
-| `OnlyLoadAppFromAsar` | Disabled | **Enable** | Prevents loading app code from outside the ASAR archive |
-| `LoadBrowserProcessSpecificV8Snapshot` | Disabled | Keep | Uses `browser_v8_context_snapshot.bin` instead of shared snapshot |
-| `GrantFileProtocolExtraPrivileges` | Enabled | **Disable** | Removes `file://` fetch access and universal frame access |
-| `WasmTrapHandlers` | Enabled | Keep | Uses signal handlers for WebAssembly memory protection (disabling increases WASM size) |
+| FuseV1Options Constant                  | Default  | Recommended | Effect When Disabled/Enabled                                                           |
+| --------------------------------------- | -------- | ----------- | -------------------------------------------------------------------------------------- |
+| `RunAsNode`                             | Enabled  | **Disable** | Prevents `ELECTRON_RUN_AS_NODE` env var from turning app into a plain Node.js process  |
+| `EnableCookieEncryption`                | Disabled | **Enable**  | Encrypts on-disk cookies with OS-level cryptography (matches Chrome behavior)          |
+| `EnableNodeOptionsEnvironmentVariable`  | Enabled  | **Disable** | Prevents `NODE_OPTIONS` and `NODE_EXTRA_CA_CERTS` env vars from injecting options      |
+| `EnableNodeCliInspectArguments`         | Enabled  | **Disable** | Prevents `--inspect` / `--inspect-brk` / SIGUSR1 from attaching a debugger             |
+| `EnableEmbeddedAsarIntegrityValidation` | Disabled | **Enable**  | Validates `app.asar` header hash at runtime (macOS 16+, Windows 30+)                   |
+| `OnlyLoadAppFromAsar`                   | Disabled | **Enable**  | Prevents loading app code from outside the ASAR archive                                |
+| `LoadBrowserProcessSpecificV8Snapshot`  | Disabled | Keep        | Uses `browser_v8_context_snapshot.bin` instead of shared snapshot                      |
+| `GrantFileProtocolExtraPrivileges`      | Enabled  | **Disable** | Removes `file://` fetch access and universal frame access                              |
+| `WasmTrapHandlers`                      | Enabled  | Keep        | Uses signal handlers for WebAssembly memory protection (disabling increases WASM size) |
 
 ---
 
@@ -187,8 +187,16 @@ if (process.defaultApp) {
     const prefs = window.webContents.getLastWebPreferences();
 
     const SECURITY_CHECKS = [
-      { key: "contextIsolation", expected: true, label: "contextIsolation must be true" },
-      { key: "nodeIntegration", expected: false, label: "nodeIntegration must be false" },
+      {
+        key: "contextIsolation",
+        expected: true,
+        label: "contextIsolation must be true",
+      },
+      {
+        key: "nodeIntegration",
+        expected: false,
+        label: "nodeIntegration must be false",
+      },
       { key: "sandbox", expected: true, label: "sandbox must be true" },
       { key: "webSecurity", expected: true, label: "webSecurity must be true" },
     ];
@@ -221,13 +229,13 @@ if (process.defaultApp) {
 
 ## webPreferences Defaults by Electron Version
 
-| Property | Default | Since | Security Impact |
-|----------|---------|-------|-----------------|
-| `contextIsolation` | `true` | Electron 12 | Isolates preload from renderer globals |
-| `nodeIntegration` | `false` | Electron 5 | Prevents renderer from accessing Node.js APIs |
-| `sandbox` | `true` | Electron 20 | OS-level process sandboxing |
-| `webSecurity` | `true` | Always | Enforces same-origin policy |
-| `webviewTag` | `false` | Electron 22 | Requires explicit opt-in for `<webview>` |
+| Property           | Default | Since       | Security Impact                               |
+| ------------------ | ------- | ----------- | --------------------------------------------- |
+| `contextIsolation` | `true`  | Electron 12 | Isolates preload from renderer globals        |
+| `nodeIntegration`  | `false` | Electron 5  | Prevents renderer from accessing Node.js APIs |
+| `sandbox`          | `true`  | Electron 20 | OS-level process sandboxing                   |
+| `webSecurity`      | `true`  | Always      | Enforces same-origin policy                   |
+| `webviewTag`       | `false` | Electron 22 | Requires explicit opt-in for `<webview>`      |
 
 ---
 

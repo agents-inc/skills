@@ -114,7 +114,9 @@ const store = new Store<SettingsV2>({
     },
   },
   beforeEachMigration: (store, context) => {
-    console.log(`Migrating from ${context.fromVersion} to ${context.toVersion}`);
+    console.log(
+      `Migrating from ${context.fromVersion} to ${context.toVersion}`,
+    );
   },
 });
 ```
@@ -129,7 +131,9 @@ Use `watch: true` to detect external changes (e.g., another process editing the 
 
 ```typescript
 const store = new Store<AppSettings>({
-  defaults: { /* ... */ },
+  defaults: {
+    /* ... */
+  },
   watch: true, // Enables file-system watching
 });
 
@@ -163,7 +167,9 @@ electron-store runs in the main process. Renderers access it through IPC handler
 import { ipcMain } from "electron";
 import Store from "electron-store";
 
-const store = new Store<AppSettings>({ /* ... */ });
+const store = new Store<AppSettings>({
+  /* ... */
+});
 
 ipcMain.handle("settings:get", (_event, key: string) => {
   return store.get(key as keyof AppSettings);
@@ -184,7 +190,8 @@ import { contextBridge, ipcRenderer } from "electron/renderer";
 
 contextBridge.exposeInMainWorld("settingsAPI", {
   get: (key: string) => ipcRenderer.invoke("settings:get", key),
-  set: (key: string, value: unknown) => ipcRenderer.invoke("settings:set", key, value),
+  set: (key: string, value: unknown) =>
+    ipcRenderer.invoke("settings:set", key, value),
   getAll: () => ipcRenderer.invoke("settings:getAll"),
 });
 ```
@@ -255,7 +262,12 @@ export { saveCredential, loadCredential, deleteCredential, hasCredential };
 ```typescript
 // main.ts -- IPC handlers for credentials
 import { ipcMain } from "electron";
-import { saveCredential, loadCredential, deleteCredential, hasCredential } from "./credential-manager.js";
+import {
+  saveCredential,
+  loadCredential,
+  deleteCredential,
+  hasCredential,
+} from "./credential-manager.js";
 
 ipcMain.handle("credentials:save", (_event, key: string, secret: string) => {
   saveCredential(key, secret);
@@ -325,11 +337,13 @@ interface NotesDB {
 
 const DB_FILE = "notes.json";
 
-async function openNotesDB(): Promise<ReturnType<typeof JSONFilePreset<NotesDB>>> {
-  return JSONFilePreset<NotesDB>(
-    path.join(app.getPath("userData"), DB_FILE),
-    { notes: [], trash: [] },
-  );
+async function openNotesDB(): Promise<
+  ReturnType<typeof JSONFilePreset<NotesDB>>
+> {
+  return JSONFilePreset<NotesDB>(path.join(app.getPath("userData"), DB_FILE), {
+    notes: [],
+    trash: [],
+  });
 }
 
 // Usage in main process
@@ -423,9 +437,7 @@ function createWindow(): BrowserWindow {
   });
 
   const mainWindow = new BrowserWindow({
-    ...(displayBounds
-      ? { x: bounds.x, y: bounds.y }
-      : {}), // Omit position if display no longer connected -- OS picks a default
+    ...(displayBounds ? { x: bounds.x, y: bounds.y } : {}), // Omit position if display no longer connected -- OS picks a default
     width: bounds.width,
     height: bounds.height,
     webPreferences: {
@@ -449,7 +461,9 @@ function createWindow(): BrowserWindow {
   mainWindow.on("resize", saveBounds);
   mainWindow.on("move", saveBounds);
   mainWindow.on("maximize", () => store.set("windowBounds.isMaximized", true));
-  mainWindow.on("unmaximize", () => store.set("windowBounds.isMaximized", false));
+  mainWindow.on("unmaximize", () =>
+    store.set("windowBounds.isMaximized", false),
+  );
 
   return mainWindow;
 }

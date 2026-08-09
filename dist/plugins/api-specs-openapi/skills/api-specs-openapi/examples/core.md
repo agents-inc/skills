@@ -574,7 +574,8 @@ description:
 # 3.1 -- exclusiveMinimum is a number
 age:
   type: integer
-  exclusiveMinimum: 0    # Must be > 0
+  exclusiveMinimum: 0 # Must be > 0
+
 
 # 3.0 (outdated) -- exclusiveMinimum was a boolean
 # age:
@@ -662,7 +663,7 @@ paths:
   /jobs:
     get:
       operationId: listJobs
-      security: []  # No auth required
+      security: [] # No auth required
 ```
 
 **Why good:** security defined once, applied consistently, per-operation overrides for public endpoints

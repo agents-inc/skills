@@ -52,7 +52,7 @@ function cleanup() {
 const map = new mapboxgl.Map({
   container: "map",
   center: [-74.006, 40.7128], // Bad: magic numbers
-  zoom: 12,                    // Bad: magic number
+  zoom: 12, // Bad: magic number
 });
 
 // Bad: addSource before style is loaded -- throws error
@@ -79,8 +79,7 @@ const popup = new mapboxgl.Popup({
   maxWidth: POPUP_MAX_WIDTH,
   closeButton: true,
   closeOnClick: true,
-})
-  .setHTML("<h3>Central Park</h3><p>843 acres of green space</p>");
+}).setHTML("<h3>Central Park</h3><p>843 acres of green space</p>");
 
 const marker = new mapboxgl.Marker({ color: MARKER_COLOR })
   .setLngLat([-73.9654, 40.7829])
@@ -111,18 +110,24 @@ new mapboxgl.Marker({ element: el, anchor: "bottom" })
 
 ```typescript
 // Navigation (zoom + compass)
-map.addControl(new mapboxgl.NavigationControl({
-  showCompass: true,
-  showZoom: true,
-  visualizePitch: true,
-}), "top-right");
+map.addControl(
+  new mapboxgl.NavigationControl({
+    showCompass: true,
+    showZoom: true,
+    visualizePitch: true,
+  }),
+  "top-right",
+);
 
 // Geolocation
-map.addControl(new mapboxgl.GeolocateControl({
-  positionOptions: { enableHighAccuracy: true },
-  trackUserLocation: true,
-  showUserHeading: true,
-}), "top-right");
+map.addControl(
+  new mapboxgl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+    trackUserLocation: true,
+    showUserHeading: true,
+  }),
+  "top-right",
+);
 
 // Scale bar
 map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-left");
@@ -181,8 +186,9 @@ function renderMarkers(locations: Location[]) {
   markers.length = 0;
 
   for (const loc of locations) {
-    const popup = new mapboxgl.Popup({ offset: 25 })
-      .setText(`${loc.name}: ${loc.description}`);
+    const popup = new mapboxgl.Popup({ offset: 25 }).setText(
+      `${loc.name}: ${loc.description}`,
+    );
 
     const marker = new mapboxgl.Marker()
       .setLngLat([loc.lng, loc.lat])
@@ -277,19 +283,13 @@ map.on("mousemove", "parks-fill", (e) => {
 
   // Clear previous hover
   if (hoveredId !== null) {
-    map.setFeatureState(
-      { source: "parks", id: hoveredId },
-      { hover: false },
-    );
+    map.setFeatureState({ source: "parks", id: hoveredId }, { hover: false });
   }
 
   hoveredId = e.features[0].id ?? null;
 
   if (hoveredId !== null) {
-    map.setFeatureState(
-      { source: "parks", id: hoveredId },
-      { hover: true },
-    );
+    map.setFeatureState({ source: "parks", id: hoveredId }, { hover: true });
   }
 });
 
@@ -297,10 +297,7 @@ map.on("mouseleave", "parks-fill", () => {
   map.getCanvas().style.cursor = "";
 
   if (hoveredId !== null) {
-    map.setFeatureState(
-      { source: "parks", id: hoveredId },
-      { hover: false },
-    );
+    map.setFeatureState({ source: "parks", id: hoveredId }, { hover: false });
     hoveredId = null;
   }
 });
@@ -337,10 +334,12 @@ map.on("click", "cities-layer", (e) => {
 
   new mapboxgl.Popup()
     .setLngLat(coordinates)
-    .setHTML(`
+    .setHTML(
+      `
       <strong>${name}</strong>
       <p>Population: ${population}</p>
-    `)
+    `,
+    )
     .addTo(map);
 });
 ```

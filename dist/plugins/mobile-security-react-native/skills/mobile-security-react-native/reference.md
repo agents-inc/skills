@@ -100,9 +100,9 @@ const result = await LocalAuthentication.authenticateAsync({
   promptMessage: "Verify identity",
   cancelLabel: "Cancel",
   disableDeviceFallback: false,
-  fallbackLabel: "Use passcode",     // iOS only
-  requireConfirmation: true,          // Android only
-  biometricsSecurityLevel: "strong",  // Android: "weak" | "strong"
+  fallbackLabel: "Use passcode", // iOS only
+  requireConfirmation: true, // Android only
+  biometricsSecurityLevel: "strong", // Android: "weak" | "strong"
 });
 // result: { success: true } | { success: false, error: string, warning?: string }
 
@@ -122,12 +122,13 @@ import { initializeSslPinning } from "react-native-ssl-public-key-pinning";
 // Initialize at app entry (before any network requests)
 await initializeSslPinning({
   "api.example.com": {
-    includeSubdomains: true,          // Pin subdomains too
-    publicKeyHashes: [                // Minimum 2 on iOS
-      "hash1...",                     // Primary (current cert)
-      "hash2...",                     // Backup (next cert)
+    includeSubdomains: true, // Pin subdomains too
+    publicKeyHashes: [
+      // Minimum 2 on iOS
+      "hash1...", // Primary (current cert)
+      "hash2...", // Backup (next cert)
     ],
-    expirationDate: "2026-12-31",    // Safety valve (optional but recommended)
+    expirationDate: "2026-12-31", // Safety valve (optional but recommended)
   },
 });
 ```
@@ -137,10 +138,10 @@ await initializeSslPinning({
 ```typescript
 import JailMonkey from "jail-monkey";
 
-JailMonkey.isJailBroken();         // boolean - jailbreak/root detected
-JailMonkey.canMockLocation();      // boolean - mock location enabled
-JailMonkey.isDebuggedMode();       // boolean - debugger attached
-JailMonkey.isOnExternalStorage();  // boolean - Android only
+JailMonkey.isJailBroken(); // boolean - jailbreak/root detected
+JailMonkey.canMockLocation(); // boolean - mock location enabled
+JailMonkey.isDebuggedMode(); // boolean - debugger attached
+JailMonkey.isOnExternalStorage(); // boolean - Android only
 ```
 
 ---

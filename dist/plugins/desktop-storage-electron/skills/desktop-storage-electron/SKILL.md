@@ -158,7 +158,9 @@ Use for secrets (tokens, API keys, passwords). The encrypted buffer is opaque --
 import { safeStorage, app } from "electron";
 import Store from "electron-store";
 
-const credentialStore = new Store<Record<string, string>>({ name: "credentials" });
+const credentialStore = new Store<Record<string, string>>({
+  name: "credentials",
+});
 
 function saveSecret(key: string, plainText: string): void {
   if (!safeStorage.isEncryptionAvailable()) {
@@ -225,7 +227,10 @@ interface ProjectData {
 }
 
 const DB_FILE = "projects.json";
-const defaultData: ProjectData = { projects: [], settings: { sortBy: "lastOpened" } };
+const defaultData: ProjectData = {
+  projects: [],
+  settings: { sortBy: "lastOpened" },
+};
 
 const db = await JSONFilePreset<ProjectData>(
   path.join(app.getPath("userData"), DB_FILE),
@@ -233,11 +238,16 @@ const db = await JSONFilePreset<ProjectData>(
 );
 
 // Read
-const recent = db.data.projects
-  .toSorted((a, b) => b.lastOpened.localeCompare(a.lastOpened));
+const recent = db.data.projects.toSorted((a, b) =>
+  b.lastOpened.localeCompare(a.lastOpened),
+);
 
 // Write (mutate then persist)
-db.data.projects.push({ id: "abc", name: "New Project", lastOpened: new Date().toISOString() });
+db.data.projects.push({
+  id: "abc",
+  name: "New Project",
+  lastOpened: new Date().toISOString(),
+});
 await db.write();
 ```
 
@@ -281,25 +291,25 @@ What kind of data?
 
 ### electron-store vs better-sqlite3
 
-| Criteria                | electron-store              | better-sqlite3                   |
-| ----------------------- | --------------------------- | -------------------------------- |
-| Data shape              | Flat key-value, small JSON  | Relational, structured records   |
-| Data size               | < 1MB                       | Up to several GB                 |
-| Query capability        | Get by key, dot-notation    | Full SQL, indexes, joins         |
-| Concurrent access       | Single process only         | WAL mode supports multi-window   |
-| Schema evolution        | Migrations by semver        | SQL ALTER TABLE / migration scripts |
-| Setup complexity        | Zero (pure JS)              | Native module rebuild required   |
-| Best for                | Preferences, feature flags  | Chat history, project data, logs |
+| Criteria          | electron-store             | better-sqlite3                      |
+| ----------------- | -------------------------- | ----------------------------------- |
+| Data shape        | Flat key-value, small JSON | Relational, structured records      |
+| Data size         | < 1MB                      | Up to several GB                    |
+| Query capability  | Get by key, dot-notation   | Full SQL, indexes, joins            |
+| Concurrent access | Single process only        | WAL mode supports multi-window      |
+| Schema evolution  | Migrations by semver       | SQL ALTER TABLE / migration scripts |
+| Setup complexity  | Zero (pure JS)             | Native module rebuild required      |
+| Best for          | Preferences, feature flags | Chat history, project data, logs    |
 
 ### safeStorage vs electron-store encryptionKey
 
-| Feature                | safeStorage                          | electron-store encryptionKey          |
-| ---------------------- | ------------------------------------ | ------------------------------------- |
-| Security level         | OS keychain (strong)                 | Obfuscation only (weak)              |
-| Key management         | OS manages keys                      | Key embedded in source code           |
-| Use for secrets        | Yes                                  | No -- not actual encryption           |
-| Use for obfuscation    | Overkill                             | Yes -- prevents casual file reading   |
-| Platform support       | macOS, Windows, Linux (varies)       | All platforms                         |
+| Feature             | safeStorage                    | electron-store encryptionKey        |
+| ------------------- | ------------------------------ | ----------------------------------- |
+| Security level      | OS keychain (strong)           | Obfuscation only (weak)             |
+| Key management      | OS manages keys                | Key embedded in source code         |
+| Use for secrets     | Yes                            | No -- not actual encryption         |
+| Use for obfuscation | Overkill                       | Yes -- prevents casual file reading |
+| Platform support    | macOS, Windows, Linux (varies) | All platforms                       |
 
 </decision_framework>
 

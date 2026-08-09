@@ -66,7 +66,14 @@ function BadParticles() {
   return (
     <>
       {Array.from({ length: 2000 }, (_, i) => (
-        <mesh key={i} position={[Math.random() * 20, Math.random() * 20, Math.random() * 20]}>
+        <mesh
+          key={i}
+          position={[
+            Math.random() * 20,
+            Math.random() * 20,
+            Math.random() * 20,
+          ]}
+        >
           <boxGeometry args={[0.1, 0.1, 0.1]} />
           <meshBasicMaterial color="cyan" />
         </mesh>
@@ -95,7 +102,11 @@ export function DreiBubbles() {
       {Array.from({ length: ITEM_COUNT }, (_, i) => (
         <Instance
           key={i}
-          position={[(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10]}
+          position={[
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+          ]}
         />
       ))}
     </Instances>
@@ -206,7 +217,8 @@ const GRID_SPACING = 1.2;
 
 export function SphereGrid() {
   const geometry = useMemo(
-    () => new THREE.SphereGeometry(SPHERE_RADIUS, SPHERE_SEGMENTS, SPHERE_SEGMENTS),
+    () =>
+      new THREE.SphereGeometry(SPHERE_RADIUS, SPHERE_SEGMENTS, SPHERE_SEGMENTS),
     [],
   );
   const material = useMemo(
@@ -367,7 +379,7 @@ import { AdaptiveDpr } from "@react-three/drei";
 <Canvas>
   <AdaptiveDpr pixelated />
   {/* Automatically lowers DPR during regression, restores after */}
-</Canvas>
+</Canvas>;
 ```
 
 ---

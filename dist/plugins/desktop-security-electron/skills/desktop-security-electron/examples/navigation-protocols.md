@@ -38,7 +38,10 @@ const ALLOWED_ORIGINS = new Set(["file://", "myapp://"]);
 
 mainWindow.webContents.on("will-navigate", (event, url) => {
   const parsed = new URL(url);
-  if (!ALLOWED_ORIGINS.has(parsed.origin) && !ALLOWED_ORIGINS.has(parsed.protocol)) {
+  if (
+    !ALLOWED_ORIGINS.has(parsed.origin) &&
+    !ALLOWED_ORIGINS.has(parsed.protocol)
+  ) {
     event.preventDefault();
   }
 });
@@ -124,10 +127,10 @@ protocol.registerSchemesAsPrivileged([
   {
     scheme: "myapp",
     privileges: {
-      standard: true,      // Enables relative URL resolution
-      secure: true,        // Treated as HTTPS for CSP and mixed-content
+      standard: true, // Enables relative URL resolution
+      secure: true, // Treated as HTTPS for CSP and mixed-content
       supportFetchAPI: true, // Allows fetch() from this scheme
-      corsEnabled: true,   // Enables CORS for cross-origin requests
+      corsEnabled: true, // Enables CORS for cross-origin requests
     },
   },
 ]);
@@ -144,7 +147,15 @@ protocol.registerSchemesAsPrivileged([
 
 ```javascript
 // main.js -- inside app.whenReady()
-const ALLOWED_EXTENSIONS = new Set([".html", ".js", ".css", ".svg", ".png", ".jpg", ".woff2"]);
+const ALLOWED_EXTENSIONS = new Set([
+  ".html",
+  ".js",
+  ".css",
+  ".svg",
+  ".png",
+  ".jpg",
+  ".woff2",
+]);
 
 protocol.handle("myapp", (request) => {
   const url = new URL(request.url);
@@ -236,7 +247,10 @@ ipcMain.handle("sensitive-operation", async (event) => {
   const senderFrame = event.senderFrame;
   const expectedOrigin = "myapp://renderer";
 
-  if (senderFrame.url !== expectedOrigin && !senderFrame.url.startsWith("file://")) {
+  if (
+    senderFrame.url !== expectedOrigin &&
+    !senderFrame.url.startsWith("file://")
+  ) {
     throw new Error("Unauthorized IPC sender");
   }
 

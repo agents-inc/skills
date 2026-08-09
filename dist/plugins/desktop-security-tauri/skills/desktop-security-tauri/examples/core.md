@@ -15,9 +15,7 @@ Every Tauri 2 app starts with at least one capability file. This is the minimum 
   "identifier": "default",
   "description": "Default permissions for all windows",
   "windows": ["main"],
-  "permissions": [
-    "core:default"
-  ]
+  "permissions": ["core:default"]
 }
 ```
 
@@ -65,17 +63,17 @@ A capability file with every available field documented.
 
 **Field reference:**
 
-| Field | Type | Required | Purpose |
-|-------|------|----------|---------|
-| `$schema` | string | No | IDE autocompletion (generated on first `cargo tauri dev`) |
-| `identifier` | string | Yes | Unique name for this capability (`[a-z]` and hyphens only) |
-| `description` | string | Yes | Explains what this capability grants |
-| `local` | boolean | No | Enable for local app URLs (default: `true`) |
-| `windows` | string[] | No | Window labels this capability applies to (supports `"*"` wildcard) |
-| `webviews` | string[] | No | Webview labels this capability applies to |
-| `platforms` | string[] | No | Restrict to platforms: `"linux"`, `"macOS"`, `"windows"`, `"iOS"`, `"android"` |
-| `permissions` | (string \| object)[] | Yes | Permission identifiers or scoped permission objects |
-| `remote` | object | No | Remote domain access via `urls` array using URLPattern standard |
+| Field         | Type                 | Required | Purpose                                                                        |
+| ------------- | -------------------- | -------- | ------------------------------------------------------------------------------ |
+| `$schema`     | string               | No       | IDE autocompletion (generated on first `cargo tauri dev`)                      |
+| `identifier`  | string               | Yes      | Unique name for this capability (`[a-z]` and hyphens only)                     |
+| `description` | string               | Yes      | Explains what this capability grants                                           |
+| `local`       | boolean              | No       | Enable for local app URLs (default: `true`)                                    |
+| `windows`     | string[]             | No       | Window labels this capability applies to (supports `"*"` wildcard)             |
+| `webviews`    | string[]             | No       | Webview labels this capability applies to                                      |
+| `platforms`   | string[]             | No       | Restrict to platforms: `"linux"`, `"macOS"`, `"windows"`, `"iOS"`, `"android"` |
+| `permissions` | (string \| object)[] | Yes      | Permission identifiers or scoped permission objects                            |
+| `remote`      | object               | No       | Remote domain access via `urls` array using URLPattern standard                |
 
 ---
 
@@ -103,9 +101,7 @@ Restrict file operations to specific directories using path scopes. Deny always 
     },
     {
       "identifier": "fs:allow-write-text-file",
-      "allow": [
-        { "path": "$APPDATA/**" }
-      ]
+      "allow": [{ "path": "$APPDATA/**" }]
     },
     {
       "identifier": "fs:deny-read-text-file",
@@ -151,9 +147,7 @@ Restrict HTTP requests to specific domains using URL scopes.
         { "url": "https://api.example.com/**" },
         { "url": "https://cdn.example.com/**" }
       ],
-      "deny": [
-        { "url": "https://api.example.com/admin/**" }
-      ]
+      "deny": [{ "url": "https://api.example.com/admin/**" }]
     }
   ]
 }
@@ -294,9 +288,7 @@ Allow remote web content to access Tauri APIs. Use for apps that load external c
   "remote": {
     "urls": ["https://*.partner.com", "https://dashboard.internal.dev"]
   },
-  "permissions": [
-    "notification:default"
-  ]
+  "permissions": ["notification:default"]
 }
 ```
 
@@ -347,11 +339,7 @@ For simple apps, capabilities can be defined directly in `tauri.conf.json` inste
           "identifier": "main-capability",
           "description": "Main window permissions",
           "windows": ["main"],
-          "permissions": [
-            "core:default",
-            "shell:allow-open",
-            "dialog:default"
-          ]
+          "permissions": ["core:default", "shell:allow-open", "dialog:default"]
         }
       ]
     }
@@ -416,12 +404,12 @@ Configure CSP in `tauri.conf.json` to control what the webview can load. This is
 
 **Key CSP directives for Tauri:**
 
-| Directive | Value | Purpose |
-|-----------|-------|---------|
-| `default-src` | `'self'` | Only allow loading from the app's own origin |
-| `connect-src` | `ipc: http://ipc.localhost` | Required for Tauri command invocation |
-| `img-src` | `asset: http://asset.localhost` | Required for loading bundled assets as images |
-| `style-src` | `'self' 'unsafe-inline'` | Allow inline styles (many frameworks need this) |
+| Directive     | Value                           | Purpose                                         |
+| ------------- | ------------------------------- | ----------------------------------------------- |
+| `default-src` | `'self'`                        | Only allow loading from the app's own origin    |
+| `connect-src` | `ipc: http://ipc.localhost`     | Required for Tauri command invocation           |
+| `img-src`     | `asset: http://asset.localhost` | Required for loading bundled assets as images   |
+| `style-src`   | `'self' 'unsafe-inline'`        | Allow inline styles (many frameworks need this) |
 
 **Key rules:**
 

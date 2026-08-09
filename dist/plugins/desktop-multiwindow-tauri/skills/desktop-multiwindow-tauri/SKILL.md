@@ -226,7 +226,10 @@ tauri::Builder::default()
 Create owned windows that are tied to a parent. Modal windows block interaction with the parent until closed.
 
 ```typescript
-import { WebviewWindow, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  WebviewWindow,
+  getCurrentWebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
 
 const DIALOG_LABEL = "confirm-dialog";
 const DIALOG_WIDTH = 400;

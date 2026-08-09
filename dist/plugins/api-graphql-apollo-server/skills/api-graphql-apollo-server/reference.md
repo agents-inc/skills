@@ -208,46 +208,46 @@ const resolvers = {
 
 ## Built-in Error Codes Reference
 
-| Code | Import from | Use Case |
-|------|-------------|----------|
-| `GRAPHQL_PARSE_FAILED` | `@apollo/server/errors` | Syntax errors in operations |
-| `GRAPHQL_VALIDATION_FAILED` | `@apollo/server/errors` | Operations invalid against schema |
-| `BAD_USER_INPUT` | `@apollo/server/errors` | Invalid field argument values |
-| `BAD_REQUEST` | `@apollo/server/errors` | Error before parsing attempted |
-| `INTERNAL_SERVER_ERROR` | `@apollo/server/errors` | Default for unspecified errors |
-| `PERSISTED_QUERY_NOT_FOUND` | `@apollo/server/errors` | APQ hash not in cache |
-| `PERSISTED_QUERY_NOT_SUPPORTED` | `@apollo/server/errors` | Server has APQ disabled |
-| `OPERATION_RESOLUTION_FAILURE` | `@apollo/server/errors` | Can't determine which operation to run |
+| Code                            | Import from             | Use Case                               |
+| ------------------------------- | ----------------------- | -------------------------------------- |
+| `GRAPHQL_PARSE_FAILED`          | `@apollo/server/errors` | Syntax errors in operations            |
+| `GRAPHQL_VALIDATION_FAILED`     | `@apollo/server/errors` | Operations invalid against schema      |
+| `BAD_USER_INPUT`                | `@apollo/server/errors` | Invalid field argument values          |
+| `BAD_REQUEST`                   | `@apollo/server/errors` | Error before parsing attempted         |
+| `INTERNAL_SERVER_ERROR`         | `@apollo/server/errors` | Default for unspecified errors         |
+| `PERSISTED_QUERY_NOT_FOUND`     | `@apollo/server/errors` | APQ hash not in cache                  |
+| `PERSISTED_QUERY_NOT_SUPPORTED` | `@apollo/server/errors` | Server has APQ disabled                |
+| `OPERATION_RESOLUTION_FAILURE`  | `@apollo/server/errors` | Can't determine which operation to run |
 
 ## Plugin Lifecycle Events Reference
 
 ### Server Events
 
-| Event | Async | Purpose |
-|-------|-------|---------|
-| `serverWillStart` | Yes | Server initialization |
+| Event                   | Async  | Purpose                       |
+| ----------------------- | ------ | ----------------------------- |
+| `serverWillStart`       | Yes    | Server initialization         |
 | `schemaDidLoadOrUpdate` | **No** | Schema loaded or hot-reloaded |
 
 ### Request Events (returned from `requestDidStart`)
 
-| Event | Async | Purpose |
-|-------|-------|---------|
-| `didResolveSource` | Yes | After resolving operation source |
-| `parsingDidStart` | Yes | Before parsing (returns end hook) |
-| `validationDidStart` | Yes | Before validation (returns end hook) |
-| `didResolveOperation` | Yes | After operation identified |
-| `responseForOperation` | Yes | Override response for operation |
-| `executionDidStart` | Yes | Before execution (returns end hook) |
-| `willResolveField` | **No** | Before each field resolves |
-| `didEncounterErrors` | Yes | After errors encountered |
-| `willSendResponse` | Yes | Before response sent |
+| Event                  | Async  | Purpose                              |
+| ---------------------- | ------ | ------------------------------------ |
+| `didResolveSource`     | Yes    | After resolving operation source     |
+| `parsingDidStart`      | Yes    | Before parsing (returns end hook)    |
+| `validationDidStart`   | Yes    | Before validation (returns end hook) |
+| `didResolveOperation`  | Yes    | After operation identified           |
+| `responseForOperation` | Yes    | Override response for operation      |
+| `executionDidStart`    | Yes    | Before execution (returns end hook)  |
+| `willResolveField`     | **No** | Before each field resolves           |
+| `didEncounterErrors`   | Yes    | After errors encountered             |
+| `willSendResponse`     | Yes    | Before response sent                 |
 
 ### Shutdown Events (returned from `serverWillStart`)
 
-| Event | Async | Purpose |
-|-------|-------|---------|
-| `drainServer` | Yes | Drain connections before stop |
-| `serverWillStop` | Yes | Final cleanup after drain |
+| Event            | Async | Purpose                       |
+| ---------------- | ----- | ----------------------------- |
+| `drainServer`    | Yes   | Drain connections before stop |
+| `serverWillStop` | Yes   | Final cleanup after drain     |
 
 ---
 

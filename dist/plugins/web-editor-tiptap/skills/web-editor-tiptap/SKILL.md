@@ -119,10 +119,10 @@ See [examples/core.md](examples/core.md) for full setup with toolbar and configu
 
 TipTap has three extension types that map to ProseMirror's schema model:
 
-| Type | Purpose | Examples |
-|------|---------|---------|
-| **Node** | Content blocks and inline elements | Paragraph, Heading, Image, CodeBlock, Table |
-| **Mark** | Formatting applied to text ranges | Bold, Italic, Link, Highlight, Code |
+| Type          | Purpose                              | Examples                                     |
+| ------------- | ------------------------------------ | -------------------------------------------- |
+| **Node**      | Content blocks and inline elements   | Paragraph, Heading, Image, CodeBlock, Table  |
+| **Mark**      | Formatting applied to text ranges    | Bold, Italic, Link, Highlight, Code          |
 | **Extension** | Functionality without schema changes | UndoRedo, CharacterCount, Placeholder, Focus |
 
 ```typescript
@@ -131,9 +131,9 @@ import { Mark } from "@tiptap/core";
 import { Extension } from "@tiptap/core";
 
 // Each type uses the same .create() factory
-const CustomNode = Node.create({ name: "customNode", /* ... */ });
-const CustomMark = Mark.create({ name: "customMark", /* ... */ });
-const CustomExt = Extension.create({ name: "customExt", /* ... */ });
+const CustomNode = Node.create({ name: "customNode" /* ... */ });
+const CustomMark = Mark.create({ name: "customMark" /* ... */ });
+const CustomExt = Extension.create({ name: "customExt" /* ... */ });
 ```
 
 **Key distinction:** Nodes and Marks define schema (parseHTML/renderHTML). Extensions add behavior only.
@@ -216,7 +216,11 @@ const Callout = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["div", mergeAttributes({ "data-type": "callout" }, HTMLAttributes), 0];
+    return [
+      "div",
+      mergeAttributes({ "data-type": "callout" }, HTMLAttributes),
+      0,
+    ];
   },
 });
 ```
@@ -255,9 +259,11 @@ const Highlight = Mark.create({
 
   addCommands() {
     return {
-      toggleHighlight: (attrs) => ({ commands }) => {
-        return commands.toggleMark(this.name, attrs);
-      },
+      toggleHighlight:
+        (attrs) =>
+        ({ commands }) => {
+          return commands.toggleMark(this.name, attrs);
+        },
     };
   },
 });
@@ -413,7 +419,7 @@ How will you store editor content?
 - `editor` from `useEditor` is `null` on first render and during SSR -- guard all `editor.` access
 - StarterKit v3 includes Link and Underline by default -- adding them separately causes duplicate extension errors
 - `NodeViewContent` tag cannot change at runtime -- set `as` prop once (e.g. `as="p"`)
-- `mergeAttributes` is required in `renderHTML` to preserve user-added attributes (class, style, data-*)
+- `mergeAttributes` is required in `renderHTML` to preserve user-added attributes (class, style, data-\*)
 - `addInputRules` regex must end with `$` (caret at cursor position); `addPasteRules` regex should NOT end with `$` but must use `/g` flag
 - Multiple input rules matching the same pattern -- only the first match in extension order fires
 - ProseMirror content expressions: `"block+"` means one-or-more blocks, `"inline*"` means zero-or-more inline, `"text*"` means text only -- mismatches cause schema validation errors

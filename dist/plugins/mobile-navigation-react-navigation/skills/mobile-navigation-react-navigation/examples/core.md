@@ -185,7 +185,10 @@ const RootStack = createNativeStackNavigator({
 ```typescript
 // navigation/types.ts
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { CompositeNavigationProp, RouteProp } from "@react-navigation/native";
+import type {
+  CompositeNavigationProp,
+  RouteProp,
+} from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 

@@ -106,10 +106,18 @@ All React Native core components accept `className` after installing NativeWind.
 ```tsx
 import { View, Text, Pressable } from "react-native";
 
-export function Card({ title, onPress }: { title: string; onPress: () => void }) {
+export function Card({
+  title,
+  onPress,
+}: {
+  title: string;
+  onPress: () => void;
+}) {
   return (
     <View className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
-      <Text className="text-lg font-bold text-gray-900 dark:text-white">{title}</Text>
+      <Text className="text-lg font-bold text-gray-900 dark:text-white">
+        {title}
+      </Text>
       <Pressable
         className="mt-3 rounded-md bg-blue-500 px-4 py-2 active:bg-blue-600"
         onPress={onPress}
@@ -141,13 +149,16 @@ interface BadgeProps {
 const VARIANT_CLASSES = {
   info: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   success: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  warning:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   error: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 } as const;
 
 export function Badge({ label, variant = "info", className }: BadgeProps) {
   return (
-    <Text className={`rounded-full px-2 py-1 text-xs font-medium ${VARIANT_CLASSES[variant]} ${className ?? ""}`}>
+    <Text
+      className={`rounded-full px-2 py-1 text-xs font-medium ${VARIANT_CLASSES[variant]} ${className ?? ""}`}
+    >
       {label}
     </Text>
   );
@@ -214,7 +225,9 @@ const brandTheme = vars({
 export function ThemedScreen() {
   return (
     <View style={brandTheme} className="flex-1 bg-[--color-surface]">
-      <Text className="text-lg font-bold text-[--color-primary]">Branded Content</Text>
+      <Text className="text-lg font-bold text-[--color-primary]">
+        Branded Content
+      </Text>
       <ThemedSpinner />
     </View>
   );

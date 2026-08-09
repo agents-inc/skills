@@ -109,22 +109,22 @@ Every task that produces files must declare `outputs`. Every task affected by en
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**"],
-      "env": ["NODE_ENV", "API_URL"]
+      "env": ["NODE_ENV", "API_URL"],
     },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["DATABASE_URL"]
+      "env": ["DATABASE_URL"],
     },
     "lint": {
       "dependsOn": [],
-      "cache": true
+      "cache": true,
     },
     "type-check": {
       "dependsOn": ["^build"],
-      "cache": true
-    }
-  }
+      "cache": true,
+    },
+  },
 }
 ```
 
@@ -158,8 +158,8 @@ TURBO_TEAM=<team-slug>       # Team/account identifier
 ```jsonc
 {
   "remoteCache": {
-    "signature": true
-  }
+    "signature": true,
+  },
 }
 ```
 
@@ -263,20 +263,20 @@ Turborepo's `strict` env mode (default in v2) only makes variables listed in `en
   "tasks": {
     "build": {
       "env": ["API_URL", "SENTRY_DSN"],
-      "passThroughEnv": ["npm_config_registry"]
-    }
-  }
+      "passThroughEnv": ["npm_config_registry"],
+    },
+  },
 }
 ```
 
 **Decision: `env` vs `globalEnv` vs `passThroughEnv`:**
 
-| Key | Affects hash? | Available to task? | Scope |
-|-----|--------------|-------------------|-------|
-| `env` | Yes | Yes | Single task |
-| `globalEnv` | Yes (all tasks) | Yes | All tasks |
-| `passThroughEnv` | No | Yes | Single task |
-| `globalPassThroughEnv` | No | Yes | All tasks |
+| Key                    | Affects hash?   | Available to task? | Scope       |
+| ---------------------- | --------------- | ------------------ | ----------- |
+| `env`                  | Yes             | Yes                | Single task |
+| `globalEnv`            | Yes (all tasks) | Yes                | All tasks   |
+| `passThroughEnv`       | No              | Yes                | Single task |
+| `globalPassThroughEnv` | No              | Yes                | All tasks   |
 
 **When to use `passThroughEnv`:** Variables needed at runtime but that don't affect build output (e.g., `npm_config_registry`, `HTTP_PROXY`). Changing them should not bust the cache.
 
@@ -318,12 +318,12 @@ turbo run build --concurrency=1
 {
   "tasks": {
     "build": {
-      "outputLogs": "new-only"
+      "outputLogs": "new-only",
     },
     "lint": {
-      "outputLogs": "errors-only"
-    }
-  }
+      "outputLogs": "errors-only",
+    },
+  },
 }
 ```
 

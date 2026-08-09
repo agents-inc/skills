@@ -44,14 +44,14 @@
 +----------------------- Minute (0-59)
 ```
 
-| Expression | Meaning |
-|------------|---------|
-| `* * * * *` | Every minute |
-| `*/15 * * * *` | Every 15 minutes |
-| `0 * * * *` | Every hour |
-| `0 2 * * *` | Daily at 2:00 AM UTC |
-| `0 9 * * 1` | Every Monday at 9:00 AM UTC |
-| `0 0 1 * *` | First day of every month at midnight UTC |
+| Expression     | Meaning                                  |
+| -------------- | ---------------------------------------- |
+| `* * * * *`    | Every minute                             |
+| `*/15 * * * *` | Every 15 minutes                         |
+| `0 * * * *`    | Every hour                               |
+| `0 2 * * *`    | Daily at 2:00 AM UTC                     |
+| `0 9 * * 1`    | Every Monday at 9:00 AM UTC              |
+| `0 0 1 * *`    | First day of every month at midnight UTC |
 
 ---
 
@@ -98,6 +98,7 @@ export default {
 ## Setting Up CRON_SECRET
 
 1. Generate a secure random value:
+
    ```bash
    openssl rand -base64 32
    ```
@@ -156,11 +157,11 @@ export default {
 
 ## Plan Limits for Crons
 
-| Plan | Max Cron Jobs | Minimum Interval |
-|------|---------------|------------------|
-| Hobby | 2 | Daily |
-| Pro | 40 | Every minute |
-| Enterprise | 100+ | Every minute |
+| Plan       | Max Cron Jobs | Minimum Interval |
+| ---------- | ------------- | ---------------- |
+| Hobby      | 2             | Daily            |
+| Pro        | 40            | Every minute     |
+| Enterprise | 100+          | Every minute     |
 
 **Key constraints:**
 

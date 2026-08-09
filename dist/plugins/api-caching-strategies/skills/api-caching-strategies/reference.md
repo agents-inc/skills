@@ -6,14 +6,14 @@ Lookup tables and comparisons. See [SKILL.md](SKILL.md) for decision frameworks,
 
 ## Cache-Control Quick Reference
 
-| Use Case | Header | Behavior |
-|---|---|---|
-| Public list data | `public, max-age=60, s-maxage=300` | Browser: 1m, CDN: 5m |
-| Public with SWR | `public, max-age=60, s-maxage=300, stale-while-revalidate=60` | CDN serves stale during refresh |
-| User-specific data | `private, no-cache` | Always revalidate, no shared cache |
-| Sensitive data | `no-store, private` | Never cached anywhere |
-| Versioned static assets | `public, max-age=31536000, immutable` | Cache forever, version in URL |
-| API with ETag | `max-age=0, must-revalidate` | Always revalidate, 304 if unchanged |
+| Use Case                | Header                                                        | Behavior                            |
+| ----------------------- | ------------------------------------------------------------- | ----------------------------------- |
+| Public list data        | `public, max-age=60, s-maxage=300`                            | Browser: 1m, CDN: 5m                |
+| Public with SWR         | `public, max-age=60, s-maxage=300, stale-while-revalidate=60` | CDN serves stale during refresh     |
+| User-specific data      | `private, no-cache`                                           | Always revalidate, no shared cache  |
+| Sensitive data          | `no-store, private`                                           | Never cached anywhere               |
+| Versioned static assets | `public, max-age=31536000, immutable`                         | Cache forever, version in URL       |
+| API with ETag           | `max-age=0, must-revalidate`                                  | Always revalidate, 304 if unchanged |
 
 ---
 
@@ -34,24 +34,24 @@ Server checks:  ETag matches? (takes precedence per RFC 9110)
 
 ## Strategy Comparison
 
-| Strategy | Read Perf | Write Perf | Consistency | Complexity | Data Loss Risk |
-|---|---|---|---|---|---|
-| Cache-aside | Fast (on hit) | N/A (reads only) | Eventual (TTL) | Low | None |
-| Write-through | Fast (on hit) | Slower (dual write) | Strong | Low | None |
-| Write-behind | Fast (on hit) | Fast (async) | Eventual | High | Yes (buffer loss) |
-| HTTP caching | Fastest (no request) | N/A | Eventual (TTL) | Low | None |
-| In-memory LRU | Sub-ms | Sub-ms | Per-process only | Low | Yes (process restart) |
+| Strategy      | Read Perf            | Write Perf          | Consistency      | Complexity | Data Loss Risk        |
+| ------------- | -------------------- | ------------------- | ---------------- | ---------- | --------------------- |
+| Cache-aside   | Fast (on hit)        | N/A (reads only)    | Eventual (TTL)   | Low        | None                  |
+| Write-through | Fast (on hit)        | Slower (dual write) | Strong           | Low        | None                  |
+| Write-behind  | Fast (on hit)        | Fast (async)        | Eventual         | High       | Yes (buffer loss)     |
+| HTTP caching  | Fastest (no request) | N/A                 | Eventual (TTL)   | Low        | None                  |
+| In-memory LRU | Sub-ms               | Sub-ms              | Per-process only | Low        | Yes (process restart) |
 
 ---
 
 ## Stampede Prevention Comparison
 
-| Technique | When to Use | Trade-off |
-|---|---|---|
-| Distributed lock | Multi-instance, critical keys | Lock overhead, potential stalls |
-| Request coalescing | Single-instance, bursty traffic | In-process only, no cross-instance |
-| Probabilistic early refresh | High-traffic, predictable patterns | Slightly higher cache store load |
-| Background refresh (cron) | Periodic data, known update schedule | Stale between refreshes |
+| Technique                   | When to Use                          | Trade-off                          |
+| --------------------------- | ------------------------------------ | ---------------------------------- |
+| Distributed lock            | Multi-instance, critical keys        | Lock overhead, potential stalls    |
+| Request coalescing          | Single-instance, bursty traffic      | In-process only, no cross-instance |
+| Probabilistic early refresh | High-traffic, predictable patterns   | Slightly higher cache store load   |
+| Background refresh (cron)   | Periodic data, known update schedule | Stale between refreshes            |
 
 ---
 

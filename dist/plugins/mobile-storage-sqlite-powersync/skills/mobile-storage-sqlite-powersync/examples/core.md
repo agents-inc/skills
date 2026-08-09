@@ -29,7 +29,7 @@ const todos = new Table(
     completed_at: column.text,
     description: column.text,
     completed: column.integer, // 0 = false, 1 = true (SQLite has no boolean)
-    priority: column.real,     // Floating-point values
+    priority: column.real, // Floating-point values
   },
   { indexes: { list: ["list_id"] } }, // Index for faster queries by list
 );
@@ -67,11 +67,11 @@ const todos = new Table({
 
 **Column type reference:**
 
-| Type             | SQLite Type | Use For                              |
-|------------------|-------------|--------------------------------------|
-| `column.text`    | TEXT        | Strings, UUIDs, ISO dates, JSON      |
-| `column.integer` | INTEGER     | Numbers, booleans (0/1), timestamps   |
-| `column.real`    | REAL        | Floating-point numbers                |
+| Type             | SQLite Type | Use For                             |
+| ---------------- | ----------- | ----------------------------------- |
+| `column.text`    | TEXT        | Strings, UUIDs, ISO dates, JSON     |
+| `column.integer` | INTEGER     | Numbers, booleans (0/1), timestamps |
+| `column.real`    | REAL        | Floating-point numbers              |
 
 ---
 
@@ -118,6 +118,7 @@ export const powersync = new PowerSyncDatabase({
 **Why good:** OP-SQLite provides SQLCipher encryption and better New Architecture support, factory pattern separates adapter config from database config
 
 **OP-SQLite package.json requirement:**
+
 ```json
 {
   "op-sqlite": {
@@ -180,7 +181,12 @@ import type { TodoRecord } from "./schema";
 
 function TodoList({ listId }: { listId: string }) {
   // Automatically re-executes when the todos table changes
-  const { data: todos, isLoading, isFetching, error } = useQuery<TodoRecord>(
+  const {
+    data: todos,
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery<TodoRecord>(
     "SELECT * FROM todos WHERE list_id = ? ORDER BY created_at DESC",
     [listId],
   );
@@ -194,7 +200,9 @@ function TodoList({ listId }: { listId: string }) {
       <FlatList
         data={todos}
         renderItem={({ item }) => (
-          <Text>{item.description} {item.completed ? "(done)" : ""}</Text>
+          <Text>
+            {item.description} {item.completed ? "(done)" : ""}
+          </Text>
         )}
         keyExtractor={(item) => item.id}
       />
@@ -337,10 +345,9 @@ const todos = await db.getAll<TodoRecord>(
 );
 
 // get -- returns single row, THROWS if not found
-const todo = await db.get<TodoRecord>(
-  "SELECT * FROM todos WHERE id = ?",
-  [todoId],
-);
+const todo = await db.get<TodoRecord>("SELECT * FROM todos WHERE id = ?", [
+  todoId,
+]);
 
 // getOptional -- returns single row or null
 const maybeTodo = await db.getOptional<TodoRecord>(

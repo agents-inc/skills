@@ -87,7 +87,7 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get"]
-    resourceNames: ["api-secrets"]  # Restrict to specific secret
+    resourceNames: ["api-secrets"] # Restrict to specific secret
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -445,7 +445,7 @@ volumes:
 # BAD: Liveness probe checks database connectivity
 livenessProbe:
   httpGet:
-    path: /health  # Returns 500 if database is down
+    path: /health # Returns 500 if database is down
     port: 3000
 ```
 

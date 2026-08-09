@@ -219,7 +219,7 @@ async function saveToApi(documentId: string, content: Record<string, unknown>) {
 // In useEditor config:
 onUpdate: ({ editor }) => {
   debouncedSave(documentId, editor.getJSON());
-}
+};
 ```
 
 ---

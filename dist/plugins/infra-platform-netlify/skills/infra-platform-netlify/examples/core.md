@@ -124,9 +124,12 @@ export default async (req: Request, context: Context) => {
   }
 
   try {
-    const response = await fetch(`https://api.example.com/users?limit=${limit}`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
+    const response = await fetch(
+      `https://api.example.com/users?limit=${limit}`,
+      {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      },
+    );
     const data = await response.json();
     return Response.json(data);
   } catch {
@@ -208,9 +211,7 @@ export default async (req: Request, context: Context) => {
   const region = context.server.region;
 
   // Background work — runs after response is sent
-  context.waitUntil(
-    logAnalytics({ city, country: country.code, requestId }),
-  );
+  context.waitUntil(logAnalytics({ city, country: country.code, requestId }));
 
   return Response.json({
     greeting: `Hello from ${city}, ${country.name}!`,
@@ -257,14 +258,14 @@ export const config: Config = {
 
 **Cron expression format** (UTC timezone):
 
-| Expression | Schedule |
-|-----------|----------|
-| `@hourly` | Every hour at minute 0 |
-| `@daily` | Every day at midnight |
-| `@weekly` | Every Sunday at midnight |
-| `@monthly` | First day of month at midnight |
-| `0 9 * * 1-5` | Weekdays at 9:00 AM UTC |
-| `*/15 * * * *` | Every 15 minutes |
+| Expression     | Schedule                       |
+| -------------- | ------------------------------ |
+| `@hourly`      | Every hour at minute 0         |
+| `@daily`       | Every day at midnight          |
+| `@weekly`      | Every Sunday at midnight       |
+| `@monthly`     | First day of month at midnight |
+| `0 9 * * 1-5`  | Weekdays at 9:00 AM UTC        |
+| `*/15 * * * *` | Every 15 minutes               |
 
 **Limitations:** 60-second execution limit. Cannot be invoked via URL. Only runs on published deploys.
 
@@ -319,7 +320,9 @@ export default async () => {
       let count = 0;
       const timer = setInterval(() => {
         controller.enqueue(
-          encoder.encode(`data: Event ${count + 1} at ${new Date().toISOString()}\n\n`),
+          encoder.encode(
+            `data: Event ${count + 1} at ${new Date().toISOString()}\n\n`,
+          ),
         );
         count++;
         if (count >= STREAM_ITEM_COUNT) {
@@ -350,7 +353,12 @@ Netlify detects forms with the `data-netlify="true"` attribute during build and 
 
 ```html
 <!-- Basic form with honeypot spam filter -->
-<form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+<form
+  name="contact"
+  method="POST"
+  data-netlify="true"
+  netlify-honeypot="bot-field"
+>
   <!-- Hidden honeypot field — bots fill it, humans don't see it -->
   <p class="hidden">
     <label>Don't fill this out: <input name="bot-field" /></label>

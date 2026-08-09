@@ -38,7 +38,10 @@ export function RevenueChart({ data }: RevenueChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <LineChart
+        data={chartData}
+        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="month" />
         <YAxis />
@@ -249,7 +252,14 @@ function BadTooltip({ active, payload }) {
 ## Pattern 5: PieChart with Custom Labels
 
 ```tsx
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface CategoryData {
   name: string;
@@ -288,7 +298,13 @@ function renderLabel({
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+    >
       {`${(percent * PERCENT_MULTIPLIER).toFixed(0)}%`}
     </text>
   );
@@ -364,11 +380,25 @@ export function WeatherChart({ data }: WeatherChartProps) {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="time" />
         <YAxis yAxisId="temp" tickFormatter={TEMPERATURE_FORMAT} />
-        <YAxis yAxisId="humidity" orientation="right" tickFormatter={HUMIDITY_FORMAT} />
+        <YAxis
+          yAxisId="humidity"
+          orientation="right"
+          tickFormatter={HUMIDITY_FORMAT}
+        />
         <Tooltip />
         <Legend />
-        <Line yAxisId="temp" type="monotone" dataKey="temperature" stroke="#ff7300" />
-        <Line yAxisId="humidity" type="monotone" dataKey="humidity" stroke="#387908" />
+        <Line
+          yAxisId="temp"
+          type="monotone"
+          dataKey="temperature"
+          stroke="#ff7300"
+        />
+        <Line
+          yAxisId="humidity"
+          type="monotone"
+          dataKey="humidity"
+          stroke="#387908"
+        />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -446,10 +476,8 @@ const ASPECT_RATIO = 16 / 9;
 const MIN_WIDTH = 300;
 
 <ResponsiveContainer width="100%" aspect={ASPECT_RATIO} minWidth={MIN_WIDTH}>
-  <LineChart data={data}>
-    {/* ... */}
-  </LineChart>
-</ResponsiveContainer>
+  <LineChart data={data}>{/* ... */}</LineChart>
+</ResponsiveContainer>;
 ```
 
 ### v3 `responsive` prop (CSS-based)
@@ -476,10 +504,8 @@ const FALLBACK_HEIGHT = 400;
   height={FALLBACK_HEIGHT}
   initialDimension={{ width: FALLBACK_WIDTH, height: FALLBACK_HEIGHT }}
 >
-  <LineChart data={data}>
-    {/* ... */}
-  </LineChart>
-</ResponsiveContainer>
+  <LineChart data={data}>{/* ... */}</LineChart>
+</ResponsiveContainer>;
 ```
 
 **Why good:** `initialDimension` provides fallback sizes for SSR where ResizeObserver hasn't fired yet.

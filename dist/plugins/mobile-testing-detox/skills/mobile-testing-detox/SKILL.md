@@ -105,12 +105,24 @@ The config file defines devices, apps, and test configurations. Keep configs in 
 module.exports = {
   testRunner: { args: { $0: "jest", config: "e2e/jest.config.js" } },
   apps: {
-    "ios.debug": { type: "ios.app", binaryPath: "ios/build/.../MyApp.app", build: "xcodebuild ..." },
-    "android.debug": { type: "android.apk", binaryPath: "android/.../app-debug.apk", build: "cd android && ./gradlew ...", reversePorts: [8081] },
+    "ios.debug": {
+      type: "ios.app",
+      binaryPath: "ios/build/.../MyApp.app",
+      build: "xcodebuild ...",
+    },
+    "android.debug": {
+      type: "android.apk",
+      binaryPath: "android/.../app-debug.apk",
+      build: "cd android && ./gradlew ...",
+      reversePorts: [8081],
+    },
   },
   devices: {
     simulator: { type: "ios.simulator", device: { type: "iPhone 16" } },
-    emulator: { type: "android.emulator", device: { avdName: "Pixel_7_API_34" } },
+    emulator: {
+      type: "android.emulator",
+      device: { avdName: "Pixel_7_API_34" },
+    },
   },
   configurations: {
     "ios.sim.debug": { device: "simulator", app: "ios.debug" },
@@ -285,7 +297,7 @@ Add `testID` to every interactive element. Forward it through custom components 
 // Native component: testID works directly
 <Pressable testID="settings-btn" onPress={openSettings}>
   <Text>Settings</Text>
-</Pressable>
+</Pressable>;
 
 // Custom component: MUST forward testID to a native component
 interface CardProps {
@@ -303,7 +315,7 @@ function Card({ testID, title, onPress }: CardProps) {
 }
 
 // Usage: derived child IDs with dot notation
-<Card testID="product-card" title="Widget" onPress={handlePress} />
+<Card testID="product-card" title="Widget" onPress={handlePress} />;
 // Matches: by.id("product-card"), by.id("product-card.title")
 ```
 

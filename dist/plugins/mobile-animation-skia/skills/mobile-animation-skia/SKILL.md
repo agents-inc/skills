@@ -110,7 +110,13 @@ React Native Skia brings Skia (the graphics engine behind Chrome, Android, and F
 Canvas is the root Skia drawing surface. It behaves like a regular React Native view (accepts `style`), but hosts its own React renderer internally.
 
 ```tsx
-import { Canvas, Circle, Rect, RoundedRect, Line } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Circle,
+  Rect,
+  RoundedRect,
+  Line,
+} from "@shopify/react-native-skia";
 
 const CANVAS_SIZE = 256;
 const CIRCLE_RADIUS = 50;
@@ -119,8 +125,14 @@ const CIRCLE_RADIUS = 50;
   <Circle cx={128} cy={128} r={CIRCLE_RADIUS} color="cyan" />
   <Rect x={10} y={10} width={100} height={80} color="red" />
   <RoundedRect x={10} y={120} width={100} height={80} r={16} color="blue" />
-  <Line p1={{ x: 0, y: 0 }} p2={{ x: 256, y: 256 }} color="green" strokeWidth={2} style="stroke" />
-</Canvas>
+  <Line
+    p1={{ x: 0, y: 0 }}
+    p2={{ x: 256, y: 256 }}
+    color="green"
+    strokeWidth={2}
+    style="stroke"
+  />
+</Canvas>;
 ```
 
 **Why good:** declarative JSX, paint properties (color, style, strokeWidth) applied directly as props
@@ -141,7 +153,7 @@ import { Canvas, Group, Circle, Rect } from "@shopify/react-native-skia";
     <Circle cx={80} cy={128} r={40} />
     <Rect x={140} y={88} width={80} height={80} />
   </Group>
-</Canvas>
+</Canvas>;
 ```
 
 **Why good:** color and opacity cascade to both children without repetition, Group provides single point for transforms and clipping
@@ -160,7 +172,12 @@ Use the declarative `<Path>` component with SVG path strings for static paths. U
 import { Canvas, Path, Skia } from "@shopify/react-native-skia";
 
 // Declarative: SVG path string
-<Path path="M 10 80 Q 95 10 180 80" color="purple" style="stroke" strokeWidth={3} />
+<Path
+  path="M 10 80 Q 95 10 180 80"
+  color="purple"
+  style="stroke"
+  strokeWidth={3}
+/>;
 
 // Imperative: dynamic construction
 const path = Skia.Path.Make();
@@ -181,7 +198,11 @@ Pass Reanimated shared values directly as Skia component props. No `createAnimat
 
 ```tsx
 import { Canvas, Circle } from "@shopify/react-native-skia";
-import { useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
+import {
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { useEffect } from "react";
 
 const DURATION = 2000;
@@ -192,7 +213,11 @@ export function PulsingCircle() {
   const r = useSharedValue(MIN_RADIUS);
 
   useEffect(() => {
-    r.value = withRepeat(withTiming(MAX_RADIUS, { duration: DURATION }), -1, true);
+    r.value = withRepeat(
+      withTiming(MAX_RADIUS, { duration: DURATION }),
+      -1,
+      true,
+    );
   }, []);
 
   return (
@@ -216,7 +241,14 @@ See [examples/animations.md](examples/animations.md) for path interpolation, col
 Image filters (Blur, Shadow, ColorMatrix) apply as children to shapes or Groups. BackdropBlur applies blur to content behind a clipping mask (like CSS `backdrop-filter`).
 
 ```tsx
-import { Canvas, Image, Blur, BackdropBlur, Fill, useImage } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Image,
+  Blur,
+  BackdropBlur,
+  Fill,
+  useImage,
+} from "@shopify/react-native-skia";
 
 const BLUR_RADIUS = 10;
 const BACKDROP_BLUR = 4;
@@ -270,9 +302,12 @@ const effect = Skia.RuntimeEffect.Make(SHADER_SOURCE)!;
 // In component: pass animated shared values as uniforms
 <Canvas style={{ flex: 1 }}>
   <Fill>
-    <Shader source={effect} uniforms={{ iResolution: [256, 256], iTime: time }} />
+    <Shader
+      source={effect}
+      uniforms={{ iResolution: [256, 256], iTime: time }}
+    />
   </Fill>
-</Canvas>
+</Canvas>;
 ```
 
 **Key SkSL differences from GLSL:** use `.eval(xy)` instead of `sample()` for child shaders, `uniform shader` for child shader declarations, supported uniform types: `float`, `float2`-`float4`, `int`, `int2`-`int4`, matrices, and arrays.
@@ -286,7 +321,13 @@ See [examples/effects.md](examples/effects.md) for RuntimeShader as image filter
 The Paragraph API handles rich text with mixed fonts, line breaking, and alignment. Requires building text with `ParagraphBuilder`. Paragraph does not follow standard paint inheritance -- use `layer` for effects.
 
 ```tsx
-import { Canvas, Paragraph, Skia, useFonts, TextAlign } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Paragraph,
+  Skia,
+  useFonts,
+  TextAlign,
+} from "@shopify/react-native-skia";
 
 const PARAGRAPH_WIDTH = 300;
 
@@ -294,10 +335,21 @@ export function RichText() {
   const fonts = useFonts({ Roboto: [require("./Roboto-Regular.ttf")] });
   if (!fonts) return null;
 
-  const para = Skia.ParagraphBuilder.Make({ textAlign: TextAlign.Center }, fonts)
-    .pushStyle({ fontSize: 24, fontFamilies: ["Roboto"], color: Skia.Color("black") })
+  const para = Skia.ParagraphBuilder.Make(
+    { textAlign: TextAlign.Center },
+    fonts,
+  )
+    .pushStyle({
+      fontSize: 24,
+      fontFamilies: ["Roboto"],
+      color: Skia.Color("black"),
+    })
     .addText("Hello ")
-    .pushStyle({ fontSize: 24, fontFamilies: ["Roboto"], fontStyle: { weight: 700 } })
+    .pushStyle({
+      fontSize: 24,
+      fontFamilies: ["Roboto"],
+      fontStyle: { weight: 700 },
+    })
     .addText("Skia")
     .pop()
     .build();
@@ -323,7 +375,13 @@ See [examples/text-and-media.md](examples/text-and-media.md) for font loading, t
 Atlas draws thousands of sprites in a single draw call using one texture. Each sprite gets an individual RSXform (rotation + scale + translation). Ideal for tile maps, particle systems, and sprite animations.
 
 ```tsx
-import { Canvas, Atlas, useImage, Skia, rect } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Atlas,
+  useImage,
+  Skia,
+  rect,
+} from "@shopify/react-native-skia";
 
 const SPRITE_SIZE = 32;
 const GRID_COLS = 10;
@@ -334,7 +392,7 @@ export function TileMap() {
   if (!texture) return null;
 
   const sprites = Array.from({ length: GRID_COLS * GRID_ROWS }, () =>
-    rect(0, 0, SPRITE_SIZE, SPRITE_SIZE)
+    rect(0, 0, SPRITE_SIZE, SPRITE_SIZE),
   );
 
   const transforms = Array.from({ length: GRID_COLS * GRID_ROWS }, (_, i) => {
@@ -344,7 +402,12 @@ export function TileMap() {
   });
 
   return (
-    <Canvas style={{ width: GRID_COLS * SPRITE_SIZE, height: GRID_ROWS * SPRITE_SIZE }}>
+    <Canvas
+      style={{
+        width: GRID_COLS * SPRITE_SIZE,
+        height: GRID_ROWS * SPRITE_SIZE,
+      }}
+    >
       <Atlas image={texture} sprites={sprites} transforms={transforms} />
     </Canvas>
   );

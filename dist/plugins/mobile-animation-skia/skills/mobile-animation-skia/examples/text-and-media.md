@@ -12,7 +12,12 @@ The Paragraph API handles rich text with multiple fonts, weights, and alignment.
 
 ```tsx
 import {
-  Canvas, Paragraph, Skia, useFonts, TextAlign, FontStyle,
+  Canvas,
+  Paragraph,
+  Skia,
+  useFonts,
+  TextAlign,
+  FontStyle,
 } from "@shopify/react-native-skia";
 
 const PARAGRAPH_WIDTH = 280;
@@ -61,7 +66,9 @@ export function RichTextParagraph() {
     })
     .addText("powerful")
     .pop()
-    .addText(" Paragraph API for rich text layout with automatic line breaking.")
+    .addText(
+      " Paragraph API for rich text layout with automatic line breaking.",
+    )
     .pop()
     .build();
 
@@ -78,6 +85,7 @@ export function RichTextParagraph() {
 **Why good:** mixed bold/italic/regular in one text block, automatic line breaking, measurable height for dynamic canvas sizing
 
 **Key methods after `build()`:**
+
 - `para.layout(width)` -- compute layout for given width (must call before rendering)
 - `para.getHeight()` -- total paragraph height after layout
 - `para.getLongestLine()` -- width of the longest line (useful for centering)
@@ -123,6 +131,7 @@ export function SVGFromString() {
 ```
 
 **SVG limitations (not supported):**
+
 - `<text>` elements
 - CSS styles (preprocess with SVGO to convert to attributes)
 - RGBA color syntax (use `rgb()` + `fill-opacity`/`stroke-opacity`)
@@ -138,15 +147,31 @@ export function SVGFromString() {
 Pictures record drawing operations and replay them. Useful for dynamic draw counts (e.g., trails, particle effects) and sharing drawings between canvases.
 
 ```tsx
-import { Canvas, Picture, Skia, Group, Paint, Blur } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Picture,
+  Skia,
+  Group,
+  Paint,
+  Blur,
+} from "@shopify/react-native-skia";
 
 const TRAIL_LENGTH = 20;
 const TRAIL_RADIUS = 5;
 
 // Record dynamic number of drawing operations
-export function TrailEffect({ points }: { points: Array<{ x: number; y: number }> }) {
+export function TrailEffect({
+  points,
+}: {
+  points: Array<{ x: number; y: number }>;
+}) {
   const recorder = Skia.PictureRecorder();
-  const canvas = recorder.beginRecording({ x: 0, y: 0, width: 256, height: 256 });
+  const canvas = recorder.beginRecording({
+    x: 0,
+    y: 0,
+    width: 256,
+    height: 256,
+  });
 
   // Draw variable number of circles (can't do this with JSX without changing component count)
   const visiblePoints = points.slice(-TRAIL_LENGTH);
@@ -162,7 +187,13 @@ export function TrailEffect({ points }: { points: Array<{ x: number; y: number }
   return (
     <Canvas style={{ width: 256, height: 256 }}>
       {/* Apply effects via layer since Picture doesn't inherit paint */}
-      <Group layer={<Paint><Blur blur={2} /></Paint>}>
+      <Group
+        layer={
+          <Paint>
+            <Blur blur={2} />
+          </Paint>
+        }
+      >
         <Picture picture={picture} />
       </Group>
     </Canvas>
@@ -171,6 +202,7 @@ export function TrailEffect({ points }: { points: Array<{ x: number; y: number }
 ```
 
 **When to use Picture:**
+
 - Variable number of draw operations per frame (trails, particles)
 - Reusing the same drawing in multiple locations
 - Immediate-mode drawing with imperative Skia API
@@ -185,7 +217,12 @@ export function TrailEffect({ points }: { points: Array<{ x: number; y: number }
 Capture canvas content as an image for sharing, saving, or processing.
 
 ```tsx
-import { Canvas, Circle, Rect, type SkiaView } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Circle,
+  Rect,
+  type SkiaView,
+} from "@shopify/react-native-skia";
 import { useRef, useCallback } from "react";
 
 export function SnapshotExample() {
@@ -213,6 +250,7 @@ export function SnapshotExample() {
 ```
 
 **Key distinction:**
+
 - `makeImageSnapshotAsync()` -- use when canvas has images, shaders, or textures (promise-based)
 - `makeImageSnapshot(rect?)` -- use for texture-free drawings (synchronous, optional crop rect)
 
@@ -223,7 +261,11 @@ export function SnapshotExample() {
 Generate images without displaying a Canvas. Useful for thumbnails, export, or server-side rendering.
 
 ```tsx
-import { LoadSkiaWeb, makeOffscreenSurface, drawOffscreen } from "@shopify/react-native-skia/lib/commonjs/headless";
+import {
+  LoadSkiaWeb,
+  makeOffscreenSurface,
+  drawOffscreen,
+} from "@shopify/react-native-skia/lib/commonjs/headless";
 import { Circle, Fill } from "@shopify/react-native-skia";
 
 const SURFACE_WIDTH = 512;
@@ -237,12 +279,13 @@ export async function generateThumbnail(): Promise<string> {
   const surface = makeOffscreenSurface(SURFACE_WIDTH, SURFACE_HEIGHT);
 
   // 3. Draw using React Native Skia components
-  const image = drawOffscreen(surface, (
+  const image = drawOffscreen(
+    surface,
     <>
       <Fill color="white" />
       <Circle cx={256} cy={256} r={120} color="blue" />
-    </>
-  ));
+    </>,
+  );
 
   // 4. Encode to base64
   return image.encodeToBase64();
@@ -250,6 +293,7 @@ export async function generateThumbnail(): Promise<string> {
 ```
 
 **When to use offscreen rendering:**
+
 - Generating thumbnails or previews without a visible Canvas
 - Server-side image generation (Node.js with CanvasKit)
 - Pre-rendering complex scenes for later display

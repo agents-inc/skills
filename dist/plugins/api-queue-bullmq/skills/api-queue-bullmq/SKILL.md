@@ -167,14 +167,18 @@ const BACKOFF_DELAY_MS = 1000;
 const DELAY_MS = 60_000;
 const KEEP_COMPLETED_COUNT = 100;
 
-await emailQueue.add("send-welcome", { to: "user@example.com", subject: "Welcome", body: "..." }, {
-  delay: DELAY_MS,
-  priority: 1, // 1 = highest, higher numbers = lower priority
-  attempts: MAX_ATTEMPTS,
-  backoff: { type: "exponential", delay: BACKOFF_DELAY_MS },
-  removeOnComplete: { count: KEEP_COMPLETED_COUNT },
-  removeOnFail: false,
-});
+await emailQueue.add(
+  "send-welcome",
+  { to: "user@example.com", subject: "Welcome", body: "..." },
+  {
+    delay: DELAY_MS,
+    priority: 1, // 1 = highest, higher numbers = lower priority
+    attempts: MAX_ATTEMPTS,
+    backoff: { type: "exponential", delay: BACKOFF_DELAY_MS },
+    removeOnComplete: { count: KEEP_COMPLETED_COUNT },
+    removeOnFail: false,
+  },
+);
 ```
 
 **Why good:** Named constants for all numeric values, exponential backoff for transient failures, `removeOnComplete` with count prevents unbounded Redis memory, `removeOnFail: false` preserves failed jobs for debugging
@@ -219,8 +223,16 @@ await flowProducer.add({
   queueName: "videos",
   children: [
     { name: "extract-audio", queueName: "media", data: { videoId: "abc" } },
-    { name: "generate-thumbnail", queueName: "media", data: { videoId: "abc" } },
-    { name: "transcode", queueName: "media", data: { videoId: "abc", format: "mp4" } },
+    {
+      name: "generate-thumbnail",
+      queueName: "media",
+      data: { videoId: "abc" },
+    },
+    {
+      name: "transcode",
+      queueName: "media",
+      data: { videoId: "abc", format: "mp4" },
+    },
   ],
 });
 ```
@@ -239,17 +251,25 @@ Use `upsertJobScheduler` (v5.16.0+) for repeatable jobs. Replaces the deprecated
 const REPORT_INTERVAL_MS = 3_600_000; // 1 hour
 
 // Fixed interval
-await emailQueue.upsertJobScheduler("hourly-digest", { every: REPORT_INTERVAL_MS }, {
-  name: "send-digest",
-  data: { type: "hourly" },
-});
+await emailQueue.upsertJobScheduler(
+  "hourly-digest",
+  { every: REPORT_INTERVAL_MS },
+  {
+    name: "send-digest",
+    data: { type: "hourly" },
+  },
+);
 
 // Cron expression -- daily at 3:15 AM
-await emailQueue.upsertJobScheduler("nightly-cleanup", { pattern: "0 15 3 * * *" }, {
-  name: "cleanup",
-  data: { type: "nightly" },
-  opts: { removeOnComplete: true },
-});
+await emailQueue.upsertJobScheduler(
+  "nightly-cleanup",
+  { pattern: "0 15 3 * * *" },
+  {
+    name: "cleanup",
+    data: { type: "nightly" },
+    opts: { removeOnComplete: true },
+  },
+);
 ```
 
 **Why good:** `upsertJobScheduler` is idempotent (safe to call on every startup), template defines job name/data/opts inherited by each produced job, cron syntax via `pattern`
@@ -287,7 +307,9 @@ QueueEvents uses Redis Streams (not Pub/Sub) so events are reliable even across 
 ```typescript
 import { QueueEvents } from "bullmq";
 
-const queueEvents = new QueueEvents(QUEUE_NAME, { connection: createBullMQConnection() });
+const queueEvents = new QueueEvents(QUEUE_NAME, {
+  connection: createBullMQConnection(),
+});
 
 queueEvents.on("completed", ({ jobId, returnvalue }) => {
   console.log(`Job ${jobId} completed with: ${returnvalue}`);

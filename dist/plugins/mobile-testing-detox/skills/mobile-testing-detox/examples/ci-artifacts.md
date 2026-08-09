@@ -23,18 +23,23 @@ module.exports = {
     "ios.debug": {
       type: "ios.app",
       binaryPath: "ios/build/Build/Products/Debug-iphonesimulator/MyApp.app",
-      build: "xcodebuild -workspace ios/MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
+      build:
+        "xcodebuild -workspace ios/MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
     },
     "android.debug": {
       type: "android.apk",
       binaryPath: "android/app/build/outputs/apk/debug/app-debug.apk",
-      build: "cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug",
+      build:
+        "cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug",
       reversePorts: [8081],
     },
   },
   devices: {
     simulator: { type: "ios.simulator", device: { type: "iPhone 16" } },
-    emulator: { type: "android.emulator", device: { avdName: "Pixel_7_API_34" } },
+    emulator: {
+      type: "android.emulator",
+      device: { avdName: "Pixel_7_API_34" },
+    },
   },
   configurations: {
     "ios.sim.debug": { device: "simulator", app: "ios.debug" },
@@ -44,6 +49,7 @@ module.exports = {
 ```
 
 **Key decisions:**
+
 - `setupTimeout: 120000` -- 2 minutes for CI builds (default 60s often insufficient)
 - `reversePorts: [8081]` -- Android emulators need port forwarding to reach Metro bundler
 - Use JSDoc `@type` for IDE autocomplete on all config options
@@ -149,7 +155,8 @@ export function createApiClient() {
 ```javascript
 // metro.config.js
 const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
-const defaultSourceExts = require("metro-config/src/defaults/defaults").sourceExts;
+const defaultSourceExts =
+  require("metro-config/src/defaults/defaults").sourceExts;
 
 const config = {
   resolver: {
@@ -247,8 +254,7 @@ describe("Checkout flow", () => {
     await element(by.id("product-detail.add-to-cart-btn")).tap();
     await element(by.id("nav-cart-tab")).tap();
 
-    await expect(element(by.id("cart-screen.item-count")))
-      .toHaveText("1 item");
+    await expect(element(by.id("cart-screen.item-count"))).toHaveText("1 item");
 
     await element(by.id("cart-screen.checkout-btn")).tap();
 
@@ -386,7 +392,8 @@ module.exports = {
     },
     "ios.companion": {
       type: "ios.app",
-      binaryPath: "ios/build/Build/Products/Debug-iphonesimulator/CompanionApp.app",
+      binaryPath:
+        "ios/build/Build/Products/Debug-iphonesimulator/CompanionApp.app",
       build: "xcodebuild -workspace ios/CompanionApp.xcworkspace ...",
     },
   },

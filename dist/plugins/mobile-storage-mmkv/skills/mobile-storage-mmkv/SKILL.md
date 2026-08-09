@@ -81,11 +81,11 @@ MMKV is a **synchronous**, JSI-based key-value store built on top of Tencent's b
 
 **Performance comparison with AsyncStorage:**
 
-| Operation       | AsyncStorage | MMKV   | Speedup |
-|----------------|-------------|--------|---------|
-| Read 1 key     | ~5ms        | ~0.015ms | ~300x  |
-| Write 1 key    | ~8ms        | ~0.018ms | ~440x  |
-| Read 1000 keys | ~200ms      | ~3ms    | ~65x   |
+| Operation      | AsyncStorage | MMKV     | Speedup |
+| -------------- | ------------ | -------- | ------- |
+| Read 1 key     | ~5ms         | ~0.015ms | ~300x   |
+| Write 1 key    | ~8ms         | ~0.018ms | ~440x   |
+| Read 1000 keys | ~200ms       | ~3ms     | ~65x    |
 
 Benchmarks vary by device, but MMKV is consistently 30-100x faster for typical operations.
 
@@ -141,9 +141,9 @@ storage.set("user.age", 28);
 storage.set("onboarded", true);
 
 // Get with correct typed getter
-const name = storage.getString("user.name");   // string | undefined
-const age = storage.getNumber("user.age");      // number | undefined
-const done = storage.getBoolean("onboarded");   // boolean | undefined
+const name = storage.getString("user.name"); // string | undefined
+const age = storage.getNumber("user.age"); // number | undefined
+const done = storage.getBoolean("onboarded"); // boolean | undefined
 ```
 
 **Why good:** Each getter returns the correct type or `undefined` if key is missing -- no parsing, no type confusion
@@ -159,7 +159,11 @@ See [examples/core.md](examples/core.md) for object serialization with `JSON.str
 Hooks provide `useState`-like API backed by MMKV. Components re-render when the stored value changes.
 
 ```typescript
-import { useMMKVString, useMMKVBoolean, useMMKVObject } from "react-native-mmkv";
+import {
+  useMMKVString,
+  useMMKVBoolean,
+  useMMKVObject,
+} from "react-native-mmkv";
 import type { User } from "../types";
 
 function ProfileScreen() {
@@ -311,13 +315,13 @@ What kind of data are you storing?
 
 ### When to Use Each API Style
 
-| Scenario                        | API                         |
-|---------------------------------|-----------------------------|
-| Read/write in services or utils | Direct: `storage.getString()` |
-| Reactive component state        | Hook: `useMMKVString()`       |
+| Scenario                        | API                                 |
+| ------------------------------- | ----------------------------------- |
+| Read/write in services or utils | Direct: `storage.getString()`       |
+| Reactive component state        | Hook: `useMMKVString()`             |
 | Cross-component sync            | Hook or `addOnValueChangedListener` |
-| Background task or service      | Direct + listener            |
-| State management persistence    | `StateStorage` adapter       |
+| Background task or service      | Direct + listener                   |
+| State management persistence    | `StateStorage` adapter              |
 
 </decision_framework>
 

@@ -4,6 +4,17 @@
 
 ---
 
+## Exit codes used below
+
+Every snippet on this page assumes the same constant as [core.md](core.md#exit-codes-used-below). Where the CLI framework defines an exit-code table, use that table's cancellation constant instead.
+
+```typescript
+// 128 + SIGINT(2), the value a shell reports for an interrupted command.
+export const EXIT_CANCELLED = 130;
+```
+
+---
+
 ## Pattern 1: Custom Prompts with @clack/core
 
 Use `@clack/core` when you need a prompt UI that `@clack/prompts` doesn't provide. Each core prompt has a `render()` function that returns the terminal output string.
@@ -38,7 +49,7 @@ const p = new TextPrompt({
 const result = await p.prompt();
 
 if (isCancel(result)) {
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -63,18 +74,20 @@ const p = new SelectPrompt({
   render() {
     const title = "Select instance size";
 
-    return `${title}\n${this.options.map((opt, i) => {
-      const cursor = i === this.cursor ? ">" : " ";
-      const selected = i === this.cursor ? "[*]" : "[ ]";
-      return `  ${cursor} ${selected} ${opt.label}`;
-    }).join("\n")}`;
+    return `${title}\n${this.options
+      .map((opt, i) => {
+        const cursor = i === this.cursor ? ">" : " ";
+        const selected = i === this.cursor ? "[*]" : "[ ]";
+        return `  ${cursor} ${selected} ${opt.label}`;
+      })
+      .join("\n")}`;
   },
 });
 
 const result = await p.prompt();
 
 if (isCancel(result)) {
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -82,13 +95,13 @@ if (isCancel(result)) {
 
 The `this.state` property in the render function cycles through these values:
 
-| State | When | Typical Display |
-|-------|------|-----------------|
-| `"initial"` | First render, before user input | Show prompt with placeholder |
-| `"active"` | User is typing or navigating | Show current input/selection |
-| `"error"` | Validation failed | Show error message |
-| `"submit"` | User pressed Enter with valid input | Show confirmed value |
-| `"cancel"` | User pressed Ctrl+C | Show cancellation notice |
+| State       | When                                | Typical Display              |
+| ----------- | ----------------------------------- | ---------------------------- |
+| `"initial"` | First render, before user input     | Show prompt with placeholder |
+| `"active"`  | User is typing or navigating        | Show current input/selection |
+| `"error"`   | Validation failed                   | Show error message           |
+| `"submit"`  | User pressed Enter with valid input | Show confirmed value         |
+| `"cancel"`  | User pressed Ctrl+C                 | Show cancellation notice     |
 
 ---
 
@@ -176,9 +189,7 @@ import * as p from "@clack/prompts";
 import { createReadStream } from "node:fs";
 
 // Stream from a file
-await p.stream.info(
-  createReadStream("./build-log.txt", { encoding: "utf-8" }),
-);
+await p.stream.info(createReadStream("./build-log.txt", { encoding: "utf-8" }));
 
 // Stream from an async generator
 async function* generateOutput(): AsyncGenerator<string> {
@@ -227,7 +238,7 @@ const deadline = await p.date({
 
 if (p.isCancel(deadline)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // deadline is a Date object
@@ -245,7 +256,7 @@ const configPath = await p.path({
 
 if (p.isCancel(configPath)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 
 // configPath is a string (absolute or relative path)
@@ -287,7 +298,7 @@ const country = await p.autocomplete({
 
 if (p.isCancel(country)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -310,7 +321,7 @@ const packages = await p.autocompleteMultiselect({
 
 if (p.isCancel(packages)) {
   p.cancel("Cancelled.");
-  process.exit(0);
+  process.exit(EXIT_CANCELLED);
 }
 ```
 
@@ -336,7 +347,11 @@ function createMockInput(responses: string[]): Readable {
   return input;
 }
 
-const output = new Writable({ write(chunk, encoding, callback) { callback(); } });
+const output = new Writable({
+  write(chunk, encoding, callback) {
+    callback();
+  },
+});
 
 // Use in tests
 const result = await p.text({

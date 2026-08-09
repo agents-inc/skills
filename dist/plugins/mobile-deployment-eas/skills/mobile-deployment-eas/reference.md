@@ -144,19 +144,19 @@ eas workflow:list                  # List workflow runs
 
 ### autoIncrement Options
 
-| Value         | iOS Effect              | Android Effect           | When to Use                     |
-| ------------- | ----------------------- | ------------------------ | ------------------------------- |
-| `false`       | No change               | No change                | Manual version management       |
-| `true`        | Increments buildNumber  | Increments versionCode   | Default auto-increment          |
-| `"buildNumber"` | Increments buildNumber | Increments versionCode   | Internal build tracking         |
-| `"version"`   | Increments version      | Increments versionName   | User-visible version bumps      |
+| Value           | iOS Effect             | Android Effect         | When to Use                |
+| --------------- | ---------------------- | ---------------------- | -------------------------- |
+| `false`         | No change              | No change              | Manual version management  |
+| `true`          | Increments buildNumber | Increments versionCode | Default auto-increment     |
+| `"buildNumber"` | Increments buildNumber | Increments versionCode | Internal build tracking    |
+| `"version"`     | Increments version     | Increments versionName | User-visible version bumps |
 
 ### appVersionSource
 
-| Value    | Behavior                                      | Plan Required |
-| -------- | --------------------------------------------- | ------------- |
-| `"local"` | Reads version from app config (default)       | Free          |
-| `"remote"` | EAS tracks version server-side                | Paid          |
+| Value      | Behavior                                | Plan Required |
+| ---------- | --------------------------------------- | ------------- |
+| `"local"`  | Reads version from app config (default) | Free          |
+| `"remote"` | EAS tracks version server-side          | Paid          |
 
 ### Version Number Rules
 

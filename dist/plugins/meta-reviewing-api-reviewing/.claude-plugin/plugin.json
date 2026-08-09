@@ -1,0 +1,9 @@
+{
+  "name": "meta-reviewing-api-reviewing",
+  "version": "2.0.0",
+  "skills": "./skills/",
+  "description": "Backend code review patterns. Use when reviewing API routes, database operations, auth middleware, and server utilities. Covers injection, boundary validation, authorization coverage, secret/PII exposure, error leakage, and query patterns.",
+  "author": {
+    "name": "@vince"
+  }
+}

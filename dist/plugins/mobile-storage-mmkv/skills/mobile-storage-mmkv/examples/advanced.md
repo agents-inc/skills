@@ -54,7 +54,7 @@ const rotateEncryptionKey = (
 **When to use AES-128 vs AES-256:**
 
 | Scenario                           | Recommendation |
-|------------------------------------|----------------|
+| ---------------------------------- | -------------- |
 | User preferences, non-sensitive    | No encryption  |
 | Auth tokens, session data          | AES-128        |
 | PII, financial data, API secrets   | AES-256        |

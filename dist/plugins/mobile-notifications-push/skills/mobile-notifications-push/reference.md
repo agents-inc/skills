@@ -56,18 +56,18 @@ When should the local notification fire?
 
 ## Platform Differences
 
-| Feature | iOS | Android |
-|---------|-----|---------|
-| Permission dialog | Shown once natively; subsequent calls return cached status | Auto-granted on install (Android 13+ requires explicit request) |
-| Notification channels | Not applicable | Required on Android 8+ (API 26+) |
-| Badge count | System-wide, reliable | Depends on launcher; not universally supported |
-| Rich images | Via Notification Service Extension + mutable-content | Via BigPicture style or imageUrl in FCM |
-| Sound | Included in app bundle (.caf, .aiff, .wav) | Included in res/raw or channel default |
-| Daily/Weekly triggers | CalendarTrigger with dateComponents | DailyTrigger / WeeklyTrigger |
-| Notification grouping | Automatic by threadIdentifier | Requires notification channel groups |
-| Foreground presentation | Controlled by shouldShowBanner/shouldShowList | Always shown (controlled by channel importance) |
-| Category actions | Long-press or 3D Touch to reveal | Swipe or expand notification |
-| Topic subscriptions | Via APNs or Firebase | Native FCM support |
+| Feature                 | iOS                                                        | Android                                                         |
+| ----------------------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
+| Permission dialog       | Shown once natively; subsequent calls return cached status | Auto-granted on install (Android 13+ requires explicit request) |
+| Notification channels   | Not applicable                                             | Required on Android 8+ (API 26+)                                |
+| Badge count             | System-wide, reliable                                      | Depends on launcher; not universally supported                  |
+| Rich images             | Via Notification Service Extension + mutable-content       | Via BigPicture style or imageUrl in FCM                         |
+| Sound                   | Included in app bundle (.caf, .aiff, .wav)                 | Included in res/raw or channel default                          |
+| Daily/Weekly triggers   | CalendarTrigger with dateComponents                        | DailyTrigger / WeeklyTrigger                                    |
+| Notification grouping   | Automatic by threadIdentifier                              | Requires notification channel groups                            |
+| Foreground presentation | Controlled by shouldShowBanner/shouldShowList              | Always shown (controlled by channel importance)                 |
+| Category actions        | Long-press or 3D Touch to reveal                           | Swipe or expand notification                                    |
+| Topic subscriptions     | Via APNs or Firebase                                       | Native FCM support                                              |
 
 ---
 
@@ -209,10 +209,10 @@ messaging().onTokenRefresh(callback);
 
 ## Android Channel Importance Reference
 
-| Level | Enum | Sound | Vibration | Heads-up | Use Case |
-|-------|------|-------|-----------|----------|----------|
-| Max | `AndroidImportance.MAX` | Yes | Yes | Yes | Incoming calls, urgent alerts |
-| High | `AndroidImportance.HIGH` | Yes | Yes | Yes | Messages, direct communication |
-| Default | `AndroidImportance.DEFAULT` | Yes | Yes | No | General notifications |
-| Low | `AndroidImportance.LOW` | No | No | No | Recommendations, updates |
-| Min | `AndroidImportance.MIN` | No | No | No | Silent, informational |
+| Level   | Enum                        | Sound | Vibration | Heads-up | Use Case                       |
+| ------- | --------------------------- | ----- | --------- | -------- | ------------------------------ |
+| Max     | `AndroidImportance.MAX`     | Yes   | Yes       | Yes      | Incoming calls, urgent alerts  |
+| High    | `AndroidImportance.HIGH`    | Yes   | Yes       | Yes      | Messages, direct communication |
+| Default | `AndroidImportance.DEFAULT` | Yes   | Yes       | No       | General notifications          |
+| Low     | `AndroidImportance.LOW`     | No    | No        | No       | Recommendations, updates       |
+| Min     | `AndroidImportance.MIN`     | No    | No        | No       | Silent, informational          |

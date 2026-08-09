@@ -23,6 +23,7 @@ const greeting = await invoke<string>("greet", { name: "World" });
 ```
 
 **Key points:**
+
 - Arguments arrive as a JSON object -- keys must match Rust parameter names
 - By default, frontend sends camelCase (`invokeMessage`), Rust receives snake_case (`invoke_message`)
 - Use `#[tauri::command(rename_all = "snake_case")]` to require snake_case from frontend instead
@@ -177,6 +178,7 @@ pub fn get_items(state: tauri::State<AppState>) -> Vec<String> {
 ```
 
 **Key points:**
+
 - `State<T>` is injected automatically -- it is never passed from the frontend
 - The type alias `type AppState = Mutex<AppStateInner>` keeps command signatures clean
 - `lock().unwrap()` panics if a previous holder panicked (mutex poisoning). In production, handle `PoisonError`
@@ -343,10 +345,14 @@ channel.onmessage = (event) => {
   }
 };
 
-await invoke("download_file", { url: "https://example.com/file", onProgress: channel });
+await invoke("download_file", {
+  url: "https://example.com/file",
+  onProgress: channel,
+});
 ```
 
 **Key points:**
+
 - `Channel<T>` payload must implement `Serialize + Clone`
 - Channel is tied to the command invocation -- it cannot be stored or reused outside the command
 - Use `#[serde(tag = "type")]` for tagged union serialization that maps cleanly to TypeScript discriminated unions

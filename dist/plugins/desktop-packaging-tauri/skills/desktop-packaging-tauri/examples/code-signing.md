@@ -8,11 +8,11 @@
 
 ### Certificate Types
 
-| Certificate                    | Distribution Method    | Notarization Required |
-| ------------------------------ | ---------------------- | --------------------- |
-| Apple Distribution             | App Store              | No (Apple handles it) |
-| Developer ID Application       | Direct download (DMG)  | Yes                   |
-| Ad-hoc (`signingIdentity: "-"`)| Development/testing    | No (Gatekeeper warns) |
+| Certificate                     | Distribution Method   | Notarization Required |
+| ------------------------------- | --------------------- | --------------------- |
+| Apple Distribution              | App Store             | No (Apple handles it) |
+| Developer ID Application        | Direct download (DMG) | Yes                   |
+| Ad-hoc (`signingIdentity: "-"`) | Development/testing   | No (Gatekeeper warns) |
 
 ### Local Setup
 
@@ -95,12 +95,12 @@ The certificate is imported into a temporary keychain during the build. The `tau
 
 ### Certificate Types
 
-| Certificate Type                | SmartScreen Behavior            | Availability              |
-| ------------------------------- | ------------------------------- | ------------------------- |
-| EV (Extended Validation)        | Immediate reputation            | More expensive            |
-| OV (Organization Validated)     | Builds reputation over time     | Pre-June 2023 only       |
-| Azure Trusted Signing           | Immediate reputation            | Azure subscription        |
-| None                            | SmartScreen warning to all users| Free                      |
+| Certificate Type            | SmartScreen Behavior             | Availability       |
+| --------------------------- | -------------------------------- | ------------------ |
+| EV (Extended Validation)    | Immediate reputation             | More expensive     |
+| OV (Organization Validated) | Builds reputation over time      | Pre-June 2023 only |
+| Azure Trusted Signing       | Immediate reputation             | Azure subscription |
+| None                        | SmartScreen warning to all users | Free               |
 
 ### Method 1: Certificate Thumbprint (Local/CI)
 

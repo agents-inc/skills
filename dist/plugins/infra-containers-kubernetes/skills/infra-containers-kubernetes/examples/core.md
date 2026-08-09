@@ -56,7 +56,7 @@ spec:
         app.kubernetes.io/component: backend
       annotations:
         # Force rollout when ConfigMap changes
-        checksum/config: "{{ include (print $.Template.BasePath \"/configmap.yaml\") . | sha256sum }}"
+        checksum/config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
     spec:
       serviceAccountName: api-server
       automountServiceAccountToken: false

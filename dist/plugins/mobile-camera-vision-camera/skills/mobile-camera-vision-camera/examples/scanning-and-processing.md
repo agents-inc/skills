@@ -70,22 +70,23 @@ const codeScanner = useCodeScanner({
 
 ### Supported Code Types
 
-| Code Type | Platform | Notes |
-|---|---|---|
-| `qr` | iOS + Android | QR codes |
-| `ean-13` | iOS + Android | European article numbers |
-| `ean-8` | iOS + Android | Short EAN |
-| `code-128` | iOS + Android | High-density barcode |
-| `code-39` | iOS + Android | Alphanumeric barcode |
-| `code-93` | iOS + Android | |
-| `upc-e` | iOS + Android | US product codes |
-| `pdf-417` | iOS + Android | 2D barcode (IDs, tickets) |
-| `aztec` | iOS + Android | 2D barcode |
-| `data-matrix` | iOS + Android | 2D matrix code |
-| `itf` | iOS + Android | Interleaved 2 of 5 (min 6 chars on Android) |
-| `codabar` | iOS + Android | |
+| Code Type     | Platform      | Notes                                       |
+| ------------- | ------------- | ------------------------------------------- |
+| `qr`          | iOS + Android | QR codes                                    |
+| `ean-13`      | iOS + Android | European article numbers                    |
+| `ean-8`       | iOS + Android | Short EAN                                   |
+| `code-128`    | iOS + Android | High-density barcode                        |
+| `code-39`     | iOS + Android | Alphanumeric barcode                        |
+| `code-93`     | iOS + Android |                                             |
+| `upc-e`       | iOS + Android | US product codes                            |
+| `pdf-417`     | iOS + Android | 2D barcode (IDs, tickets)                   |
+| `aztec`       | iOS + Android | 2D barcode                                  |
+| `data-matrix` | iOS + Android | 2D matrix code                              |
+| `itf`         | iOS + Android | Interleaved 2 of 5 (min 6 chars on Android) |
+| `codabar`     | iOS + Android |                                             |
 
 **Platform notes:**
+
 - UPC-A codes report as EAN-13 on iOS (EAN-13 is a superset of UPC-A)
 - ITF-14 (14-character restriction) is iOS-only
 - Android requires MLKit: set `VisionCamera_enableCodeScanner=true` in `gradle.properties`

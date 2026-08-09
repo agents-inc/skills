@@ -20,15 +20,15 @@ function DebugMesh() {
       onClick={(e) => {
         e.stopPropagation();
         // Three.js intersection data
-        console.log(e.point);           // Vector3 - world-space hit point
-        console.log(e.distance);        // number - distance from camera
-        console.log(e.face);            // Face - hit triangle (normal, vertices)
-        console.log(e.object);          // Object3D - the actual mesh hit
-        console.log(e.eventObject);     // Object3D - the mesh with the event handler
-        console.log(e.ray);             // Ray - the raycaster ray
-        console.log(e.camera);          // Camera - active camera
-        console.log(e.delta);           // number - mousedown-to-mouseup distance (px)
-        console.log(e.intersections);   // Intersection[] - all hits (nearest first)
+        console.log(e.point); // Vector3 - world-space hit point
+        console.log(e.distance); // number - distance from camera
+        console.log(e.face); // Face - hit triangle (normal, vertices)
+        console.log(e.object); // Object3D - the actual mesh hit
+        console.log(e.eventObject); // Object3D - the mesh with the event handler
+        console.log(e.ray); // Ray - the raycaster ray
+        console.log(e.camera); // Camera - active camera
+        console.log(e.delta); // number - mousedown-to-mouseup distance (px)
+        console.log(e.intersections); // Intersection[] - all hits (nearest first)
         console.log(e.unprojectedPoint); // Vector3 - camera-unprojected point
       }}
     >
@@ -46,13 +46,21 @@ function DebugMesh() {
 
 ```tsx
 // eventObject = group, object = the specific child mesh hit
-<group onClick={(e) => {
-  e.stopPropagation();
-  console.log(e.eventObject); // the <group>
-  console.log(e.object);      // the child <mesh> that was actually hit
-}}>
-  <mesh><boxGeometry /><meshBasicMaterial /></mesh>
-  <mesh position={[2, 0, 0]}><boxGeometry /><meshBasicMaterial /></mesh>
+<group
+  onClick={(e) => {
+    e.stopPropagation();
+    console.log(e.eventObject); // the <group>
+    console.log(e.object); // the child <mesh> that was actually hit
+  }}
+>
+  <mesh>
+    <boxGeometry />
+    <meshBasicMaterial />
+  </mesh>
+  <mesh position={[2, 0, 0]}>
+    <boxGeometry />
+    <meshBasicMaterial />
+  </mesh>
 </group>
 ```
 
@@ -194,9 +202,7 @@ export function SelectableScene() {
         }}
       >
         <boxGeometry />
-        <meshStandardMaterial
-          color={selected === "box" ? "gold" : "gray"}
-        />
+        <meshStandardMaterial color={selected === "box" ? "gold" : "gray"} />
       </mesh>
     </Canvas>
   );
@@ -253,19 +259,19 @@ export function DraggableMesh() {
 
 ```tsx
 <mesh
-  onClick={(e) => {}}            // Left click
-  onContextMenu={(e) => {}}      // Right click
-  onDoubleClick={(e) => {}}      // Double click
-  onWheel={(e) => {}}            // Mouse wheel
-  onPointerDown={(e) => {}}      // Pointer press
-  onPointerUp={(e) => {}}        // Pointer release
-  onPointerOver={(e) => {}}      // Pointer enters (bubbles)
-  onPointerOut={(e) => {}}       // Pointer exits (bubbles)
-  onPointerEnter={(e) => {}}     // Pointer enters (no bubble)
-  onPointerLeave={(e) => {}}     // Pointer exits (no bubble)
-  onPointerMove={(e) => {}}      // Pointer moves over
-  onPointerMissed={(e) => {}}    // Click missed this object
-  onUpdate={(self) => {}}        // Object received new props
+  onClick={(e) => {}} // Left click
+  onContextMenu={(e) => {}} // Right click
+  onDoubleClick={(e) => {}} // Double click
+  onWheel={(e) => {}} // Mouse wheel
+  onPointerDown={(e) => {}} // Pointer press
+  onPointerUp={(e) => {}} // Pointer release
+  onPointerOver={(e) => {}} // Pointer enters (bubbles)
+  onPointerOut={(e) => {}} // Pointer exits (bubbles)
+  onPointerEnter={(e) => {}} // Pointer enters (no bubble)
+  onPointerLeave={(e) => {}} // Pointer exits (no bubble)
+  onPointerMove={(e) => {}} // Pointer moves over
+  onPointerMissed={(e) => {}} // Click missed this object
+  onUpdate={(self) => {}} // Object received new props
 />
 ```
 

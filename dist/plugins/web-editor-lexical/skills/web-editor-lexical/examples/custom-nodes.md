@@ -427,10 +427,7 @@ export function ImageComponent({
 ```typescript
 import { useEffect } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $insertNodeToNearestRoot,
-  COMMAND_PRIORITY_EDITOR,
-} from "lexical";
+import { $insertNodeToNearestRoot, COMMAND_PRIORITY_EDITOR } from "lexical";
 import {
   INSERT_IMAGE_COMMAND,
   $createImageNode,

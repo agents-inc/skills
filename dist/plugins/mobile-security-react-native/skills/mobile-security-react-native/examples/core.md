@@ -18,7 +18,10 @@ const REFRESH_TOKEN_KEY = "refresh-token";
 
 // ---- Store ----
 
-async function storeTokens(accessToken: string, refreshToken: string): Promise<void> {
+async function storeTokens(
+  accessToken: string,
+  refreshToken: string,
+): Promise<void> {
   await SecureStore.setItemAsync(AUTH_TOKEN_KEY, accessToken);
   await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
 }
@@ -158,18 +161,18 @@ async function getBiometricInfo(): Promise<{
 
 ## Pattern 3: expo-secure-store vs react-native-keychain Comparison
 
-| Feature | expo-secure-store | react-native-keychain |
-|---------|-------------------|-----------------------|
-| **Workflow** | Expo managed + bare | Bare RN (+ Expo dev builds) |
-| **API style** | Key-value (string only) | Username/password pairs |
-| **Value size limit** | ~2KB | No practical limit |
-| **Biometric gating** | `requireAuthentication` option | `ACCESS_CONTROL` enum (granular) |
-| **Access control** | Basic (unlock/passcode) | Fine-grained (biometry types, current set vs any) |
-| **iOS storage** | Keychain (`kSecClassGenericPassword`) | Keychain (`kSecClassGenericPassword`) |
-| **Android storage** | Keystore-encrypted SharedPreferences | Keystore (RSA or AES) |
-| **Persists on reinstall** | iOS: yes, Android: no | iOS: yes, Android: no |
-| **Sync API** | `setItem`/`getItem` (sync) | No sync API |
-| **Internet credentials** | No | Yes (`setInternetCredentials`) |
+| Feature                   | expo-secure-store                     | react-native-keychain                             |
+| ------------------------- | ------------------------------------- | ------------------------------------------------- |
+| **Workflow**              | Expo managed + bare                   | Bare RN (+ Expo dev builds)                       |
+| **API style**             | Key-value (string only)               | Username/password pairs                           |
+| **Value size limit**      | ~2KB                                  | No practical limit                                |
+| **Biometric gating**      | `requireAuthentication` option        | `ACCESS_CONTROL` enum (granular)                  |
+| **Access control**        | Basic (unlock/passcode)               | Fine-grained (biometry types, current set vs any) |
+| **iOS storage**           | Keychain (`kSecClassGenericPassword`) | Keychain (`kSecClassGenericPassword`)             |
+| **Android storage**       | Keystore-encrypted SharedPreferences  | Keystore (RSA or AES)                             |
+| **Persists on reinstall** | iOS: yes, Android: no                 | iOS: yes, Android: no                             |
+| **Sync API**              | `setItem`/`getItem` (sync)            | No sync API                                       |
+| **Internet credentials**  | No                                    | Yes (`setInternetCredentials`)                    |
 
 **Use expo-secure-store when:** Expo managed workflow, simple token storage, values under 2KB.
 
@@ -249,7 +252,10 @@ import * as LocalAuthentication from "expo-local-authentication";
 
 type BiometricResult =
   | { success: true }
-  | { success: false; reason: "no-hardware" | "not-enrolled" | "failed" | "cancelled" };
+  | {
+      success: false;
+      reason: "no-hardware" | "not-enrolled" | "failed" | "cancelled";
+    };
 
 async function authenticateWithBiometrics(): Promise<BiometricResult> {
   const hasHardware = await LocalAuthentication.hasHardwareAsync();

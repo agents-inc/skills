@@ -20,7 +20,7 @@ import { User } from "./models/user";
 const adapter = new SQLiteAdapter({
   schema,
   migrations,
-  jsi: true,  // Recommended for iOS; enables synchronous native bridge
+  jsi: true, // Recommended for iOS; enables synchronous native bridge
   // dbName: "myapp",       // Custom database name (optional)
   // onSetUpError: (error) => { /* handle DB load failure */ },
 });
@@ -93,6 +93,7 @@ export const schema = appSchema({
 ```
 
 **Naming conventions:**
+
 - Tables: plural snake_case (`posts`, `blog_comments`)
 - Columns: snake_case (`created_at`, `author_id`)
 - Foreign keys: `_id` suffix (`post_id`, `author_id`)
@@ -136,25 +137,25 @@ export class Post extends Model {
   } as const;
 
   // --- Field decorators ---
-  @text("title") title!: string;              // Trims whitespace
+  @text("title") title!: string; // Trims whitespace
   @text("body") body!: string;
-  @field("is_pinned") isPinned!: boolean;      // Raw column value
+  @field("is_pinned") isPinned!: boolean; // Raw column value
   @field("is_published") isPublished!: boolean;
   @field("like_count") likeCount!: number;
 
   // --- Date decorators ---
-  @date("created_at") createdAt!: Date;        // Converts timestamp -> Date
-  @readonly @date("updated_at") updatedAt!: Date;  // Cannot be set at all
+  @date("created_at") createdAt!: Date; // Converts timestamp -> Date
+  @readonly @date("updated_at") updatedAt!: Date; // Cannot be set at all
 
   // --- Constraint decorators ---
-  @nochange @field("author_id") authorId!: string;  // Set once in create()
+  @nochange @field("author_id") authorId!: string; // Set once in create()
 
   // --- JSON decorator ---
-  @json("tags", sanitizeTags) tags!: string[];  // Parses JSON from string column
+  @json("tags", sanitizeTags) tags!: string[]; // Parses JSON from string column
 
   // --- Relations ---
-  @immutableRelation("users", "author_id") author!: Relation<User>;  // Never changes
-  @children("comments") comments!: Query<Comment>;                   // To-many
+  @immutableRelation("users", "author_id") author!: Relation<User>; // Never changes
+  @children("comments") comments!: Query<Comment>; // To-many
 
   // --- Actions ---
   @writer async togglePin() {
@@ -186,7 +187,7 @@ export class Post extends Model {
 ```typescript
 // BAD: Using @field for user-editable text
 class Post extends Model {
-  @field("title") title!: string;  // Does NOT trim whitespace
+  @field("title") title!: string; // Does NOT trim whitespace
   @field("body") body!: string;
 }
 ```
@@ -196,7 +197,7 @@ class Post extends Model {
 ```typescript
 // BAD: Using @relation for a fixed FK
 class Comment extends Model {
-  @relation("posts", "post_id") post!: Relation<Post>;  // Mutable -- but it never changes
+  @relation("posts", "post_id") post!: Relation<Post>; // Mutable -- but it never changes
 }
 ```
 
@@ -309,8 +310,11 @@ class Post extends Model {
 const stats = await database.read(async () => {
   // No writes can happen during this block
   const postCount = await database.get<Post>("posts").query().fetchCount();
-  const commentCount = await database.get<Comment>("comments").query().fetchCount();
-  return { postCount, commentCount };  // Consistent snapshot
+  const commentCount = await database
+    .get<Comment>("comments")
+    .query()
+    .fetchCount();
+  return { postCount, commentCount }; // Consistent snapshot
 });
 ```
 
@@ -324,7 +328,9 @@ const stats = await database.read(async () => {
 import { Q } from "@nozbe/watermelondb";
 
 // Equality (shorthand)
-const pinnedPosts = await postsCollection.query(Q.where("is_pinned", true)).fetch();
+const pinnedPosts = await postsCollection
+  .query(Q.where("is_pinned", true))
+  .fetch();
 
 // Comparison operators
 const popularPosts = await postsCollection
@@ -348,7 +354,7 @@ const flagged = await postsCollection
 ### Text Search with Q.like
 
 ```typescript
-const searchTerm = Q.sanitizeLikeString(userInput);  // Escape special chars
+const searchTerm = Q.sanitizeLikeString(userInput); // Escape special chars
 const results = await postsCollection
   .query(Q.where("title", Q.like(`%${searchTerm}%`)))
   .fetch();
@@ -381,7 +387,10 @@ const postsWithActiveComments = await postsCollection
 // Posts with comments containing a specific word
 const postsWithKeyword = await postsCollection
   .query(
-    Q.on("comments", Q.where("body", Q.like(`%${Q.sanitizeLikeString(keyword)}%`))),
+    Q.on(
+      "comments",
+      Q.where("body", Q.like(`%${Q.sanitizeLikeString(keyword)}%`)),
+    ),
   )
   .fetch();
 ```
@@ -389,12 +398,12 @@ const postsWithKeyword = await postsCollection
 ### Execution Methods
 
 ```typescript
-const posts = await query.fetch();            // Model[]
-const count = await query.fetchCount();       // number
-const ids = await query.fetchIds();           // string[]
-const stream$ = query.observe();              // Observable<Model[]>
-const count$ = query.observeCount();          // Observable<number> (throttled 250ms)
-const sorted$ = query.observeWithColumns(["like_count"]);  // Re-emits on column change
+const posts = await query.fetch(); // Model[]
+const count = await query.fetchCount(); // number
+const ids = await query.fetchIds(); // string[]
+const stream$ = query.observe(); // Observable<Model[]>
+const count$ = query.observeCount(); // Observable<number> (throttled 250ms)
+const sorted$ = query.observeWithColumns(["like_count"]); // Re-emits on column change
 ```
 
 ---
@@ -471,7 +480,7 @@ const enhance = withObservables([], ({ database }: { database: Database }) => ({
   posts: database
     .get<Post>("posts")
     .query(Q.sortBy("like_count", Q.desc))
-    .observeWithColumns(["like_count"]),  // Re-emits when like_count changes
+    .observeWithColumns(["like_count"]), // Re-emits when like_count changes
 }));
 ```
 
@@ -495,9 +504,9 @@ import { switchMap } from "rxjs/operators";
 
 const enhance = withObservables(["post"], ({ post }: { post: Post }) => ({
   post: post.observe(),
-  authorContact: post.author.observe().pipe(
-    switchMap((author) => author.contact.observe()),
-  ),
+  authorContact: post.author
+    .observe()
+    .pipe(switchMap((author) => author.contact.observe())),
 }));
 ```
 
@@ -524,7 +533,10 @@ const enhance = withObservables(["post"], ({ post }: { post: Post }) => ({
 const post = await database.get<Post>("posts").find("some-id");
 
 // By query
-const posts = await database.get<Post>("posts").query(Q.where("is_pinned", true)).fetch();
+const posts = await database
+  .get<Post>("posts")
+  .query(Q.where("is_pinned", true))
+  .fetch();
 ```
 
 ### Update

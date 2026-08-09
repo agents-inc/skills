@@ -32,9 +32,7 @@ pub fn run() {
 
 ```json
 {
-  "permissions": [
-    "window-state:default"
-  ]
+  "permissions": ["window-state:default"]
 }
 ```
 
@@ -92,7 +90,11 @@ window.restore_state(StateFlags::all())
 ## Manual Save and Restore (JavaScript)
 
 ```typescript
-import { saveWindowState, restoreStateCurrent, StateFlags } from "@tauri-apps/plugin-window-state";
+import {
+  saveWindowState,
+  restoreStateCurrent,
+  StateFlags,
+} from "@tauri-apps/plugin-window-state";
 
 // Save all windows
 await saveWindowState(StateFlags.ALL);
@@ -107,15 +109,15 @@ await restoreStateCurrent(StateFlags.ALL);
 
 Control which dimensions of window state are persisted.
 
-| Flag           | What it persists         |
-| -------------- | ------------------------ |
-| `POSITION`     | Window x/y coordinates   |
-| `SIZE`         | Window width/height      |
-| `MAXIMIZED`    | Whether window is maximized |
-| `VISIBLE`      | Whether window is visible |
-| `DECORATIONS`  | Whether decorations are shown |
-| `FULLSCREEN`   | Whether window is fullscreen |
-| `ALL`          | All of the above         |
+| Flag          | What it persists              |
+| ------------- | ----------------------------- |
+| `POSITION`    | Window x/y coordinates        |
+| `SIZE`        | Window width/height           |
+| `MAXIMIZED`   | Whether window is maximized   |
+| `VISIBLE`     | Whether window is visible     |
+| `DECORATIONS` | Whether decorations are shown |
+| `FULLSCREEN`  | Whether window is fullscreen  |
+| `ALL`         | All of the above              |
 
 ```rust
 use tauri_plugin_window_state::StateFlags;

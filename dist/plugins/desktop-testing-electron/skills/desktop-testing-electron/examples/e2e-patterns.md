@@ -22,7 +22,9 @@ test("opens and displays a file", async () => {
 
   await window.click('button[data-testid="open-file"]');
 
-  await expect(window.locator('[data-testid="file-content"]')).toContainText("sample content");
+  await expect(window.locator('[data-testid="file-content"]')).toContainText(
+    "sample content",
+  );
 });
 ```
 
@@ -63,7 +65,9 @@ test("handles canceled dialog gracefully", async () => {
   await window.click('button[data-testid="open-file"]');
 
   // Verify the app does not crash and shows no file
-  await expect(window.locator('[data-testid="file-content"]')).not.toBeVisible();
+  await expect(
+    window.locator('[data-testid="file-content"]'),
+  ).not.toBeVisible();
 });
 ```
 
@@ -102,7 +106,9 @@ test("opens file using helper library", async () => {
   });
 
   await window.click('button[data-testid="open-file"]');
-  await expect(window.locator('[data-testid="file-name"]')).toHaveText("test.txt");
+  await expect(window.locator('[data-testid="file-name"]')).toHaveText(
+    "test.txt",
+  );
 });
 
 test("multi-step file workflow", async () => {
@@ -118,7 +124,9 @@ test("multi-step file workflow", async () => {
   ]);
 
   await window.click('button[data-testid="convert-file"]');
-  await expect(window.locator('[data-testid="status"]')).toHaveText("Conversion complete");
+  await expect(window.locator('[data-testid="status"]')).toHaveText(
+    "Conversion complete",
+  );
 });
 ```
 
@@ -139,7 +147,9 @@ test("File > New creates a new document", async () => {
     fileMenu?.click();
   });
 
-  await expect(window.locator('[data-testid="document-title"]')).toHaveText("Untitled");
+  await expect(window.locator('[data-testid="document-title"]')).toHaveText(
+    "Untitled",
+  );
 });
 ```
 
@@ -164,7 +174,7 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-      - run: npm run build  # Build the Electron app first
+      - run: npm run build # Build the Electron app first
       - run: npx playwright install --with-deps chromium
       - name: Run E2E tests
         run: xvfb-run --auto-servernum -- npx playwright test
@@ -179,7 +189,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test  # No xvfb needed on macOS
+      - run: npx playwright test # No xvfb needed on macOS
 
   test-windows:
     runs-on: windows-latest
@@ -191,7 +201,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test  # No xvfb needed on Windows
+      - run: npx playwright test # No xvfb needed on Windows
 ```
 
 ### Cross-Platform npm Script with xvfb-maybe
@@ -285,12 +295,18 @@ describe("auto-updater setup", () => {
 
   it("registers update-available handler", () => {
     setupAutoUpdater();
-    expect(autoUpdater.on).toHaveBeenCalledWith("update-available", expect.any(Function));
+    expect(autoUpdater.on).toHaveBeenCalledWith(
+      "update-available",
+      expect.any(Function),
+    );
   });
 
   it("registers update-downloaded handler", () => {
     setupAutoUpdater();
-    expect(autoUpdater.on).toHaveBeenCalledWith("update-downloaded", expect.any(Function));
+    expect(autoUpdater.on).toHaveBeenCalledWith(
+      "update-downloaded",
+      expect.any(Function),
+    );
   });
 });
 ```
@@ -309,7 +325,9 @@ test("shows update notification when update is available", async () => {
   });
 
   await expect(window.locator('[data-testid="update-banner"]')).toBeVisible();
-  await expect(window.locator('[data-testid="update-version"]')).toHaveText("2.0.0");
+  await expect(window.locator('[data-testid="update-version"]')).toHaveText(
+    "2.0.0",
+  );
 });
 ```
 

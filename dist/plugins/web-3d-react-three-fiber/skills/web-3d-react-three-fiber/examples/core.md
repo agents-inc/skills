@@ -98,7 +98,7 @@ const ORTHO_ZOOM = 50;
 
 <Canvas orthographic camera={{ zoom: ORTHO_ZOOM, position: [0, 10, 0] }}>
   {/* Isometric / 2D-style scenes */}
-</Canvas>
+</Canvas>;
 ```
 
 ---
@@ -124,7 +124,8 @@ export function AnimatedBox() {
     // Frame-rate independent rotation
     meshRef.current.rotation.y += ROTATION_SPEED * delta;
     // Clock-based bobbing (sine wave)
-    meshRef.current.position.y = Math.sin(state.clock.elapsedTime * BOB_FREQUENCY) * BOB_AMPLITUDE;
+    meshRef.current.position.y =
+      Math.sin(state.clock.elapsedTime * BOB_FREQUENCY) * BOB_AMPLITUDE;
   });
 
   return (
@@ -147,7 +148,12 @@ function BadAnimatedBox() {
   useFrame((_, delta) => {
     setRotY((r) => r + 0.5 * delta); // setState in render loop!
   });
-  return <mesh rotation-y={rotY}><boxGeometry /><meshBasicMaterial /></mesh>;
+  return (
+    <mesh rotation-y={rotY}>
+      <boxGeometry />
+      <meshBasicMaterial />
+    </mesh>
+  );
 }
 ```
 
@@ -191,7 +197,11 @@ export function OrbitingLight() {
   useFrame((state) => {
     if (!lightRef.current) return;
     const t = state.clock.elapsedTime * ORBIT_SPEED;
-    tempVec.set(Math.cos(t) * ORBIT_RADIUS, ORBIT_HEIGHT, Math.sin(t) * ORBIT_RADIUS);
+    tempVec.set(
+      Math.cos(t) * ORBIT_RADIUS,
+      ORBIT_HEIGHT,
+      Math.sin(t) * ORBIT_RADIUS,
+    );
     lightRef.current.position.copy(tempVec);
   });
 
@@ -221,7 +231,11 @@ export function Car(props: JSX.IntrinsicElements["group"]) {
   const { nodes, materials } = useGLTF("/car.glb") as GLTFResult;
   return (
     <group {...props}>
-      <mesh geometry={nodes.body.geometry} material={materials.paint} castShadow />
+      <mesh
+        geometry={nodes.body.geometry}
+        material={materials.paint}
+        castShadow
+      />
       <mesh geometry={nodes.wheels.geometry} material={materials.rubber} />
     </group>
   );
@@ -288,14 +302,8 @@ export function ThreePointLighting() {
         intensity={KEY_INTENSITY}
         castShadow
       />
-      <directionalLight
-        position={FILL_LIGHT_POS}
-        intensity={FILL_INTENSITY}
-      />
-      <pointLight
-        position={BACK_LIGHT_POS}
-        intensity={BACK_INTENSITY}
-      />
+      <directionalLight position={FILL_LIGHT_POS} intensity={FILL_INTENSITY} />
+      <pointLight position={BACK_LIGHT_POS} intensity={BACK_INTENSITY} />
     </>
   );
 }
@@ -307,7 +315,7 @@ export function ThreePointLighting() {
 import { Environment } from "@react-three/drei";
 
 // Preset HDRI environments (no manual light setup needed)
-<Environment preset="sunset" background />
+<Environment preset="sunset" background />;
 // Presets: "apartment", "city", "dawn", "forest", "lobby", "night",
 //          "park", "studio", "sunset", "warehouse"
 ```
@@ -331,7 +339,7 @@ const MAX_POLAR_ANGLE = Math.PI / 2; // Prevent going below ground
   minDistance={MIN_DISTANCE}
   maxDistance={MAX_DISTANCE}
   maxPolarAngle={MAX_POLAR_ANGLE}
-/>
+/>;
 ```
 
 ### Html Overlay at 3D Position
@@ -348,7 +356,13 @@ export function LabeledObject() {
       <sphereGeometry args={[0.5, 32, 32]} />
       <meshStandardMaterial color="teal" />
       <Html position={LABEL_OFFSET} distanceFactor={DISTANCE_SCALE} center>
-        <div style={{ background: "white", padding: "4px 8px", borderRadius: "4px" }}>
+        <div
+          style={{
+            background: "white",
+            padding: "4px 8px",
+            borderRadius: "4px",
+          }}
+        >
           My Label
         </div>
       </Html>
@@ -374,7 +388,7 @@ const FONT_SIZE = 0.8;
   anchorY="middle"
 >
   Hello World
-</Text>
+</Text>;
 ```
 
 ### ContactShadows (Soft Ground Shadows)
@@ -390,7 +404,7 @@ const SHADOW_BLUR = 2;
   opacity={SHADOW_OPACITY}
   blur={SHADOW_BLUR}
   far={4}
-/>
+/>;
 ```
 
 ### Float (Hovering Animation)
@@ -401,12 +415,16 @@ import { Float } from "@react-three/drei";
 const FLOAT_SPEED = 1.5;
 const FLOAT_AMPLITUDE = 0.3;
 
-<Float speed={FLOAT_SPEED} floatIntensity={FLOAT_AMPLITUDE} rotationIntensity={0.2}>
+<Float
+  speed={FLOAT_SPEED}
+  floatIntensity={FLOAT_AMPLITUDE}
+  rotationIntensity={0.2}
+>
   <mesh>
     <dodecahedronGeometry />
     <meshStandardMaterial color="gold" />
   </mesh>
-</Float>
+</Float>;
 ```
 
 ---

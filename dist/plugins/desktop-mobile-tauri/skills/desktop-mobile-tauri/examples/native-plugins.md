@@ -156,9 +156,13 @@ class ExamplePlugin: Plugin {
 // JavaScript listener
 import { addPluginListener } from "@tauri-apps/api/core";
 
-const unlisten = await addPluginListener("plugin:example", "status-changed", (event) => {
-  console.log("Status:", event.status);
-});
+const unlisten = await addPluginListener(
+  "plugin:example",
+  "status-changed",
+  (event) => {
+    console.log("Status:", event.status);
+  },
+);
 ```
 
 ---

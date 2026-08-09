@@ -101,7 +101,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const SIGNATURE_ALGORITHM = "sha256";
 const SIGNATURE_ENCODING = "hex";
 
-function verifySignature(rawBody: string, signature: string, secret: string): boolean {
+function verifySignature(
+  rawBody: string,
+  signature: string,
+  secret: string,
+): boolean {
   const expected = createHmac(SIGNATURE_ALGORITHM, secret)
     .update(rawBody)
     .digest(SIGNATURE_ENCODING);
@@ -189,13 +193,21 @@ type EventHandlerMap = {
 };
 
 const handlers: EventHandlerMap = {
-  "order.created": async (data) => { /* handle */ },
-  "order.cancelled": async (data) => { /* handle */ },
-  "payment.completed": async (data) => { /* handle */ },
+  "order.created": async (data) => {
+    /* handle */
+  },
+  "order.cancelled": async (data) => {
+    /* handle */
+  },
+  "payment.completed": async (data) => {
+    /* handle */
+  },
 };
 
 async function routeEvent(event: WebhookEvent): Promise<void> {
-  const handler = handlers[event.type] as (data: WebhookEvent["data"]) => Promise<void>;
+  const handler = handlers[event.type] as (
+    data: WebhookEvent["data"],
+  ) => Promise<void>;
   await handler(event.data);
 }
 ```
@@ -306,19 +318,19 @@ Need to notify external consumers of events?
 
 ### Status Code Quick Reference
 
-| Status | Meaning | Action |
-|--------|---------|--------|
-| 200-299 | Success | Mark delivered |
-| 400 | Bad request | DLQ immediately |
-| 401 | Unauthorized | DLQ immediately |
-| 404 | Not found | DLQ immediately |
-| 410 | Gone | Disable endpoint |
-| 422 | Validation error | DLQ immediately |
-| 429 | Rate limited | Retry with `Retry-After` |
-| 500 | Server error | Retry with backoff |
-| 502/503 | Unavailable | Retry with backoff |
-| Timeout | No response | Retry with backoff |
-| Connection refused | Unreachable | Retry with backoff |
+| Status             | Meaning          | Action                   |
+| ------------------ | ---------------- | ------------------------ |
+| 200-299            | Success          | Mark delivered           |
+| 400                | Bad request      | DLQ immediately          |
+| 401                | Unauthorized     | DLQ immediately          |
+| 404                | Not found        | DLQ immediately          |
+| 410                | Gone             | Disable endpoint         |
+| 422                | Validation error | DLQ immediately          |
+| 429                | Rate limited     | Retry with `Retry-After` |
+| 500                | Server error     | Retry with backoff       |
+| 502/503            | Unavailable      | Retry with backoff       |
+| Timeout            | No response      | Retry with backoff       |
+| Connection refused | Unreachable      | Retry with backoff       |
 
 </decision_framework>
 

@@ -288,14 +288,14 @@ Which stack navigator?
 |-- Everything else --> @react-navigation/native-stack (NATIVE)
 ```
 
-| Feature | Native Stack | JS Stack |
-|---------|-------------|----------|
-| Performance | Native animations, lower memory | JS-driven, higher overhead |
-| Transitions | Platform defaults + limited custom | Fully customizable |
-| Large titles (iOS) | Supported natively | Not available |
-| Search bar (iOS) | headerSearchBarOptions | Must build custom |
-| Form sheets | presentation: "formSheet" | Not available |
-| Gesture handling | Native, smooth | JS-driven |
+| Feature            | Native Stack                       | JS Stack                   |
+| ------------------ | ---------------------------------- | -------------------------- |
+| Performance        | Native animations, lower memory    | JS-driven, higher overhead |
+| Transitions        | Platform defaults + limited custom | Fully customizable         |
+| Large titles (iOS) | Supported natively                 | Not available              |
+| Search bar (iOS)   | headerSearchBarOptions             | Must build custom          |
+| Form sheets        | presentation: "formSheet"          | Not available              |
+| Gesture handling   | Native, smooth                     | JS-driven                  |
 
 **Default to native stack.** Only use JS stack when you need transition animations that native stack cannot provide.
 
@@ -315,7 +315,7 @@ function ChatScreen({ roomId }: { roomId: string }) {
       const ws = new WebSocket(`wss://chat.example.com/rooms/${roomId}`);
       // Cleanup runs when screen loses focus
       return () => ws.close();
-    }, [roomId])
+    }, [roomId]),
   );
 }
 ```

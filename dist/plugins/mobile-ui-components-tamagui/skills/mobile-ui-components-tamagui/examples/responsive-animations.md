@@ -20,10 +20,20 @@ function ResponsiveLayout() {
       $gtSm={{ flexDirection: "row", padding: "$4", gap: "$4" }}
       $gtLg={{ padding: "$6", gap: "$6" }}
     >
-      <YStack flex={1} backgroundColor="$background" padding="$3" borderRadius="$3">
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        padding="$3"
+        borderRadius="$3"
+      >
         <SizableText size="$4">Panel A</SizableText>
       </YStack>
-      <YStack flex={1} backgroundColor="$background" padding="$3" borderRadius="$3">
+      <YStack
+        flex={1}
+        backgroundColor="$background"
+        padding="$3"
+        borderRadius="$3"
+      >
         <SizableText size="$4">Panel B</SizableText>
       </YStack>
     </XStack>
@@ -199,7 +209,13 @@ function InteractiveCard() {
 ```tsx
 import { AnimatePresence } from "tamagui";
 
-function ToastNotification({ visible, message }: { visible: boolean; message: string }) {
+function ToastNotification({
+  visible,
+  message,
+}: {
+  visible: boolean;
+  message: string;
+}) {
   return (
     <AnimatePresence>
       {visible && (

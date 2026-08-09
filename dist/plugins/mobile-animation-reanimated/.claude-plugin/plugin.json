@@ -1,6 +1,6 @@
 {
   "name": "mobile-animation-reanimated",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "React Native Reanimated 4 - shared values, animated styles, spring/timing/decay, layout animations, gesture integration, scroll-driven animations, interpolation, worklets, CSS animations",
   "author": {

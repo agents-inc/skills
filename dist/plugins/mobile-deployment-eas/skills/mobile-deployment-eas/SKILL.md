@@ -133,11 +133,11 @@ export default {
 };
 ```
 
-| Policy        | Behavior                                  | Best For                         |
-| ------------- | ----------------------------------------- | -------------------------------- |
-| `fingerprint` | Hashes all native dependencies            | Complex apps with native modules |
-| `appVersion`  | Uses `version` from app config            | Simple apps, manual control      |
-| Custom string | Exact match (e.g., `"1.0.0"`)            | Full manual control              |
+| Policy        | Behavior                       | Best For                         |
+| ------------- | ------------------------------ | -------------------------------- |
+| `fingerprint` | Hashes all native dependencies | Complex apps with native modules |
+| `appVersion`  | Uses `version` from app config | Simple apps, manual control      |
+| Custom string | Exact match (e.g., `"1.0.0"`)  | Full manual control              |
 
 **Gotcha:** `fingerprint` can be aggressive -- it may flag changes that don't actually affect native code, requiring more builds than necessary. Use `appVersion` for simpler projects.
 

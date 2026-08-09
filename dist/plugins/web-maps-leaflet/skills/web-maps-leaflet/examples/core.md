@@ -60,11 +60,11 @@ const map = L.map("map", {
   zoom: 13,
   minZoom: 2,
   maxZoom: 18,
-  zoomControl: true,         // show +/- buttons
-  scrollWheelZoom: true,     // zoom with scroll
-  dragging: true,            // pan with mouse/touch
-  preferCanvas: true,        // render vector layers on canvas (better for many circles/polylines)
-  attributionControl: true,  // show attribution
+  zoomControl: true, // show +/- buttons
+  scrollWheelZoom: true, // zoom with scroll
+  dragging: true, // pan with mouse/touch
+  preferCanvas: true, // render vector layers on canvas (better for many circles/polylines)
+  attributionControl: true, // show attribution
 });
 ```
 
@@ -161,7 +161,12 @@ L.Icon.Default.mergeOptions({
 ### Full-Featured GeoJSON Setup
 
 ```typescript
-import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
+import type {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+} from "geojson";
 
 const CIRCLE_MARKER_RADIUS = 8;
 const CIRCLE_MARKER_WEIGHT = 1;
@@ -171,7 +176,10 @@ const DEFAULT_COLOR = "#3388ff";
 
 const geoLayer = L.geoJSON(featureCollection, {
   // Customize how points are rendered (default is L.marker)
-  pointToLayer: (feature: Feature<Geometry, GeoJsonProperties>, latlng: L.LatLng) =>
+  pointToLayer: (
+    feature: Feature<Geometry, GeoJsonProperties>,
+    latlng: L.LatLng,
+  ) =>
     L.circleMarker(latlng, {
       radius: CIRCLE_MARKER_RADIUS,
       fillColor: feature.properties?.color ?? DEFAULT_COLOR,
@@ -292,16 +300,19 @@ const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: MAX_ZOOM,
 });
 
-const satellite = L.tileLayer("https://{s}.tile.provider.com/sat/{z}/{x}/{y}.png", {
-  attribution: "Satellite Provider",
-  maxZoom: MAX_ZOOM,
-});
+const satellite = L.tileLayer(
+  "https://{s}.tile.provider.com/sat/{z}/{x}/{y}.png",
+  {
+    attribution: "Satellite Provider",
+    maxZoom: MAX_ZOOM,
+  },
+);
 
 // Base layers -- radio buttons (only one active)
-const baseLayers = { "Street": osm, "Satellite": satellite };
+const baseLayers = { Street: osm, Satellite: satellite };
 
 // Overlays -- checkboxes (multiple active)
-const overlays = { "Restaurants": restaurants, "Parks": parks };
+const overlays = { Restaurants: restaurants, Parks: parks };
 
 // Add the first base layer to the map and show the control
 osm.addTo(map);
@@ -379,7 +390,9 @@ map.setView(TARGET, FLY_ZOOM);
 ### Event Cleanup
 
 ```typescript
-const handleMove = () => { /* ... */ };
+const handleMove = () => {
+  /* ... */
+};
 map.on("moveend", handleMove);
 
 // Later, remove the specific handler
@@ -391,14 +404,14 @@ map.off();
 
 ### Common Event Types Reference
 
-| Target | Event | Fires When |
-|---|---|---|
-| Map | `click` | User clicks the map |
-| Map | `moveend` | Pan or zoom animation finishes |
-| Map | `zoomend` | Zoom animation finishes |
-| Map | `resize` | Map container size changes |
-| Marker | `click` | Marker is clicked |
-| Marker | `dragend` | Draggable marker is dropped |
-| Popup | `popupopen` | Popup opens |
-| Popup | `popupclose` | Popup closes |
-| GeoJSON layer | `click` | Feature is clicked (via `onEachFeature`) |
+| Target        | Event        | Fires When                               |
+| ------------- | ------------ | ---------------------------------------- |
+| Map           | `click`      | User clicks the map                      |
+| Map           | `moveend`    | Pan or zoom animation finishes           |
+| Map           | `zoomend`    | Zoom animation finishes                  |
+| Map           | `resize`     | Map container size changes               |
+| Marker        | `click`      | Marker is clicked                        |
+| Marker        | `dragend`    | Draggable marker is dropped              |
+| Popup         | `popupopen`  | Popup opens                              |
+| Popup         | `popupclose` | Popup closes                             |
+| GeoJSON layer | `click`      | Feature is clicked (via `onEachFeature`) |

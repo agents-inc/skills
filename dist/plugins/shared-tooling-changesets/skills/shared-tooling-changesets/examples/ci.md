@@ -74,22 +74,22 @@ jobs:
 
 **Key inputs:**
 
-| Input | Default | Purpose |
-| --- | --- | --- |
-| `publish` | -- | Command to build and publish |
-| `version` | `changeset version` | Command to bump versions |
-| `commit` | `"Version Packages"` | Commit message for version PR |
-| `title` | `"Version Packages"` | PR title |
-| `setupGitUser` | `true` | Configure git as `github-actions[bot]` |
-| `createGithubReleases` | `true` | Create GitHub Releases on publish |
+| Input                  | Default              | Purpose                                |
+| ---------------------- | -------------------- | -------------------------------------- |
+| `publish`              | --                   | Command to build and publish           |
+| `version`              | `changeset version`  | Command to bump versions               |
+| `commit`               | `"Version Packages"` | Commit message for version PR          |
+| `title`                | `"Version Packages"` | PR title                               |
+| `setupGitUser`         | `true`               | Configure git as `github-actions[bot]` |
+| `createGithubReleases` | `true`               | Create GitHub Releases on publish      |
 
 **Key outputs:**
 
-| Output | Type | Purpose |
-| --- | --- | --- |
-| `published` | `boolean` | Whether packages were published |
+| Output              | Type         | Purpose                                        |
+| ------------------- | ------------ | ---------------------------------------------- |
+| `published`         | `boolean`    | Whether packages were published                |
 | `publishedPackages` | `JSON array` | `[{"name": "@myorg/pkg", "version": "1.2.0"}]` |
-| `hasChangesets` | `boolean` | Whether unpublished changesets exist |
+| `hasChangesets`     | `boolean`    | Whether unpublished changesets exist           |
 
 ---
 
@@ -143,12 +143,12 @@ git push --follow-tags
 
 ### Common Pre-Release Tags
 
-| Tag | Purpose | Example Version |
-| --- | --- | --- |
-| `alpha` | Early testing, unstable | `2.0.0-alpha.0` |
-| `beta` | Feature complete, testing | `2.0.0-beta.0` |
-| `rc` | Release candidate, near stable | `2.0.0-rc.0` |
-| `next` | Upcoming major version | `2.0.0-next.0` |
+| Tag     | Purpose                        | Example Version |
+| ------- | ------------------------------ | --------------- |
+| `alpha` | Early testing, unstable        | `2.0.0-alpha.0` |
+| `beta`  | Feature complete, testing      | `2.0.0-beta.0`  |
+| `rc`    | Release candidate, near stable | `2.0.0-rc.0`    |
+| `next`  | Upcoming major version         | `2.0.0-next.0`  |
 
 ---
 
@@ -179,11 +179,11 @@ changeset publish --no-git-tag --tag canary
 }
 ```
 
-| Option | Effect |
-| --- | --- |
-| `useCalculatedVersion: false` (default) | Base version is `0.0.0` |
-| `useCalculatedVersion: true` | Base version is the calculated next version |
-| `prereleaseTemplate` | Custom suffix: `{tag}`, `{commit}`, `{timestamp}`, `{datetime}` |
+| Option                                  | Effect                                                          |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `useCalculatedVersion: false` (default) | Base version is `0.0.0`                                         |
+| `useCalculatedVersion: true`            | Base version is the calculated next version                     |
+| `prereleaseTemplate`                    | Custom suffix: `{tag}`, `{commit}`, `{timestamp}`, `{datetime}` |
 
 **Critical:** Do NOT commit or push snapshot version changes -- they are for installation testing only. Consumers install via:
 

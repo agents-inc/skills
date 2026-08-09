@@ -1,6 +1,6 @@
 {
   "name": "mobile-styling-unistyles",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Unistyles 3.0 styling - C++ powered StyleSheet superset with zero re-renders, theming, breakpoints, variants, dynamic functions, runtime values",
   "author": {

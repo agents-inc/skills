@@ -56,7 +56,11 @@ const yoga = createYoga({
 Use the generic parameter on `createYoga` for server-specific context. The `context` factory receives `YogaInitialContext` and merges your return value into the resolver context.
 
 ```typescript
-import { createYoga, createSchema, type YogaInitialContext } from "graphql-yoga";
+import {
+  createYoga,
+  createSchema,
+  type YogaInitialContext,
+} from "graphql-yoga";
 import { createServer } from "node:http";
 
 interface AppContext {

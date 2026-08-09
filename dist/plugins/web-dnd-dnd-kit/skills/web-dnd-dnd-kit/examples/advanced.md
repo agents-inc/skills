@@ -16,7 +16,11 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 const DROP_ANIMATION_DURATION_MS = 200;
 const DROP_ANIMATION_EASING = "ease";
@@ -35,7 +39,9 @@ function SortableListWithOverlay() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useDndSensors(); // See core.md Pattern 3
 
-  const activeItem = activeId ? items.find((item) => item.id === activeId) : null;
+  const activeItem = activeId
+    ? items.find((item) => item.id === activeId)
+    : null;
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(String(event.active.id));
@@ -65,9 +71,16 @@ function SortableListWithOverlay() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={items.map((i) => i.id)}
+        strategy={verticalListSortingStrategy}
+      >
         {items.map((item) => (
-          <SortableItem key={item.id} id={item.id} isDragOverlay={activeId === item.id}>
+          <SortableItem
+            key={item.id}
+            id={item.id}
+            isDragOverlay={activeId === item.id}
+          >
             {item.label}
           </SortableItem>
         ))}
@@ -89,7 +102,9 @@ function SortableListWithOverlay() {
 // Presentational preview (NOT a draggable -- no useDraggable inside DragOverlay)
 function ItemPreview({ label }: { label: string }) {
   return (
-    <div style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)", padding: "0.5rem" }}>
+    <div
+      style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)", padding: "0.5rem" }}
+    >
       {label}
     </div>
   );
@@ -114,7 +129,11 @@ import {
   type DragEndEvent,
   type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 interface KanbanItem {
   id: string;
@@ -155,13 +174,16 @@ function KanbanBoard() {
 
     const activeContainer = findContainer(active.id);
     const overContainer = findContainer(over.id);
-    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
+    if (!activeContainer || !overContainer || activeContainer === overContainer)
+      return;
 
     // Move item from one container to another
     setColumns((prev) => {
       const activeItems = [...prev[activeContainer]];
       const overItems = [...prev[overContainer]];
-      const activeIndex = activeItems.findIndex((item) => item.id === active.id);
+      const activeIndex = activeItems.findIndex(
+        (item) => item.id === active.id,
+      );
       const overIndex = overItems.findIndex((item) => item.id === over.id);
 
       const [movedItem] = activeItems.splice(activeIndex, 1);
@@ -183,7 +205,8 @@ function KanbanBoard() {
 
     const activeContainer = findContainer(active.id);
     const overContainer = findContainer(over.id);
-    if (!activeContainer || !overContainer || activeContainer !== overContainer) return;
+    if (!activeContainer || !overContainer || activeContainer !== overContainer)
+      return;
 
     // Reorder within the same container
     const items = columns[overContainer];
@@ -198,7 +221,9 @@ function KanbanBoard() {
   }
 
   const activeItem = activeId
-    ? Object.values(columns).flat().find((item) => item.id === activeId)
+    ? Object.values(columns)
+        .flat()
+        .find((item) => item.id === activeId)
     : null;
 
   return (
@@ -217,7 +242,9 @@ function KanbanBoard() {
       </div>
 
       <DragOverlay>
-        {activeItem ? <KanbanCard content={activeItem.content} isOverlay /> : null}
+        {activeItem ? (
+          <KanbanCard content={activeItem.content} isOverlay />
+        ) : null}
       </DragOverlay>
     </DndContext>
   );
@@ -228,7 +255,10 @@ function KanbanBoard() {
 
 ```tsx
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 interface KanbanColumnProps {
   id: string;
@@ -244,7 +274,9 @@ function KanbanColumn({ id, items }: KanbanColumnProps) {
       style={{
         minWidth: "250px",
         padding: "0.5rem",
-        backgroundColor: isOver ? "var(--color-drop-highlight)" : "var(--color-surface)",
+        backgroundColor: isOver
+          ? "var(--color-drop-highlight)"
+          : "var(--color-surface)",
         borderRadius: "8px",
       }}
     >
@@ -254,7 +286,11 @@ function KanbanColumn({ id, items }: KanbanColumnProps) {
         strategy={verticalListSortingStrategy}
       >
         {items.map((item) => (
-          <SortableKanbanCard key={item.id} id={item.id} content={item.content} />
+          <SortableKanbanCard
+            key={item.id}
+            id={item.id}
+            content={item.content}
+          />
         ))}
       </SortableContext>
     </div>
@@ -282,7 +318,10 @@ function KanbanColumn({ id, items }: KanbanColumnProps) {
 ### Vertical-Only Sortable List
 
 ```tsx
-import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifiers";
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
 
 <DndContext
   sensors={sensors}
@@ -291,13 +330,16 @@ import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifier
   onDragEnd={handleDragEnd}
 >
   {/* Vertical sortable list -- items can only move up/down */}
-</DndContext>
+</DndContext>;
 ```
 
 ### Constrained to Parent with DragOverlay
 
 ```tsx
-import { restrictToParentElement, restrictToWindowEdges } from "@dnd-kit/modifiers";
+import {
+  restrictToParentElement,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
 
 <DndContext modifiers={[restrictToParentElement]}>
   {/* Items constrained to parent container */}
@@ -305,7 +347,7 @@ import { restrictToParentElement, restrictToWindowEdges } from "@dnd-kit/modifie
     {/* Overlay constrained to window (different modifier) */}
     {activeItem ? <ItemPreview item={activeItem} /> : null}
   </DragOverlay>
-</DndContext>
+</DndContext>;
 ```
 
 **Why good:** DndContext and DragOverlay can have different modifiers -- constrain source items to parent but let the overlay move freely within the viewport, restrictToVerticalAxis eliminates horizontal jitter in vertical-only lists
@@ -362,11 +404,16 @@ interface SortableItemProps {
   disabled?: boolean;
 }
 
-export function SortableItem({ id, children, disabled = false }: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id,
-    disabled,
-  });
+export function SortableItem({
+  id,
+  children,
+  disabled = false,
+}: SortableItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id,
+      disabled,
+    });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -376,7 +423,12 @@ export function SortableItem({ id, children, disabled = false }: SortableItemPro
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...(disabled ? {} : listeners)}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...(disabled ? {} : listeners)}
+    >
       {children}
     </div>
   );

@@ -109,7 +109,9 @@ async function getUserById(userId: string): Promise<User | null> {
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) return null;
 
-  await cacheStore.set(cacheKey, JSON.stringify(user), { ttl: CACHE_TTL_SECONDS });
+  await cacheStore.set(cacheKey, JSON.stringify(user), {
+    ttl: CACHE_TTL_SECONDS,
+  });
   return user;
 }
 ```
@@ -142,8 +144,12 @@ Update both cache and data source on every write. Guarantees read-after-write co
 ```typescript
 const CACHE_TTL_SECONDS = 300;
 
-async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
-  const updatedUser = await db.update(users)
+async function updateUser(
+  userId: string,
+  updates: Partial<User>,
+): Promise<User> {
+  const updatedUser = await db
+    .update(users)
     .set({ ...updates, updatedAt: new Date() })
     .where(eq(users.id, userId))
     .returning();
@@ -179,7 +185,10 @@ function setCacheHeaders(
   const etag = generateETag(body);
   const scope = options.isPublic ? "public" : "private";
 
-  res.setHeader("Cache-Control", `${scope}, max-age=${options.maxAge}, must-revalidate`);
+  res.setHeader(
+    "Cache-Control",
+    `${scope}, max-age=${options.maxAge}, must-revalidate`,
+  );
   res.setHeader("ETag", etag);
   res.setHeader("Last-Modified", new Date().toUTCString());
 }
@@ -187,12 +196,12 @@ function setCacheHeaders(
 
 **Key header combinations for APIs:**
 
-| Use Case | Cache-Control | Why |
-|---|---|---|
-| Public list data | `public, max-age=60, s-maxage=300` | CDN caches longer than browser |
+| Use Case           | Cache-Control                         | Why                                |
+| ------------------ | ------------------------------------- | ---------------------------------- |
+| Public list data   | `public, max-age=60, s-maxage=300`    | CDN caches longer than browser     |
 | User-specific data | `private, max-age=0, must-revalidate` | No shared cache, always revalidate |
-| Sensitive data | `no-store, private` | Never cache anywhere |
-| Immutable assets | `public, max-age=31536000, immutable` | Version in URL, cache forever |
+| Sensitive data     | `no-store, private`                   | Never cache anywhere               |
+| Immutable assets   | `public, max-age=31536000, immutable` | Version in URL, cache forever      |
 
 See [examples/core.md](examples/core.md) for conditional request handling (If-None-Match / 304) and CDN patterns.
 
@@ -285,9 +294,9 @@ await invalidateByTag("category:electronics");
 **TTL-based expiration** -- let the cache expire naturally when eventual consistency is acceptable:
 
 ```typescript
-const SHORT_TTL = 60;    // 1 minute for frequently changing data
-const MEDIUM_TTL = 300;  // 5 minutes for user data
-const LONG_TTL = 3600;   // 1 hour for reference data
+const SHORT_TTL = 60; // 1 minute for frequently changing data
+const MEDIUM_TTL = 300; // 5 minutes for user data
+const LONG_TTL = 3600; // 1 hour for reference data
 ```
 
 See [examples/advanced.md](examples/advanced.md) for tag-based invalidation implementation and pattern-based key deletion.
@@ -301,12 +310,17 @@ When a popular cache key expires, many concurrent requests may all miss the cach
 **Locking** -- only one request regenerates the cache; others wait or get stale data:
 
 ```typescript
-async function getWithLock(key: string, fetchFn: () => Promise<string>): Promise<string> {
+async function getWithLock(
+  key: string,
+  fetchFn: () => Promise<string>,
+): Promise<string> {
   const cached = await cacheStore.get(key);
   if (cached) return cached;
 
   const lockKey = `lock:${key}`;
-  const acquired = await cacheStore.setNX(lockKey, "1", { ttl: LOCK_TTL_SECONDS });
+  const acquired = await cacheStore.setNX(lockKey, "1", {
+    ttl: LOCK_TTL_SECONDS,
+  });
 
   if (!acquired) {
     await delay(RETRY_DELAY_MS);
@@ -370,14 +384,14 @@ Is the response public (same for all users)?
 
 ### TTL Selection Guide
 
-| Data Type | Recommended TTL | Rationale |
-|---|---|---|
-| Static config / feature flags | 3600s+ (1h+) | Rarely changes |
-| Product catalog / listings | 300-3600s (5m-1h) | Infrequent updates |
-| User profile | 60-300s (1-5m) | Changes occasionally |
-| Search results | 30-60s (30s-1m) | Balance freshness vs performance |
-| Real-time data (prices, stock) | 5-30s | Must be near-fresh |
-| Session data | 86400s (24h) | Long-lived by design |
+| Data Type                      | Recommended TTL   | Rationale                        |
+| ------------------------------ | ----------------- | -------------------------------- |
+| Static config / feature flags  | 3600s+ (1h+)      | Rarely changes                   |
+| Product catalog / listings     | 300-3600s (5m-1h) | Infrequent updates               |
+| User profile                   | 60-300s (1-5m)    | Changes occasionally             |
+| Search results                 | 30-60s (30s-1m)   | Balance freshness vs performance |
+| Real-time data (prices, stock) | 5-30s             | Must be near-fresh               |
+| Session data                   | 86400s (24h)      | Long-lived by design             |
 
 </decision_framework>
 

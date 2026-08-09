@@ -12,7 +12,12 @@ Pass Reanimated shared values directly to Skia component props. No `createAnimat
 
 ```tsx
 import { Canvas, Circle, RoundedRect } from "@shopify/react-native-skia";
-import { useSharedValue, useDerivedValue, withRepeat, withTiming } from "react-native-reanimated";
+import {
+  useSharedValue,
+  useDerivedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { useEffect } from "react";
 
 const DURATION_MS = 1500;
@@ -24,11 +29,17 @@ export function AnimatedShapes() {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withRepeat(withTiming(1, { duration: DURATION_MS }), -1, true);
+    progress.value = withRepeat(
+      withTiming(1, { duration: DURATION_MS }),
+      -1,
+      true,
+    );
   }, []);
 
   // Derive values from the animated progress
-  const radius = useDerivedValue(() => MIN_RADIUS + progress.value * (MAX_RADIUS - MIN_RADIUS));
+  const radius = useDerivedValue(
+    () => MIN_RADIUS + progress.value * (MAX_RADIUS - MIN_RADIUS),
+  );
   const x = useDerivedValue(() => progress.value * (SIZE - MAX_RADIUS * 2));
 
   return (
@@ -58,7 +69,12 @@ Skia uses a different internal color format than Reanimated. Always use `interpo
 
 ```tsx
 import { Canvas, Circle, interpolateColors } from "@shopify/react-native-skia";
-import { useSharedValue, useDerivedValue, withRepeat, withTiming } from "react-native-reanimated";
+import {
+  useSharedValue,
+  useDerivedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { useEffect } from "react";
 
 const CYCLE_DURATION = 3000;
@@ -69,11 +85,14 @@ export function ColorCycleCircle() {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withRepeat(withTiming(1, { duration: CYCLE_DURATION }), -1);
+    progress.value = withRepeat(
+      withTiming(1, { duration: CYCLE_DURATION }),
+      -1,
+    );
   }, []);
 
   const color = useDerivedValue(() =>
-    interpolateColors(progress.value, COLOR_STOPS, COLORS)
+    interpolateColors(progress.value, COLOR_STOPS, COLORS),
   );
 
   return (
@@ -89,7 +108,9 @@ export function ColorCycleCircle() {
 ```tsx
 // BAD: Using Reanimated's interpolateColor
 import { interpolateColor } from "react-native-reanimated"; // WRONG for Skia
-const color = useDerivedValue(() => interpolateColor(progress.value, [0, 1], ["red", "blue"]));
+const color = useDerivedValue(() =>
+  interpolateColor(progress.value, [0, 1], ["red", "blue"]),
+);
 ```
 
 **Why bad:** Reanimated's `interpolateColor` uses a different internal format, produces wrong/flickering colors in Skia components
@@ -102,7 +123,11 @@ Morph between multiple paths smoothly. Paths must have the same number and types
 
 ```tsx
 import { Canvas, Path, usePathInterpolation } from "@shopify/react-native-skia";
-import { useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
+import {
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { useEffect } from "react";
 
 const MORPH_DURATION = 2000;
@@ -116,10 +141,18 @@ export function MorphingShape() {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withRepeat(withTiming(1, { duration: MORPH_DURATION }), -1, true);
+    progress.value = withRepeat(
+      withTiming(1, { duration: MORPH_DURATION }),
+      -1,
+      true,
+    );
   }, []);
 
-  const path = usePathInterpolation(progress, [0, 0.5, 1], [TRIANGLE, DIAMOND, SQUARE]);
+  const path = usePathInterpolation(
+    progress,
+    [0, 0.5, 1],
+    [TRIANGLE, DIAMOND, SQUARE],
+  );
 
   return (
     <Canvas style={{ width: 256, height: 256 }}>
@@ -181,7 +214,13 @@ export function AnimatedWave() {
 Animate thousands of sprites with worklet-based transforms at near-zero cost.
 
 ```tsx
-import { Canvas, Atlas, useImage, rect, useRSXformBuffer } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Atlas,
+  useImage,
+  rect,
+  useRSXformBuffer,
+} from "@shopify/react-native-skia";
 import { useClock } from "@shopify/react-native-skia";
 
 const SPRITE_COUNT = 100;
@@ -193,7 +232,7 @@ export function AnimatedSprites() {
   const clock = useClock();
 
   const sprites = Array.from({ length: SPRITE_COUNT }, () =>
-    rect(0, 0, SPRITE_SIZE, SPRITE_SIZE)
+    rect(0, 0, SPRITE_SIZE, SPRITE_SIZE),
   );
 
   const transforms = useRSXformBuffer(SPRITE_COUNT, (val, i) => {

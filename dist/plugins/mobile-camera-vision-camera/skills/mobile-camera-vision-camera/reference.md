@@ -19,11 +19,11 @@ Which camera position?
 
 **Physical device zoom levels:**
 
-| Device | Zoom | Use Case |
-|---|---|---|
-| `ultra-wide-angle-camera` | ~0.5x | Landscapes, group photos |
-| `wide-angle-camera` | 1x | General photography |
-| `telephoto-camera` | ~3x | Portraits, distant subjects |
+| Device                    | Zoom  | Use Case                    |
+| ------------------------- | ----- | --------------------------- |
+| `ultra-wide-angle-camera` | ~0.5x | Landscapes, group photos    |
+| `wide-angle-camera`       | 1x    | General photography         |
+| `telephoto-camera`        | ~3x   | Portraits, distant subjects |
 
 ---
 
@@ -43,15 +43,15 @@ What matters most?
 
 **Format properties:**
 
-| Property | Type | Description |
-|---|---|---|
-| `photoWidth`/`photoHeight` | number | Photo capture resolution |
-| `videoWidth`/`videoHeight` | number | Video/preview resolution |
-| `minFps`/`maxFps` | number | FPS range |
-| `supportsVideoHdr` | boolean | 10-bit HDR video |
-| `supportsPhotoHdr` | boolean | Multi-exposure HDR photo |
-| `supportsDepthCapture` | boolean | Depth data available |
-| `videoStabilizationModes` | string[] | Stabilization options |
+| Property                   | Type     | Description              |
+| -------------------------- | -------- | ------------------------ |
+| `photoWidth`/`photoHeight` | number   | Photo capture resolution |
+| `videoWidth`/`videoHeight` | number   | Video/preview resolution |
+| `minFps`/`maxFps`          | number   | FPS range                |
+| `supportsVideoHdr`         | boolean  | 10-bit HDR video         |
+| `supportsPhotoHdr`         | boolean  | Multi-exposure HDR photo |
+| `supportsDepthCapture`     | boolean  | Depth data available     |
+| `videoStabilizationModes`  | string[] | Stabilization options    |
 
 ---
 
@@ -100,57 +100,57 @@ const animatedProps = useAnimatedProps(() => ({
 
 ## Camera Props Quick Reference
 
-| Prop | Type | Default | Notes |
-|---|---|---|---|
-| `device` | CameraDevice | required | From `useCameraDevice()` |
-| `isActive` | boolean | required | Toggle, don't unmount |
-| `photo` | boolean | false | Enable photo capture pipeline |
-| `video` | boolean | false | Enable video recording pipeline |
-| `audio` | boolean | false | Enable audio (requires mic permission) |
-| `format` | CameraDeviceFormat | auto | From `useCameraFormat()` |
-| `fps` | number \| [min, max] | auto | Fixed or variable FPS |
-| `photoQualityBalance` | "speed" \| "balanced" \| "quality" | "balanced" | Photo capture speed vs quality |
-| `zoom` | number | neutralZoom | Logarithmic scale |
-| `exposure` | number | neutral | Offset from auto-exposure |
-| `videoHdr` | boolean | false | Requires format support |
-| `photoHdr` | boolean | false | Requires format support |
-| `enableLocation` | boolean | false | GPS metadata in captures |
-| `enableZoomGesture` | boolean | false | Built-in pinch-to-zoom |
-| `enableBufferCompression` | boolean | false | Lossy compression for less memory |
-| `videoStabilizationMode` | string | "off" | Check format support |
-| `codeScanner` | CodeScanner | - | From `useCodeScanner()` |
-| `frameProcessor` | FrameProcessor | - | From `useFrameProcessor()` |
+| Prop                      | Type                               | Default     | Notes                                  |
+| ------------------------- | ---------------------------------- | ----------- | -------------------------------------- |
+| `device`                  | CameraDevice                       | required    | From `useCameraDevice()`               |
+| `isActive`                | boolean                            | required    | Toggle, don't unmount                  |
+| `photo`                   | boolean                            | false       | Enable photo capture pipeline          |
+| `video`                   | boolean                            | false       | Enable video recording pipeline        |
+| `audio`                   | boolean                            | false       | Enable audio (requires mic permission) |
+| `format`                  | CameraDeviceFormat                 | auto        | From `useCameraFormat()`               |
+| `fps`                     | number \| [min, max]               | auto        | Fixed or variable FPS                  |
+| `photoQualityBalance`     | "speed" \| "balanced" \| "quality" | "balanced"  | Photo capture speed vs quality         |
+| `zoom`                    | number                             | neutralZoom | Logarithmic scale                      |
+| `exposure`                | number                             | neutral     | Offset from auto-exposure              |
+| `videoHdr`                | boolean                            | false       | Requires format support                |
+| `photoHdr`                | boolean                            | false       | Requires format support                |
+| `enableLocation`          | boolean                            | false       | GPS metadata in captures               |
+| `enableZoomGesture`       | boolean                            | false       | Built-in pinch-to-zoom                 |
+| `enableBufferCompression` | boolean                            | false       | Lossy compression for less memory      |
+| `videoStabilizationMode`  | string                             | "off"       | Check format support                   |
+| `codeScanner`             | CodeScanner                        | -           | From `useCodeScanner()`                |
+| `frameProcessor`          | FrameProcessor                     | -           | From `useFrameProcessor()`             |
 
 ---
 
 ## Camera Ref Methods
 
-| Method | Returns | Notes |
-|---|---|---|
-| `takePhoto(options?)` | `Promise<PhotoFile>` | Full quality, AE/AF/AWB |
-| `takeSnapshot(options?)` | `Promise<PhotoFile>` | ~16ms, preview quality, needs `video` on iOS |
-| `startRecording(options)` | void | Callback-based (onRecordingFinished) |
-| `stopRecording()` | `Promise<void>` | Triggers onRecordingFinished |
-| `pauseRecording()` | `Promise<void>` | |
-| `resumeRecording()` | `Promise<void>` | |
-| `cancelRecording()` | `Promise<void>` | Deletes file, fires onRecordingError |
-| `focus(point)` | `Promise<void>` | { x, y } relative to view |
+| Method                    | Returns              | Notes                                        |
+| ------------------------- | -------------------- | -------------------------------------------- |
+| `takePhoto(options?)`     | `Promise<PhotoFile>` | Full quality, AE/AF/AWB                      |
+| `takeSnapshot(options?)`  | `Promise<PhotoFile>` | ~16ms, preview quality, needs `video` on iOS |
+| `startRecording(options)` | void                 | Callback-based (onRecordingFinished)         |
+| `stopRecording()`         | `Promise<void>`      | Triggers onRecordingFinished                 |
+| `pauseRecording()`        | `Promise<void>`      |                                              |
+| `resumeRecording()`       | `Promise<void>`      |                                              |
+| `cancelRecording()`       | `Promise<void>`      | Deletes file, fires onRecordingError         |
+| `focus(point)`            | `Promise<void>`      | { x, y } relative to view                    |
 
 ---
 
 ## Hooks Quick Reference
 
-| Hook | Returns | Purpose |
-|---|---|---|
-| `useCameraDevice(position, options?)` | `CameraDevice \| undefined` | Best device for position |
-| `useCameraDevices()` | `CameraDevice[]` | All available devices |
-| `useCameraFormat(device, filters)` | `CameraDeviceFormat \| undefined` | Best format matching filters |
-| `useCameraPermission()` | `{ hasPermission, requestPermission }` | Camera permission state |
-| `useMicrophonePermission()` | `{ hasPermission, requestPermission }` | Mic permission state |
-| `useLocationPermission()` | `{ hasPermission, requestPermission }` | Location permission state |
-| `useCodeScanner(options)` | `CodeScanner` | QR/barcode scanner config |
-| `useFrameProcessor(callback, deps)` | `FrameProcessor` | Worklet-based frame processing |
-| `useSkiaFrameProcessor(callback, deps)` | `FrameProcessor` | Skia canvas on frames |
+| Hook                                    | Returns                                | Purpose                        |
+| --------------------------------------- | -------------------------------------- | ------------------------------ |
+| `useCameraDevice(position, options?)`   | `CameraDevice \| undefined`            | Best device for position       |
+| `useCameraDevices()`                    | `CameraDevice[]`                       | All available devices          |
+| `useCameraFormat(device, filters)`      | `CameraDeviceFormat \| undefined`      | Best format matching filters   |
+| `useCameraPermission()`                 | `{ hasPermission, requestPermission }` | Camera permission state        |
+| `useMicrophonePermission()`             | `{ hasPermission, requestPermission }` | Mic permission state           |
+| `useLocationPermission()`               | `{ hasPermission, requestPermission }` | Location permission state      |
+| `useCodeScanner(options)`               | `CodeScanner`                          | QR/barcode scanner config      |
+| `useFrameProcessor(callback, deps)`     | `FrameProcessor`                       | Worklet-based frame processing |
+| `useSkiaFrameProcessor(callback, deps)` | `FrameProcessor`                       | Skia canvas on frames          |
 
 ---
 
@@ -207,9 +207,9 @@ Events fire in this order:
 
 ## Permission States
 
-| Status | Meaning | Action |
-|---|---|---|
-| `granted` | User approved | Render Camera |
-| `not-determined` | Never asked | Call `requestPermission()` |
-| `denied` | User rejected | Show rationale, link to Settings |
-| `restricted` | Device policy (parental) | Show explanation, no action possible |
+| Status           | Meaning                  | Action                               |
+| ---------------- | ------------------------ | ------------------------------------ |
+| `granted`        | User approved            | Render Camera                        |
+| `not-determined` | Never asked              | Call `requestPermission()`           |
+| `denied`         | User rejected            | Show rationale, link to Settings     |
+| `restricted`     | Device policy (parental) | Show explanation, no action possible |

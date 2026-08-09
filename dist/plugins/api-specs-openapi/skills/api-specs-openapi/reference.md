@@ -2,70 +2,70 @@
 
 ## OpenAPI 3.0 to 3.1 Migration
 
-| Feature | 3.0 Syntax | 3.1 Syntax |
-|---------|-----------|-----------|
-| Nullable | `nullable: true` | `type: ["string", "null"]` |
-| Exclusive min/max | `exclusiveMinimum: true` (boolean) | `exclusiveMinimum: 0` (number) |
-| `$ref` siblings | Siblings ignored | Siblings allowed (e.g., `description`) |
-| Constant value | `enum: [value]` | `const: value` |
-| Examples | `example: "val"` | `examples: ["val1", "val2"]` |
-| JSON Schema | Subset (extended) | Superset of Draft 2020-12 |
+| Feature           | 3.0 Syntax                         | 3.1 Syntax                             |
+| ----------------- | ---------------------------------- | -------------------------------------- |
+| Nullable          | `nullable: true`                   | `type: ["string", "null"]`             |
+| Exclusive min/max | `exclusiveMinimum: true` (boolean) | `exclusiveMinimum: 0` (number)         |
+| `$ref` siblings   | Siblings ignored                   | Siblings allowed (e.g., `description`) |
+| Constant value    | `enum: [value]`                    | `const: value`                         |
+| Examples          | `example: "val"`                   | `examples: ["val1", "val2"]`           |
+| JSON Schema       | Subset (extended)                  | Superset of Draft 2020-12              |
 
 ---
 
 ## Schema Type Quick Reference
 
-| OpenAPI Type | Format | TypeScript | Notes |
-|-------------|--------|------------|-------|
-| `string` | — | `string` | |
-| `string` | `email` | `string` | Validated format |
-| `string` | `uri` | `string` | Validated format |
-| `string` | `uuid` | `string` | Validated format |
-| `string` | `date` | `string` | ISO 8601 date |
-| `string` | `date-time` | `string` | ISO 8601 datetime |
-| `string` | `password` | `string` | UI hint only |
-| `string` | `binary` | `Blob` | File upload |
-| `integer` | — | `number` | |
-| `integer` | `int32` | `number` | 32-bit |
-| `integer` | `int64` | `number` | 64-bit (JS precision loss) |
-| `number` | — | `number` | |
-| `number` | `float` | `number` | |
-| `number` | `double` | `number` | |
-| `boolean` | — | `boolean` | |
-| `array` | — | `T[]` | `items` required |
-| `object` | — | `Record<string, T>` | Or typed properties |
-| `["string", "null"]` | — | `string \| null` | 3.1 nullable |
+| OpenAPI Type         | Format      | TypeScript          | Notes                      |
+| -------------------- | ----------- | ------------------- | -------------------------- |
+| `string`             | —           | `string`            |                            |
+| `string`             | `email`     | `string`            | Validated format           |
+| `string`             | `uri`       | `string`            | Validated format           |
+| `string`             | `uuid`      | `string`            | Validated format           |
+| `string`             | `date`      | `string`            | ISO 8601 date              |
+| `string`             | `date-time` | `string`            | ISO 8601 datetime          |
+| `string`             | `password`  | `string`            | UI hint only               |
+| `string`             | `binary`    | `Blob`              | File upload                |
+| `integer`            | —           | `number`            |                            |
+| `integer`            | `int32`     | `number`            | 32-bit                     |
+| `integer`            | `int64`     | `number`            | 64-bit (JS precision loss) |
+| `number`             | —           | `number`            |                            |
+| `number`             | `float`     | `number`            |                            |
+| `number`             | `double`    | `number`            |                            |
+| `boolean`            | —           | `boolean`           |                            |
+| `array`              | —           | `T[]`               | `items` required           |
+| `object`             | —           | `Record<string, T>` | Or typed properties        |
+| `["string", "null"]` | —           | `string \| null`    | 3.1 nullable               |
 
 ---
 
 ## Composition Cheat Sheet
 
-| Keyword | Meaning | Use Case |
-|---------|---------|----------|
-| `$ref` | Reference another schema | Reuse, DRY |
-| `allOf` | Must match ALL schemas | Extend base schema |
-| `oneOf` | Must match exactly ONE | Polymorphism with discriminator |
-| `anyOf` | Must match ONE or MORE | Flexible matching |
-| `not` | Must NOT match | Exclusion constraint |
-| `discriminator` | Hint for codegen | Identifies variant by field value |
+| Keyword         | Meaning                  | Use Case                          |
+| --------------- | ------------------------ | --------------------------------- |
+| `$ref`          | Reference another schema | Reuse, DRY                        |
+| `allOf`         | Must match ALL schemas   | Extend base schema                |
+| `oneOf`         | Must match exactly ONE   | Polymorphism with discriminator   |
+| `anyOf`         | Must match ONE or MORE   | Flexible matching                 |
+| `not`           | Must NOT match           | Exclusion constraint              |
+| `discriminator` | Hint for codegen         | Identifies variant by field value |
 
 ---
 
 ## openapi-typescript CLI Flags
 
-| Flag | Short | Default | Purpose |
-|------|-------|---------|---------|
-| `--output` | `-o` | stdout | Output file path |
-| `--immutable` | — | `false` | `readonly` properties |
-| `--alphabetize` | — | `false` | Sort types |
-| `--export-type` | `-t` | `false` | `type` vs `interface` |
-| `--enum` | — | `false` | TS enums vs unions |
-| `--default-non-nullable` | — | `true` | Defaults are non-nullable |
-| `--path-params-as-types` | — | `false` | Dynamic path lookups |
-| `--exclude-deprecated` | — | `false` | Omit deprecated fields |
-| `--check` | — | `false` | CI freshness check |
-| `--additional-properties` | — | `false` | Allow extra properties |
-| `--array-length` | — | `false` | Tuple from min/maxItems |
+| Flag                      | Short | Default | Purpose                   |
+| ------------------------- | ----- | ------- | ------------------------- |
+| `--output`                | `-o`  | stdout  | Output file path          |
+| `--immutable`             | —     | `false` | `readonly` properties     |
+| `--alphabetize`           | —     | `false` | Sort types                |
+| `--export-type`           | `-t`  | `false` | `type` vs `interface`     |
+| `--enum`                  | —     | `false` | TS enums vs unions        |
+| `--default-non-nullable`  | —     | `true`  | Defaults are non-nullable |
+| `--path-params-as-types`  | —     | `false` | Dynamic path lookups      |
+| `--exclude-deprecated`    | —     | `false` | Omit deprecated fields    |
+| `--check`                 | —     | `false` | CI freshness check        |
+| `--additional-properties` | —     | `false` | Allow extra properties    |
+| `--array-length`          | —     | `false` | Tuple from min/maxItems   |
 
 ---
 
@@ -97,7 +97,7 @@ const { error } = await client.DELETE("/path/{id}", {
 });
 
 // Middleware
-client.use(middleware);   // Register
+client.use(middleware); // Register
 client.eject(middleware); // Remove
 ```
 
@@ -157,4 +157,3 @@ Spec growing beyond 500 lines?
 Multiple independent APIs?
 +-- Separate specs, redocly.yaml for multi-schema generation
 ```
-

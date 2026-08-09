@@ -175,7 +175,12 @@ function validateResponse(
 
   // Use your spec validation library to check body against
   // the response schema for this path/method/status
-  const isValid = specValidator.validateResponse(path, method, statusCode, body);
+  const isValid = specValidator.validateResponse(
+    path,
+    method,
+    statusCode,
+    body,
+  );
 
   if (!isValid) {
     console.warn(
@@ -238,7 +243,9 @@ interface ApiError {
   details?: Array<{ field: string; message: string }>;
 }
 
-function formatValidationError(issues: Array<{ path: string; message: string }>): ApiError {
+function formatValidationError(
+  issues: Array<{ path: string; message: string }>,
+): ApiError {
   return {
     code: ERROR_CODES.VALIDATION_ERROR,
     message: "Validation failed",

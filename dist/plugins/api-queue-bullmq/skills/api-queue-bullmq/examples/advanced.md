@@ -20,9 +20,21 @@ const flow = await flowProducer.add({
   queueName: "videos",
   data: { videoId: "abc-123" },
   children: [
-    { name: "extract-audio", queueName: "media-processing", data: { videoId: "abc-123" } },
-    { name: "generate-thumbnail", queueName: "media-processing", data: { videoId: "abc-123", size: "720p" } },
-    { name: "transcode-hd", queueName: "media-processing", data: { videoId: "abc-123", format: "mp4" } },
+    {
+      name: "extract-audio",
+      queueName: "media-processing",
+      data: { videoId: "abc-123" },
+    },
+    {
+      name: "generate-thumbnail",
+      queueName: "media-processing",
+      data: { videoId: "abc-123", size: "720p" },
+    },
+    {
+      name: "transcode-hd",
+      queueName: "media-processing",
+      data: { videoId: "abc-123", format: "mp4" },
+    },
   ],
 });
 
@@ -158,9 +170,13 @@ for (const scheduler of schedulers) {
 
 ```typescript
 // ❌ Bad -- Using deprecated repeat option
-await emailQueue.add("cleanup", { type: "expired" }, {
-  repeat: { every: 3600000 }, // Deprecated since v5.16.0
-});
+await emailQueue.add(
+  "cleanup",
+  { type: "expired" },
+  {
+    repeat: { every: 3600000 }, // Deprecated since v5.16.0
+  },
+);
 ```
 
 **Why bad:** `repeat` option is deprecated; `upsertJobScheduler` provides better management (list, remove, upsert semantics)
@@ -293,7 +309,10 @@ const worker = new Worker("emails", processor, {
   settings: {
     backoffStrategy: (attemptsMade: number) => {
       // Exponential with jitter
-      const exponential = Math.min(Math.pow(2, attemptsMade) * BASE_DELAY_MS, MAX_DELAY_MS);
+      const exponential = Math.min(
+        Math.pow(2, attemptsMade) * BASE_DELAY_MS,
+        MAX_DELAY_MS,
+      );
       const jitter = Math.random() * BASE_DELAY_MS;
       return exponential + jitter;
     },

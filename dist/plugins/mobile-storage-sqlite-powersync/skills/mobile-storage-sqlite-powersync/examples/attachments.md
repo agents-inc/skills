@@ -13,7 +13,12 @@
 Add `AttachmentTable` to your schema alongside tables that reference attachments.
 
 ```typescript
-import { column, Schema, Table, AttachmentTable } from "@powersync/react-native";
+import {
+  column,
+  Schema,
+  Table,
+  AttachmentTable,
+} from "@powersync/react-native";
 
 const users = new Table({
   name: column.text,
@@ -44,7 +49,10 @@ The `AttachmentQueue` manages the full lifecycle: save locally, queue upload, sy
 
 ```typescript
 import { AttachmentQueue } from "@powersync/react-native";
-import type { LocalStorageAdapter, RemoteStorageAdapter } from "@powersync/react-native";
+import type {
+  LocalStorageAdapter,
+  RemoteStorageAdapter,
+} from "@powersync/react-native";
 import { powersync } from "./database";
 
 const SYNC_INTERVAL_MS = 30_000; // Retry failed uploads/downloads every 30s
@@ -86,7 +94,10 @@ export const attachmentQueue = new AttachmentQueue({
        UNION
        SELECT attachment_id as id FROM messages WHERE attachment_id IS NOT NULL`,
       [],
-      { onResult: (result) => onUpdate(result.rows?._array?.map((r) => r.id) ?? []) },
+      {
+        onResult: (result) =>
+          onUpdate(result.rows?._array?.map((r) => r.id) ?? []),
+      },
     );
   },
 });
@@ -137,14 +148,18 @@ async function removeUserPhoto(userId: string, photoId: string): Promise<void> {
   await attachmentQueue.deleteFile({
     id: photoId,
     updateHook: async (tx) => {
-      await tx.execute("UPDATE users SET photo_id = NULL WHERE id = ?", [userId]);
+      await tx.execute("UPDATE users SET photo_id = NULL WHERE id = ?", [
+        userId,
+      ]);
     },
   });
 }
 
 // Alternative: simply remove the reference -- queue auto-archives unreferenced attachments
 async function removePhotoReference(userId: string): Promise<void> {
-  await powersync.execute("UPDATE users SET photo_id = NULL WHERE id = ?", [userId]);
+  await powersync.execute("UPDATE users SET photo_id = NULL WHERE id = ?", [
+    userId,
+  ]);
   // The queue's watchAttachments will detect the orphaned attachment and archive it
 }
 ```
@@ -153,15 +168,16 @@ async function removePhotoReference(userId: string): Promise<void> {
 
 ## Pattern 15: Attachment States
 
-| State              | Meaning                                          |
-|--------------------|--------------------------------------------------|
-| `QUEUED_UPLOAD`    | File saved locally, waiting to be uploaded        |
-| `QUEUED_DOWNLOAD`  | Synced from another device, waiting to download   |
-| `SYNCED`           | Exists both locally and in cloud storage          |
-| `QUEUED_DELETE`    | Marked for removal from local and cloud           |
-| `ARCHIVED`         | No longer referenced by data, candidate for cleanup |
+| State             | Meaning                                             |
+| ----------------- | --------------------------------------------------- |
+| `QUEUED_UPLOAD`   | File saved locally, waiting to be uploaded          |
+| `QUEUED_DOWNLOAD` | Synced from another device, waiting to download     |
+| `SYNCED`          | Exists both locally and in cloud storage            |
+| `QUEUED_DELETE`   | Marked for removal from local and cloud             |
+| `ARCHIVED`        | No longer referenced by data, candidate for cleanup |
 
 **Lifecycle:**
+
 ```
 New file:     Save -> QUEUED_UPLOAD -> (upload) -> SYNCED
 From server:  Sync -> QUEUED_DOWNLOAD -> (download) -> SYNCED

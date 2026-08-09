@@ -20,7 +20,7 @@ const SECURE_STORAGE_ID = "secure-storage";
 export const secureStorage = createMMKV({
   id: SECURE_STORAGE_ID,
   encryptionKey: "your-secret-key",
-  encryptionType: "AES-256",           // Default: "AES-128"
+  encryptionType: "AES-256", // Default: "AES-128"
   // path: "/custom/path",             // Custom file location (rarely needed)
   // mode: "multi-process",            // For App Groups / extensions
   // readOnly: true,                   // Prevent writes
@@ -76,17 +76,21 @@ interface UserProfile {
   email: string;
 }
 
-const profile: UserProfile = { id: "1", name: "Alice", email: "alice@example.com" };
+const profile: UserProfile = {
+  id: "1",
+  name: "Alice",
+  email: "alice@example.com",
+};
 storage.set("user.profile", JSON.stringify(profile));
 
 const stored = storage.getString("user.profile");
 const parsed: UserProfile | undefined = stored ? JSON.parse(stored) : undefined;
 
 // --- Key management ---
-storage.contains("user.name");  // true
-storage.getAllKeys();            // ["user.name", "settings.maxRetries", ...]
-storage.remove("user.name");    // Delete single key (NOT .delete() -- renamed in v4)
-storage.clearAll();             // Delete all keys in this instance
+storage.contains("user.name"); // true
+storage.getAllKeys(); // ["user.name", "settings.maxRetries", ...]
+storage.remove("user.name"); // Delete single key (NOT .delete() -- renamed in v4)
+storage.clearAll(); // Delete all keys in this instance
 ```
 
 **Why good:** Each getter returns `T | undefined` -- no exceptions on missing keys. `remove()` is the v4 method name (was `delete()` in v3).

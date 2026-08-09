@@ -6,34 +6,34 @@
 
 ## IPC Methods Quick Reference
 
-| Pattern                 | Main API                             | Preload API              | Direction          | Returns   |
-| ----------------------- | ------------------------------------ | ------------------------ | ------------------ | --------- |
-| Request-response        | `ipcMain.handle(ch, handler)`        | `ipcRenderer.invoke(ch)` | Renderer --> Main  | `Promise` |
-| Fire-and-forget         | `ipcMain.on(ch, handler)`            | `ipcRenderer.send(ch)`   | Renderer --> Main  | `void`    |
-| Main pushes to renderer | `webContents.send(ch, data)`         | `ipcRenderer.on(ch, cb)` | Main --> Renderer  | `void`    |
-| Synchronous (avoid)     | `ipcMain.on()` + `event.returnValue` | `sendSync()` (blocks!)   | Renderer --> Main  | sync      |
-| Port-based              | `MessageChannelMain`                 | `MessagePort`            | Bidirectional      | `void`    |
-| Utility process         | `child.postMessage()`                | `parentPort.postMessage` | Main <-> Utility   | `void`    |
+| Pattern                 | Main API                             | Preload API              | Direction         | Returns   |
+| ----------------------- | ------------------------------------ | ------------------------ | ----------------- | --------- |
+| Request-response        | `ipcMain.handle(ch, handler)`        | `ipcRenderer.invoke(ch)` | Renderer --> Main | `Promise` |
+| Fire-and-forget         | `ipcMain.on(ch, handler)`            | `ipcRenderer.send(ch)`   | Renderer --> Main | `void`    |
+| Main pushes to renderer | `webContents.send(ch, data)`         | `ipcRenderer.on(ch, cb)` | Main --> Renderer | `void`    |
+| Synchronous (avoid)     | `ipcMain.on()` + `event.returnValue` | `sendSync()` (blocks!)   | Renderer --> Main | sync      |
+| Port-based              | `MessageChannelMain`                 | `MessagePort`            | Bidirectional     | `void`    |
+| Utility process         | `child.postMessage()`                | `parentPort.postMessage` | Main <-> Utility  | `void`    |
 
 ---
 
 ## Type Safety Approaches Comparison
 
-| Approach                   | Dependencies          | Type Safety Level | Effort   | Best For               |
-| -------------------------- | --------------------- | ----------------- | -------- | ---------------------- |
-| Shared channel map + wraps | None                  | Compile-time      | Low      | 1-10 IPC channels      |
-| electron-trpc              | `electron-trpc`, tRPC | Compile + runtime | Medium   | 10+ channels, complex  |
-| @electron-toolkit/typed-ipc| `@electron-toolkit/*` | Compile-time      | Low      | Drop-in typed wrappers |
+| Approach                    | Dependencies          | Type Safety Level | Effort | Best For               |
+| --------------------------- | --------------------- | ----------------- | ------ | ---------------------- |
+| Shared channel map + wraps  | None                  | Compile-time      | Low    | 1-10 IPC channels      |
+| electron-trpc               | `electron-trpc`, tRPC | Compile + runtime | Medium | 10+ channels, complex  |
+| @electron-toolkit/typed-ipc | `@electron-toolkit/*` | Compile-time      | Low    | Drop-in typed wrappers |
 
 ---
 
 ## Channel Map Type Patterns
 
-| Communication Pattern  | Type Shape                          | Example                                                    |
-| ---------------------- | ----------------------------------- | ---------------------------------------------------------- |
-| Request-response       | `channel: (...args) => ReturnType`  | `"file:read": (path: string) => { content: string }`      |
-| Fire-and-forget        | `channel: [...args]`                | `"log:error": [message: string, stack?: string]`           |
-| Main-to-renderer push  | `channel: PayloadType`              | `"update:progress": { percent: number }`                   |
+| Communication Pattern | Type Shape                         | Example                                              |
+| --------------------- | ---------------------------------- | ---------------------------------------------------- |
+| Request-response      | `channel: (...args) => ReturnType` | `"file:read": (path: string) => { content: string }` |
+| Fire-and-forget       | `channel: [...args]`               | `"log:error": [message: string, stack?: string]`     |
+| Main-to-renderer push | `channel: PayloadType`             | `"update:progress": { percent: number }`             |
 
 ---
 
@@ -41,12 +41,12 @@
 
 Standard IPC methods (`send`, `invoke`) **cannot** transfer MessagePort objects. You must use:
 
-| Method                       | Process         | Usage                                        |
-| ---------------------------- | --------------- | -------------------------------------------- |
-| `webContents.postMessage()`  | Main            | Transfer port to renderer                    |
-| `ipcRenderer.postMessage()`  | Renderer/Preload| Transfer port to main                        |
-| `child.postMessage()`        | Main            | Transfer port to utility process             |
-| `parentPort.postMessage()`   | Utility process | Transfer port back to main                   |
+| Method                      | Process          | Usage                            |
+| --------------------------- | ---------------- | -------------------------------- |
+| `webContents.postMessage()` | Main             | Transfer port to renderer        |
+| `ipcRenderer.postMessage()` | Renderer/Preload | Transfer port to main            |
+| `child.postMessage()`       | Main             | Transfer port to utility process |
+| `parentPort.postMessage()`  | Utility process  | Transfer port back to main       |
 
 ---
 

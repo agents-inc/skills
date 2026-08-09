@@ -91,22 +91,22 @@ autoUpdater.logger.transports.file.level = "debug";
 
 ```yaml
 # latest.yml must contain these fields:
-version: 2.0.0           # Must be higher than current app version
-path: my-app-setup.exe   # Must match actual filename on server
-sha512: <valid-hash>     # Must match actual file hash
-releaseDate: "2025-..."  # ISO 8601 format
+version: 2.0.0 # Must be higher than current app version
+path: my-app-setup.exe # Must match actual filename on server
+sha512: <valid-hash> # Must match actual file hash
+releaseDate: "2025-..." # ISO 8601 format
 ```
 
 ### 3. Common Failure Points
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `checkForUpdates()` returns null | `app.isPackaged` is false and `forceDevUpdateConfig` not set | Set `forceDevUpdateConfig = true` |
-| "No published versions" error | Metadata file not found at provider URL | Verify URL + path combination resolves to `latest.yml` |
-| "sha512 checksum mismatch" | Installer was modified or hash is wrong | Regenerate `latest.yml` with correct hash |
-| "Code signing verification failed" | Windows: unsigned installer / wrong publisher | Sign the installer or disable verification for testing |
-| Silently does nothing | Logger not attached | Set `autoUpdater.logger = log` and check log file |
-| "net::ERR_CONNECTION_REFUSED" | Local server not running | Start your HTTP/S3 server |
+| Symptom                            | Cause                                                        | Fix                                                    |
+| ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------ |
+| `checkForUpdates()` returns null   | `app.isPackaged` is false and `forceDevUpdateConfig` not set | Set `forceDevUpdateConfig = true`                      |
+| "No published versions" error      | Metadata file not found at provider URL                      | Verify URL + path combination resolves to `latest.yml` |
+| "sha512 checksum mismatch"         | Installer was modified or hash is wrong                      | Regenerate `latest.yml` with correct hash              |
+| "Code signing verification failed" | Windows: unsigned installer / wrong publisher                | Sign the installer or disable verification for testing |
+| Silently does nothing              | Logger not attached                                          | Set `autoUpdater.logger = log` and check log file      |
+| "net::ERR_CONNECTION_REFUSED"      | Local server not running                                     | Start your HTTP/S3 server                              |
 
 ### 4. Disable Code Signing Verification (Testing Only)
 

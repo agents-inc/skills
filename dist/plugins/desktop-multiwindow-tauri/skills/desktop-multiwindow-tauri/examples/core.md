@@ -144,9 +144,12 @@ await emitTo("editor", "file-opened", { path: "/docs/readme.md" });
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const appWindow = getCurrentWebviewWindow();
-const unlisten = await appWindow.listen<{ path: string }>("file-opened", (event) => {
-  loadFile(event.payload.path);
-});
+const unlisten = await appWindow.listen<{ path: string }>(
+  "file-opened",
+  (event) => {
+    loadFile(event.payload.path);
+  },
+);
 ```
 
 **Key point:** `emitTo` accepts either a string label or an `EventTarget` object. Using the string label is simpler for most cases.
@@ -232,10 +235,13 @@ interface PreferenceUpdate {
   value: unknown;
 }
 
-const unlisten = await listen<PreferenceUpdate>("preference-updated", (event) => {
-  const { key, value } = event.payload;
-  applyPreference(key, value);
-});
+const unlisten = await listen<PreferenceUpdate>(
+  "preference-updated",
+  (event) => {
+    const { key, value } = event.payload;
+    applyPreference(key, value);
+  },
+);
 
 // Clean up on unmount
 unlisten();
@@ -257,7 +263,9 @@ const unlisten = await currentWindow.onCloseRequested(async (event) => {
   if (hasUnsavedChanges()) {
     event.preventDefault();
     // Show your confirmation UI
-    const confirmed = await showConfirmDialog("You have unsaved changes. Close anyway?");
+    const confirmed = await showConfirmDialog(
+      "You have unsaved changes. Close anyway?",
+    );
     if (confirmed) {
       // Use destroy() to force-close without retriggering close-requested
       await currentWindow.destroy();

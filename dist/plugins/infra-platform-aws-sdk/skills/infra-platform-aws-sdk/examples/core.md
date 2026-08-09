@@ -52,13 +52,19 @@ import { s3 } from "./lib/aws-clients.js";
 
 const CONTENT_TYPE_JSON = "application/json";
 
-export async function uploadJson(bucket: string, key: string, data: unknown): Promise<void> {
-  await s3.send(new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: JSON.stringify(data),
-    ContentType: CONTENT_TYPE_JSON,
-  }));
+export async function uploadJson(
+  bucket: string,
+  key: string,
+  data: unknown,
+): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: JSON.stringify(data),
+      ContentType: CONTENT_TYPE_JSON,
+    }),
+  );
 }
 ```
 
@@ -72,9 +78,14 @@ export async function uploadJson(bucket: string, key: string, data: unknown): Pr
 import { GetObjectCommand, NoSuchKey } from "@aws-sdk/client-s3";
 import { s3 } from "./lib/aws-clients.js";
 
-export async function downloadJson<T>(bucket: string, key: string): Promise<T | null> {
+export async function downloadJson<T>(
+  bucket: string,
+  key: string,
+): Promise<T | null> {
   try {
-    const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const response = await s3.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
     const body = await response.Body?.transformToString();
     if (!body) return null;
     return JSON.parse(body) as T;
@@ -92,7 +103,8 @@ export async function downloadJson<T>(bucket: string, key: string): Promise<T | 
 try {
   await s3.send(new GetObjectCommand({ Bucket: "b", Key: "k" }));
 } catch (error: any) {
-  if (error.code === "NoSuchKey") { // String comparison — fragile, no type narrowing
+  if (error.code === "NoSuchKey") {
+    // String comparison — fragile, no type narrowing
     return null;
   }
 }
@@ -124,7 +136,10 @@ import { s3 } from "./lib/aws-clients.js";
 
 const MAX_KEYS_PER_PAGE = 1_000;
 
-export async function listAllKeys(bucket: string, prefix: string): Promise<string[]> {
+export async function listAllKeys(
+  bucket: string,
+  prefix: string,
+): Promise<string[]> {
   const paginator = paginateListObjectsV2(
     { client: s3, pageSize: MAX_KEYS_PER_PAGE },
     { Bucket: bucket, Prefix: prefix },
@@ -146,11 +161,13 @@ export async function listAllKeys(bucket: string, prefix: string): Promise<strin
 let token: string | undefined;
 const keys: string[] = [];
 do {
-  const response = await s3.send(new ListObjectsV2Command({
-    Bucket: bucket,
-    Prefix: prefix,
-    ContinuationToken: token,
-  }));
+  const response = await s3.send(
+    new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      ContinuationToken: token,
+    }),
+  );
   keys.push(...(response.Contents?.map((o) => o.Key!).filter(Boolean) ?? []));
   token = response.NextContinuationToken;
 } while (token);
@@ -174,10 +191,12 @@ interface User {
 }
 
 export async function getUser(userId: string): Promise<User | null> {
-  const { Item } = await ddb.send(new GetCommand({
-    TableName: "users",
-    Key: { userId },
-  }));
+  const { Item } = await ddb.send(
+    new GetCommand({
+      TableName: "users",
+      Key: { userId },
+    }),
+  );
   return (Item as User) ?? null;
 }
 ```
@@ -193,11 +212,13 @@ import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "./lib/aws-clients.js";
 
 export async function createUser(user: User): Promise<void> {
-  await ddb.send(new PutCommand({
-    TableName: "users",
-    Item: user,
-    ConditionExpression: "attribute_not_exists(userId)", // Prevent overwrite
-  }));
+  await ddb.send(
+    new PutCommand({
+      TableName: "users",
+      Item: user,
+      ConditionExpression: "attribute_not_exists(userId)", // Prevent overwrite
+    }),
+  );
 }
 ```
 
@@ -211,14 +232,19 @@ import { ddb } from "./lib/aws-clients.js";
 
 const DEFAULT_LIMIT = 20;
 
-export async function getUserOrders(userId: string, limit = DEFAULT_LIMIT): Promise<Order[]> {
-  const { Items } = await ddb.send(new QueryCommand({
-    TableName: "orders",
-    KeyConditionExpression: "userId = :userId",
-    ExpressionAttributeValues: { ":userId": userId },
-    ScanIndexForward: false, // newest first
-    Limit: limit,
-  }));
+export async function getUserOrders(
+  userId: string,
+  limit = DEFAULT_LIMIT,
+): Promise<Order[]> {
+  const { Items } = await ddb.send(
+    new QueryCommand({
+      TableName: "orders",
+      KeyConditionExpression: "userId = :userId",
+      ExpressionAttributeValues: { ":userId": userId },
+      ScanIndexForward: false, // newest first
+      Limit: limit,
+    }),
+  );
   return (Items as Order[]) ?? [];
 }
 ```
@@ -231,15 +257,23 @@ export async function getUserOrders(userId: string, limit = DEFAULT_LIMIT): Prom
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "./lib/aws-clients.js";
 
-export async function updateUserName(userId: string, name: string): Promise<void> {
-  await ddb.send(new UpdateCommand({
-    TableName: "users",
-    Key: { userId },
-    UpdateExpression: "SET #name = :name, updatedAt = :now",
-    ExpressionAttributeNames: { "#name": "name" }, // "name" is a DynamoDB reserved word
-    ExpressionAttributeValues: { ":name": name, ":now": new Date().toISOString() },
-    ConditionExpression: "attribute_exists(userId)", // Fail if user doesn't exist
-  }));
+export async function updateUserName(
+  userId: string,
+  name: string,
+): Promise<void> {
+  await ddb.send(
+    new UpdateCommand({
+      TableName: "users",
+      Key: { userId },
+      UpdateExpression: "SET #name = :name, updatedAt = :now",
+      ExpressionAttributeNames: { "#name": "name" }, // "name" is a DynamoDB reserved word
+      ExpressionAttributeValues: {
+        ":name": name,
+        ":now": new Date().toISOString(),
+      },
+      ConditionExpression: "attribute_exists(userId)", // Fail if user doesn't exist
+    }),
+  );
 }
 ```
 
@@ -254,11 +288,13 @@ import { DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "./lib/aws-clients.js";
 
 export async function deleteUser(userId: string): Promise<void> {
-  await ddb.send(new DeleteCommand({
-    TableName: "users",
-    Key: { userId },
-    ConditionExpression: "attribute_exists(userId)", // Fail if already deleted
-  }));
+  await ddb.send(
+    new DeleteCommand({
+      TableName: "users",
+      Key: { userId },
+      ConditionExpression: "attribute_exists(userId)", // Fail if already deleted
+    }),
+  );
 }
 ```
 
@@ -268,7 +304,10 @@ export async function deleteUser(userId: string): Promise<void> {
 
 ```typescript
 import { S3Client } from "@aws-sdk/client-s3";
-import { fromIni, fromTemporaryCredentials } from "@aws-sdk/credential-providers";
+import {
+  fromIni,
+  fromTemporaryCredentials,
+} from "@aws-sdk/credential-providers";
 
 // Local development — use a named AWS profile
 const devClient = new S3Client({
@@ -305,10 +344,15 @@ import {
 } from "@aws-sdk/client-s3";
 import { s3 } from "./lib/aws-clients.js";
 
-export async function safeGetObject(bucket: string, key: string): Promise<string | null> {
+export async function safeGetObject(
+  bucket: string,
+  key: string,
+): Promise<string | null> {
   try {
-    const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-    return await response.Body?.transformToString() ?? null;
+    const response = await s3.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
+    return (await response.Body?.transformToString()) ?? null;
   } catch (error) {
     // 1. Check specific exception types first
     if (error instanceof NoSuchKey) {

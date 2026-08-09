@@ -20,7 +20,10 @@ const InfoControl = L.Control.extend({
   } as InfoControlOptions,
 
   onAdd(map: L.Map): HTMLElement {
-    const container = L.DomUtil.create("div", "leaflet-bar leaflet-control info-control");
+    const container = L.DomUtil.create(
+      "div",
+      "leaflet-bar leaflet-control info-control",
+    );
 
     const button = L.DomUtil.create("a", "info-button", container);
     button.innerHTML = "i";
@@ -62,6 +65,7 @@ infoControl({ position: "topright", title: "Details" }).addTo(map);
 ```
 
 **Key rules:**
+
 - Call `L.DomEvent.disableClickPropagation(container)` to prevent map clicks through the control
 - Call `L.DomEvent.disableScrollPropagation(container)` if the control has scrollable content
 - Use `L.DomEvent.on()` / `L.DomEvent.off()` for control event binding (not native addEventListener)
@@ -161,7 +165,12 @@ function getClusterClass(count: number): string {
 const clusterGroup = L.markerClusterGroup({
   iconCreateFunction: (cluster: L.MarkerCluster) => {
     const count = cluster.getChildCount();
-    const size = count < SMALL_CLUSTER_THRESHOLD ? 30 : count < MEDIUM_CLUSTER_THRESHOLD ? 40 : 50;
+    const size =
+      count < SMALL_CLUSTER_THRESHOLD
+        ? 30
+        : count < MEDIUM_CLUSTER_THRESHOLD
+          ? 40
+          : 50;
 
     return L.divIcon({
       html: `<div><span>${count}</span></div>`,
@@ -246,7 +255,7 @@ const cityLayer = L.geoJSON<CityProperties>(cityData as CityCollection, {
   onEachFeature: (feature: CityFeature, layer: L.Layer) => {
     layer.bindPopup(
       `<strong>${feature.properties.name}</strong><br>` +
-      `Pop: ${feature.properties.population.toLocaleString()}`,
+        `Pop: ${feature.properties.population.toLocaleString()}`,
     );
   },
 });
@@ -291,7 +300,11 @@ const SearchControl = L.Control.extend({
 
   onAdd(_map: L.Map): HTMLElement {
     const container = L.DomUtil.create("div", "leaflet-bar search-control");
-    const input = L.DomUtil.create("input", "search-input", container) as HTMLInputElement;
+    const input = L.DomUtil.create(
+      "input",
+      "search-input",
+      container,
+    ) as HTMLInputElement;
 
     input.type = "text";
     input.placeholder = this.options.placeholder ?? "Search...";
@@ -345,6 +358,7 @@ locations.forEach((loc) => {
 ```
 
 **When to use canvas:**
+
 - Rendering 1000+ circles, polylines, or polygons
 - Data visualization with many overlapping shapes
 - Performance is more important than crisp SVG rendering
@@ -376,14 +390,11 @@ if (bounds.isValid()) {
 ### Restrict Map to Geographic Area
 
 ```typescript
-const WORLD_BOUNDS = L.latLngBounds(
-  L.latLng(-90, -180),
-  L.latLng(90, 180),
-);
+const WORLD_BOUNDS = L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180));
 
 const REGION_BOUNDS = L.latLngBounds(
-  L.latLng(49.5, -8.2),  // SW corner
-  L.latLng(59.0, 2.0),   // NE corner
+  L.latLng(49.5, -8.2), // SW corner
+  L.latLng(59.0, 2.0), // NE corner
 );
 
 const map = L.map("map", {

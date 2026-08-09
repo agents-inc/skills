@@ -17,10 +17,7 @@ function saveEditorState(editorState: EditorState): string {
 }
 
 // Restore: JSON string -> EditorState
-function restoreEditorState(
-  editor: LexicalEditor,
-  jsonString: string,
-): void {
+function restoreEditorState(editor: LexicalEditor, jsonString: string): void {
   const editorState = editor.parseEditorState(jsonString);
   // Clone with null to prevent auto-focusing the editor
   editor.setEditorState(editorState.clone(null));
@@ -71,9 +68,7 @@ export class AlertNode extends ElementNode {
   }
 
   // updateFromJSON: apply properties from JSON (v0.23+)
-  updateFromJSON(
-    serializedNode: LexicalUpdateJSON<SerializedAlertNode>,
-  ): this {
+  updateFromJSON(serializedNode: LexicalUpdateJSON<SerializedAlertNode>): this {
     return super.updateFromJSON(serializedNode);
     // __level is set via constructor in importJSON
   }
@@ -138,10 +133,7 @@ function importHtml(editor: LexicalEditor, htmlString: string): void {
 }
 
 // Insert HTML at cursor position
-function insertHtmlAtCursor(
-  editor: LexicalEditor,
-  htmlString: string,
-): void {
+function insertHtmlAtCursor(editor: LexicalEditor, htmlString: string): void {
   editor.update(() => {
     const parser = new DOMParser();
     const dom = parser.parseFromString(htmlString, "text/html");
@@ -160,10 +152,7 @@ function insertHtmlAtCursor(
 ### Good Example - Node with HTML Representation
 
 ```typescript
-import type {
-  DOMExportOutput,
-  LexicalEditor,
-} from "lexical";
+import type { DOMExportOutput, LexicalEditor } from "lexical";
 
 export class CalloutNode extends ElementNode {
   __variant: "info" | "warning" | "error";
@@ -278,7 +267,9 @@ const htmlConfig: HTMLConfig = {
 const editor = createEditor({
   namespace: "MyEditor",
   html: htmlConfig,
-  nodes: [/* ... */],
+  nodes: [
+    /* ... */
+  ],
   onError: (error) => console.error(error),
 });
 ```

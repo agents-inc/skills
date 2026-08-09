@@ -174,7 +174,7 @@ Roll out updates gradually by setting `stagingPercentage` in your metadata YAML 
 ```yaml
 # latest.yml (manually edited after publishing)
 version: 2.1.0
-stagingPercentage: 10  # Ship to 10% of users first
+stagingPercentage: 10 # Ship to 10% of users first
 ```
 
 **Key point:** Increment the version when pulling a broken staged release -- users already on the broken version will not downgrade to the same version number. See [examples/channels-and-rollouts.md](examples/channels-and-rollouts.md).

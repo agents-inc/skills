@@ -212,10 +212,10 @@ onFlowStart:
 
 **Hook failure behavior:**
 
-| Scenario | Result |
-|----------|--------|
-| `onFlowStart` fails | Flow marked FAILED, main body skipped, `onFlowComplete` still runs |
-| `onFlowComplete` fails | Flow marked FAILED even if main test passed |
+| Scenario               | Result                                                             |
+| ---------------------- | ------------------------------------------------------------------ |
+| `onFlowStart` fails    | Flow marked FAILED, main body skipped, `onFlowComplete` still runs |
+| `onFlowComplete` fails | Flow marked FAILED even if main test passed                        |
 
 **Warning:** Avoid slow operations in hooks -- they run before/after EVERY flow in the suite, multiplying total execution time.
 
@@ -342,7 +342,7 @@ env:
 maestro test -e USERNAME=admin@test.com -e ENV=production flow.yaml
 ```
 
-### Shell Variables (MAESTRO_ prefix)
+### Shell Variables (MAESTRO\_ prefix)
 
 ```bash
 export MAESTRO_API_KEY="sk-test-12345"
@@ -361,12 +361,12 @@ maestro test flow.yaml
 
 ### Built-in Variables
 
-| Variable | Description |
-|----------|-------------|
-| `MAESTRO_FILENAME` | Current flow filename |
+| Variable              | Description                 |
+| --------------------- | --------------------------- |
+| `MAESTRO_FILENAME`    | Current flow filename       |
 | `MAESTRO_DEVICE_UDID` | Connected device identifier |
-| `MAESTRO_SHARD_ID` | Shard ID (starts at 1) |
-| `MAESTRO_SHARD_INDEX` | Shard index (starts at 0) |
+| `MAESTRO_SHARD_ID`    | Shard ID (starts at 1)      |
+| `MAESTRO_SHARD_INDEX` | Shard index (starts at 0)   |
 
 ### Subflow Variable Passing
 

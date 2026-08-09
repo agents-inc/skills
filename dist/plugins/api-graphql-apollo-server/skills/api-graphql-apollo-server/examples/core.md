@@ -195,12 +195,20 @@ import { GraphQLError } from "graphql";
 const resolvers = {
   Query: {
     // Top-level resolver: parent is undefined
-    books: async (_parent: undefined, _args: Record<string, never>, contextValue: MyContext) => {
+    books: async (
+      _parent: undefined,
+      _args: Record<string, never>,
+      contextValue: MyContext,
+    ) => {
       return contextValue.dataSources.booksAPI.getAllBooks();
     },
 
     // Args typed from schema
-    book: async (_parent: undefined, args: { id: string }, contextValue: MyContext) => {
+    book: async (
+      _parent: undefined,
+      args: { id: string },
+      contextValue: MyContext,
+    ) => {
       const book = await contextValue.dataSources.booksAPI.getBook(args.id);
       if (!book) {
         throw new GraphQLError(`Book with id "${args.id}" not found`, {
@@ -213,26 +221,41 @@ const resolvers = {
 
   // Field resolver: parent is the Book returned by Query.book
   Book: {
-    author: async (parent: Book, _args: Record<string, never>, contextValue: MyContext) => {
+    author: async (
+      parent: Book,
+      _args: Record<string, never>,
+      contextValue: MyContext,
+    ) => {
       return contextValue.dataSources.authorsAPI.getAuthor(parent.authorId);
     },
   },
 
   // Field resolver: parent is the Author
   Author: {
-    books: async (parent: Author, _args: Record<string, never>, contextValue: MyContext) => {
+    books: async (
+      parent: Author,
+      _args: Record<string, never>,
+      contextValue: MyContext,
+    ) => {
       return contextValue.dataSources.booksAPI.getBooksByAuthor(parent.id);
     },
   },
 
   Mutation: {
-    addBook: async (_parent: undefined, args: { title: string; authorId: string }, contextValue: MyContext) => {
+    addBook: async (
+      _parent: undefined,
+      args: { title: string; authorId: string },
+      contextValue: MyContext,
+    ) => {
       if (!contextValue.token) {
         throw new GraphQLError("Authentication required", {
           extensions: { code: "UNAUTHENTICATED" },
         });
       }
-      return contextValue.dataSources.booksAPI.addBook(args.title, args.authorId);
+      return contextValue.dataSources.booksAPI.addBook(
+        args.title,
+        args.authorId,
+      );
     },
   },
 };
@@ -251,7 +274,9 @@ const resolvers = {
       return result.rows;
     },
     book: async (_parent, args) => {
-      const result = await db.query("SELECT * FROM books WHERE id = $1", [args.id]);
+      const result = await db.query("SELECT * FROM books WHERE id = $1", [
+        args.id,
+      ]);
       if (!result.rows[0]) {
         // BAD: generic Error exposes stack trace
         throw new Error("Not found");
@@ -310,7 +335,10 @@ const server = new ApolloServer<MyContext>({
     const originalError = unwrapResolverError(error);
 
     // Log internal errors for debugging
-    if (formattedError.extensions?.code === ApolloServerErrorCode.INTERNAL_SERVER_ERROR) {
+    if (
+      formattedError.extensions?.code ===
+      ApolloServerErrorCode.INTERNAL_SERVER_ERROR
+    ) {
       console.error("Internal error:", originalError);
     }
 
@@ -470,7 +498,11 @@ const { url } = await startStandaloneServer(server, {
 // In resolvers: check auth where needed
 const resolvers = {
   Mutation: {
-    deleteBook: async (_parent: undefined, args: { id: string }, contextValue: MyContext) => {
+    deleteBook: async (
+      _parent: undefined,
+      args: { id: string },
+      contextValue: MyContext,
+    ) => {
       if (!contextValue.user) {
         throw new GraphQLError("Authentication required", {
           extensions: { code: "UNAUTHENTICATED" },

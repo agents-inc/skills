@@ -227,4 +227,3 @@ const RESOURCES_PATH = app.isPackaged
 **Why critical:** Forge bundles `dependencies` into the final app but excludes `devDependencies`. Electron itself (~200MB) is provided by the packager -- placing it in `dependencies` ships a duplicate copy.
 
 **Common mistake:** Build tools, testing libraries, Forge packages, or `electron` itself in `dependencies` instead of `devDependencies`.
-

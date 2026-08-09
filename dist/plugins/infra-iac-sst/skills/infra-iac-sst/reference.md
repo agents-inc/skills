@@ -97,72 +97,72 @@ sst version
 
 ### Compute
 
-| Component | Service | Key Props |
-|-----------|---------|-----------|
-| `sst.aws.Function` | Lambda | `handler`, `runtime`, `memory`, `timeout`, `link`, `url`, `streaming`, `vpc` |
-| `sst.aws.Cluster` | ECS | `vpc` |
-| `sst.aws.Service` | ECS Service | `cluster`, `image`, `link`, `scaling` |
-| `sst.aws.Task` | ECS Task | `cluster`, `image`, `link` |
+| Component          | Service     | Key Props                                                                    |
+| ------------------ | ----------- | ---------------------------------------------------------------------------- |
+| `sst.aws.Function` | Lambda      | `handler`, `runtime`, `memory`, `timeout`, `link`, `url`, `streaming`, `vpc` |
+| `sst.aws.Cluster`  | ECS         | `vpc`                                                                        |
+| `sst.aws.Service`  | ECS Service | `cluster`, `image`, `link`, `scaling`                                        |
+| `sst.aws.Task`     | ECS Task    | `cluster`, `image`, `link`                                                   |
 
 ### API & Routing
 
-| Component | Service | Key Props |
-|-----------|---------|-----------|
+| Component              | Service        | Key Props                                                     |
+| ---------------------- | -------------- | ------------------------------------------------------------- |
 | `sst.aws.ApiGatewayV2` | API Gateway v2 | `domain`, `cors`, `accessLog`, `.route()`, `.addAuthorizer()` |
-| `sst.aws.Router` | CloudFront | `domain`, `.route()` |
+| `sst.aws.Router`       | CloudFront     | `domain`, `.route()`                                          |
 
 ### Data & Storage
 
-| Component | Service | Key Props |
-|-----------|---------|-----------|
-| `sst.aws.Dynamo` | DynamoDB | `fields`, `primaryIndex`, `globalIndexes`, `stream`, `ttl` |
-| `sst.aws.Bucket` | S3 | `access`, `cors`, `versioning` |
-| `sst.aws.Postgres` | RDS Postgres | `vpc`, `scaling` |
+| Component          | Service      | Key Props                                                  |
+| ------------------ | ------------ | ---------------------------------------------------------- |
+| `sst.aws.Dynamo`   | DynamoDB     | `fields`, `primaryIndex`, `globalIndexes`, `stream`, `ttl` |
+| `sst.aws.Bucket`   | S3           | `access`, `cors`, `versioning`                             |
+| `sst.aws.Postgres` | RDS Postgres | `vpc`, `scaling`                                           |
 
 ### Messaging & Scheduling
 
-| Component | Service | Key Props |
-|-----------|---------|-----------|
-| `sst.aws.Queue` | SQS | `fifo`, `visibilityTimeout`, `dlq`, `.subscribe()` |
-| `sst.aws.Topic` | SNS | `.subscribe()` |
-| `sst.aws.Cron` | EventBridge | `schedule`, `function` / `task` |
+| Component       | Service     | Key Props                                          |
+| --------------- | ----------- | -------------------------------------------------- |
+| `sst.aws.Queue` | SQS         | `fifo`, `visibilityTimeout`, `dlq`, `.subscribe()` |
+| `sst.aws.Topic` | SNS         | `.subscribe()`                                     |
+| `sst.aws.Cron`  | EventBridge | `schedule`, `function` / `task`                    |
 
 ### Frontend Frameworks
 
-| Component | Framework | Key Props |
-|-----------|-----------|-----------|
-| `sst.aws.Nextjs` | Next.js | `link`, `domain`, `environment` |
-| `sst.aws.Remix` | Remix | `link`, `domain` |
-| `sst.aws.Astro` | Astro | `link`, `domain` |
-| `sst.aws.SvelteKit` | SvelteKit | `link`, `domain` |
-| `sst.aws.SolidStart` | SolidStart | `link`, `domain` |
+| Component            | Framework      | Key Props                       |
+| -------------------- | -------------- | ------------------------------- |
+| `sst.aws.Nextjs`     | Next.js        | `link`, `domain`, `environment` |
+| `sst.aws.Remix`      | Remix          | `link`, `domain`                |
+| `sst.aws.Astro`      | Astro          | `link`, `domain`                |
+| `sst.aws.SvelteKit`  | SvelteKit      | `link`, `domain`                |
+| `sst.aws.SolidStart` | SolidStart     | `link`, `domain`                |
 | `sst.aws.StaticSite` | Static HTML/JS | `path`, `domain`, `environment` |
 
 ### Infrastructure
 
-| Component | Service | Key Props |
-|-----------|---------|-----------|
-| `sst.aws.Vpc` | VPC | `bastion`, `nat` |
-| `sst.Linkable` | Custom | `properties`, `include` |
+| Component      | Service | Key Props               |
+| -------------- | ------- | ----------------------- |
+| `sst.aws.Vpc`  | VPC     | `bastion`, `nat`        |
+| `sst.Linkable` | Custom  | `properties`, `include` |
 
 ---
 
 ## Global Helpers (Available in `sst.config.ts` `run()`)
 
-| Helper | Purpose | Example |
-|--------|---------|---------|
-| `$app.name` | App name | `$app.name` |
-| `$app.stage` | Current stage | `$app.stage === "production"` |
-| `$app.protect` | Protect flag | `$app.protect` |
-| `$app.removal` | Removal policy | `$app.removal` |
-| `$dev` | Is `sst dev` mode | `if ($dev) { ... }` |
-| `$concat(...vals)` | Join Output strings | `$concat("prefix-", bucket.name)` |
-| `` $interpolate`...` `` | Template literal Outputs | `` $interpolate`arn:aws:s3:::${bucket.name}` `` |
-| `$resolve(vals)` | Await multiple Outputs | `$resolve([a, b]).apply(([a, b]) => ...)` |
-| `$transform(Type, fn)` | Global component defaults | `$transform(sst.aws.Function, (args) => { ... })` |
-| `$asset(path)` | File/dir as Pulumi asset | `$asset("./files/config.json")` |
-| `$jsonParse(str)` | Parse JSON Output | `$jsonParse(secret.value)` |
-| `$jsonStringify(obj)` | Stringify Output | `$jsonStringify({ key: output })` |
+| Helper                  | Purpose                   | Example                                           |
+| ----------------------- | ------------------------- | ------------------------------------------------- |
+| `$app.name`             | App name                  | `$app.name`                                       |
+| `$app.stage`            | Current stage             | `$app.stage === "production"`                     |
+| `$app.protect`          | Protect flag              | `$app.protect`                                    |
+| `$app.removal`          | Removal policy            | `$app.removal`                                    |
+| `$dev`                  | Is `sst dev` mode         | `if ($dev) { ... }`                               |
+| `$concat(...vals)`      | Join Output strings       | `$concat("prefix-", bucket.name)`                 |
+| `` $interpolate`...` `` | Template literal Outputs  | `` $interpolate`arn:aws:s3:::${bucket.name}` ``   |
+| `$resolve(vals)`        | Await multiple Outputs    | `$resolve([a, b]).apply(([a, b]) => ...)`         |
+| `$transform(Type, fn)`  | Global component defaults | `$transform(sst.aws.Function, (args) => { ... })` |
+| `$asset(path)`          | File/dir as Pulumi asset  | `$asset("./files/config.json")`                   |
+| `$jsonParse(str)`       | Parse JSON Output         | `$jsonParse(secret.value)`                        |
+| `$jsonStringify(obj)`   | Stringify Output          | `$jsonStringify({ key: output })`                 |
 
 ---
 
@@ -217,8 +217,8 @@ Both are available as `process.env` in `sst.config.ts` and in Lambda functions.
 
 Control build parallelism during `sst deploy`:
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `SST_BUILD_CONCURRENCY_SITE` | 1 | Frontend builds in parallel |
-| `SST_BUILD_CONCURRENCY_FUNCTION` | 4 | Function bundles in parallel |
-| `SST_BUILD_CONCURRENCY_CONTAINER` | 1 | Container builds in parallel |
+| Variable                          | Default | Purpose                      |
+| --------------------------------- | ------- | ---------------------------- |
+| `SST_BUILD_CONCURRENCY_SITE`      | 1       | Frontend builds in parallel  |
+| `SST_BUILD_CONCURRENCY_FUNCTION`  | 4       | Function bundles in parallel |
+| `SST_BUILD_CONCURRENCY_CONTAINER` | 1       | Container builds in parallel |

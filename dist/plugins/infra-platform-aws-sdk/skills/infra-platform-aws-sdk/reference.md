@@ -2,19 +2,19 @@
 
 ## Package Cheat Sheet
 
-| Service          | Client Package                         | Key Commands                                              |
-| ---------------- | -------------------------------------- | --------------------------------------------------------- |
-| S3               | `@aws-sdk/client-s3`                  | `PutObject`, `GetObject`, `DeleteObject`, `ListObjectsV2` |
-| S3 Presigning    | `@aws-sdk/s3-request-presigner`       | `getSignedUrl`                                            |
-| DynamoDB (raw)   | `@aws-sdk/client-dynamodb`            | `GetItem`, `PutItem`, `Query`, `Scan`, `UpdateItem`       |
-| DynamoDB (doc)   | `@aws-sdk/lib-dynamodb`               | `Get`, `Put`, `Query`, `Scan`, `Update`, `Delete`         |
-| SQS              | `@aws-sdk/client-sqs`                 | `SendMessage`, `ReceiveMessage`, `DeleteMessage`           |
-| SNS              | `@aws-sdk/client-sns`                 | `Publish`, `Subscribe`, `CreateTopic`                      |
-| Lambda           | `@aws-sdk/client-lambda`              | `Invoke`, `InvokeAsync`                                    |
-| Secrets Manager  | `@aws-sdk/client-secrets-manager`     | `GetSecretValue`, `CreateSecret`, `UpdateSecret`           |
-| STS              | `@aws-sdk/client-sts`                 | `AssumeRole`, `GetCallerIdentity`                          |
-| Credentials      | `@aws-sdk/credential-providers`       | `fromEnv`, `fromIni`, `fromTemporaryCredentials`           |
-| DynamoDB Utils   | `@aws-sdk/util-dynamodb`              | `marshall`, `unmarshall` (only if using raw client)        |
+| Service         | Client Package                    | Key Commands                                              |
+| --------------- | --------------------------------- | --------------------------------------------------------- |
+| S3              | `@aws-sdk/client-s3`              | `PutObject`, `GetObject`, `DeleteObject`, `ListObjectsV2` |
+| S3 Presigning   | `@aws-sdk/s3-request-presigner`   | `getSignedUrl`                                            |
+| DynamoDB (raw)  | `@aws-sdk/client-dynamodb`        | `GetItem`, `PutItem`, `Query`, `Scan`, `UpdateItem`       |
+| DynamoDB (doc)  | `@aws-sdk/lib-dynamodb`           | `Get`, `Put`, `Query`, `Scan`, `Update`, `Delete`         |
+| SQS             | `@aws-sdk/client-sqs`             | `SendMessage`, `ReceiveMessage`, `DeleteMessage`          |
+| SNS             | `@aws-sdk/client-sns`             | `Publish`, `Subscribe`, `CreateTopic`                     |
+| Lambda          | `@aws-sdk/client-lambda`          | `Invoke`, `InvokeAsync`                                   |
+| Secrets Manager | `@aws-sdk/client-secrets-manager` | `GetSecretValue`, `CreateSecret`, `UpdateSecret`          |
+| STS             | `@aws-sdk/client-sts`             | `AssumeRole`, `GetCallerIdentity`                         |
+| Credentials     | `@aws-sdk/credential-providers`   | `fromEnv`, `fromIni`, `fromTemporaryCredentials`          |
+| DynamoDB Utils  | `@aws-sdk/util-dynamodb`          | `marshall`, `unmarshall` (only if using raw client)       |
 
 ---
 
@@ -22,22 +22,37 @@
 
 ```typescript
 // Client + commands from the same package
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 
 // Exception classes also exported from client package
 import { NoSuchKey, S3ServiceException } from "@aws-sdk/client-s3";
 
 // Types use `import type`
-import type { PutObjectCommandInput, GetObjectCommandOutput } from "@aws-sdk/client-s3";
+import type {
+  PutObjectCommandInput,
+  GetObjectCommandOutput,
+} from "@aws-sdk/client-s3";
 
 // Presigning is a separate package
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // DynamoDB Document Client â€” commands from lib-dynamodb, NOT client-dynamodb
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 // Credential providers
-import { fromIni, fromTemporaryCredentials } from "@aws-sdk/credential-providers";
+import {
+  fromIni,
+  fromTemporaryCredentials,
+} from "@aws-sdk/credential-providers";
 ```
 
 ---
@@ -81,14 +96,15 @@ In Lambda, ECS, and EC2 the default chain resolves automatically via IAM roles â
 
 ```typescript
 const client = new S3Client({
-  region: "us-east-1",                          // Required (or set AWS_REGION env var)
-  credentials: fromIni({ profile: "dev" }),     // Explicit provider (optional)
-  maxAttempts: 5,                               // Retry attempts (default: 3)
-  requestHandler: new NodeHttpHandler({         // Custom HTTP settings
+  region: "us-east-1", // Required (or set AWS_REGION env var)
+  credentials: fromIni({ profile: "dev" }), // Explicit provider (optional)
+  maxAttempts: 5, // Retry attempts (default: 3)
+  requestHandler: new NodeHttpHandler({
+    // Custom HTTP settings
     connectionTimeout: 5_000,
     socketTimeout: 10_000,
   }),
-  logger: console,                              // SDK debug logging
+  logger: console, // SDK debug logging
 });
 ```
 
@@ -96,14 +112,14 @@ const client = new S3Client({
 
 ## DynamoDB Expression Patterns
 
-| Operation            | Expression                                              |
-| -------------------- | ------------------------------------------------------- |
-| Query by PK          | `KeyConditionExpression: "pk = :pk"`                    |
+| Operation            | Expression                                                        |
+| -------------------- | ----------------------------------------------------------------- |
+| Query by PK          | `KeyConditionExpression: "pk = :pk"`                              |
 | Query PK + SK prefix | `KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)"` |
-| Filter results       | `FilterExpression: "status = :status"`                  |
-| Update attribute     | `UpdateExpression: "SET #name = :name"`                 |
-| Increment counter    | `UpdateExpression: "SET viewCount = viewCount + :inc"`  |
-| Remove attribute     | `UpdateExpression: "REMOVE deletedAt"`                  |
-| Conditional write    | `ConditionExpression: "attribute_not_exists(pk)"`       |
+| Filter results       | `FilterExpression: "status = :status"`                            |
+| Update attribute     | `UpdateExpression: "SET #name = :name"`                           |
+| Increment counter    | `UpdateExpression: "SET viewCount = viewCount + :inc"`            |
+| Remove attribute     | `UpdateExpression: "REMOVE deletedAt"`                            |
+| Conditional write    | `ConditionExpression: "attribute_not_exists(pk)"`                 |
 
 **Expression attribute names** (`#name`) are required when the attribute name is a DynamoDB reserved word. **Expression attribute values** (`:value`) are always required in expressions.

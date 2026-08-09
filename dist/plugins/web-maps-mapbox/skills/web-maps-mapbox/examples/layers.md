@@ -158,9 +158,12 @@ map.addLayer({
     "circle-color": [
       "match",
       ["get", "category"],
-      "retail", RETAIL_COLOR,
-      "food", FOOD_COLOR,
-      "office", OFFICE_COLOR,
+      "retail",
+      RETAIL_COLOR,
+      "food",
+      FOOD_COLOR,
+      "office",
+      OFFICE_COLOR,
       DEFAULT_CATEGORY_COLOR, // Fallback for unknown categories
     ],
     "circle-radius": 8,
@@ -186,14 +189,22 @@ map.addLayer({
   source: "stores",
   paint: {
     "circle-radius": [
-      "interpolate", ["linear"], ["get", "revenue"],
-      MIN_REVENUE, MIN_CIRCLE_RADIUS,
-      MAX_REVENUE, MAX_CIRCLE_RADIUS,
+      "interpolate",
+      ["linear"],
+      ["get", "revenue"],
+      MIN_REVENUE,
+      MIN_CIRCLE_RADIUS,
+      MAX_REVENUE,
+      MAX_CIRCLE_RADIUS,
     ],
     "circle-color": [
-      "interpolate", ["linear"], ["get", "revenue"],
-      MIN_REVENUE, LOW_REVENUE_COLOR,
-      MAX_REVENUE, HIGH_REVENUE_COLOR,
+      "interpolate",
+      ["linear"],
+      ["get", "revenue"],
+      MIN_REVENUE,
+      LOW_REVENUE_COLOR,
+      MAX_REVENUE,
+      HIGH_REVENUE_COLOR,
     ],
   },
 });
@@ -238,9 +249,13 @@ map.addLayer({
   source: "stores",
   paint: {
     "circle-radius": [
-      "interpolate", ["linear"], ["zoom"],
-      ZOOM_SMALL, RADIUS_AT_SMALL_ZOOM,
-      ZOOM_LARGE, RADIUS_AT_LARGE_ZOOM,
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      ZOOM_SMALL,
+      RADIUS_AT_SMALL_ZOOM,
+      ZOOM_LARGE,
+      RADIUS_AT_LARGE_ZOOM,
     ],
   },
 });
@@ -278,7 +293,9 @@ map.setFilter("stores-circles", [
 
 // Alternative: "in" for multiple values
 map.setFilter("stores-circles", [
-  "in", ["get", "category"], ["literal", ["retail", "food"]],
+  "in",
+  ["get", "category"],
+  ["literal", ["retail", "food"]],
 ]);
 
 // Clear filter (show all)
@@ -324,16 +341,22 @@ map.addLayer({
   filter: ["has", "point_count"],
   paint: {
     "circle-color": [
-      "step", ["get", "point_count"],
+      "step",
+      ["get", "point_count"],
       SMALL_CLUSTER_COLOR,
-      SMALL_CLUSTER_THRESHOLD, MEDIUM_CLUSTER_COLOR,
-      LARGE_CLUSTER_THRESHOLD, LARGE_CLUSTER_COLOR,
+      SMALL_CLUSTER_THRESHOLD,
+      MEDIUM_CLUSTER_COLOR,
+      LARGE_CLUSTER_THRESHOLD,
+      LARGE_CLUSTER_COLOR,
     ],
     "circle-radius": [
-      "step", ["get", "point_count"],
+      "step",
+      ["get", "point_count"],
       SMALL_CLUSTER_SIZE,
-      SMALL_CLUSTER_THRESHOLD, MEDIUM_CLUSTER_SIZE,
-      LARGE_CLUSTER_THRESHOLD, LARGE_CLUSTER_SIZE,
+      SMALL_CLUSTER_THRESHOLD,
+      MEDIUM_CLUSTER_SIZE,
+      LARGE_CLUSTER_THRESHOLD,
+      LARGE_CLUSTER_SIZE,
     ],
   },
 });
@@ -379,7 +402,10 @@ map.on("click", "clusters", (e) => {
     if (err || zoom === undefined || zoom === null) return;
 
     map.easeTo({
-      center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number],
+      center: (features[0].geometry as GeoJSON.Point).coordinates as [
+        number,
+        number,
+      ],
       zoom,
     });
   });
@@ -479,7 +505,7 @@ function removeLayerAndSource(layerId: string, sourceId: string) {
 
 ```typescript
 // Bad: can't remove source while layers still reference it
-map.removeSource("stores");     // Throws error
+map.removeSource("stores"); // Throws error
 map.removeLayer("stores-fill"); // Too late
 ```
 

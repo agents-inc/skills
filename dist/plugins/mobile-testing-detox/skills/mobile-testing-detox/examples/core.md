@@ -188,8 +188,10 @@ await expect(element(by.id("dark-mode-toggle"))).toHaveToggleValue(true);
 // Slider position
 const EXPECTED_VOLUME = 0.5;
 const SLIDER_TOLERANCE = 0.05;
-await expect(element(by.id("volume")))
-  .toHaveSliderPosition(EXPECTED_VOLUME, SLIDER_TOLERANCE);
+await expect(element(by.id("volume"))).toHaveSliderPosition(
+  EXPECTED_VOLUME,
+  SLIDER_TOLERANCE,
+);
 
 // Focus state
 await expect(element(by.id("search-input"))).toBeFocused();
@@ -460,7 +462,9 @@ describe("Authentication", () => {
 
   describe("Login", () => {
     it("should show error for invalid credentials", async () => {
-      await element(by.id("login-screen.email-input")).typeText("bad@email.com");
+      await element(by.id("login-screen.email-input")).typeText(
+        "bad@email.com",
+      );
       await element(by.id("login-screen.password-input")).typeText("wrong");
       await element(by.id("login-screen.submit-btn")).tap();
 
@@ -468,13 +472,18 @@ describe("Authentication", () => {
         .toBeVisible()
         .withTimeout(LOGIN_TIMEOUT_MS);
 
-      await expect(element(by.id("login-screen.error-message")))
-        .toHaveText("Invalid credentials");
+      await expect(element(by.id("login-screen.error-message"))).toHaveText(
+        "Invalid credentials",
+      );
     });
 
     it("should navigate to home on valid login", async () => {
-      await element(by.id("login-screen.email-input")).typeText("user@example.com");
-      await element(by.id("login-screen.password-input")).typeText("valid-password");
+      await element(by.id("login-screen.email-input")).typeText(
+        "user@example.com",
+      );
+      await element(by.id("login-screen.password-input")).typeText(
+        "valid-password",
+      );
       await element(by.id("login-screen.submit-btn")).tap();
 
       await waitFor(element(by.id("home-screen")))

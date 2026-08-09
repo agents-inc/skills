@@ -34,10 +34,10 @@ Channels allow you to distribute pre-release versions to specific user groups. T
 ### Generated Metadata Files
 
 | Version Suffix | Files Generated (with `generateUpdatesFilesForAllChannels: true`) |
-|----------------|-------------------------------------------------------------------|
-| `2.1.0`        | `latest.yml`, `latest-mac.yml`, `latest-linux.yml`               |
-| `2.1.0-beta`   | Above + `beta.yml`, `beta-mac.yml`, `beta-linux.yml`             |
-| `2.1.0-alpha`  | Above + `alpha.yml`, `alpha-mac.yml`, `alpha-linux.yml`          |
+| -------------- | ----------------------------------------------------------------- |
+| `2.1.0`        | `latest.yml`, `latest-mac.yml`, `latest-linux.yml`                |
+| `2.1.0-beta`   | Above + `beta.yml`, `beta-mac.yml`, `beta-linux.yml`              |
+| `2.1.0-alpha`  | Above + `alpha.yml`, `alpha-mac.yml`, `alpha-linux.yml`           |
 
 ### Channel Inheritance
 
@@ -169,5 +169,5 @@ publish:
   provider: github
   owner: my-org
   repo: my-app
-  channel: beta  # Explicit channel for GitHub
+  channel: beta # Explicit channel for GitHub
 ```

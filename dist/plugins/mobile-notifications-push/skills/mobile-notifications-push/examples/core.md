@@ -19,7 +19,9 @@ import { Platform } from "react-native";
 const DEFAULT_CHANNEL_ID = "default";
 const DEFAULT_CHANNEL_NAME = "Default";
 
-async function registerForPushNotificationsAsync(): Promise<string | undefined> {
+async function registerForPushNotificationsAsync(): Promise<
+  string | undefined
+> {
   // Android channels must be created before any notification is displayed
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
@@ -50,8 +52,8 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
 
   // Retrieve Expo push token with explicit projectId
   const projectId =
-    Constants?.expoConfig?.extra?.eas?.projectId
-    ?? Constants?.easConfig?.projectId;
+    Constants?.expoConfig?.extra?.eas?.projectId ??
+    Constants?.easConfig?.projectId;
 
   if (!projectId) {
     throw new Error("Missing projectId for push token registration");
@@ -149,12 +151,11 @@ interface UseNotificationListenersOptions {
   onTokenRefresh?: (token: string) => void;
 }
 
-export function useNotificationListeners(options: UseNotificationListenersOptions) {
-  const {
-    onNotificationReceived,
-    onNotificationResponse,
-    onTokenRefresh,
-  } = options;
+export function useNotificationListeners(
+  options: UseNotificationListenersOptions,
+) {
+  const { onNotificationReceived, onNotificationResponse, onTokenRefresh } =
+    options;
 
   // Use refs to avoid re-subscribing when callbacks change
   const receivedRef = useRef(onNotificationReceived);
@@ -172,14 +173,14 @@ export function useNotificationListeners(options: UseNotificationListenersOption
     const receivedSub = Notifications.addNotificationReceivedListener(
       (notification) => {
         receivedRef.current?.(notification);
-      }
+      },
     );
 
     // Tap/Response: user interacts with a notification
     const responseSub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         responseRef.current?.(response);
-      }
+      },
     );
 
     // Token refresh: push token changed (rare but important)
@@ -229,7 +230,7 @@ import * as Notifications from "expo-notifications";
 const DEFAULT_ACTION = Notifications.DEFAULT_ACTION_IDENTIFIER;
 
 export function useNotificationNavigation(
-  navigate: (screen: string, params?: Record<string, unknown>) => void
+  navigate: (screen: string, params?: Record<string, unknown>) => void,
 ) {
   const lastResponse = Notifications.useLastNotificationResponse();
 
@@ -258,7 +259,7 @@ import { useEffect } from "react";
 import messaging from "@react-native-firebase/messaging";
 
 export function useFirebaseNotificationNavigation(
-  navigate: (screen: string, params?: Record<string, unknown>) => void
+  navigate: (screen: string, params?: Record<string, unknown>) => void,
 ) {
   useEffect(() => {
     // Cold launch: app was killed, user tapped notification to open it
@@ -268,7 +269,7 @@ export function useFirebaseNotificationNavigation(
         if (remoteMessage?.data?.screen) {
           navigate(
             remoteMessage.data.screen as string,
-            remoteMessage.data as Record<string, unknown>
+            remoteMessage.data as Record<string, unknown>,
           );
         }
       });
@@ -278,7 +279,7 @@ export function useFirebaseNotificationNavigation(
       if (remoteMessage?.data?.screen) {
         navigate(
           remoteMessage.data.screen as string,
-          remoteMessage.data as Record<string, unknown>
+          remoteMessage.data as Record<string, unknown>,
         );
       }
     });
@@ -343,7 +344,7 @@ import messaging from "@react-native-firebase/messaging";
 import type { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 
 export function useFirebaseForegroundMessages(
-  onMessage: (message: FirebaseMessagingTypes.RemoteMessage) => void
+  onMessage: (message: FirebaseMessagingTypes.RemoteMessage) => void,
 ) {
   useEffect(() => {
     const unsubscribe = messaging().onMessage(async (remoteMessage) => {
@@ -371,7 +372,10 @@ Push tokens must be sent to your backend and kept up to date. Tokens can change 
 import { useEffect, useCallback } from "react";
 import * as Notifications from "expo-notifications";
 
-async function syncTokenWithBackend(token: string, userId: string): Promise<void> {
+async function syncTokenWithBackend(
+  token: string,
+  userId: string,
+): Promise<void> {
   await fetch("https://your-api.example.com/push-tokens", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -384,7 +388,7 @@ export function usePushTokenSync(userId: string) {
     async (token: string) => {
       await syncTokenWithBackend(token, userId);
     },
-    [userId]
+    [userId],
   );
 
   useEffect(() => {

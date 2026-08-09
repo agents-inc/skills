@@ -222,11 +222,11 @@ function DraggableInScrollView() {
 
 **Key differences from composition:**
 
-| Same component         | Different components               |
-|------------------------|------------------------------------|
-| `Gesture.Simultaneous(a, b)` | `a.simultaneousWith(b)`   |
-| `Gesture.Race(a, b)`  | `a.requireExternalGestureToFail(b)`|
-| `Gesture.Exclusive(a, b)` | `a.blocksExternalGesture(b)` |
+| Same component               | Different components                |
+| ---------------------------- | ----------------------------------- |
+| `Gesture.Simultaneous(a, b)` | `a.simultaneousWith(b)`             |
+| `Gesture.Race(a, b)`         | `a.requireExternalGestureToFail(b)` |
+| `Gesture.Exclusive(a, b)`    | `a.blocksExternalGesture(b)`        |
 
 **Why this distinction matters:** Composition methods create a single composed gesture for one `GestureDetector`. Cross-component relations connect gestures on separate `GestureDetector` components in the view hierarchy.
 

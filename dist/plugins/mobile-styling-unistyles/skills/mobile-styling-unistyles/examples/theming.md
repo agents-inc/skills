@@ -104,7 +104,7 @@ StyleSheet.configure({
     dark: darkTheme,
   },
   breakpoints: {
-    xs: 0,    // Required: at least one must be 0
+    xs: 0, // Required: at least one must be 0
     sm: 576,
     md: 768,
     lg: 992,
@@ -126,11 +126,11 @@ import "expo-router/entry";
 
 ### Settings Options
 
-| Setting | Type | Description |
-|---------|------|-------------|
-| `initialTheme` | string or `() => string` | Sets the first theme. Function must be synchronous. |
-| `adaptiveThemes` | boolean | Auto-switch theme based on device color scheme |
-| `CSSVars` | boolean | Enable CSS variables on web (default: true) |
+| Setting                 | Type                     | Description                                                    |
+| ----------------------- | ------------------------ | -------------------------------------------------------------- |
+| `initialTheme`          | string or `() => string` | Sets the first theme. Function must be synchronous.            |
+| `adaptiveThemes`        | boolean                  | Auto-switch theme based on device color scheme                 |
+| `CSSVars`               | boolean                  | Enable CSS variables on web (default: true)                    |
 | `nativeBreakpointsMode` | `"pixels"` or `"points"` | How breakpoints are calculated on native (default: `"pixels"`) |
 
 **Mutually exclusive:** `initialTheme` and `adaptiveThemes` cannot both be set -- Unistyles throws an error.
@@ -268,11 +268,11 @@ function CameraScreen() {
 
 ### ScopedTheme Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `name` | string | Force a specific theme by name |
+| Prop               | Type    | Description                                |
+| ------------------ | ------- | ------------------------------------------ |
+| `name`             | string  | Force a specific theme by name             |
 | `invertedAdaptive` | boolean | Use the opposite of current adaptive theme |
-| `reset` | boolean | Reset to parent/global theme |
+| `reset`            | boolean | Reset to parent/global theme               |
 
 ### Gotchas
 

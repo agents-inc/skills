@@ -53,12 +53,20 @@ const typeDefs = `#graphql
 
 const resolvers = {
   Query: {
-    posts: async (_parent: undefined, _args: Record<string, never>, ctx: MyContext) => {
+    posts: async (
+      _parent: undefined,
+      _args: Record<string, never>,
+      ctx: MyContext,
+    ) => {
       return ctx.dataSources.postsAPI.getAll();
     },
   },
   Mutation: {
-    createPost: async (_parent: undefined, args: { title: string; content: string }, ctx: MyContext) => {
+    createPost: async (
+      _parent: undefined,
+      args: { title: string; content: string },
+      ctx: MyContext,
+    ) => {
       const post = await ctx.dataSources.postsAPI.create(args);
 
       // Publish event to subscribers
@@ -223,7 +231,11 @@ function requestLoggingPlugin(): ApolloServerPlugin<MyContext> {
         // Log all encountered errors
         async didEncounterErrors(ctx) {
           for (const err of ctx.errors) {
-            console.error(`Error in ${operationName}:`, err.message, err.extensions);
+            console.error(
+              `Error in ${operationName}:`,
+              err.message,
+              err.extensions,
+            );
           }
         },
 
@@ -255,7 +267,9 @@ import { GraphQLError } from "graphql";
 
 const MAX_QUERY_DEPTH = 10;
 
-function depthLimitPlugin(maxDepth = MAX_QUERY_DEPTH): ApolloServerPlugin<MyContext> {
+function depthLimitPlugin(
+  maxDepth = MAX_QUERY_DEPTH,
+): ApolloServerPlugin<MyContext> {
   return {
     async requestDidStart() {
       return {
@@ -264,9 +278,12 @@ function depthLimitPlugin(maxDepth = MAX_QUERY_DEPTH): ApolloServerPlugin<MyCont
           const depth = calculateQueryDepth(document);
 
           if (depth > maxDepth) {
-            throw new GraphQLError(`Query depth ${depth} exceeds maximum of ${maxDepth}`, {
-              extensions: { code: "QUERY_TOO_DEEP", depth, maxDepth },
-            });
+            throw new GraphQLError(
+              `Query depth ${depth} exceeds maximum of ${maxDepth}`,
+              {
+                extensions: { code: "QUERY_TOO_DEEP", depth, maxDepth },
+              },
+            );
           }
         },
       };
@@ -331,7 +348,10 @@ import gql from "graphql-tag";
 // Federation 2 schema with @link directive
 const typeDefs = gql`
   extend schema
-    @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires"])
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.0"
+      import: ["@key", "@external", "@requires"]
+    )
 
   type Product @key(fields: "id") {
     id: ID!
@@ -348,10 +368,18 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    products: async (_parent: undefined, _args: Record<string, never>, ctx: MyContext) => {
+    products: async (
+      _parent: undefined,
+      _args: Record<string, never>,
+      ctx: MyContext,
+    ) => {
       return ctx.dataSources.productsAPI.getAll();
     },
-    product: async (_parent: undefined, args: { id: string }, ctx: MyContext) => {
+    product: async (
+      _parent: undefined,
+      args: { id: string },
+      ctx: MyContext,
+    ) => {
       return ctx.dataSources.productsAPI.getById(args.id);
     },
   },
@@ -376,7 +404,10 @@ const server = new ApolloServer({
 // Reviews subgraph extends Product from Products subgraph
 const typeDefs = gql`
   extend schema
-    @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external"])
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.0"
+      import: ["@key", "@external"]
+    )
 
   type Review {
     id: ID!
@@ -398,7 +429,11 @@ const typeDefs = gql`
 
 const resolvers = {
   Product: {
-    reviews: async (parent: { id: string }, _args: Record<string, never>, ctx: MyContext) => {
+    reviews: async (
+      parent: { id: string },
+      _args: Record<string, never>,
+      ctx: MyContext,
+    ) => {
       return ctx.dataSources.reviewsAPI.getByProductId(parent.id);
     },
   },
@@ -427,7 +462,11 @@ const AUTH_DIRECTIVE_NAME = "auth";
 function authDirectiveTransformer(schema: GraphQLSchema): GraphQLSchema {
   return mapSchema(schema, {
     [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-      const authDirective = getDirective(schema, fieldConfig, AUTH_DIRECTIVE_NAME)?.[0];
+      const authDirective = getDirective(
+        schema,
+        fieldConfig,
+        AUTH_DIRECTIVE_NAME,
+      )?.[0];
 
       if (authDirective) {
         const { requires: requiredRole } = authDirective;

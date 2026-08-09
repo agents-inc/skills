@@ -160,13 +160,13 @@ export default function Root({ children }: PropsWithChildren) {
 
 ## Static vs Server Output
 
-| Feature | `"static"` | `"server"` |
-|---------|-----------|-----------|
-| Output | Individual `.html` files | Server bundle + client bundle |
-| Dynamic routes | Requires `generateStaticParams` | Rendered on request |
-| API routes (`+api.ts`) | Not available | Available |
-| Deployment | Any static host (Netlify, Vercel, S3) | Requires server (EAS Hosting, Node.js) |
-| SEO | Excellent (pre-rendered HTML) | Good (SSR on request) |
-| React Server Components | No | Yes (experimental) |
+| Feature                 | `"static"`                            | `"server"`                             |
+| ----------------------- | ------------------------------------- | -------------------------------------- |
+| Output                  | Individual `.html` files              | Server bundle + client bundle          |
+| Dynamic routes          | Requires `generateStaticParams`       | Rendered on request                    |
+| API routes (`+api.ts`)  | Not available                         | Available                              |
+| Deployment              | Any static host (Netlify, Vercel, S3) | Requires server (EAS Hosting, Node.js) |
+| SEO                     | Excellent (pre-rendered HTML)         | Good (SSR on request)                  |
+| React Server Components | No                                    | Yes (experimental)                     |
 
 Choose `"static"` for content sites, marketing pages, and blogs. Choose `"server"` when you need API routes, dynamic server-rendered pages, or React Server Components.

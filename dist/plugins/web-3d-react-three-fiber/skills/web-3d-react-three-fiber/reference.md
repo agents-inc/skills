@@ -6,20 +6,20 @@
 
 ## Canvas Props Reference
 
-| Prop | Type | Default | Purpose |
-|------|------|---------|---------|
-| `camera` | `CameraProps \| THREE.Camera` | `{ fov: 75, near: 0.1, far: 1000, position: [0, 0, 5] }` | Camera configuration |
-| `gl` | `RendererProps \| (canvas) => Renderer` | `{}` | WebGL renderer config |
-| `shadows` | `boolean \| "basic" \| "percentage" \| "soft" \| "variance"` | `false` | Shadow map type |
-| `frameloop` | `"always" \| "demand" \| "never"` | `"always"` | Render loop mode |
-| `dpr` | `number \| [min, max]` | `[1, 2]` | Device pixel ratio |
-| `orthographic` | `boolean` | `false` | Use orthographic camera |
-| `flat` | `boolean` | `false` | Disable tone mapping |
-| `linear` | `boolean` | `false` | Disable sRGB color space |
-| `scene` | `SceneProps \| THREE.Scene` | `{}` | Scene configuration |
-| `raycaster` | `RaycasterProps` | `{}` | Raycaster configuration |
-| `onCreated` | `(state) => void` | - | Fires when Canvas mounts |
-| `onPointerMissed` | `(event) => void` | - | Click missed all meshes |
+| Prop              | Type                                                         | Default                                                  | Purpose                  |
+| ----------------- | ------------------------------------------------------------ | -------------------------------------------------------- | ------------------------ |
+| `camera`          | `CameraProps \| THREE.Camera`                                | `{ fov: 75, near: 0.1, far: 1000, position: [0, 0, 5] }` | Camera configuration     |
+| `gl`              | `RendererProps \| (canvas) => Renderer`                      | `{}`                                                     | WebGL renderer config    |
+| `shadows`         | `boolean \| "basic" \| "percentage" \| "soft" \| "variance"` | `false`                                                  | Shadow map type          |
+| `frameloop`       | `"always" \| "demand" \| "never"`                            | `"always"`                                               | Render loop mode         |
+| `dpr`             | `number \| [min, max]`                                       | `[1, 2]`                                                 | Device pixel ratio       |
+| `orthographic`    | `boolean`                                                    | `false`                                                  | Use orthographic camera  |
+| `flat`            | `boolean`                                                    | `false`                                                  | Disable tone mapping     |
+| `linear`          | `boolean`                                                    | `false`                                                  | Disable sRGB color space |
+| `scene`           | `SceneProps \| THREE.Scene`                                  | `{}`                                                     | Scene configuration      |
+| `raycaster`       | `RaycasterProps`                                             | `{}`                                                     | Raycaster configuration  |
+| `onCreated`       | `(state) => void`                                            | -                                                        | Fires when Canvas mounts |
+| `onPointerMissed` | `(event) => void`                                            | -                                                        | Click missed all meshes  |
 
 ---
 
@@ -84,19 +84,19 @@ const { nodes, materials } = useGraph(object: THREE.Object3D): {
 ```typescript
 interface ThreeEvent<T extends Event> extends T {
   // Three.js intersection data
-  object: THREE.Object3D;          // Actually hit mesh
-  eventObject: THREE.Object3D;     // Mesh with the handler
-  point: THREE.Vector3;            // World-space hit point
-  distance: number;                // Distance from camera
-  face: THREE.Face | null;         // Hit triangle
-  ray: THREE.Ray;                  // Raycaster ray
-  camera: THREE.Camera;            // Active camera
+  object: THREE.Object3D; // Actually hit mesh
+  eventObject: THREE.Object3D; // Mesh with the handler
+  point: THREE.Vector3; // World-space hit point
+  distance: number; // Distance from camera
+  face: THREE.Face | null; // Hit triangle
+  ray: THREE.Ray; // Raycaster ray
+  camera: THREE.Camera; // Active camera
   unprojectedPoint: THREE.Vector3; // Camera-unprojected point
   intersections: THREE.Intersection[]; // All hits (nearest first)
-  delta: number;                   // mousedown-to-mouseup px distance
+  delta: number; // mousedown-to-mouseup px distance
 
   // Methods
-  stopPropagation(): void;         // Stop bubble + occluded delivery
+  stopPropagation(): void; // Stop bubble + occluded delivery
 }
 ```
 
@@ -104,12 +104,12 @@ interface ThreeEvent<T extends Event> extends T {
 
 ## Ecosystem Packages
 
-| Package | Import | Purpose |
-|---------|--------|---------|
-| `@react-three/fiber` | `Canvas, useFrame, useThree, useLoader` | Core renderer |
-| `@react-three/drei` | `OrbitControls, Environment, useGLTF, Text, Html, Float, Detailed, ContactShadows, PerformanceMonitor, Instances, Instance, AdaptiveDpr` | Helpers and abstractions |
-| `@react-three/rapier` | `Physics, RigidBody, CuboidCollider, BallCollider, MeshCollider, InstancedRigidBodies, useRapier` | Rapier WASM physics |
-| `@react-three/postprocessing` | `EffectComposer, Bloom, Vignette, DepthOfField, SSAO, ChromaticAberration` | Post-processing effects |
+| Package                       | Import                                                                                                                                   | Purpose                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `@react-three/fiber`          | `Canvas, useFrame, useThree, useLoader`                                                                                                  | Core renderer            |
+| `@react-three/drei`           | `OrbitControls, Environment, useGLTF, Text, Html, Float, Detailed, ContactShadows, PerformanceMonitor, Instances, Instance, AdaptiveDpr` | Helpers and abstractions |
+| `@react-three/rapier`         | `Physics, RigidBody, CuboidCollider, BallCollider, MeshCollider, InstancedRigidBodies, useRapier`                                        | Rapier WASM physics      |
+| `@react-three/postprocessing` | `EffectComposer, Bloom, Vignette, DepthOfField, SSAO, ChromaticAberration`                                                               | Post-processing effects  |
 
 ---
 
@@ -117,8 +117,13 @@ interface ThreeEvent<T extends Event> extends T {
 
 ```tsx
 import {
-  EffectComposer, Bloom, Vignette, DepthOfField,
-  ChromaticAberration, SSAO, ToneMapping,
+  EffectComposer,
+  Bloom,
+  Vignette,
+  DepthOfField,
+  ChromaticAberration,
+  SSAO,
+  ToneMapping,
 } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 
@@ -127,9 +132,12 @@ import { BlendFunction } from "postprocessing";
   <Vignette darkness={0.5} offset={0.5} />
   <DepthOfField focusDistance={0.01} focalLength={0.02} bokehScale={3} />
   <SSAO radius={0.1} intensity={30} />
-  <ChromaticAberration offset={[0.002, 0.002]} blendFunction={BlendFunction.NORMAL} />
+  <ChromaticAberration
+    offset={[0.002, 0.002]}
+    blendFunction={BlendFunction.NORMAL}
+  />
   <ToneMapping />
-</EffectComposer>
+</EffectComposer>;
 ```
 
 **Performance note:** EffectComposer merges compatible effects into a single render pass automatically. Adding effects has less overhead than using separate passes.
@@ -138,18 +146,18 @@ import { BlendFunction } from "postprocessing";
 
 ## Anti-Pattern Checklist
 
-| Anti-Pattern | Fix |
-|-------------|-----|
-| `setState` inside `useFrame` | Mutate refs directly |
-| `new THREE.Vector3()` inside `useFrame` | `useMemo(() => new THREE.Vector3(), [])` |
-| Missing `<Suspense>` around `useLoader`/`useGLTF` | Wrap in `<Suspense fallback={...}>` |
-| Individual meshes for repeated objects | `<instancedMesh>` or drei `<Instances>` |
-| Missing `stopPropagation()` on click events | Always call `e.stopPropagation()` |
-| `frameloop="always"` for static scenes | `frameloop="demand"` + `invalidate()` |
-| Unbounded `dpr` on HiDPI displays | `dpr={[1, 2]}` to clamp |
-| Using `useThree()` without selector | `useThree((s) => s.camera)` to avoid all-state re-renders |
+| Anti-Pattern                                               | Fix                                                       |
+| ---------------------------------------------------------- | --------------------------------------------------------- |
+| `setState` inside `useFrame`                               | Mutate refs directly                                      |
+| `new THREE.Vector3()` inside `useFrame`                    | `useMemo(() => new THREE.Vector3(), [])`                  |
+| Missing `<Suspense>` around `useLoader`/`useGLTF`          | Wrap in `<Suspense fallback={...}>`                       |
+| Individual meshes for repeated objects                     | `<instancedMesh>` or drei `<Instances>`                   |
+| Missing `stopPropagation()` on click events                | Always call `e.stopPropagation()`                         |
+| `frameloop="always"` for static scenes                     | `frameloop="demand"` + `invalidate()`                     |
+| Unbounded `dpr` on HiDPI displays                          | `dpr={[1, 2]}` to clamp                                   |
+| Using `useThree()` without selector                        | `useThree((s) => s.camera)` to avoid all-state re-renders |
 | Declarative `<boxGeometry>` for repeated identical objects | Share via `useMemo(() => new THREE.BoxGeometry(...), [])` |
-| `<Physics>` without `<Suspense>` | Rapier loads WASM async -- wrap in Suspense |
+| `<Physics>` without `<Suspense>`                           | Rapier loads WASM async -- wrap in Suspense               |
 
 ---
 
@@ -157,18 +165,18 @@ import { BlendFunction } from "postprocessing";
 
 Every Three.js class maps to a camelCase JSX element:
 
-| Three.js | JSX |
-|----------|-----|
-| `new THREE.Mesh()` | `<mesh>` |
-| `new THREE.BoxGeometry(1, 1, 1)` | `<boxGeometry args={[1, 1, 1]}>` |
-| `new THREE.MeshStandardMaterial({ color: "red" })` | `<meshStandardMaterial color="red">` |
-| `new THREE.Group()` | `<group>` |
-| `new THREE.AmbientLight(0xffffff, 0.5)` | `<ambientLight intensity={0.5}>` |
-| `new THREE.DirectionalLight()` | `<directionalLight>` |
-| `new THREE.PointLight()` | `<pointLight>` |
-| `new THREE.SpotLight()` | `<spotLight>` |
-| `new THREE.PerspectiveCamera()` | `<perspectiveCamera>` |
-| `new THREE.InstancedMesh(geo, mat, count)` | `<instancedMesh args={[geo, mat, count]}>` |
+| Three.js                                           | JSX                                        |
+| -------------------------------------------------- | ------------------------------------------ |
+| `new THREE.Mesh()`                                 | `<mesh>`                                   |
+| `new THREE.BoxGeometry(1, 1, 1)`                   | `<boxGeometry args={[1, 1, 1]}>`           |
+| `new THREE.MeshStandardMaterial({ color: "red" })` | `<meshStandardMaterial color="red">`       |
+| `new THREE.Group()`                                | `<group>`                                  |
+| `new THREE.AmbientLight(0xffffff, 0.5)`            | `<ambientLight intensity={0.5}>`           |
+| `new THREE.DirectionalLight()`                     | `<directionalLight>`                       |
+| `new THREE.PointLight()`                           | `<pointLight>`                             |
+| `new THREE.SpotLight()`                            | `<spotLight>`                              |
+| `new THREE.PerspectiveCamera()`                    | `<perspectiveCamera>`                      |
+| `new THREE.InstancedMesh(geo, mat, count)`         | `<instancedMesh args={[geo, mat, count]}>` |
 
 **Constructor args:** Use the `args` prop as an array matching the constructor signature.
 
@@ -178,10 +186,10 @@ Every Three.js class maps to a camelCase JSX element:
 
 ## Collider Types (Rapier)
 
-| Type | Shape | Performance | Use When |
-|------|-------|------------|----------|
-| `"cuboid"` | Axis-aligned box | Fastest | Boxes, floors, walls |
-| `"ball"` | Sphere | Fast | Balls, particles |
-| `"hull"` | Convex envelope | Medium | Convex shapes, vehicles |
-| `"trimesh"` | Triangle mesh | Slowest | Concave, complex shapes |
-| `false` | None (manual) | - | Custom collider setup |
+| Type        | Shape            | Performance | Use When                |
+| ----------- | ---------------- | ----------- | ----------------------- |
+| `"cuboid"`  | Axis-aligned box | Fastest     | Boxes, floors, walls    |
+| `"ball"`    | Sphere           | Fast        | Balls, particles        |
+| `"hull"`    | Convex envelope  | Medium      | Convex shapes, vehicles |
+| `"trimesh"` | Triangle mesh    | Slowest     | Concave, complex shapes |
+| `false`     | None (manual)    | -           | Custom collider setup   |

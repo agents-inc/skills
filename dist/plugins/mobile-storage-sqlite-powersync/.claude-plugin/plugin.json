@@ -1,6 +1,6 @@
 {
   "name": "mobile-storage-sqlite-powersync",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "PowerSync offline-first sync engine on SQLite for React Native - schema definition, watched queries, CRUD operations, backend connectors, sync rules, conflict resolution, attachments",
   "author": {

@@ -46,7 +46,10 @@ class MoviesAPI extends RESTDataSource {
   }
 
   // GET with query params
-  async getMovies(page = 1, pageSize = DEFAULT_PAGE_SIZE): Promise<MoviesResponse> {
+  async getMovies(
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Promise<MoviesResponse> {
     return this.get<MoviesResponse>("movies", {
       params: {
         page: page.toString(),
@@ -61,7 +64,10 @@ class MoviesAPI extends RESTDataSource {
   }
 
   // POST with JSON body
-  async createMovie(input: { title: string; releaseYear: number }): Promise<Movie> {
+  async createMovie(input: {
+    title: string;
+    releaseYear: number;
+  }): Promise<Movie> {
     return this.post<Movie>("movies", {
       body: input,
     });
@@ -133,15 +139,22 @@ class CatalogAPI extends RESTDataSource {
   // Override cache key (default is method + URL)
   override cacheKeyFor(url: URL, request: RequestInit) {
     // Include auth header in cache key so different users get different results
-    const auth = (request.headers as Record<string, string>)?.authorization ?? "anonymous";
+    const auth =
+      (request.headers as Record<string, string>)?.authorization ?? "anonymous";
     return `${request.method}:${url.toString()}:${auth}`;
   }
 
   // Control request deduplication behavior
-  override requestDeduplicationPolicyFor(url: URL, request: RequestInit): RequestDeduplicationPolicy {
+  override requestDeduplicationPolicyFor(
+    url: URL,
+    request: RequestInit,
+  ): RequestDeduplicationPolicy {
     if (request.method === "GET") {
       // Default: deduplicate concurrent GET requests
-      return { policy: "deduplicate-during-request-lifetime", deduplicationKey: url.toString() };
+      return {
+        policy: "deduplicate-during-request-lifetime",
+        deduplicationKey: url.toString(),
+      };
     }
     // Don't deduplicate mutations
     return { policy: "do-not-deduplicate" };
@@ -203,13 +216,21 @@ const { url } = await startStandaloneServer(server, {
 // In resolvers: use loader instead of direct calls
 const resolvers = {
   Post: {
-    author: async (parent: Post, _args: Record<string, never>, contextValue: MyContext) => {
+    author: async (
+      parent: Post,
+      _args: Record<string, never>,
+      contextValue: MyContext,
+    ) => {
       // If 50 posts reference 10 unique authors, this makes 1 batch call, not 50
       return contextValue.loaders.userLoader.load(parent.authorId);
     },
   },
   Author: {
-    posts: async (parent: Author, _args: Record<string, never>, contextValue: MyContext) => {
+    posts: async (
+      parent: Author,
+      _args: Record<string, never>,
+      contextValue: MyContext,
+    ) => {
       return contextValue.loaders.postLoader.load(parent.id);
     },
   },
@@ -254,7 +275,9 @@ class UsersAPI extends RESTDataSource {
       params: { ids: [...ids].join(",") },
     });
     const userMap = new Map(users.map((u) => [u.id, u]));
-    return ids.map((id) => userMap.get(id) ?? new Error(`User ${id} not found`));
+    return ids.map(
+      (id) => userMap.get(id) ?? new Error(`User ${id} not found`),
+    );
   });
 
   // Public API uses DataLoader internally
@@ -296,12 +319,17 @@ class BooksDataSource {
   }
 
   async getById(id: string): Promise<Book | null> {
-    const [book] = await this.db.query<Book>("SELECT * FROM books WHERE id = $1", [id]);
+    const [book] = await this.db.query<Book>(
+      "SELECT * FROM books WHERE id = $1",
+      [id],
+    );
     return book ?? null;
   }
 
   async getByAuthorId(authorId: string): Promise<Book[]> {
-    return this.db.query<Book>("SELECT * FROM books WHERE author_id = $1", [authorId]);
+    return this.db.query<Book>("SELECT * FROM books WHERE author_id = $1", [
+      authorId,
+    ]);
   }
 
   async create(input: { title: string; authorId: string }): Promise<Book> {

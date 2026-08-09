@@ -82,6 +82,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="optional-password"
 ```
 
 **Key points:**
+
 - Signature validation is mandatory and cannot be disabled
 - Losing the private key means you cannot ship updates to existing users
 - The public key goes in `tauri.conf.json`, the private key stays in CI/CD secrets
@@ -98,9 +99,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="optional-password"
 {
   "plugins": {
     "deep-link": {
-      "mobile": [
-        { "scheme": ["myapp"], "appLink": false }
-      ],
+      "mobile": [{ "scheme": ["myapp"], "appLink": false }],
       "desktop": {
         "schemes": ["myapp"]
       }
@@ -146,6 +145,7 @@ app.deep_link().register("myapp")?;
 ```
 
 **Key points:**
+
 - On desktop, deep links arrive as command-line arguments -- combine with single-instance plugin for handling when the app is already running
 - On mobile, `appLink: true` requires server-side verification files (`.well-known/assetlinks.json` for Android, `.well-known/apple-app-site-association` for iOS)
 - `appLink: false` uses custom URI schemes (`myapp://`) without server verification
@@ -186,6 +186,7 @@ await disable();
 ```
 
 **Key points:**
+
 - Desktop-only -- guard with `#[cfg(desktop)]`
 - `MacosLauncher::LaunchAgent` is the recommended macOS method
 - Optional args are passed to the app when it auto-starts (useful for `--minimized` flag)
@@ -219,6 +220,7 @@ tauri::Builder::default()
 ```
 
 **Key points:**
+
 - Desktop-only
 - When a second instance starts, the callback fires in the FIRST instance and the second instance exits
 - The `argv` parameter contains command-line arguments from the second instance (useful for deep links on desktop)
@@ -243,11 +245,13 @@ tauri::Builder::default()
 ```
 
 **That is it.** The plugin automatically:
+
 - Saves window position, size, and maximized state on close
 - Restores saved state on next launch
 - No JavaScript API needed
 
 **Key points:**
+
 - Zero-config persistence of window geometry
 - Data persists in the app's data directory
 - Works automatically for all windows
@@ -306,6 +310,7 @@ app.global_shortcut().register(shortcut)?;
 ```
 
 **Key points:**
+
 - Desktop-only -- guard with `#[cfg(desktop)]`
 - `CommandOrControl` maps to `Cmd` on macOS and `Ctrl` on Windows/Linux
 - Registering a shortcut already bound system-wide may silently fail or override the system binding (OS-dependent)

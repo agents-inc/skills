@@ -54,9 +54,9 @@ appId: com.example.app
 ---
 - clearState
 - launchApp:
-    clearKeychain: true  # iOS only - clears stored credentials
-    clearState: true     # Clears app data (alternative to separate clearState command)
-    stopApp: true        # Force-stops the app before launching
+    clearKeychain: true # iOS only - clears stored credentials
+    clearState: true # Clears app data (alternative to separate clearState command)
+    stopApp: true # Force-stops the app before launching
 
 # Or with permissions
 - launchApp:
@@ -111,7 +111,7 @@ Select nth matching element when multiple matches exist.
 # Tap the second "Delete" button on screen
 - tapOn:
     text: "Delete"
-    index: 1  # 0-based index
+    index: 1 # 0-based index
 ```
 
 ### Point Selector (Last Resort)
@@ -120,10 +120,10 @@ Tap absolute coordinates. Fragile -- breaks on different screen sizes.
 
 ```yaml
 - tapOn:
-    point: "50%,80%"  # Percentage-based (more portable)
+    point: "50%,80%" # Percentage-based (more portable)
 
 - tapOn:
-    point: "200,450"  # Absolute pixels (fragile)
+    point: "200,450" # Absolute pixels (fragile)
 ```
 
 ### Relational Selectors

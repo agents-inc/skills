@@ -36,10 +36,7 @@ pub fn run() {
   "identifier": "main-capability",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "fs:default"
-  ]
+  "permissions": ["core:default", "fs:default"]
 }
 ```
 
@@ -154,6 +151,7 @@ pub fn run() {
 ```
 
 **Key points:**
+
 - Plugin registration order does not matter
 - Cross-platform plugins register directly on the Builder
 - Desktop-only plugins register inside `setup()` with `#[cfg(desktop)]` guard
@@ -204,6 +202,7 @@ pub fn run() {
 ```
 
 **Key points:**
+
 - Use `:default` permission sets for safe defaults
 - Add granular `allow-*` permissions for specific operations
 - Scope filesystem and HTTP permissions to specific paths/URLs

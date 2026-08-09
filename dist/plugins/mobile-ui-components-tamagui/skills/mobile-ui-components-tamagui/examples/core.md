@@ -127,7 +127,7 @@ export const Button = StyledButton.styleable<{ loading?: boolean }>(
         {loading ? <Spinner /> : children}
       </StyledButton>
     );
-  }
+  },
 );
 
 // Further composition still works
@@ -156,7 +156,7 @@ export const NativeButton = styled(View, {
 // Runtime override
 <Card render="article">
   <SizableText>Semantic article card</SizableText>
-</Card>
+</Card>;
 ```
 
 **Why good:** string `render` prop is compiler-optimized (unlike function render), produces semantic HTML for accessibility, no deoptimization penalty
@@ -229,12 +229,12 @@ export const tokens = createTokens({
 // In JSX -- $ prefix resolves from tokens/theme
 <YStack padding="$4" gap="$2" backgroundColor="$background">
   <SizableText size="$5">Token-driven layout</SizableText>
-</YStack>
+</YStack>;
 
 // Programmatic access
 import { getTokens } from "@tamagui/core";
-const size4 = getTokens().size[4].val;        // 16
-const sizeVar = getTokens().size[4].variable;  // "--size-4" (CSS variable)
+const size4 = getTokens().size[4].val; // 16
+const sizeVar = getTokens().size[4].variable; // "--size-4" (CSS variable)
 ```
 
 ---
@@ -411,7 +411,7 @@ const MyCard = styled(View, {
   borderRadius: "$3",
 });
 
-<MyCard elevated />
+<MyCard elevated />;
 
 // AFTER compilation (web output)
 // MyCard → <div class="bg-[var(--background)] p-4 rounded-3" />

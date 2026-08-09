@@ -87,12 +87,12 @@ React Three Fiber is a React reconciler for Three.js -- every Three.js object be
 
 **The R3F ecosystem:**
 
-| Package | Purpose |
-|---------|---------|
-| `@react-three/fiber` | Core renderer -- Canvas, hooks, reconciler |
-| `@react-three/drei` | Helpers -- controls, loaders, abstractions, text, HTML overlays |
-| `@react-three/rapier` | Physics -- rigid bodies, colliders, collision events |
-| `@react-three/postprocessing` | Effects -- bloom, DOF, SSAO, vignette |
+| Package                       | Purpose                                                         |
+| ----------------------------- | --------------------------------------------------------------- |
+| `@react-three/fiber`          | Core renderer -- Canvas, hooks, reconciler                      |
+| `@react-three/drei`           | Helpers -- controls, loaders, abstractions, text, HTML overlays |
+| `@react-three/rapier`         | Physics -- rigid bodies, colliders, collision events            |
+| `@react-three/postprocessing` | Effects -- bloom, DOF, SSAO, vignette                           |
 
 </philosophy>
 
@@ -115,7 +115,12 @@ const CAMERA_POSITION: [number, number, number] = [0, 2, 5];
 export function Scene() {
   return (
     <Canvas
-      camera={{ fov: CAMERA_FOV, position: CAMERA_POSITION, near: 0.1, far: 100 }}
+      camera={{
+        fov: CAMERA_FOV,
+        position: CAMERA_POSITION,
+        near: 0.1,
+        far: 100,
+      }}
       shadows
       dpr={[1, 2]}
       frameloop="always"
@@ -346,7 +351,7 @@ const VIGNETTE_DARKNESS = 0.5;
     luminanceThreshold={BLOOM_LUMINANCE_THRESHOLD}
   />
   <Vignette darkness={VIGNETTE_DARKNESS} />
-</EffectComposer>
+</EffectComposer>;
 ```
 
 See [reference.md](reference.md) for common effect combinations and performance considerations.
@@ -407,7 +412,10 @@ import { useMemo } from "react";
 
 export function SharedGeometryScene() {
   const sharedGeo = useMemo(() => new THREE.SphereGeometry(0.5, 32, 32), []);
-  const sharedMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "coral" }), []);
+  const sharedMat = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "coral" }),
+    [],
+  );
 
   return (
     <>

@@ -30,11 +30,11 @@ npx react-native start
 
 **Key metrics to look for:**
 
-| Metric | Target | Action if exceeded |
-|--------|--------|--------------------|
-| Component render time | < 16ms | Memoize, simplify, or split component |
-| Re-render count per interaction | Minimal | Add React.memo, check prop stability |
-| Commit frequency | 1 per interaction | Check for cascading state updates |
+| Metric                          | Target            | Action if exceeded                    |
+| ------------------------------- | ----------------- | ------------------------------------- |
+| Component render time           | < 16ms            | Memoize, simplify, or split component |
+| Re-render count per interaction | Minimal           | Add React.memo, check prop stability  |
+| Commit frequency                | 1 per interaction | Check for cascading state updates     |
 
 ### Highlight Re-Renders
 
@@ -66,13 +66,13 @@ if (__DEV__) {
 
 **Reading the Perf Monitor:**
 
-| Indicator | Meaning | Action |
-|-----------|---------|--------|
-| JS FPS < 55 | JS thread congested | Defer work, reduce re-renders |
-| UI FPS < 55 | UI thread congested | Offload to native driver, simplify layout |
-| Both low | General overload | Profile to find root cause |
-| JS low, UI fine | Computation bottleneck | InteractionManager, useMemo, workers |
-| JS fine, UI low | Layout/drawing bottleneck | Simplify views, reduce nesting |
+| Indicator       | Meaning                   | Action                                    |
+| --------------- | ------------------------- | ----------------------------------------- |
+| JS FPS < 55     | JS thread congested       | Defer work, reduce re-renders             |
+| UI FPS < 55     | UI thread congested       | Offload to native driver, simplify layout |
+| Both low        | General overload          | Profile to find root cause                |
+| JS low, UI fine | Computation bottleneck    | InteractionManager, useMemo, workers      |
+| JS fine, UI low | Layout/drawing bottleneck | Simplify views, reduce nesting            |
 
 **Warning:** Perf Monitor shows dev-mode FPS which includes dev overhead. Only trust release build measurements for accurate profiling.
 
@@ -410,7 +410,10 @@ export function useAppStateMonitoring() {
       }
     };
 
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
     return () => subscription.remove();
   }, []);
 }
@@ -418,10 +421,10 @@ export function useAppStateMonitoring() {
 
 **Key production metrics to track:**
 
-| Metric | Target | Concern Threshold |
-|--------|--------|-------------------|
-| Cold start time | < 2s | > 3s |
-| Screen render time | < 300ms | > 500ms |
-| JS thread FPS | 60 | < 50 |
-| Memory usage | Stable | Growing over time |
-| Crash-free sessions | > 99.5% | < 99% |
+| Metric              | Target  | Concern Threshold |
+| ------------------- | ------- | ----------------- |
+| Cold start time     | < 2s    | > 3s              |
+| Screen render time  | < 300ms | > 500ms           |
+| JS thread FPS       | 60      | < 50              |
+| Memory usage        | Stable  | Growing over time |
+| Crash-free sessions | > 99.5% | < 99%             |

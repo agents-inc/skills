@@ -182,7 +182,10 @@ export async function handleReadFile(filePath: string): Promise<FileResult> {
   }
 }
 
-export async function handleSaveFile(filePath: string, content: string): Promise<FileResult> {
+export async function handleSaveFile(
+  filePath: string,
+  content: string,
+): Promise<FileResult> {
   try {
     await writeFile(filePath, content, "utf-8");
     return { success: true };
@@ -200,8 +203,12 @@ import { ipcMain } from "electron";
 import { handleReadFile, handleSaveFile } from "./handlers/file-handler.js";
 
 export function registerFileHandlers(): void {
-  ipcMain.handle("read-file", (_event, filePath: string) => handleReadFile(filePath));
-  ipcMain.handle("save-file", (_event, filePath: string, content: string) => handleSaveFile(filePath, content));
+  ipcMain.handle("read-file", (_event, filePath: string) =>
+    handleReadFile(filePath),
+  );
+  ipcMain.handle("save-file", (_event, filePath: string, content: string) =>
+    handleSaveFile(filePath, content),
+  );
 }
 ```
 
@@ -296,7 +303,9 @@ describe("preload script", () => {
     const electronMock = await import("electron");
     // Import preload -- it calls exposeInMainWorld as a side effect
     await import("./preload.js");
-    exposedApis = (electronMock as unknown as { __exposedApis: Record<string, unknown> }).__exposedApis;
+    exposedApis = (
+      electronMock as unknown as { __exposedApis: Record<string, unknown> }
+    ).__exposedApis;
   });
 
   it("exposes electronAPI to the renderer", () => {
@@ -312,10 +321,16 @@ describe("preload script", () => {
 
   it("readFile calls ipcRenderer.invoke with correct channel", async () => {
     const { ipcRenderer } = await import("electron");
-    const api = exposedApis.electronAPI as Record<string, (arg: string) => Promise<unknown>>;
+    const api = exposedApis.electronAPI as Record<
+      string,
+      (arg: string) => Promise<unknown>
+    >;
 
     await api.readFile("/tmp/test.txt");
-    expect(ipcRenderer.invoke).toHaveBeenCalledWith("read-file", "/tmp/test.txt");
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      "read-file",
+      "/tmp/test.txt",
+    );
   });
 });
 ```

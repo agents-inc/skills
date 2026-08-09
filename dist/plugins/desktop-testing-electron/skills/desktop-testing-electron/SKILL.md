@@ -27,7 +27,7 @@ description: E2E testing with Playwright, main process unit testing, IPC testing
 
 ---
 
-**Auto-detection:** Electron testing, _electron.launch, electronApp, electronApplication, firstWindow, Playwright Electron, electron-mock-ipc, electron-playwright-helpers, stubDialog, xvfb, xvfb-run, xvfb-maybe, Spectron migration, ipcMain.handle test, ipcRenderer mock, contextBridge mock, BrowserWindow mock, Electron E2E, Electron unit test
+**Auto-detection:** Electron testing, \_electron.launch, electronApp, electronApplication, firstWindow, Playwright Electron, electron-mock-ipc, electron-playwright-helpers, stubDialog, xvfb, xvfb-run, xvfb-maybe, Spectron migration, ipcMain.handle test, ipcRenderer mock, contextBridge mock, BrowserWindow mock, Electron E2E, Electron unit test
 
 **When to use:**
 
@@ -166,7 +166,9 @@ import path from "node:path";
 
 const ALLOWED_EXTENSIONS = [".txt", ".md", ".json"];
 
-export async function handleReadFile(filePath: string): Promise<{ success: boolean; content?: string; error?: string }> {
+export async function handleReadFile(
+  filePath: string,
+): Promise<{ success: boolean; content?: string; error?: string }> {
   const ext = path.extname(filePath);
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return { success: false, error: `Unsupported extension: ${ext}` };
@@ -250,7 +252,9 @@ test("opens a file via dialog", async () => {
 
   // Click the button that triggers showOpenDialog
   await window.click('button[data-testid="open-file"]');
-  await expect(window.locator('[data-testid="file-name"]')).toHaveText("test-file.txt");
+  await expect(window.locator('[data-testid="file-name"]')).toHaveText(
+    "test-file.txt",
+  );
 });
 ```
 
@@ -301,7 +305,9 @@ test("main window matches screenshot", async () => {
 test("dialog state matches screenshot", async () => {
   await window.click('button[data-testid="open-settings"]');
   await window.waitForSelector('[data-testid="settings-panel"]');
-  await expect(window.locator('[data-testid="settings-panel"]')).toHaveScreenshot("settings-panel.png");
+  await expect(
+    window.locator('[data-testid="settings-panel"]'),
+  ).toHaveScreenshot("settings-panel.png");
 });
 ```
 

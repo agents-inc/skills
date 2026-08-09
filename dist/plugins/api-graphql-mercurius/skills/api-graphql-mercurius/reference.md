@@ -69,23 +69,23 @@ Is the GraphQL API managed by multiple teams?
 
 ### Request Lifecycle Order
 
-| Hook            | When                        | Can Modify             | Common Use                    |
-| --------------- | --------------------------- | ---------------------- | ----------------------------- |
-| preParsing      | Before query string parsing | source (query string)  | Tracing, query preprocessing  |
-| preValidation   | After parsing               | document (AST)         | Custom validation             |
-| preExecution    | Before execution            | document, schema, vars | Auth, rate limiting, logging  |
-| onResolution    | After execution complete    | execution result       | Metrics, response logging     |
+| Hook          | When                        | Can Modify             | Common Use                   |
+| ------------- | --------------------------- | ---------------------- | ---------------------------- |
+| preParsing    | Before query string parsing | source (query string)  | Tracing, query preprocessing |
+| preValidation | After parsing               | document (AST)         | Custom validation            |
+| preExecution  | Before execution            | document, schema, vars | Auth, rate limiting, logging |
+| onResolution  | After execution complete    | execution result       | Metrics, response logging    |
 
 ### Subscription Lifecycle Order
 
-| Hook                          | When                        | Common Use                    |
-| ----------------------------- | --------------------------- | ----------------------------- |
-| preSubscriptionParsing        | Before parsing sub query    | Tracing                       |
-| preSubscriptionExecution      | After parsing, before exec  | Auth, connection validation   |
-| onSubscriptionResolution      | After each event resolves   | Event logging, transformation |
-| onSubscriptionEnd             | Subscription terminates     | Cleanup, metrics              |
-| onSubscriptionConnectionClose | WebSocket closes            | Session cleanup               |
-| onSubscriptionConnectionError | Connection error occurs     | Error logging, alerting       |
+| Hook                          | When                       | Common Use                    |
+| ----------------------------- | -------------------------- | ----------------------------- |
+| preSubscriptionParsing        | Before parsing sub query   | Tracing                       |
+| preSubscriptionExecution      | After parsing, before exec | Auth, connection validation   |
+| onSubscriptionResolution      | After each event resolves  | Event logging, transformation |
+| onSubscriptionEnd             | Subscription terminates    | Cleanup, metrics              |
+| onSubscriptionConnectionClose | WebSocket closes           | Session cleanup               |
+| onSubscriptionConnectionError | Connection error occurs    | Error logging, alerting       |
 
 ### Hook Registration
 
@@ -118,34 +118,34 @@ app.graphql.addHook("onResolution", async (execution, context) => {
 
 ### Core Options
 
-| Option               | Type                 | Default    | Description                                         |
-| -------------------- | -------------------- | ---------- | --------------------------------------------------- |
-| `schema`             | string / string[]    | required   | GraphQL SDL schema definition                       |
-| `resolvers`          | object               | required   | Resolver functions by type                          |
-| `loaders`            | object               | -          | Batch loader functions by type/field                |
-| `context`            | function             | -          | `(req, reply) => object` per-request context        |
-| `jit`                | integer              | 0          | Executions before JIT compilation (0 = disabled)    |
-| `queryDepth`         | integer              | -          | Maximum allowed query nesting depth                 |
-| `graphiql`           | boolean / string     | true       | Enable GraphiQL IDE at `/graphiql`                  |
-| `routes`             | boolean              | true       | Expose `/graphql` endpoint                          |
-| `path`               | string               | `/graphql` | Custom GraphQL endpoint path                        |
-| `subscription`       | boolean / object     | false      | Enable WebSocket subscriptions                      |
-| `errorHandler`       | function / boolean   | true       | Custom GraphQL error handler                        |
-| `errorFormatter`     | function             | -          | Custom error response formatting                    |
-| `allowBatchedQueries`| boolean              | false      | Accept arrays of queries                            |
-| `persistedQueries`   | object               | -          | Hash-to-query map for persisted queries             |
-| `onlyPersisted`      | boolean              | false      | Reject non-persisted queries                        |
-| `defineMutation`     | boolean              | false      | Auto-add empty Mutation type if undefined           |
+| Option                | Type               | Default    | Description                                      |
+| --------------------- | ------------------ | ---------- | ------------------------------------------------ |
+| `schema`              | string / string[]  | required   | GraphQL SDL schema definition                    |
+| `resolvers`           | object             | required   | Resolver functions by type                       |
+| `loaders`             | object             | -          | Batch loader functions by type/field             |
+| `context`             | function           | -          | `(req, reply) => object` per-request context     |
+| `jit`                 | integer            | 0          | Executions before JIT compilation (0 = disabled) |
+| `queryDepth`          | integer            | -          | Maximum allowed query nesting depth              |
+| `graphiql`            | boolean / string   | true       | Enable GraphiQL IDE at `/graphiql`               |
+| `routes`              | boolean            | true       | Expose `/graphql` endpoint                       |
+| `path`                | string             | `/graphql` | Custom GraphQL endpoint path                     |
+| `subscription`        | boolean / object   | false      | Enable WebSocket subscriptions                   |
+| `errorHandler`        | function / boolean | true       | Custom GraphQL error handler                     |
+| `errorFormatter`      | function           | -          | Custom error response formatting                 |
+| `allowBatchedQueries` | boolean            | false      | Accept arrays of queries                         |
+| `persistedQueries`    | object             | -          | Hash-to-query map for persisted queries          |
+| `onlyPersisted`       | boolean            | false      | Reject non-persisted queries                     |
+| `defineMutation`      | boolean            | false      | Auto-add empty Mutation type if undefined        |
 
 ### Subscription Options (when `subscription` is an object)
 
-| Option     | Type     | Description                                     |
-| ---------- | -------- | ----------------------------------------------- |
-| `emitter`  | object   | Custom MQEmitter (e.g., mqemitter-redis)        |
-| `pubsub`   | object   | Custom PubSub implementation                    |
-| `context`  | function | `(connection, request) => object` for WS context|
-| `onConnect`| function | Called on WebSocket connection_init              |
-| `onDisconnect` | function | Called on WebSocket disconnect              |
+| Option         | Type     | Description                                      |
+| -------------- | -------- | ------------------------------------------------ |
+| `emitter`      | object   | Custom MQEmitter (e.g., mqemitter-redis)         |
+| `pubsub`       | object   | Custom PubSub implementation                     |
+| `context`      | function | `(connection, request) => object` for WS context |
+| `onConnect`    | function | Called on WebSocket connection_init              |
+| `onDisconnect` | function | Called on WebSocket disconnect                   |
 
 ---
 
@@ -173,7 +173,10 @@ const resolvers = {
 const loaders = {
   Query: {
     // Loaders are request-scoped and batched automatically
-    async users(queries: Array<{ params: { ids: string[] } }>, ctx: MercuriusContext) {
+    async users(
+      queries: Array<{ params: { ids: string[] } }>,
+      ctx: MercuriusContext,
+    ) {
       const allIds = queries.flatMap(({ params }) => params.ids);
       return fetchUsers(allIds);
     },
@@ -235,16 +238,16 @@ app.register(async (fastify) => {
 
 ## Quick Reference: Mercurius Ecosystem Packages
 
-| Package                    | Purpose                                      |
-| -------------------------- | -------------------------------------------- |
-| `mercurius`                | Core GraphQL plugin for Fastify              |
-| `@mercuriusjs/federation`  | Build federated GraphQL services             |
-| `@mercuriusjs/gateway`     | Compose federated services into a gateway    |
-| `mercurius-codegen`        | Auto-generate TypeScript types from schema   |
-| `mercurius-cache`          | Response-level caching for resolvers         |
-| `mercurius-upload`         | File upload support (multipart)              |
-| `mercurius-logging`        | Automatic query/mutation logging             |
-| `mercurius-integration-testing` | Testing utilities for Mercurius APIs    |
+| Package                         | Purpose                                    |
+| ------------------------------- | ------------------------------------------ |
+| `mercurius`                     | Core GraphQL plugin for Fastify            |
+| `@mercuriusjs/federation`       | Build federated GraphQL services           |
+| `@mercuriusjs/gateway`          | Compose federated services into a gateway  |
+| `mercurius-codegen`             | Auto-generate TypeScript types from schema |
+| `mercurius-cache`               | Response-level caching for resolvers       |
+| `mercurius-upload`              | File upload support (multipart)            |
+| `mercurius-logging`             | Automatic query/mutation logging           |
+| `mercurius-integration-testing` | Testing utilities for Mercurius APIs       |
 
 ---
 

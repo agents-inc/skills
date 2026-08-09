@@ -19,11 +19,11 @@ function openDatabase(): Database.Database {
   const db = new Database(dbPath);
 
   // Performance and safety pragmas -- set once per connection
-  db.pragma("journal_mode = WAL");      // Concurrent reads during writes
-  db.pragma("synchronous = NORMAL");    // Balanced durability and speed
-  db.pragma("foreign_keys = ON");       // Enforce referential integrity
+  db.pragma("journal_mode = WAL"); // Concurrent reads during writes
+  db.pragma("synchronous = NORMAL"); // Balanced durability and speed
+  db.pragma("foreign_keys = ON"); // Enforce referential integrity
   db.pragma(`cache_size = -${CACHE_SIZE_KB}`); // Negative = KB (positive = pages)
-  db.pragma("busy_timeout = 5000");     // Wait 5s on lock instead of failing immediately
+  db.pragma("busy_timeout = 5000"); // Wait 5s on lock instead of failing immediately
   db.pragma("wal_autocheckpoint = 1000"); // Default -- checkpoint every 1000 pages
 
   return db;
@@ -82,7 +82,7 @@ const deleteNote = db.prepare(`
 insertNote.run({ id: crypto.randomUUID(), title: "My Note", content: "Hello" });
 
 const note = getNote.get("abc-123"); // Single row or undefined
-const notes = getAllNotes.all();       // Array of rows
+const notes = getAllNotes.all(); // Array of rows
 
 updateNote.run({ id: "abc-123", title: "Updated", content: "New content" });
 deleteNote.run("abc-123");
@@ -165,11 +165,15 @@ function runMigrations(db: Database.Database): void {
 
     if (currentVersion < 2) {
       db.exec(`ALTER TABLE notes ADD COLUMN updated_at TEXT`);
-      db.exec(`UPDATE notes SET updated_at = created_at WHERE updated_at IS NULL`);
+      db.exec(
+        `UPDATE notes SET updated_at = created_at WHERE updated_at IS NULL`,
+      );
     }
 
     if (currentVersion < 3) {
-      db.exec(`ALTER TABLE notes ADD COLUMN archived INTEGER NOT NULL DEFAULT 0`);
+      db.exec(
+        `ALTER TABLE notes ADD COLUMN archived INTEGER NOT NULL DEFAULT 0`,
+      );
       db.exec(`CREATE INDEX idx_notes_archived ON notes(archived)`);
     }
 
@@ -206,11 +210,14 @@ const getNote = db.prepare("SELECT * FROM notes WHERE id = ?");
 const getAllNotes = db.prepare("SELECT * FROM notes ORDER BY updated_at DESC");
 const deleteNote = db.prepare("DELETE FROM notes WHERE id = ?");
 
-ipcMain.handle("notes:create", (_event, note: { title: string; content: string }) => {
-  const id = crypto.randomUUID();
-  insertNote.run({ id, title: note.title, content: note.content });
-  return getNote.get(id);
-});
+ipcMain.handle(
+  "notes:create",
+  (_event, note: { title: string; content: string }) => {
+    const id = crypto.randomUUID();
+    insertNote.run({ id, title: note.title, content: note.content });
+    return getNote.get(id);
+  },
+);
 
 ipcMain.handle("notes:list", () => {
   return getAllNotes.all();

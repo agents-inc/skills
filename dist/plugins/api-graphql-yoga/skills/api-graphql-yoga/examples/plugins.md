@@ -130,7 +130,12 @@ function useAllHooks(): Plugin {
     onExecutionResult({ result, setResult }) {
       // Called for each execution result
     },
-    onResultProcess({ result, request, acceptableMediaTypes, setResultProcessor }) {
+    onResultProcess({
+      result,
+      request,
+      acceptableMediaTypes,
+      setResultProcessor,
+    }) {
       // Before result is serialized to HTTP response
     },
 

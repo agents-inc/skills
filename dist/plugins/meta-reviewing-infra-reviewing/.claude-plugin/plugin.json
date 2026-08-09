@@ -1,0 +1,9 @@
+{
+  "name": "meta-reviewing-infra-reviewing",
+  "version": "2.0.0",
+  "skills": "./skills/",
+  "description": "Infrastructure code review patterns. Use when reviewing CI/CD workflows, Dockerfiles, deployment configs, and IaC. Covers supply-chain pinning, secret exposure, container hygiene, least-privilege permissions, and deployment safety.",
+  "author": {
+    "name": "@vince"
+  }
+}

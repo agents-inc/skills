@@ -6,16 +6,16 @@
 
 ## Performance Targets
 
-| Metric | Target | Acceptable | Action Required |
-|--------|--------|------------|-----------------|
-| JS thread FPS | 60 | 55+ | < 50: investigate JS bottleneck |
-| UI thread FPS | 60 | 55+ | < 50: offload to native driver |
-| Cold start time | < 1.5s | < 3s | > 3s: lazy load, defer init |
-| Screen render time | < 200ms | < 500ms | > 500ms: profile component tree |
-| List scroll FPS | 60 | 55+ | < 50: FlashList, memoize items |
-| Memory growth | Stable | < 5MB/min | Growing: check for leaks |
-| Bundle size (JS) | < 3MB | < 5MB | > 5MB: analyze dependencies |
-| TTI (Time to Interactive) | < 2s | < 4s | > 4s: defer non-critical work |
+| Metric                    | Target  | Acceptable | Action Required                 |
+| ------------------------- | ------- | ---------- | ------------------------------- |
+| JS thread FPS             | 60      | 55+        | < 50: investigate JS bottleneck |
+| UI thread FPS             | 60      | 55+        | < 50: offload to native driver  |
+| Cold start time           | < 1.5s  | < 3s       | > 3s: lazy load, defer init     |
+| Screen render time        | < 200ms | < 500ms    | > 500ms: profile component tree |
+| List scroll FPS           | 60      | 55+        | < 50: FlashList, memoize items  |
+| Memory growth             | Stable  | < 5MB/min  | Growing: check for leaks        |
+| Bundle size (JS)          | < 3MB   | < 5MB      | > 5MB: analyze dependencies     |
+| TTI (Time to Interactive) | < 2s    | < 4s       | > 4s: defer non-critical work   |
 
 ---
 
@@ -168,17 +168,17 @@ What type of animation?
 
 ## Profiling Tools Quick Reference
 
-| Tool | What It Shows | When to Use |
-|------|---------------|-------------|
-| React Native DevTools Profiler | Component render times, re-render counts | Diagnosing re-render issues |
-| Perf Monitor (Dev Menu) | Real-time JS/UI thread FPS | Quick check during development |
-| Hermes CPU Profile | Function-level CPU time | Identifying expensive functions |
-| Xcode Instruments | Native CPU, memory, GPU, energy | iOS-specific deep profiling |
-| Android Studio Profiler | Native CPU, memory, network | Android-specific deep profiling |
-| react-native-bundle-visualizer | Bundle composition treemap | Reducing bundle size |
-| Heap Snapshots (DevTools Memory) | Object retention, memory leaks | Diagnosing memory growth |
-| Core Animation (Xcode) | Blended layers, offscreen rendering | iOS GPU optimization |
-| systrace (Android) | Low-level frame analysis | Android frame drop analysis |
+| Tool                             | What It Shows                            | When to Use                     |
+| -------------------------------- | ---------------------------------------- | ------------------------------- |
+| React Native DevTools Profiler   | Component render times, re-render counts | Diagnosing re-render issues     |
+| Perf Monitor (Dev Menu)          | Real-time JS/UI thread FPS               | Quick check during development  |
+| Hermes CPU Profile               | Function-level CPU time                  | Identifying expensive functions |
+| Xcode Instruments                | Native CPU, memory, GPU, energy          | iOS-specific deep profiling     |
+| Android Studio Profiler          | Native CPU, memory, network              | Android-specific deep profiling |
+| react-native-bundle-visualizer   | Bundle composition treemap               | Reducing bundle size            |
+| Heap Snapshots (DevTools Memory) | Object retention, memory leaks           | Diagnosing memory growth        |
+| Core Animation (Xcode)           | Blended layers, offscreen rendering      | iOS GPU optimization            |
+| systrace (Android)               | Low-level frame analysis                 | Android frame drop analysis     |
 
 ---
 
@@ -208,14 +208,14 @@ UI Thread (16.67ms budget):
 
 ## Quick Performance Wins
 
-| Problem | Quick Fix | Impact |
-|---------|-----------|--------|
-| Jank during navigation | `InteractionManager.runAfterInteractions()` | High |
-| Slow FlatList scrolling | `getItemLayout` for fixed-height items | High |
-| List items all re-render | `React.memo` + `useCallback` for renderItem | High |
-| Slow startup | `lazy()` for non-critical screens | Medium |
-| Large bundle | Named imports + remove unused deps | Medium |
-| Console.log in production | `babel-plugin-transform-remove-console` | Medium |
-| Image jank in lists | Right-size + preload + caching library | Medium |
-| Sluggish touch response | `requestAnimationFrame(() => heavyWork())` | Low |
-| Inline styles in lists | `StyleSheet.create` + style arrays | Low |
+| Problem                   | Quick Fix                                   | Impact |
+| ------------------------- | ------------------------------------------- | ------ |
+| Jank during navigation    | `InteractionManager.runAfterInteractions()` | High   |
+| Slow FlatList scrolling   | `getItemLayout` for fixed-height items      | High   |
+| List items all re-render  | `React.memo` + `useCallback` for renderItem | High   |
+| Slow startup              | `lazy()` for non-critical screens           | Medium |
+| Large bundle              | Named imports + remove unused deps          | Medium |
+| Console.log in production | `babel-plugin-transform-remove-console`     | Medium |
+| Image jank in lists       | Right-size + preload + caching library      | Medium |
+| Sluggish touch response   | `requestAnimationFrame(() => heavyWork())`  | Low    |
+| Inline styles in lists    | `StyleSheet.create` + style arrays          | Low    |

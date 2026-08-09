@@ -96,10 +96,7 @@ The `@changesets/changelog-github` generator adds PR links and contributor attri
 ```json
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
-  "changelog": [
-    "@changesets/changelog-github",
-    { "repo": "myorg/myrepo" }
-  ],
+  "changelog": ["@changesets/changelog-github", { "repo": "myorg/myrepo" }],
   "commit": false,
   "fixed": [],
   "linked": [],
@@ -124,9 +121,7 @@ The `@changesets/changelog-github` generator adds PR links and contributor attri
   "fixed": [
     ["@myorg/react-button", "@myorg/react-input", "@myorg/react-select"]
   ],
-  "linked": [
-    ["@myorg/core", "@myorg/utils"]
-  ],
+  "linked": [["@myorg/core", "@myorg/utils"]],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
@@ -136,7 +131,7 @@ The `@changesets/changelog-github` generator adds PR links and contributor attri
 
 **Key points:**
 
-- `fixed`: all three react-* packages always release together with the same version
+- `fixed`: all three react-\* packages always release together with the same version
 - `linked`: core and utils share versions, but only when both have changesets
 - `ignore`: docs and dev-tools are excluded from publishing entirely
 - Glob patterns supported: `["@myorg/react-*"]` instead of listing each package
@@ -196,11 +191,11 @@ Config: `"fixed": [["pkg-a", "pkg-b"]]`
 
 Starting state: both at `1.0.0`.
 
-| Changeset | pkg-a bump | pkg-b bump | Result |
-| --- | --- | --- | --- |
-| Only pkg-a: minor | minor | (none, but fixed) | Both become `1.1.0` |
-| Only pkg-b: patch | (none, but fixed) | patch | Both become `1.0.1` |
-| pkg-a: minor, pkg-b: patch | minor | patch | Both become `1.1.0` (highest wins) |
+| Changeset                  | pkg-a bump        | pkg-b bump        | Result                             |
+| -------------------------- | ----------------- | ----------------- | ---------------------------------- |
+| Only pkg-a: minor          | minor             | (none, but fixed) | Both become `1.1.0`                |
+| Only pkg-b: patch          | (none, but fixed) | patch             | Both become `1.0.1`                |
+| pkg-a: minor, pkg-b: patch | minor             | patch             | Both become `1.1.0` (highest wins) |
 
 **Key behavior:** Even unchanged packages are bumped to match the group's highest version.
 
@@ -210,10 +205,10 @@ Config: `"linked": [["pkg-a", "pkg-b"]]`
 
 Starting state: both at `1.0.0`.
 
-| Changeset | pkg-a bump | pkg-b bump | Result |
-| --- | --- | --- | --- |
-| Only pkg-a: minor | minor | -- | pkg-a: `1.1.0`, pkg-b stays `1.0.0` |
-| Both: pkg-a minor, pkg-b patch | minor | minor | Both become `1.1.0` (highest wins for both) |
+| Changeset                      | pkg-a bump | pkg-b bump | Result                                      |
+| ------------------------------ | ---------- | ---------- | ------------------------------------------- |
+| Only pkg-a: minor              | minor      | --         | pkg-a: `1.1.0`, pkg-b stays `1.0.0`         |
+| Both: pkg-a minor, pkg-b patch | minor      | minor      | Both become `1.1.0` (highest wins for both) |
 
 **Key behavior:** Only packages with changesets are bumped. When both change, they coordinate to the highest version in the group.
 

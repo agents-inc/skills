@@ -40,7 +40,8 @@ export const Callout = Node.create({
     return {
       type: {
         default: DEFAULT_CALLOUT_TYPE,
-        parseHTML: (element) => element.getAttribute("data-callout-type") ?? DEFAULT_CALLOUT_TYPE,
+        parseHTML: (element) =>
+          element.getAttribute("data-callout-type") ?? DEFAULT_CALLOUT_TYPE,
         renderHTML: (attributes) => ({
           "data-callout-type": attributes.type,
         }),
@@ -55,7 +56,11 @@ export const Callout = Node.create({
   renderHTML({ HTMLAttributes }) {
     return [
       "div",
-      mergeAttributes({ "data-type": "callout" }, this.options.HTMLAttributes, HTMLAttributes),
+      mergeAttributes(
+        { "data-type": "callout" },
+        this.options.HTMLAttributes,
+        HTMLAttributes,
+      ),
       0,
     ];
   },
@@ -139,7 +144,10 @@ export const Mention = Node.create({
   renderHTML({ node, HTMLAttributes }) {
     return [
       "span",
-      mergeAttributes({ "data-type": "mention", "data-id": node.attrs.id }, HTMLAttributes),
+      mergeAttributes(
+        { "data-type": "mention", "data-id": node.attrs.id },
+        HTMLAttributes,
+      ),
       `@${node.attrs.label}`,
     ];
   },
@@ -185,7 +193,12 @@ export const Mention = Node.create({
 ## Pattern 3: Custom Mark with Input Rule
 
 ```typescript
-import { Mark, mergeAttributes, markInputRule, markPasteRule } from "@tiptap/core";
+import {
+  Mark,
+  mergeAttributes,
+  markInputRule,
+  markPasteRule,
+} from "@tiptap/core";
 
 const HIGHLIGHT_INPUT_REGEX = /(?:==)((?:[^=]+))(?:==)$/;
 const HIGHLIGHT_PASTE_REGEX = /(?:==)((?:[^=]+))(?:==)/g;
@@ -230,7 +243,11 @@ export const CustomHighlight = Mark.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["mark", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
+    return [
+      "mark",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0,
+    ];
   },
 
   addCommands() {
@@ -282,6 +299,7 @@ export const CustomHighlight = Mark.create({
 **Why good:** input rule converts `==text==` to highlight as user types (regex ends with `$`), paste rule applies on paste (uses `/g` flag), configurable multicolor via options, all three commands (set/toggle/unset) for full control
 
 **Input rule vs paste rule regex:**
+
 - Input rules: regex must end with `$` (matches at cursor position as you type)
 - Paste rules: regex must NOT end with `$` but must use `/g` (matches all occurrences in pasted content)
 
@@ -291,7 +309,11 @@ export const CustomHighlight = Mark.create({
 
 ```tsx
 import { Node, mergeAttributes } from "@tiptap/core";
-import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react";
+import {
+  NodeViewWrapper,
+  NodeViewContent,
+  ReactNodeViewRenderer,
+} from "@tiptap/react";
 
 // Step 1: The React component
 interface CounterViewProps {
@@ -303,7 +325,12 @@ interface CounterViewProps {
 
 const INITIAL_COUNT = 0;
 
-function CounterView({ node, updateAttributes, deleteNode, selected }: CounterViewProps) {
+function CounterView({
+  node,
+  updateAttributes,
+  deleteNode,
+  selected,
+}: CounterViewProps) {
   return (
     <NodeViewWrapper
       className="counter-widget"
@@ -311,7 +338,9 @@ function CounterView({ node, updateAttributes, deleteNode, selected }: CounterVi
     >
       <div contentEditable={false}>
         <span>Count: {node.attrs.count}</span>
-        <button onClick={() => updateAttributes({ count: node.attrs.count + 1 })}>
+        <button
+          onClick={() => updateAttributes({ count: node.attrs.count + 1 })}
+        >
           +1
         </button>
         <button onClick={() => updateAttributes({ count: INITIAL_COUNT })}>
@@ -351,7 +380,11 @@ export const Counter = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["div", mergeAttributes({ "data-type": "counter" }, HTMLAttributes), 0];
+    return [
+      "div",
+      mergeAttributes({ "data-type": "counter" }, HTMLAttributes),
+      0,
+    ];
   },
 
   addNodeView() {
@@ -363,7 +396,10 @@ export const Counter = Node.create({
       insertCounter:
         () =>
         ({ commands }) => {
-          return commands.insertContent({ type: this.name, attrs: { count: INITIAL_COUNT } });
+          return commands.insertContent({
+            type: this.name,
+            attrs: { count: INITIAL_COUNT },
+          });
         },
     };
   },

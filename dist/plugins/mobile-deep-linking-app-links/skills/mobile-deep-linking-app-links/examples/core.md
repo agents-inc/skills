@@ -15,7 +15,11 @@ import { useEffect } from "react";
 import * as Linking from "expo-linking";
 
 // useURL returns the initial URL on cold start AND subsequent URL changes
-export function DeepLinkHandler({ onNavigate }: { onNavigate: (path: string, params: Record<string, string>) => void }) {
+export function DeepLinkHandler({
+  onNavigate,
+}: {
+  onNavigate: (path: string, params: Record<string, string>) => void;
+}) {
   const url = Linking.useURL();
 
   useEffect(() => {
@@ -165,7 +169,7 @@ const linking: LinkingOptions<RootStackParamList> = {
       Profile: {
         path: "user/:id",
         screens: {
-          Posts: "posts",        // Matches /user/123/posts
+          Posts: "posts", // Matches /user/123/posts
           Followers: "followers", // Matches /user/123/followers
         },
       },
@@ -285,7 +289,12 @@ export default function ProductScreen() {
 Never trust incoming URLs. Validate paths and parameters before navigating.
 
 ```typescript
-const VALID_DEEP_LINK_PATHS = new Set(["profile", "product", "settings", "order"]);
+const VALID_DEEP_LINK_PATHS = new Set([
+  "profile",
+  "product",
+  "settings",
+  "order",
+]);
 const MAX_PARAM_LENGTH = 256;
 
 interface DeepLinkResult {
@@ -312,7 +321,10 @@ export function validateDeepLink(url: string): DeepLinkResult | null {
     }
   }
 
-  return { screen: rootPath, params: { ...sanitizedParams, id: segments[1] ?? "" } };
+  return {
+    screen: rootPath,
+    params: { ...sanitizedParams, id: segments[1] ?? "" },
+  };
 }
 ```
 

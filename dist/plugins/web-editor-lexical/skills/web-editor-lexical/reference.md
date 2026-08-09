@@ -6,33 +6,33 @@
 
 ## Package Map
 
-| Package | Purpose |
-|---------|---------|
-| `lexical` | Core: nodes, commands, EditorState, selection |
-| `@lexical/react` | React bindings: LexicalComposer, plugins, hooks |
-| `@lexical/rich-text` | HeadingNode, QuoteNode, rich text commands |
-| `@lexical/list` | ListNode, ListItemNode, list commands |
-| `@lexical/link` | LinkNode, AutoLinkNode, link commands |
-| `@lexical/code` | CodeNode, CodeHighlightNode |
-| `@lexical/html` | $generateHtmlFromNodes, $generateNodesFromDOM |
-| `@lexical/headless` | createHeadlessEditor (server-side) |
-| `@lexical/markdown` | Markdown shortcuts and conversion |
-| `@lexical/table` | TableNode, table editing |
-| `@lexical/clipboard` | Copy/paste handling |
-| `@lexical/selection` | Selection utilities |
-| `@lexical/utils` | General utilities ($insertNodeToNearestRoot, mergeRegister) |
+| Package              | Purpose                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| `lexical`            | Core: nodes, commands, EditorState, selection               |
+| `@lexical/react`     | React bindings: LexicalComposer, plugins, hooks             |
+| `@lexical/rich-text` | HeadingNode, QuoteNode, rich text commands                  |
+| `@lexical/list`      | ListNode, ListItemNode, list commands                       |
+| `@lexical/link`      | LinkNode, AutoLinkNode, link commands                       |
+| `@lexical/code`      | CodeNode, CodeHighlightNode                                 |
+| `@lexical/html`      | $generateHtmlFromNodes, $generateNodesFromDOM               |
+| `@lexical/headless`  | createHeadlessEditor (server-side)                          |
+| `@lexical/markdown`  | Markdown shortcuts and conversion                           |
+| `@lexical/table`     | TableNode, table editing                                    |
+| `@lexical/clipboard` | Copy/paste handling                                         |
+| `@lexical/selection` | Selection utilities                                         |
+| `@lexical/utils`     | General utilities ($insertNodeToNearestRoot, mergeRegister) |
 
 ---
 
 ## Command Priority Reference
 
-| Constant | Value | Use Case |
-|----------|-------|----------|
-| `COMMAND_PRIORITY_EDITOR` | 0 | Base editor behavior, default handlers |
-| `COMMAND_PRIORITY_LOW` | 1 | Most plugins (default choice) |
-| `COMMAND_PRIORITY_NORMAL` | 2 | Standard plugin behavior |
-| `COMMAND_PRIORITY_HIGH` | 3 | Must override other plugins (table nav) |
-| `COMMAND_PRIORITY_CRITICAL` | 4 | Emergency overrides only |
+| Constant                    | Value | Use Case                                |
+| --------------------------- | ----- | --------------------------------------- |
+| `COMMAND_PRIORITY_EDITOR`   | 0     | Base editor behavior, default handlers  |
+| `COMMAND_PRIORITY_LOW`      | 1     | Most plugins (default choice)           |
+| `COMMAND_PRIORITY_NORMAL`   | 2     | Standard plugin behavior                |
+| `COMMAND_PRIORITY_HIGH`     | 3     | Must override other plugins (table nav) |
+| `COMMAND_PRIORITY_CRITICAL` | 4     | Emergency overrides only                |
 
 Higher priority runs first. Return `true` to stop propagation to lower priorities.
 
@@ -40,25 +40,25 @@ Higher priority runs first. Return `true` to stop propagation to lower prioritie
 
 ## Built-in Commands (Commonly Used)
 
-| Command | Payload | Source Package |
-|---------|---------|----------------|
-| `FORMAT_TEXT_COMMAND` | `TextFormatType` | `lexical` |
-| `FORMAT_ELEMENT_COMMAND` | `ElementFormatType` | `lexical` |
-| `UNDO_COMMAND` | `void` | `lexical` |
-| `REDO_COMMAND` | `void` | `lexical` |
-| `KEY_ENTER_COMMAND` | `KeyboardEvent \| null` | `lexical` |
-| `KEY_TAB_COMMAND` | `KeyboardEvent` | `lexical` |
-| `KEY_BACKSPACE_COMMAND` | `KeyboardEvent` | `lexical` |
-| `KEY_DELETE_COMMAND` | `KeyboardEvent` | `lexical` |
-| `KEY_ESCAPE_COMMAND` | `KeyboardEvent` | `lexical` |
-| `SELECTION_CHANGE_COMMAND` | `void` | `lexical` |
-| `CLICK_COMMAND` | `MouseEvent` | `lexical` |
-| `PASTE_COMMAND` | `PasteCommandType` | `lexical` |
-| `CLEAR_EDITOR_COMMAND` | `void` | `lexical` |
-| `INSERT_PARAGRAPH_COMMAND` | `void` | `lexical` |
-| `INDENT_CONTENT_COMMAND` | `void` | `lexical` |
-| `OUTDENT_CONTENT_COMMAND` | `void` | `lexical` |
-| `INSERT_LINE_BREAK_COMMAND` | `boolean` | `lexical` |
+| Command                     | Payload                 | Source Package |
+| --------------------------- | ----------------------- | -------------- |
+| `FORMAT_TEXT_COMMAND`       | `TextFormatType`        | `lexical`      |
+| `FORMAT_ELEMENT_COMMAND`    | `ElementFormatType`     | `lexical`      |
+| `UNDO_COMMAND`              | `void`                  | `lexical`      |
+| `REDO_COMMAND`              | `void`                  | `lexical`      |
+| `KEY_ENTER_COMMAND`         | `KeyboardEvent \| null` | `lexical`      |
+| `KEY_TAB_COMMAND`           | `KeyboardEvent`         | `lexical`      |
+| `KEY_BACKSPACE_COMMAND`     | `KeyboardEvent`         | `lexical`      |
+| `KEY_DELETE_COMMAND`        | `KeyboardEvent`         | `lexical`      |
+| `KEY_ESCAPE_COMMAND`        | `KeyboardEvent`         | `lexical`      |
+| `SELECTION_CHANGE_COMMAND`  | `void`                  | `lexical`      |
+| `CLICK_COMMAND`             | `MouseEvent`            | `lexical`      |
+| `PASTE_COMMAND`             | `PasteCommandType`      | `lexical`      |
+| `CLEAR_EDITOR_COMMAND`      | `void`                  | `lexical`      |
+| `INSERT_PARAGRAPH_COMMAND`  | `void`                  | `lexical`      |
+| `INDENT_CONTENT_COMMAND`    | `void`                  | `lexical`      |
+| `OUTDENT_CONTENT_COMMAND`   | `void`                  | `lexical`      |
+| `INSERT_LINE_BREAK_COMMAND` | `boolean`               | `lexical`      |
 
 ---
 
@@ -87,23 +87,23 @@ LexicalNode (base - not directly extendable)
 
 ## React Plugin Reference
 
-| Plugin | Package | Purpose |
-|--------|---------|---------|
-| `RichTextPlugin` | `@lexical/react` | Bold, italic, underline, headings, quotes |
-| `PlainTextPlugin` | `@lexical/react` | Plain text only (no formatting) |
-| `HistoryPlugin` | `@lexical/react` | Undo/redo |
-| `OnChangePlugin` | `@lexical/react` | State change callbacks |
-| `AutoFocusPlugin` | `@lexical/react` | Focus editor on mount |
-| `ListPlugin` | `@lexical/react` | Ordered and unordered lists |
-| `CheckListPlugin` | `@lexical/react` | Checklists |
-| `LinkPlugin` | `@lexical/react` | Link support |
-| `AutoLinkPlugin` | `@lexical/react` | Auto-convert URLs to links |
-| `TablePlugin` | `@lexical/react` | Table editing |
-| `TabIndentationPlugin` | `@lexical/react` | Tab-based indentation |
-| `ClearEditorPlugin` | `@lexical/react` | Clear editor command |
-| `MarkdownShortcutPlugin` | `@lexical/react` | Markdown input shortcuts |
-| `TreeViewPlugin` | `@lexical/react` | Debug: shows node tree |
-| `LexicalEditorRefPlugin` | `@lexical/react` | External ref to editor instance |
+| Plugin                   | Package          | Purpose                                   |
+| ------------------------ | ---------------- | ----------------------------------------- |
+| `RichTextPlugin`         | `@lexical/react` | Bold, italic, underline, headings, quotes |
+| `PlainTextPlugin`        | `@lexical/react` | Plain text only (no formatting)           |
+| `HistoryPlugin`          | `@lexical/react` | Undo/redo                                 |
+| `OnChangePlugin`         | `@lexical/react` | State change callbacks                    |
+| `AutoFocusPlugin`        | `@lexical/react` | Focus editor on mount                     |
+| `ListPlugin`             | `@lexical/react` | Ordered and unordered lists               |
+| `CheckListPlugin`        | `@lexical/react` | Checklists                                |
+| `LinkPlugin`             | `@lexical/react` | Link support                              |
+| `AutoLinkPlugin`         | `@lexical/react` | Auto-convert URLs to links                |
+| `TablePlugin`            | `@lexical/react` | Table editing                             |
+| `TabIndentationPlugin`   | `@lexical/react` | Tab-based indentation                     |
+| `ClearEditorPlugin`      | `@lexical/react` | Clear editor command                      |
+| `MarkdownShortcutPlugin` | `@lexical/react` | Markdown input shortcuts                  |
+| `TreeViewPlugin`         | `@lexical/react` | Debug: shows node tree                    |
+| `LexicalEditorRefPlugin` | `@lexical/react` | External ref to editor instance           |
 
 ---
 

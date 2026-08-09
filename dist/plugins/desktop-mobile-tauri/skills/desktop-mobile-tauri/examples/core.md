@@ -203,7 +203,10 @@ Mobile plugins require three layers of permissions:
 Many mobile features require explicit user consent at runtime:
 
 ```typescript
-import { checkPermissions, requestPermissions } from "@tauri-apps/plugin-geolocation";
+import {
+  checkPermissions,
+  requestPermissions,
+} from "@tauri-apps/plugin-geolocation";
 
 // Check current permission status
 const status = await checkPermissions();
@@ -333,6 +336,7 @@ npx tauri android build
 ### WebView Debugging
 
 **iOS (Safari Web Inspector):**
+
 1. Open Safari on Mac
 2. Safari > Settings > Advanced > "Show features for web developers"
 3. On physical device: Settings > Safari > Advanced > Web Inspector = ON
@@ -340,6 +344,7 @@ npx tauri android build
 5. Safari > Develop menu > select device > inspect localhost
 
 **Android (Chrome DevTools):**
+
 1. Enable USB Debugging on device (Settings > Developer Options)
 2. Run `tauri android dev`
 3. Open `chrome://inspect` in Chrome on your computer
@@ -398,7 +403,10 @@ Tauri does not provide built-in safe area handling. Use CSS environment variable
 Add the viewport meta tag for proper mobile rendering:
 
 ```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+/>
 ```
 
 **Key point:** `viewport-fit=cover` enables edge-to-edge rendering, allowing content to extend under the notch and home indicator. Without `env(safe-area-inset-*)`, content will be obscured.

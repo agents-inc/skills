@@ -39,7 +39,7 @@ replicaCount: 3
 
 image:
   repository: registry.example.com/my-app
-  tag: ""  # Defaults to chart appVersion
+  tag: "" # Defaults to chart appVersion
   pullPolicy: IfNotPresent
 
 service:
@@ -104,7 +104,7 @@ postgresql:
 
 **Why good:** Grouped by concern, comments explain non-obvious defaults, security values mirror restricted Pod Security Standards, HPA and Ingress conditionally enabled, image tag defaults to appVersion
 
-### templates/_helpers.tpl
+### templates/\_helpers.tpl
 
 ```yaml
 {{/*
@@ -237,16 +237,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "my-app.fullname" . }}
-  labels:
-    {{- include "my-app.labels" . | nindent 4 }}
+  name: { { include "my-app.fullname" . } }
+  labels: { { - include "my-app.labels" . | nindent 4 } }
 spec:
-  type: {{ .Values.service.type }}
-  selector:
-    {{- include "my-app.selectorLabels" . | nindent 4 }}
+  type: { { .Values.service.type } }
+  selector: { { - include "my-app.selectorLabels" . | nindent 4 } }
   ports:
     - name: http
-      port: {{ .Values.service.port }}
+      port: { { .Values.service.port } }
       targetPort: http
       protocol: TCP
 ```
@@ -427,7 +425,7 @@ containers:
 ```yaml
 # BAD: replicas always set even when HPA manages scaling
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
 ```
 
 **Why bad:** When HPA is active, Helm resets replicas to the manifest value on every upgrade, overriding HPA's scaling decisions. Wrap in `{{- if not .Values.autoscaling.enabled }}`

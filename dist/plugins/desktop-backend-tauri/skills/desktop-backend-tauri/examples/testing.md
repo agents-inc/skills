@@ -98,6 +98,7 @@ mod tests {
 ```
 
 **Key points:**
+
 - `mock_builder()` creates a `Builder` with `MockRuntime` (no actual webview)
 - `mock_context(noop_assets())` provides a minimal app context
 - Access managed state via `app.state::<T>()` and wrap in `tauri::State::from()`

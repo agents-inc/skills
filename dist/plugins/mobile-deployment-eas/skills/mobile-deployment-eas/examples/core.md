@@ -251,12 +251,12 @@ For CI (avoids 2FA prompts), use App Store Connect API keys:
 
 **Track options:**
 
-| Track        | Purpose                      |
-| ------------ | ---------------------------- |
-| `internal`   | Internal testers only        |
-| `alpha`      | Closed testing               |
-| `beta`       | Open testing                 |
-| `production` | Public release               |
+| Track        | Purpose               |
+| ------------ | --------------------- |
+| `internal`   | Internal testers only |
+| `alpha`      | Closed testing        |
+| `beta`       | Open testing          |
+| `production` | Public release        |
 
 **Tip:** Start with `"track": "internal"` and promote through Play Console. Set `"releaseStatus": "draft"` to review before publishing.
 

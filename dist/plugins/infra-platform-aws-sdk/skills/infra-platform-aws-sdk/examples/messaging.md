@@ -16,14 +16,19 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 const sqs = new SQSClient({});
 
-export async function enqueueOrder(queueUrl: string, order: OrderPayload): Promise<string> {
-  const result = await sqs.send(new SendMessageCommand({
-    QueueUrl: queueUrl,
-    MessageBody: JSON.stringify(order),
-    MessageAttributes: {
-      eventType: { DataType: "String", StringValue: "order.created" },
-    },
-  }));
+export async function enqueueOrder(
+  queueUrl: string,
+  order: OrderPayload,
+): Promise<string> {
+  const result = await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: queueUrl,
+      MessageBody: JSON.stringify(order),
+      MessageAttributes: {
+        eventType: { DataType: "String", StringValue: "order.created" },
+      },
+    }),
+  );
   return result.MessageId!;
 }
 ```
@@ -46,12 +51,14 @@ const MAX_MESSAGES = 10;
 const WAIT_TIME_SECONDS = 20; // Long polling — reduces empty responses and cost
 
 export async function pollMessages(queueUrl: string): Promise<void> {
-  const { Messages } = await sqs.send(new ReceiveMessageCommand({
-    QueueUrl: queueUrl,
-    MaxNumberOfMessages: MAX_MESSAGES,
-    WaitTimeSeconds: WAIT_TIME_SECONDS,
-    MessageAttributeNames: ["All"],
-  }));
+  const { Messages } = await sqs.send(
+    new ReceiveMessageCommand({
+      QueueUrl: queueUrl,
+      MaxNumberOfMessages: MAX_MESSAGES,
+      WaitTimeSeconds: WAIT_TIME_SECONDS,
+      MessageAttributeNames: ["All"],
+    }),
+  );
 
   // IMPORTANT: Messages may be undefined (not empty array) when queue is empty
   for (const message of Messages ?? []) {
@@ -60,10 +67,12 @@ export async function pollMessages(queueUrl: string): Promise<void> {
       await processMessage(body);
 
       // Delete only after successful processing
-      await sqs.send(new DeleteMessageCommand({
-        QueueUrl: queueUrl,
-        ReceiptHandle: message.ReceiptHandle!,
-      }));
+      await sqs.send(
+        new DeleteMessageCommand({
+          QueueUrl: queueUrl,
+          ReceiptHandle: message.ReceiptHandle!,
+        }),
+      );
     } catch (error) {
       // Message stays in queue — will be retried after visibility timeout
       console.error(`Failed to process message ${message.MessageId}:`, error);
@@ -77,10 +86,12 @@ export async function pollMessages(queueUrl: string): Promise<void> {
 ```typescript
 // BAD: Deleting before processing
 for (const message of Messages ?? []) {
-  await sqs.send(new DeleteMessageCommand({
-    QueueUrl: queueUrl,
-    ReceiptHandle: message.ReceiptHandle!,
-  }));
+  await sqs.send(
+    new DeleteMessageCommand({
+      QueueUrl: queueUrl,
+      ReceiptHandle: message.ReceiptHandle!,
+    }),
+  );
   await processMessage(JSON.parse(message.Body!)); // If this fails, message is lost
 }
 ```
@@ -94,18 +105,21 @@ for (const message of Messages ?? []) {
 FIFO queues guarantee ordering and exactly-once processing within a message group.
 
 ```typescript
-const FIFO_QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/123456789012/orders.fifo";
+const FIFO_QUEUE_URL =
+  "https://sqs.us-east-1.amazonaws.com/123456789012/orders.fifo";
 
 export async function enqueueFifoMessage(
   orderId: string,
   payload: unknown,
 ): Promise<void> {
-  await sqs.send(new SendMessageCommand({
-    QueueUrl: FIFO_QUEUE_URL,
-    MessageBody: JSON.stringify(payload),
-    MessageGroupId: orderId,            // Messages with same group ID are ordered
-    MessageDeduplicationId: `${orderId}-${Date.now()}`, // Prevents duplicate processing
-  }));
+  await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: FIFO_QUEUE_URL,
+      MessageBody: JSON.stringify(payload),
+      MessageGroupId: orderId, // Messages with same group ID are ordered
+      MessageDeduplicationId: `${orderId}-${Date.now()}`, // Prevents duplicate processing
+    }),
+  );
 }
 ```
 
@@ -131,13 +145,15 @@ export async function enqueueBatch(
   // Split into chunks of MAX_BATCH_SIZE
   for (let i = 0; i < messages.length; i += MAX_BATCH_SIZE) {
     const batch = messages.slice(i, i + MAX_BATCH_SIZE);
-    await sqs.send(new SendMessageBatchCommand({
-      QueueUrl: queueUrl,
-      Entries: batch.map((msg, idx) => ({
-        Id: String(idx),
-        MessageBody: JSON.stringify(msg),
-      })),
-    }));
+    await sqs.send(
+      new SendMessageBatchCommand({
+        QueueUrl: queueUrl,
+        Entries: batch.map((msg, idx) => ({
+          Id: String(idx),
+          MessageBody: JSON.stringify(msg),
+        })),
+      }),
+    );
   }
 }
 ```
@@ -155,13 +171,15 @@ export async function publishEvent(
   topicArn: string,
   event: { type: string; payload: unknown },
 ): Promise<string> {
-  const result = await sns.send(new PublishCommand({
-    TopicArn: topicArn,
-    Message: JSON.stringify(event.payload),
-    MessageAttributes: {
-      eventType: { DataType: "String", StringValue: event.type },
-    },
-  }));
+  const result = await sns.send(
+    new PublishCommand({
+      TopicArn: topicArn,
+      Message: JSON.stringify(event.payload),
+      MessageAttributes: {
+        eventType: { DataType: "String", StringValue: event.type },
+      },
+    }),
+  );
   return result.MessageId!;
 }
 ```
@@ -178,11 +196,13 @@ export async function sendNotification(
   subject: string,
   message: string,
 ): Promise<void> {
-  await sns.send(new PublishCommand({
-    TopicArn: topicArn,
-    Subject: subject, // Used as email subject for email subscribers
-    Message: message,
-  }));
+  await sns.send(
+    new PublishCommand({
+      TopicArn: topicArn,
+      Subject: subject, // Used as email subject for email subscribers
+      Message: message,
+    }),
+  );
 }
 ```
 
@@ -197,12 +217,14 @@ export async function publishFifoEvent(
   groupId: string,
   payload: unknown,
 ): Promise<void> {
-  await sns.send(new PublishCommand({
-    TopicArn: FIFO_TOPIC_ARN,
-    Message: JSON.stringify(payload),
-    MessageGroupId: groupId,
-    MessageDeduplicationId: `${groupId}-${Date.now()}`,
-  }));
+  await sns.send(
+    new PublishCommand({
+      TopicArn: FIFO_TOPIC_ARN,
+      Message: JSON.stringify(payload),
+      MessageGroupId: groupId,
+      MessageDeduplicationId: `${groupId}-${Date.now()}`,
+    }),
+  );
 }
 ```
 

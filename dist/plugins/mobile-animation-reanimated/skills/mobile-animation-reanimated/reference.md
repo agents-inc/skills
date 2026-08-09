@@ -75,33 +75,33 @@ What kind of spring behavior?
 
 ### Dependency Changes
 
-| Step | 3.x | 4.x |
-|------|-----|-----|
-| Install | `react-native-reanimated` | `react-native-reanimated` + `react-native-worklets` |
-| Babel plugin | `react-native-reanimated/plugin` | `react-native-worklets/plugin` (must be last) |
-| Architecture | Both old and new | New Architecture only |
+| Step         | 3.x                              | 4.x                                                 |
+| ------------ | -------------------------------- | --------------------------------------------------- |
+| Install      | `react-native-reanimated`        | `react-native-reanimated` + `react-native-worklets` |
+| Babel plugin | `react-native-reanimated/plugin` | `react-native-worklets/plugin` (must be last)       |
+| Architecture | Both old and new                 | New Architecture only                               |
 
 ### API Renames
 
-| 3.x | 4.x | Package |
-|-----|-----|---------|
-| `runOnJS(fn)("arg")` | `scheduleOnRN(fn, "arg")` | `react-native-worklets` |
-| `runOnUI(fn)("arg")` | `scheduleOnUI(fn, "arg")` | `react-native-worklets` |
-| `executeOnUIRuntimeSync(fn)("arg")` | `runOnUISync(fn, "arg")` | `react-native-worklets` |
-| `runOnRuntime(rt, fn)("arg")` | `scheduleOnRuntime(rt, fn, "arg")` | `react-native-worklets` |
-| `useScrollViewOffset` | `useScrollOffset` | `react-native-reanimated` |
+| 3.x                                 | 4.x                                | Package                   |
+| ----------------------------------- | ---------------------------------- | ------------------------- |
+| `runOnJS(fn)("arg")`                | `scheduleOnRN(fn, "arg")`          | `react-native-worklets`   |
+| `runOnUI(fn)("arg")`                | `scheduleOnUI(fn, "arg")`          | `react-native-worklets`   |
+| `executeOnUIRuntimeSync(fn)("arg")` | `runOnUISync(fn, "arg")`           | `react-native-worklets`   |
+| `runOnRuntime(rt, fn)("arg")`       | `scheduleOnRuntime(rt, fn, "arg")` | `react-native-worklets`   |
+| `useScrollViewOffset`               | `useScrollOffset`                  | `react-native-reanimated` |
 
 ### Removed APIs
 
-| Removed | Replacement |
-|---------|-------------|
-| `useWorkletCallback` | `useCallback` + `'worklet'` directive |
-| `useAnimatedGestureHandler` | Gesture Handler 2 `Gesture` API |
-| `combineTransition` | `EntryExitTransition.entering(X).exiting(Y)` |
-| `addWhitelistedNativeProps` | Remove (no-op in v4) |
-| `addWhitelistedUIProps` | Remove (no-op in v4) |
-| `restDisplacementThreshold` | `energyThreshold` (or just remove) |
-| `restSpeedThreshold` | `energyThreshold` (or just remove) |
+| Removed                     | Replacement                                  |
+| --------------------------- | -------------------------------------------- |
+| `useWorkletCallback`        | `useCallback` + `'worklet'` directive        |
+| `useAnimatedGestureHandler` | Gesture Handler 2 `Gesture` API              |
+| `combineTransition`         | `EntryExitTransition.entering(X).exiting(Y)` |
+| `addWhitelistedNativeProps` | Remove (no-op in v4)                         |
+| `addWhitelistedUIProps`     | Remove (no-op in v4)                         |
+| `restDisplacementThreshold` | `energyThreshold` (or just remove)           |
+| `restSpeedThreshold`        | `energyThreshold` (or just remove)           |
 
 ### withSpring Duration Change
 
@@ -113,60 +113,60 @@ Actual completion time = perceptual `duration` x 1.5. To get equivalent timing f
 
 ### Core Hooks
 
-| Hook | Purpose |
-|------|---------|
-| `useSharedValue(initial)` | Create reactive value on UI thread |
-| `useAnimatedStyle(() => style)` | Derive animated styles from shared values |
-| `useAnimatedRef()` | Create ref for scroll offset tracking |
-| `useScrollOffset(ref)` | Track scroll position as shared value |
-| `useDerivedValue(() => expr)` | Compute derived value from shared values |
+| Hook                            | Purpose                                        |
+| ------------------------------- | ---------------------------------------------- |
+| `useSharedValue(initial)`       | Create reactive value on UI thread             |
+| `useAnimatedStyle(() => style)` | Derive animated styles from shared values      |
+| `useAnimatedRef()`              | Create ref for scroll offset tracking          |
+| `useScrollOffset(ref)`          | Track scroll position as shared value          |
+| `useDerivedValue(() => expr)`   | Compute derived value from shared values       |
 | `useAnimatedProps(() => props)` | Animate non-style props (e.g., SVG attributes) |
 
 ### Animation Functions
 
-| Function | Purpose | Key Config |
-|----------|---------|------------|
-| `withTiming(to, config)` | Duration-based | `duration`, `easing` |
+| Function                 | Purpose        | Key Config                                         |
+| ------------------------ | -------------- | -------------------------------------------------- |
+| `withTiming(to, config)` | Duration-based | `duration`, `easing`                               |
 | `withSpring(to, config)` | Physics spring | `damping`/`stiffness` or `duration`/`dampingRatio` |
-| `withDecay(config)` | Momentum | `velocity`, `clamp`, `rubberBandEffect` |
+| `withDecay(config)`      | Momentum       | `velocity`, `clamp`, `rubberBandEffect`            |
 
 ### Modifiers
 
-| Modifier | Purpose |
-|----------|---------|
-| `withDelay(ms, animation)` | Delay before starting |
-| `withSequence(...animations)` | Run animations in order |
-| `withRepeat(animation, count, reverse)` | Repeat animation |
-| `withClamp({ min, max }, animation)` | Clamp output range |
-| `cancelAnimation(sharedValue)` | Stop running animation |
+| Modifier                                | Purpose                 |
+| --------------------------------------- | ----------------------- |
+| `withDelay(ms, animation)`              | Delay before starting   |
+| `withSequence(...animations)`           | Run animations in order |
+| `withRepeat(animation, count, reverse)` | Repeat animation        |
+| `withClamp({ min, max }, animation)`    | Clamp output range      |
+| `cancelAnimation(sharedValue)`          | Stop running animation  |
 
 ### Extrapolation
 
-| Type | Behavior |
-|------|----------|
-| `Extrapolation.CLAMP` | Cap at output range edges |
-| `Extrapolation.EXTEND` | Extend linearly beyond range |
-| `Extrapolation.IDENTITY` | Return raw input value |
+| Type                     | Behavior                     |
+| ------------------------ | ---------------------------- |
+| `Extrapolation.CLAMP`    | Cap at output range edges    |
+| `Extrapolation.EXTEND`   | Extend linearly beyond range |
+| `Extrapolation.IDENTITY` | Return raw input value       |
 
 ### Layout Animation Modifiers
 
-| Modifier | Purpose |
-|----------|---------|
-| `.duration(ms)` | Set animation length |
-| `.delay(ms)` | Postpone start |
-| `.springify()` | Use spring physics |
-| `.damping(n)` / `.stiffness(n)` / `.mass(n)` | Spring config (after springify) |
-| `.withInitialValues(style)` | Override starting values |
-| `.withCallback(fn)` | Execute on completion |
-| `.reduceMotion(mode)` | Respect accessibility |
-| `.randomDelay()` | Random delay (0 to specified delay) |
+| Modifier                                     | Purpose                             |
+| -------------------------------------------- | ----------------------------------- |
+| `.duration(ms)`                              | Set animation length                |
+| `.delay(ms)`                                 | Postpone start                      |
+| `.springify()`                               | Use spring physics                  |
+| `.damping(n)` / `.stiffness(n)` / `.mass(n)` | Spring config (after springify)     |
+| `.withInitialValues(style)`                  | Override starting values            |
+| `.withCallback(fn)`                          | Execute on completion               |
+| `.reduceMotion(mode)`                        | Respect accessibility               |
+| `.randomDelay()`                             | Random delay (0 to specified delay) |
 
 ### Animated Components
 
-| Built-in | Custom |
-|----------|--------|
-| `Animated.View` | `Animated.createAnimatedComponent(Component)` |
-| `Animated.Text` | (call at module level, not in render) |
-| `Animated.ScrollView` | |
-| `Animated.Image` | |
-| `Animated.FlatList` | |
+| Built-in              | Custom                                        |
+| --------------------- | --------------------------------------------- |
+| `Animated.View`       | `Animated.createAnimatedComponent(Component)` |
+| `Animated.Text`       | (call at module level, not in render)         |
+| `Animated.ScrollView` |                                               |
+| `Animated.Image`      |                                               |
+| `Animated.FlatList`   |                                               |

@@ -186,7 +186,13 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
 }
 
 // Components reference CSS variables -- no prop drilling needed
-export function ThemedButton({ label, onPress }: { label: string; onPress: () => void }) {
+export function ThemedButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       className="rounded-lg bg-[--color-primary] px-4 py-3 active:opacity-80"
@@ -202,7 +208,9 @@ export function ThemedButton({ label, onPress }: { label: string; onPress: () =>
 export function ThemedCard({ title, body }: { title: string; body: string }) {
   return (
     <View className="rounded-xl bg-[--color-surface] p-4">
-      <Text className="text-lg font-bold text-[--color-surface-text]">{title}</Text>
+      <Text className="text-lg font-bold text-[--color-surface-text]">
+        {title}
+      </Text>
       <Text className="mt-1 text-[--color-surface-text]">{body}</Text>
     </View>
   );
@@ -228,7 +236,10 @@ const theme = vars({
 
 export function LoadingScreen() {
   return (
-    <View style={theme} className="flex-1 items-center justify-center bg-white dark:bg-gray-900">
+    <View
+      style={theme}
+      className="flex-1 items-center justify-center bg-white dark:bg-gray-900"
+    >
       <ThemedLoader />
       <Text className="mt-4 text-[--color-primary]">Loading...</Text>
     </View>
@@ -274,7 +285,7 @@ module.exports = {
         "safe-bottom": "env(safe-area-inset-bottom)",
       },
       borderRadius: {
-        "card": "12px",
+        card: "12px",
       },
     },
   },

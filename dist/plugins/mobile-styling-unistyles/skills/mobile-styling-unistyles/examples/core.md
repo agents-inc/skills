@@ -77,26 +77,26 @@ const styles = StyleSheet.create((theme, rt) => ({
 
 ### miniRuntime (rt) Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `rt.insets.top` | number | Safe area top (notch/Dynamic Island) |
-| `rt.insets.bottom` | number | Safe area bottom (home indicator) |
-| `rt.insets.left` | number | Safe area left |
-| `rt.insets.right` | number | Safe area right |
-| `rt.insets.ime` | number | Keyboard height (input method editor) |
-| `rt.screen.width` | number | Screen width in pixels |
-| `rt.screen.height` | number | Screen height in pixels |
-| `rt.fontScale` | number | System font scale (e.g. 1.0, 1.5) |
-| `rt.pixelRatio` | number | Device pixel density (e.g. 2.0, 3.0) |
-| `rt.colorScheme` | string | `"light"`, `"dark"`, or `"unspecified"` |
-| `rt.isPortrait` | boolean | True when device is in portrait |
-| `rt.isLandscape` | boolean | True when device is in landscape |
-| `rt.contentSizeCategory` | string | Accessibility text size (e.g. `"Large"`) |
-| `rt.statusBar` | `{width, height}` | Status bar dimensions |
-| `rt.navigationBar` | `{width, height}` | Navigation bar dimensions (Android) |
-| `rt.rtl` | boolean | Right-to-left language mode |
-| `rt.themeName` | string? | Currently active theme name |
-| `rt.breakpoint` | string? | Currently active breakpoint |
+| Property                 | Type              | Description                              |
+| ------------------------ | ----------------- | ---------------------------------------- |
+| `rt.insets.top`          | number            | Safe area top (notch/Dynamic Island)     |
+| `rt.insets.bottom`       | number            | Safe area bottom (home indicator)        |
+| `rt.insets.left`         | number            | Safe area left                           |
+| `rt.insets.right`        | number            | Safe area right                          |
+| `rt.insets.ime`          | number            | Keyboard height (input method editor)    |
+| `rt.screen.width`        | number            | Screen width in pixels                   |
+| `rt.screen.height`       | number            | Screen height in pixels                  |
+| `rt.fontScale`           | number            | System font scale (e.g. 1.0, 1.5)        |
+| `rt.pixelRatio`          | number            | Device pixel density (e.g. 2.0, 3.0)     |
+| `rt.colorScheme`         | string            | `"light"`, `"dark"`, or `"unspecified"`  |
+| `rt.isPortrait`          | boolean           | True when device is in portrait          |
+| `rt.isLandscape`         | boolean           | True when device is in landscape         |
+| `rt.contentSizeCategory` | string            | Accessibility text size (e.g. `"Large"`) |
+| `rt.statusBar`           | `{width, height}` | Status bar dimensions                    |
+| `rt.navigationBar`       | `{width, height}` | Navigation bar dimensions (Android)      |
+| `rt.rtl`                 | boolean           | Right-to-left language mode              |
+| `rt.themeName`           | string?           | Currently active theme name              |
+| `rt.breakpoint`          | string?           | Currently active breakpoint              |
 
 **Gotcha:** `rt.insets.bottom` is NOT dynamic for keyboard. Use `rt.insets.ime` for keyboard-responsive padding.
 
@@ -284,12 +284,12 @@ Inline props always win over `uniProps`, which win over global mappings.
 
 ### When to Use What
 
-| Component Type | Solution |
-|---------------|----------|
-| React Native built-ins (`View`, `Text`) | Normal `style` prop -- no wrapper needed |
-| Third-party with `style` prop | `withUnistyles(Component)` -- auto-maps style |
+| Component Type                              | Solution                                          |
+| ------------------------------------------- | ------------------------------------------------- |
+| React Native built-ins (`View`, `Text`)     | Normal `style` prop -- no wrapper needed          |
+| Third-party with `style` prop               | `withUnistyles(Component)` -- auto-maps style     |
 | Third-party with custom props (color, tint) | `withUnistyles(Component, mappings)` + `uniProps` |
-| Last resort / migration from v2 | `useUnistyles()` hook (causes re-renders) |
+| Last resort / migration from v2             | `useUnistyles()` hook (causes re-renders)         |
 
 ---
 

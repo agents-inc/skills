@@ -1,0 +1,9 @@
+{
+  "name": "web-testing-visual-regression",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Visual regression testing - screenshot baselines, determinism, diff review workflow, baseline custody, and CI wiring for catching unintended UI changes",
+  "author": {
+    "name": "@vince"
+  }
+}

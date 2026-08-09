@@ -1,6 +1,6 @@
 {
   "name": "desktop-storage-electron",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "Persistent storage, SQLite databases, and credential management in Electron apps",
   "author": {

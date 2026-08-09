@@ -43,6 +43,7 @@ const createResponse = await fetch("https://api.example.com/items", {
 ```
 
 **Key points:**
+
 - HTTP plugin requests go through the Rust backend, bypassing CORS restrictions
 - Always scope URL patterns in capabilities -- unscoped `http:default` allows requests to any domain
 - The API mirrors the browser `fetch()` API
@@ -81,7 +82,14 @@ tauri::Builder::default()
 ### JavaScript API
 
 ```typescript
-import { trace, debug, info, warn, error, attachConsole } from "@tauri-apps/plugin-log";
+import {
+  trace,
+  debug,
+  info,
+  warn,
+  error,
+  attachConsole,
+} from "@tauri-apps/plugin-log";
 
 // Attach to browser console (forwards console.log etc. to Tauri log)
 const detach = await attachConsole();
@@ -118,6 +126,7 @@ forwardConsole("error", error);
 ```
 
 **Key points:**
+
 - Default targets: stdout + app log directory
 - Use `.clear_targets()` before `.targets()` to override defaults
 - Log directory: Linux `~/.local/share/{bundleId}/logs`, macOS `~/Library/Logs/{bundleId}`, Windows `AppData\Local\{bundleId}\logs`
@@ -147,6 +156,7 @@ ws.disconnect();
 ```
 
 **Key points:**
+
 - WebSocket connections go through the Rust backend (bypasses browser restrictions)
 - Works on all platforms
 - Permissions: `"websocket:default"`
@@ -164,11 +174,12 @@ await upload(
   (progress, total) => {
     console.log(`Uploaded ${progress} of ${total} bytes`);
   },
-  { "Authorization": "Bearer token" },
+  { Authorization: "Bearer token" },
 );
 ```
 
 **Key points:**
+
 - Streams the file from disk (does not load entire file into memory)
 - Progress callback provides byte-level progress
 - Works on all platforms

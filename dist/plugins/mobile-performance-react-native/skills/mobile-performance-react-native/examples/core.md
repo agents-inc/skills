@@ -410,13 +410,13 @@ export function TunedFlatList({
 
 **Key tuning props explained:**
 
-| Prop | Default | Effect |
-|------|---------|--------|
-| `windowSize` | 21 | Viewports to keep rendered. Lower = less memory, more blank area. Start at 5. |
-| `maxToRenderPerBatch` | 10 | Items per render cycle. Higher = fewer blanks, more JS thread work. |
-| `initialNumToRender` | 10 | Items on first render. Match to visible items for fastest initial paint. |
-| `getItemLayout` | None | Eliminates measurement for fixed-height items. Massive scrollToIndex speedup. |
-| `removeClippedSubviews` | false | Reclaims memory for off-screen items. Android only -- causes issues on iOS. |
+| Prop                    | Default | Effect                                                                        |
+| ----------------------- | ------- | ----------------------------------------------------------------------------- |
+| `windowSize`            | 21      | Viewports to keep rendered. Lower = less memory, more blank area. Start at 5. |
+| `maxToRenderPerBatch`   | 10      | Items per render cycle. Higher = fewer blanks, more JS thread work.           |
+| `initialNumToRender`    | 10      | Items on first render. Match to visible items for fastest initial paint.      |
+| `getItemLayout`         | None    | Eliminates measurement for fixed-height items. Massive scrollToIndex speedup. |
+| `removeClippedSubviews` | false   | Reclaims memory for off-screen items. Android only -- causes issues on iOS.   |
 
 ---
 

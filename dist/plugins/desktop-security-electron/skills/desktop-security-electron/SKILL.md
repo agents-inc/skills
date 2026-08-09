@@ -136,10 +136,10 @@ await flipFuses(
 
 ASAR integrity ensures the packaged `app.asar` has not been tampered with. Requires **two** fuses enabled together.
 
-| Fuse | Purpose |
-|------|---------|
-| `EnableEmbeddedAsarIntegrityValidation` | Validates the ASAR header hash at runtime |
-| `OnlyLoadAppFromAsar` | Prevents loading app code from outside the ASAR archive |
+| Fuse                                    | Purpose                                                 |
+| --------------------------------------- | ------------------------------------------------------- |
+| `EnableEmbeddedAsarIntegrityValidation` | Validates the ASAR header hash at runtime               |
+| `OnlyLoadAppFromAsar`                   | Prevents loading app code from outside the ASAR archive |
 
 **Platform support:** macOS (Electron 16+), Windows (Electron 30+).
 
@@ -173,9 +173,9 @@ const mainWindow = new BrowserWindow({
 // BAD -- overriding secure defaults
 const mainWindow = new BrowserWindow({
   webPreferences: {
-    contextIsolation: false,  // exposes preload scope to renderer
-    nodeIntegration: true,    // gives renderer full Node.js access
-    sandbox: false,           // disables OS-level process isolation
+    contextIsolation: false, // exposes preload scope to renderer
+    nodeIntegration: true, // gives renderer full Node.js access
+    sandbox: false, // disables OS-level process isolation
   },
 });
 ```
@@ -214,7 +214,10 @@ Set CSP to restrict what the renderer can load and execute. Use the `<meta>` tag
 By default, Electron grants most web API permissions (camera, microphone, geolocation, notifications). Use an explicit allowlist to deny everything else.
 
 ```javascript
-const ALLOWED_PERMISSIONS = new Set(["clipboard-read", "clipboard-sanitized-write"]);
+const ALLOWED_PERMISSIONS = new Set([
+  "clipboard-read",
+  "clipboard-sanitized-write",
+]);
 
 session.defaultSession.setPermissionRequestHandler(
   (_webContents, permission, callback) => {
@@ -222,11 +225,9 @@ session.defaultSession.setPermissionRequestHandler(
   },
 );
 
-session.defaultSession.setPermissionCheckHandler(
-  (_webContents, permission) => {
-    return ALLOWED_PERMISSIONS.has(permission);
-  },
-);
+session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+  return ALLOWED_PERMISSIONS.has(permission);
+});
 ```
 
 **Why both handlers:** `setPermissionRequestHandler` handles async permission requests (prompted). `setPermissionCheckHandler` handles synchronous permission queries (silent checks). Without both, some permissions can slip through. See [examples/csp-permissions.md](examples/csp-permissions.md) for extended examples.
@@ -266,7 +267,10 @@ Custom protocols (`myapp://`) replace `file://` for serving local content and ha
 
 ```javascript
 protocol.registerSchemesAsPrivileged([
-  { scheme: "myapp", privileges: { standard: true, secure: true, supportFetchAPI: true } },
+  {
+    scheme: "myapp",
+    privileges: { standard: true, secure: true, supportFetchAPI: true },
+  },
 ]);
 ```
 

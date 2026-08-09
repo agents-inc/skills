@@ -146,7 +146,10 @@ const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 // Cancel a specific notification by its identifier
 const notificationId = await Notifications.scheduleNotificationAsync({
   content: { title: "Reminder", body: "..." },
-  trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: EXAMPLE_DELAY_SECONDS },
+  trigger: {
+    type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+    seconds: EXAMPLE_DELAY_SECONDS,
+  },
 });
 await Notifications.cancelScheduledNotificationAsync(notificationId);
 
@@ -213,7 +216,8 @@ async function setupAndroidChannels() {
       name: channel.name,
       importance: channel.importance,
       sound: "sound" in channel ? channel.sound : undefined,
-      vibrationPattern: "vibrationPattern" in channel ? channel.vibrationPattern : undefined,
+      vibrationPattern:
+        "vibrationPattern" in channel ? channel.vibrationPattern : undefined,
       groupId: "groupId" in channel ? channel.groupId : undefined,
       description: "description" in channel ? channel.description : undefined,
     });
@@ -282,7 +286,9 @@ async function setupNotificationCategories() {
 ```typescript
 import * as Notifications from "expo-notifications";
 
-function handleNotificationAction(response: Notifications.NotificationResponse) {
+function handleNotificationAction(
+  response: Notifications.NotificationResponse,
+) {
   const actionId = response.actionIdentifier;
   const data = response.notification.request.content.data;
 

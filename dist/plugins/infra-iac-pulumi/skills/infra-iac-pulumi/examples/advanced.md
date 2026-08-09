@@ -16,8 +16,16 @@ import * as aws from "@pulumi/aws";
 const vpc = new aws.ec2.Vpc("main", { cidrBlock: "10.0.0.0/16" });
 
 const publicSubnets = [
-  new aws.ec2.Subnet("public-1", { vpcId: vpc.id, cidrBlock: "10.0.1.0/24", availabilityZone: "us-east-1a" }),
-  new aws.ec2.Subnet("public-2", { vpcId: vpc.id, cidrBlock: "10.0.2.0/24", availabilityZone: "us-east-1b" }),
+  new aws.ec2.Subnet("public-1", {
+    vpcId: vpc.id,
+    cidrBlock: "10.0.1.0/24",
+    availabilityZone: "us-east-1a",
+  }),
+  new aws.ec2.Subnet("public-2", {
+    vpcId: vpc.id,
+    cidrBlock: "10.0.2.0/24",
+    availabilityZone: "us-east-1b",
+  }),
 ];
 
 // Export values for other stacks to consume
@@ -85,20 +93,26 @@ import * as pulumi from "@pulumi/pulumi";
 const MANAGED_BY_TAG = "pulumi";
 
 // Apply tags to all taggable child resources
-const vpc = new MyVpcComponent("production", {}, {
-  transforms: [(args) => {
-    if (isTaggable(args.type)) {
-      return {
-        props: {
-          ...args.props,
-          tags: { ...args.props["tags"], ManagedBy: MANAGED_BY_TAG },
-        },
-        opts: args.opts,
-      };
-    }
-    return undefined; // Return undefined to leave unmodified
-  }],
-});
+const vpc = new MyVpcComponent(
+  "production",
+  {},
+  {
+    transforms: [
+      (args) => {
+        if (isTaggable(args.type)) {
+          return {
+            props: {
+              ...args.props,
+              tags: { ...args.props["tags"], ManagedBy: MANAGED_BY_TAG },
+            },
+            opts: args.opts,
+          };
+        }
+        return undefined; // Return undefined to leave unmodified
+      },
+    ],
+  },
+);
 
 function isTaggable(type: string): boolean {
   // AWS resources generally support tags
@@ -132,17 +146,26 @@ pulumi.runtime.registerResourceTransform((args) => {
 
 ```typescript
 // Ignore tag drift on all resources in a component
-const vpc = new MyVpcComponent("vpc", {}, {
-  transforms: [(args) => {
-    if (args.type === "aws:ec2/vpc:Vpc" || args.type === "aws:ec2/subnet:Subnet") {
-      return {
-        props: args.props,
-        opts: pulumi.mergeOptions(args.opts, { ignoreChanges: ["tags"] }),
-      };
-    }
-    return undefined;
-  }],
-});
+const vpc = new MyVpcComponent(
+  "vpc",
+  {},
+  {
+    transforms: [
+      (args) => {
+        if (
+          args.type === "aws:ec2/vpc:Vpc" ||
+          args.type === "aws:ec2/subnet:Subnet"
+        ) {
+          return {
+            props: args.props,
+            opts: pulumi.mergeOptions(args.opts, { ignoreChanges: ["tags"] }),
+          };
+        }
+        return undefined;
+      },
+    ],
+  },
+);
 ```
 
 **Migration note:** `transforms` replaces the deprecated `transformations`. Key differences: `transforms` support modifying packaged component children (awsx, eks), support async callbacks, and do not pass a Resource object (use `args.type` instead).
@@ -185,7 +208,10 @@ class WebhookProvider implements pulumi.dynamic.ResourceProvider {
     };
   }
 
-  async read(id: string, props: WebhookOutputs): Promise<pulumi.dynamic.ReadResult> {
+  async read(
+    id: string,
+    props: WebhookOutputs,
+  ): Promise<pulumi.dynamic.ReadResult> {
     const response = await fetch(`https://api.example.com/webhooks/${id}`);
     if (!response.ok) {
       // Return empty to signal resource was deleted externally
@@ -224,7 +250,11 @@ export class Webhook extends pulumi.dynamic.Resource {
   declare readonly webhookId: pulumi.Output<string>;
   declare readonly createdAt: pulumi.Output<string>;
 
-  constructor(name: string, args: WebhookResourceInputs, opts?: pulumi.CustomResourceOptions) {
+  constructor(
+    name: string,
+    args: WebhookResourceInputs,
+    opts?: pulumi.CustomResourceOptions,
+  ) {
     super(
       new WebhookProvider(),
       name,
@@ -245,6 +275,7 @@ export const hookId = hook.webhookId;
 ```
 
 **Key points:**
+
 - Output properties use `declare readonly` (not `public readonly`)
 - Pass `{ outputName: undefined, ...args }` to super to register output properties
 - Provider methods receive unwrapped plain values (not `Output<T>`)
@@ -374,7 +405,10 @@ new policy.PolicyPack("compliance", {
       validateResource: policy.validateResourceOfType(
         "aws.s3.Bucket",
         (bucket, args, reportViolation) => {
-          if (bucket.acl === "public-read" || bucket.acl === "public-read-write") {
+          if (
+            bucket.acl === "public-read" ||
+            bucket.acl === "public-read-write"
+          ) {
             reportViolation("S3 buckets must not have public ACLs");
           }
         },
@@ -399,7 +433,9 @@ new policy.PolicyPack("stack-policies", {
           if (resource.type === "aws:rds/instance:Instance") {
             const props = resource.props as Record<string, unknown>;
             if (!props.storageEncrypted) {
-              reportViolation(`RDS instance ${resource.name} must have storage encryption enabled`);
+              reportViolation(
+                `RDS instance ${resource.name} must have storage encryption enabled`,
+              );
             }
           }
         }
@@ -430,9 +466,15 @@ pulumi policy publish ./policy
 ```typescript
 // Before: resource was named "my-bucket"
 // After: rename to "data-bucket" without destroying and recreating
-const bucket = new aws.s3.Bucket("data-bucket", { /* ... */ }, {
-  aliases: [{ name: "my-bucket" }],
-});
+const bucket = new aws.s3.Bucket(
+  "data-bucket",
+  {
+    /* ... */
+  },
+  {
+    aliases: [{ name: "my-bucket" }],
+  },
+);
 ```
 
 ### Move Resource Into a Component
@@ -444,10 +486,14 @@ class StorageComponent extends pulumi.ComponentResource {
     super("myinfra:storage:StorageComponent", name, {}, opts);
 
     // Alias tells Pulumi this was previously at root (no parent)
-    const bucket = new aws.s3.Bucket("data-bucket", {}, {
-      parent: this,
-      aliases: [{ parent: pulumi.rootStackResource }],
-    });
+    const bucket = new aws.s3.Bucket(
+      "data-bucket",
+      {},
+      {
+        parent: this,
+        aliases: [{ parent: pulumi.rootStackResource }],
+      },
+    );
 
     this.registerOutputs({});
   }
@@ -460,10 +506,15 @@ class StorageComponent extends pulumi.ComponentResource {
 // Changed the component type token from "pkg:old:Name" to "pkg:new:Name"
 class MyComponent extends pulumi.ComponentResource {
   constructor(name: string, opts?: pulumi.ComponentResourceOptions) {
-    super("myinfra:v2:MyComponent", name, {}, {
-      ...opts,
-      aliases: [{ type: "myinfra:v1:MyComponent" }],
-    });
+    super(
+      "myinfra:v2:MyComponent",
+      name,
+      {},
+      {
+        ...opts,
+        aliases: [{ type: "myinfra:v1:MyComponent" }],
+      },
+    );
 
     this.registerOutputs({});
   }

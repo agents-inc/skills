@@ -186,7 +186,11 @@ Use `useQuery` from `@powersync/react` for watched queries that re-execute when 
 import { useQuery, useStatus, usePowerSync } from "@powersync/react";
 
 function TodoList({ listId }: { listId: string }) {
-  const { data: todos, isLoading, error } = useQuery<TodoRecord>(
+  const {
+    data: todos,
+    isLoading,
+    error,
+  } = useQuery<TodoRecord>(
     "SELECT * FROM todos WHERE list_id = ? ORDER BY created_at DESC",
     [listId],
   );
@@ -256,7 +260,10 @@ See [examples/core.md](examples/core.md) for `get()`, `getAll()`, `getOptional()
 The connector bridges PowerSync with your backend. Implement `fetchCredentials()` for auth and `uploadData()` for pushing local changes.
 
 ```typescript
-import type { PowerSyncBackendConnector, PowerSyncCredentials } from "@powersync/react-native";
+import type {
+  PowerSyncBackendConnector,
+  PowerSyncCredentials,
+} from "@powersync/react-native";
 import type { AbstractPowerSyncDatabase } from "@powersync/react-native";
 
 export const connector: PowerSyncBackendConnector = {
@@ -300,7 +307,7 @@ bucket_definitions:
     data:
       - SELECT * FROM lists WHERE owner_id = bucket.user_id
       - SELECT * FROM todos WHERE list_id IN (
-          SELECT id FROM lists WHERE owner_id = bucket.user_id
+        SELECT id FROM lists WHERE owner_id = bucket.user_id
         )
 
   global_settings:
@@ -396,15 +403,15 @@ What kind of data are you storing?
 
 ### When to Use Each Query API
 
-| Scenario                          | API                                        |
-|-----------------------------------|--------------------------------------------|
-| Reactive component data           | `useQuery()` from `@powersync/react`       |
-| Reactive with Suspense            | `useSuspenseQuery()` from `@powersync/react` |
-| One-time fetch (no reactivity)    | `useQuery()` with `runQueryOnce: true`     |
-| Service/utility reads             | `powersync.getAll()` / `get()` / `getOptional()` |
-| Write operations                  | `powersync.execute()`                      |
-| Connection status                 | `useStatus()` from `@powersync/react`      |
-| Database instance access          | `usePowerSync()` from `@powersync/react`   |
+| Scenario                       | API                                              |
+| ------------------------------ | ------------------------------------------------ |
+| Reactive component data        | `useQuery()` from `@powersync/react`             |
+| Reactive with Suspense         | `useSuspenseQuery()` from `@powersync/react`     |
+| One-time fetch (no reactivity) | `useQuery()` with `runQueryOnce: true`           |
+| Service/utility reads          | `powersync.getAll()` / `get()` / `getOptional()` |
+| Write operations               | `powersync.execute()`                            |
+| Connection status              | `useStatus()` from `@powersync/react`            |
+| Database instance access       | `usePowerSync()` from `@powersync/react`         |
 
 </decision_framework>
 

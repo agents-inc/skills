@@ -27,7 +27,9 @@ const schema = createSchema({
       countdown: {
         subscribe: async function* (_, { from }: { from: number }) {
           for (let i = from; i >= 0; i--) {
-            await new Promise((resolve) => setTimeout(resolve, TICK_INTERVAL_MS));
+            await new Promise((resolve) =>
+              setTimeout(resolve, TICK_INTERVAL_MS),
+            );
             yield { countdown: i };
           }
         },
@@ -80,7 +82,8 @@ const schema = createSchema({
     Subscription: {
       newMessage: {
         subscribe: () => pubSub.subscribe("newMessage"),
-        resolve: (payload: { id: string; text: string; author: string }) => payload,
+        resolve: (payload: { id: string; text: string; author: string }) =>
+          payload,
       },
     },
     Mutation: {
@@ -106,7 +109,9 @@ Use `pipe`, `filter`, and `map` from `graphql-yoga` to transform and filter subs
 import { createPubSub, createSchema, pipe, filter, map } from "graphql-yoga";
 
 const pubSub = createPubSub<{
-  notification: [payload: { userId: string; message: string; priority: string }];
+  notification: [
+    payload: { userId: string; message: string; priority: string },
+  ];
 }>();
 
 const schema = createSchema({

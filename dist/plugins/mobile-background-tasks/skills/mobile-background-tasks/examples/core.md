@@ -136,7 +136,7 @@ async function initBackgroundFetch(): Promise<number> {
       console.warn("[BackgroundFetch] Task timed out:", taskId);
       // Save partial progress, then finish immediately
       BackgroundFetch.finish(taskId);
-    }
+    },
   );
 
   return status;
@@ -177,22 +177,19 @@ AppRegistry.registerComponent(APP_NAME, () => App);
 
 // Register headless task for Android background execution
 // This runs when the app is terminated but a background fetch fires
-AppRegistry.registerHeadlessTask(
-  HEADLESS_TASK_NAME,
-  () => async (event) => {
-    const { taskId } = event;
-    console.log("[HeadlessJS] Task:", taskId);
+AppRegistry.registerHeadlessTask(HEADLESS_TASK_NAME, () => async (event) => {
+  const { taskId } = event;
+  console.log("[HeadlessJS] Task:", taskId);
 
-    try {
-      await performLightweightSync();
-    } catch (error) {
-      console.error("[HeadlessJS] Failed:", error);
-    }
-
-    // Task completes when the async function resolves
-    // No need to call finish() -- the promise resolution signals completion
+  try {
+    await performLightweightSync();
+  } catch (error) {
+    console.error("[HeadlessJS] Failed:", error);
   }
-);
+
+  // Task completes when the async function resolves
+  // No need to call finish() -- the promise resolution signals completion
+});
 ```
 
 **Key requirements for headless JS:**

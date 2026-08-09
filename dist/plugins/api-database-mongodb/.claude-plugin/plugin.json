@@ -1,8 +1,8 @@
 {
   "name": "api-database-mongodb",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "skills": "./skills/",
-  "description": "MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management",
+  "description": "Native MongoDB driver (the mongodb npm package) - MongoClient lifecycle, typed collections, CRUD result shapes, cursors, aggregation pipelines, index design, transactions",
   "author": {
     "name": "@vince"
   }

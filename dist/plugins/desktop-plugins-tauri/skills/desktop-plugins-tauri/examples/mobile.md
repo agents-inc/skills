@@ -19,6 +19,7 @@ console.log(`Scanned: ${result.content} (format: ${result.format})`);
 ```
 
 **Key points:**
+
 - iOS and Android only -- not available on desktop
 - Requires camera permission on both platforms
 - `windowed: true` shows the scanner in a small overlay; `false` uses full-screen
@@ -47,6 +48,7 @@ try {
 ```
 
 **Key points:**
+
 - iOS (Face ID, Touch ID) and Android (fingerprint, face) only
 - `allowDeviceCredential: true` allows PIN/password as fallback
 - `confirmationRequired` adds explicit confirmation after biometric (Android only)
@@ -66,7 +68,9 @@ import {
 
 // Get current position
 const position = await getCurrentPosition();
-console.log(`Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`);
+console.log(
+  `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`,
+);
 console.log(`Accuracy: ${position.coords.accuracy}m`);
 
 // Watch position changes
@@ -74,13 +78,16 @@ const watchId = await watchPosition(
   { enableHighAccuracy: true },
   (position) => {
     if (position) {
-      console.log(`Moved to: ${position.coords.latitude}, ${position.coords.longitude}`);
+      console.log(
+        `Moved to: ${position.coords.latitude}, ${position.coords.longitude}`,
+      );
     }
   },
 );
 ```
 
 **Key points:**
+
 - iOS and Android only
 - Requires location permission on both platforms (the plugin handles permission requests)
 - `enableHighAccuracy: true` uses GPS (higher battery usage)
@@ -114,6 +121,7 @@ await vibrate(VIBRATION_DURATION_MS);
 ```
 
 **Key points:**
+
 - iOS and Android only
 - `impactFeedback` accepts string values: `"light"`, `"medium"`, `"heavy"`
 - `notificationFeedback` accepts string values: `"success"`, `"warning"`, `"error"`
@@ -136,13 +144,11 @@ const tag = await scan({
 console.log("Tag data:", tag);
 
 // Write to an NFC tag
-await write([
-  textRecord("Hello from Tauri"),
-  uriRecord("https://example.com"),
-]);
+await write([textRecord("Hello from Tauri"), uriRecord("https://example.com")]);
 ```
 
 **Key points:**
+
 - iOS and Android only
 - Requires NFC hardware and permission
 - `scan()` takes an options object with `type` and `keepSessionAlive` fields

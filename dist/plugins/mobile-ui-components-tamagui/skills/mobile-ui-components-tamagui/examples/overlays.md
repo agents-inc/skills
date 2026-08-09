@@ -79,7 +79,12 @@ function ScrollableSheet({ items }: { items: string[] }) {
         <Sheet.ScrollView padding="$4">
           <YStack gap="$2">
             {items.map((item) => (
-              <YStack key={item} padding="$3" backgroundColor="$background" borderRadius="$2">
+              <YStack
+                key={item}
+                padding="$3"
+                backgroundColor="$background"
+                borderRadius="$2"
+              >
                 <SizableText>{item}</SizableText>
               </YStack>
             ))}
@@ -156,7 +161,16 @@ function ConfirmDialog() {
 The primary pattern for responsive overlays. `Adapt` renders Dialog.Content as a Sheet at smaller breakpoints on touch devices.
 
 ```tsx
-import { Adapt, Button, Dialog, Sheet, YStack, SizableText, XStack, Input } from "tamagui";
+import {
+  Adapt,
+  Button,
+  Dialog,
+  Sheet,
+  YStack,
+  SizableText,
+  XStack,
+  Input,
+} from "tamagui";
 
 function AdaptiveFormDialog() {
   return (
@@ -197,7 +211,9 @@ function AdaptiveFormDialog() {
           width={400}
         >
           <Dialog.Title>Edit Profile</Dialog.Title>
-          <Dialog.Description>Update your display name and bio.</Dialog.Description>
+          <Dialog.Description>
+            Update your display name and bio.
+          </Dialog.Description>
 
           <YStack gap="$3">
             <Input placeholder="Display name" />
@@ -258,9 +274,7 @@ function ControlledDialog({
           elevate
         >
           <Dialog.Title>Controlled Dialog</Dialog.Title>
-          <Dialog.Description>
-            Open state managed by parent.
-          </Dialog.Description>
+          <Dialog.Description>Open state managed by parent.</Dialog.Description>
           <Dialog.Close asChild>
             <Button>Close</Button>
           </Dialog.Close>

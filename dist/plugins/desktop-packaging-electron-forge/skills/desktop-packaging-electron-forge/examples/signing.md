@@ -148,11 +148,11 @@ packagerConfig: {
 
 ### Certificate Types Comparison
 
-| Type | SmartScreen | Cost | Setup |
-|------|------------|------|-------|
-| Standard (OV) | Builds reputation over time | ~$200/year | Buy from CA, install .pfx |
-| Extended Validation (EV) | Immediate trust | ~$400/year | HSM/USB token required |
-| Azure Trusted Signing | Immediate trust | ~$10/month | Azure subscription |
+| Type                     | SmartScreen                 | Cost       | Setup                     |
+| ------------------------ | --------------------------- | ---------- | ------------------------- |
+| Standard (OV)            | Builds reputation over time | ~$200/year | Buy from CA, install .pfx |
+| Extended Validation (EV) | Immediate trust             | ~$400/year | HSM/USB token required    |
+| Azure Trusted Signing    | Immediate trust             | ~$10/month | Azure subscription        |
 
 ---
 

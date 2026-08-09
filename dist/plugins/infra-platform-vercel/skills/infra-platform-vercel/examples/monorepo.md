@@ -81,6 +81,7 @@ my-monorepo/
 ```
 
 **How `ignoreCommand` works:**
+
 - Exit code `1` = build continues
 - Exit code `0` = build is skipped
 
@@ -189,11 +190,11 @@ coverage/
 }
 ```
 
-| Setting | Behavior |
-|---------|----------|
-| `cleanUrls: true` | `/about.html` redirects to `/about` |
-| `trailingSlash: false` | `/about/` redirects to `/about` |
-| `trailingSlash: true` | `/about` redirects to `/about/` |
+| Setting                | Behavior                            |
+| ---------------------- | ----------------------------------- |
+| `cleanUrls: true`      | `/about.html` redirects to `/about` |
+| `trailingSlash: false` | `/about/` redirects to `/about`     |
+| `trailingSlash: true`  | `/about` redirects to `/about/`     |
 
 **Gotcha:** `cleanUrls: true` causes 404 errors locally with `vercel dev` but works correctly when deployed.
 

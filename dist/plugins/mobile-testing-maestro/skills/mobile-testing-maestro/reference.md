@@ -8,97 +8,97 @@
 
 ### Interaction Commands
 
-| Command | Purpose | Example |
-|---------|---------|---------|
-| `tapOn` | Tap element or coordinates | `- tapOn: id: "btn"` |
-| `doubleTapOn` | Double-tap element | `- doubleTapOn: id: "like"` |
-| `longPressOn` | Long press (context menu) | `- longPressOn: id: "msg"` |
-| `inputText` | Type into focused field | `- inputText: "hello"` |
-| `eraseText` | Delete text (count or all) | `- eraseText: 5` |
-| `pressKey` | Hardware key press | `- pressKey: Enter` |
-| `hideKeyboard` | Dismiss on-screen keyboard | `- hideKeyboard` |
-| `swipe` | Swipe gesture | `- swipe: direction: LEFT` |
-| `scroll` | Scroll in direction | `- scroll` |
-| `scrollUntilVisible` | Scroll until element found | See examples |
-| `back` | System back button | `- back` |
-| `pasteText` | Paste clipboard content | `- pasteText` |
+| Command              | Purpose                    | Example                     |
+| -------------------- | -------------------------- | --------------------------- |
+| `tapOn`              | Tap element or coordinates | `- tapOn: id: "btn"`        |
+| `doubleTapOn`        | Double-tap element         | `- doubleTapOn: id: "like"` |
+| `longPressOn`        | Long press (context menu)  | `- longPressOn: id: "msg"`  |
+| `inputText`          | Type into focused field    | `- inputText: "hello"`      |
+| `eraseText`          | Delete text (count or all) | `- eraseText: 5`            |
+| `pressKey`           | Hardware key press         | `- pressKey: Enter`         |
+| `hideKeyboard`       | Dismiss on-screen keyboard | `- hideKeyboard`            |
+| `swipe`              | Swipe gesture              | `- swipe: direction: LEFT`  |
+| `scroll`             | Scroll in direction        | `- scroll`                  |
+| `scrollUntilVisible` | Scroll until element found | See examples                |
+| `back`               | System back button         | `- back`                    |
+| `pasteText`          | Paste clipboard content    | `- pasteText`               |
 
 ### Assertion Commands
 
-| Command | Purpose | Auto-Retry |
-|---------|---------|------------|
-| `assertVisible` | Element is on screen | 7 seconds |
-| `assertNotVisible` | Element is NOT on screen | 7 seconds |
-| `assertTrue` | JavaScript expression is true | No |
-| `assertScreenshot` | Visual regression match | No |
-| `assertWithAI` | AI validates UI state | No |
-| `assertNoDefectsWithAI` | AI checks for visual defects | No |
+| Command                 | Purpose                       | Auto-Retry |
+| ----------------------- | ----------------------------- | ---------- |
+| `assertVisible`         | Element is on screen          | 7 seconds  |
+| `assertNotVisible`      | Element is NOT on screen      | 7 seconds  |
+| `assertTrue`            | JavaScript expression is true | No         |
+| `assertScreenshot`      | Visual regression match       | No         |
+| `assertWithAI`          | AI validates UI state         | No         |
+| `assertNoDefectsWithAI` | AI checks for visual defects  | No         |
 
 ### Data Commands
 
-| Command | Purpose |
-|---------|---------|
-| `inputRandomName` | Generate random name |
-| `inputRandomEmail` | Generate random email |
-| `inputRandomNumber` | Generate random number |
-| `inputRandomText` | Generate random text |
-| `copyTextFrom` | Extract text from element |
-| `setClipboard` | Set device clipboard |
+| Command             | Purpose                   |
+| ------------------- | ------------------------- |
+| `inputRandomName`   | Generate random name      |
+| `inputRandomEmail`  | Generate random email     |
+| `inputRandomNumber` | Generate random number    |
+| `inputRandomText`   | Generate random text      |
+| `copyTextFrom`      | Extract text from element |
+| `setClipboard`      | Set device clipboard      |
 
 ### App Lifecycle Commands
 
-| Command | Purpose |
-|---------|---------|
-| `launchApp` | Start app (with permissions/state options) |
-| `stopApp` | Stop app (preserve state) |
-| `killApp` | Force stop (optional clearState) |
-| `clearState` | Reset app to clean install |
-| `clearKeychain` | Clear iOS keychain data |
+| Command         | Purpose                                    |
+| --------------- | ------------------------------------------ |
+| `launchApp`     | Start app (with permissions/state options) |
+| `stopApp`       | Stop app (preserve state)                  |
+| `killApp`       | Force stop (optional clearState)           |
+| `clearState`    | Reset app to clean install                 |
+| `clearKeychain` | Clear iOS keychain data                    |
 
 ### Device Commands
 
-| Command | Purpose |
-|---------|---------|
-| `setLocation` | Set GPS coordinates |
-| `setOrientation` | Portrait or landscape |
-| `setAirplaneMode` | Enable/disable airplane mode |
-| `toggleAirplaneMode` | Toggle airplane mode |
-| `setPermissions` | Grant/revoke permissions |
-| `openLink` | Open URL or deep link |
-| `addMedia` | Add image/video to gallery |
-| `travel` | Simulate time passage |
+| Command              | Purpose                      |
+| -------------------- | ---------------------------- |
+| `setLocation`        | Set GPS coordinates          |
+| `setOrientation`     | Portrait or landscape        |
+| `setAirplaneMode`    | Enable/disable airplane mode |
+| `toggleAirplaneMode` | Toggle airplane mode         |
+| `setPermissions`     | Grant/revoke permissions     |
+| `openLink`           | Open URL or deep link        |
+| `addMedia`           | Add image/video to gallery   |
+| `travel`             | Simulate time passage        |
 
 ### Flow Control Commands
 
-| Command | Purpose |
-|---------|---------|
-| `runFlow` | Execute subflow (file or inline) |
-| `repeat` | Loop commands (count or condition) |
-| `retry` | Retry on failure (max 3) |
-| `evalScript` | Inline JavaScript execution |
-| `runScript` | External JavaScript file |
-| `waitForAnimationToEnd` | Pause until animations complete |
-| `extendedWaitUntil` | Custom timeout wait |
+| Command                 | Purpose                            |
+| ----------------------- | ---------------------------------- |
+| `runFlow`               | Execute subflow (file or inline)   |
+| `repeat`                | Loop commands (count or condition) |
+| `retry`                 | Retry on failure (max 3)           |
+| `evalScript`            | Inline JavaScript execution        |
+| `runScript`             | External JavaScript file           |
+| `waitForAnimationToEnd` | Pause until animations complete    |
+| `extendedWaitUntil`     | Custom timeout wait                |
 
 ### Recording Commands
 
-| Command | Purpose |
-|---------|---------|
+| Command          | Purpose             |
+| ---------------- | ------------------- |
 | `startRecording` | Begin video capture |
-| `stopRecording` | End video capture |
-| `takeScreenshot` | Capture screenshot |
+| `stopRecording`  | End video capture   |
+| `takeScreenshot` | Capture screenshot  |
 
 ---
 
 ## Selector Priority
 
-| Priority | Selector | Stability | Notes |
-|----------|----------|-----------|-------|
-| 1 | `id` | High | Accessibility identifier, language-independent |
-| 2 | `text` + relational | Medium-High | Text with `below`/`childOf` for disambiguation |
-| 3 | `text` | Medium | Breaks with i18n, copy changes |
-| 4 | `index` | Medium | Position-dependent, breaks if list changes |
-| 5 | `point` | Low | Coordinate-based, breaks on different screens |
+| Priority | Selector            | Stability   | Notes                                          |
+| -------- | ------------------- | ----------- | ---------------------------------------------- |
+| 1        | `id`                | High        | Accessibility identifier, language-independent |
+| 2        | `text` + relational | Medium-High | Text with `below`/`childOf` for disambiguation |
+| 3        | `text`              | Medium      | Breaks with i18n, copy changes                 |
+| 4        | `index`             | Medium      | Position-dependent, breaks if list changes     |
+| 5        | `point`             | Low         | Coordinate-based, breaks on different screens  |
 
 ---
 
@@ -181,9 +181,9 @@ appId: com.example.app
 
 # Test discovery
 flows:
-  - "*"           # Root only (default)
-  - "auth/*"      # Specific subdirectory
-  - "tests/**"    # Recursive
+  - "*" # Root only (default)
+  - "auth/*" # Specific subdirectory
+  - "tests/**" # Recursive
 
 # Tag filtering
 includeTags:
@@ -194,8 +194,8 @@ excludeTags:
 
 # Execution order
 executionOrder:
-  continueOnFailure: true          # Continue suite after flow failure
-  flowsOrder:                       # Explicit execution order
+  continueOnFailure: true # Continue suite after flow failure
+  flowsOrder: # Explicit execution order
     - setup-flow.yaml
     - login-test.yaml
     - checkout-test.yaml

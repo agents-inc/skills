@@ -94,10 +94,16 @@ Pulumi treats infrastructure as real code, not configuration files. TypeScript g
 Every resource takes a logical name (used for state tracking), an args bag (typed inputs), and optional resource options.
 
 ```typescript
-const bucket = new aws.s3.Bucket("data-bucket", {
-  versioning: { enabled: true },
-  lifecycleRules: [{ enabled: true, expiration: { days: BUCKET_EXPIRY_DAYS } }],
-}, { protect: true }); // Prevent accidental deletion
+const bucket = new aws.s3.Bucket(
+  "data-bucket",
+  {
+    versioning: { enabled: true },
+    lifecycleRules: [
+      { enabled: true, expiration: { days: BUCKET_EXPIRY_DAYS } },
+    ],
+  },
+  { protect: true },
+); // Prevent accidental deletion
 ```
 
 **Key points:** Logical names must be unique per type within a stack. Pulumi auto-appends a random suffix to the physical name to prevent collisions. Use `protect: true` on critical resources. Export outputs for cross-stack consumption.
@@ -123,20 +129,31 @@ class StaticSite extends pulumi.ComponentResource {
   public readonly bucketName: pulumi.Output<string>;
   public readonly websiteUrl: pulumi.Output<string>;
 
-  constructor(name: string, args: StaticSiteArgs, opts?: pulumi.ComponentResourceOptions) {
+  constructor(
+    name: string,
+    args: StaticSiteArgs,
+    opts?: pulumi.ComponentResourceOptions,
+  ) {
     super("myinfra:web:StaticSite", name, args, opts);
 
     const bucket = new aws.s3.BucketV2(`${name}-bucket`, {}, { parent: this });
 
-    const website = new aws.s3.BucketWebsiteConfigurationV2(`${name}-website`, {
-      bucket: bucket.id,
-      indexDocument: { suffix: args.indexDocument ?? "index.html" },
-      errorDocument: { key: args.errorDocument ?? "error.html" },
-    }, { parent: this });
+    const website = new aws.s3.BucketWebsiteConfigurationV2(
+      `${name}-website`,
+      {
+        bucket: bucket.id,
+        indexDocument: { suffix: args.indexDocument ?? "index.html" },
+        errorDocument: { key: args.errorDocument ?? "error.html" },
+      },
+      { parent: this },
+    );
 
     this.bucketName = bucket.id;
     this.websiteUrl = website.websiteEndpoint;
-    this.registerOutputs({ bucketName: this.bucketName, websiteUrl: this.websiteUrl });
+    this.registerOutputs({
+      bucketName: this.bucketName,
+      websiteUrl: this.websiteUrl,
+    });
   }
 }
 ```
@@ -159,9 +176,9 @@ const url = pulumi.interpolate`https://${bucket.bucketRegionalDomainName}/index.
 const upper = bucket.id.apply((id) => id.toUpperCase());
 
 // all -- combine multiple outputs
-const endpoint = pulumi.all([lb.dnsName, listener.port]).apply(
-  ([dns, port]) => `http://${dns}:${port}`,
-);
+const endpoint = pulumi
+  .all([lb.dnsName, listener.port])
+  .apply(([dns, port]) => `http://${dns}:${port}`);
 
 // Lifting -- access properties directly on resource outputs
 const subnetId = vpc.subnets[0].id; // No apply needed for known properties
@@ -183,8 +200,8 @@ Use `pulumi.Config` for stack-specific values. Use `requireSecret` for sensitive
 const config = new pulumi.Config();
 
 // Plain config values
-const region = config.require("region");            // Fails if missing
-const nodeCount = config.getNumber("nodeCount");    // Returns undefined if missing
+const region = config.require("region"); // Fails if missing
+const nodeCount = config.getNumber("nodeCount"); // Returns undefined if missing
 
 // Secret values -- encrypted in state
 const dbPassword = config.requireSecret("dbPassword");
@@ -209,16 +226,22 @@ See [examples/core.md](examples/core.md) for namespaced config, secret outputs, 
 Resource options control lifecycle behavior. The most important ones:
 
 ```typescript
-const db = new aws.rds.Instance("primary-db", { /* ... */ }, {
-  protect: true,                         // Prevent accidental deletion
-  dependsOn: [vpc, securityGroup],       // Explicit ordering
-  ignoreChanges: ["tags"],               // Ignore drift on specific props
-  aliases: [{ name: "old-db-name" }],    // Rename without recreating
-  retainOnDelete: true,                  // Keep cloud resource on pulumi destroy
-  deleteBeforeReplace: true,             // For resources that must be unique
-  replaceOnChanges: ["engine"],          // Force replace on specific changes
-  provider: usEastProvider,              // Explicit provider (region, account)
-});
+const db = new aws.rds.Instance(
+  "primary-db",
+  {
+    /* ... */
+  },
+  {
+    protect: true, // Prevent accidental deletion
+    dependsOn: [vpc, securityGroup], // Explicit ordering
+    ignoreChanges: ["tags"], // Ignore drift on specific props
+    aliases: [{ name: "old-db-name" }], // Rename without recreating
+    retainOnDelete: true, // Keep cloud resource on pulumi destroy
+    deleteBeforeReplace: true, // For resources that must be unique
+    replaceOnChanges: ["engine"], // Force replace on specific changes
+    provider: usEastProvider, // Explicit provider (region, account)
+  },
+);
 ```
 
 **Gotcha:** Changing a resource's logical name or parent causes Pulumi to delete and recreate it. Use `aliases` to rename safely.
@@ -255,14 +278,26 @@ Apply transformations to resources and their children. Use `transforms` (not the
 
 ```typescript
 // Resource-level: apply tags to all taggable children of a component
-const vpc = new MyVpcComponent("vpc", {}, {
-  transforms: [(args) => {
-    if (isTaggable(args.type)) {
-      return { props: { ...args.props, tags: { ...args.props["tags"], ManagedBy: "pulumi" } }, opts: args.opts };
-    }
-    return undefined;
-  }],
-});
+const vpc = new MyVpcComponent(
+  "vpc",
+  {},
+  {
+    transforms: [
+      (args) => {
+        if (isTaggable(args.type)) {
+          return {
+            props: {
+              ...args.props,
+              tags: { ...args.props["tags"], ManagedBy: "pulumi" },
+            },
+            opts: args.opts,
+          };
+        }
+        return undefined;
+      },
+    ],
+  },
+);
 ```
 
 **Key difference from deprecated `transformations`:** `transforms` support modifying packaged component children (awsx, eks), support async callbacks, and do not pass a Resource object.

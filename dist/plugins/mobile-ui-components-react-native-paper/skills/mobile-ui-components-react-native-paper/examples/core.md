@@ -147,7 +147,11 @@ export function AppRoot() {
 Use `configureFonts` to apply custom font families across all MD3 typography variants (display, headline, title, label, body).
 
 ```typescript
-import { configureFonts, MD3LightTheme, PaperProvider } from "react-native-paper";
+import {
+  configureFonts,
+  MD3LightTheme,
+  PaperProvider,
+} from "react-native-paper";
 import { Platform } from "react-native";
 
 // Global font override - applies to ALL MD3 variants

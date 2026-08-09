@@ -36,7 +36,9 @@ export function createElectronMock() {
       show: vi.fn(),
       close: vi.fn(),
       isDestroyed: vi.fn().mockReturnValue(false),
-      getBounds: vi.fn().mockReturnValue({ x: 0, y: 0, width: 1200, height: 800 }),
+      getBounds: vi
+        .fn()
+        .mockReturnValue({ x: 0, y: 0, width: 1200, height: 800 }),
     })),
     ipcMain: {
       handle: vi.fn(),
@@ -181,17 +183,23 @@ describe("registerFileHandlers", () => {
   it("registers read-file and save-file handlers", () => {
     registerFileHandlers();
 
-    expect(ipcMain.handle).toHaveBeenCalledWith("read-file", expect.any(Function));
-    expect(ipcMain.handle).toHaveBeenCalledWith("save-file", expect.any(Function));
+    expect(ipcMain.handle).toHaveBeenCalledWith(
+      "read-file",
+      expect.any(Function),
+    );
+    expect(ipcMain.handle).toHaveBeenCalledWith(
+      "save-file",
+      expect.any(Function),
+    );
   });
 
   it("read-file handler calls through to handleReadFile", async () => {
     registerFileHandlers();
 
     // Extract the registered handler
-    const handleCall = vi.mocked(ipcMain.handle).mock.calls.find(
-      ([channel]) => channel === "read-file"
-    );
+    const handleCall = vi
+      .mocked(ipcMain.handle)
+      .mock.calls.find(([channel]) => channel === "read-file");
     const handler = handleCall?.[1];
 
     // Call the handler with a mock event and test args
@@ -248,13 +256,15 @@ describe("createMainWindow", () => {
         webPreferences: expect.objectContaining({
           preload: expect.stringContaining("preload"),
         }),
-      })
+      }),
     );
   });
 
   it("loads the correct entry file", () => {
     const win = createMainWindow();
-    expect(win.loadFile).toHaveBeenCalledWith(expect.stringContaining("index.html"));
+    expect(win.loadFile).toHaveBeenCalledWith(
+      expect.stringContaining("index.html"),
+    );
   });
 });
 ```
@@ -296,7 +306,12 @@ describe("preload script", () => {
     const api = exposedApis.electronAPI;
     expect(api).toBeDefined();
 
-    const expectedMethods = ["readFile", "saveFile", "getAppVersion", "onUpdateAvailable"];
+    const expectedMethods = [
+      "readFile",
+      "saveFile",
+      "getAppVersion",
+      "onUpdateAvailable",
+    ];
     for (const method of expectedMethods) {
       expect(typeof api[method]).toBe("function");
     }
@@ -308,7 +323,10 @@ describe("preload script", () => {
 
     await api.readFile("/test/path.txt");
 
-    expect(ipcRenderer.invoke).toHaveBeenCalledWith("read-file", "/test/path.txt");
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(
+      "read-file",
+      "/test/path.txt",
+    );
   });
 
   it("wires event listener to correct channel", async () => {
@@ -318,7 +336,10 @@ describe("preload script", () => {
 
     api.onUpdateAvailable(callback);
 
-    expect(ipcRenderer.on).toHaveBeenCalledWith("update-available", expect.any(Function));
+    expect(ipcRenderer.on).toHaveBeenCalledWith(
+      "update-available",
+      expect.any(Function),
+    );
   });
 });
 ```

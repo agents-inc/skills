@@ -35,17 +35,17 @@ What navigation pattern?
 
 ### Navigation Method (v7)
 
-| Method | When to Use |
-|--------|-------------|
-| `navigate("Screen", params)` | Go forward to a screen. Stays put if already focused. |
-| `popTo("Screen", params)` | Go BACK to a specific screen in the stack. NEW in v7. |
-| `goBack()` | Go back one screen. |
-| `push("Screen", params)` | Always push a new instance (even if screen already in stack). |
-| `replace("Screen", params)` | Replace current screen (no back navigation to it). |
-| `pop(n)` | Go back n screens. |
-| `popToTop()` | Go back to first screen in stack. |
-| `reset({ routes: [...] })` | Reset entire navigation state. |
-| `preload("Screen", params)` | Render screen off-screen in background. NEW in v7. |
+| Method                       | When to Use                                                   |
+| ---------------------------- | ------------------------------------------------------------- |
+| `navigate("Screen", params)` | Go forward to a screen. Stays put if already focused.         |
+| `popTo("Screen", params)`    | Go BACK to a specific screen in the stack. NEW in v7.         |
+| `goBack()`                   | Go back one screen.                                           |
+| `push("Screen", params)`     | Always push a new instance (even if screen already in stack). |
+| `replace("Screen", params)`  | Replace current screen (no back navigation to it).            |
+| `pop(n)`                     | Go back n screens.                                            |
+| `popToTop()`                 | Go back to first screen in stack.                             |
+| `reset({ routes: [...] })`   | Reset entire navigation state.                                |
+| `preload("Screen", params)`  | Render screen off-screen in background. NEW in v7.            |
 
 ---
 
@@ -53,70 +53,70 @@ What navigation pattern?
 
 ### Header
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `headerShown` | boolean | Show/hide entire header |
-| `title` | string | Fallback for headerTitle |
-| `headerTitle` | string or function | Title content |
-| `headerTintColor` | string | Back button and title color |
-| `headerStyle` | object | `{ backgroundColor }` |
-| `headerTransparent` | boolean | Transparent header background |
-| `headerBlurEffect` | string | iOS blur material ("regular", "light", etc.) |
-| `headerShadowVisible` | boolean | Show header bottom shadow |
-| `headerLeft` | function | Custom left element |
-| `headerRight` | function | Custom right element |
+| Option                | Type               | Notes                                        |
+| --------------------- | ------------------ | -------------------------------------------- |
+| `headerShown`         | boolean            | Show/hide entire header                      |
+| `title`               | string             | Fallback for headerTitle                     |
+| `headerTitle`         | string or function | Title content                                |
+| `headerTintColor`     | string             | Back button and title color                  |
+| `headerStyle`         | object             | `{ backgroundColor }`                        |
+| `headerTransparent`   | boolean            | Transparent header background                |
+| `headerBlurEffect`    | string             | iOS blur material ("regular", "light", etc.) |
+| `headerShadowVisible` | boolean            | Show header bottom shadow                    |
+| `headerLeft`          | function           | Custom left element                          |
+| `headerRight`         | function           | Custom right element                         |
 
 ### Large Title (iOS)
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `headerLargeTitleEnabled` | boolean | Enable collapsible large title |
-| `headerLargeStyle` | object | `{ backgroundColor }` for large title area |
-| `headerLargeTitleStyle` | object | `{ fontFamily, fontSize, fontWeight, color }` |
-| `headerLargeTitleShadowVisible` | boolean | Shadow below large title |
+| Option                          | Type    | Notes                                         |
+| ------------------------------- | ------- | --------------------------------------------- |
+| `headerLargeTitleEnabled`       | boolean | Enable collapsible large title                |
+| `headerLargeStyle`              | object  | `{ backgroundColor }` for large title area    |
+| `headerLargeTitleStyle`         | object  | `{ fontFamily, fontSize, fontWeight, color }` |
+| `headerLargeTitleShadowVisible` | boolean | Shadow below large title                      |
 
 ### Back Button (iOS)
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `headerBackVisible` | boolean | Show/hide back button |
-| `headerBackTitle` | string | Custom back button label |
-| `headerBackButtonDisplayMode` | string | `"default"`, `"generic"`, or `"minimal"` (replaces v6 `headerBackTitleVisible`) |
-| `headerBackButtonMenuEnabled` | boolean | Long-press shows stack history (default: true) |
+| Option                        | Type    | Notes                                                                           |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `headerBackVisible`           | boolean | Show/hide back button                                                           |
+| `headerBackTitle`             | string  | Custom back button label                                                        |
+| `headerBackButtonDisplayMode` | string  | `"default"`, `"generic"`, or `"minimal"` (replaces v6 `headerBackTitleVisible`) |
+| `headerBackButtonMenuEnabled` | boolean | Long-press shows stack history (default: true)                                  |
 
 ### Search Bar
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `headerSearchBarOptions.placeholder` | string | Search placeholder text |
-| `headerSearchBarOptions.onChangeText` | function | Text change handler |
-| `headerSearchBarOptions.hideWhenScrolling` | boolean | iOS: collapse on scroll |
-| `headerSearchBarOptions.autoFocus` | boolean | Android: auto-focus on mount |
+| Option                                     | Type     | Notes                        |
+| ------------------------------------------ | -------- | ---------------------------- |
+| `headerSearchBarOptions.placeholder`       | string   | Search placeholder text      |
+| `headerSearchBarOptions.onChangeText`      | function | Text change handler          |
+| `headerSearchBarOptions.hideWhenScrolling` | boolean  | iOS: collapse on scroll      |
+| `headerSearchBarOptions.autoFocus`         | boolean  | Android: auto-focus on mount |
 
 ### Animation
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `animation` | string | `"default"`, `"fade"`, `"slide_from_right"`, `"slide_from_left"`, `"slide_from_bottom"`, `"fade_from_bottom"`, `"flip"`, `"simple_push"`, `"none"` |
-| `animationDuration` | number | iOS only, in ms (default: 350) |
-| `gestureEnabled` | boolean | iOS: swipe back gesture |
-| `fullScreenGestureEnabled` | boolean | iOS: swipe from anywhere |
+| Option                     | Type    | Notes                                                                                                                                              |
+| -------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animation`                | string  | `"default"`, `"fade"`, `"slide_from_right"`, `"slide_from_left"`, `"slide_from_bottom"`, `"fade_from_bottom"`, `"flip"`, `"simple_push"`, `"none"` |
+| `animationDuration`        | number  | iOS only, in ms (default: 350)                                                                                                                     |
+| `gestureEnabled`           | boolean | iOS: swipe back gesture                                                                                                                            |
+| `fullScreenGestureEnabled` | boolean | iOS: swipe from anywhere                                                                                                                           |
 
 ### Presentation
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `presentation` | string | `"card"`, `"modal"`, `"transparentModal"`, `"containedModal"`, `"fullScreenModal"`, `"formSheet"`, `"containedTransparentModal"` |
-| `sheetAllowedDetents` | array | Form sheet stop points: `[0.25, 0.5, 1.0]` or `"fitToContents"` |
-| `sheetGrabberVisible` | boolean | iOS: show drag indicator |
-| `sheetCornerRadius` | number | Corner radius in points |
+| Option                | Type    | Notes                                                                                                                            |
+| --------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `presentation`        | string  | `"card"`, `"modal"`, `"transparentModal"`, `"containedModal"`, `"fullScreenModal"`, `"formSheet"`, `"containedTransparentModal"` |
+| `sheetAllowedDetents` | array   | Form sheet stop points: `[0.25, 0.5, 1.0]` or `"fitToContents"`                                                                  |
+| `sheetGrabberVisible` | boolean | iOS: show drag indicator                                                                                                         |
+| `sheetCornerRadius`   | number  | Corner radius in points                                                                                                          |
 
 ### Performance
 
-| Option | Type | Notes |
-|--------|------|-------|
-| `freezeOnBlur` | boolean | Prevents re-renders when screen inactive |
-| `lazy` | boolean | Tab/Drawer: don't render until first visited |
+| Option         | Type    | Notes                                        |
+| -------------- | ------- | -------------------------------------------- |
+| `freezeOnBlur` | boolean | Prevents re-renders when screen inactive     |
+| `lazy`         | boolean | Tab/Drawer: don't render until first visited |
 
 ---
 

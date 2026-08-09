@@ -25,30 +25,30 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**"],
       "env": ["API_URL", "SENTRY_DSN", "PUBLIC_ASSET_PREFIX"],
-      "outputLogs": "new-only"
+      "outputLogs": "new-only",
     },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
       "env": ["DATABASE_URL", "TEST_API_URL"],
-      "outputLogs": "new-only"
+      "outputLogs": "new-only",
     },
     "lint": {
       "dependsOn": [],
       "cache": true,
-      "outputLogs": "errors-only"
+      "outputLogs": "errors-only",
     },
     "type-check": {
       "dependsOn": ["^build"],
       "cache": true,
-      "outputLogs": "errors-only"
+      "outputLogs": "errors-only",
     },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true
-    }
-  }
+      "persistent": true,
+    },
+  },
 }
 ```
 
@@ -61,15 +61,15 @@
 {
   "tasks": {
     "build": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
       // No outputs: cache hit restores nothing
       // No env: API_URL change doesn't bust cache
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
       // No outputs: coverage reports lost on cache hit
-    }
-  }
+    },
+  },
 }
 ```
 
@@ -89,13 +89,13 @@ Individual packages can extend root turbo.json to add package-specific configura
   "tasks": {
     "build": {
       "env": ["PUBLIC_API_URL", "PUBLIC_ANALYTICS_ID"],
-      "outputs": ["dist/**", "build/**"]
+      "outputs": ["dist/**", "build/**"],
     },
     "test": {
       "env": ["PLAYWRIGHT_BASE_URL"],
-      "inputs": ["src/**", "tests/**", "playwright.config.ts"]
-    }
-  }
+      "inputs": ["src/**", "tests/**", "playwright.config.ts"],
+    },
+  },
 }
 ```
 
@@ -115,13 +115,14 @@ Individual packages can extend root turbo.json to add package-specific configura
   "tasks": {
     "build": {
       "env": ["API_URL"],
-      "passThroughEnv": ["DEPLOY_REGION"]
-    }
-  }
+      "passThroughEnv": ["DEPLOY_REGION"],
+    },
+  },
 }
 ```
 
 **Strict mode behavior:**
+
 - Only variables listed in `env`/`globalEnv`/`passThroughEnv`/`globalPassThroughEnv` are available
 - Unlisted variables are invisible to tasks
 - Prevents accidental dependency on undeclared variables
@@ -130,11 +131,12 @@ Individual packages can extend root turbo.json to add package-specific configura
 
 ```jsonc
 {
-  "envMode": "loose"
+  "envMode": "loose",
 }
 ```
 
 **Loose mode behavior:**
+
 - All process environment variables available to all tasks
 - Only `env`/`globalEnv` variables affect the cache hash
 - Useful during migration to strict mode -- everything works, but cache correctness depends on manual `env` declarations
@@ -226,8 +228,8 @@ turbo run build --concurrency=1
     "deploy": { "dependsOn": ["build"] },
 
     // E2E tests run after build in the same package
-    "test:e2e": { "dependsOn": ["build"], "cache": false }
-  }
+    "test:e2e": { "dependsOn": ["build"], "cache": false },
+  },
 }
 ```
 
@@ -243,18 +245,18 @@ turbo run build --concurrency=1
 {
   "tasks": {
     "lint": {
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", ".eslintrc.*", "eslint.config.*"],
-      "dependsOn": []
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        ".eslintrc.*",
+        "eslint.config.*",
+      ],
+      "dependsOn": [],
     },
     "test": {
-      "inputs": [
-        "src/**",
-        "tests/**",
-        "vitest.config.*",
-        "$TURBO_DEFAULT$"
-      ]
-    }
-  }
+      "inputs": ["src/**", "tests/**", "vitest.config.*", "$TURBO_DEFAULT$"],
+    },
+  },
 }
 ```
 
@@ -269,10 +271,10 @@ turbo run build --concurrency=1
       "inputs": [
         "src/**",
         "$TURBO_ROOT$/tsconfig.base.json",
-        "$TURBO_DEFAULT$"
-      ]
-    }
-  }
+        "$TURBO_DEFAULT$",
+      ],
+    },
+  },
 }
 ```
 

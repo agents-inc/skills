@@ -58,6 +58,7 @@ cargo tauri signer generate -w ~/.tauri/myapp.key
 ```
 
 This produces:
+
 - **Private key** -- store securely, never commit to source control
 - **Public key** -- safe to commit, goes in `tauri.conf.json`
 
@@ -98,6 +99,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
 ```
 
 **Template variables** (resolved at runtime):
+
 - `{{current_version}}` -- app version from `tauri.conf.json`
 - `{{target}}` -- `linux`, `windows`, or `darwin`
 - `{{arch}}` -- `x86_64`, `aarch64`, `i686`, `armv7`
@@ -126,11 +128,11 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
 
 When `createUpdaterArtifacts: true` and `TAURI_SIGNING_PRIVATE_KEY` is set:
 
-| Platform | Installer                  | Signature File                     |
-| -------- | -------------------------- | ---------------------------------- |
-| Linux    | `.AppImage`                | `.AppImage.sig`                    |
-| macOS    | `.app` (as `.app.tar.gz`) | `.app.tar.gz.sig`                  |
-| Windows  | `-setup.exe` or `.msi`    | `-setup.exe.sig` or `.msi.sig`    |
+| Platform | Installer                 | Signature File                 |
+| -------- | ------------------------- | ------------------------------ |
+| Linux    | `.AppImage`               | `.AppImage.sig`                |
+| macOS    | `.app` (as `.app.tar.gz`) | `.app.tar.gz.sig`              |
+| Windows  | `-setup.exe` or `.msi`    | `-setup.exe.sig` or `.msi.sig` |
 
 ---
 
@@ -156,7 +158,9 @@ async function checkForUpdates(): Promise<void> {
   await update.downloadAndInstall((event) => {
     switch (event.event) {
       case "Started":
-        console.log(`Downloading ${event.data.contentLength ?? "unknown"} bytes`);
+        console.log(
+          `Downloading ${event.data.contentLength ?? "unknown"} bytes`,
+        );
         break;
       case "Progress":
         console.log(`Downloaded chunk: ${event.data.chunkLength} bytes`);
@@ -308,7 +312,7 @@ The `tauri-action` automatically generates the update JSON when configured:
   with:
     tagName: app-v__VERSION__
     releaseName: "App v__VERSION__"
-    updaterJsonPreferNsis: true  # Prefer NSIS over MSI for Windows updates
+    updaterJsonPreferNsis: true # Prefer NSIS over MSI for Windows updates
 ```
 
 The action creates a `latest.json` artifact compatible with the static endpoint format. Point your `endpoints` config at the release asset URL.

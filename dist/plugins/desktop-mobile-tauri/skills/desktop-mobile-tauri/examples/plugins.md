@@ -144,7 +144,13 @@ On iOS, you must also enable the "Near Field Communication Tag Reading" capabili
 ### Usage
 
 ```typescript
-import { isAvailable, scan, write, textRecord, uriRecord } from "@tauri-apps/plugin-nfc";
+import {
+  isAvailable,
+  scan,
+  write,
+  textRecord,
+  uriRecord,
+} from "@tauri-apps/plugin-nfc";
 
 // Check NFC hardware availability
 const available = await isAvailable();
@@ -161,10 +167,7 @@ const tag = await scan({
 console.log("Tag data:", tag);
 
 // Write to an NFC tag
-await write([
-  uriRecord("https://example.com"),
-  textRecord("Hello from Tauri"),
-]);
+await write([uriRecord("https://example.com"), textRecord("Hello from Tauri")]);
 ```
 
 **Key point:** NFC requires physical proximity. On iOS, a system NFC sheet appears during scanning. `keepSessionAlive: true` allows multiple reads without re-triggering the scan UI.
@@ -287,7 +290,9 @@ if (status.location !== "granted") {
 
 // Get current position (one-shot)
 const position = await getCurrentPosition();
-console.log(`Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`);
+console.log(
+  `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`,
+);
 console.log(`Altitude: ${position.coords.altitude}`);
 console.log(`Speed: ${position.coords.speed}`);
 
@@ -299,7 +304,9 @@ const watchId = await watchPosition(
       console.error("Location error:", error);
       return;
     }
-    console.log(`Updated: ${position.coords.latitude}, ${position.coords.longitude}`);
+    console.log(
+      `Updated: ${position.coords.latitude}, ${position.coords.longitude}`,
+    );
   },
 );
 

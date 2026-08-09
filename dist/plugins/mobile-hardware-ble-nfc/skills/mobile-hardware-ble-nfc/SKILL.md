@@ -146,7 +146,9 @@ manager.startDeviceScan(
   [HEART_RATE_SERVICE_UUID], // Filter by service UUID -- null scans ALL devices
   { allowDuplicates: false },
   (error, device) => {
-    if (error) { /* handle */ return; }
+    if (error) {
+      /* handle */ return;
+    }
     if (device?.name === "MyDevice") {
       manager.stopDeviceScan();
       // Connect to device
@@ -177,9 +179,11 @@ const device = await manager.connectToDevice(deviceId, {
 await device.discoverAllServicesAndCharacteristics();
 
 // Monitor for unexpected disconnects
-const disconnectSubscription = device.onDisconnected((error, disconnectedDevice) => {
-  // Handle reconnection logic
-});
+const disconnectSubscription = device.onDisconnected(
+  (error, disconnectedDevice) => {
+    // Handle reconnection logic
+  },
+);
 
 // Cleanup
 disconnectSubscription.remove();
@@ -203,15 +207,26 @@ const SERVICE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const CHAR_UUID = "00002a37-0000-1000-8000-00805f9b34fb";
 
 // Read
-const characteristic = await device.readCharacteristicForService(SERVICE_UUID, CHAR_UUID);
+const characteristic = await device.readCharacteristicForService(
+  SERVICE_UUID,
+  CHAR_UUID,
+);
 const decodedValue = atob(characteristic.value ?? "");
 
 // Write with response (acknowledged)
 const base64Value = btoa("command-data");
-await device.writeCharacteristicWithResponseForService(SERVICE_UUID, CHAR_UUID, base64Value);
+await device.writeCharacteristicWithResponseForService(
+  SERVICE_UUID,
+  CHAR_UUID,
+  base64Value,
+);
 
 // Write without response (faster, no acknowledgment)
-await device.writeCharacteristicWithoutResponseForService(SERVICE_UUID, CHAR_UUID, base64Value);
+await device.writeCharacteristicWithoutResponseForService(
+  SERVICE_UUID,
+  CHAR_UUID,
+  base64Value,
+);
 ```
 
 **Why good:** named constants for UUIDs, Base64 decode/encode explicit, write-with-response used for reliable delivery, write-without-response available for speed
@@ -229,7 +244,9 @@ const subscription = device.monitorCharacteristicForService(
   SERVICE_UUID,
   CHAR_UUID,
   (error, characteristic) => {
-    if (error) { /* handle */ return; }
+    if (error) {
+      /* handle */ return;
+    }
     const value = atob(characteristic?.value ?? "");
     // Process incoming notification
   },

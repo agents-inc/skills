@@ -169,6 +169,7 @@ const styles = StyleSheet.create({
 **Why good:** `activeOffsetX` prevents accidental activation during vertical scroll, velocity check catches fast flicks, `scheduleOnRN` bridges from UI thread callback to JS, opacity fades with distance
 
 **Key points:**
+
 - `scheduleOnRN` (Reanimated 4) replaces `runOnJS` for calling JS functions from worklets
 - `onFinalize` fires when gesture ends regardless of success/failure -- safer than `onEnd` for cleanup
 - `activeOffsetX` with symmetric values prevents horizontal pan from stealing vertical scroll

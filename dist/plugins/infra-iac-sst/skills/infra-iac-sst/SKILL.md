@@ -200,23 +200,23 @@ See [examples/core.md](examples/core.md) for dev workflow and debugging setup.
 
 SST provides high-level components for common AWS services. Each handles IAM, logging, and configuration automatically.
 
-| Component | AWS Service | Use Case |
-|-----------|-------------|----------|
-| `sst.aws.Function` | Lambda | Serverless functions |
-| `sst.aws.ApiGatewayV2` | API Gateway v2 | HTTP APIs with routes |
-| `sst.aws.Dynamo` | DynamoDB | NoSQL database |
-| `sst.aws.Bucket` | S3 | Object storage |
-| `sst.aws.Queue` | SQS | Message queues |
-| `sst.aws.Topic` | SNS | Pub/sub messaging |
-| `sst.aws.Cron` | EventBridge | Scheduled tasks |
-| `sst.aws.Vpc` | VPC | Network isolation |
-| `sst.aws.Cluster` | ECS | Container workloads |
-| `sst.aws.Postgres` | RDS Postgres | Relational database |
-| `sst.aws.Nextjs` | Lambda + CloudFront | Next.js deployment |
-| `sst.aws.Remix` | Lambda + CloudFront | Remix deployment |
-| `sst.aws.Astro` | Lambda + CloudFront | Astro deployment |
-| `sst.aws.StaticSite` | S3 + CloudFront | Static site hosting |
-| `sst.aws.Router` | CloudFront | URL routing |
+| Component              | AWS Service         | Use Case              |
+| ---------------------- | ------------------- | --------------------- |
+| `sst.aws.Function`     | Lambda              | Serverless functions  |
+| `sst.aws.ApiGatewayV2` | API Gateway v2      | HTTP APIs with routes |
+| `sst.aws.Dynamo`       | DynamoDB            | NoSQL database        |
+| `sst.aws.Bucket`       | S3                  | Object storage        |
+| `sst.aws.Queue`        | SQS                 | Message queues        |
+| `sst.aws.Topic`        | SNS                 | Pub/sub messaging     |
+| `sst.aws.Cron`         | EventBridge         | Scheduled tasks       |
+| `sst.aws.Vpc`          | VPC                 | Network isolation     |
+| `sst.aws.Cluster`      | ECS                 | Container workloads   |
+| `sst.aws.Postgres`     | RDS Postgres        | Relational database   |
+| `sst.aws.Nextjs`       | Lambda + CloudFront | Next.js deployment    |
+| `sst.aws.Remix`        | Lambda + CloudFront | Remix deployment      |
+| `sst.aws.Astro`        | Lambda + CloudFront | Astro deployment      |
+| `sst.aws.StaticSite`   | S3 + CloudFront     | Static site hosting   |
+| `sst.aws.Router`       | CloudFront          | URL routing           |
 
 See [examples/api-data.md](examples/api-data.md) for API, database, storage, queue, and cron patterns.
 

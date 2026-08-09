@@ -52,7 +52,9 @@ async function getProduct(id: string) {
     // Silently swallow -- cache failure hides bugs
   }
 
-  const product = await db.query.products.findFirst({ where: eq(products.id, id) });
+  const product = await db.query.products.findFirst({
+    where: eq(products.id, id),
+  });
   await cacheStore.set(id, JSON.stringify(product)); // No TTL
   return product;
 }
@@ -113,7 +115,10 @@ async function getUserById(userId: string): Promise<User | null> {
 const CACHE_TTL = 300;
 const USER_PREFIX = "app:user";
 
-async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
+async function updateUser(
+  userId: string,
+  updates: Partial<User>,
+): Promise<User> {
   // Update database first (source of truth)
   const [updatedUser] = await db
     .update(users)
@@ -123,7 +128,9 @@ async function updateUser(userId: string, updates: Partial<User>): Promise<User>
 
   // Write-through: update cache immediately
   const cacheKey = `${USER_PREFIX}:${userId}`;
-  await cacheStore.set(cacheKey, JSON.stringify(updatedUser), { ttl: CACHE_TTL });
+  await cacheStore.set(cacheKey, JSON.stringify(updatedUser), {
+    ttl: CACHE_TTL,
+  });
 
   return updatedUser;
 }
@@ -245,10 +252,10 @@ Use `s-maxage` to let CDNs (shared caches) cache responses longer than the brows
 
 ```typescript
 // Good Example - CDN-optimized cache headers
-const BROWSER_MAX_AGE = 60;        // Browser: 1 minute
-const CDN_MAX_AGE = 300;           // CDN: 5 minutes
-const SWR_WINDOW = 60;             // Serve stale for 60s while refreshing
-const ERROR_WINDOW = 600;          // Serve stale for 10m during origin errors
+const BROWSER_MAX_AGE = 60; // Browser: 1 minute
+const CDN_MAX_AGE = 300; // CDN: 5 minutes
+const SWR_WINDOW = 60; // Serve stale for 60s while refreshing
+const ERROR_WINDOW = 600; // Serve stale for 10m during origin errors
 
 function setCDNCacheHeaders(res: Response): void {
   res.setHeader(

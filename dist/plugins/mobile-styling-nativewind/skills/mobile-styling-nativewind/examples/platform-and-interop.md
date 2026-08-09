@@ -54,7 +54,7 @@ export function PlatformCard({
 }
 ```
 
-**Why good:** Shadows handled correctly per platform (iOS uses shadow-*, Android uses elevation-*), font weights adjusted for platform rendering, no Platform.select boilerplate
+**Why good:** Shadows handled correctly per platform (iOS uses shadow-_, Android uses elevation-_), font weights adjusted for platform rendering, no Platform.select boilerplate
 
 ---
 
@@ -179,7 +179,11 @@ After calling `remapProps` or `cssInterop`, add TypeScript declarations so the n
 // nativewind-env.d.ts or a dedicated declarations file
 /// <reference types="nativewind/types" />
 
-import type { FlatListProps, ScrollViewProps, TextInputProps } from "react-native";
+import type {
+  FlatListProps,
+  ScrollViewProps,
+  TextInputProps,
+} from "react-native";
 
 declare module "react-native" {
   interface FlatListProps<ItemT> {
@@ -263,8 +267,20 @@ function MyCard({ style, children }) {
 cssInterop(MyCard, { className: "style" }); // WRONG
 
 // GOOD -- accept and merge className directly
-function MyCard({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <View className={`rounded-xl bg-white p-4 dark:bg-gray-800 ${className ?? ""}`}>{children}</View>;
+function MyCard({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View
+      className={`rounded-xl bg-white p-4 dark:bg-gray-800 ${className ?? ""}`}
+    >
+      {children}
+    </View>
+  );
 }
 ```
 

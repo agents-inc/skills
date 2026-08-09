@@ -77,17 +77,17 @@ Is this a critical resource (database, DNS zone, state bucket)?
 
 ## File Naming Conventions (Official Style Guide)
 
-| File              | Purpose                                           |
-| ----------------- | ------------------------------------------------- |
-| `terraform.tf`    | `terraform` block: `required_version`, `required_providers` |
-| `backend.tf`      | Backend configuration                             |
-| `providers.tf`    | Provider blocks and configuration                 |
-| `main.tf`         | Resource and data source definitions              |
-| `variables.tf`    | Input variable declarations (alphabetical)        |
-| `outputs.tf`      | Output declarations (alphabetical)                |
-| `locals.tf`       | Local value definitions                           |
-| `data.tf`         | Data source blocks (if too many for `main.tf`)    |
-| `versions.tf`     | Alternative name for `terraform.tf` (common)      |
+| File           | Purpose                                                     |
+| -------------- | ----------------------------------------------------------- |
+| `terraform.tf` | `terraform` block: `required_version`, `required_providers` |
+| `backend.tf`   | Backend configuration                                       |
+| `providers.tf` | Provider blocks and configuration                           |
+| `main.tf`      | Resource and data source definitions                        |
+| `variables.tf` | Input variable declarations (alphabetical)                  |
+| `outputs.tf`   | Output declarations (alphabetical)                          |
+| `locals.tf`    | Local value definitions                                     |
+| `data.tf`      | Data source blocks (if too many for `main.tf`)              |
+| `versions.tf`  | Alternative name for `terraform.tf` (common)                |
 
 **For larger codebases:** Split `main.tf` by logical group: `network.tf`, `compute.tf`, `storage.tf`, `iam.tf`.
 
@@ -108,13 +108,13 @@ Is this a critical resource (database, DNS zone, state bucket)?
 
 ## Version Constraint Syntax
 
-| Constraint      | Meaning                                        | Example            |
-| --------------- | ---------------------------------------------- | ------------------ |
-| `= 1.0.0`      | Exact version                                  | Only 1.0.0         |
-| `>= 1.0.0`     | Minimum version (no upper bound -- risky)      | 1.0.0 and above    |
-| `~> 1.0`        | Pessimistic: allows 1.x, blocks 2.0            | 1.0 through 1.99   |
-| `~> 1.0.0`      | Pessimistic: allows 1.0.x, blocks 1.1.0        | 1.0.0 through 1.0.99 |
-| `>= 1.0, < 2.0` | Explicit range                                 | 1.0 through 1.99   |
+| Constraint      | Meaning                                   | Example              |
+| --------------- | ----------------------------------------- | -------------------- |
+| `= 1.0.0`       | Exact version                             | Only 1.0.0           |
+| `>= 1.0.0`      | Minimum version (no upper bound -- risky) | 1.0.0 and above      |
+| `~> 1.0`        | Pessimistic: allows 1.x, blocks 2.0       | 1.0 through 1.99     |
+| `~> 1.0.0`      | Pessimistic: allows 1.0.x, blocks 1.1.0   | 1.0.0 through 1.0.99 |
+| `>= 1.0, < 2.0` | Explicit range                            | 1.0 through 1.99     |
 
 **Best practice:** Use `~> MAJOR.MINOR` for providers (allows patch updates, blocks breaking changes). Use `>= MAJOR.MINOR.0, < NEXT_MAJOR.0.0` for explicit ranges.
 
@@ -200,15 +200,15 @@ terraform.rc
 
 ## Common Terraform Functions
 
-| Function                     | Purpose                              | Example                                           |
-| ---------------------------- | ------------------------------------ | ------------------------------------------------- |
-| `lookup(map, key, default)`  | Safe map lookup with fallback        | `lookup(var.amis, var.region, "ami-default")`      |
-| `try(expr, fallback)`        | First expression that doesn't error  | `try(var.config.name, "default")`                  |
-| `coalesce(vals...)`          | First non-null, non-empty value      | `coalesce(var.custom_name, local.generated_name)`  |
-| `merge(maps...)`             | Merge maps (last wins on conflict)   | `merge(local.default_tags, var.extra_tags)`        |
-| `flatten(list_of_lists)`     | Flatten nested lists one level       | `flatten([var.public_subnets, var.private_subnets])` |
-| `toset(list)`                | Convert list to set (deduplicates)   | `for_each = toset(var.team_members)`               |
-| `cidrsubnet(prefix, new, n)` | Calculate subnet CIDR                | `cidrsubnet("10.0.0.0/16", 8, 0)` = `10.0.0.0/24` |
-| `templatefile(path, vars)`   | Render template file                 | `templatefile("user-data.sh.tpl", { env = "prod" })` |
-| `jsonencode(value)`          | Convert to JSON string               | `jsonencode(local.policy_document)`                |
-| `format(fmt, vals...)`       | Printf-style formatting              | `format("web-%s-%02d", var.env, count.index)`      |
+| Function                     | Purpose                             | Example                                              |
+| ---------------------------- | ----------------------------------- | ---------------------------------------------------- |
+| `lookup(map, key, default)`  | Safe map lookup with fallback       | `lookup(var.amis, var.region, "ami-default")`        |
+| `try(expr, fallback)`        | First expression that doesn't error | `try(var.config.name, "default")`                    |
+| `coalesce(vals...)`          | First non-null, non-empty value     | `coalesce(var.custom_name, local.generated_name)`    |
+| `merge(maps...)`             | Merge maps (last wins on conflict)  | `merge(local.default_tags, var.extra_tags)`          |
+| `flatten(list_of_lists)`     | Flatten nested lists one level      | `flatten([var.public_subnets, var.private_subnets])` |
+| `toset(list)`                | Convert list to set (deduplicates)  | `for_each = toset(var.team_members)`                 |
+| `cidrsubnet(prefix, new, n)` | Calculate subnet CIDR               | `cidrsubnet("10.0.0.0/16", 8, 0)` = `10.0.0.0/24`    |
+| `templatefile(path, vars)`   | Render template file                | `templatefile("user-data.sh.tpl", { env = "prod" })` |
+| `jsonencode(value)`          | Convert to JSON string              | `jsonencode(local.policy_document)`                  |
+| `format(fmt, vals...)`       | Printf-style formatting             | `format("web-%s-%02d", var.env, count.index)`        |

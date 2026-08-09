@@ -56,18 +56,18 @@ const styles = StyleSheet.create({
 
 ### Available Builder Families
 
-| Family | Entering | Exiting | Variants |
-|--------|----------|---------|----------|
-| Fade | `FadeIn` | `FadeOut` | Up, Down, Left, Right |
-| Slide | `SlideInRight` | `SlideOutLeft` | Up, Down, Left, Right |
-| Zoom | `ZoomIn` | `ZoomOut` | Up, Down, Left, Right, EasyUp, EasyDown |
-| Bounce | `BounceIn` | `BounceOut` | Up, Down, Left, Right |
-| Flip | `FlipInEasyX` | `FlipOutEasyX` | X, Y, XUp, XDown, YLeft, YRight |
-| LightSpeed | `LightSpeedInRight` | `LightSpeedOutRight` | Left, Right |
-| Rotate | `RotateInDownLeft` | `RotateOutDownLeft` | Up/Down + Left/Right |
-| Pinwheel | `PinwheelIn` | `PinwheelOut` | (no variants) |
-| Roll | `RollInLeft` | `RollOutLeft` | Left, Right |
-| Stretch | `StretchInX` | `StretchOutX` | X, Y |
+| Family     | Entering            | Exiting              | Variants                                |
+| ---------- | ------------------- | -------------------- | --------------------------------------- |
+| Fade       | `FadeIn`            | `FadeOut`            | Up, Down, Left, Right                   |
+| Slide      | `SlideInRight`      | `SlideOutLeft`       | Up, Down, Left, Right                   |
+| Zoom       | `ZoomIn`            | `ZoomOut`            | Up, Down, Left, Right, EasyUp, EasyDown |
+| Bounce     | `BounceIn`          | `BounceOut`          | Up, Down, Left, Right                   |
+| Flip       | `FlipInEasyX`       | `FlipOutEasyX`       | X, Y, XUp, XDown, YLeft, YRight         |
+| LightSpeed | `LightSpeedInRight` | `LightSpeedOutRight` | Left, Right                             |
+| Rotate     | `RotateInDownLeft`  | `RotateOutDownLeft`  | Up/Down + Left/Right                    |
+| Pinwheel   | `PinwheelIn`        | `PinwheelOut`        | (no variants)                           |
+| Roll       | `RollInLeft`        | `RollOutLeft`        | Left, Right                             |
+| Stretch    | `StretchInX`        | `StretchOutX`        | X, Y                                    |
 
 ---
 
@@ -200,6 +200,7 @@ function CustomAnimatedCard() {
 **Why good:** full control over initial values and animation config per property, can mix spring and timing in one entering animation, `values` parameter provides target layout measurements (width, height, targetOriginX, etc.)
 
 **Custom animation callback shape:**
+
 - Receives `EntryAnimationsValues` (entering) or `ExitAnimationsValues` (exiting) with target layout info
 - Must return `{ initialValues, animations }` where each has the same style property keys
 - Must be marked with `'worklet'` directive

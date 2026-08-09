@@ -125,7 +125,7 @@ The `isActive` prop should combine screen focus and app state:
 
 ```typescript
 const isFocused = useIsFocused(); // from navigation
-const appState = useAppState();   // from community hooks
+const appState = useAppState(); // from community hooks
 const isActive = isFocused && appState === "active";
 ```
 
@@ -253,7 +253,11 @@ const device = useCameraDevice("back");
 
 // Multi-camera with specific lenses
 const device = useCameraDevice("back", {
-  physicalDevices: ["ultra-wide-angle-camera", "wide-angle-camera", "telephoto-camera"],
+  physicalDevices: [
+    "ultra-wide-angle-camera",
+    "wide-angle-camera",
+    "telephoto-camera",
+  ],
 });
 
 // Format selection (filters ordered by descending priority)

@@ -1,6 +1,6 @@
 {
   "name": "mobile-animation-gesture-handler",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "skills": "./skills/",
   "description": "React Native Gesture Handler - gesture types, GestureDetector, gesture composition, state machine, platform-specific gestures, swipeable rows, hover gestures",
   "author": {

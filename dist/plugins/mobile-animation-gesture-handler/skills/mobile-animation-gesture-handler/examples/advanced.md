@@ -136,7 +136,7 @@ const pan = Gesture.Pan()
       ios: PAN_MIN_DISTANCE_IOS,
       android: PAN_MIN_DISTANCE_ANDROID,
       default: PAN_MIN_DISTANCE_IOS,
-    })
+    }),
   )
   .onChange((event) => {
     translateX.value += event.changeX;

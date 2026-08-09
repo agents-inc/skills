@@ -8,21 +8,21 @@
 
 The [Standard Webhooks](https://github.com/standard-webhooks/standard-webhooks) specification defines these headers:
 
-| Header | Purpose | Example |
-|--------|---------|---------|
-| `webhook-id` | Unique event identifier for idempotency | `evt_1234abcd` |
-| `webhook-timestamp` | Unix timestamp (seconds) for replay protection | `1714556800` |
-| `webhook-signature` | HMAC-SHA256 signature of `timestamp.body` | `a1b2c3d4...` |
-| `content-type` | Always `application/json` | `application/json` |
+| Header              | Purpose                                        | Example            |
+| ------------------- | ---------------------------------------------- | ------------------ |
+| `webhook-id`        | Unique event identifier for idempotency        | `evt_1234abcd`     |
+| `webhook-timestamp` | Unix timestamp (seconds) for replay protection | `1714556800`       |
+| `webhook-signature` | HMAC-SHA256 signature of `timestamp.body`      | `a1b2c3d4...`      |
+| `content-type`      | Always `application/json`                      | `application/json` |
 
 **Provider-specific variants:**
 
-| Provider | Signature Header | Timestamp | Format |
-|----------|-----------------|-----------|--------|
-| Stripe | `stripe-signature` | In header (`t=...`) | `t=timestamp,v1=signature` |
-| GitHub | `x-hub-signature-256` | N/A | `sha256=signature` |
-| Shopify | `x-shopify-hmac-sha256` | N/A | Base64-encoded HMAC |
-| Twilio | `x-twilio-signature` | N/A | Base64-encoded HMAC |
+| Provider | Signature Header        | Timestamp           | Format                     |
+| -------- | ----------------------- | ------------------- | -------------------------- |
+| Stripe   | `stripe-signature`      | In header (`t=...`) | `t=timestamp,v1=signature` |
+| GitHub   | `x-hub-signature-256`   | N/A                 | `sha256=signature`         |
+| Shopify  | `x-shopify-hmac-sha256` | N/A                 | Base64-encoded HMAC        |
+| Twilio   | `x-twilio-signature`    | N/A                 | Base64-encoded HMAC        |
 
 ---
 

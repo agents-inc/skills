@@ -50,6 +50,7 @@ export const migrations = schemaMigrations({
 ```
 
 **Critical rules:**
+
 - Schema `version` must match the highest migration `toVersion` -- if you add `toVersion: 3`, set schema `version: 3`
 - Migrations cannot be newer than schema -- the adapter checks this on startup
 - Migrations are run sequentially from the user's current version to the latest
@@ -77,7 +78,11 @@ Use `batch()` to group multiple operations into a single native SQLite transacti
 ```typescript
 import type { Database } from "@nozbe/watermelondb";
 
-async function importPosts(database: Database, rawPosts: RawPost[], author: User) {
+async function importPosts(
+  database: Database,
+  rawPosts: RawPost[],
+  author: User,
+) {
   await database.write(async () => {
     const postsCollection = database.get<Post>("posts");
     const prepared = rawPosts.map((raw) =>
@@ -141,8 +146,14 @@ async function importPosts(database: Database, rawPosts: RawPost[], author: User
 ```typescript
 // Falsy values are ignored -- useful for conditional operations
 await this.batch(
-  postsCollection.prepareCreate((p) => { p.title = "Always created"; }),
-  shouldPin ? existingPost.prepareUpdate((p) => { p.isPinned = true; }) : null,
+  postsCollection.prepareCreate((p) => {
+    p.title = "Always created";
+  }),
+  shouldPin
+    ? existingPost.prepareUpdate((p) => {
+        p.isPinned = true;
+      })
+    : null,
   shouldDeleteOld ? oldPost.prepareMarkAsDeleted() : null,
 );
 ```
@@ -210,21 +221,21 @@ The sync protocol uses a specific changes format per table:
 interface SyncPullResult {
   changes: {
     [tableName: string]: {
-      created: RawRecord[];   // New records from server
-      updated: RawRecord[];   // Modified records from server
-      deleted: string[];      // IDs of deleted records
+      created: RawRecord[]; // New records from server
+      updated: RawRecord[]; // Modified records from server
+      deleted: string[]; // IDs of deleted records
     };
   };
-  timestamp: number;  // Server's current time (for next sync)
+  timestamp: number; // Server's current time (for next sync)
 }
 
 // pushChanges receives this shape:
 interface SyncPushChanges {
   changes: {
     [tableName: string]: {
-      created: RawRecord[];   // Locally created records
-      updated: RawRecord[];   // Locally modified records
-      deleted: string[];      // Locally deleted record IDs
+      created: RawRecord[]; // Locally created records
+      updated: RawRecord[]; // Locally modified records
+      deleted: string[]; // Locally deleted record IDs
     };
   };
   lastPulledAt: number;
@@ -232,6 +243,7 @@ interface SyncPushChanges {
 ```
 
 **Key constraints:**
+
 - `pullChanges` must return ALL changes since `lastPulledAt` for ALL synced tables
 - Raw records use column names (snake_case), not model property names
 - The server must provide a consistent snapshot (use database transactions or read locks)
@@ -245,8 +257,8 @@ await synchronize({
   database,
   pullChanges,
   pushChanges,
-  migrationsEnabledAtVersion: 1,         // Enable schema-aware sync
-  sendCreatedAsUpdated: false,            // If true, created records go in `updated` array
+  migrationsEnabledAtVersion: 1, // Enable schema-aware sync
+  sendCreatedAsUpdated: false, // If true, created records go in `updated` array
   // conflictResolver: customResolver,    // Custom conflict resolution
   // log: syncLog,                        // Diagnostic logging object
   // onDidPullChanges: async () => {},    // Callback after pull applied
@@ -264,12 +276,14 @@ async function syncWithRetry(database: Database) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await syncDatabase(database);
-      return;  // Success
+      return; // Success
     } catch (error) {
       if (attempt === MAX_RETRIES) {
-        throw error;  // Final attempt failed
+        throw error; // Final attempt failed
       }
-      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+      await new Promise((resolve) =>
+        setTimeout(resolve, RETRY_DELAY_MS * attempt),
+      );
     }
   }
 }

@@ -121,10 +121,20 @@ const STROKE_WIDTH = 2;
     <YAxis />
     <Tooltip />
     <Legend />
-    <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={STROKE_WIDTH} />
-    <Line type="monotone" dataKey="expenses" stroke="#82ca9d" strokeWidth={STROKE_WIDTH} />
+    <Line
+      type="monotone"
+      dataKey="revenue"
+      stroke="#8884d8"
+      strokeWidth={STROKE_WIDTH}
+    />
+    <Line
+      type="monotone"
+      dataKey="expenses"
+      stroke="#82ca9d"
+      strokeWidth={STROKE_WIDTH}
+    />
   </LineChart>
-</ResponsiveContainer>
+</ResponsiveContainer>;
 ```
 
 **Why good:** Each child component is an independent feature -- remove `Tooltip` to remove tooltips, remove `CartesianGrid` to remove grid lines. Data binding is declarative via `dataKey`.
@@ -143,10 +153,8 @@ Charts require explicit dimensions. Two approaches for responsive behavior:
 const CHART_HEIGHT = 300;
 
 <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-  <BarChart data={data}>
-    {/* ... */}
-  </BarChart>
-</ResponsiveContainer>
+  <BarChart data={data}>{/* ... */}</BarChart>
+</ResponsiveContainer>;
 ```
 
 #### `responsive` prop (v3+ -- simpler, CSS-based)
@@ -173,9 +181,16 @@ Use the `content` prop on `Tooltip` to render a custom tooltip component. The co
 
 ```tsx
 import type { TooltipProps } from "recharts";
-import type { ValueType, NameType } from "recharts/types/component/DefaultTooltipContent";
+import type {
+  ValueType,
+  NameType,
+} from "recharts/types/component/DefaultTooltipContent";
 
-function CustomTooltip({ active, payload, label }: TooltipProps<ValueType, NameType>) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: TooltipProps<ValueType, NameType>) {
   if (!active || !payload?.length) return null;
 
   return (
@@ -191,7 +206,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<ValueType, NameT
 }
 
 // Usage
-<Tooltip content={<CustomTooltip />} />
+<Tooltip content={<CustomTooltip />} />;
 ```
 
 **Why good:** Full control over tooltip markup and styling, TypeScript types from Recharts, HTML elements (not SVG).
@@ -264,7 +279,7 @@ const INNER_RADIUS = 80; // > 0 for donut
   </Pie>
   <Tooltip />
   <Legend />
-</PieChart>
+</PieChart>;
 ```
 
 **Why good:** `Cell` components give per-slice control. `innerRadius > 0` creates donut chart. `label` prop enables sector labels.
@@ -278,7 +293,16 @@ See [examples/core.md](examples/core.md) for custom labels and nested pie charts
 Mix different chart types (Line, Bar, Area) in a single chart using `ComposedChart`.
 
 ```tsx
-import { ComposedChart, Line, Bar, Area, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import {
+  ComposedChart,
+  Line,
+  Bar,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 <ComposedChart data={data}>
   <XAxis dataKey="month" />
@@ -288,8 +312,14 @@ import { ComposedChart, Line, Bar, Area, XAxis, YAxis, Tooltip, Legend } from "r
   <Legend />
   <Bar dataKey="sales" yAxisId="left" fill="#8884d8" />
   <Line type="monotone" dataKey="trend" yAxisId="right" stroke="#ff7300" />
-  <Area type="monotone" dataKey="forecast" yAxisId="left" fill="#82ca9d" opacity={0.3} />
-</ComposedChart>
+  <Area
+    type="monotone"
+    dataKey="forecast"
+    yAxisId="left"
+    fill="#82ca9d"
+    opacity={0.3}
+  />
+</ComposedChart>;
 ```
 
 **Why good:** Dual Y-axes via `yAxisId`, different visual types in one chart. Use when data has different scales or units.
@@ -311,7 +341,7 @@ const ANIMATION_DURATION = 800;
   animationDuration={ANIMATION_DURATION}
   animationEasing="ease-in-out"
   animationBegin={0}
-/>
+/>;
 ```
 
 **Disable animations** for real-time data or performance-critical scenarios:

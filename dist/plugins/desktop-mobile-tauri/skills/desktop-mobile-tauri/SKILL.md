@@ -281,6 +281,7 @@ npx tauri android dev --open
 ```
 
 **Debugging approaches:**
+
 - **iOS:** Safari > Develop menu > select device > inspect localhost
 - **Android:** `chrome://inspect` in Chrome > select connected device
 - **Rust logs:** Use `tauri-plugin-log` for structured logging across platforms

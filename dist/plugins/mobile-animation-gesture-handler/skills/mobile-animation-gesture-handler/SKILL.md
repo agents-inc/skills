@@ -189,14 +189,14 @@ UNDETERMINED ──> BEGAN ──> ACTIVE ──> END ──> UNDETERMINED
 
 **Lifecycle callbacks map to states:**
 
-| Callback       | When it fires                                           |
-|----------------|---------------------------------------------------------|
-| `onBegin`      | UNDETERMINED -> BEGAN (touch detected, not yet recognized) |
-| `onStart`      | BEGAN -> ACTIVE (gesture recognized, meets criteria)    |
-| `onUpdate`     | While ACTIVE (cumulative: `translationX`, `scale`)      |
-| `onChange`     | While ACTIVE (incremental: `changeX`, `changeY`)        |
-| `onEnd`        | ACTIVE -> END (finger lifted normally)                  |
-| `onFinalize`   | Fires for ANY terminal state (END, FAILED, CANCELLED)   |
+| Callback     | When it fires                                              |
+| ------------ | ---------------------------------------------------------- |
+| `onBegin`    | UNDETERMINED -> BEGAN (touch detected, not yet recognized) |
+| `onStart`    | BEGAN -> ACTIVE (gesture recognized, meets criteria)       |
+| `onUpdate`   | While ACTIVE (cumulative: `translationX`, `scale`)         |
+| `onChange`   | While ACTIVE (incremental: `changeX`, `changeY`)           |
+| `onEnd`      | ACTIVE -> END (finger lifted normally)                     |
+| `onFinalize` | Fires for ANY terminal state (END, FAILED, CANCELLED)      |
 
 **`onEnd` vs `onFinalize`:** Use `onEnd` for success-only cleanup (save position). Use `onFinalize` for guaranteed cleanup (reset state regardless of outcome). `onFinalize` receives a second `success` boolean parameter.
 

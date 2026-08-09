@@ -37,12 +37,10 @@ async function invalidateByTag(tag: string): Promise<number> {
 // Usage
 const PRODUCT_TTL = 3600;
 
-await setWithTags(
-  "myapp:product:123",
-  JSON.stringify(product),
-  PRODUCT_TTL,
-  ["category:electronics", "brand:apple"],
-);
+await setWithTags("myapp:product:123", JSON.stringify(product), PRODUCT_TTL, [
+  "category:electronics",
+  "brand:apple",
+]);
 
 // When electronics category changes -- invalidate all electronics products
 const invalidated = await invalidateByTag("category:electronics");
@@ -185,7 +183,9 @@ async function getProduct(id: string): Promise<Product> {
     });
     if (!result) throw new Error(`Product ${id} not found`);
 
-    await cacheStore.set(cacheKey, JSON.stringify(result), { ttl: PRODUCT_TTL });
+    await cacheStore.set(cacheKey, JSON.stringify(result), {
+      ttl: PRODUCT_TTL,
+    });
     return result;
   });
 
@@ -212,7 +212,7 @@ const EARLY_RECOMPUTE_FACTOR = 0.1; // Start refreshing at 10% remaining TTL
 interface CachedEntry<T> {
   data: T;
   expiresAt: number; // Unix timestamp in ms
-  ttlMs: number;     // Original TTL for probability calculation
+  ttlMs: number; // Original TTL for probability calculation
 }
 
 async function getWithEarlyRefresh<T>(
@@ -228,7 +228,10 @@ async function getWithEarlyRefresh<T>(
     const remainingFraction = remainingMs / entry.ttlMs;
 
     // Probability of refresh increases as TTL approaches expiration
-    if (remainingFraction < EARLY_RECOMPUTE_FACTOR && Math.random() > remainingFraction) {
+    if (
+      remainingFraction < EARLY_RECOMPUTE_FACTOR &&
+      Math.random() > remainingFraction
+    ) {
       // Background refresh -- don't await, serve stale data immediately
       refreshInBackground(key, fetchFn, ttlMs);
     }
@@ -297,7 +300,9 @@ class WriteBuffer {
   private buffer: PendingWrite[] = [];
   private timer: NodeJS.Timeout | null = null;
 
-  constructor(private readonly persistFn: (writes: PendingWrite[]) => Promise<void>) {}
+  constructor(
+    private readonly persistFn: (writes: PendingWrite[]) => Promise<void>,
+  ) {}
 
   add(key: string, value: unknown): void {
     this.buffer.push({ key, value, timestamp: Date.now() });
@@ -419,7 +424,8 @@ function getCacheStats(): Record<string, CacheMetrics & { hitRate: string }> {
   const stats: Record<string, CacheMetrics & { hitRate: string }> = {};
   for (const [prefix, m] of metrics) {
     const total = m.hits + m.misses;
-    const hitRate = total > 0 ? `${((m.hits / total) * 100).toFixed(1)}%` : "N/A";
+    const hitRate =
+      total > 0 ? `${((m.hits / total) * 100).toFixed(1)}%` : "N/A";
     stats[prefix] = { ...m, hitRate };
   }
   return stats;
@@ -432,11 +438,11 @@ export { getCachedWithMetrics, getCacheStats };
 
 **Target cache hit rates:**
 
-| Cache Type | Good Hit Rate | Action if Below |
-|---|---|---|
-| User profile | > 80% | Increase TTL or check invalidation frequency |
-| Product catalog | > 90% | Cache may be too small (increase max items) |
-| Search results | > 60% | Expected lower rate due to query diversity |
+| Cache Type      | Good Hit Rate | Action if Below                              |
+| --------------- | ------------- | -------------------------------------------- |
+| User profile    | > 80%         | Increase TTL or check invalidation frequency |
+| Product catalog | > 90%         | Cache may be too small (increase max items)  |
+| Search results  | > 60%         | Expected lower rate due to query diversity   |
 
 ---
 

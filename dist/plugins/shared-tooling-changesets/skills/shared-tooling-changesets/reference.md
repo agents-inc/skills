@@ -6,44 +6,44 @@
 
 ## CLI Command Reference
 
-| Command | Purpose | Key Flags |
-| --- | --- | --- |
-| `changeset init` | Set up `.changeset/` directory | -- |
-| `changeset` / `changeset add` | Create a changeset file | `--empty`, `--open`, `-m <msg>`, `--since <ref>` |
-| `changeset version` | Consume changesets, bump versions, write changelogs | `--ignore <pkg>`, `--snapshot [tag]` |
-| `changeset publish` | Publish packages to npm, create git tags | `--otp <token>`, `--tag <name>`, `--no-git-tag` |
-| `changeset status` | Show pending changesets and expected bumps | `--verbose`, `--output <file>`, `--since <ref>` |
-| `changeset pre enter <tag>` | Enter pre-release mode | tag: `alpha`, `beta`, `rc`, `next`, etc. |
-| `changeset pre exit` | Signal intent to exit pre-release mode | -- |
-| `changeset tag` | Create git tags for current versions | -- |
+| Command                       | Purpose                                             | Key Flags                                        |
+| ----------------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| `changeset init`              | Set up `.changeset/` directory                      | --                                               |
+| `changeset` / `changeset add` | Create a changeset file                             | `--empty`, `--open`, `-m <msg>`, `--since <ref>` |
+| `changeset version`           | Consume changesets, bump versions, write changelogs | `--ignore <pkg>`, `--snapshot [tag]`             |
+| `changeset publish`           | Publish packages to npm, create git tags            | `--otp <token>`, `--tag <name>`, `--no-git-tag`  |
+| `changeset status`            | Show pending changesets and expected bumps          | `--verbose`, `--output <file>`, `--since <ref>`  |
+| `changeset pre enter <tag>`   | Enter pre-release mode                              | tag: `alpha`, `beta`, `rc`, `next`, etc.         |
+| `changeset pre exit`          | Signal intent to exit pre-release mode              | --                                               |
+| `changeset tag`               | Create git tags for current versions                | --                                               |
 
 ---
 
 ## Config Options (.changeset/config.json)
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `changelog` | `false \| string \| [string, options]` | `"@changesets/cli/changelog"` | Changelog generator module |
-| `commit` | `boolean \| string \| [string, options]` | `false` | Auto-commit on add/version |
-| `access` | `"restricted" \| "public"` | `"restricted"` | npm publish access level |
-| `baseBranch` | `string` | `"main"` | Branch for comparison |
-| `fixed` | `string[][]` | `[]` | Package groups released together |
-| `linked` | `string[][]` | `[]` | Package groups sharing versions |
-| `updateInternalDependencies` | `"patch" \| "minor"` | `"patch"` | Min bump to update internal deps |
-| `ignore` | `string[]` | `[]` | Packages excluded from publishing |
-| `bumpVersionsWithWorkspaceProtocolOnly` | `boolean` | `false` | Only bump `workspace:` ranges |
-| `privatePackages` | `{ version, tag } \| false` | `{ version: true, tag: false }` | How to handle private packages |
-| `snapshot.useCalculatedVersion` | `boolean` | `false` | Use real version as snapshot base |
-| `snapshot.prereleaseTemplate` | `string` | `"{tag}-{datetime}"` | Snapshot version suffix template |
+| Option                                  | Type                                     | Default                         | Description                       |
+| --------------------------------------- | ---------------------------------------- | ------------------------------- | --------------------------------- |
+| `changelog`                             | `false \| string \| [string, options]`   | `"@changesets/cli/changelog"`   | Changelog generator module        |
+| `commit`                                | `boolean \| string \| [string, options]` | `false`                         | Auto-commit on add/version        |
+| `access`                                | `"restricted" \| "public"`               | `"restricted"`                  | npm publish access level          |
+| `baseBranch`                            | `string`                                 | `"main"`                        | Branch for comparison             |
+| `fixed`                                 | `string[][]`                             | `[]`                            | Package groups released together  |
+| `linked`                                | `string[][]`                             | `[]`                            | Package groups sharing versions   |
+| `updateInternalDependencies`            | `"patch" \| "minor"`                     | `"patch"`                       | Min bump to update internal deps  |
+| `ignore`                                | `string[]`                               | `[]`                            | Packages excluded from publishing |
+| `bumpVersionsWithWorkspaceProtocolOnly` | `boolean`                                | `false`                         | Only bump `workspace:` ranges     |
+| `privatePackages`                       | `{ version, tag } \| false`              | `{ version: true, tag: false }` | How to handle private packages    |
+| `snapshot.useCalculatedVersion`         | `boolean`                                | `false`                         | Use real version as snapshot base |
+| `snapshot.prereleaseTemplate`           | `string`                                 | `"{tag}-{datetime}"`            | Snapshot version suffix template  |
 
 ### Snapshot Template Placeholders
 
-| Placeholder | Value |
-| --- | --- |
-| `{tag}` | Snapshot tag name |
-| `{commit}` | Current git commit hash |
-| `{timestamp}` | Unix timestamp |
-| `{datetime}` | ISO-like datetime string |
+| Placeholder   | Value                    |
+| ------------- | ------------------------ |
+| `{tag}`       | Snapshot tag name        |
+| `{commit}`    | Current git commit hash  |
+| `{timestamp}` | Unix timestamp           |
+| `{datetime}`  | ISO-like datetime string |
 
 ---
 
@@ -67,13 +67,13 @@ Description of the change (becomes CHANGELOG.md entry).
 
 ## fixed vs linked Quick Reference
 
-| Behavior | `fixed` | `linked` |
-| --- | --- | --- |
-| All packages bump together | Yes (always) | No (only those with changesets) |
-| Share the same version | Yes | Yes (when bumped) |
-| Unchanged packages bumped | Yes | No |
-| Glob support | Yes (micromatch) | Yes (micromatch) |
-| Use case | Single product | Related but independent |
+| Behavior                   | `fixed`          | `linked`                        |
+| -------------------------- | ---------------- | ------------------------------- |
+| All packages bump together | Yes (always)     | No (only those with changesets) |
+| Share the same version     | Yes              | Yes (when bumped)               |
+| Unchanged packages bumped  | Yes              | No                              |
+| Glob support               | Yes (micromatch) | Yes (micromatch)                |
+| Use case                   | Single product   | Related but independent         |
 
 ---
 

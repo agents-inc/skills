@@ -131,16 +131,16 @@ jobs:
 
 **Key built-in functions:**
 
-| Function                     | Purpose                                     |
-| ---------------------------- | ------------------------------------------- |
-| `eas/checkout`               | Clone repository source                     |
-| `eas/install_node_modules`   | Install deps (auto-detects package manager) |
-| `eas/prebuild`               | Run `expo prebuild`                         |
-| `eas/download_build`         | Retrieve build artifacts                    |
-| `eas/restore_cache`          | Restore cached files                        |
-| `eas/save_cache`             | Save files to cache                         |
-| `eas/use_npm_token`          | Configure private npm access                |
-| `eas/send_slack_message`     | Post to Slack webhook                       |
+| Function                   | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `eas/checkout`             | Clone repository source                     |
+| `eas/install_node_modules` | Install deps (auto-detects package manager) |
+| `eas/prebuild`             | Run `expo prebuild`                         |
+| `eas/download_build`       | Retrieve build artifacts                    |
+| `eas/restore_cache`        | Restore cached files                        |
+| `eas/save_cache`           | Save files to cache                         |
+| `eas/use_npm_token`        | Configure private npm access                |
+| `eas/send_slack_message`   | Post to Slack webhook                       |
 
 ---
 
@@ -183,7 +183,7 @@ name: Nightly Build
 
 on:
   schedule:
-    - cron: "0 2 * * 1-5"  # 2 AM UTC, Monday-Friday
+    - cron: "0 2 * * 1-5" # 2 AM UTC, Monday-Friday
 
 jobs:
   build:
@@ -233,7 +233,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true  # Cancel previous run if new push arrives
+  cancel-in-progress: true # Cancel previous run if new push arrives
 
 jobs:
   build:

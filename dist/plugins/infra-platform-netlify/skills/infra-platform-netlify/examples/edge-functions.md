@@ -211,7 +211,10 @@ export default async (req: Request, context: Context) => {
     "Cache-Control",
     `public, max-age=${CACHE_MAX_AGE_SECONDS}`,
   );
-  response.headers.set("Netlify-CDN-Cache-Control", `max-age=${CACHE_MAX_AGE_SECONDS}`);
+  response.headers.set(
+    "Netlify-CDN-Cache-Control",
+    `max-age=${CACHE_MAX_AGE_SECONDS}`,
+  );
 
   return response;
 };
@@ -287,7 +290,10 @@ export default async (req: Request, context: Context) => {
     const file = formData.get("file") as File;
 
     if (!file || file.size > MAX_FILE_SIZE_BYTES) {
-      return Response.json({ error: "Invalid or oversized file" }, { status: 400 });
+      return Response.json(
+        { error: "Invalid or oversized file" },
+        { status: 400 },
+      );
     }
 
     const key = `${context.geo.country?.code ?? "unknown"}/${crypto.randomUUID()}`;
@@ -350,9 +356,13 @@ export default async (req: Request, context: Context) => {
   if (result) {
     const { data, etag } = result;
     const newCount = (data as { count: number }).count + 1;
-    await store.setJSON("page-views", { count: newCount }, {
-      onlyIfMatch: etag, // Fails if another write happened since our read
-    });
+    await store.setJSON(
+      "page-views",
+      { count: newCount },
+      {
+        onlyIfMatch: etag, // Fails if another write happened since our read
+      },
+    );
   }
 
   return new Response("OK");

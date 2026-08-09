@@ -272,7 +272,11 @@ Configure routing rules in `vercel.json` with optional `has`/`missing` condition
     }
   ],
   "redirects": [
-    { "source": "/blog/:slug", "destination": "/posts/:slug", "permanent": true }
+    {
+      "source": "/blog/:slug",
+      "destination": "/posts/:slug",
+      "permanent": true
+    }
   ],
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://api.example.com/:path*" }
@@ -331,12 +335,12 @@ See [examples/monorepo.md](examples/monorepo.md) for monorepo setup, Nx integrat
 
 ### Function Placement
 
-| Setting | Purpose | When to use |
-|---------|---------|-------------|
-| `regions: ["iad1"]` | Deploy to specific region(s) | When your data source is in a known region |
-| `functionFailoverRegions` | Failover during outages | Enterprise plan, critical APIs |
-| `fluid: true` | Reuse instances for concurrent requests | Default for new projects since April 2025 |
-| Per-function `regions` | Different regions per function | When functions access different data sources |
+| Setting                   | Purpose                                 | When to use                                  |
+| ------------------------- | --------------------------------------- | -------------------------------------------- |
+| `regions: ["iad1"]`       | Deploy to specific region(s)            | When your data source is in a known region   |
+| `functionFailoverRegions` | Failover during outages                 | Enterprise plan, critical APIs               |
+| `fluid: true`             | Reuse instances for concurrent requests | Default for new projects since April 2025    |
+| Per-function `regions`    | Different regions per function          | When functions access different data sources |
 
 For runtime comparison and plan limits, see [reference.md](reference.md).
 

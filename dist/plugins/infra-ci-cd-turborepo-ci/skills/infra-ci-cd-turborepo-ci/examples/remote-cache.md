@@ -60,6 +60,7 @@ turbo login --manual
 ```
 
 **Community implementations:**
+
 - `ducktors/turborepo-remote-cache` -- Node.js, supports S3/GCS/Azure Blob storage
 - `brunojppb/turbo-cache-server` -- Lightweight Rust implementation
 
@@ -72,8 +73,8 @@ turbo login --manual
 ```jsonc
 {
   "remoteCache": {
-    "signature": true
-  }
+    "signature": true,
+  },
 }
 ```
 
@@ -85,6 +86,7 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY=<your-secret-key>
 ```
 
 **Behavior:**
+
 - Artifacts are signed on upload with HMAC-SHA256
 - Signature verified on download
 - Failed verification = treated as cache miss (task re-executes)
@@ -134,17 +136,17 @@ turbo run build --cache=local:off,remote:r
     "signature": false,
     "preflight": false,
     "timeout": 30,
-    "uploadTimeout": 60
-  }
+    "uploadTimeout": 60,
+  },
 }
 ```
 
-| Key | Default | Purpose |
-|-----|---------|---------|
-| `enabled` | `true` | Toggle Remote Cache |
-| `signature` | `false` | HMAC-SHA256 artifact signing |
-| `preflight` | `false` | Send preflight request before cache ops |
-| `timeout` | `30` | Download timeout in seconds |
-| `uploadTimeout` | `60` | Upload timeout in seconds |
+| Key             | Default | Purpose                                 |
+| --------------- | ------- | --------------------------------------- |
+| `enabled`       | `true`  | Toggle Remote Cache                     |
+| `signature`     | `false` | HMAC-SHA256 artifact signing            |
+| `preflight`     | `false` | Send preflight request before cache ops |
+| `timeout`       | `30`    | Download timeout in seconds             |
+| `uploadTimeout` | `60`    | Upload timeout in seconds               |
 
 **When to increase timeouts:** Large monorepos with many packages produce large cache artifacts. If CI logs show timeout errors during cache upload/download, increase these values.

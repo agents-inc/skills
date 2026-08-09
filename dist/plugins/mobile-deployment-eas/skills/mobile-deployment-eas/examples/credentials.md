@@ -52,11 +52,11 @@ eas credentials --platform android
 
 ### Distribution Types
 
-| Type           | Use Case                    | Build Profile Setting              |
-| -------------- | --------------------------- | ---------------------------------- |
-| App Store      | App Store submission        | `distribution: "store"` (default)  |
-| Ad Hoc         | Internal testing (devices)  | `distribution: "internal"`         |
-| Enterprise     | Company-wide distribution   | Enterprise Apple Developer account |
+| Type       | Use Case                   | Build Profile Setting              |
+| ---------- | -------------------------- | ---------------------------------- |
+| App Store  | App Store submission       | `distribution: "store"` (default)  |
+| Ad Hoc     | Internal testing (devices) | `distribution: "internal"`         |
+| Enterprise | Company-wide distribution  | Enterprise Apple Developer account |
 
 ### Device Registration for Ad Hoc
 

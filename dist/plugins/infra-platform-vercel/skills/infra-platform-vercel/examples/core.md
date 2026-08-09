@@ -47,9 +47,7 @@
   "redirects": [
     { "source": "/old-path", "destination": "/new-path", "permanent": true }
   ],
-  "rewrites": [
-    { "source": "/api/v1/:path*", "destination": "/api/:path*" }
-  ],
+  "rewrites": [{ "source": "/api/v1/:path*", "destination": "/api/:path*" }],
   "crons": [
     {
       "path": "/api/cron/daily-cleanup",
@@ -90,10 +88,7 @@ export default {
     }
 
     const limitParam = url.searchParams.get("limit");
-    const limit = Math.min(
-      Number(limitParam) || DEFAULT_LIMIT,
-      MAX_LIMIT,
-    );
+    const limit = Math.min(Number(limitParam) || DEFAULT_LIMIT, MAX_LIMIT);
 
     // Your data fetching logic here
     const users = await fetchUsers(limit);

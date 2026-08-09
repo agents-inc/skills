@@ -86,11 +86,11 @@ In Expo Router projects, place at: `public/.well-known/apple-app-site-associatio
 
 ### Wildcard Rules
 
-| Pattern | Matches | Does NOT Match |
-|---|---|---|
-| `/product/*` | `/product/123` | `/product/123/reviews` (single level only in legacy) |
-| `/product/*/reviews` | `/product/123/reviews` | `/product/123` |
-| `/user/?????` | `/user/alice` (5 chars) | `/user/bob` (3 chars) |
+| Pattern              | Matches                 | Does NOT Match                                       |
+| -------------------- | ----------------------- | ---------------------------------------------------- |
+| `/product/*`         | `/product/123`          | `/product/123/reviews` (single level only in legacy) |
+| `/product/*/reviews` | `/product/123/reviews`  | `/product/123`                                       |
+| `/user/?????`        | `/user/alice` (5 chars) | `/user/bob` (3 chars)                                |
 
 **iOS 13+ components format:** The `*` wildcard in components matches across path separators, unlike the legacy format.
 
@@ -172,10 +172,7 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
     "target": {
       "namespace": "android_app",
       "package_name": "com.example.myapp",
-      "sha256_cert_fingerprints": [
-        "AA:BB:CC:...",
-        "DD:EE:FF:..."
-      ]
+      "sha256_cert_fingerprints": ["AA:BB:CC:...", "DD:EE:FF:..."]
     }
   }
 ]
@@ -219,14 +216,14 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
 
 ### Both Platforms
 
-| Requirement | Detail |
-|---|---|
-| Protocol | HTTPS only (no HTTP, no redirects from HTTP) |
-| Content-Type | `application/json` |
+| Requirement   | Detail                                                   |
+| ------------- | -------------------------------------------------------- |
+| Protocol      | HTTPS only (no HTTP, no redirects from HTTP)             |
+| Content-Type  | `application/json`                                       |
 | Accessibility | Publicly accessible (no authentication, no geo-blocking) |
-| Response code | 200 (not 301, 302, or any redirect) |
-| File size | < 128KB (Apple limit) |
-| CDN caching | Be aware of cache TTL when updating files |
+| Response code | 200 (not 301, 302, or any redirect)                      |
+| File size     | < 128KB (Apple limit)                                    |
+| CDN caching   | Be aware of cache TTL when updating files                |
 
 ### iOS-Specific
 

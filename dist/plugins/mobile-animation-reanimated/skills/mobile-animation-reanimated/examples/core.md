@@ -130,9 +130,9 @@ const TARGET = 100;
 // Lower damping = more bouncy, higher stiffness = snappier
 function physicsSpring(sv: ReturnType<typeof useSharedValue<number>>) {
   sv.value = withSpring(TARGET, {
-    damping: 80,       // how quickly it settles (default: 120)
-    stiffness: 600,    // how bouncy (default: 900)
-    mass: 1,           // weight (default: 4)
+    damping: 80, // how quickly it settles (default: 120)
+    stiffness: 600, // how bouncy (default: 900)
+    mass: 1, // weight (default: 4)
   });
 }
 
@@ -140,8 +140,8 @@ function physicsSpring(sv: ReturnType<typeof useSharedValue<number>>) {
 // dampingRatio < 1 = bouncy, 1 = critically damped (no overshoot), > 1 = overdamped
 function durationSpring(sv: ReturnType<typeof useSharedValue<number>>) {
   sv.value = withSpring(TARGET, {
-    duration: 400,       // perceptual duration in ms (default: 550)
-    dampingRatio: 0.7,   // < 1 bouncy, 1 no bounce, > 1 overdamped
+    duration: 400, // perceptual duration in ms (default: 550)
+    dampingRatio: 0.7, // < 1 bouncy, 1 no bounce, > 1 overdamped
   });
 }
 
@@ -150,7 +150,7 @@ function clampedSpring(sv: ReturnType<typeof useSharedValue<number>>) {
   sv.value = withSpring(TARGET, {
     duration: 400,
     dampingRatio: 0.7,
-    clamp: { min: 0, max: 120 },  // limits movement range
+    clamp: { min: 0, max: 120 }, // limits movement range
   });
 }
 
@@ -198,7 +198,10 @@ function fadeIn(sv: SharedValue<number>) {
 
 // Delayed animation
 function delayedFade(sv: SharedValue<number>) {
-  sv.value = withDelay(FADE_DELAY, withTiming(1, { duration: ANIMATION_DURATION }));
+  sv.value = withDelay(
+    FADE_DELAY,
+    withTiming(1, { duration: ANIMATION_DURATION }),
+  );
 }
 
 // Sequence: shake animation
@@ -208,9 +211,9 @@ function shake(sv: SharedValue<number>) {
     withRepeat(
       withTiming(SHAKE_OFFSET, { duration: SHAKE_DURATION }),
       SHAKE_REPETITIONS,
-      true  // reverse each iteration
+      true, // reverse each iteration
     ),
-    withTiming(0, { duration: SHAKE_DURATION })
+    withTiming(0, { duration: SHAKE_DURATION }),
   );
 }
 ```
@@ -233,8 +236,8 @@ const MAX_POSITION = 300;
 function applyDecay(sv: SharedValue<number>, velocity: number) {
   sv.value = withDecay({
     velocity,
-    rubberBandEffect: true,  // bounces at edges instead of hard stop
-    clamp: [MIN_POSITION, MAX_POSITION],  // boundaries
+    rubberBandEffect: true, // bounces at edges instead of hard stop
+    clamp: [MIN_POSITION, MAX_POSITION], // boundaries
   });
 }
 
@@ -242,7 +245,7 @@ function applyDecay(sv: SharedValue<number>, velocity: number) {
 function clampedDecay(sv: SharedValue<number>, velocity: number) {
   sv.value = withClamp(
     { min: MIN_POSITION, max: MAX_POSITION },
-    withDecay({ velocity })
+    withDecay({ velocity }),
   );
 }
 ```
@@ -274,13 +277,13 @@ function useHeaderStyle(scrollY: SharedValue<number>) {
       scrollY.value,
       [0, HEADER_MAX - HEADER_MIN],
       [HEADER_MAX, HEADER_MIN],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     const opacity = interpolate(
       scrollY.value,
       [0, SCROLL_THRESHOLD],
       [1, 0],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     return { height, opacity };
   });
@@ -292,7 +295,7 @@ function useProgressColor(progress: SharedValue<number>) {
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 0.5, 1],
-      ["#FF3B30", "#FFCC00", "#34C759"]  // red -> yellow -> green
+      ["#FF3B30", "#FFCC00", "#34C759"], // red -> yellow -> green
     );
     return { backgroundColor };
   });
@@ -306,9 +309,9 @@ function useParallax(scrollY: SharedValue<number>) {
       [0, SCROLL_THRESHOLD],
       [0, -50],
       {
-        extrapolateLeft: Extrapolation.CLAMP,   // don't go past 0
-        extrapolateRight: Extrapolation.EXTEND,  // continue beyond range
-      }
+        extrapolateLeft: Extrapolation.CLAMP, // don't go past 0
+        extrapolateRight: Extrapolation.EXTEND, // continue beyond range
+      },
     );
     return { transform: [{ translateY }] };
   });
@@ -317,11 +320,11 @@ function useParallax(scrollY: SharedValue<number>) {
 
 **Extrapolation types:**
 
-| Type | Behavior |
-|------|----------|
-| `CLAMP` | Caps output at range edges |
-| `EXTEND` | Continues linearly past range |
-| `IDENTITY` | Returns the raw input value |
+| Type       | Behavior                      |
+| ---------- | ----------------------------- |
+| `CLAMP`    | Caps output at range edges    |
+| `EXTEND`   | Continues linearly past range |
+| `IDENTITY` | Returns the raw input value   |
 
 **`interpolateColor` modes:** `'RGB'` (default) or `'HSV'`. HSV produces perceptually smoother hue transitions (e.g., red to blue through purple, not through muddy brown).
 

@@ -12,7 +12,13 @@ Image filters compose as children of shapes or Groups. Multiple filters can be n
 
 ```tsx
 import {
-  Canvas, Image, Rect, Blur, Shadow, ColorMatrix, useImage,
+  Canvas,
+  Image,
+  Rect,
+  Blur,
+  Shadow,
+  ColorMatrix,
+  useImage,
 } from "@shopify/react-native-skia";
 
 const BLUR_SIGMA = 8;
@@ -39,7 +45,12 @@ export function ShadowedRect() {
   return (
     <Canvas style={{ width: 256, height: 256 }}>
       <Rect x={40} y={40} width={160} height={160} color="white">
-        <Shadow dx={SHADOW_DX} dy={SHADOW_DY} blur={SHADOW_BLUR} color="rgba(0,0,0,0.4)" />
+        <Shadow
+          dx={SHADOW_DX}
+          dy={SHADOW_DY}
+          blur={SHADOW_BLUR}
+          color="rgba(0,0,0,0.4)"
+        />
       </Rect>
     </Canvas>
   );
@@ -47,10 +58,8 @@ export function ShadowedRect() {
 
 // Composed: Blur + ColorMatrix (grayscale)
 const GRAYSCALE_MATRIX = [
-  0.2126, 0.7152, 0.0722, 0, 0,
-  0.2126, 0.7152, 0.0722, 0, 0,
-  0.2126, 0.7152, 0.0722, 0, 0,
-  0,      0,      0,      1, 0,
+  0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152,
+  0.0722, 0, 0, 0, 0, 0, 1, 0,
 ];
 
 export function GrayscaleBlurredImage() {
@@ -79,7 +88,13 @@ Apply effects to content behind a clipping region (like CSS `backdrop-filter`). 
 
 ```tsx
 import {
-  Canvas, Image, BackdropBlur, BackdropFilter, Fill, ColorMatrix, useImage,
+  Canvas,
+  Image,
+  BackdropBlur,
+  BackdropFilter,
+  Fill,
+  ColorMatrix,
+  useImage,
 } from "@shopify/react-native-skia";
 
 const BACKDROP_BLUR_RADIUS = 10;
@@ -106,10 +121,8 @@ export function GlassMorphism() {
 
 // BackdropFilter with custom ColorMatrix
 const SEPIA_MATRIX = [
-  0.393, 0.769, 0.189, 0, 0,
-  0.349, 0.686, 0.168, 0, 0,
-  0.272, 0.534, 0.131, 0, 0,
-  0,     0,     0,     1, 0,
+  0.393, 0.769, 0.189, 0, 0, 0.349, 0.686, 0.168, 0, 0, 0.272, 0.534, 0.131, 0,
+  0, 0, 0, 0, 1, 0,
 ];
 
 export function SepiaBackdrop() {
@@ -119,9 +132,7 @@ export function SepiaBackdrop() {
       <Fill color="cyan" />
 
       {/* Apply sepia to bottom half */}
-      <BackdropFilter
-        clip={{ x: 0, y: 128, width: 256, height: 128 }}
-      >
+      <BackdropFilter clip={{ x: 0, y: 128, width: 256, height: 128 }}>
         <ColorMatrix matrix={SEPIA_MATRIX} />
       </BackdropFilter>
     </Canvas>
@@ -139,7 +150,12 @@ Write GPU shaders with `Skia.RuntimeEffect.Make()`. Uniforms are passed as a pla
 
 ```tsx
 import { Canvas, Fill, Shader, Skia } from "@shopify/react-native-skia";
-import { useSharedValue, useDerivedValue, withRepeat, withTiming } from "react-native-reanimated";
+import {
+  useSharedValue,
+  useDerivedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { useEffect } from "react";
 
 const ANIMATION_DURATION = 4000;
@@ -164,7 +180,10 @@ export function AnimatedGradientShader() {
   const time = useSharedValue(0);
 
   useEffect(() => {
-    time.value = withRepeat(withTiming(6.28, { duration: ANIMATION_DURATION }), -1);
+    time.value = withRepeat(
+      withTiming(6.28, { duration: ANIMATION_DURATION }),
+      -1,
+    );
   }, []);
 
   if (!effect) return null; // Shader compilation failed
@@ -191,7 +210,13 @@ export function AnimatedGradientShader() {
 RuntimeShader processes existing canvas content as a shader uniform. The filtered image is available as `uniform shader image` implicitly.
 
 ```tsx
-import { Canvas, Image, RuntimeShader, Skia, useImage } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Image,
+  RuntimeShader,
+  Skia,
+  useImage,
+} from "@shopify/react-native-skia";
 
 const PIXELATE_SHADER = `
   uniform shader image;
@@ -216,10 +241,20 @@ export function PixelatedImage() {
 
   return (
     <Canvas style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}>
-      <Image image={photo} fit="cover" x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE}>
+      <Image
+        image={photo}
+        fit="cover"
+        x={0}
+        y={0}
+        width={CANVAS_SIZE}
+        height={CANVAS_SIZE}
+      >
         <RuntimeShader
           source={pixelateEffect}
-          uniforms={{ resolution: [CANVAS_SIZE, CANVAS_SIZE], pixelSize: PIXEL_COUNT }}
+          uniforms={{
+            resolution: [CANVAS_SIZE, CANVAS_SIZE],
+            pixelSize: PIXEL_COUNT,
+          }}
         />
       </Image>
     </Canvas>
@@ -238,7 +273,14 @@ export function PixelatedImage() {
 Compose shaders by declaring `uniform shader` and sampling with `.eval(xy)`.
 
 ```tsx
-import { Canvas, Fill, Shader, ImageShader, Skia, useImage } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Fill,
+  Shader,
+  ImageShader,
+  Skia,
+  useImage,
+} from "@shopify/react-native-skia";
 
 const SWIRL_SHADER = `
   uniform shader image;
@@ -280,7 +322,14 @@ export function SwirlImage() {
           }}
         >
           {/* Child shader: image texture available as `uniform shader image` */}
-          <ImageShader image={photo} fit="cover" x={0} y={0} width={256} height={256} />
+          <ImageShader
+            image={photo}
+            fit="cover"
+            x={0}
+            y={0}
+            width={256}
+            height={256}
+          />
         </Shader>
       </Fill>
     </Canvas>

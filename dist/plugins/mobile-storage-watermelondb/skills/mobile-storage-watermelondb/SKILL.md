@@ -81,12 +81,12 @@ WatermelonDB is a **reactive, lazy-loading** database built on SQLite for React 
 
 **Performance characteristics:**
 
-| Scenario | Behavior |
-|---|---|
-| 10,000 records in a table | Zero JS cost until queried |
-| Complex query | Runs on native SQLite thread, resolves instantly |
-| List re-rendering | `observe()` emits only when matching records change |
-| Bulk operations | `batch()` groups into single native transaction |
+| Scenario                  | Behavior                                            |
+| ------------------------- | --------------------------------------------------- |
+| 10,000 records in a table | Zero JS cost until queried                          |
+| Complex query             | Runs on native SQLite thread, resolves instantly    |
+| List re-rendering         | `observe()` emits only when matching records change |
+| Bulk operations           | `batch()` groups into single native transaction     |
 
 **v0.27+ architecture:** All React helpers consolidated under `@nozbe/watermelondb/react` (replaces `@nozbe/with-observables`, `@nozbe/watermelondb/DatabaseProvider`, `@nozbe/watermelondb/hooks`). v0.28 requires React Native 0.74+ and Node.js 18+.
 
@@ -115,8 +115,8 @@ export const schema = appSchema({
         { name: "body", type: "string" },
         { name: "subtitle", type: "string", isOptional: true },
         { name: "is_pinned", type: "boolean" },
-        { name: "created_at", type: "number" },   // dates stored as timestamps
-        { name: "author_id", type: "string", isIndexed: true },  // FK
+        { name: "created_at", type: "number" }, // dates stored as timestamps
+        { name: "author_id", type: "string", isIndexed: true }, // FK
       ],
     }),
     tableSchema({
@@ -133,7 +133,7 @@ export const schema = appSchema({
 
 **Why good:** `isIndexed` on foreign keys speeds up relation queries, dates use `number` type (unix timestamps), snake_case naming follows convention
 
-**Naming conventions:** Tables are plural snake_case (`posts`, `blog_comments`). Columns are snake_case. FKs use `_id` suffix. Booleans use `is_` prefix. Date columns use `_at` suffix.
+**Naming conventions:** Tables are plural snake*case (`posts`, `blog_comments`). Columns are snake_case. FKs use `_id` suffix. Booleans use `is*`prefix. Date columns use`\_at` suffix.
 
 See [examples/core.md](examples/core.md) for full schema with all column types.
 
@@ -145,9 +145,20 @@ Models are classes extending `Model` that map to schema tables. Decorators bind 
 
 ```typescript
 import { Model } from "@nozbe/watermelondb";
-import { field, text, date, readonly, json, nochange, relation, children, immutableRelation } from "@nozbe/watermelondb/decorators";
+import {
+  field,
+  text,
+  date,
+  readonly,
+  json,
+  nochange,
+  relation,
+  children,
+  immutableRelation,
+} from "@nozbe/watermelondb/decorators";
 
-const sanitizeTags = (raw: unknown) => (Array.isArray(raw) ? raw.map(String) : []);
+const sanitizeTags = (raw: unknown) =>
+  Array.isArray(raw) ? raw.map(String) : [];
 
 class Post extends Model {
   static table = "posts";
@@ -171,6 +182,7 @@ class Post extends Model {
 **Why good:** `@text` trims whitespace (for user input), `@date` converts timestamps to Date objects, `@readonly` prevents any assignment, `@nochange` prevents modification after creation, `@json` with sanitizer validates parsed data
 
 **Key decorator rules:**
+
 - `@field` -- raw column value (string/number/boolean), guaranteed to match schema type
 - `@text` -- like `@field` but trims whitespace, use for user-editable text
 - `@date` -- converts stored unix timestamp to JS `Date` object
@@ -244,6 +256,7 @@ class Post extends Model {
 **Why good:** `@writer` guarantees mutual exclusion (only one writer at a time), `@reader` prevents writes during multi-step reads, `markAsDeleted` preserves record for sync
 
 **Key rules:**
+
 - `@writer` methods can create, update, delete records
 - `@reader` methods can only read (fetch, count)
 - Writers/readers are async and return Promises
@@ -286,6 +299,7 @@ const EnhancedPostItem = enhance(PostItem);
 **Why good:** Component re-renders only when the specific post or its comment count changes, not on any database change
 
 **`observe()` vs `observeWithColumns()`:**
+
 - `observe()` -- emits when the record itself changes, or when query results add/remove records
 - `observeWithColumns(["column_a", "column_b"])` -- also emits when matched records change specified columns (use for sorted lists)
 
@@ -359,7 +373,11 @@ See [examples/sync.md](examples/sync.md) for batch patterns with mixed create/up
 Evolve your database schema across app versions. Each migration step increments `toVersion` and applies changes.
 
 ```typescript
-import { schemaMigrations, addColumns, createTable } from "@nozbe/watermelondb/Schema/migrations";
+import {
+  schemaMigrations,
+  addColumns,
+  createTable,
+} from "@nozbe/watermelondb/Schema/migrations";
 
 export const migrations = schemaMigrations({
   migrations: [
@@ -423,6 +441,7 @@ async function syncDatabase(database: Database) {
 ```
 
 **Key constraints:**
+
 - `pullChanges` returns `{ changes, timestamp }` where `changes` has `{ created: [], updated: [], deleted: [] }` per table
 - `pushChanges` receives local changes in the same format
 - Server must provide a consistent snapshot (use transactions or read locks)
@@ -459,22 +478,22 @@ What kind of local data do you need?
 
 ### When to Use Each API
 
-| Scenario | API |
-|---|---|
-| Define database structure | `appSchema`/`tableSchema` |
-| Map columns to properties | `@field`, `@text`, `@date`, `@json` |
-| Prevent field modification | `@readonly` (never set), `@nochange` (set once) |
-| One-to-one relation (fixed) | `@immutableRelation` |
-| One-to-one relation (mutable) | `@relation` |
-| One-to-many relation | `@children` |
-| Create/update/delete records | `@writer` method or `database.write()` |
-| Consistent multi-step reads | `@reader` method or `database.read()` |
-| Bulk create/update/delete | `batch()` with `prepare*` methods |
-| Reactive component data | `withObservables` + `observe()` |
-| Reactive sorted list | `observeWithColumns(["sort_column"])` |
-| Access database in component | `useDatabase()` from `@nozbe/watermelondb/react` |
-| Evolve schema across versions | `schemaMigrations` + `addColumns`/`createTable` |
-| Sync with remote server | `synchronize()` with `pullChanges`/`pushChanges` |
+| Scenario                      | API                                              |
+| ----------------------------- | ------------------------------------------------ |
+| Define database structure     | `appSchema`/`tableSchema`                        |
+| Map columns to properties     | `@field`, `@text`, `@date`, `@json`              |
+| Prevent field modification    | `@readonly` (never set), `@nochange` (set once)  |
+| One-to-one relation (fixed)   | `@immutableRelation`                             |
+| One-to-one relation (mutable) | `@relation`                                      |
+| One-to-many relation          | `@children`                                      |
+| Create/update/delete records  | `@writer` method or `database.write()`           |
+| Consistent multi-step reads   | `@reader` method or `database.read()`            |
+| Bulk create/update/delete     | `batch()` with `prepare*` methods                |
+| Reactive component data       | `withObservables` + `observe()`                  |
+| Reactive sorted list          | `observeWithColumns(["sort_column"])`            |
+| Access database in component  | `useDatabase()` from `@nozbe/watermelondb/react` |
+| Evolve schema across versions | `schemaMigrations` + `addColumns`/`createTable`  |
+| Sync with remote server       | `synchronize()` with `pullChanges`/`pushChanges` |
 
 </decision_framework>
 

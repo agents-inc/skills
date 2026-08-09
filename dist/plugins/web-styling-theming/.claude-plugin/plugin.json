@@ -1,0 +1,9 @@
+{
+  "name": "web-styling-theming",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Runtime theming - applying a theme system to a live app without flash",
+  "author": {
+    "name": "@vince"
+  }
+}

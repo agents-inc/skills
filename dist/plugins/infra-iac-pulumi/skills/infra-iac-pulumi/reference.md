@@ -61,52 +61,52 @@ Want to prevent accidental `pulumi destroy`?
 
 ## Resource Options Reference
 
-| Option                 | Type                        | Purpose                                                       |
-| ---------------------- | --------------------------- | ------------------------------------------------------------- |
-| `parent`               | `Resource`                  | Set parent (establishes resource tree, cascading delete)       |
-| `provider`             | `ProviderResource`          | Explicit provider for this resource                            |
-| `providers`            | `Record<string, Provider>`  | Provider map for child resources (components only)             |
-| `dependsOn`            | `Input<Resource[]>`         | Explicit ordering beyond automatic dependency inference        |
-| `protect`              | `boolean`                   | Prevent accidental deletion (must unprotect first)             |
-| `retainOnDelete`       | `boolean`                   | Keep cloud resource when removed from Pulumi state             |
-| `deleteBeforeReplace`  | `boolean`                   | Delete old before creating new (for unique name constraints)   |
-| `ignoreChanges`        | `string[]`                  | Ignore drift on specific properties                            |
-| `aliases`              | `Input<Alias[]>`            | Old names/types/parents for safe renaming                      |
-| `replaceOnChanges`     | `string[]`                  | Force replacement on specific property changes                 |
-| `import`               | `string`                    | Import existing cloud resource into Pulumi state               |
-| `transforms`           | `ResourceTransform[]`       | Modify child resource properties/options dynamically           |
-| `customTimeouts`       | `CustomTimeouts`            | Override default create/update/delete timeouts                 |
-| `hooks`                | `ResourceHooks`             | Lifecycle callbacks (before/after create, update, delete)      |
+| Option                | Type                       | Purpose                                                      |
+| --------------------- | -------------------------- | ------------------------------------------------------------ |
+| `parent`              | `Resource`                 | Set parent (establishes resource tree, cascading delete)     |
+| `provider`            | `ProviderResource`         | Explicit provider for this resource                          |
+| `providers`           | `Record<string, Provider>` | Provider map for child resources (components only)           |
+| `dependsOn`           | `Input<Resource[]>`        | Explicit ordering beyond automatic dependency inference      |
+| `protect`             | `boolean`                  | Prevent accidental deletion (must unprotect first)           |
+| `retainOnDelete`      | `boolean`                  | Keep cloud resource when removed from Pulumi state           |
+| `deleteBeforeReplace` | `boolean`                  | Delete old before creating new (for unique name constraints) |
+| `ignoreChanges`       | `string[]`                 | Ignore drift on specific properties                          |
+| `aliases`             | `Input<Alias[]>`           | Old names/types/parents for safe renaming                    |
+| `replaceOnChanges`    | `string[]`                 | Force replacement on specific property changes               |
+| `import`              | `string`                   | Import existing cloud resource into Pulumi state             |
+| `transforms`          | `ResourceTransform[]`      | Modify child resource properties/options dynamically         |
+| `customTimeouts`      | `CustomTimeouts`           | Override default create/update/delete timeouts               |
+| `hooks`               | `ResourceHooks`            | Lifecycle callbacks (before/after create, update, delete)    |
 
 ---
 
 ## Output Methods Reference
 
-| Method                  | Input            | Output            | Use When                                          |
-| ----------------------- | ---------------- | ----------------- | ------------------------------------------------- |
-| `pulumi.interpolate`    | Template literal  | `Output<string>`  | Building strings from Outputs (preferred)          |
-| `.apply(fn)`            | `Output<T>`      | `Output<U>`       | Transforming a single Output value                 |
-| `pulumi.all([...])`     | `Output<T>[]`    | `Output<T[]>`     | Combining multiple Outputs                         |
-| `pulumi.output(val)`    | `T \| Output<T>` | `Output<T>`       | Wrapping a plain value as an Output                |
-| `pulumi.secret(val)`    | `T \| Output<T>` | `Output<T>`       | Marking a value as secret (encrypted in state)     |
-| `.getOutput(name)`      | `StackReference`  | `Output<any>`     | Reading a stack output (returns undefined if missing) |
-| `.requireOutput(name)`  | `StackReference`  | `Output<any>`     | Reading a stack output (throws if missing)         |
-| `.getOutputDetails(name)` | `StackReference` | `OutputDetails`  | Reading a stack output as plain value              |
+| Method                    | Input            | Output           | Use When                                              |
+| ------------------------- | ---------------- | ---------------- | ----------------------------------------------------- |
+| `pulumi.interpolate`      | Template literal | `Output<string>` | Building strings from Outputs (preferred)             |
+| `.apply(fn)`              | `Output<T>`      | `Output<U>`      | Transforming a single Output value                    |
+| `pulumi.all([...])`       | `Output<T>[]`    | `Output<T[]>`    | Combining multiple Outputs                            |
+| `pulumi.output(val)`      | `T \| Output<T>` | `Output<T>`      | Wrapping a plain value as an Output                   |
+| `pulumi.secret(val)`      | `T \| Output<T>` | `Output<T>`      | Marking a value as secret (encrypted in state)        |
+| `.getOutput(name)`        | `StackReference` | `Output<any>`    | Reading a stack output (returns undefined if missing) |
+| `.requireOutput(name)`    | `StackReference` | `Output<any>`    | Reading a stack output (throws if missing)            |
+| `.getOutputDetails(name)` | `StackReference` | `OutputDetails`  | Reading a stack output as plain value                 |
 
 ---
 
 ## Config Methods Reference
 
-| Method              | Returns              | Behavior When Missing |
-| ------------------- | -------------------- | --------------------- |
-| `config.get(key)`   | `string \| undefined` | Returns undefined     |
-| `config.require(key)` | `string`           | Throws error          |
-| `config.getNumber(key)` | `number \| undefined` | Returns undefined  |
-| `config.requireNumber(key)` | `number`      | Throws error          |
-| `config.getBoolean(key)` | `boolean \| undefined` | Returns undefined |
-| `config.requireBoolean(key)` | `boolean`    | Throws error          |
-| `config.getSecret(key)` | `Output<string> \| undefined` | Returns undefined |
-| `config.requireSecret(key)` | `Output<string>` | Throws error       |
+| Method                       | Returns                       | Behavior When Missing |
+| ---------------------------- | ----------------------------- | --------------------- |
+| `config.get(key)`            | `string \| undefined`         | Returns undefined     |
+| `config.require(key)`        | `string`                      | Throws error          |
+| `config.getNumber(key)`      | `number \| undefined`         | Returns undefined     |
+| `config.requireNumber(key)`  | `number`                      | Throws error          |
+| `config.getBoolean(key)`     | `boolean \| undefined`        | Returns undefined     |
+| `config.requireBoolean(key)` | `boolean`                     | Throws error          |
+| `config.getSecret(key)`      | `Output<string> \| undefined` | Returns undefined     |
+| `config.requireSecret(key)`  | `Output<string>`              | Throws error          |
 
 ---
 

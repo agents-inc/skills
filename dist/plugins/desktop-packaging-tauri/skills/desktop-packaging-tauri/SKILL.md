@@ -136,15 +136,15 @@ The `bundle` section in `tauri.conf.json` controls all packaging behavior. The `
 
 Each platform has distinct installer formats with different trade-offs.
 
-| Platform | Format     | Output               | Size    | Notes                       |
-| -------- | ---------- | -------------------- | ------- | --------------------------- |
-| Windows  | `nsis`     | `-setup.exe`         | ~2-5 MB | Recommended, cross-compile  |
-| Windows  | `msi`      | `.msi`               | ~2-5 MB | WiX, Windows-only build     |
-| macOS    | `dmg`      | `.dmg`               | ~5-8 MB | Drag-to-install disk image  |
-| macOS    | `app`      | `.app` bundle        | ~5-8 MB | Raw app, no installer       |
-| Linux    | `deb`      | `.deb`               | ~2-6 MB | Debian/Ubuntu               |
-| Linux    | `rpm`      | `.rpm`               | ~2-6 MB | Fedora/RHEL                 |
-| Linux    | `appimage` | `.AppImage`          | ~70+ MB | Portable, bundles all deps  |
+| Platform | Format     | Output        | Size    | Notes                      |
+| -------- | ---------- | ------------- | ------- | -------------------------- |
+| Windows  | `nsis`     | `-setup.exe`  | ~2-5 MB | Recommended, cross-compile |
+| Windows  | `msi`      | `.msi`        | ~2-5 MB | WiX, Windows-only build    |
+| macOS    | `dmg`      | `.dmg`        | ~5-8 MB | Drag-to-install disk image |
+| macOS    | `app`      | `.app` bundle | ~5-8 MB | Raw app, no installer      |
+| Linux    | `deb`      | `.deb`        | ~2-6 MB | Debian/Ubuntu              |
+| Linux    | `rpm`      | `.rpm`        | ~2-6 MB | Fedora/RHEL                |
+| Linux    | `appimage` | `.AppImage`   | ~70+ MB | Portable, bundles all deps |
 
 ```sh
 # Build all formats for current platform
@@ -230,13 +230,13 @@ panic = "abort"
 strip = true
 ```
 
-| Setting         | Impact            | Trade-off                    |
-| --------------- | ----------------- | ---------------------------- |
-| `strip = true`  | ~10-20% smaller   | No debug symbols             |
-| `lto = true`    | ~10-20% smaller   | Slower compile               |
-| `opt-level = "s"` | Optimize for size | May be slower at runtime     |
-| `codegen-units = 1` | Better optimization | Slower compile          |
-| `panic = "abort"` | Smaller binary  | No panic unwinding           |
+| Setting             | Impact              | Trade-off                |
+| ------------------- | ------------------- | ------------------------ |
+| `strip = true`      | ~10-20% smaller     | No debug symbols         |
+| `lto = true`        | ~10-20% smaller     | Slower compile           |
+| `opt-level = "s"`   | Optimize for size   | May be slower at runtime |
+| `codegen-units = 1` | Better optimization | Slower compile           |
+| `panic = "abort"`   | Smaller binary      | No panic unwinding       |
 
 **Key point:** These settings significantly increase compile time (10-30 min clean builds). Use `cargo tauri build --debug` during development. Tauri 2.4+ also supports `removeUnusedCommands: true` in `build` config. See [examples/core.md](examples/core.md) for frontend optimization tips.
 

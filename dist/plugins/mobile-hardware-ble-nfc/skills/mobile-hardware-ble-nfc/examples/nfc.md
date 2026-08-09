@@ -82,14 +82,18 @@ async function readNdefTag(): Promise<ParsedTag | null> {
         // URI record -- first payload byte is URI prefix code
         return {
           type: "uri",
-          value: Ndef.uri.decodePayload(record.payload as unknown as Uint8Array),
+          value: Ndef.uri.decodePayload(
+            record.payload as unknown as Uint8Array,
+          ),
         };
       }
       if (type === "T") {
         // Text record -- first bytes encode language
         return {
           type: "text",
-          value: Ndef.text.decodePayload(record.payload as unknown as Uint8Array),
+          value: Ndef.text.decodePayload(
+            record.payload as unknown as Uint8Array,
+          ),
         };
       }
 
@@ -269,7 +273,9 @@ async function readMifareUltralight(): Promise<number[][] | null> {
 
     for (let i = 0; i < PAGE_COUNT; i += PAGES_PER_READ) {
       const pageData =
-        await NfcManager.mifareUltralightHandlerAndroid.mifareUltralightReadPages(i);
+        await NfcManager.mifareUltralightHandlerAndroid.mifareUltralightReadPages(
+          i,
+        );
       pages.push(pageData);
     }
 

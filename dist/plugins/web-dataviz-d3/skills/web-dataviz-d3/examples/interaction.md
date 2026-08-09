@@ -14,7 +14,7 @@
 ### Good Example - Animated Bar Chart Update
 
 ```typescript
-import "d3-transition";               // MUST import for side-effect prototype extension
+import "d3-transition"; // MUST import for side-effect prototype extension
 import { select } from "d3-selection";
 import { easeCubicOut, easeExpOut } from "d3-ease";
 
@@ -32,10 +32,11 @@ function updateBars(svgEl: SVGSVGElement, data: BarData[]): void {
           .attr("fill", "steelblue")
           .attr("x", (d) => xScale(d.category)!)
           .attr("width", xScale.bandwidth())
-          .attr("y", innerHeight)          // start at baseline
-          .attr("height", 0)              // start invisible
+          .attr("y", innerHeight) // start at baseline
+          .attr("height", 0) // start invisible
           .call((s) =>
-            s.transition()
+            s
+              .transition()
               .duration(TRANSITION_DURATION_MS)
               .ease(easeCubicOut)
               .delay((_, i) => i * STAGGER_DELAY_MS)
@@ -44,7 +45,8 @@ function updateBars(svgEl: SVGSVGElement, data: BarData[]): void {
           ),
       (update) =>
         update.call((s) =>
-          s.transition()
+          s
+            .transition()
             .duration(TRANSITION_DURATION_MS)
             .ease(easeCubicOut)
             .attr("y", (d) => yScale(d.value))
@@ -52,7 +54,8 @@ function updateBars(svgEl: SVGSVGElement, data: BarData[]): void {
         ),
       (exit) =>
         exit.call((s) =>
-          s.transition()
+          s
+            .transition()
             .duration(TRANSITION_DURATION_MS)
             .attr("y", innerHeight)
             .attr("height", 0)
@@ -72,12 +75,12 @@ const SECOND_PHASE_MS = 500;
 
 select(element)
   .transition()
-    .duration(FIRST_PHASE_MS)
-    .attr("fill", "orange")
-  .transition()                           // chains after first completes
-    .duration(SECOND_PHASE_MS)
-    .attr("fill", "steelblue")
-    .attr("r", FINAL_RADIUS);
+  .duration(FIRST_PHASE_MS)
+  .attr("fill", "orange")
+  .transition() // chains after first completes
+  .duration(SECOND_PHASE_MS)
+  .attr("fill", "steelblue")
+  .attr("r", FINAL_RADIUS);
 ```
 
 **Why good:** chained `.transition()` runs sequentially — second transition starts after first ends, no manual setTimeout needed
@@ -85,7 +88,14 @@ select(element)
 ### Common Easing Functions
 
 ```typescript
-import { easeLinear, easeCubicOut, easeCubicInOut, easeElasticOut, easeBounceOut, easeExpOut } from "d3-ease";
+import {
+  easeLinear,
+  easeCubicOut,
+  easeCubicInOut,
+  easeElasticOut,
+  easeBounceOut,
+  easeExpOut,
+} from "d3-ease";
 
 // easeLinear      — constant speed (mechanical)
 // easeCubicOut    — fast start, slow end (most common for data transitions)
@@ -101,11 +111,12 @@ import { easeLinear, easeCubicOut, easeCubicInOut, easeElasticOut, easeBounceOut
 // Bad: selection.transition() is undefined without the import
 // import "d3-transition";  // forgot this import
 
-select(svg).selectAll("rect")
+select(svg)
+  .selectAll("rect")
   .data(data)
   .join("rect")
-  .transition()               // TypeError: .transition is not a function
-  .duration(500)              // magic number
+  .transition() // TypeError: .transition is not a function
+  .duration(500) // magic number
   .attr("width", (d) => d);
 ```
 
@@ -162,9 +173,7 @@ const zoomBehavior = zoom<SVGSVGElement, unknown>()
     yAxisGroup.call(axisLeft(newYScale));
 
     // Reposition data elements with new scales
-    circles
-      .attr("cx", (d) => newXScale(d.x))
-      .attr("cy", (d) => newYScale(d.y));
+    circles.attr("cx", (d) => newXScale(d.x)).attr("cy", (d) => newYScale(d.y));
   });
 ```
 
@@ -174,10 +183,9 @@ const zoomBehavior = zoom<SVGSVGElement, unknown>()
 
 ```typescript
 // Bad: transforming the SVG root clips content when panning
-const zoomBehavior = zoom()
-  .on("zoom", (event) => {
-    select("svg").attr("transform", event.transform);  // clips!
-  });
+const zoomBehavior = zoom().on("zoom", (event) => {
+  select("svg").attr("transform", event.transform); // clips!
+});
 ```
 
 **Why bad:** transforming the SVG root moves the entire SVG viewport, clipping content outside the original bounds — use an inner `<g>` group instead
@@ -204,15 +212,12 @@ function setupBrush(
       [innerWidth, innerHeight],
     ])
     .on("end", (event: D3BrushEvent<unknown>) => {
-      if (!event.selection) return;        // brush cleared
+      if (!event.selection) return; // brush cleared
       const [x0, x1] = event.selection as [number, number];
       onBrush([xScale.invert(x0), xScale.invert(x1)]);
     });
 
-  select(svgEl)
-    .append("g")
-    .attr("class", "brush")
-    .call(brush);
+  select(svgEl).append("g").attr("class", "brush").call(brush);
 }
 ```
 
@@ -242,7 +247,11 @@ interface DraggableNode {
   id: string;
 }
 
-type NodeDragEvent = D3DragEvent<SVGCircleElement, DraggableNode, DraggableNode>;
+type NodeDragEvent = D3DragEvent<
+  SVGCircleElement,
+  DraggableNode,
+  DraggableNode
+>;
 
 const DRAG_RADIUS = 10;
 
@@ -252,9 +261,7 @@ function setupDrag(svgEl: SVGSVGElement): void {
       select(this).raise().attr("stroke", "black");
     })
     .on("drag", function (event: NodeDragEvent) {
-      select(this)
-        .attr("cx", (event.x))
-        .attr("cy", (event.y));
+      select(this).attr("cx", event.x).attr("cy", event.y);
     })
     .on("end", function (event: NodeDragEvent) {
       select(this).attr("stroke", null);
@@ -272,11 +279,10 @@ function setupDrag(svgEl: SVGSVGElement): void {
 
 ```typescript
 // Bad: arrow function loses `this` binding
-const dragBehavior = drag()
-  .on("drag", (event) => {
-    select(this)              // `this` is lexical scope, not the DOM element!
-      .attr("cx", event.x);
-  });
+const dragBehavior = drag().on("drag", (event) => {
+  select(this) // `this` is lexical scope, not the DOM element!
+    .attr("cx", event.x);
+});
 ```
 
 **Why bad:** D3 event handlers use `this` to reference the DOM element — arrow functions capture lexical `this` instead, causing `select(this)` to select the wrong element. Use `function` keyword or `select(event.currentTarget)`.
@@ -323,13 +329,14 @@ select(svgEl)
 
 ```typescript
 // Native browser tooltip via <title> element
-svg.selectAll("rect")
+svg
+  .selectAll("rect")
   .data(data)
   .join("rect")
-    .attr("width", (d) => xScale(d.value))
-    .attr("height", BAR_HEIGHT)
+  .attr("width", (d) => xScale(d.value))
+  .attr("height", BAR_HEIGHT)
   .append("title")
-    .text((d) => `${d.label}: ${d.value}`);
+  .text((d) => `${d.label}: ${d.value}`);
 ```
 
 **When to use:** quick prototyping where custom styling isn't needed — browser handles positioning and rendering

@@ -137,6 +137,7 @@ function CollapsibleCard() {
 **Why good:** static styles stay in StyleSheet, only dynamic height in useAnimatedStyle, named constants for dimensions and durations, Animated.View receives the animated style
 
 **Key rules:**
+
 - Only animate dynamic properties in `useAnimatedStyle` -- static styles belong in `StyleSheet.create`
 - Never mutate shared values inside `useAnimatedStyle` -- it is read-only
 - Always apply animated styles to `Animated.*` components, not regular `View`/`Text`
@@ -244,6 +245,7 @@ function DraggableCard() {
 **Why good:** `onChange` gives delta values (not absolute), `onFinalize` adds momentum with `withDecay`, gesture callbacks access shared values directly on UI thread
 
 **Key points:**
+
 - Use `onChange` for incremental updates (delta), `onUpdate` for absolute position
 - `GestureHandlerRootView` must wrap your app near the root
 - This skill covers the Reanimated side of gesture animations -- for gesture configuration details (tap, pinch, fling, simultaneous gestures), see the gesture handler skill
@@ -305,21 +307,25 @@ See [examples/scroll-animations.md](examples/scroll-animations.md) for parallax,
 Map one value range to another. `interpolate` for numbers, `interpolateColor` for color transitions.
 
 ```typescript
-import { interpolate, interpolateColor, Extrapolation } from "react-native-reanimated";
+import {
+  interpolate,
+  interpolateColor,
+  Extrapolation,
+} from "react-native-reanimated";
 
 // Number interpolation: scroll position -> opacity
 const opacity = interpolate(
   scrollY.value,
-  [0, 100],    // input range
-  [1, 0],      // output range
-  Extrapolation.CLAMP
+  [0, 100], // input range
+  [1, 0], // output range
+  Extrapolation.CLAMP,
 );
 
 // Color interpolation: progress -> background
 const backgroundColor = interpolateColor(
   progress.value,
-  [0, 0.5, 1],                      // input range
-  ["#FF0000", "#FFFF00", "#00FF00"]  // output colors (red -> yellow -> green)
+  [0, 0.5, 1], // input range
+  ["#FF0000", "#FFFF00", "#00FF00"], // output colors (red -> yellow -> green)
 );
 ```
 
@@ -351,16 +357,18 @@ const style = useAnimatedStyle(() => ({
 
 **Reanimated 4 threading changes:**
 
-| Reanimated 3             | Reanimated 4 (react-native-worklets) |
-|--------------------------|--------------------------------------|
-| `runOnJS(fn)("arg")`    | `scheduleOnRN(fn, "arg")`           |
-| `runOnUI(fn)("arg")`    | `scheduleOnUI(fn, "arg")`           |
+| Reanimated 3         | Reanimated 4 (react-native-worklets) |
+| -------------------- | ------------------------------------ |
+| `runOnJS(fn)("arg")` | `scheduleOnRN(fn, "arg")`            |
+| `runOnUI(fn)("arg")` | `scheduleOnUI(fn, "arg")`            |
 
 **When you need explicit `'worklet'`:**
+
 - Standalone helper functions called from other worklets
 - Functions passed to `scheduleOnUI`
 
 **When you do NOT need it:**
+
 - `useAnimatedStyle` callbacks (auto-workletized)
 - Gesture handler callbacks (auto-workletized)
 - Animation callbacks (auto-workletized)
@@ -411,6 +419,7 @@ const PULSE_DURATION = 1000;
 ```
 
 **When to use CSS vs worklets:**
+
 - CSS -- state-driven toggles, hover effects, simple transitions (less code, better optimizable)
 - Worklets -- gesture-driven, scroll-driven, frame-by-frame control, complex orchestration
 

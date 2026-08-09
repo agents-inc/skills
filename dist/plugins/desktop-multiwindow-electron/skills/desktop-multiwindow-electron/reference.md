@@ -6,15 +6,15 @@
 
 ## Window Type Comparison
 
-| Feature                  | BrowserWindow                     | BaseWindow + WebContentsView        |
-| ------------------------ | --------------------------------- | ----------------------------------- |
-| Web views                | 1 (built-in)                      | 0+ (added manually)                 |
-| Has `webContents`        | Yes (automatic)                   | No (each view has its own)          |
-| `ready-to-show`          | Yes                               | No (listen on view's webContents)   |
-| Auto-cleanup on close    | Yes (destroys webContents)        | No (must close webContents manually)|
-| Preload scripts          | 1 (in webPreferences)             | 1 per WebContentsView               |
-| Resize handling          | Automatic for content              | Manual via `resize` event           |
-| Use case                 | Single-view windows               | Multi-view layouts (tabs, panels)   |
+| Feature               | BrowserWindow              | BaseWindow + WebContentsView         |
+| --------------------- | -------------------------- | ------------------------------------ |
+| Web views             | 1 (built-in)               | 0+ (added manually)                  |
+| Has `webContents`     | Yes (automatic)            | No (each view has its own)           |
+| `ready-to-show`       | Yes                        | No (listen on view's webContents)    |
+| Auto-cleanup on close | Yes (destroys webContents) | No (must close webContents manually) |
+| Preload scripts       | 1 (in webPreferences)      | 1 per WebContentsView                |
+| Resize handling       | Automatic for content      | Manual via `resize` event            |
+| Use case              | Single-view windows        | Multi-view layouts (tabs, panels)    |
 
 ---
 
@@ -33,28 +33,28 @@
 
 ## View API Quick Reference
 
-| Method / Property        | Class             | Description                                       |
-| ------------------------ | ----------------- | ------------------------------------------------- |
-| `addChildView(view, i?)` | View              | Add child view; optional index for z-order        |
-| `removeChildView(view)`  | View              | Remove child view (no-op if not a child)          |
-| `children`               | View (read-only)  | Array of child View objects                       |
-| `setBounds(rect)`        | View              | Set position and size relative to parent          |
-| `getBounds()`            | View              | Get position and size relative to parent          |
-| `setBackgroundColor(c)`  | View              | Set background (hex, RGB, RGBA, HSL, CSS names)   |
-| `setBorderRadius(r)`     | View              | Set border radius in pixels                       |
-| `setVisible(bool)`       | View              | Show or hide the view                             |
-| `getVisible()`           | View              | Whether the view should be drawn                  |
-| `webContents`            | WebContentsView   | Read-only reference to the displayed WebContents   |
+| Method / Property        | Class            | Description                                      |
+| ------------------------ | ---------------- | ------------------------------------------------ |
+| `addChildView(view, i?)` | View             | Add child view; optional index for z-order       |
+| `removeChildView(view)`  | View             | Remove child view (no-op if not a child)         |
+| `children`               | View (read-only) | Array of child View objects                      |
+| `setBounds(rect)`        | View             | Set position and size relative to parent         |
+| `getBounds()`            | View             | Get position and size relative to parent         |
+| `setBackgroundColor(c)`  | View             | Set background (hex, RGB, RGBA, HSL, CSS names)  |
+| `setBorderRadius(r)`     | View             | Set border radius in pixels                      |
+| `setVisible(bool)`       | View             | Show or hide the view                            |
+| `getVisible()`           | View             | Whether the view should be drawn                 |
+| `webContents`            | WebContentsView  | Read-only reference to the displayed WebContents |
 
 ---
 
 ## Window Lifecycle Events (Ordered)
 
-| Event            | Preventable? | When                                           | Typical Use                      |
-| ---------------- | ------------ | ---------------------------------------------- | -------------------------------- |
-| `ready-to-show`  | No           | First paint complete (BrowserWindow only)       | Show window without flash        |
-| `close`          | Yes          | Window is about to close                        | Save state, confirm unsaved work |
-| `closed`         | No           | Window has been destroyed                       | Clean up registry, release refs  |
+| Event           | Preventable? | When                                      | Typical Use                      |
+| --------------- | ------------ | ----------------------------------------- | -------------------------------- |
+| `ready-to-show` | No           | First paint complete (BrowserWindow only) | Show window without flash        |
+| `close`         | Yes          | Window is about to close                  | Save state, confirm unsaved work |
+| `closed`        | No           | Window has been destroyed                 | Clean up registry, release refs  |
 
 **Note:** `will-close` does not exist as a documented event. Use `close` with `event.preventDefault()` to intercept.
 
@@ -62,25 +62,25 @@
 
 ## Screen API Quick Reference
 
-| Method / Event                | Returns / Fires    | Description                                    |
-| ----------------------------- | ------------------ | ---------------------------------------------- |
-| `screen.getAllDisplays()`     | `Display[]`        | All connected displays                         |
-| `screen.getPrimaryDisplay()`  | `Display`          | The primary/main display                       |
-| `screen.getDisplayNearestPoint(point)` | `Display` | Display closest to a screen coordinate         |
-| `screen.getDisplayMatching(rect)`      | `Display` | Display that most overlaps with the given rect |
-| `display-added`               | Event              | New display connected                          |
-| `display-removed`             | Event              | Display disconnected                           |
-| `display-metrics-changed`     | Event              | Display properties changed (resolution, etc.)  |
+| Method / Event                         | Returns / Fires | Description                                    |
+| -------------------------------------- | --------------- | ---------------------------------------------- |
+| `screen.getAllDisplays()`              | `Display[]`     | All connected displays                         |
+| `screen.getPrimaryDisplay()`           | `Display`       | The primary/main display                       |
+| `screen.getDisplayNearestPoint(point)` | `Display`       | Display closest to a screen coordinate         |
+| `screen.getDisplayMatching(rect)`      | `Display`       | Display that most overlaps with the given rect |
+| `display-added`                        | Event           | New display connected                          |
+| `display-removed`                      | Event           | Display disconnected                           |
+| `display-metrics-changed`              | Event           | Display properties changed (resolution, etc.)  |
 
 ### Display Object Properties
 
-| Property      | Type        | Description                                       |
-| ------------- | ----------- | ------------------------------------------------- |
-| `id`          | `number`    | Unique display identifier                         |
-| `bounds`      | `Rectangle` | Full display area including taskbar               |
-| `workArea`    | `Rectangle` | Usable area excluding taskbar/dock                |
-| `scaleFactor` | `number`    | DPI scale factor (1 = standard, 2 = retina)       |
-| `rotation`    | `number`    | Display rotation in degrees (0, 90, 180, 270)     |
+| Property      | Type        | Description                                   |
+| ------------- | ----------- | --------------------------------------------- |
+| `id`          | `number`    | Unique display identifier                     |
+| `bounds`      | `Rectangle` | Full display area including taskbar           |
+| `workArea`    | `Rectangle` | Usable area excluding taskbar/dock            |
+| `scaleFactor` | `number`    | DPI scale factor (1 = standard, 2 = retina)   |
+| `rotation`    | `number`    | Display rotation in degrees (0, 90, 180, 270) |
 
 **Key distinction:** Use `workArea` (not `bounds`) for window placement to avoid positioning behind taskbars or docks.
 
@@ -88,23 +88,23 @@
 
 ## Inter-Window Communication Methods
 
-| Pattern              | Setup Complexity | Latency    | Use Case                          |
-| -------------------- | --------------- | ---------- | --------------------------------- |
-| Main process relay   | Low              | Medium     | Infrequent messages, state sync   |
-| MessagePort          | Medium           | Low        | High-frequency, streaming data    |
-| Shared main state    | Low              | Medium     | App-wide settings, preferences    |
+| Pattern            | Setup Complexity | Latency | Use Case                        |
+| ------------------ | ---------------- | ------- | ------------------------------- |
+| Main process relay | Low              | Medium  | Infrequent messages, state sync |
+| MessagePort        | Medium           | Low     | High-frequency, streaming data  |
+| Shared main state  | Low              | Medium  | App-wide settings, preferences  |
 
 ---
 
 ## Parent/Child Window Behavior by Platform
 
-| Behavior                     | macOS                     | Windows / Linux           |
-| ---------------------------- | ------------------------- | ------------------------- |
-| Modal display                | Sheet attached to parent  | Separate window           |
-| Modal blocks parent          | Yes                       | Yes                       |
-| Child always above parent    | Yes                       | Yes                       |
-| Parent close closes children | Yes                       | Yes                       |
-| Child can outlive parent     | No                        | No                        |
+| Behavior                     | macOS                    | Windows / Linux |
+| ---------------------------- | ------------------------ | --------------- |
+| Modal display                | Sheet attached to parent | Separate window |
+| Modal blocks parent          | Yes                      | Yes             |
+| Child always above parent    | Yes                      | Yes             |
+| Parent close closes children | Yes                      | Yes             |
+| Child can outlive parent     | No                       | No              |
 
 ---
 

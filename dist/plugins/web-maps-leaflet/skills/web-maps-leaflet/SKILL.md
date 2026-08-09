@@ -150,10 +150,7 @@ marker.bindTooltip("Hover text", { permanent: false, direction: "top" });
 Standalone popups (not attached to a marker):
 
 ```typescript
-L.popup()
-  .setLatLng([51.513, -0.09])
-  .setContent("Standalone popup")
-  .openOn(map);
+L.popup().setLatLng([51.513, -0.09]).setContent("Standalone popup").openOn(map);
 ```
 
 **Gotcha:** `openOn(map)` closes any previously open popup. Use `addTo(map)` if multiple popups should be open simultaneously.
@@ -207,13 +204,13 @@ const cities = L.layerGroup([markerA, markerB]);
 const parks = L.layerGroup([polygonA, polygonB]);
 
 const baseLayers = {
-  "OpenStreetMap": osmTileLayer,
-  "Satellite": satelliteTileLayer,
+  OpenStreetMap: osmTileLayer,
+  Satellite: satelliteTileLayer,
 };
 
 const overlays = {
-  "Cities": cities,
-  "Parks": parks,
+  Cities: cities,
+  Parks: parks,
 };
 
 L.control.layers(baseLayers, overlays).addTo(map);
@@ -251,7 +248,9 @@ marker.on("dragend", (e: L.DragEndEvent) => {
 Remove listeners with `.off()`:
 
 ```typescript
-const handler = () => { /* ... */ };
+const handler = () => {
+  /* ... */
+};
 map.on("moveend", handler);
 map.off("moveend", handler); // cleanup
 ```
@@ -323,7 +322,11 @@ See [examples/advanced.md](examples/advanced.md) Pattern 2 for custom cluster ic
 Install `leaflet` and `@types/leaflet` for full type safety. Leaflet types cover all classes, options, and events.
 
 ```typescript
-import L, { type LatLngExpression, type MapOptions, type TileLayerOptions } from "leaflet";
+import L, {
+  type LatLngExpression,
+  type MapOptions,
+  type TileLayerOptions,
+} from "leaflet";
 
 const options: MapOptions = {
   center: [51.505, -0.09],
@@ -349,8 +352,8 @@ Always remove map instances on component teardown to prevent memory leaks and or
 ```typescript
 // Vanilla JS / framework-agnostic cleanup
 function destroyMap(map: L.Map): void {
-  map.off();       // remove all event listeners
-  map.remove();    // destroy the map instance, clean up DOM
+  map.off(); // remove all event listeners
+  map.remove(); // destroy the map instance, clean up DOM
 }
 ```
 
@@ -368,12 +371,12 @@ function destroyMap(map: L.Map): void {
 
 ### Marker Count Thresholds
 
-| Marker Count | Strategy | Notes |
-|---|---|---|
-| < 100 | Standard `L.marker` | DOM markers are fine |
-| 100 - 10K | `L.markerClusterGroup` | Clusters reduce DOM nodes |
-| 10K - 50K | `L.markerClusterGroup` + `chunkedLoading` | Batch additions to avoid UI freeze |
-| 50K+ | Canvas-based rendering plugin or vector tiles | DOM/SVG cannot handle this volume |
+| Marker Count | Strategy                                      | Notes                              |
+| ------------ | --------------------------------------------- | ---------------------------------- |
+| < 100        | Standard `L.marker`                           | DOM markers are fine               |
+| 100 - 10K    | `L.markerClusterGroup`                        | Clusters reduce DOM nodes          |
+| 10K - 50K    | `L.markerClusterGroup` + `chunkedLoading`     | Batch additions to avoid UI freeze |
+| 50K+         | Canvas-based rendering plugin or vector tiles | DOM/SVG cannot handle this volume  |
 
 ### GeoJSON Performance Tips
 

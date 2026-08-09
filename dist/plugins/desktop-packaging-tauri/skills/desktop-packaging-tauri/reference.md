@@ -6,16 +6,16 @@
 
 ## Build CLI Commands
 
-| Command                                   | Purpose                                        |
-| ----------------------------------------- | ---------------------------------------------- |
-| `cargo tauri build`                       | Build production binary + installers           |
-| `cargo tauri build --debug`               | Debug build (faster compile, larger binary)    |
-| `cargo tauri build --bundles nsis`         | Build specific installer format                |
-| `cargo tauri build --bundles deb,appimage` | Build multiple formats                         |
-| `cargo tauri build --no-bundle`            | Build binary without packaging                 |
-| `cargo tauri build --target x86_64-apple-darwin` | Build for specific Rust target            |
-| `cargo tauri icon path/to/1024.png`       | Generate all icon sizes from source image      |
-| `cargo tauri signer generate -w key.key`  | Generate Ed25519 key pair for updater          |
+| Command                                          | Purpose                                     |
+| ------------------------------------------------ | ------------------------------------------- |
+| `cargo tauri build`                              | Build production binary + installers        |
+| `cargo tauri build --debug`                      | Debug build (faster compile, larger binary) |
+| `cargo tauri build --bundles nsis`               | Build specific installer format             |
+| `cargo tauri build --bundles deb,appimage`       | Build multiple formats                      |
+| `cargo tauri build --no-bundle`                  | Build binary without packaging              |
+| `cargo tauri build --target x86_64-apple-darwin` | Build for specific Rust target              |
+| `cargo tauri icon path/to/1024.png`              | Generate all icon sizes from source image   |
+| `cargo tauri signer generate -w key.key`         | Generate Ed25519 key pair for updater       |
 
 ---
 
@@ -23,73 +23,73 @@
 
 ### Top-Level Bundle Fields
 
-| Field                    | Type       | Default     | Purpose                                       |
-| ------------------------ | ---------- | ----------- | --------------------------------------------- |
-| `bundle.active`          | `boolean`  | `true`      | Enable/disable bundling                       |
-| `bundle.targets`         | `string[]` | `"all"`     | Installer formats to build                    |
-| `bundle.identifier`      | `string`   | --          | Reverse-domain app ID (required)              |
-| `bundle.icon`            | `string[]` | `[]`        | Icon file paths                               |
-| `bundle.resources`       | `object`   | --          | Extra files/dirs to include in bundle         |
-| `bundle.externalBin`     | `string[]` | --          | Sidecar binary paths (without target triple)  |
-| `bundle.createUpdaterArtifacts` | `boolean` | `false` | Generate `.sig` files for updater           |
+| Field                           | Type       | Default | Purpose                                      |
+| ------------------------------- | ---------- | ------- | -------------------------------------------- |
+| `bundle.active`                 | `boolean`  | `true`  | Enable/disable bundling                      |
+| `bundle.targets`                | `string[]` | `"all"` | Installer formats to build                   |
+| `bundle.identifier`             | `string`   | --      | Reverse-domain app ID (required)             |
+| `bundle.icon`                   | `string[]` | `[]`    | Icon file paths                              |
+| `bundle.resources`              | `object`   | --      | Extra files/dirs to include in bundle        |
+| `bundle.externalBin`            | `string[]` | --      | Sidecar binary paths (without target triple) |
+| `bundle.createUpdaterArtifacts` | `boolean`  | `false` | Generate `.sig` files for updater            |
 
 ### Windows Bundle Fields
 
-| Field                                   | Purpose                                      |
-| --------------------------------------- | -------------------------------------------- |
-| `bundle.windows.certificateThumbprint`  | Code signing certificate thumbprint          |
-| `bundle.windows.digestAlgorithm`        | Signing digest (typically `"sha256"`)        |
-| `bundle.windows.timestampUrl`           | Timestamp server URL                         |
-| `bundle.windows.signCommand`            | Custom sign command (Azure, relic, etc.)     |
-| `bundle.windows.nsis.installMode`       | `"perUser"` / `"perMachine"` / `"both"`     |
-| `bundle.windows.nsis.installerHooks`    | Path to `.nsh` hook file                     |
-| `bundle.windows.nsis.template`          | Path to custom NSIS template                 |
-| `bundle.windows.nsis.displayLanguageSelector` | Show language picker                   |
-| `bundle.windows.nsis.languages`         | NSIS language list                           |
-| `bundle.windows.nsis.minimumWebview2Version` | Minimum WebView2 runtime version        |
-| `bundle.windows.webviewInstallMode`     | WebView2 bundling strategy                   |
+| Field                                         | Purpose                                  |
+| --------------------------------------------- | ---------------------------------------- |
+| `bundle.windows.certificateThumbprint`        | Code signing certificate thumbprint      |
+| `bundle.windows.digestAlgorithm`              | Signing digest (typically `"sha256"`)    |
+| `bundle.windows.timestampUrl`                 | Timestamp server URL                     |
+| `bundle.windows.signCommand`                  | Custom sign command (Azure, relic, etc.) |
+| `bundle.windows.nsis.installMode`             | `"perUser"` / `"perMachine"` / `"both"`  |
+| `bundle.windows.nsis.installerHooks`          | Path to `.nsh` hook file                 |
+| `bundle.windows.nsis.template`                | Path to custom NSIS template             |
+| `bundle.windows.nsis.displayLanguageSelector` | Show language picker                     |
+| `bundle.windows.nsis.languages`               | NSIS language list                       |
+| `bundle.windows.nsis.minimumWebview2Version`  | Minimum WebView2 runtime version         |
+| `bundle.windows.webviewInstallMode`           | WebView2 bundling strategy               |
 
 ### macOS Bundle Fields
 
-| Field                               | Purpose                                   |
-| ----------------------------------- | ----------------------------------------- |
+| Field                               | Purpose                                     |
+| ----------------------------------- | ------------------------------------------- |
 | `bundle.macOS.signingIdentity`      | Code signing identity (or `"-"` for ad-hoc) |
-| `bundle.macOS.entitlements`         | Path to entitlements plist                |
-| `bundle.macOS.frameworks`           | Native frameworks to bundle               |
-| `bundle.macOS.minimumSystemVersion` | Minimum macOS version (default `"10.13"`) |
+| `bundle.macOS.entitlements`         | Path to entitlements plist                  |
+| `bundle.macOS.frameworks`           | Native frameworks to bundle                 |
+| `bundle.macOS.minimumSystemVersion` | Minimum macOS version (default `"10.13"`)   |
 
 ### Linux Bundle Fields
 
-| Field                                    | Purpose                                  |
-| ---------------------------------------- | ---------------------------------------- |
-| `bundle.linux.deb.depends`               | Debian package dependencies              |
-| `bundle.linux.deb.section`               | Package section (e.g., `"utils"`)        |
+| Field                                        | Purpose                              |
+| -------------------------------------------- | ------------------------------------ |
+| `bundle.linux.deb.depends`                   | Debian package dependencies          |
+| `bundle.linux.deb.section`                   | Package section (e.g., `"utils"`)    |
 | `bundle.linux.appimage.bundleMediaFramework` | Include GStreamer for media playback |
-| `bundle.linux.appimage.files`            | Extra files to include in AppImage       |
-| `bundle.linux.rpm.epoch`                 | RPM epoch number                         |
-| `bundle.linux.rpm.release`               | RPM release string                       |
+| `bundle.linux.appimage.files`                | Extra files to include in AppImage   |
+| `bundle.linux.rpm.epoch`                     | RPM epoch number                     |
+| `bundle.linux.rpm.release`                   | RPM release string                   |
 
 ---
 
 ## WebView2 Install Modes
 
-| Mode                   | Internet | Size Impact | Use Case                       |
-| ---------------------- | -------- | ----------- | ------------------------------ |
-| `downloadBootstrapper` | Yes      | +0 MB       | Default, smallest installer    |
-| `embedBootstrapper`    | Yes      | +1.8 MB     | Better Windows 7 support       |
+| Mode                   | Internet | Size Impact | Use Case                        |
+| ---------------------- | -------- | ----------- | ------------------------------- |
+| `downloadBootstrapper` | Yes      | +0 MB       | Default, smallest installer     |
+| `embedBootstrapper`    | Yes      | +1.8 MB     | Better Windows 7 support        |
 | `offlineInstaller`     | No       | +127 MB     | Offline/air-gapped environments |
-| `fixedVersion`         | No       | +180 MB     | Controlled runtime management  |
-| `skip`                 | No       | +0 MB       | Assumes runtime pre-installed  |
+| `fixedVersion`         | No       | +180 MB     | Controlled runtime management   |
+| `skip`                 | No       | +0 MB       | Assumes runtime pre-installed   |
 
 ---
 
 ## NSIS Install Modes
 
-| Mode         | Admin Required | Install Path         | Use Case               |
-| ------------ | -------------- | -------------------- | ---------------------- |
-| `perUser`    | No             | `%LOCALAPPDATA%`     | Default, no UAC prompt |
-| `perMachine` | Yes            | `Program Files`      | Enterprise/system-wide |
-| `both`       | Yes            | User chooses         | Flexible installer     |
+| Mode         | Admin Required | Install Path     | Use Case               |
+| ------------ | -------------- | ---------------- | ---------------------- |
+| `perUser`    | No             | `%LOCALAPPDATA%` | Default, no UAC prompt |
+| `perMachine` | Yes            | `Program Files`  | Enterprise/system-wide |
+| `both`       | Yes            | User chooses     | Flexible installer     |
 
 ---
 
@@ -97,31 +97,31 @@
 
 ### macOS
 
-| Variable                    | Purpose                                  |
-| --------------------------- | ---------------------------------------- |
-| `APPLE_CERTIFICATE`         | Base64-encoded `.p12` certificate        |
-| `APPLE_CERTIFICATE_PASSWORD`| Password for the `.p12` file             |
-| `APPLE_SIGNING_IDENTITY`    | Signing identity string                  |
-| `APPLE_API_ISSUER`          | App Store Connect API issuer ID          |
-| `APPLE_API_KEY`             | App Store Connect API key ID             |
-| `APPLE_API_KEY_PATH`        | Path to `.p8` API key file               |
-| `APPLE_ID`                  | Apple account email (alternate auth)     |
-| `APPLE_PASSWORD`            | App-specific password (alternate auth)   |
-| `APPLE_TEAM_ID`             | Apple Developer team ID                  |
+| Variable                     | Purpose                                |
+| ---------------------------- | -------------------------------------- |
+| `APPLE_CERTIFICATE`          | Base64-encoded `.p12` certificate      |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for the `.p12` file           |
+| `APPLE_SIGNING_IDENTITY`     | Signing identity string                |
+| `APPLE_API_ISSUER`           | App Store Connect API issuer ID        |
+| `APPLE_API_KEY`              | App Store Connect API key ID           |
+| `APPLE_API_KEY_PATH`         | Path to `.p8` API key file             |
+| `APPLE_ID`                   | Apple account email (alternate auth)   |
+| `APPLE_PASSWORD`             | App-specific password (alternate auth) |
+| `APPLE_TEAM_ID`              | Apple Developer team ID                |
 
 ### Windows
 
-| Variable                      | Purpose                                |
-| ----------------------------- | -------------------------------------- |
-| `WINDOWS_CERTIFICATE`         | Base64-encoded `.pfx` certificate      |
-| `WINDOWS_CERTIFICATE_PASSWORD`| Password for the `.pfx` file           |
+| Variable                       | Purpose                           |
+| ------------------------------ | --------------------------------- |
+| `WINDOWS_CERTIFICATE`          | Base64-encoded `.pfx` certificate |
+| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the `.pfx` file      |
 
 ### Updater
 
-| Variable                          | Purpose                              |
-| --------------------------------- | ------------------------------------ |
-| `TAURI_SIGNING_PRIVATE_KEY`       | Ed25519 private key (path or content)|
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Private key password (optional)   |
+| Variable                             | Purpose                               |
+| ------------------------------------ | ------------------------------------- |
+| `TAURI_SIGNING_PRIVATE_KEY`          | Ed25519 private key (path or content) |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Private key password (optional)       |
 
 ---
 
@@ -176,15 +176,15 @@ Required fields: `version`, `url`, `signature`.
 
 ## Platform Target Strings (Updater)
 
-| `{{target}}`  | `{{arch}}`  | Platform                 |
-| ------------- | ----------- | ------------------------ |
-| `linux`       | `x86_64`    | Linux x64                |
-| `linux`       | `aarch64`   | Linux ARM64              |
-| `windows`     | `x86_64`    | Windows x64              |
-| `windows`     | `i686`      | Windows x86              |
-| `windows`     | `aarch64`   | Windows ARM64            |
-| `darwin`      | `x86_64`    | macOS Intel              |
-| `darwin`      | `aarch64`   | macOS Apple Silicon      |
+| `{{target}}` | `{{arch}}` | Platform            |
+| ------------ | ---------- | ------------------- |
+| `linux`      | `x86_64`   | Linux x64           |
+| `linux`      | `aarch64`  | Linux ARM64         |
+| `windows`    | `x86_64`   | Windows x64         |
+| `windows`    | `i686`     | Windows x86         |
+| `windows`    | `aarch64`  | Windows ARM64       |
+| `darwin`     | `x86_64`   | macOS Intel         |
+| `darwin`     | `aarch64`  | macOS Apple Silicon |
 
 ---
 

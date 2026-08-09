@@ -31,13 +31,23 @@ function createSplitWindow() {
   // Initial layout
   const { width, height } = win.getBounds();
   sidebar.setBounds({ x: 0, y: 0, width: SIDEBAR_WIDTH, height });
-  main.setBounds({ x: SIDEBAR_WIDTH, y: 0, width: width - SIDEBAR_WIDTH, height });
+  main.setBounds({
+    x: SIDEBAR_WIDTH,
+    y: 0,
+    width: width - SIDEBAR_WIDTH,
+    height,
+  });
 
   // Re-layout on resize (WebContentsView has no setAutoResize)
   win.on("resize", () => {
     const { width: w, height: h } = win.getBounds();
     sidebar.setBounds({ x: 0, y: 0, width: SIDEBAR_WIDTH, height: h });
-    main.setBounds({ x: SIDEBAR_WIDTH, y: 0, width: w - SIDEBAR_WIDTH, height: h });
+    main.setBounds({
+      x: SIDEBAR_WIDTH,
+      y: 0,
+      width: w - SIDEBAR_WIDTH,
+      height: h,
+    });
   });
 
   sidebar.webContents.loadFile("sidebar.html");
@@ -119,7 +129,9 @@ class TabbedWindow {
 
     // Hide current active tab
     if (this.activeTabId && this.tabs.has(this.activeTabId)) {
-      this.tabs.get(this.activeTabId).setBounds({ x: 0, y: 0, width: 0, height: 0 });
+      this.tabs
+        .get(this.activeTabId)
+        .setBounds({ x: 0, y: 0, width: 0, height: 0 });
     }
 
     // Show new active tab
@@ -260,7 +272,9 @@ function createManagedWindow() {
 
 ```javascript
 const win = new BaseWindow({ show: false, width: 800, height: 600 });
-const view = new WebContentsView({ /* ... */ });
+const view = new WebContentsView({
+  /* ... */
+});
 win.contentView.addChildView(view);
 view.webContents.loadFile("index.html");
 
@@ -436,8 +450,17 @@ function restoreWindowState(windowName) {
 
   // Validate: are saved bounds within the display's work area?
   const { workArea } = targetDisplay;
-  const x = Math.max(workArea.x, Math.min(state.bounds.x, workArea.x + workArea.width - state.bounds.width));
-  const y = Math.max(workArea.y, Math.min(state.bounds.y, workArea.y + workArea.height - state.bounds.height));
+  const x = Math.max(
+    workArea.x,
+    Math.min(state.bounds.x, workArea.x + workArea.width - state.bounds.width),
+  );
+  const y = Math.max(
+    workArea.y,
+    Math.min(
+      state.bounds.y,
+      workArea.y + workArea.height - state.bounds.height,
+    ),
+  );
 
   return {
     x,

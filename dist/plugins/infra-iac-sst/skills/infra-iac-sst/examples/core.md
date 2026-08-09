@@ -177,7 +177,9 @@ sst.Linkable.wrap(aws.dynamodb.Table, (table) => ({
 }));
 
 // Now raw Pulumi tables can be linked like SST components
-const rawTable = new aws.dynamodb.Table("Legacy", { /* ... */ });
+const rawTable = new aws.dynamodb.Table("Legacy", {
+  /* ... */
+});
 new sst.aws.Function("Handler", {
   handler: "src/handler.handler",
   link: [rawTable],

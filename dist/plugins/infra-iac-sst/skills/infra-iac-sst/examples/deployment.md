@@ -78,11 +78,11 @@ app(input) {
 }
 ```
 
-| Policy | Behavior | Use For |
-|--------|----------|---------|
-| `"remove"` | Deletes all resources | Dev stages, PR previews |
-| `"retain"` | Keeps data resources (S3, DynamoDB, RDS) | Production |
-| `"retain-all"` | Keeps everything including logs | Production with audit requirements |
+| Policy         | Behavior                                 | Use For                            |
+| -------------- | ---------------------------------------- | ---------------------------------- |
+| `"remove"`     | Deletes all resources                    | Dev stages, PR previews            |
+| `"retain"`     | Keeps data resources (S3, DynamoDB, RDS) | Production                         |
+| `"retain-all"` | Keeps everything including logs          | Production with audit requirements |
 
 ---
 

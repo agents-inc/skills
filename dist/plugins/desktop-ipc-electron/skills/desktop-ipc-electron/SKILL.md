@@ -139,7 +139,10 @@ Build a typed preload API from the channel map, then augment `window` so the ren
 ```typescript
 // preload.ts
 import { contextBridge, ipcRenderer } from "electron";
-import type { IpcHandleChannels, IpcSendChannels } from "../shared/ipc-channels";
+import type {
+  IpcHandleChannels,
+  IpcSendChannels,
+} from "../shared/ipc-channels";
 
 type ElectronAPI = {
   invoke: <C extends keyof IpcHandleChannels>(

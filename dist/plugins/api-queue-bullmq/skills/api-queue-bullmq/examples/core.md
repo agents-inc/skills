@@ -91,7 +91,11 @@ const emailQueue = new Queue<EmailJobData>(QUEUE_NAME, {
 const emailWorker = new Worker<EmailJobData, EmailJobReturn>(
   QUEUE_NAME,
   async (job: Job<EmailJobData>) => {
-    const result = await sendEmail(job.data.to, job.data.subject, job.data.body);
+    const result = await sendEmail(
+      job.data.to,
+      job.data.subject,
+      job.data.body,
+    );
     return { messageId: result.id };
   },
   { connection: createWorkerConnection() },
@@ -110,10 +114,14 @@ export { emailQueue, emailWorker };
 ```typescript
 // ❌ Bad -- No types, no error handler, no defaultJobOptions
 const queue = new Queue("emails", { connection: createWorkerConnection() });
-const worker = new Worker("emails", async (job) => {
-  await sendEmail(job.data.to, job.data.subject, job.data.body);
-  // No return value, no error handler
-}, { connection: createWorkerConnection() });
+const worker = new Worker(
+  "emails",
+  async (job) => {
+    await sendEmail(job.data.to, job.data.subject, job.data.body);
+    // No return value, no error handler
+  },
+  { connection: createWorkerConnection() },
+);
 ```
 
 **Why bad:** No type safety on job data, no error event handler risks crash, no retry/backoff config means failures are permanent
@@ -127,21 +135,34 @@ const worker = new Worker("emails", async (job) => {
 const DELAY_MS = 60_000;
 const HIGH_PRIORITY = 1;
 
-await emailQueue.add("send-welcome", {
-  to: "user@example.com",
-  subject: "Welcome",
-  body: "Hello!",
-}, {
-  delay: DELAY_MS,           // Wait 60s before processing
-  priority: HIGH_PRIORITY,   // 1 = highest priority
-  jobId: "welcome-user-123", // Idempotent -- same ID won't add duplicate
-});
+await emailQueue.add(
+  "send-welcome",
+  {
+    to: "user@example.com",
+    subject: "Welcome",
+    body: "Hello!",
+  },
+  {
+    delay: DELAY_MS, // Wait 60s before processing
+    priority: HIGH_PRIORITY, // 1 = highest priority
+    jobId: "welcome-user-123", // Idempotent -- same ID won't add duplicate
+  },
+);
 
 // ✅ Bulk add -- single Redis round-trip
 await emailQueue.addBulk([
-  { name: "send-notification", data: { to: "a@example.com", subject: "Hi", body: "..." } },
-  { name: "send-notification", data: { to: "b@example.com", subject: "Hi", body: "..." } },
-  { name: "send-notification", data: { to: "c@example.com", subject: "Hi", body: "..." } },
+  {
+    name: "send-notification",
+    data: { to: "a@example.com", subject: "Hi", body: "..." },
+  },
+  {
+    name: "send-notification",
+    data: { to: "b@example.com", subject: "Hi", body: "..." },
+  },
+  {
+    name: "send-notification",
+    data: { to: "c@example.com", subject: "Hi", body: "..." },
+  },
 ]);
 ```
 
@@ -168,7 +189,9 @@ const worker = new Worker<ImportJobData>(
       const batch = rows.slice(i, i + BATCH_SIZE);
       await processBatch(batch);
       const PERCENTAGE_MULTIPLIER = 100;
-      await job.updateProgress(Math.round(((i + batch.length) / total) * PERCENTAGE_MULTIPLIER));
+      await job.updateProgress(
+        Math.round(((i + batch.length) / total) * PERCENTAGE_MULTIPLIER),
+      );
     }
 
     return { processed: total };
@@ -196,7 +219,10 @@ async function gracefulShutdown(workers: Worker[]): Promise<void> {
   const closePromise = Promise.all(workers.map((w) => w.close()));
 
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error("Shutdown timed out")), SHUTDOWN_TIMEOUT_MS);
+    setTimeout(
+      () => reject(new Error("Shutdown timed out")),
+      SHUTDOWN_TIMEOUT_MS,
+    );
   });
 
   try {
@@ -237,7 +263,13 @@ await emailQueue.drain();
 await emailQueue.obliterate();
 
 // Get job counts by status
-const counts = await emailQueue.getJobCounts("waiting", "active", "completed", "failed", "delayed");
+const counts = await emailQueue.getJobCounts(
+  "waiting",
+  "active",
+  "completed",
+  "failed",
+  "delayed",
+);
 // { waiting: 5, active: 2, completed: 100, failed: 3, delayed: 1 }
 
 // Get jobs by status

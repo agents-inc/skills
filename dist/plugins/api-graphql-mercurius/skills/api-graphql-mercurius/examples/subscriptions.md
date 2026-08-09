@@ -92,7 +92,11 @@ app.register(mercurius, {
 ```typescript
 const resolvers = {
   Mutation: {
-    sendMessage: async (_: unknown, args: { text: string }, ctx: MercuriusContext) => {
+    sendMessage: async (
+      _: unknown,
+      args: { text: string },
+      ctx: MercuriusContext,
+    ) => {
       const message = { id: "1", text: args.text };
 
       await ctx.pubsub.publish({
@@ -138,7 +142,10 @@ const resolvers = {
           return ctx.pubsub.subscribe(MESSAGE_TOPIC);
         },
         // Filter function: return true to deliver, false to skip
-        (payload: { messageSent: { channelId: string } }, args: { channelId: string }) => {
+        (
+          payload: { messageSent: { channelId: string } },
+          args: { channelId: string },
+        ) => {
           return payload.messageSent.channelId === args.channelId;
         },
       ),
@@ -238,7 +245,11 @@ const COMMENT_DELETED = "COMMENT_DELETED";
 const resolvers = {
   Subscription: {
     commentActivity: {
-      subscribe: async (_parent: unknown, _args: unknown, ctx: MercuriusContext) => {
+      subscribe: async (
+        _parent: unknown,
+        _args: unknown,
+        ctx: MercuriusContext,
+      ) => {
         return ctx.pubsub.subscribe([COMMENT_ADDED, COMMENT_DELETED]);
       },
     },

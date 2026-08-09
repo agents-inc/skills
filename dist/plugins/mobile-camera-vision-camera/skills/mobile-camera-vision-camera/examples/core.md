@@ -168,10 +168,10 @@ const styles = StyleSheet.create({
 
 **Key distinctions:**
 
-| Method | Speed | Quality | Requires |
-|---|---|---|---|
-| `takePhoto()` | Slower (AE/AF/AWB) | Full sensor quality | `photo={true}` |
-| `takeSnapshot()` | ~16ms | Preview quality | `video={true}` on iOS |
+| Method           | Speed              | Quality             | Requires              |
+| ---------------- | ------------------ | ------------------- | --------------------- |
+| `takePhoto()`    | Slower (AE/AF/AWB) | Full sensor quality | `photo={true}`        |
+| `takeSnapshot()` | ~16ms              | Preview quality     | `video={true}` on iOS |
 
 ---
 
@@ -359,10 +359,10 @@ function useExternalCamera() {
 
 **Physical device types and their zoom levels:**
 
-| Physical Device | Typical Zoom |
-|---|---|
-| `ultra-wide-angle-camera` | 0.5x |
-| `wide-angle-camera` | 1x (default) |
-| `telephoto-camera` | 3x |
+| Physical Device           | Typical Zoom |
+| ------------------------- | ------------ |
+| `ultra-wide-angle-camera` | 0.5x         |
+| `wide-angle-camera`       | 1x (default) |
+| `telephoto-camera`        | 3x           |
 
 **Key:** `device.neutralZoom` gives the recommended starting zoom level for the selected device. On ultra-wide cameras this is NOT 1.0.

@@ -42,6 +42,7 @@ async fn start_sync(app: tauri::AppHandle) -> Result<(), String> {
 ```
 
 **Key points:**
+
 - Import `tauri::Emitter` to use `.emit()` on `AppHandle`
 - Payloads must implement `Serialize + Clone`
 - Use `#[serde(rename_all = "camelCase")]` so frontend receives camelCase keys
@@ -140,6 +141,7 @@ async fn watch_for_event(app: tauri::AppHandle) -> Result<(), String> {
 ```
 
 **Key points:**
+
 - Import `tauri::Listener` to use `.listen()` on `AppHandle` or `App`
 - `.listen()` returns an `EventId` that can be passed to `.unlisten()` to stop listening
 - Event payloads arrive as `&str` (JSON string) -- parse manually if structured data is needed

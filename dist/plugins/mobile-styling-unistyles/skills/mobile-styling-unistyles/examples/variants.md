@@ -157,6 +157,7 @@ const styles = StyleSheet.create((theme) => ({
 ```
 
 **Precedence order (lowest to highest):**
+
 1. Base styles (outside `variants`)
 2. Regular variant styles
 3. Compound variant styles (always win over regular variants)

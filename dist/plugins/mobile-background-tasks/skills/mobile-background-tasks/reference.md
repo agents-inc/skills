@@ -8,13 +8,14 @@
 
 ### iOS BGTaskScheduler
 
-| Task Type | Time Limit | Requirements | Use Case |
-|-----------|-----------|--------------|----------|
-| BGAppRefreshTask | ~30 seconds | None | Light data sync, feed refresh |
-| BGProcessingTask | Several minutes | Charger + network (configurable) | ML models, database maintenance |
-| BGContinuedProcessingTask (iOS 26+) | Until complete | User-initiated action | Export, upload started in foreground |
+| Task Type                           | Time Limit      | Requirements                     | Use Case                             |
+| ----------------------------------- | --------------- | -------------------------------- | ------------------------------------ |
+| BGAppRefreshTask                    | ~30 seconds     | None                             | Light data sync, feed refresh        |
+| BGProcessingTask                    | Several minutes | Charger + network (configurable) | ML models, database maintenance      |
+| BGContinuedProcessingTask (iOS 26+) | Until complete  | User-initiated action            | Export, upload started in foreground |
 
 **iOS scheduling behavior:**
+
 - System uses ML to predict optimal execution time based on user habits
 - Newly installed apps may take days for scheduling to stabilize
 - Force-quitting the app stops ALL background tasks until user reopens
@@ -23,14 +24,15 @@
 
 ### Android WorkManager / Doze
 
-| State | Network | CPU | AlarmManager | WorkManager |
-|-------|---------|-----|--------------|-------------|
-| Active | Full | Full | Full | Full |
-| Doze (idle) | Blocked | Restricted | Deferred | Deferred (runs in maintenance windows) |
-| App Standby | Blocked | Restricted | Deferred | Deferred |
-| Deep Doze | Blocked | Blocked | Deferred | Deferred |
+| State       | Network | CPU        | AlarmManager | WorkManager                            |
+| ----------- | ------- | ---------- | ------------ | -------------------------------------- |
+| Active      | Full    | Full       | Full         | Full                                   |
+| Doze (idle) | Blocked | Restricted | Deferred     | Deferred (runs in maintenance windows) |
+| App Standby | Blocked | Restricted | Deferred     | Deferred                               |
+| Deep Doze   | Blocked | Blocked    | Deferred     | Deferred                               |
 
 **Android-specific constraints:**
+
 - WorkManager minimum interval: 15 minutes (hard limit)
 - Doze maintenance windows occur at increasing intervals (first after 1 hour, then 2, 4, etc.)
 - `forceAlarmManager: true` bypasses JobScheduler but increases battery usage
@@ -77,35 +79,38 @@ Background location:
 
 ### expo-background-task
 
-| Method | Purpose |
-|--------|---------|
-| `TaskManager.defineTask(name, executor)` | Register task logic (top-level) |
-| `BackgroundTask.registerTaskAsync(name, options?)` | Schedule task with OS |
-| `BackgroundTask.unregisterTaskAsync(name)` | Remove scheduled task |
-| `BackgroundTask.getStatusAsync()` | Check if background tasks are available |
-| `BackgroundTask.triggerTaskWorkerForTestingAsync()` | Debug-only: trigger task manually |
-| `TaskManager.isTaskRegisteredAsync(name)` | Check if task is registered |
-| `BackgroundTask.addExpirationListener(fn)` | iOS: called when OS stops task early |
+| Method                                              | Purpose                                 |
+| --------------------------------------------------- | --------------------------------------- |
+| `TaskManager.defineTask(name, executor)`            | Register task logic (top-level)         |
+| `BackgroundTask.registerTaskAsync(name, options?)`  | Schedule task with OS                   |
+| `BackgroundTask.unregisterTaskAsync(name)`          | Remove scheduled task                   |
+| `BackgroundTask.getStatusAsync()`                   | Check if background tasks are available |
+| `BackgroundTask.triggerTaskWorkerForTestingAsync()` | Debug-only: trigger task manually       |
+| `TaskManager.isTaskRegisteredAsync(name)`           | Check if task is registered             |
+| `BackgroundTask.addExpirationListener(fn)`          | iOS: called when OS stops task early    |
 
 **BackgroundTaskOptions:**
+
 - `minimumInterval?: number` -- Minutes between executions (min: 15, default: 720)
 
 **Return values:**
+
 - `BackgroundTaskResult.Success` (1) -- Task completed successfully
 - `BackgroundTaskResult.Failed` (2) -- Task failed
 
 ### react-native-background-fetch
 
-| Method | Purpose |
-|--------|---------|
-| `BackgroundFetch.configure(config, onEvent, onTimeout)` | Initialize with handlers |
-| `BackgroundFetch.scheduleTask(config)` | Schedule one-shot or periodic task |
-| `BackgroundFetch.finish(taskId)` | Signal OS that task is done |
-| `BackgroundFetch.start()` | Resume background fetch |
-| `BackgroundFetch.stop(taskId?)` | Pause background fetch |
-| `BackgroundFetch.status()` | Check authorization status |
+| Method                                                  | Purpose                            |
+| ------------------------------------------------------- | ---------------------------------- |
+| `BackgroundFetch.configure(config, onEvent, onTimeout)` | Initialize with handlers           |
+| `BackgroundFetch.scheduleTask(config)`                  | Schedule one-shot or periodic task |
+| `BackgroundFetch.finish(taskId)`                        | Signal OS that task is done        |
+| `BackgroundFetch.start()`                               | Resume background fetch            |
+| `BackgroundFetch.stop(taskId?)`                         | Pause background fetch             |
+| `BackgroundFetch.status()`                              | Check authorization status         |
 
 **Key configure options:**
+
 - `minimumFetchInterval: number` -- Minutes (min: 15)
 - `stopOnTerminate: boolean` -- Android: stop when app killed (default: true)
 - `startOnBoot: boolean` -- Android: restart after reboot (default: false)
@@ -118,15 +123,16 @@ Background location:
 
 ### expo-location (background)
 
-| Method | Purpose |
-|--------|---------|
-| `Location.requestForegroundPermissionsAsync()` | Request foreground location |
-| `Location.requestBackgroundPermissionsAsync()` | Request "Always Allow" permission |
-| `Location.startLocationUpdatesAsync(taskName, options)` | Start background tracking |
-| `Location.stopLocationUpdatesAsync(taskName)` | Stop background tracking |
-| `Location.hasStartedLocationUpdatesAsync(taskName)` | Check if tracking active |
+| Method                                                  | Purpose                           |
+| ------------------------------------------------------- | --------------------------------- |
+| `Location.requestForegroundPermissionsAsync()`          | Request foreground location       |
+| `Location.requestBackgroundPermissionsAsync()`          | Request "Always Allow" permission |
+| `Location.startLocationUpdatesAsync(taskName, options)` | Start background tracking         |
+| `Location.stopLocationUpdatesAsync(taskName)`           | Stop background tracking          |
+| `Location.hasStartedLocationUpdatesAsync(taskName)`     | Check if tracking active          |
 
 **Location update options:**
+
 - `accuracy: Location.Accuracy.*` -- Lowest, Low, Balanced, High, Highest, BestForNavigation
 - `distanceInterval: number` -- Meters between updates
 - `timeInterval: number` -- Milliseconds between updates (Android only)

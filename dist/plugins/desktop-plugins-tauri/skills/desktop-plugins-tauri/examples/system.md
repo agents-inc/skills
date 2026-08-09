@@ -50,6 +50,7 @@ Shell execution must be scoped to specific commands and arguments in the capabil
 ```
 
 **Key points:**
+
 - Desktop-only -- wrap registration in `#[cfg(desktop)]`
 - `shell:allow-open` is safe (opens URLs/files in default app)
 - `shell:allow-execute` is dangerous -- always scope to specific commands
@@ -85,6 +86,7 @@ if (granted) {
 ```
 
 **Key points:**
+
 - On macOS and mobile, notifications require explicit user permission -- always check first
 - On Windows and Linux, permissions are typically granted by default
 - The notification API is fire-and-forget -- no callback when the user clicks
@@ -97,10 +99,7 @@ if (granted) {
 ### Reading and Writing Clipboard
 
 ```typescript
-import {
-  readText,
-  writeText,
-} from "@tauri-apps/plugin-clipboard-manager";
+import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 // Write text to clipboard
 await writeText("Copied text content");
@@ -110,6 +109,7 @@ const text = await readText();
 ```
 
 **Key points:**
+
 - Works on desktop and mobile
 - Permissions: `"clipboard-manager:default"` grants read and write
 - The plugin name in capabilities uses `clipboard-manager` (not `clipboard`)
@@ -165,6 +165,7 @@ const result = await confirm("Save changes before closing?", {
 ```
 
 **Key points:**
+
 - Works on desktop and mobile (file selection). Folder picker is desktop-only.
 - On mobile, file dialog returns `file://` URIs (iOS) or content URIs (Android) instead of filesystem paths
 - All picker dialogs return `null` when the user cancels -- always handle the null case
@@ -188,16 +189,17 @@ import {
 } from "@tauri-apps/plugin-os";
 
 const osInfo = {
-  platform: platform(),         // "linux", "macos", "windows", "ios", "android"
-  arch: arch(),                 // "x86_64", "aarch64", "armv7", etc.
-  osType: type(),               // "linux", "darwin", "windows_nt"
-  osVersion: version(),         // "14.0" (macOS), "10.0.22621" (Windows), etc.
-  locale: await locale(),       // "en-US", "fr-FR", etc.
-  hostname: await hostname(),   // Computer name (desktop only)
+  platform: platform(), // "linux", "macos", "windows", "ios", "android"
+  arch: arch(), // "x86_64", "aarch64", "armv7", etc.
+  osType: type(), // "linux", "darwin", "windows_nt"
+  osVersion: version(), // "14.0" (macOS), "10.0.22621" (Windows), etc.
+  locale: await locale(), // "en-US", "fr-FR", etc.
+  hostname: await hostname(), // Computer name (desktop only)
 };
 ```
 
 **Key points:**
+
 - Works on all platforms
 - `platform()`, `arch()`, `type()`, `version()` are synchronous
 - `locale()` and `hostname()` are async
@@ -213,13 +215,14 @@ const osInfo = {
 import { exit, relaunch } from "@tauri-apps/plugin-process";
 
 // Exit the application
-await exit(0);  // Exit code 0 = success
+await exit(0); // Exit code 0 = success
 
 // Restart the application
 await relaunch();
 ```
 
 **Key points:**
+
 - `exit()` terminates the process immediately -- ensure data is saved first
 - `relaunch()` starts a new instance and exits the current one (used after updates)
 - Works on all platforms

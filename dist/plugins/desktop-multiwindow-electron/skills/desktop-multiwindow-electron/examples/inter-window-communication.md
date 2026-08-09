@@ -49,8 +49,7 @@ const { contextBridge, ipcRenderer } = require("electron/renderer");
 contextBridge.exposeInMainWorld("windowAPI", {
   sendToWindow: (targetId, channel, data) =>
     ipcRenderer.send("relay-to-window", targetId, channel, data),
-  broadcast: (channel, data) =>
-    ipcRenderer.send("broadcast", channel, data),
+  broadcast: (channel, data) => ipcRenderer.send("broadcast", channel, data),
   onMessage: (channel, callback) => {
     ipcRenderer.on(channel, (_event, data) => callback(data));
   },
@@ -88,8 +87,12 @@ function connectWindows(window1, window2) {
   const { port1, port2 } = new MessageChannelMain();
 
   // Transfer ports to each renderer -- MUST use postMessage, not send
-  window1.webContents.postMessage("connect-port", { peerId: "window2" }, [port1]);
-  window2.webContents.postMessage("connect-port", { peerId: "window1" }, [port2]);
+  window1.webContents.postMessage("connect-port", { peerId: "window2" }, [
+    port1,
+  ]);
+  window2.webContents.postMessage("connect-port", { peerId: "window1" }, [
+    port2,
+  ]);
 }
 
 // Example: connect windows when both are ready
@@ -118,10 +121,7 @@ ipcRenderer.on("connect-port", (event) => {
 
   // Forward port messages to the renderer world
   port.onmessage = (msgEvent) => {
-    window.postMessage(
-      { type: "peer-message", data: msgEvent.data },
-      "*",
-    );
+    window.postMessage({ type: "peer-message", data: msgEvent.data }, "*");
   };
 });
 
@@ -149,7 +149,10 @@ window.portAPI.onPeerMessage((data) => {
   console.log("Received from peer:", data);
 });
 
-window.portAPI.sendToPeer({ action: "cursor-move", position: { line: 10, col: 5 } });
+window.portAPI.sendToPeer({
+  action: "cursor-move",
+  position: { line: 10, col: 5 },
+});
 ```
 
 **Why good:** After setup, messages flow directly between renderers without main process overhead. Ideal for real-time collaboration, streaming updates, or high-frequency events.

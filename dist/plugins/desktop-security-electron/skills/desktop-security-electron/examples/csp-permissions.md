@@ -152,16 +152,16 @@ app.whenReady().then(() => {
 
 ## Common Web API Permissions
 
-| Permission | Risk | Recommendation |
-|-----------|------|----------------|
-| `media` | Camera and microphone access | Deny unless video/audio app |
-| `geolocation` | User location tracking | Deny unless mapping app |
-| `notifications` | Desktop notification spam | Allow only if needed |
-| `clipboard-read` | Read clipboard contents | Allow only if needed |
-| `clipboard-sanitized-write` | Write to clipboard | Generally safe to allow |
-| `fullscreen` | Fullscreen mode | Generally safe to allow |
-| `pointerLock` | Mouse pointer capture | Allow only for games/drawing |
-| `openExternal` | Open URL in default browser | Validate URL before allowing |
+| Permission                  | Risk                         | Recommendation               |
+| --------------------------- | ---------------------------- | ---------------------------- |
+| `media`                     | Camera and microphone access | Deny unless video/audio app  |
+| `geolocation`               | User location tracking       | Deny unless mapping app      |
+| `notifications`             | Desktop notification spam    | Allow only if needed         |
+| `clipboard-read`            | Read clipboard contents      | Allow only if needed         |
+| `clipboard-sanitized-write` | Write to clipboard           | Generally safe to allow      |
+| `fullscreen`                | Fullscreen mode              | Generally safe to allow      |
+| `pointerLock`               | Mouse pointer capture        | Allow only for games/drawing |
+| `openExternal`              | Open URL in default browser  | Validate URL before allowing |
 
 ---
 

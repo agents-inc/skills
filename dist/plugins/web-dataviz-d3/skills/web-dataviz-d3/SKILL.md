@@ -118,11 +118,11 @@ const BAR_GAP = 5;
 // Select, bind data, join
 select(svgElement)
   .selectAll<SVGRectElement, number>("rect")
-  .data(values, (d) => String(d))                   // key function for identity
-  .join("rect")                                       // enter + update merged
-    .attr("y", (_, i) => i * (BAR_HEIGHT + BAR_GAP))
-    .attr("width", (d) => xScale(d))
-    .attr("height", BAR_HEIGHT);
+  .data(values, (d) => String(d)) // key function for identity
+  .join("rect") // enter + update merged
+  .attr("y", (_, i) => i * (BAR_HEIGHT + BAR_GAP))
+  .attr("width", (d) => xScale(d))
+  .attr("height", BAR_HEIGHT);
 ```
 
 **Why good:** `join("rect")` handles enter/update/exit in one call, key function ensures correct element-data binding across updates, typed selection generics
@@ -179,13 +179,12 @@ const xAxis = axisBottom(xScale).ticks(TICK_COUNT).tickFormat(format(",.0f"));
 const yAxis = axisLeft(yScale);
 
 // Render into <g> containers
-svg.append("g")
+svg
+  .append("g")
   .attr("transform", `translate(0,${CHART_HEIGHT - MARGIN_BOTTOM})`)
   .call(xAxis);
 
-svg.append("g")
-  .attr("transform", `translate(${MARGIN_LEFT},0)`)
-  .call(yAxis);
+svg.append("g").attr("transform", `translate(${MARGIN_LEFT},0)`).call(yAxis);
 ```
 
 **Why good:** axes derived from scales (always in sync), `selection.call()` pattern for reusable rendering, `d3-format` for tick label formatting
@@ -208,7 +207,8 @@ const lineGen = line<DataPoint>()
   .y((d) => yScale(d.value))
   .curve(curveMonotoneX);
 
-svg.append("path")
+svg
+  .append("path")
   .datum(data)
   .attr("d", lineGen)
   .attr("fill", "none")
@@ -223,11 +223,12 @@ const arcGen = arc<PieArcDatum<SliceData>>()
   .innerRadius(INNER_RADIUS)
   .outerRadius(OUTER_RADIUS);
 
-svg.selectAll("path")
+svg
+  .selectAll("path")
   .data(pieGen(sliceData))
   .join("path")
-    .attr("d", arcGen)
-    .attr("fill", (d) => colorScale(d.data.label));
+  .attr("d", arcGen)
+  .attr("fill", (d) => colorScale(d.data.label));
 ```
 
 **Why good:** generators configured once then reused, `.curve()` for smooth interpolation, typed `PieArcDatum` generic for pie data, named radius constants
@@ -273,16 +274,31 @@ select(svgElement)
   .selectAll<SVGRectElement, DataPoint>("rect")
   .data(newData, (d) => d.id)
   .join(
-    (enter) => enter.append("rect")
-      .attr("width", 0)
-      .call((s) => s.transition().duration(TRANSITION_DURATION_MS)
-        .attr("width", (d) => xScale(d.value))),
-    (update) => update
-      .call((s) => s.transition().duration(TRANSITION_DURATION_MS)
-        .attr("width", (d) => xScale(d.value))),
-    (exit) => exit
-      .call((s) => s.transition().duration(TRANSITION_DURATION_MS)
-        .attr("width", 0).remove()),
+    (enter) =>
+      enter
+        .append("rect")
+        .attr("width", 0)
+        .call((s) =>
+          s
+            .transition()
+            .duration(TRANSITION_DURATION_MS)
+            .attr("width", (d) => xScale(d.value)),
+        ),
+    (update) =>
+      update.call((s) =>
+        s
+          .transition()
+          .duration(TRANSITION_DURATION_MS)
+          .attr("width", (d) => xScale(d.value)),
+      ),
+    (exit) =>
+      exit.call((s) =>
+        s
+          .transition()
+          .duration(TRANSITION_DURATION_MS)
+          .attr("width", 0)
+          .remove(),
+      ),
   );
 ```
 
@@ -323,13 +339,24 @@ See [examples/interaction.md](examples/interaction.md) Pattern 2 for semantic zo
 Force simulations position nodes using physics-based forces (repulsion, attraction, centering).
 
 ```typescript
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from "d3-force";
+import {
+  forceSimulation,
+  forceLink,
+  forceManyBody,
+  forceCenter,
+  forceCollide,
+} from "d3-force";
 
 const CHARGE_STRENGTH = -300;
 const COLLISION_RADIUS = 5;
 
 const simulation = forceSimulation(nodes)
-  .force("link", forceLink(links).id((d: NodeDatum) => d.id).distance(100))
+  .force(
+    "link",
+    forceLink(links)
+      .id((d: NodeDatum) => d.id)
+      .distance(100),
+  )
   .force("charge", forceManyBody().strength(CHARGE_STRENGTH))
   .force("center", forceCenter(width / 2, height / 2))
   .force("collide", forceCollide(COLLISION_RADIUS))
@@ -352,16 +379,19 @@ Project geographic coordinates onto a 2D plane and render GeoJSON features as SV
 import { geoMercator, geoPath, geoNaturalEarth1 } from "d3-geo";
 import type { GeoPermissibleObjects } from "d3-geo";
 
-const projection = geoNaturalEarth1()
-  .fitSize([CHART_WIDTH, CHART_HEIGHT], geoJsonData);
+const projection = geoNaturalEarth1().fitSize(
+  [CHART_WIDTH, CHART_HEIGHT],
+  geoJsonData,
+);
 
 const pathGenerator = geoPath().projection(projection);
 
-svg.selectAll("path")
+svg
+  .selectAll("path")
   .data(geoJsonData.features)
   .join("path")
-    .attr("d", pathGenerator)
-    .attr("fill", (d) => colorScale(dataByRegion.get(d.properties.id) ?? 0));
+  .attr("d", pathGenerator)
+  .attr("fill", (d) => colorScale(dataByRegion.get(d.properties.id) ?? 0));
 ```
 
 **Why good:** `fitSize` auto-scales projection to container, path generator produces `d` strings from GeoJSON, color encodes data values per region
@@ -440,15 +470,15 @@ Does the visualization need zoom, brush, drag, or force tick?
 
 ### Scale Selection
 
-| Data Type        | Scale        | Example                     |
-| ---------------- | ------------ | --------------------------- |
-| Continuous       | scaleLinear  | Revenue, temperature        |
-| Categorical      | scaleBand    | Categories on bar chart     |
-| Categorical dots | scalePoint   | Categories without width    |
-| Time series      | scaleTime    | Dates on x-axis             |
-| Logarithmic      | scaleLog     | Exponential data ranges     |
-| Square root      | scaleSqrt    | Bubble chart radius         |
-| Color categories | scaleOrdinal | Category -> color           |
+| Data Type        | Scale        | Example                  |
+| ---------------- | ------------ | ------------------------ |
+| Continuous       | scaleLinear  | Revenue, temperature     |
+| Categorical      | scaleBand    | Categories on bar chart  |
+| Categorical dots | scalePoint   | Categories without width |
+| Time series      | scaleTime    | Dates on x-axis          |
+| Logarithmic      | scaleLog     | Exponential data ranges  |
+| Square root      | scaleSqrt    | Bubble chart radius      |
+| Color categories | scaleOrdinal | Category -> color        |
 
 </decision_framework>
 

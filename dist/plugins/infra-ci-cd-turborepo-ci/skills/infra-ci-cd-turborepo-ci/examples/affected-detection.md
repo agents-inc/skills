@@ -15,6 +15,7 @@ turbo run build test lint --affected
 ```
 
 **How --affected works in CI:**
+
 1. Detects CI provider via environment variables (e.g., `GITHUB_BASE_REF` for GitHub Actions)
 2. Determines comparison base (PR base branch or push event's before SHA)
 3. Identifies packages with file changes between base and HEAD

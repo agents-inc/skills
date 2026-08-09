@@ -79,7 +79,11 @@ export default function middleware(request: Request) {
   const url = new URL(request.url);
 
   // Don't redirect if already on a localized path
-  if (url.pathname.startsWith("/de") || url.pathname.startsWith("/fr") || url.pathname.startsWith("/ja")) {
+  if (
+    url.pathname.startsWith("/de") ||
+    url.pathname.startsWith("/fr") ||
+    url.pathname.startsWith("/ja")
+  ) {
     return;
   }
 
@@ -124,7 +128,10 @@ export default function middleware(request: Request) {
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
@@ -177,9 +184,7 @@ export default function middleware(request: Request) {
           "key": "authorized"
         }
       ],
-      "headers": [
-        { "key": "x-authorized", "value": "true" }
-      ]
+      "headers": [{ "key": "x-authorized", "value": "true" }]
     }
   ]
 }
@@ -216,6 +221,7 @@ export default function middleware(request: Request) {
 ```
 
 **Key rules:**
+
 - `permanent: true` = 308 status (browsers cache aggressively)
 - `permanent: false` = 307 status (temporary, no browser caching)
 - `statusCode` can override (301, 302, etc.) but cannot be combined with `permanent`

@@ -19,13 +19,19 @@ import * as aws from "@pulumi/aws";
 const BUCKET_EXPIRY_DAYS = 90;
 
 // Good: explicit logical name, typed args, resource options
-const bucket = new aws.s3.Bucket("data-bucket", {
-  versioning: { enabled: true },
-  lifecycleRules: [{
-    enabled: true,
-    expiration: { days: BUCKET_EXPIRY_DAYS },
-  }],
-}, { protect: true });
+const bucket = new aws.s3.Bucket(
+  "data-bucket",
+  {
+    versioning: { enabled: true },
+    lifecycleRules: [
+      {
+        enabled: true,
+        expiration: { days: BUCKET_EXPIRY_DAYS },
+      },
+    ],
+  },
+  { protect: true },
+);
 
 export const bucketName = bucket.id;
 export const bucketArn = bucket.arn;
@@ -51,9 +57,13 @@ const bucket = new aws.s3.Bucket("data-bucket", {
 // This prevents collisions and enables zero-downtime replacement.
 
 // Override auto-naming only when you must (shared external references):
-const bucket = new aws.s3.Bucket("shared-assets", {
-  bucket: `${pulumi.getProject()}-${pulumi.getStack()}-assets`, // Explicit physical name
-}, { deleteBeforeReplace: true }); // Required when naming explicitly (uniqueness constraint)
+const bucket = new aws.s3.Bucket(
+  "shared-assets",
+  {
+    bucket: `${pulumi.getProject()}-${pulumi.getStack()}-assets`, // Explicit physical name
+  },
+  { deleteBeforeReplace: true },
+); // Required when naming explicitly (uniqueness constraint)
 ```
 
 **Gotcha:** Explicit physical names make your project susceptible to naming collisions across stacks. Prefer auto-naming unless an external system needs a predictable name.
@@ -85,8 +95,20 @@ config:
 const usEast = new aws.Provider("us-east", { region: "us-east-1" });
 const euWest = new aws.Provider("eu-west", { region: "eu-west-1" });
 
-const usTable = new aws.dynamodb.Table("us-users", { /* ... */ }, { provider: usEast });
-const euTable = new aws.dynamodb.Table("eu-users", { /* ... */ }, { provider: euWest });
+const usTable = new aws.dynamodb.Table(
+  "us-users",
+  {
+    /* ... */
+  },
+  { provider: usEast },
+);
+const euTable = new aws.dynamodb.Table(
+  "eu-users",
+  {
+    /* ... */
+  },
+  { provider: euWest },
+);
 ```
 
 **Key point:** Relying on the default provider causes gotchas in multi-region setups. Enforce explicit providers:
@@ -119,33 +141,53 @@ export class Database extends pulumi.ComponentResource {
   public readonly endpoint: pulumi.Output<string>;
   public readonly port: pulumi.Output<number>;
 
-  constructor(name: string, args: DatabaseArgs, opts?: pulumi.ComponentResourceOptions) {
+  constructor(
+    name: string,
+    args: DatabaseArgs,
+    opts?: pulumi.ComponentResourceOptions,
+  ) {
     // Type token format: "pkg:module:Type"
     super("myinfra:data:Database", name, args, opts);
 
-    const subnetGroup = new aws.rds.SubnetGroup(`${name}-subnets`, {
-      subnetIds: [/* ... */],
-    }, { parent: this }); // Always pass parent
+    const subnetGroup = new aws.rds.SubnetGroup(
+      `${name}-subnets`,
+      {
+        subnetIds: [
+          /* ... */
+        ],
+      },
+      { parent: this },
+    ); // Always pass parent
 
-    const securityGroup = new aws.ec2.SecurityGroup(`${name}-sg`, {
-      vpcId: "vpc-xxx",
-      ingress: [{
-        protocol: "tcp",
-        fromPort: 5432,
-        toPort: 5432,
-        cidrBlocks: ["10.0.0.0/8"],
-      }],
-    }, { parent: this });
+    const securityGroup = new aws.ec2.SecurityGroup(
+      `${name}-sg`,
+      {
+        vpcId: "vpc-xxx",
+        ingress: [
+          {
+            protocol: "tcp",
+            fromPort: 5432,
+            toPort: 5432,
+            cidrBlocks: ["10.0.0.0/8"],
+          },
+        ],
+      },
+      { parent: this },
+    );
 
-    const db = new aws.rds.Instance(`${name}-instance`, {
-      engine: args.engine,
-      instanceClass: args.instanceClass,
-      allocatedStorage: args.allocatedStorage,
-      password: args.masterPassword,
-      dbSubnetGroupName: subnetGroup.name,
-      vpcSecurityGroupIds: [securityGroup.id],
-      skipFinalSnapshot: false,
-    }, { parent: this, protect: true }); // Protect the actual database
+    const db = new aws.rds.Instance(
+      `${name}-instance`,
+      {
+        engine: args.engine,
+        instanceClass: args.instanceClass,
+        allocatedStorage: args.allocatedStorage,
+        password: args.masterPassword,
+        dbSubnetGroupName: subnetGroup.name,
+        vpcSecurityGroupIds: [securityGroup.id],
+        skipFinalSnapshot: false,
+      },
+      { parent: this, protect: true },
+    ); // Protect the actual database
 
     this.endpoint = db.endpoint;
     this.port = db.port;
@@ -174,12 +216,20 @@ export const dbEndpoint = db.endpoint;
 ```typescript
 // Bad: this is how NOT to write a component
 class Database extends pulumi.ComponentResource {
-  constructor(name: string, args: DatabaseArgs, opts?: pulumi.ComponentResourceOptions) {
+  constructor(
+    name: string,
+    args: DatabaseArgs,
+    opts?: pulumi.ComponentResourceOptions,
+  ) {
     super("myinfra:data:Database", name, args, opts);
 
     // Missing { parent: this } -- resources appear at root of state tree
-    const sg = new aws.ec2.SecurityGroup(`${name}-sg`, { /* ... */ });
-    const db = new aws.rds.Instance(`${name}-db`, { /* ... */ });
+    const sg = new aws.ec2.SecurityGroup(`${name}-sg`, {
+      /* ... */
+    });
+    const db = new aws.rds.Instance(`${name}-db`, {
+      /* ... */
+    });
 
     // Missing registerOutputs -- outputs not tracked in state
   }
@@ -199,12 +249,16 @@ class Database extends pulumi.ComponentResource {
 const connectionString = pulumi.interpolate`postgres://admin:${password}@${db.endpoint}:${db.port}/mydb`;
 
 // Good: interpolate works in resource args
-const record = new aws.route53.Record("api-dns", {
-  name: pulumi.interpolate`api.${zone.name}`,
-  type: "CNAME",
-  records: [lb.dnsName],
-  ttl: 300,
-}, { parent: this });
+const record = new aws.route53.Record(
+  "api-dns",
+  {
+    name: pulumi.interpolate`api.${zone.name}`,
+    type: "CNAME",
+    records: [lb.dnsName],
+    ttl: 300,
+  },
+  { parent: this },
+);
 ```
 
 ```typescript
@@ -221,19 +275,19 @@ const url = "https://" + bucket.id; // Produces "https://[object Object]"
 ```typescript
 const HTTP_PORT = 80;
 
-const endpoint = pulumi.all([lb.dnsName, listener.port]).apply(
-  ([dns, port]) => `http://${dns}:${port}`,
-);
+const endpoint = pulumi
+  .all([lb.dnsName, listener.port])
+  .apply(([dns, port]) => `http://${dns}:${port}`);
 
 // Also works for building complex objects from multiple outputs
-const dbConfig = pulumi.all([db.endpoint, db.port, db.dbName]).apply(
-  ([host, port, name]) => ({
+const dbConfig = pulumi
+  .all([db.endpoint, db.port, db.dbName])
+  .apply(([host, port, name]) => ({
     host,
     port,
     database: name,
     connectionString: `postgres://${host}:${port}/${name}`,
-  }),
-);
+  }));
 ```
 
 ---
@@ -242,7 +296,9 @@ const dbConfig = pulumi.all([db.endpoint, db.port, db.dbName]).apply(
 
 ```typescript
 // Good: transform an output value
-const bucketUrl = bucket.websiteEndpoint.apply((endpoint) => `https://${endpoint}`);
+const bucketUrl = bucket.websiteEndpoint.apply(
+  (endpoint) => `https://${endpoint}`,
+);
 
 // Good: conditional logic on an output
 const displayName = instance.tags.apply((tags) => tags?.["Name"] ?? "unnamed");
@@ -252,7 +308,7 @@ const displayName = instance.tags.apply((tags) => tags?.["Name"] ?? "unnamed");
 // Bad: creating resources inside apply
 bucket.id.apply((id) => {
   // This resource won't appear in pulumi preview!
-  new aws.s3.BucketPolicy("policy", { bucket: id, /* ... */ });
+  new aws.s3.BucketPolicy("policy", { bucket: id /* ... */ });
 });
 ```
 
@@ -262,9 +318,13 @@ bucket.id.apply((id) => {
 // Good: pass Output directly as input
 new aws.s3.BucketPolicy("policy", {
   bucket: bucket.id, // Output<string> accepted as Input<string>
-  policy: bucket.arn.apply((arn) => JSON.stringify({
-    Statement: [{ Effect: "Allow", Action: ["s3:GetObject"], Resource: `${arn}/*` }],
-  })),
+  policy: bucket.arn.apply((arn) =>
+    JSON.stringify({
+      Statement: [
+        { Effect: "Allow", Action: ["s3:GetObject"], Resource: `${arn}/*` },
+      ],
+    }),
+  ),
 });
 ```
 

@@ -131,8 +131,9 @@ Markers are DOM elements placed at coordinates. Popups display content on click.
 ```typescript
 const MARKER_COLOR = "#e74c3c";
 
-const popup = new mapboxgl.Popup({ offset: 25, maxWidth: "300px" })
-  .setHTML("<h3>Location</h3><p>Description</p>");
+const popup = new mapboxgl.Popup({ offset: 25, maxWidth: "300px" }).setHTML(
+  "<h3>Location</h3><p>Description</p>",
+);
 
 new mapboxgl.Marker({ color: MARKER_COLOR })
   .setLngLat([-74.006, 40.7128])
@@ -140,7 +141,10 @@ new mapboxgl.Marker({ color: MARKER_COLOR })
   .addTo(map);
 
 map.addControl(new mapboxgl.NavigationControl(), "top-right");
-map.addControl(new mapboxgl.GeolocateControl({ trackUserLocation: true }), "top-right");
+map.addControl(
+  new mapboxgl.GeolocateControl({ trackUserLocation: true }),
+  "top-right",
+);
 map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-left");
 ```
 
@@ -163,7 +167,12 @@ map.on("load", () => {
       features: [
         {
           type: "Feature",
-          geometry: { type: "Polygon", coordinates: [/* ... */] },
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              /* ... */
+            ],
+          },
           properties: { name: "Central Park", area: 3.41 },
         },
       ],
@@ -212,16 +221,24 @@ map.addLayer({
   paint: {
     // Size by population
     "circle-radius": [
-      "interpolate", ["linear"], ["get", "population"],
-      10000, 5,
-      100000, 15,
-      1000000, 30,
+      "interpolate",
+      ["linear"],
+      ["get", "population"],
+      10000,
+      5,
+      100000,
+      15,
+      1000000,
+      30,
     ],
     // Color by category
     "circle-color": [
-      "match", ["get", "type"],
-      "capital", "#e74c3c",
-      "major", "#3498db",
+      "match",
+      ["get", "type"],
+      "capital",
+      "#e74c3c",
+      "major",
+      "#3498db",
       "#95a5a6", // fallback
     ],
   },
@@ -274,7 +291,10 @@ map.flyTo({
 });
 
 map.fitBounds(
-  [[-122.5, 37.7], [-122.3, 37.8]], // [sw, ne]
+  [
+    [-122.5, 37.7],
+    [-122.3, 37.8],
+  ], // [sw, ne]
   { padding: BOUNDS_PADDING_PX },
 );
 ```
@@ -364,7 +384,7 @@ const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/mapbox/standard",
   config: {
-    "basemap": {
+    basemap: {
       lightPreset: "dusk",
       showPointOfInterestLabels: false,
     },

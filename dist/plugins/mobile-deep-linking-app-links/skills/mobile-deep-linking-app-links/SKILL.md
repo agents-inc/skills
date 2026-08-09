@@ -293,15 +293,15 @@ Which router are you using?
 
 ### Link Type Comparison
 
-| Feature | Custom URI Scheme | Universal Links (iOS) | App Links (Android) |
-|---|---|---|---|
-| Format | `myapp://path` | `https://domain/path` | `https://domain/path` |
-| Fallback | None (fails silently) | Opens website | Opens website |
-| Verification | None | AASA file on server | assetlinks.json on server |
-| Hijack risk | Any app can register | OS-verified, secure | OS-verified, secure |
-| Setup complexity | Low | Medium | Medium |
-| Works without install | No | Yes (opens website) | Yes (opens website) |
-| Disambiguation dialog | Sometimes | Never (verified) | Never (verified) |
+| Feature               | Custom URI Scheme     | Universal Links (iOS) | App Links (Android)       |
+| --------------------- | --------------------- | --------------------- | ------------------------- |
+| Format                | `myapp://path`        | `https://domain/path` | `https://domain/path`     |
+| Fallback              | None (fails silently) | Opens website         | Opens website             |
+| Verification          | None                  | AASA file on server   | assetlinks.json on server |
+| Hijack risk           | Any app can register  | OS-verified, secure   | OS-verified, secure       |
+| Setup complexity      | Low                   | Medium                | Medium                    |
+| Works without install | No                    | Yes (opens website)   | Yes (opens website)       |
+| Disambiguation dialog | Sometimes             | Never (verified)      | Never (verified)          |
 
 </decision_framework>
 

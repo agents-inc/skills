@@ -184,11 +184,11 @@ tauri::Builder::default()
 
 Three storage plugins serve different needs:
 
-| Plugin | Use Case | Encryption | Query | Platform |
-|--------|----------|------------|-------|----------|
-| Store | App preferences, settings | No | Key-value only | All |
-| Stronghold | Secrets, API keys, tokens | Yes (Argon2) | Key-value only | Desktop |
-| SQL | Structured data, relations | No (app-level) | Full SQL (SQLite/MySQL/Postgres) | All |
+| Plugin     | Use Case                   | Encryption     | Query                            | Platform |
+| ---------- | -------------------------- | -------------- | -------------------------------- | -------- |
+| Store      | App preferences, settings  | No             | Key-value only                   | All      |
+| Stronghold | Secrets, API keys, tokens  | Yes (Argon2)   | Key-value only                   | Desktop  |
+| SQL        | Structured data, relations | No (app-level) | Full SQL (SQLite/MySQL/Postgres) | All      |
 
 **Decision:** User preferences and simple config? Store. Sensitive credentials? Stronghold. Structured relational data? SQL.
 

@@ -1,0 +1,9 @@
+{
+  "name": "meta-planning-ai-planning",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "AI specification planning frameworks. Use when a spec touches model calls, prompts, retrieval, tool calling, agentic loops, or evals. Covers approach selection, model and provider choice, structured output contracts, loop guards, budgets, failure modes, and eval design.",
+  "author": {
+    "name": "@vince"
+  }
+}

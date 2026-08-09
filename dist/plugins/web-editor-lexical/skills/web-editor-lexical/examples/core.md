@@ -166,8 +166,9 @@ import {
 } from "lexical";
 
 // Typed command with payload
-export const INSERT_CALLOUT_COMMAND: LexicalCommand<string> =
-  createCommand("INSERT_CALLOUT_COMMAND");
+export const INSERT_CALLOUT_COMMAND: LexicalCommand<string> = createCommand(
+  "INSERT_CALLOUT_COMMAND",
+);
 
 export function CalloutPlugin() {
   const [editor] = useLexicalComposerContext();
@@ -387,7 +388,11 @@ import type { EditorState } from "lexical";
 
 const SAVE_DELAY_MS = 1000;
 
-export function PersistencePlugin({ onSave }: { onSave: (json: string) => void }) {
+export function PersistencePlugin({
+  onSave,
+}: {
+  onSave: (json: string) => void;
+}) {
   const [editor] = useLexicalComposerContext();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -429,7 +434,11 @@ export function PersistencePlugin({ onSave }: { onSave: (json: string) => void }
 import { useEffect } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
-export function RestoreStatePlugin({ savedJson }: { savedJson: string | null }) {
+export function RestoreStatePlugin({
+  savedJson,
+}: {
+  savedJson: string | null;
+}) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {

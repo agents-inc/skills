@@ -1,418 +1,266 @@
 # MongoDB Index Examples
 
-> Index types, compound indexes, text search, geospatial, TTL, Atlas Search, and performance patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Index types, compound key ordering, and verifying with `explain` using the native driver. See [SKILL.md](../SKILL.md) for the decisions behind these.
 
-**Core patterns:** See [core.md](core.md). **Queries:** See [queries.md](queries.md). **Aggregation:** See [aggregation.md](aggregation.md). **Advanced:** See [patterns.md](patterns.md).
-
----
-
-## Pattern 1: Single-Field Indexes
-
-### Good Example -- Common Query Fields
-
-```typescript
-import { Schema, model } from "mongoose";
-
-const userSchema = new Schema({
-  email: { type: String, required: true, unique: true }, // unique creates index
-  role: { type: String, index: true }, // simple index
-  createdAt: { type: Date, default: Date.now },
-  lastLoginAt: { type: Date },
-});
-
-// Explicit index definition (equivalent to inline `index: true`)
-userSchema.index({ lastLoginAt: -1 }); // Descending for "most recent" queries
-
-const User = model("User", userSchema);
-export { User };
-```
-
-**Why good:** `unique: true` creates a unique index, inline `index: true` for frequently queried fields, explicit index for sort order control, descending for recency queries
-
-### Bad Example -- Index on Low-Cardinality Field
-
-```typescript
-// BAD: Boolean fields have only 2 values -- index provides minimal benefit
-const schema = new Schema({
-  isActive: { type: Boolean, index: true }, // Only true/false -- poor selectivity
-  status: { type: String },
-});
-```
-
-**Why bad:** Boolean fields have very low cardinality (2 values), the index doesn't significantly narrow results, wastes storage and slows writes; use compound index with higher-cardinality field first
+**Core:** See [core.md](core.md). **Queries:** See [queries.md](queries.md). **Aggregation:** See [aggregation.md](aggregation.md). **Advanced:** See [patterns.md](patterns.md).
 
 ---
 
-## Pattern 2: Compound Indexes (ESR Rule)
+## Pattern 1: Creating Indexes
 
-Follow the **Equality-Sort-Range** rule for compound index field order.
-
-### Good Example -- ESR Compound Index
+### Good Example -- Declared Once, Applied Deliberately
 
 ```typescript
-const orderSchema = new Schema({
-  status: { type: String, enum: ["pending", "shipped", "delivered"] as const },
-  customerId: { type: Schema.Types.ObjectId, ref: "Customer" },
-  total: { type: Number },
-  createdAt: { type: Date, default: Date.now },
-});
+import type { Collection, IndexDescription } from "mongodb";
 
-// Query: Find orders by status, sorted by date, with total > threshold
-// Filter: { status: "shipped", total: { $gte: 100 } }, sort: { createdAt: -1 }
-//
-// ESR Rule:
-// 1. Equality: status (exact match)
-// 2. Sort: createdAt (sort order)
-// 3. Range: total (range comparison)
-orderSchema.index({ status: 1, createdAt: -1, total: 1 });
+const ORDER_INDEXES: IndexDescription[] = [
+  { key: { tenantId: 1, createdAt: -1 }, name: "tenant_created" },
+  { key: { customerId: 1 }, name: "customer" },
+  { key: { reference: 1 }, name: "reference_unique", unique: true },
+];
 
-// Query: Find customer orders sorted by date
-// Filter: { customerId }, sort: { createdAt: -1 }
-orderSchema.index({ customerId: 1, createdAt: -1 });
+// Called from a migration or a controlled startup step — never a request path.
+async function ensureOrderIndexes(orders: Collection<OrderDoc>): Promise<void> {
+  await orders.createIndexes(ORDER_INDEXES);
+}
 
-const Order = model("Order", orderSchema);
-export { Order };
+export { ensureOrderIndexes, ORDER_INDEXES };
 ```
 
-**Why good:** ESR rule maximizes index efficiency, equality fields first for exact matches, sort field in the middle for in-order traversal, range field last
+**Why good:** the full index set is one reviewable list rather than scattered calls, explicit names make `explain` output and drop operations legible, and `createIndexes` is idempotent so re-running it is safe
 
-### Good Example -- Partial Index
+### Bad Example -- Creating Indexes in a Request Path
 
 ```typescript
-// Index only active users -- smaller index, faster writes for inactive users
-userSchema.index(
-  { email: 1 },
-  {
-    partialFilterExpression: { isActive: true },
-    unique: true, // Unique among active users only
-  },
+// BAD
+export async function listOrders(filter: Filter<OrderDoc>) {
+  await orders.createIndex({ tenantId: 1 }); // every request
+  return orders.find(filter).toArray();
+}
+```
+
+**Why bad:** the call runs on every request, and the first build on a large collection contends with live traffic; a schema change that alters the index then conflicts with the existing one and starts throwing on a path that used to work
+
+---
+
+## Pattern 2: Compound Indexes and the ESR Rule
+
+Order compound keys by how the query uses them: **E**quality first, then **S**ort, then **R**ange.
+
+### Good Example -- ESR Applied
+
+```typescript
+// Query:
+//   find({ tenantId, status: { $in: [...] } }).sort({ createdAt: -1 })
+//        equality              range                 sort
+await orders.createIndex(
+  { tenantId: 1, createdAt: -1, status: 1 }, // E, S, R
+  { name: "tenant_created_status" },
 );
 ```
 
-**Why good:** Partial index is smaller and faster, uniqueness enforced only for active records, inactive users can share email addresses (useful for soft-delete patterns)
+**Why good:** the equality field seeks to one section of the index, the sort field is then already in order so no in-memory sort is needed, and the range field filters what remains
 
-### Bad Example -- Wrong Field Order
+### Bad Example -- Range Before Sort
 
 ```typescript
-// BAD: Range field before sort field
-orderSchema.index({ status: 1, total: 1, createdAt: -1 });
-// Query: { status: "shipped", total: { $gte: 100 } }, sort: { createdAt: -1 }
-// MongoDB can't use index for sort because range field (total) comes before sort field
-// Results in an in-memory sort (SORT stage in explain)
+// BAD: R before S
+await orders.createIndex({ tenantId: 1, status: 1, createdAt: -1 });
 ```
 
-**Why bad:** Range field (`total`) before sort field (`createdAt`) prevents index-based sorting, MongoDB falls back to in-memory sort which is slow for large result sets
+**Why bad:** a range on `status` leaves the index scattered across many ranges, so `createdAt` is no longer traversed in order and the server sorts in memory — the index exists, is used, and still does not remove the sort, which is why this looks fine in `explain` until you read the sort stage
+
+### Good Example -- Sort Direction on Compound Keys
+
+```typescript
+// Serves sort({ tenantId: 1, createdAt: -1 }) and its exact inverse
+// sort({ tenantId: -1, createdAt: 1 }) — a mixed sort is not covered.
+await orders.createIndex({ tenantId: 1, createdAt: -1 });
+```
+
+**Why good:** an index can be walked forwards or backwards, so one index serves both a sort and its complete reversal, and knowing that avoids creating a second index that adds write cost for nothing
 
 ---
 
-## Pattern 3: Text Indexes
-
-### Good Example -- Full-Text Search
-
-```typescript
-const articleSchema = new Schema({
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-  summary: { type: String },
-  tags: [{ type: String }],
-  authorId: { type: Schema.Types.ObjectId, ref: "User" },
-});
-
-// Text index with weights -- title matches are more relevant
-articleSchema.index(
-  { title: "text", content: "text", summary: "text", tags: "text" },
-  {
-    weights: {
-      title: 10,
-      tags: 5,
-      summary: 3,
-      content: 1,
-    },
-    name: "article_text_search",
-    default_language: "english",
-  },
-);
-
-const Article = model("Article", articleSchema);
-
-// Search with text score
-const results = await Article.find(
-  { $text: { $search: "mongodb best practices" } },
-  { score: { $meta: "textScore" } },
-)
-  .sort({ score: { $meta: "textScore" } })
-  .limit(20)
-  .lean();
-
-export { Article };
-```
-
-**Why good:** Weighted text index prioritizes title matches, named index for management, text score for relevance ranking, limited results
-
-**When to use:** Basic full-text search without Atlas. For advanced search (fuzzy, autocomplete, facets), use Atlas Search.
-
-### Important Limitation
-
-```typescript
-// A collection can have only ONE text index
-// BAD: Trying to create a second text index
-articleSchema.index({ title: "text" }); // First text index
-articleSchema.index({ content: "text" }); // ERROR -- only one text index allowed
-
-// GOOD: Include all searchable fields in one text index
-articleSchema.index({ title: "text", content: "text" });
-```
-
----
-
-## Pattern 4: Geospatial Indexes
-
-### Good Example -- 2dsphere Index
-
-```typescript
-const storeSchema = new Schema({
-  name: { type: String, required: true },
-  address: { type: String, required: true },
-  location: {
-    type: {
-      type: String,
-      enum: ["Point"] as const,
-      required: true,
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true,
-    },
-  },
-  isOpen: { type: Boolean, default: true },
-});
-
-// 2dsphere index for geospatial queries
-storeSchema.index({ location: "2dsphere" });
-
-const Store = model("Store", storeSchema);
-
-// Find stores near a location
-const METERS_PER_MILE = 1609.34;
-const MAX_DISTANCE_MILES = 10;
-
-const nearbyStores = await Store.find({
-  location: {
-    $near: {
-      $geometry: {
-        type: "Point",
-        coordinates: [-73.9857, 40.7484], // [longitude, latitude]
-      },
-      $maxDistance: MAX_DISTANCE_MILES * METERS_PER_MILE,
-    },
-  },
-  isOpen: true,
-}).lean();
-
-// Find stores within a polygon (e.g., delivery zone)
-const deliveryZone = await Store.find({
-  location: {
-    $geoWithin: {
-      $geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-74.0, 40.7],
-            [-73.9, 40.7],
-            [-73.9, 40.8],
-            [-74.0, 40.8],
-            [-74.0, 40.7], // Close the polygon
-          ],
-        ],
-      },
-    },
-  },
-}).lean();
-
-export { Store };
-```
-
-**Why good:** GeoJSON format with `Point` type, 2dsphere index for earth-like sphere calculations, named constants for distance, `$near` for proximity queries, `$geoWithin` for area queries
-
----
-
-## Pattern 5: TTL (Time-to-Live) Indexes
-
-### Good Example -- Auto-Expiring Documents
-
-```typescript
-const SESSION_EXPIRY_SECONDS = 60 * 60 * 24; // 24 hours
-const OTP_EXPIRY_SECONDS = 60 * 5; // 5 minutes
-
-// Session tokens -- expire after 24 hours
-const sessionSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  token: { type: String, required: true, unique: true },
-  createdAt: { type: Date, default: Date.now },
-});
-
-sessionSchema.index(
-  { createdAt: 1 },
-  { expireAfterSeconds: SESSION_EXPIRY_SECONDS },
-);
-
-// OTP codes -- expire after 5 minutes
-const otpSchema = new Schema({
-  email: { type: String, required: true },
-  code: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
-
-otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: OTP_EXPIRY_SECONDS });
-
-const Session = model("Session", sessionSchema);
-const OTP = model("OTP", otpSchema);
-
-export { Session, OTP };
-```
-
-**Why good:** Named constants for expiry durations, TTL index on `createdAt` for automatic cleanup, MongoDB background thread removes expired documents, no application-level cleanup code needed
-
-### Good Example -- Custom Expiry per Document
-
-```typescript
-// Each document can have its own expiry time
-const cacheSchema = new Schema({
-  key: { type: String, required: true, unique: true },
-  value: { type: Schema.Types.Mixed, required: true },
-  expiresAt: { type: Date, required: true },
-});
-
-// TTL index with expireAfterSeconds: 0 means "expire at the date in the field"
-cacheSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-const Cache = model("Cache", cacheSchema);
-
-// Usage -- set custom TTL per entry
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-
-await Cache.create({
-  key: "user:123:profile",
-  value: { name: "Alice" },
-  expiresAt: new Date(Date.now() + ONE_HOUR_MS),
-});
-
-await Cache.create({
-  key: "config:features",
-  value: { darkMode: true },
-  expiresAt: new Date(Date.now() + ONE_DAY_MS),
-});
-
-export { Cache };
-```
-
-**Why good:** `expireAfterSeconds: 0` with date field allows per-document TTL, named constants for duration, useful for caching with variable lifetimes
-
----
-
-## Pattern 6: Unique and Sparse Indexes
+## Pattern 3: Unique and Partial Indexes
 
 ### Good Example -- Conditional Uniqueness
 
 ```typescript
-const userSchema = new Schema({
-  email: { type: String, required: true },
-  googleId: { type: String },
-  githubId: { type: String },
-});
-
-// Unique email
-userSchema.index({ email: 1 }, { unique: true });
-
-// Sparse unique -- only indexed when field exists
-// Multiple users can have no googleId (null/undefined not indexed)
-userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
-userSchema.index({ githubId: 1 }, { unique: true, sparse: true });
-```
-
-**Why good:** Sparse index allows multiple documents without the field (null/undefined are not indexed), unique constraint only enforced for documents with the field present, useful for optional OAuth IDs
-
----
-
-## Pattern 7: Wildcard Indexes
-
-### Good Example -- Dynamic Fields
-
-```typescript
-const eventSchema = new Schema({
-  eventType: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
-  properties: { type: Schema.Types.Mixed },
-});
-
-// Wildcard index on dynamic properties
-eventSchema.index({ "properties.$**": 1 });
-
-// Query any nested property
-const results = await Event.find({
-  "properties.userId": "abc123",
-  "properties.action": "click",
-}).lean();
-```
-
-**Why good:** Wildcard index supports queries on any field within `properties` without knowing field names in advance, useful for event tracking with variable payloads
-
-**When to use:** Collections with dynamic or unpredictable field names. Not for production-critical queries (compound indexes are faster for known patterns).
-
----
-
-## Index Management Best Practices
-
-### Monitor Index Usage
-
-```typescript
-// Check index usage stats (in mongosh or via admin API)
-// db.users.aggregate([{ $indexStats: {} }])
-
-// Explain query to verify index usage
-const explanation = await User.find({ role: "admin", isActive: true }).explain(
-  "executionStats",
-);
-
-// Check: explanation.executionStats.executionStages.stage should be "IXSCAN", not "COLLSCAN"
-```
-
-### Index Creation in Production
-
-```typescript
-// Mongoose 9 removed the { background: true } option (MongoDB 4.2+ builds in background by default)
-// NOTE: In Mongoose, autoIndex should be disabled in production
-
-const schema = new Schema(
+// Enforce unique email among active users only, so soft-deleted rows
+// do not block a re-registration.
+await users.createIndex(
+  { email: 1 },
   {
-    /* fields */
+    name: "email_unique_active",
+    unique: true,
+    partialFilterExpression: { deletedAt: { $exists: false } },
   },
-  { autoIndex: process.env.NODE_ENV !== "production" },
 );
-
-// Use createIndexes() explicitly during deployment/migration
-async function ensureIndexes(): Promise<void> {
-  await User.createIndexes();
-  await Order.createIndexes();
-  await Product.createIndexes();
-  console.log("All indexes created");
-}
-
-export { ensureIndexes };
 ```
 
-### Rules of Thumb
+**Why good:** the constraint matches the rule the application actually has, and the partial index is smaller and cheaper to maintain than one covering every document
 
-1. **Every query pattern needs a supporting index** -- `COLLSCAN` in explain means missing index
-2. **Follow ESR rule** for compound indexes -- Equality, Sort, Range
-3. **Remove unused indexes** -- they slow writes and consume storage
-4. **One text index per collection** -- include all searchable fields
-5. **Use partial indexes** when queries consistently filter on a condition
-6. **Limit to ~10 indexes per collection** -- more indexes slow writes
-7. **Monitor with `$indexStats`** -- remove indexes with zero usage
-8. **Use `explain("executionStats")`** to verify index usage on slow queries
+### Good Example -- Indexing a Sparse Field
+
+```typescript
+// Only some orders have an external reference; index only those.
+await orders.createIndex(
+  { externalRef: 1 },
+  {
+    name: "external_ref",
+    partialFilterExpression: { externalRef: { $exists: true } },
+  },
+);
+```
+
+**Why good:** documents without the field are absent from the index entirely, keeping it small
+
+**A partial index is only used when the query provably matches its filter.** A query without `externalRef: { $exists: true }` (or a condition implying it) falls back to a collection scan, silently.
 
 ---
 
-_For core patterns, see [core.md](core.md). For query patterns, see [queries.md](queries.md). For aggregation, see [aggregation.md](aggregation.md). For schema design, see [patterns.md](patterns.md)._
+## Pattern 4: TTL Indexes
+
+### Good Example -- Expiring Sessions
+
+```typescript
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
+
+// The indexed field MUST hold a BSON Date. A number or an ISO string
+// is ignored and nothing is ever deleted.
+await sessions.createIndex(
+  { expiresAt: 1 },
+  { name: "session_ttl", expireAfterSeconds: SESSION_TTL_SECONDS },
+);
+```
+
+**Why good:** expiry is enforced by the server rather than a cleanup job that can stop running, and the constant states the retention window in one place
+
+### Good Example -- Per-Document Expiry
+
+```typescript
+// expireAfterSeconds: 0 deletes each document at the time its own field holds,
+// which lets different documents expire on different schedules.
+await tokens.createIndex(
+  { expiresAt: 1 },
+  { name: "token_ttl", expireAfterSeconds: 0 },
+);
+
+await tokens.insertOne({ value, expiresAt: new Date(Date.now() + ttlMs) });
+```
+
+**Why good:** one index serves many retention policies, so a short-lived token and a long-lived one coexist without a second index
+
+**Deletion is not immediate.** The background task runs roughly every minute, so expired documents stay readable for a short window. Filter on `expiresAt` in queries where that matters rather than trusting the sweep.
+
+---
+
+## Pattern 5: Text Indexes
+
+### Good Example -- Full-Text Search
+
+```typescript
+const TITLE_WEIGHT = 10;
+const BODY_WEIGHT = 1;
+const SEARCH_RESULT_LIMIT = 20;
+
+await articles.createIndex(
+  { title: "text", body: "text" },
+  { name: "article_text", weights: { title: TITLE_WEIGHT, body: BODY_WEIGHT } },
+);
+
+type ScoredArticle = WithId<ArticleDoc> & { score: number };
+
+const results = await articles
+  .find({ $text: { $search: query } })
+  .project<ScoredArticle>({ score: { $meta: "textScore" }, title: 1, body: 1 })
+  .sort({ score: { $meta: "textScore" } })
+  .limit(SEARCH_RESULT_LIMIT)
+  .toArray();
+```
+
+**Why good:** weighting ranks a title match above a body match, and the score is both projected and sorted on, which are two separate steps — sorting without projecting it produces an error
+
+**One text index per collection.** Adding a second requires dropping the first, so the field list has to be decided as a whole rather than extended later.
+
+---
+
+## Pattern 6: Geospatial Indexes
+
+### Good Example -- Nearby Search
+
+```typescript
+const SEARCH_RADIUS_METRES = 5_000;
+const NEARBY_LIMIT = 20;
+
+// Coordinates are [longitude, latitude] — that order, always.
+await venues.createIndex({ location: "2dsphere" }, { name: "venue_location" });
+
+const nearby = await venues
+  .find({
+    location: {
+      $near: {
+        $geometry: { type: "Point", coordinates: [longitude, latitude] },
+        $maxDistance: SEARCH_RADIUS_METRES,
+      },
+    },
+  })
+  .limit(NEARBY_LIMIT)
+  .toArray();
+```
+
+**Why good:** `$near` returns results already ordered nearest-first so no sort stage is needed, and `$maxDistance` in metres bounds the scan
+
+**The coordinate order is the usual defect here:** GeoJSON is `[longitude, latitude]` while most APIs and every map UI say "lat, lng". Reversed coordinates produce plausible-looking results in the wrong hemisphere rather than an error.
+
+---
+
+## Pattern 7: Verifying with explain
+
+### Good Example -- Confirming the Index Is Used
+
+```typescript
+const plan = await orders
+  .find({ tenantId, status: "complete" })
+  .sort({ createdAt: -1 })
+  .explain("executionStats");
+```
+
+Read three things from the output:
+
+| Field                                             | Want           | A problem when                                                |
+| ------------------------------------------------- | -------------- | ------------------------------------------------------------- |
+| `winningPlan.stage`                               | `IXSCAN`       | `COLLSCAN` — no index is being used at all                    |
+| `executionStats.totalDocsExamined` vs `nReturned` | Close together | Examined ≫ returned — the index narrows poorly                |
+| A `SORT` stage in the plan                        | Absent         | Present — the sort is happening in memory, not from the index |
+
+### Good Example -- Finding Unused Indexes
+
+```typescript
+// Every index costs write throughput and storage. One never read is pure cost.
+const usage = await orders.aggregate([{ $indexStats: {} }]).toArray();
+```
+
+**Why good:** `accesses.ops` per index turns index cleanup into evidence rather than guesswork — but read it only from a server that has been up long enough to be representative, since the counters reset on restart
+
+### Bad Example -- Assuming the Index Works
+
+```typescript
+// BAD
+await orders.createIndex({ tenantId: 1, status: 1 });
+// ...ship it, and find out at scale
+```
+
+**Why bad:** an unindexed or badly ordered query returns correct results at every size, so nothing fails in review or in tests — the defect only appears when the collection is large, which is exactly when it is hardest to fix
+
+---
+
+## Index Rules of Thumb
+
+- Index every field you filter or sort on in a query that runs often; leave the rest unindexed.
+- Prefer one well-ordered compound index over several single-field ones — the server generally uses one index per query.
+- Do not index a low-cardinality field alone (a two-value status), but it can earn its place as a later key in a compound index.
+- Every index slows writes and consumes storage. An index with no reads is pure cost.
+- Build indexes before a collection grows, not after it has become a problem.
+- `explain` before and after. An index you did not verify is a hypothesis.

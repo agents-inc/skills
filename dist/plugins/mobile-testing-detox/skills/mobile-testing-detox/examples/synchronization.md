@@ -7,6 +7,7 @@
 ## How Detox Auto-Synchronization Works
 
 Detox automatically waits for:
+
 - **JS thread** to be idle (no pending promises, timers, or microtasks)
 - **Native UI** animations to complete
 - **Network requests** to finish (unless blacklisted)
@@ -150,6 +151,7 @@ detox test --configuration ios.sim.debug --debug-synchronization 5000
 ```
 
 Output shows what Detox is waiting for:
+
 ```
 The app is busy with the following tasks:
 - 1 enqueued native animation
@@ -195,8 +197,9 @@ it("should interact with map screen", async () => {
       .toBeVisible()
       .withTimeout(MAP_LOAD_TIMEOUT_MS);
 
-    await expect(element(by.id("pin-detail-card.title")))
-      .toHaveText("Central Park");
+    await expect(element(by.id("pin-detail-card.title"))).toHaveText(
+      "Central Park",
+    );
   } finally {
     await device.enableSynchronization();
   }

@@ -25,7 +25,11 @@ export function ReactiveCanvas() {
 }
 
 // useCanvasSize: JS thread dimensions (for layout calculations)
-function CenteredCircle({ size }: { size: SharedValue<{ width: number; height: number }> }) {
+function CenteredCircle({
+  size,
+}: {
+  size: SharedValue<{ width: number; height: number }>;
+}) {
   // Derive center from shared value for UI thread animation
   return <Circle cx={128} cy={128} r={40} color="cyan" />;
 }
@@ -39,8 +43,16 @@ function CenteredCircle({ size }: { size: SharedValue<{ width: number; height: n
 
 ```tsx
 import {
-  Canvas, Circle, Rect, RoundedRect, Line, Oval,
-  Points, DiffRect, rrect, rect,
+  Canvas,
+  Circle,
+  Rect,
+  RoundedRect,
+  Line,
+  Oval,
+  Points,
+  DiffRect,
+  rrect,
+  rect,
 } from "@shopify/react-native-skia";
 
 const CANVAS_SIZE = 300;
@@ -53,16 +65,39 @@ export function ShapeShowcase() {
       {/* Filled shapes */}
       <Circle cx={50} cy={50} r={30} color="cyan" />
       <Rect x={100} y={20} width={60} height={60} color="red" />
-      <RoundedRect x={180} y={20} width={60} height={60} r={CORNER_RADIUS} color="blue" />
+      <RoundedRect
+        x={180}
+        y={20}
+        width={60}
+        height={60}
+        r={CORNER_RADIUS}
+        color="blue"
+      />
       <Oval x={20} y={100} width={80} height={50} color="green" />
 
       {/* Stroked shapes */}
-      <Circle cx={180} cy={130} r={30} color="purple" style="stroke" strokeWidth={STROKE_WIDTH} />
-      <Line p1={{ x: 0, y: 200 }} p2={{ x: 300, y: 200 }} color="gray" strokeWidth={1} />
+      <Circle
+        cx={180}
+        cy={130}
+        r={30}
+        color="purple"
+        style="stroke"
+        strokeWidth={STROKE_WIDTH}
+      />
+      <Line
+        p1={{ x: 0, y: 200 }}
+        p2={{ x: 300, y: 200 }}
+        color="gray"
+        strokeWidth={1}
+      />
 
       {/* Points */}
       <Points
-        points={[{ x: 50, y: 250 }, { x: 100, y: 230 }, { x: 150, y: 260 }]}
+        points={[
+          { x: 50, y: 250 },
+          { x: 100, y: 230 },
+          { x: 150, y: 260 },
+        ]}
         mode="polygon"
         color="orange"
         style="stroke"
@@ -224,7 +259,14 @@ export function InvertedClip() {
 ## Pattern 6: Images and FitBox
 
 ```tsx
-import { Canvas, Image, useImage, FitBox, Circle, rect } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Image,
+  useImage,
+  FitBox,
+  Circle,
+  rect,
+} from "@shopify/react-native-skia";
 
 export function ImageExample() {
   const image = useImage(require("./photo.png"));

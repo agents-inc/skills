@@ -35,13 +35,13 @@ function renderBars(svgEl: SVGSVGElement, data: BarData[]): void {
 
   select(svgEl)
     .selectAll<SVGRectElement, BarData>("rect")
-    .data(data, (d) => d.id)              // key function: bind by identity
+    .data(data, (d) => d.id) // key function: bind by identity
     .join("rect")
-      .attr("x", 0)
-      .attr("y", (_, i) => i * (BAR_HEIGHT + BAR_GAP))
-      .attr("width", (d) => xScale(d.value))
-      .attr("height", BAR_HEIGHT)
-      .attr("fill", "steelblue");
+    .attr("x", 0)
+    .attr("y", (_, i) => i * (BAR_HEIGHT + BAR_GAP))
+    .attr("width", (d) => xScale(d.value))
+    .attr("height", BAR_HEIGHT)
+    .attr("fill", "steelblue");
 }
 ```
 
@@ -59,14 +59,16 @@ select(svgEl)
         .append("circle")
         .attr("cx", (d) => xScale(d.x))
         .attr("cy", (d) => yScale(d.y))
-        .attr("r", 0)                     // start invisible
+        .attr("r", 0) // start invisible
         .attr("fill", "steelblue")
         .call((s) =>
           s.transition().duration(ENTER_DURATION_MS).attr("r", CIRCLE_RADIUS),
         ),
     (update) =>
       update.call((s) =>
-        s.transition().duration(UPDATE_DURATION_MS)
+        s
+          .transition()
+          .duration(UPDATE_DURATION_MS)
           .attr("cx", (d) => xScale(d.x))
           .attr("cy", (d) => yScale(d.y)),
       ),
@@ -85,11 +87,12 @@ select(svgEl)
 // Bad: verbose and error-prone boilerplate
 const bars = select(svg).selectAll("rect").data(data);
 
-bars.enter()
+bars
+  .enter()
   .append("rect")
-  .merge(bars)  // easy to forget, causes update bugs
-    .attr("width", (d) => d.value * 5)  // magic number
-    .attr("height", 20);                 // magic number
+  .merge(bars) // easy to forget, causes update bugs
+  .attr("width", (d) => d.value * 5) // magic number
+  .attr("height", 20); // magic number
 
 bars.exit().remove();
 ```
@@ -124,7 +127,7 @@ const xLinear = scaleLinear<number>()
 const yBand = scaleBand<string>()
   .domain(data.map((d) => d.category))
   .range([0, innerHeight])
-  .padding(0.2);              // 20% gap between bars
+  .padding(0.2); // 20% gap between bars
 // yBand("Electronics") -> pixel position
 // yBand.bandwidth()    -> computed bar width
 
@@ -145,12 +148,13 @@ const colorScale = scaleOrdinal<string>()
 
 ```typescript
 // Bad: no scales, hardcoded pixel math
-svg.selectAll("rect")
+svg
+  .selectAll("rect")
   .data(data)
   .join("rect")
-    .attr("x", (d) => d.value * 3.7)    // magic multiplier
-    .attr("width", 40)                    // hardcoded bar width
-    .attr("fill", (d) => d.type === "A" ? "red" : "blue");  // manual color logic
+  .attr("x", (d) => d.value * 3.7) // magic multiplier
+  .attr("width", 40) // hardcoded bar width
+  .attr("fill", (d) => (d.type === "A" ? "red" : "blue")); // manual color logic
 ```
 
 **Why bad:** magic multiplier breaks when data range changes, hardcoded width doesn't adapt to number of categories, manual color mapping doesn't scale
@@ -169,33 +173,33 @@ import { timeFormat } from "d3-time-format";
 const TICK_COUNT = 6;
 
 // Numeric axis with comma formatting
-const xAxis = axisBottom(xScale)
-  .ticks(TICK_COUNT)
-  .tickFormat(format(",.0f"));            // "1,234"
+const xAxis = axisBottom(xScale).ticks(TICK_COUNT).tickFormat(format(",.0f")); // "1,234"
 
 // Time axis
-const timeAxis = axisBottom(timeScale)
-  .tickFormat(timeFormat("%b %Y"));       // "Jan 2025"
+const timeAxis = axisBottom(timeScale).tickFormat(timeFormat("%b %Y")); // "Jan 2025"
 
 // Render axes
-const xAxisGroup = svg.append("g")
+const xAxisGroup = svg
+  .append("g")
   .attr("class", "x-axis")
   .attr("transform", `translate(0,${innerHeight})`)
   .call(xAxis);
 
-const yAxisGroup = svg.append("g")
+const yAxisGroup = svg
+  .append("g")
   .attr("class", "y-axis")
   .call(axisLeft(yScale));
 
 // Grid lines: extend tick lines across chart
-svg.append("g")
+svg
+  .append("g")
   .attr("class", "grid")
   .call(
     axisLeft(yScale)
-      .tickSize(-innerWidth)              // negative = extend rightward
-      .tickFormat(() => ""),              // no labels on grid
+      .tickSize(-innerWidth) // negative = extend rightward
+      .tickFormat(() => ""), // no labels on grid
   )
-  .call((g) => g.select(".domain").remove())  // remove axis line
+  .call((g) => g.select(".domain").remove()) // remove axis line
   .call((g) => g.selectAll(".tick line").attr("stroke-opacity", 0.1));
 ```
 
@@ -216,7 +220,8 @@ yAxisGroup.transition().duration(TRANSITION_DURATION_MS).call(axisLeft(yScale));
 ```typescript
 // Bad: appends new axis group on every data update
 function update(data) {
-  svg.append("g")                         // duplicates axis every call
+  svg
+    .append("g") // duplicates axis every call
     .call(axisBottom(xScale));
 }
 ```
@@ -240,10 +245,11 @@ interface TimeSeriesPoint {
 const lineGen = line<TimeSeriesPoint>()
   .x((d) => xScale(d.date))
   .y((d) => yScale(d.value))
-  .curve(curveMonotoneX);                  // smooth interpolation
+  .curve(curveMonotoneX); // smooth interpolation
 
 // Single line: use .datum() (no join needed for one path)
-svg.append("path")
+svg
+  .append("path")
   .datum(data)
   .attr("d", lineGen)
   .attr("fill", "none")
@@ -251,13 +257,14 @@ svg.append("path")
   .attr("stroke-width", 2);
 
 // Multiple lines: use .data() + .join()
-svg.selectAll<SVGPathElement, TimeSeriesPoint[]>("path.line")
+svg
+  .selectAll<SVGPathElement, TimeSeriesPoint[]>("path.line")
   .data(seriesArray)
   .join("path")
-    .attr("class", "line")
-    .attr("d", lineGen)
-    .attr("fill", "none")
-    .attr("stroke", (_, i) => colorScale(String(i)));
+  .attr("class", "line")
+  .attr("d", lineGen)
+  .attr("fill", "none")
+  .attr("stroke", (_, i) => colorScale(String(i)));
 ```
 
 **Why good:** typed line generator with `TimeSeriesPoint`, `.datum()` for single path vs `.data()` for multiple, `.curve()` for smooth lines, no fill on line paths
@@ -273,33 +280,35 @@ interface SliceData {
   value: number;
 }
 
-const INNER_RADIUS = 60;   // 0 for pie, > 0 for donut
+const INNER_RADIUS = 60; // 0 for pie, > 0 for donut
 const OUTER_RADIUS = 150;
 const PAD_ANGLE = 0.02;
 
 const pieGen = pie<SliceData>()
   .value((d) => d.value)
   .padAngle(PAD_ANGLE)
-  .sort(null);               // preserve data order (default sorts by value)
+  .sort(null); // preserve data order (default sorts by value)
 
 const arcGen = arc<PieArcDatum<SliceData>>()
   .innerRadius(INNER_RADIUS)
   .outerRadius(OUTER_RADIUS);
 
 // Render slices
-svg.selectAll<SVGPathElement, PieArcDatum<SliceData>>("path")
+svg
+  .selectAll<SVGPathElement, PieArcDatum<SliceData>>("path")
   .data(pieGen(sliceData))
   .join("path")
-    .attr("d", arcGen)
-    .attr("fill", (d) => colorScale(d.data.label));
+  .attr("d", arcGen)
+  .attr("fill", (d) => colorScale(d.data.label));
 
 // Centroid labels
-svg.selectAll<SVGTextElement, PieArcDatum<SliceData>>("text")
+svg
+  .selectAll<SVGTextElement, PieArcDatum<SliceData>>("text")
   .data(pieGen(sliceData))
   .join("text")
-    .attr("transform", (d) => `translate(${arcGen.centroid(d)})`)
-    .attr("text-anchor", "middle")
-    .text((d) => d.data.label);
+  .attr("transform", (d) => `translate(${arcGen.centroid(d)})`)
+  .attr("text-anchor", "middle")
+  .text((d) => d.data.label);
 ```
 
 **Why good:** typed `PieArcDatum<SliceData>` generic flows through, `.sort(null)` preserves input order, `.padAngle()` adds visual separation, `arcGen.centroid()` places labels at the arc midpoint
@@ -311,11 +320,12 @@ import { area, curveMonotoneX } from "d3-shape";
 
 const areaGen = area<TimeSeriesPoint>()
   .x((d) => xScale(d.date))
-  .y0(innerHeight)                         // baseline at bottom
+  .y0(innerHeight) // baseline at bottom
   .y1((d) => yScale(d.value))
   .curve(curveMonotoneX);
 
-svg.append("path")
+svg
+  .append("path")
   .datum(data)
   .attr("d", areaGen)
   .attr("fill", "steelblue")
@@ -377,8 +387,8 @@ function useChartDimensions(containerRef: { current: HTMLElement | null }) {
 // Bad: chart doesn't resize
 const svg = select("#chart")
   .append("svg")
-  .attr("width", 960)     // fixed pixels
-  .attr("height", 500);   // fixed pixels
+  .attr("width", 960) // fixed pixels
+  .attr("height", 500); // fixed pixels
 ```
 
 **Why bad:** chart overflows or underflows its container on different screen sizes, no responsive behavior
@@ -402,7 +412,8 @@ const svg = select(container)
   .attr("viewBox", `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`);
 
 // Inner group offset by margins — all chart content goes here
-const chart = svg.append("g")
+const chart = svg
+  .append("g")
   .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
 
 // Scales use innerWidth/innerHeight
@@ -410,12 +421,12 @@ const xScale = scaleLinear().domain([0, maxVal]).range([0, innerWidth]);
 const yScale = scaleLinear().domain([0, maxVal]).range([innerHeight, 0]); // inverted: SVG y=0 is top
 
 // Axes positioned at edges of inner area
-chart.append("g")
+chart
+  .append("g")
   .attr("transform", `translate(0,${innerHeight})`)
   .call(axisBottom(xScale));
 
-chart.append("g")
-  .call(axisLeft(yScale));
+chart.append("g").call(axisLeft(yScale));
 ```
 
 **Why good:** margins reserve space for axes and labels, inner group simplifies all positioning (coordinates relative to chart area, not SVG), y-scale inverted because SVG origin is top-left
@@ -424,11 +435,17 @@ chart.append("g")
 
 ```typescript
 // Bad: axes and data compete for the same space
-const svg = select("#chart").append("svg").attr("width", 800).attr("height", 500);
-svg.selectAll("rect").data(data).join("rect")
-  .attr("x", (d) => d.x)     // no offset for y-axis space
-  .attr("y", (d) => d.y);    // bars overlap with axis labels
-svg.append("g").call(axisLeft(yScale));  // axis renders on top of bars
+const svg = select("#chart")
+  .append("svg")
+  .attr("width", 800)
+  .attr("height", 500);
+svg
+  .selectAll("rect")
+  .data(data)
+  .join("rect")
+  .attr("x", (d) => d.x) // no offset for y-axis space
+  .attr("y", (d) => d.y); // bars overlap with axis labels
+svg.append("g").call(axisLeft(yScale)); // axis renders on top of bars
 ```
 
 **Why bad:** axes overlap with data elements, no reserved space for tick labels, chart content starts at SVG origin instead of being offset

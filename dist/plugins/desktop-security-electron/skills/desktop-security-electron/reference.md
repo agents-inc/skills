@@ -64,33 +64,33 @@
 
 ## Fuse Defaults and Recommendations
 
-| Fuse | Default | Production | Attack Vector Prevented |
-|------|---------|------------|------------------------|
-| `RunAsNode` | ON | **OFF** | `ELECTRON_RUN_AS_NODE=1 app malicious.js` |
-| `EnableCookieEncryption` | OFF | **ON** | Plain-text cookie theft from disk |
-| `EnableNodeOptionsEnvironmentVariable` | ON | **OFF** | `NODE_OPTIONS='--require malicious.js' app` |
-| `EnableNodeCliInspectArguments` | ON | **OFF** | `app --inspect` debugger attachment |
-| `EnableEmbeddedAsarIntegrityValidation` | OFF | **ON** | Modified `app.asar` code injection |
-| `OnlyLoadAppFromAsar` | OFF | **ON** | `app/` folder bypass of ASAR validation |
-| `LoadBrowserProcessSpecificV8Snapshot` | OFF | Keep | N/A (performance, not security) |
-| `GrantFileProtocolExtraPrivileges` | ON | **OFF** | `file://` fetch and universal frame access |
-| `WasmTrapHandlers` | ON | Keep | N/A (disabling increases WASM size) |
+| Fuse                                    | Default | Production | Attack Vector Prevented                     |
+| --------------------------------------- | ------- | ---------- | ------------------------------------------- |
+| `RunAsNode`                             | ON      | **OFF**    | `ELECTRON_RUN_AS_NODE=1 app malicious.js`   |
+| `EnableCookieEncryption`                | OFF     | **ON**     | Plain-text cookie theft from disk           |
+| `EnableNodeOptionsEnvironmentVariable`  | ON      | **OFF**    | `NODE_OPTIONS='--require malicious.js' app` |
+| `EnableNodeCliInspectArguments`         | ON      | **OFF**    | `app --inspect` debugger attachment         |
+| `EnableEmbeddedAsarIntegrityValidation` | OFF     | **ON**     | Modified `app.asar` code injection          |
+| `OnlyLoadAppFromAsar`                   | OFF     | **ON**     | `app/` folder bypass of ASAR validation     |
+| `LoadBrowserProcessSpecificV8Snapshot`  | OFF     | Keep       | N/A (performance, not security)             |
+| `GrantFileProtocolExtraPrivileges`      | ON      | **OFF**    | `file://` fetch and universal frame access  |
+| `WasmTrapHandlers`                      | ON      | Keep       | N/A (disabling increases WASM size)         |
 
 ---
 
 ## Electron Security Version History
 
-| Version | Security Change |
-|---------|----------------|
-| 5 | `nodeIntegration` defaults to `false` |
-| 10 | `enableRemoteModule` defaults to `false` |
-| 12 | `contextIsolation` defaults to `true` |
-| 14 | `remote` module removed entirely |
-| 20 | `sandbox` defaults to `true` |
-| 22 | `webviewTag` defaults to `false`; `utilityProcess` API added |
-| 28 | `nativeWindowOpen` removed (was already default behavior) |
-| 29 | `GrantFileProtocolExtraPrivileges` fuse added |
-| 30 | ASAR integrity validation supported on Windows |
+| Version | Security Change                                              |
+| ------- | ------------------------------------------------------------ |
+| 5       | `nodeIntegration` defaults to `false`                        |
+| 10      | `enableRemoteModule` defaults to `false`                     |
+| 12      | `contextIsolation` defaults to `true`                        |
+| 14      | `remote` module removed entirely                             |
+| 20      | `sandbox` defaults to `true`                                 |
+| 22      | `webviewTag` defaults to `false`; `utilityProcess` API added |
+| 28      | `nativeWindowOpen` removed (was already default behavior)    |
+| 29      | `GrantFileProtocolExtraPrivileges` fuse added                |
+| 30      | ASAR integrity validation supported on Windows               |
 
 ---
 

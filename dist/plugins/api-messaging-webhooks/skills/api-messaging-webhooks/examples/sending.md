@@ -112,12 +112,12 @@ export type { RetryConfig };
 With default config (`baseDelayMs: 1000`):
 
 | Attempt | Base Delay | + Jitter (0-1s) | Total Range |
-|---------|-----------|-----------------|-------------|
-| 0 | 1s | 0-1s | 1-2s |
-| 1 | 2s | 0-1s | 2-3s |
-| 2 | 4s | 0-1s | 4-5s |
-| 3 | 8s | 0-1s | 8-9s |
-| 4 | 16s | 0-1s | 16-17s |
+| ------- | ---------- | --------------- | ----------- |
+| 0       | 1s         | 0-1s            | 1-2s        |
+| 1       | 2s         | 0-1s            | 2-3s        |
+| 2       | 4s         | 0-1s            | 4-5s        |
+| 3       | 8s         | 0-1s            | 8-9s        |
+| 4       | 16s        | 0-1s            | 16-17s      |
 
 ---
 
@@ -146,7 +146,12 @@ function classifyDeliveryResult(statusCode: number): DeliveryAction {
   }
 
   // Permanent client errors -- don't retry, move to DLQ
-  const permanentFailures = [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND, HTTP_UNPROCESSABLE];
+  const permanentFailures = [
+    HTTP_BAD_REQUEST,
+    HTTP_UNAUTHORIZED,
+    HTTP_NOT_FOUND,
+    HTTP_UNPROCESSABLE,
+  ];
   if (permanentFailures.includes(statusCode)) {
     return "dead-letter";
   }

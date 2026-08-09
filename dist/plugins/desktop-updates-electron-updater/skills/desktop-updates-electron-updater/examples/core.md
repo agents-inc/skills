@@ -212,7 +212,10 @@ function checkForUpdatesWithRetry(mainWindow) {
   if (!app.isPackaged) return;
 
   autoUpdater.on("error", (error) => {
-    log.error(`Update check failed (attempt ${retryCount + 1}):`, error.message);
+    log.error(
+      `Update check failed (attempt ${retryCount + 1}):`,
+      error.message,
+    );
 
     if (retryCount < MAX_RETRIES) {
       retryCount++;
@@ -221,7 +224,10 @@ function checkForUpdatesWithRetry(mainWindow) {
       setTimeout(() => autoUpdater.checkForUpdates(), delay);
     } else {
       log.error("Max retries reached. Update check abandoned.");
-      mainWindow.webContents.send("update-error", "Update check failed after multiple attempts.");
+      mainWindow.webContents.send(
+        "update-error",
+        "Update check failed after multiple attempts.",
+      );
       retryCount = 0; // Reset for next scheduled check
     }
   });

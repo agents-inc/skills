@@ -69,45 +69,45 @@ Static theme (compile-time)?
 
 ### Core APIs
 
-| API | Import | Purpose |
-|-----|--------|---------|
-| `useColorScheme()` | `nativewind` | Read/set color scheme (light/dark/system) |
-| `vars()` | `nativewind` | Set CSS variables as style object |
-| `useUnstableNativeVariable()` | `nativewind` | Read resolved CSS variable value in JS |
-| `cssInterop()` | `nativewind` | Tag third-party component for full style interop |
-| `remapProps()` | `nativewind` | Map className props to style props (lightweight) |
-| `colorScheme` | `nativewind` | Module-level color scheme control (outside components) |
-| `withNativeWind()` | `nativewind/metro` | Metro config wrapper |
+| API                           | Import             | Purpose                                                |
+| ----------------------------- | ------------------ | ------------------------------------------------------ |
+| `useColorScheme()`            | `nativewind`       | Read/set color scheme (light/dark/system)              |
+| `vars()`                      | `nativewind`       | Set CSS variables as style object                      |
+| `useUnstableNativeVariable()` | `nativewind`       | Read resolved CSS variable value in JS                 |
+| `cssInterop()`                | `nativewind`       | Tag third-party component for full style interop       |
+| `remapProps()`                | `nativewind`       | Map className props to style props (lightweight)       |
+| `colorScheme`                 | `nativewind`       | Module-level color scheme control (outside components) |
+| `withNativeWind()`            | `nativewind/metro` | Metro config wrapper                                   |
 
 ### useColorScheme Return Values
 
 ```typescript
 const {
-  colorScheme,        // "light" | "dark"
-  setColorScheme,     // (scheme: "light" | "dark" | "system") => void
-  toggleColorScheme,  // () => void -- switches between light and dark
+  colorScheme, // "light" | "dark"
+  setColorScheme, // (scheme: "light" | "dark" | "system") => void
+  toggleColorScheme, // () => void -- switches between light and dark
 } = useColorScheme();
 ```
 
 ### Platform Prefixes
 
-| Prefix | Target |
-|--------|--------|
-| `ios:` | iOS only |
-| `android:` | Android only |
-| `web:` | Web only |
-| `windows:` | Windows only |
-| `osx:` | macOS only |
-| `native:` | All platforms except web |
+| Prefix     | Target                   |
+| ---------- | ------------------------ |
+| `ios:`     | iOS only                 |
+| `android:` | Android only             |
+| `web:`     | Web only                 |
+| `windows:` | Windows only             |
+| `osx:`     | macOS only               |
+| `native:`  | All platforms except web |
 
 ### State Prefixes
 
-| Prefix | Behavior |
-|--------|----------|
-| `dark:` | Dark color scheme active |
-| `active:` | Component being pressed |
-| `hover:` | Pointer hovering (web, pointer devices) |
-| `focus:` | Component focused |
+| Prefix    | Behavior                                |
+| --------- | --------------------------------------- |
+| `dark:`   | Dark color scheme active                |
+| `active:` | Component being pressed                 |
+| `hover:`  | Pointer hovering (web, pointer devices) |
+| `focus:`  | Component focused                       |
 
 ---
 
@@ -158,28 +158,28 @@ react-native-safe-area-context
 
 Key breaking changes:
 
-| v2 | v4 |
-|----|-----|
-| `styled()` wrapper | Removed -- className works directly |
-| Babel plugin approach | JSX import source transform |
-| `NativeWindStyleSheet` | Renamed to `StyleSheet` |
-| `gap-` polyfill | Compiles to native `columnGap`/`rowGap` |
-| rem = 16 everywhere | rem = 14 on native, 16 on web |
-| `divide-` / `space-` | Temporarily unavailable |
+| v2                                         | v4                                       |
+| ------------------------------------------ | ---------------------------------------- |
+| `styled()` wrapper                         | Removed -- className works directly      |
+| Babel plugin approach                      | JSX import source transform              |
+| `NativeWindStyleSheet`                     | Renamed to `StyleSheet`                  |
+| `gap-` polyfill                            | Compiles to native `columnGap`/`rowGap`  |
+| rem = 16 everywhere                        | rem = 14 on native, 16 on web            |
+| `divide-` / `space-`                       | Temporarily unavailable                  |
 | className not accessible inside components | className accessible (enables clsx, cva) |
 
 ### From v4 to v5 (Preview)
 
 When NativeWind v5 stabilizes:
 
-| v4 | v5 |
-|----|-----|
-| `cssInterop()` / `remapProps()` | Unified `styled()` API |
-| `vars()` for theming | `VariableContextProvider` component |
-| Custom JSX transform | Import rewrite system |
-| Tailwind CSS v3.4 config | Tailwind CSS v4.1+ with new import syntax |
-| Requires RN 0.73+ | Requires RN 0.81+ |
-| `platformSelect()` JS function | CSS media queries |
+| v4                              | v5                                        |
+| ------------------------------- | ----------------------------------------- |
+| `cssInterop()` / `remapProps()` | Unified `styled()` API                    |
+| `vars()` for theming            | `VariableContextProvider` component       |
+| Custom JSX transform            | Import rewrite system                     |
+| Tailwind CSS v3.4 config        | Tailwind CSS v4.1+ with new import syntax |
+| Requires RN 0.73+               | Requires RN 0.81+                         |
+| `platformSelect()` JS function  | CSS media queries                         |
 
 ### From StyleSheet.create to NativeWind
 

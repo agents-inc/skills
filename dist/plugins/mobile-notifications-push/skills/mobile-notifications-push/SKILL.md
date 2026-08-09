@@ -148,8 +148,9 @@ Expo push tokens work with Expo's push service. Native device tokens (FCM/APNs) 
 ```typescript
 // Expo push token -- for use with Expo Push Service
 const expoPushToken = await Notifications.getExpoPushTokenAsync({
-  projectId: Constants?.expoConfig?.extra?.eas?.projectId
-    ?? Constants?.easConfig?.projectId,
+  projectId:
+    Constants?.expoConfig?.extra?.eas?.projectId ??
+    Constants?.easConfig?.projectId,
 });
 // Returns: "ExponentPushToken[xxxxxx]"
 
@@ -174,8 +175,8 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
     shouldSetBadge: true,
-    shouldShowBanner: true,  // replaces deprecated shouldShowAlert
-    shouldShowList: true,    // show in notification center
+    shouldShowBanner: true, // replaces deprecated shouldShowAlert
+    shouldShowList: true, // show in notification center
   }),
 });
 ```
@@ -198,7 +199,7 @@ const receivedSub = Notifications.addNotificationReceivedListener(
   (notification) => {
     const data = notification.request.content.data;
     // Update UI, show in-app indicator, etc.
-  }
+  },
 );
 
 // Tap/Response: user taps a notification (from any state)
@@ -206,7 +207,7 @@ const responseSub = Notifications.addNotificationResponseReceivedListener(
   (response) => {
     const data = response.notification.request.content.data;
     // Navigate to relevant screen
-  }
+  },
 );
 
 // Cleanup on unmount
@@ -228,9 +229,21 @@ Required on Android 8+ (API 26+). Create channels at app startup. Users can cust
 
 ```typescript
 const CHANNELS = {
-  messages: { id: "messages", name: "Messages", importance: Notifications.AndroidImportance.HIGH },
-  updates: { id: "updates", name: "App Updates", importance: Notifications.AndroidImportance.DEFAULT },
-  marketing: { id: "marketing", name: "Promotions", importance: Notifications.AndroidImportance.LOW },
+  messages: {
+    id: "messages",
+    name: "Messages",
+    importance: Notifications.AndroidImportance.HIGH,
+  },
+  updates: {
+    id: "updates",
+    name: "App Updates",
+    importance: Notifications.AndroidImportance.DEFAULT,
+  },
+  marketing: {
+    id: "marketing",
+    name: "Promotions",
+    importance: Notifications.AndroidImportance.LOW,
+  },
 } as const;
 
 // Create at app startup

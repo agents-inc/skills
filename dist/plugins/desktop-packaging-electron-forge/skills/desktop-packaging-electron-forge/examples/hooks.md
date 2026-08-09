@@ -122,10 +122,10 @@ export class MakerPortable extends MakerBase<MyMakerConfig> {
   }
 
   async make({
-    dir,         // path to packaged app directory
-    makeDir,     // path to output directory for artifacts
-    targetArch,  // target architecture (x64, arm64, etc.)
-    appName,     // application name
+    dir, // path to packaged app directory
+    makeDir, // path to output directory for artifacts
+    targetArch, // target architecture (x64, arm64, etc.)
+    appName, // application name
   }: MakerOptions): Promise<string[]> {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");

@@ -130,10 +130,9 @@ function DraggableFromOrigin() {
 
 ```typescript
 // BAD: Mixing onChange deltas with onUpdate cumulative values
-const pan = Gesture.Pan()
-  .onUpdate((event) => {
-    translateX.value += event.translationX; // WRONG: translationX is cumulative, not delta
-  });
+const pan = Gesture.Pan().onUpdate((event) => {
+  translateX.value += event.translationX; // WRONG: translationX is cumulative, not delta
+});
 ```
 
 **Why bad:** `translationX` grows each frame, so `+=` causes exponential drift instead of linear movement

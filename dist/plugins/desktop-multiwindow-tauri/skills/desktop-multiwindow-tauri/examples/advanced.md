@@ -9,7 +9,10 @@
 ### JavaScript: Create a Child Window
 
 ```typescript
-import { WebviewWindow, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  WebviewWindow,
+  getCurrentWebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
 
 const DIALOG_LABEL = "confirm-dialog";
 const DIALOG_WIDTH = 400;
@@ -130,7 +133,10 @@ async function handleConfirm(confirmed: boolean): Promise<void> {
 ### Position Relative to Parent
 
 ```typescript
-import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  getCurrentWebviewWindow,
+  WebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
 import { PhysicalPosition, PhysicalSize } from "@tauri-apps/api/dpi";
 
 const OFFSET_X = 50;
@@ -227,9 +233,12 @@ async function selectItem(itemId: string): Promise<void> {
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 const webview = getCurrentWebview();
-const unlisten = await webview.listen<{ itemId: string }>("item-selected", (event) => {
-  loadItem(event.payload.itemId);
-});
+const unlisten = await webview.listen<{ itemId: string }>(
+  "item-selected",
+  (event) => {
+    loadItem(event.payload.itemId);
+  },
+);
 ```
 
 **Key point:** in multi-webview setups, use `getCurrentWebview()` from `@tauri-apps/api/webview` (not `getCurrentWebviewWindow()`). Each webview within the window has its own label and event scope.
@@ -265,6 +274,7 @@ fn resize_sidebar(app: tauri::AppHandle, new_width: f64) -> Result<(), String> {
 ```
 
 **Limitations of multi-webview:**
+
 - Desktop-only (no mobile support)
 - Requires `unstable` feature flag -- API may change between Tauri minor versions
 - No built-in drag-to-resize between panels -- must implement resize handles in the webview or via Rust commands

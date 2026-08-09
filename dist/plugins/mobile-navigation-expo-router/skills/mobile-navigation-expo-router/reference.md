@@ -104,52 +104,52 @@ How should routes be presented?
 
 ## Hook Selection
 
-| Hook | Returns | Re-renders when | Use for |
-|------|---------|-----------------|---------|
-| `useLocalSearchParams<T>()` | Route + query params | Screen is focused and params change | Screen-specific param access |
-| `useGlobalSearchParams<T>()` | Route + query params | ANY route's params change | Background analytics, rarely needed |
-| `useRouter()` | Router object | Never (stable ref) | Imperative navigation in handlers |
-| `usePathname()` | Current path string | Path changes | Displaying current location |
-| `useSegments()` | File segment array | Segments change | Auth checks, conditional logic |
-| `useFocusEffect(cb)` | void | Screen focus/blur | Data fetching on screen focus |
-| `useNavigation(parent?)` | React Navigation object | Varies | Low-level navigator control |
+| Hook                         | Returns                 | Re-renders when                     | Use for                             |
+| ---------------------------- | ----------------------- | ----------------------------------- | ----------------------------------- |
+| `useLocalSearchParams<T>()`  | Route + query params    | Screen is focused and params change | Screen-specific param access        |
+| `useGlobalSearchParams<T>()` | Route + query params    | ANY route's params change           | Background analytics, rarely needed |
+| `useRouter()`                | Router object           | Never (stable ref)                  | Imperative navigation in handlers   |
+| `usePathname()`              | Current path string     | Path changes                        | Displaying current location         |
+| `useSegments()`              | File segment array      | Segments change                     | Auth checks, conditional logic      |
+| `useFocusEffect(cb)`         | void                    | Screen focus/blur                   | Data fetching on screen focus       |
+| `useNavigation(parent?)`     | React Navigation object | Varies                              | Low-level navigator control         |
 
 ---
 
 ## File Convention Quick Reference
 
-| Convention | Example | Purpose |
-|-----------|---------|---------|
-| `index.tsx` | `app/index.tsx` | Default route for directory |
-| `[param].tsx` | `app/users/[id].tsx` | Dynamic route segment |
-| `[...param].tsx` | `app/docs/[...slug].tsx` | Catch-all route |
-| `_layout.tsx` | `app/(tabs)/_layout.tsx` | Navigator wrapping siblings |
-| `(group)/` | `app/(tabs)/` | URL-invisible grouping |
-| `(a,b)/` | `app/(feed,search)/` | Shared routes between groups |
-| `+not-found.tsx` | `app/+not-found.tsx` | 404 fallback |
-| `+api.ts` | `app/api/users+api.ts` | Server-side API route |
-| `+html.tsx` | `app/+html.tsx` | Root HTML wrapper (web) |
-| `+middleware.ts` | `app/+middleware.ts` | Server middleware (v6+) |
+| Convention       | Example                  | Purpose                      |
+| ---------------- | ------------------------ | ---------------------------- |
+| `index.tsx`      | `app/index.tsx`          | Default route for directory  |
+| `[param].tsx`    | `app/users/[id].tsx`     | Dynamic route segment        |
+| `[...param].tsx` | `app/docs/[...slug].tsx` | Catch-all route              |
+| `_layout.tsx`    | `app/(tabs)/_layout.tsx` | Navigator wrapping siblings  |
+| `(group)/`       | `app/(tabs)/`            | URL-invisible grouping       |
+| `(a,b)/`         | `app/(feed,search)/`     | Shared routes between groups |
+| `+not-found.tsx` | `app/+not-found.tsx`     | 404 fallback                 |
+| `+api.ts`        | `app/api/users+api.ts`   | Server-side API route        |
+| `+html.tsx`      | `app/+html.tsx`          | Root HTML wrapper (web)      |
+| `+middleware.ts` | `app/+middleware.ts`     | Server middleware (v6+)      |
 
 ---
 
 ## Version Compatibility
 
-| Feature | Minimum Version | Notes |
-|---------|----------------|-------|
-| File-based routing | Expo Router v1 / SDK 49 | Core feature |
-| Typed routes | Expo Router v2 / SDK 50 | `experiments.typedRoutes` in app.json |
-| `dismissTo` / `dismissAll` | Expo Router v4 / SDK 52 | Stack dismiss methods |
-| Headless tabs (`expo-router/ui`) | Expo Router v4 / SDK 52 | TabList, TabTrigger, TabSlot |
-| API routes (`+api.ts`) | Expo Router v3 / SDK 50 | Requires `web.output: "server"` |
-| Stack.Protected (guard) | Expo Router v5 / SDK 53 | Replaces redirect-based auth |
-| Build-time redirects/rewrites | Expo Router v5 / SDK 53 | Config in app.json |
-| React Server Functions | Expo Router v5 / SDK 53 | Beta, requires server output |
-| NativeTabs (Liquid Glass) | Expo Router v6 / SDK 54 | Alpha, import from `unstable-native-tabs` |
-| Link.Preview / Link.Menu | Expo Router v6 / SDK 54 | iOS context menus |
-| Server middleware (`+middleware.ts`) | Expo Router v6 / SDK 54 | Edge middleware |
-| Stack.Toolbar | Expo Router v7 / SDK 55 | Toolbar component |
-| SplitView (experimental) | Expo Router v7 / SDK 55 | iPad/desktop split views |
+| Feature                              | Minimum Version         | Notes                                     |
+| ------------------------------------ | ----------------------- | ----------------------------------------- |
+| File-based routing                   | Expo Router v1 / SDK 49 | Core feature                              |
+| Typed routes                         | Expo Router v2 / SDK 50 | `experiments.typedRoutes` in app.json     |
+| `dismissTo` / `dismissAll`           | Expo Router v4 / SDK 52 | Stack dismiss methods                     |
+| Headless tabs (`expo-router/ui`)     | Expo Router v4 / SDK 52 | TabList, TabTrigger, TabSlot              |
+| API routes (`+api.ts`)               | Expo Router v3 / SDK 50 | Requires `web.output: "server"`           |
+| Stack.Protected (guard)              | Expo Router v5 / SDK 53 | Replaces redirect-based auth              |
+| Build-time redirects/rewrites        | Expo Router v5 / SDK 53 | Config in app.json                        |
+| React Server Functions               | Expo Router v5 / SDK 53 | Beta, requires server output              |
+| NativeTabs (Liquid Glass)            | Expo Router v6 / SDK 54 | Alpha, import from `unstable-native-tabs` |
+| Link.Preview / Link.Menu             | Expo Router v6 / SDK 54 | iOS context menus                         |
+| Server middleware (`+middleware.ts`) | Expo Router v6 / SDK 54 | Edge middleware                           |
+| Stack.Toolbar                        | Expo Router v7 / SDK 55 | Toolbar component                         |
+| SplitView (experimental)             | Expo Router v7 / SDK 55 | iPad/desktop split views                  |
 
 ---
 

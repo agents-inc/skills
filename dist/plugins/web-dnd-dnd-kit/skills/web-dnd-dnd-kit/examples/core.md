@@ -18,7 +18,8 @@ interface DraggableProps {
 }
 
 export function Draggable({ id, children }: DraggableProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -124,7 +125,14 @@ interface SortableItemProps {
 }
 
 export function SortableItem({ id, children }: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id,
   });
 
@@ -218,7 +226,12 @@ function TaskList() {
 ### Standard Sensor Setup
 
 ```tsx
-import { useSensor, useSensors, PointerSensor, KeyboardSensor } from "@dnd-kit/core";
+import {
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+} from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 const ACTIVATION_DISTANCE_PX = 8;
@@ -236,7 +249,7 @@ function useDndSensors() {
 
 // Usage:
 const sensors = useDndSensors();
-<DndContext sensors={sensors}>{/* ... */}</DndContext>
+<DndContext sensors={sensors}>{/* ... */}</DndContext>;
 ```
 
 **Why good:** Distance constraint prevents accidental drags when clicking, KeyboardSensor with sortableKeyboardCoordinates moves items to next position on arrow key (not by fixed pixels), extracted as custom hook for reuse
@@ -244,7 +257,13 @@ const sensors = useDndSensors();
 ### Touch Sensor with Delay
 
 ```tsx
-import { useSensor, useSensors, TouchSensor, MouseSensor, KeyboardSensor } from "@dnd-kit/core";
+import {
+  useSensor,
+  useSensors,
+  TouchSensor,
+  MouseSensor,
+  KeyboardSensor,
+} from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 const TOUCH_DELAY_MS = 250;
@@ -299,7 +318,7 @@ const composedCollision: CollisionDetection = (args) => {
   return closestCenter(args);
 };
 
-<DndContext collisionDetection={composedCollision}>{/* ... */}</DndContext>
+<DndContext collisionDetection={composedCollision}>{/* ... */}</DndContext>;
 ```
 
 **Why good:** pointerWithin gives precise "pointer must be inside" behavior for pointer users, closestCenter provides a fallback for keyboard users (since pointerWithin requires pointer position), composition pattern avoids building custom collision algorithms from scratch
@@ -339,13 +358,25 @@ function createAnnouncements(items: string[]) {
     onDragStart({ active }: { active: { id: UniqueIdentifier } }) {
       return `Picked up item at ${getPosition(active.id)}`;
     },
-    onDragOver({ active, over }: { active: { id: UniqueIdentifier }; over: { id: UniqueIdentifier } | null }) {
+    onDragOver({
+      active,
+      over,
+    }: {
+      active: { id: UniqueIdentifier };
+      over: { id: UniqueIdentifier } | null;
+    }) {
       if (over) {
         return `Item moved to ${getPosition(over.id)}`;
       }
       return `Item is no longer over a drop target`;
     },
-    onDragEnd({ active, over }: { active: { id: UniqueIdentifier }; over: { id: UniqueIdentifier } | null }) {
+    onDragEnd({
+      active,
+      over,
+    }: {
+      active: { id: UniqueIdentifier };
+      over: { id: UniqueIdentifier } | null;
+    }) {
       if (over) {
         return `Item dropped at ${getPosition(over.id)}`;
       }
@@ -359,7 +390,7 @@ function createAnnouncements(items: string[]) {
 
 // Usage:
 const announcements = createAnnouncements(items);
-<DndContext announcements={announcements}>{/* ... */}</DndContext>
+<DndContext announcements={announcements}>{/* ... */}</DndContext>;
 ```
 
 **Why good:** Position-based messages ("position 2 of 5") are meaningful to screen reader users, dynamic announcements update as items list changes, factory function makes announcements reusable across lists
@@ -388,7 +419,13 @@ const announcements = createAnnouncements(items);
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-export function SortableItemWithHandle({ id, children }: { id: string; children: React.ReactNode }) {
+export function SortableItemWithHandle({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
   const {
     attributes,
     listeners,
@@ -406,7 +443,12 @@ export function SortableItemWithHandle({ id, children }: { id: string; children:
   return (
     <div ref={setNodeRef} style={style}>
       {/* Drag handle: only this element activates drag */}
-      <button ref={setActivatorNodeRef} {...listeners} {...attributes} aria-label={`Reorder ${id}`}>
+      <button
+        ref={setActivatorNodeRef}
+        {...listeners}
+        {...attributes}
+        aria-label={`Reorder ${id}`}
+      >
         &#x2630;
       </button>
       {children}

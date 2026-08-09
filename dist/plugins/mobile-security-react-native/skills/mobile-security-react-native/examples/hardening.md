@@ -47,8 +47,8 @@ import { Alert } from "react-native";
 type SecurityAction = "block" | "warn" | "log";
 
 const SECURITY_ACTIONS: Record<string, SecurityAction> = {
-  jailbroken: "warn",    // Alert user but allow access
-  debugMode: "log",      // Log only (may be legitimate dev use)
+  jailbroken: "warn", // Alert user but allow access
+  debugMode: "log", // Log only (may be legitimate dev use)
   mockLocation: "block", // Block for location-sensitive features
 };
 
@@ -126,9 +126,7 @@ const config = getDefaultConfig(__dirname);
 
 config.transformer = {
   ...config.transformer,
-  babelTransformerPath: require.resolve(
-    "react-native-obfuscating-transformer"
-  ),
+  babelTransformerPath: require.resolve("react-native-obfuscating-transformer"),
 };
 
 module.exports = config;
@@ -306,10 +304,10 @@ function disableSecureMode(): void {
 
 **Platform differences:**
 
-| Platform | Screenshots | Screen Recording | App Switcher Thumbnail |
-|----------|-------------|------------------|------------------------|
-| iOS (ScreenCapture) | Blocked (blank) | Blocked | Not affected |
-| Android (FLAG_SECURE) | Blocked (black) | Blocked (black) | Black thumbnail |
+| Platform              | Screenshots     | Screen Recording | App Switcher Thumbnail |
+| --------------------- | --------------- | ---------------- | ---------------------- |
+| iOS (ScreenCapture)   | Blocked (blank) | Blocked          | Not affected           |
+| Android (FLAG_SECURE) | Blocked (black) | Blocked (black)  | Black thumbnail        |
 
 ---
 

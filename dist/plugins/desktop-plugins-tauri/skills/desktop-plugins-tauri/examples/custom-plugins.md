@@ -105,6 +105,7 @@ export async function processData(input: string): Promise<string> {
 ```
 
 **Key points:**
+
 - Plugin commands are invoked as `plugin:<plugin-name>|<command_name>` from JS
 - The `<R: Runtime>` generic allows the plugin to work in both desktop and mobile contexts
 - Export an `init()` function following the Tauri plugin convention
@@ -161,6 +162,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, Config> {
 ```
 
 **Key points:**
+
 - Config is deserialized from the host app's `tauri.conf.json` at runtime
 - Use `#[serde(default)]` for optional fields with default values
 - The config key in JSON must match the plugin name
@@ -215,6 +217,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 ```
 
 **Key points:**
+
 - `setup`: Runs once when the plugin initializes -- register state and start background tasks here
 - `on_navigation`: Runs before each webview navigation -- return `false` to block
 - `on_webview_ready`: Runs when a new webview is created
@@ -260,10 +263,7 @@ This generates `allow-get-status`, `deny-get-status`, `allow-process-data`, `den
 
 ```json
 {
-  "permissions": [
-    "my-feature:default",
-    "my-feature:allow-process-data"
-  ]
+  "permissions": ["my-feature:default", "my-feature:allow-process-data"]
 }
 ```
 
@@ -336,6 +336,7 @@ class MyFeaturePlugin(private val activity: Activity) : Plugin(activity) {
 ```
 
 **Key points for Android:**
+
 - `@TauriPlugin` annotation marks the plugin class
 - `@Command` marks methods callable from Rust/JS
 - Commands run on the main thread -- use coroutines for blocking I/O
@@ -361,6 +362,7 @@ class MyFeaturePlugin: Plugin {
 ```
 
 **Key points for iOS:**
+
 - Plugin class extends `Plugin`
 - `@objc` attribute + `Invoke` parameter = callable from Rust
 - `invoke.resolve([String: Any])` sends data back
@@ -409,6 +411,7 @@ cargo publish
 ```
 
 **Naming conventions:**
+
 - Cargo crate: `tauri-plugin-<name>`
 - NPM package: `@scope/plugin-<name>` (scope recommended) or `tauri-plugin-<name>`
 - Plugin identifier (in Builder): `<name>` (without the `tauri-plugin-` prefix)

@@ -1,6 +1,6 @@
 # api-database-mongodb
 
-MongoDB with Mongoose ODM - schemas, models, queries, aggregation, indexes, TypeScript typing, connection management
+Native MongoDB driver (the mongodb npm package) - MongoClient lifecycle, typed collections, CRUD result shapes, cursors, aggregation pipelines, index design, transactions
 
 ## Installation
 

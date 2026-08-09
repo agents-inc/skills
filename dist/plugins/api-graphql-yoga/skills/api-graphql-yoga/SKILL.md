@@ -294,13 +294,13 @@ Feature available as Yoga-specific plugin?
 
 ### Yoga-Specific Plugins (Prefer Over Envelop)
 
-| Plugin | Package | Why Yoga-specific |
-|--------|---------|-------------------|
-| Response Cache | `@graphql-yoga/plugin-response-cache` | Skips execution for cached queries |
+| Plugin               | Package                                     | Why Yoga-specific                        |
+| -------------------- | ------------------------------------------- | ---------------------------------------- |
+| Response Cache       | `@graphql-yoga/plugin-response-cache`       | Skips execution for cached queries       |
 | Persisted Operations | `@graphql-yoga/plugin-persisted-operations` | Rejects unknown operations at HTTP layer |
-| Defer/Stream | `@graphql-yoga/plugin-defer-stream` | Streams via HTTP chunked encoding |
-| CSRF Prevention | `@graphql-yoga/plugin-csrf-prevention` | Requires custom header before parsing |
-| GraphQL SSE | `@graphql-yoga/plugin-graphql-sse` | Single-connection SSE mode |
+| Defer/Stream         | `@graphql-yoga/plugin-defer-stream`         | Streams via HTTP chunked encoding        |
+| CSRF Prevention      | `@graphql-yoga/plugin-csrf-prevention`      | Requires custom header before parsing    |
+| GraphQL SSE          | `@graphql-yoga/plugin-graphql-sse`          | Single-connection SSE mode               |
 
 </decision_framework>
 

@@ -39,7 +39,10 @@ const resolvers = {
 // CRITICAL: Define __resolveReference as a LOADER, not a resolver
 const loaders = {
   User: {
-    async __resolveReference(queries: Array<{ obj: { id: string } }>, ctx: MercuriusContext) {
+    async __resolveReference(
+      queries: Array<{ obj: { id: string } }>,
+      ctx: MercuriusContext,
+    ) {
       const ids = queries.map(({ obj }) => obj.id);
       const users = await ctx.reply.server.db.findUsersByIds(ids);
       const userMap = new Map(users.map((u) => [u.id, u]));
@@ -63,7 +66,7 @@ app.listen({ port: SERVER_PORT });
 
 **Why good:** `__resolveReference` as a loader batches entity resolution (strongly recommended by Mercurius docs), Map for O(1) lookups, results in query order
 
-### Bad Example - __resolveReference as Resolver
+### Bad Example - \_\_resolveReference as Resolver
 
 ```typescript
 const resolvers = {
@@ -115,9 +118,15 @@ app.register(mercuriusGateway, {
     pollingInterval: POLLING_INTERVAL_MS,
     errorHandler: (error, service) => {
       if (service.mandatory) {
-        app.log.error({ error: error.message, service: service.name }, "Mandatory service error");
+        app.log.error(
+          { error: error.message, service: service.name },
+          "Mandatory service error",
+        );
       } else {
-        app.log.warn({ error: error.message, service: service.name }, "Optional service unavailable");
+        app.log.warn(
+          { error: error.message, service: service.name },
+          "Optional service unavailable",
+        );
       }
     },
   },
@@ -211,7 +220,11 @@ const schema = `
 
 const resolvers = {
   Query: {
-    post: async (_parent: unknown, args: { id: string }, ctx: MercuriusContext) => {
+    post: async (
+      _parent: unknown,
+      args: { id: string },
+      ctx: MercuriusContext,
+    ) => {
       return ctx.reply.server.db.findPost(args.id);
     },
   },
@@ -219,7 +232,10 @@ const resolvers = {
 
 const loaders = {
   User: {
-    async posts(queries: Array<{ obj: { id: string } }>, ctx: MercuriusContext) {
+    async posts(
+      queries: Array<{ obj: { id: string } }>,
+      ctx: MercuriusContext,
+    ) {
       const userIds = queries.map(({ obj }) => obj.id);
       const allPosts = await ctx.reply.server.db.findPostsByAuthorIds(userIds);
       return queries.map(({ obj }) =>
@@ -228,7 +244,10 @@ const loaders = {
     },
   },
   Post: {
-    async __resolveReference(queries: Array<{ obj: { id: string } }>, ctx: MercuriusContext) {
+    async __resolveReference(
+      queries: Array<{ obj: { id: string } }>,
+      ctx: MercuriusContext,
+    ) {
       const ids = queries.map(({ obj }) => obj.id);
       const posts = await ctx.reply.server.db.findPostsByIds(ids);
       const postMap = new Map(posts.map((p) => [p.id, p]));

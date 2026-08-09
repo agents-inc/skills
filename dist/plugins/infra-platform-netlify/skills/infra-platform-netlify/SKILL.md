@@ -331,23 +331,23 @@ const hasKey = Netlify.env.has("SECRET_KEY");
 
 ### Function Limits
 
-| Type | Execution Time | Memory | Payload Size |
-|------|---------------|--------|-------------|
-| Serverless (sync) | 60 seconds | 1 GB | 6 MB (request/response) |
-| Serverless (streamed) | 60 seconds | 1 GB | 20 MB (response) |
-| Background | 15 minutes | 1 GB | 256 KB |
-| Scheduled | 60 seconds | 1 GB | N/A |
-| Edge | 50ms CPU | 512 MB | N/A |
+| Type                  | Execution Time | Memory | Payload Size            |
+| --------------------- | -------------- | ------ | ----------------------- |
+| Serverless (sync)     | 60 seconds     | 1 GB   | 6 MB (request/response) |
+| Serverless (streamed) | 60 seconds     | 1 GB   | 20 MB (response)        |
+| Background            | 15 minutes     | 1 GB   | 256 KB                  |
+| Scheduled             | 60 seconds     | 1 GB   | N/A                     |
+| Edge                  | 50ms CPU       | 512 MB | N/A                     |
 
 ### Optimization Techniques
 
-| Technique | Impact |
-|-----------|--------|
-| Response streaming | Faster TTFB, up to 20 MB response (vs 6 MB buffered) |
-| `context.waitUntil()` | Returns response immediately, processes analytics/logging after |
-| Edge functions with caching | Responses cached at edge, invocations don't count toward limits |
-| `esbuild` bundler for functions | Faster builds than default `zisi` bundler |
-| `preferStatic: true` on edge functions | Serves static files when available, skips edge function |
+| Technique                              | Impact                                                          |
+| -------------------------------------- | --------------------------------------------------------------- |
+| Response streaming                     | Faster TTFB, up to 20 MB response (vs 6 MB buffered)            |
+| `context.waitUntil()`                  | Returns response immediately, processes analytics/logging after |
+| Edge functions with caching            | Responses cached at edge, invocations don't count toward limits |
+| `esbuild` bundler for functions        | Faster builds than default `zisi` bundler                       |
+| `preferStatic: true` on edge functions | Serves static files when available, skips edge function         |
 
 ### Deploy Context Priority
 

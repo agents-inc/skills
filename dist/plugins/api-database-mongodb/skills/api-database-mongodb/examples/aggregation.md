@@ -1,414 +1,279 @@
 # MongoDB Aggregation Examples
 
-> Aggregation pipeline patterns: $match, $group, $lookup, $project, $facet, pagination, and performance. See [SKILL.md](../SKILL.md) for core concepts.
+> Pipeline construction, stage ordering, joins, faceting and materialised views with the native driver. See [SKILL.md](../SKILL.md) for the decisions behind these.
 
-**Core patterns:** See [core.md](core.md). **Queries:** See [queries.md](queries.md). **Advanced:** See [patterns.md](patterns.md). **Indexes:** See [indexes.md](indexes.md).
+**Core:** See [core.md](core.md). **Queries:** See [queries.md](queries.md). **Indexes:** See [indexes.md](indexes.md). **Advanced:** See [patterns.md](patterns.md).
 
 ---
 
-## Pattern 1: Basic Aggregation Pipeline
+## Pattern 1: Pipeline Construction and Stage Order
 
-### Good Example -- Sales Report
+### Good Example -- Revenue Report
 
 ```typescript
-import type { PipelineStage } from "mongoose";
+import type { Document, ObjectId } from "mongodb";
 
-const MIN_ORDER_COUNT = 5;
+const TOP_CUSTOMER_COUNT = 10;
 
-async function getSalesReport(startDate: Date, endDate: Date) {
-  const pipeline: PipelineStage[] = [
-    // 1. Filter early to reduce dataset (uses index on createdAt)
-    {
-      $match: {
-        status: "completed",
-        createdAt: { $gte: startDate, $lte: endDate },
-      },
-    },
-    // 2. Group by category
-    {
-      $group: {
-        _id: "$category",
-        totalRevenue: { $sum: "$total" },
-        orderCount: { $sum: 1 },
-        avgOrderValue: { $avg: "$total" },
-        minOrder: { $min: "$total" },
-        maxOrder: { $max: "$total" },
-      },
-    },
-    // 3. Filter groups with significant volume
-    {
-      $match: {
-        orderCount: { $gte: MIN_ORDER_COUNT },
-      },
-    },
-    // 4. Shape the output
-    {
-      $project: {
-        category: "$_id",
-        _id: 0,
-        totalRevenue: { $round: ["$totalRevenue", 2] },
-        orderCount: 1,
-        avgOrderValue: { $round: ["$avgOrderValue", 2] },
-        minOrder: 1,
-        maxOrder: 1,
-      },
-    },
-    // 5. Sort by revenue descending
-    { $sort: { totalRevenue: -1 } },
-  ];
+type RevenueByCustomer = {
+  _id: ObjectId;
+  total: number;
+  orderCount: number;
+};
 
-  return Order.aggregate(pipeline);
+async function topCustomers(
+  orders: Collection<OrderDoc>,
+  tenantId: ObjectId,
+  since: Date,
+): Promise<RevenueByCustomer[]> {
+  return orders
+    .aggregate<RevenueByCustomer>([
+      // 1. Narrow first. This is the only stage that can use an index.
+      { $match: { tenantId, status: "complete", createdAt: { $gte: since } } },
+      // 2. Shrink documents before they flow through the expensive stages.
+      { $project: { customerId: 1, total: 1 } },
+      // 3. Aggregate.
+      {
+        $group: {
+          _id: "$customerId",
+          total: { $sum: "$total" },
+          orderCount: { $sum: 1 },
+        },
+      },
+      { $sort: { total: -1 } },
+      { $limit: TOP_CUSTOMER_COUNT },
+    ])
+    .toArray();
 }
 
-export { getSalesReport };
+export { topCustomers };
 ```
 
-**Why good:** `$match` first to leverage indexes and reduce dataset, typed `PipelineStage[]`, named constant for threshold, `$round` for clean output, `$project` reshapes output without \_id
+**Why good:** `$match` first lets a compound index on `{ tenantId, createdAt }` do the narrowing, `$project` cuts each document to two fields before grouping, and the explicit generic types an output shape that no longer resembles `OrderDoc`
 
-### Bad Example -- $match After $group
+### Bad Example -- Matching After Grouping
 
 ```typescript
-// BAD: Processing all documents before filtering
-const result = await Order.aggregate([
-  { $group: { _id: "$category", total: { $sum: "$total" } } },
-  { $match: { _id: { $ne: "test" } } }, // Filter AFTER grouping all documents
-]);
+// BAD
+[
+  { $group: { _id: "$customerId", total: { $sum: "$total" } } },
+  { $match: { status: "complete" } },
+];
 ```
 
-**Why bad:** Groups ALL documents before filtering, processes unnecessary data, placing `$match` before `$group` would filter first and reduce the grouping workload
+**Why bad:** the group has already read the entire collection, so no index is usable and the work is done before anything is filtered; worse, `status` does not exist in the grouped output, so the match silently returns nothing and the report shows zero rows rather than an error
+
+### Good Example -- Allowing Disk Use on a Large Group
+
+```typescript
+const results = await orders
+  .aggregate<RevenueByCustomer>(pipeline, { allowDiskUse: true })
+  .toArray();
+```
+
+**Why good:** each stage is capped at 100 MB of memory, so a group or sort over a large dataset fails without this; spilling to disk is slower but completes
 
 ---
 
 ## Pattern 2: $lookup (Joins)
 
-### Good Example -- Join with Pipeline
+### Good Example -- Lookup with a Sub-Pipeline
 
 ```typescript
-async function getOrdersWithCustomerDetails(status: string) {
-  return Order.aggregate([
-    { $match: { status } },
-    // Join with customers collection
-    {
-      $lookup: {
-        from: "customers",
-        localField: "customerId",
-        foreignField: "_id",
-        as: "customer",
-        // Pipeline $lookup for selective fields
-        pipeline: [{ $project: { name: 1, email: 1, tier: 1 } }],
-      },
-    },
-    // Flatten the array to a single object
-    { $unwind: "$customer" },
-    // Join with products for line items
-    {
-      $lookup: {
-        from: "products",
-        localField: "items.productId",
-        foreignField: "_id",
-        as: "productDetails",
-        pipeline: [{ $project: { name: 1, sku: 1, price: 1 } }],
-      },
-    },
-    {
-      $project: {
-        orderNumber: 1,
-        status: 1,
-        total: 1,
-        createdAt: 1,
-        customer: 1,
-        items: 1,
-        productDetails: 1,
-      },
-    },
-    { $sort: { createdAt: -1 } },
-  ]);
-}
+const RECENT_ORDER_LIMIT = 5;
 
-export { getOrdersWithCustomerDetails };
+type CustomerWithOrders = {
+  _id: ObjectId;
+  email: string;
+  recentOrders: Array<{ _id: ObjectId; total: number; createdAt: Date }>;
+};
+
+const results = await customers
+  .aggregate<CustomerWithOrders>([
+    { $match: { tenantId } },
+    {
+      $lookup: {
+        from: "orders",
+        localField: "_id",
+        foreignField: "customerId", // MUST be indexed
+        as: "recentOrders",
+        pipeline: [
+          { $match: { status: "complete" } },
+          { $sort: { createdAt: -1 } },
+          { $limit: RECENT_ORDER_LIMIT },
+          { $project: { total: 1, createdAt: 1 } },
+        ],
+      },
+    },
+  ])
+  .toArray();
 ```
 
-**Why good:** Pipeline-based `$lookup` limits fields from joined collection, `$unwind` after `$lookup` for one-to-one join, separate lookups for different references
+**Why good:** the sub-pipeline filters, sorts, limits and projects inside the lookup, so each customer carries five small documents instead of every order they have ever placed
 
-### Bad Example -- Lookup Without Field Selection
+### Bad Example -- Unbounded Lookup on an Unindexed Field
 
 ```typescript
-// BAD: Fetches ALL fields from joined collection
-const result = await Order.aggregate([
-  {
-    $lookup: {
-      from: "customers",
-      localField: "customerId",
-      foreignField: "_id",
-      as: "customer", // Returns entire customer document
-    },
+// BAD
+{
+  $lookup: {
+    from: "orders",
+    localField: "_id",
+    foreignField: "customerId", // no index
+    as: "orders",               // every order, every field
   },
-]);
+}
 ```
 
-**Why bad:** Returns all customer fields including potentially sensitive data, no pipeline to filter fields, wasteful for large documents
+**Why bad:** without an index on `customerId` the lookup scans the orders collection once per input customer, so 1,000 customers means 1,000 scans; embedding every order in full can also push a result document past the 16 MB limit, at which point the pipeline fails outright
+
+**Before using `$lookup` at all:** if these two collections are always read together, the data may belong in one document. A join you perform on every read is a modelling decision to revisit, not just a query to tune.
 
 ---
 
-## Pattern 3: $facet for Multi-Result Queries
+## Pattern 3: $facet for Several Answers in One Pass
 
-### Good Example -- Search with Faceted Results
+### Good Example -- Results and Metadata Together
 
 ```typescript
-const PAGE_SIZE = 20;
+const FACET_PAGE_SIZE = 20;
 
-async function searchProducts(searchTerm: string, page: number = 1) {
-  const matchStage = {
-    $match: {
-      isActive: true,
-      $or: [
-        { name: { $regex: searchTerm, $options: "i" } },
-        { tags: { $in: [searchTerm.toLowerCase()] } },
-      ],
-    },
-  };
+type SearchResult = {
+  items: Array<WithId<ProductDoc>>;
+  totalCount: Array<{ count: number }>;
+  byCategory: Array<{ _id: string; count: number }>;
+};
 
-  const result = await Product.aggregate([
-    matchStage,
+const [result] = await products
+  .aggregate<SearchResult>([
+    { $match: filter }, // runs once, shared by every facet below
     {
       $facet: {
-        // Paginated results
-        data: [
-          { $sort: { createdAt: -1 } },
-          { $skip: (page - 1) * PAGE_SIZE },
-          { $limit: PAGE_SIZE },
-          { $project: { name: 1, price: 1, category: 1, tags: 1 } },
-        ],
-        // Total count
+        items: [{ $sort: { score: -1 } }, { $limit: FACET_PAGE_SIZE }],
         totalCount: [{ $count: "count" }],
-        // Category breakdown
-        categoryFacets: [
-          { $group: { _id: "$category", count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-        ],
-        // Price range
-        priceRange: [
-          {
-            $group: {
-              _id: null,
-              minPrice: { $min: "$price" },
-              maxPrice: { $max: "$price" },
-              avgPrice: { $avg: "$price" },
-            },
-          },
-        ],
+        byCategory: [{ $group: { _id: "$category", count: { $sum: 1 } } }],
       },
     },
-  ]);
+  ])
+  .toArray();
 
-  const { data, totalCount, categoryFacets, priceRange } = result[0];
-
-  return {
-    data,
-    total: totalCount[0]?.count ?? 0,
-    categories: categoryFacets,
-    priceRange: priceRange[0] ?? null,
-    page,
-    pageSize: PAGE_SIZE,
-  };
-}
-
-export { searchProducts };
+const total = result.totalCount.at(0)?.count ?? 0;
 ```
 
-**Why good:** `$facet` runs multiple aggregations in a single pass, returns data + metadata + facets in one query, `$match` before `$facet` filters early
+**Why good:** one round trip and one shared `$match` instead of three queries repeating the same filter, so the counts cannot disagree with the page the way three separate queries can when data changes between them
+
+**Note the shapes:** `$count` yields an array that is empty when nothing matched, which is why the total is read with `.at(0)?.count ?? 0` rather than indexed directly.
 
 ---
 
-## Pattern 4: Aggregation with Date Operations
+## Pattern 4: Date Grouping
 
-### Good Example -- Time-Series Analytics
+### Good Example -- Daily Totals
 
 ```typescript
-async function getDailyRevenue(startDate: Date, endDate: Date) {
-  return Order.aggregate([
+type DailyTotal = { _id: string; total: number };
+
+const daily = await orders
+  .aggregate<DailyTotal>([
+    { $match: { tenantId, createdAt: { $gte: since } } },
     {
-      $match: {
-        status: "completed",
-        createdAt: { $gte: startDate, $lte: endDate },
+      $group: {
+        // $dateToString groups in a named timezone, so "day" means the
+        // user's day rather than the server's.
+        _id: {
+          $dateToString: {
+            format: "%Y-%m-%d",
+            date: "$createdAt",
+            timezone: reportTimezone,
+          },
+        },
+        total: { $sum: "$total" },
       },
     },
+    { $sort: { _id: 1 } },
+  ])
+  .toArray();
+```
+
+**Why good:** the timezone is explicit, so a report does not silently shift by a day for users outside UTC, and sorting the formatted `YYYY-MM-DD` key sorts chronologically
+
+---
+
+## Pattern 5: $merge for Materialised Views
+
+### Good Example -- Pre-Computing an Expensive Report
+
+```typescript
+// Runs on a schedule; readers query daily_revenue directly and pay nothing.
+await orders
+  .aggregate([
+    { $match: { createdAt: { $gte: since } } },
     {
       $group: {
         _id: {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" },
-          day: { $dayOfMonth: "$createdAt" },
+          tenantId: "$tenantId",
+          day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
         },
-        revenue: { $sum: "$total" },
-        orderCount: { $sum: 1 },
-        avgOrderValue: { $avg: "$total" },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        date: {
-          $dateFromParts: {
-            year: "$_id.year",
-            month: "$_id.month",
-            day: "$_id.day",
-          },
-        },
-        revenue: { $round: ["$revenue", 2] },
-        orderCount: 1,
-        avgOrderValue: { $round: ["$avgOrderValue", 2] },
-      },
-    },
-    { $sort: { date: 1 } },
-  ]);
-}
-
-export { getDailyRevenue };
-```
-
-**Why good:** Date extraction operators for grouping by day, `$dateFromParts` to reconstruct a proper Date for output, `$round` for clean monetary values
-
----
-
-## Pattern 5: $bucket and $bucketAuto
-
-### Good Example -- Price Distribution
-
-```typescript
-const PRICE_BOUNDARIES = [0, 10, 25, 50, 100, 250, 500, 1000, Infinity];
-
-async function getPriceDistribution() {
-  return Product.aggregate([
-    { $match: { isActive: true } },
-    {
-      $bucket: {
-        groupBy: "$price",
-        boundaries: PRICE_BOUNDARIES,
-        default: "other",
-        output: {
-          count: { $sum: 1 },
-          avgPrice: { $avg: "$price" },
-          products: { $push: { name: "$name", price: "$price" } },
-        },
-      },
-    },
-  ]);
-}
-
-export { getPriceDistribution };
-```
-
-**Why good:** Named constant for boundaries, `$bucket` for predefined ranges, output includes count, average, and sample products
-
----
-
-## Pattern 6: $merge for Materialized Views
-
-### Good Example -- Pre-Computed Analytics
-
-```typescript
-async function refreshCategorySummary(): Promise<void> {
-  await Product.aggregate([
-    { $match: { isActive: true } },
-    {
-      $group: {
-        _id: "$category",
-        productCount: { $sum: 1 },
-        avgPrice: { $avg: "$price" },
-        totalStock: { $sum: "$stock" },
-        priceRange: {
-          min: { $min: "$price" },
-          max: { $max: "$price" },
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        category: "$_id",
-        productCount: 1,
-        avgPrice: { $round: ["$avgPrice", 2] },
-        totalStock: 1,
-        priceRange: 1,
-        updatedAt: new Date(),
+        total: { $sum: "$total" },
       },
     },
     {
       $merge: {
-        into: "category_summaries",
-        on: "category",
+        into: "daily_revenue",
+        on: "_id",
         whenMatched: "replace",
         whenNotMatched: "insert",
       },
     },
-  ]);
-}
-
-export { refreshCategorySummary };
+  ])
+  .toArray(); // the pipeline only runs when the cursor is consumed
 ```
 
-**Why good:** `$merge` writes results to a separate collection as a materialized view, upsert behavior with `whenMatched`/`whenNotMatched`, timestamp for cache freshness, avoids running heavy aggregation on every read
+**Why good:** `$merge` updates the target incrementally rather than replacing it, so readers never see an empty collection mid-refresh, and the expensive aggregation is paid once per schedule instead of once per reader
+
+**The `toArray()` is load-bearing:** `aggregate()` returns a lazy cursor, so a pipeline ending in `$merge` writes nothing at all until the cursor is consumed.
 
 ---
 
-## Pattern 7: $setWindowFields (Mongoose 7+)
+## Pattern 6: Typing Aggregation Output
 
-### Good Example -- Running Totals and Rankings
+### Good Example -- Declaring the Output Shape
 
 ```typescript
-async function getProductRankings() {
-  return Product.aggregate([
-    { $match: { isActive: true } },
-    {
-      $setWindowFields: {
-        partitionBy: "$category",
-        sortBy: { salesCount: -1 },
-        output: {
-          categoryRank: {
-            $rank: {},
-          },
-          categorySalesTotal: {
-            $sum: "$salesCount",
-            window: { documents: ["unbounded", "unbounded"] },
-          },
-          runningTotal: {
-            $sum: "$salesCount",
-            window: { documents: ["unbounded", "current"] },
-          },
-        },
-      },
-    },
-    { $sort: { category: 1, categoryRank: 1 } },
-  ]);
-}
+type StatusBreakdown = { _id: OrderStatus; count: number };
 
-export { getProductRankings };
+const breakdown = await orders
+  .aggregate<StatusBreakdown>([
+    { $match: { tenantId } },
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+  ])
+  .toArray();
 ```
 
-**Why good:** Window functions for analytics without separate queries, `$rank` for within-group ranking, running totals and partition totals in one pass
+**Why good:** without the generic the cursor is typed as `Document`, so every field access is untyped and a renamed group key stays silent until it reaches a consumer
 
----
-
-## Performance Tips for Aggregation
-
-1. **Place `$match` and `$limit` as early as possible** -- reduces documents flowing through the pipeline
-2. **Use indexes on `$match` fields** -- the first `$match` can use indexes, subsequent stages cannot
-3. **Avoid `$unwind` + `$group` for array transformations** -- use array operators (`$map`, `$filter`, `$reduce`) instead
-4. **Use `$project` early to drop unnecessary fields** -- reduces memory per document
-5. **Set `allowDiskUse: true` for large pipelines** -- prevents memory limit errors on 100 MB+ working sets
-6. **Use `$merge` for frequently-accessed aggregations** -- pre-compute results instead of running on every request
-7. **Limit `$lookup` results** -- add `pipeline` with `$limit` to prevent joining unbounded datasets
-8. **Use `explain("executionStats")` to analyze pipeline performance**
+### Bad Example -- Reusing the Collection Type
 
 ```typescript
-// Enable disk use for large aggregations
-const result = await Order.aggregate(pipeline).option({ allowDiskUse: true });
-
-// Explain aggregation performance
-const explanation = await Order.aggregate(pipeline).explain("executionStats");
+// BAD: the pipeline output is nothing like OrderDoc
+const breakdown = await orders.aggregate<OrderDoc>(groupPipeline).toArray();
+breakdown[0].total; // typed as number, actually undefined
 ```
+
+**Why bad:** the type claims fields the grouped output never had, so reads are `undefined` with no compile error -- the exact failure the generic exists to prevent
+
+**Aggregation output is not validated either.** The generic describes what the pipeline is expected to produce; nothing checks that it did.
 
 ---
 
-_For core patterns, see [core.md](core.md). For query patterns, see [queries.md](queries.md). For schema design, see [patterns.md](patterns.md). For indexes, see [indexes.md](indexes.md)._
+## Performance Notes
+
+| Concern                    | What to do                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------- |
+| Index usage                | Only a leading `$match` (and a leading `$sort`) can use one. Put `$match` first.  |
+| Document size mid-pipeline | `$project` or `$unset` early — every later stage carries whatever you left in.    |
+| Memory                     | 100 MB per stage. Large `$group` or `$sort` needs `allowDiskUse: true`.           |
+| Verifying a plan           | `aggregate(pipeline, { explain: true })` — same reasoning as `explain` on a find. |
+| `$lookup` cost             | Index the `foreignField`, always. It runs per input document.                     |
+| Repeated expensive reports | `$merge` into a collection on a schedule; read from that.                         |
+| Result size                | Stream with `for await` rather than `toArray()` when the output is unbounded.     |

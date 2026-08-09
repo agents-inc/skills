@@ -31,10 +31,19 @@ function loadWindowState() {
 
     // Validate saved bounds are still on a visible display
     if (state.x !== undefined && state.y !== undefined) {
-      const visible = isPositionOnScreen(state.x, state.y, state.width, state.height);
+      const visible = isPositionOnScreen(
+        state.x,
+        state.y,
+        state.width,
+        state.height,
+      );
       if (!visible) {
         // Display configuration changed -- use defaults but keep size
-        return { width: state.width, height: state.height, isMaximized: state.isMaximized };
+        return {
+          width: state.width,
+          height: state.height,
+          isMaximized: state.isMaximized,
+        };
       }
     }
 
@@ -49,8 +58,14 @@ function isPositionOnScreen(x, y, width, height) {
   return displays.some((display) => {
     const { x: dx, y: dy, width: dw, height: dh } = display.workArea;
     // Check that at least MIN_VISIBLE_OVERLAP px of the window overlaps a display
-    const overlapX = Math.max(0, Math.min(x + width, dx + dw) - Math.max(x, dx));
-    const overlapY = Math.max(0, Math.min(y + height, dy + dh) - Math.max(y, dy));
+    const overlapX = Math.max(
+      0,
+      Math.min(x + width, dx + dw) - Math.max(x, dx),
+    );
+    const overlapY = Math.max(
+      0,
+      Math.min(y + height, dy + dh) - Math.max(y, dy),
+    );
     return overlapX >= MIN_VISIBLE_OVERLAP && overlapY >= MIN_VISIBLE_OVERLAP;
   });
 }
@@ -179,8 +194,14 @@ function createWindow() {
 **Key point:** `state.manage(win)` attaches `move`, `resize`, and `close` listeners automatically. Call it after creating the window. For multi-window apps, pass a unique `file` option to each instance:
 
 ```javascript
-const editorState = windowStateKeeper({ defaultWidth: 800, file: "editor-window-state.json" });
-const previewState = windowStateKeeper({ defaultWidth: 600, file: "preview-window-state.json" });
+const editorState = windowStateKeeper({
+  defaultWidth: 800,
+  file: "editor-window-state.json",
+});
+const previewState = windowStateKeeper({
+  defaultWidth: 600,
+  file: "preview-window-state.json",
+});
 ```
 
 ---
@@ -194,7 +215,7 @@ Electron has an active RFC for built-in window state persistence (`windowStatePe
 const win = new BrowserWindow({
   name: "main-window", // unique identifier for state persistence
   windowStatePersistence: {
-    bounds: true,      // save position and size
+    bounds: true, // save position and size
     displayMode: true, // save maximized/fullscreen state
   },
 });

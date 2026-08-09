@@ -106,10 +106,18 @@ const config: ForgeConfig = {
     executableName: "my-app",
     appBundleId: "com.example.myapp",
   },
-  makers: [/* see Pattern 2 */],
-  publishers: [/* see Pattern 5 */],
-  plugins: [/* see Pattern 4 */],
-  hooks: {/* see Pattern 6 */},
+  makers: [
+    /* see Pattern 2 */
+  ],
+  publishers: [
+    /* see Pattern 5 */
+  ],
+  plugins: [
+    /* see Pattern 4 */
+  ],
+  hooks: {
+    /* see Pattern 6 */
+  },
 };
 
 export default config;
@@ -125,19 +133,19 @@ See [examples/core.md](examples/core.md) for full configuration with makers, sig
 
 Each maker produces a specific installer format for a target OS. Install only the makers you need.
 
-| Maker | Package | Platform | Output |
-|-------|---------|----------|--------|
-| Squirrel.Windows | `@electron-forge/maker-squirrel` | Windows | `.exe` (auto-updating) |
-| WiX MSI | `@electron-forge/maker-wix` | Windows | `.msi` |
-| MSIX | `@electron-forge/maker-msix` | Windows | `.msix` |
-| AppX | `@electron-forge/maker-appx` | Windows | `.appx` (Microsoft Store) |
-| DMG | `@electron-forge/maker-dmg` | macOS | `.dmg` |
-| PKG | `@electron-forge/maker-pkg` | macOS | `.pkg` (Mac App Store) |
-| ZIP | `@electron-forge/maker-zip` | macOS, Linux | `.zip` |
-| deb | `@electron-forge/maker-deb` | Linux | `.deb` (Debian/Ubuntu) |
-| RPM | `@electron-forge/maker-rpm` | Linux | `.rpm` (Fedora/RHEL) |
-| Flatpak | `@electron-forge/maker-flatpak` | Linux | `.flatpak` |
-| Snap | `@electron-forge/maker-snap` | Linux | `.snap` |
+| Maker            | Package                          | Platform     | Output                    |
+| ---------------- | -------------------------------- | ------------ | ------------------------- |
+| Squirrel.Windows | `@electron-forge/maker-squirrel` | Windows      | `.exe` (auto-updating)    |
+| WiX MSI          | `@electron-forge/maker-wix`      | Windows      | `.msi`                    |
+| MSIX             | `@electron-forge/maker-msix`     | Windows      | `.msix`                   |
+| AppX             | `@electron-forge/maker-appx`     | Windows      | `.appx` (Microsoft Store) |
+| DMG              | `@electron-forge/maker-dmg`      | macOS        | `.dmg`                    |
+| PKG              | `@electron-forge/maker-pkg`      | macOS        | `.pkg` (Mac App Store)    |
+| ZIP              | `@electron-forge/maker-zip`      | macOS, Linux | `.zip`                    |
+| deb              | `@electron-forge/maker-deb`      | Linux        | `.deb` (Debian/Ubuntu)    |
+| RPM              | `@electron-forge/maker-rpm`      | Linux        | `.rpm` (Fedora/RHEL)      |
+| Flatpak          | `@electron-forge/maker-flatpak`  | Linux        | `.flatpak`                |
+| Snap             | `@electron-forge/maker-snap`     | Linux        | `.snap`                   |
 
 **Recommended starter set:** Squirrel (Windows) + DMG + ZIP (macOS) + deb (Linux).
 
@@ -229,12 +237,12 @@ publishers: [
 ],
 ```
 
-| Publisher | Package | Target |
-|-----------|---------|--------|
-| GitHub | `@electron-forge/publisher-github` | GitHub Releases |
-| S3 | `@electron-forge/publisher-s3` | Amazon S3 bucket |
-| Snapcraft | `@electron-forge/publisher-snapcraft` | Snap Store |
-| GCS | `@electron-forge/publisher-gcs` | Google Cloud Storage |
+| Publisher | Package                               | Target               |
+| --------- | ------------------------------------- | -------------------- |
+| GitHub    | `@electron-forge/publisher-github`    | GitHub Releases      |
+| S3        | `@electron-forge/publisher-s3`        | Amazon S3 bucket     |
+| Snapcraft | `@electron-forge/publisher-snapcraft` | Snap Store           |
+| GCS       | `@electron-forge/publisher-gcs`       | Google Cloud Storage |
 
 **Authentication:** Use `GITHUB_TOKEN` env var for GitHub publisher. Use AWS credentials (env vars or shared credentials file) for S3.
 
@@ -259,16 +267,16 @@ hooks: {
 },
 ```
 
-| Hook | When | Can Mutate? |
-|------|------|-------------|
-| `generateAssets` | Before start or package | No |
-| `prePackage` | Before @electron/packager | No |
-| `packageAfterCopy` | After packager copies build dir | No |
-| `packageAfterPrune` | After devDependencies pruned | No |
-| `postPackage` | After package completes | No |
-| `preMake` | Before makers run | No |
-| `postMake` | After makers complete | Yes -- return modified `MakeResult[]` |
-| `readPackageJson` | Every package.json read | Yes -- return modified package.json |
+| Hook                | When                            | Can Mutate?                           |
+| ------------------- | ------------------------------- | ------------------------------------- |
+| `generateAssets`    | Before start or package         | No                                    |
+| `prePackage`        | Before @electron/packager       | No                                    |
+| `packageAfterCopy`  | After packager copies build dir | No                                    |
+| `packageAfterPrune` | After devDependencies pruned    | No                                    |
+| `postPackage`       | After package completes         | No                                    |
+| `preMake`           | Before makers run               | No                                    |
+| `postMake`          | After makers complete           | Yes -- return modified `MakeResult[]` |
+| `readPackageJson`   | Every package.json read         | Yes -- return modified package.json   |
 
 See [examples/hooks.md](examples/hooks.md) for hook implementation examples.
 
@@ -322,16 +330,16 @@ Choosing a build tool?
     +-- YES --> Electron Forge (official recommendation, TypeScript config)
 ```
 
-| Factor | Electron Forge | electron-builder |
-|--------|---------------|-----------------|
-| Maintainer | Electron team | Community |
-| Config format | TypeScript / JavaScript | YAML / JSON / JS |
-| New Electron features | Same-day | Delayed |
-| Plugin ecosystem | Makers, publishers, plugins | Built-in monolith |
-| Windows installers | Squirrel, WiX, MSIX, AppX | NSIS, Squirrel, MSI, AppX |
-| macOS installers | DMG, ZIP, PKG | DMG, ZIP, PKG, MAS |
-| npm downloads | ~50K/week | ~1.4M/week |
-| Architecture | Composable packages | Monolithic |
+| Factor                | Electron Forge              | electron-builder          |
+| --------------------- | --------------------------- | ------------------------- |
+| Maintainer            | Electron team               | Community                 |
+| Config format         | TypeScript / JavaScript     | YAML / JSON / JS          |
+| New Electron features | Same-day                    | Delayed                   |
+| Plugin ecosystem      | Makers, publishers, plugins | Built-in monolith         |
+| Windows installers    | Squirrel, WiX, MSIX, AppX   | NSIS, Squirrel, MSI, AppX |
+| macOS installers      | DMG, ZIP, PKG               | DMG, ZIP, PKG, MAS        |
+| npm downloads         | ~50K/week                   | ~1.4M/week                |
+| Architecture          | Composable packages         | Monolithic                |
 
 ### Maker Selection
 

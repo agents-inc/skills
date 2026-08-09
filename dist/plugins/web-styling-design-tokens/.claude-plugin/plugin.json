@@ -1,0 +1,9 @@
+{
+  "name": "web-styling-design-tokens",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Design token architecture - primitive/semantic/component tiers, naming grammar, CSS custom property delivery, and DTCG build pipelines",
+  "author": {
+    "name": "@vince"
+  }
+}

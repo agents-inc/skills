@@ -57,7 +57,10 @@ Create typed wrappers around `ipcMain.handle` and `ipcMain.on` that constrain ch
 ```typescript
 // main/typed-ipc.ts
 import { ipcMain } from "electron";
-import type { IpcHandleChannels, IpcSendChannels } from "../shared/ipc-channels";
+import type {
+  IpcHandleChannels,
+  IpcSendChannels,
+} from "../shared/ipc-channels";
 
 /** Type-safe ipcMain.handle -- only accepts channels from IpcHandleChannels */
 export function typedHandle<C extends keyof IpcHandleChannels>(
@@ -65,7 +68,9 @@ export function typedHandle<C extends keyof IpcHandleChannels>(
   handler: (
     event: Electron.IpcMainInvokeEvent,
     ...args: Parameters<IpcHandleChannels[C]>
-  ) => ReturnType<IpcHandleChannels[C]> | Promise<ReturnType<IpcHandleChannels[C]>>
+  ) =>
+    | ReturnType<IpcHandleChannels[C]>
+    | Promise<ReturnType<IpcHandleChannels[C]>>,
 ): void {
   ipcMain.handle(channel, handler as (...args: unknown[]) => unknown);
 }
@@ -73,7 +78,7 @@ export function typedHandle<C extends keyof IpcHandleChannels>(
 /** Type-safe ipcMain.on -- only accepts channels from IpcSendChannels */
 export function typedOn<C extends keyof IpcSendChannels>(
   channel: C,
-  handler: (event: Electron.IpcMainEvent, ...args: IpcSendChannels[C]) => void
+  handler: (event: Electron.IpcMainEvent, ...args: IpcSendChannels[C]) => void,
 ): void {
   ipcMain.on(channel, handler as (...args: unknown[]) => void);
 }
@@ -143,7 +148,7 @@ export interface ElectronAPI {
   ) => void;
   on: <C extends keyof IpcMainToRendererChannels>(
     channel: C,
-    callback: (data: IpcMainToRendererChannels[C]) => void
+    callback: (data: IpcMainToRendererChannels[C]) => void,
   ) => () => void;
 }
 
@@ -188,7 +193,10 @@ declare global {
 ```typescript
 // renderer/some-component.ts
 // Full autocompletion: channel names, argument types, return types
-const { content } = await window.electronAPI.invoke("file:read", "/path/to/file");
+const { content } = await window.electronAPI.invoke(
+  "file:read",
+  "/path/to/file",
+);
 //     ^-- typed as { content: string }
 
 window.electronAPI.send("analytics:track", "page-view", { page: "/home" });
@@ -215,7 +223,7 @@ import type { IpcMainToRendererChannels } from "../shared/ipc-channels";
 export function typedSendToRenderer<C extends keyof IpcMainToRendererChannels>(
   win: BrowserWindow,
   channel: C,
-  data: IpcMainToRendererChannels[C]
+  data: IpcMainToRendererChannels[C],
 ): void {
   win.webContents.send(channel, data);
 }
@@ -244,7 +252,10 @@ For defense-in-depth, validate that incoming IPC channels are in the allowed set
 ```typescript
 // main/ipc-validator.ts
 import { ipcMain } from "electron";
-import type { IpcHandleChannels, IpcSendChannels } from "../shared/ipc-channels";
+import type {
+  IpcHandleChannels,
+  IpcSendChannels,
+} from "../shared/ipc-channels";
 
 const ALLOWED_HANDLE_CHANNELS = new Set<string>([
   "file:read",
@@ -272,7 +283,10 @@ const ALLOWED_SEND_CHANNELS = new Set<string>([
  */
 export function installChannelValidator(): void {
   const originalHandle = ipcMain.handle.bind(ipcMain);
-  ipcMain.handle = (channel: string, handler: (...args: unknown[]) => unknown) => {
+  ipcMain.handle = (
+    channel: string,
+    handler: (...args: unknown[]) => unknown,
+  ) => {
     if (!ALLOWED_HANDLE_CHANNELS.has(channel)) {
       throw new Error(`Unregistered IPC handle channel: ${channel}`);
     }

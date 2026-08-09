@@ -128,7 +128,9 @@ TaskManager.defineTask(SYNC_TASK_NAME, async () => {
 function App() {
   useEffect(() => {
     // This will NOT work when app starts from background
-    TaskManager.defineTask(SYNC_TASK_NAME, async () => { /* ... */ });
+    TaskManager.defineTask(SYNC_TASK_NAME, async () => {
+      /* ... */
+    });
   }, []);
 }
 ```
@@ -152,9 +154,9 @@ const MIN_FETCH_INTERVAL_MINUTES = 15;
 const status = await BackgroundFetch.configure(
   {
     minimumFetchInterval: MIN_FETCH_INTERVAL_MINUTES,
-    stopOnTerminate: false,    // Android: continue after app killed
-    startOnBoot: true,         // Android: restart after device reboot
-    enableHeadless: true,      // Android: enable Headless JS
+    stopOnTerminate: false, // Android: continue after app killed
+    startOnBoot: true, // Android: restart after device reboot
+    enableHeadless: true, // Android: enable Headless JS
     requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
   },
   async (taskId) => {
@@ -165,7 +167,7 @@ const status = await BackgroundFetch.configure(
   async (taskId) => {
     // Timeout -- OS is about to kill the task, clean up immediately
     BackgroundFetch.finish(taskId);
-  }
+  },
 );
 ```
 
@@ -219,13 +221,10 @@ const HEADLESS_TASK_NAME = "com.transistorsoft.fetch"; // Default ID from react-
 AppRegistry.registerComponent(APP_NAME, () => App);
 
 // Headless task runs when app is terminated but task fires
-AppRegistry.registerHeadlessTask(
-  HEADLESS_TASK_NAME,
-  () => async (taskData) => {
-    await performSync(taskData);
-    // Task completes when promise resolves
-  }
-);
+AppRegistry.registerHeadlessTask(HEADLESS_TASK_NAME, () => async (taskData) => {
+  await performSync(taskData);
+  // Task completes when promise resolves
+});
 ```
 
 **Why good:** Registered at app entry point, async function allows proper cleanup, runs even after app termination on Android
@@ -300,25 +299,25 @@ What kind of background work do you need?
 
 ### expo-background-task vs expo-background-fetch
 
-| Feature | expo-background-task | expo-background-fetch |
-|---------|---------------------|-----------------------|
-| Status | **Active** (recommended) | **Deprecated** |
-| iOS API | BGTaskScheduler | Legacy Background Fetch |
-| Android API | WorkManager | JobScheduler |
-| Min interval | 15 minutes | ~10 minutes (advisory) |
-| Network required | Yes (by default) | No |
-| Reliability | Higher | Lower |
+| Feature          | expo-background-task     | expo-background-fetch   |
+| ---------------- | ------------------------ | ----------------------- |
+| Status           | **Active** (recommended) | **Deprecated**          |
+| iOS API          | BGTaskScheduler          | Legacy Background Fetch |
+| Android API      | WorkManager              | JobScheduler            |
+| Min interval     | 15 minutes               | ~10 minutes (advisory)  |
+| Network required | Yes (by default)         | No                      |
+| Reliability      | Higher                   | Lower                   |
 
 ### Platform Execution Limits
 
-| Constraint | iOS | Android |
-|-----------|-----|---------|
-| Refresh task time | ~30 seconds | ~10 minutes |
-| Processing task time | Several minutes (charger required) | ~10 minutes |
-| Minimum interval | 15 minutes (system-managed) | 15 minutes (WorkManager-enforced) |
-| After force-quit | No tasks run | Headless JS can run (with config) |
-| After reboot | Tasks resume automatically | Requires `startOnBoot: true` |
-| Simulator support | No (physical device only for BGTaskScheduler) | Partial (Doze may not be enforced) |
+| Constraint           | iOS                                           | Android                            |
+| -------------------- | --------------------------------------------- | ---------------------------------- |
+| Refresh task time    | ~30 seconds                                   | ~10 minutes                        |
+| Processing task time | Several minutes (charger required)            | ~10 minutes                        |
+| Minimum interval     | 15 minutes (system-managed)                   | 15 minutes (WorkManager-enforced)  |
+| After force-quit     | No tasks run                                  | Headless JS can run (with config)  |
+| After reboot         | Tasks resume automatically                    | Requires `startOnBoot: true`       |
+| Simulator support    | No (physical device only for BGTaskScheduler) | Partial (Doze may not be enforced) |
 
 </decision_framework>
 

@@ -6,11 +6,11 @@
 
 ## Package Overview
 
-| Package                    | Purpose                                  |
-|----------------------------|------------------------------------------|
-| `@powersync/react-native`  | Core SDK: database, schema, sync engine  |
-| `@powersync/react`         | React hooks: useQuery, useStatus, etc.   |
-| `@powersync/op-sqlite`     | OP-SQLite adapter with SQLCipher support |
+| Package                   | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| `@powersync/react-native` | Core SDK: database, schema, sync engine  |
+| `@powersync/react`        | React hooks: useQuery, useStatus, etc.   |
+| `@powersync/op-sqlite`    | OP-SQLite adapter with SQLCipher support |
 
 **Peer dependencies:** One SQLite adapter is required -- either `@journeyapps/react-native-quick-sqlite` (default) or `@powersync/op-sqlite` + `@op-engineering/op-sqlite`.
 
@@ -20,11 +20,11 @@
 
 ### Column Types
 
-| Type             | SQLite Type | Example Values             |
-|------------------|-------------|----------------------------|
-| `column.text`    | TEXT        | Strings, UUIDs, ISO dates  |
-| `column.integer` | INTEGER     | Numbers, booleans (0/1)    |
-| `column.real`    | REAL        | Floating-point numbers     |
+| Type             | SQLite Type | Example Values            |
+| ---------------- | ----------- | ------------------------- |
+| `column.text`    | TEXT        | Strings, UUIDs, ISO dates |
+| `column.integer` | INTEGER     | Numbers, booleans (0/1)   |
+| `column.real`    | REAL        | Floating-point numbers    |
 
 **Note:** The `id` column (TEXT, primary key) is auto-created. Never declare it.
 
@@ -34,11 +34,11 @@
 new Table(columns, options?)
 ```
 
-| Option       | Type              | Purpose                              |
-|--------------|-------------------|--------------------------------------|
-| `indexes`    | `Record<string, string[]>` | Named indexes on columns   |
-| `localOnly`  | `boolean`         | Never synced (default: false)        |
-| `viewName`   | `string`          | Custom SQLite view name              |
+| Option      | Type                       | Purpose                       |
+| ----------- | -------------------------- | ----------------------------- |
+| `indexes`   | `Record<string, string[]>` | Named indexes on columns      |
+| `localOnly` | `boolean`                  | Never synced (default: false) |
+| `viewName`  | `string`                   | Custom SQLite view name       |
 
 ---
 
@@ -46,78 +46,78 @@ new Table(columns, options?)
 
 ### Read Methods
 
-| Method         | Returns              | Throws on empty? |
-|----------------|----------------------|-------------------|
-| `getAll(sql)`  | `T[]`                | No (empty array)  |
-| `get(sql)`     | `T`                  | Yes               |
-| `getOptional(sql)` | `T \| null`      | No                |
+| Method             | Returns     | Throws on empty? |
+| ------------------ | ----------- | ---------------- |
+| `getAll(sql)`      | `T[]`       | No (empty array) |
+| `get(sql)`         | `T`         | Yes              |
+| `getOptional(sql)` | `T \| null` | No               |
 
 ### Write Methods
 
-| Method                    | Purpose                              |
-|---------------------------|--------------------------------------|
-| `execute(sql, params)`    | INSERT, UPDATE, DELETE               |
-| `writeTransaction(fn)`    | Atomic multi-statement transaction   |
+| Method                 | Purpose                            |
+| ---------------------- | ---------------------------------- |
+| `execute(sql, params)` | INSERT, UPDATE, DELETE             |
+| `writeTransaction(fn)` | Atomic multi-statement transaction |
 
 ### Watch Methods
 
-| Method             | Purpose                                    |
-|--------------------|--------------------------------------------|
+| Method                     | Purpose                                   |
+| -------------------------- | ----------------------------------------- |
 | `watch(sql, params, opts)` | Async iterable that re-queries on changes |
 
 ### Lifecycle Methods
 
-| Method                  | Purpose                                |
-|-------------------------|----------------------------------------|
-| `init()`                | Create tables from schema              |
-| `connect(connector)`    | Start bidirectional sync               |
-| `disconnect()`          | Stop sync, preserve local data         |
-| `disconnectAndClear()`  | Stop sync, delete all local data       |
+| Method                 | Purpose                          |
+| ---------------------- | -------------------------------- |
+| `init()`               | Create tables from schema        |
+| `connect(connector)`   | Start bidirectional sync         |
+| `disconnect()`         | Stop sync, preserve local data   |
+| `disconnectAndClear()` | Stop sync, delete all local data |
 
 ### Upload Queue Methods
 
-| Method                       | Returns                    | Purpose                     |
-|------------------------------|----------------------------|-----------------------------|
-| `getNextCrudTransaction()`   | `CrudTransaction \| null`  | Next atomic transaction     |
-| `getCrudBatch(limit)`        | `CrudBatch \| null`        | Batch of operations         |
+| Method                     | Returns                   | Purpose                 |
+| -------------------------- | ------------------------- | ----------------------- |
+| `getNextCrudTransaction()` | `CrudTransaction \| null` | Next atomic transaction |
+| `getCrudBatch(limit)`      | `CrudBatch \| null`       | Batch of operations     |
 
 ---
 
 ## React Hooks API (@powersync/react)
 
-| Hook                  | Returns                                        | Purpose                        |
-|-----------------------|------------------------------------------------|--------------------------------|
-| `useQuery(sql)`       | `{ data, isLoading, isFetching, error }`       | Reactive watched query         |
-| `useSuspenseQuery(sql)` | `{ data }`                                   | Watched query with Suspense    |
-| `useStatus()`         | `{ connected, hasSynced }`                     | Sync connection status         |
-| `usePowerSync()`      | `PowerSyncDatabase`                            | Direct database instance       |
+| Hook                    | Returns                                  | Purpose                     |
+| ----------------------- | ---------------------------------------- | --------------------------- |
+| `useQuery(sql)`         | `{ data, isLoading, isFetching, error }` | Reactive watched query      |
+| `useSuspenseQuery(sql)` | `{ data }`                               | Watched query with Suspense |
+| `useStatus()`           | `{ connected, hasSynced }`               | Sync connection status      |
+| `usePowerSync()`        | `PowerSyncDatabase`                      | Direct database instance    |
 
 ### useQuery Options
 
-| Option           | Type       | Default | Purpose                              |
-|------------------|------------|---------|--------------------------------------|
-| `runQueryOnce`   | `boolean`  | `false` | Disable watching (one-time fetch)    |
-| `throttleMs`     | `number`   | -       | Minimum interval between re-queries  |
+| Option         | Type      | Default | Purpose                             |
+| -------------- | --------- | ------- | ----------------------------------- |
+| `runQueryOnce` | `boolean` | `false` | Disable watching (one-time fetch)   |
+| `throttleMs`   | `number`  | -       | Minimum interval between re-queries |
 
 ---
 
 ## CrudEntry Reference
 
-| Property    | Type              | Description                        |
-|-------------|-------------------|------------------------------------|
-| `id`        | `string`          | Row ID                             |
-| `table`     | `string`          | Table name                         |
-| `op`        | `UpdateType`      | `PUT`, `PATCH`, or `DELETE`        |
-| `opData`    | `Record \| null`  | Changed fields (null for DELETE)   |
-| `clientId`  | `string`          | Unique client identifier           |
+| Property   | Type             | Description                      |
+| ---------- | ---------------- | -------------------------------- |
+| `id`       | `string`         | Row ID                           |
+| `table`    | `string`         | Table name                       |
+| `op`       | `UpdateType`     | `PUT`, `PATCH`, or `DELETE`      |
+| `opData`   | `Record \| null` | Changed fields (null for DELETE) |
+| `clientId` | `string`         | Unique client identifier         |
 
 ### UpdateType Enum
 
-| Value    | Meaning                                 |
-|----------|-----------------------------------------|
-| `PUT`    | Full row insert or replace              |
-| `PATCH`  | Partial update (only changed fields)    |
-| `DELETE` | Row deletion                            |
+| Value    | Meaning                              |
+| -------- | ------------------------------------ |
+| `PUT`    | Full row insert or replace           |
+| `PATCH`  | Partial update (only changed fields) |
+| `DELETE` | Row deletion                         |
 
 ---
 
@@ -135,11 +135,11 @@ bucket_definitions:
 
 ### Built-in Functions
 
-| Function                     | Returns              | Use In         |
-|------------------------------|----------------------|----------------|
-| `request.user_id()`          | Authenticated user ID| Parameters     |
-| `request.parameters() ->> 'key'` | Client-provided param | Parameters |
-| `bucket.param_name`          | Parameter value      | Data queries   |
+| Function                         | Returns               | Use In       |
+| -------------------------------- | --------------------- | ------------ |
+| `request.user_id()`              | Authenticated user ID | Parameters   |
+| `request.parameters() ->> 'key'` | Client-provided param | Parameters   |
+| `bucket.param_name`              | Parameter value       | Data queries |
 
 ---
 

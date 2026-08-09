@@ -67,7 +67,10 @@ interface StateStorage {
   removeItem: (name: string) => void;
 }
 
-const createMMKVAdapter = (instanceId: string, encryptionKey?: string): StateStorage => {
+const createMMKVAdapter = (
+  instanceId: string,
+  encryptionKey?: string,
+): StateStorage => {
   const instance = createMMKV({
     id: instanceId,
     ...(encryptionKey && { encryptionKey, encryptionType: "AES-256" as const }),

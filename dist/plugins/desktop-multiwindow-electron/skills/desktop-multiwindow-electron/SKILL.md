@@ -121,14 +121,14 @@ main.webContents.loadFile("main.html");
 
 BrowserView is deprecated since Electron 30. Migration is straightforward -- constructors have the same shape.
 
-| Deprecated (BrowserView)                    | Replacement (WebContentsView)                              |
-| ------------------------------------------- | ---------------------------------------------------------- |
-| `new BrowserView(opts)`                     | `new WebContentsView(opts)`                                |
-| `win.addBrowserView(view)`                  | `win.contentView.addChildView(view)`                       |
-| `win.removeBrowserView(view)`               | `win.contentView.removeChildView(view)`                    |
-| `win.getBrowserViews()`                     | `win.contentView.children`                                 |
-| `win.setTopBrowserView(view)`               | `win.contentView.addChildView(view)` (re-adding reorders)  |
-| `view.setAutoResize({ vertical: true })`    | Manual resize via `win.on("resize", ...)` + `setBounds()`  |
+| Deprecated (BrowserView)                 | Replacement (WebContentsView)                             |
+| ---------------------------------------- | --------------------------------------------------------- |
+| `new BrowserView(opts)`                  | `new WebContentsView(opts)`                               |
+| `win.addBrowserView(view)`               | `win.contentView.addChildView(view)`                      |
+| `win.removeBrowserView(view)`            | `win.contentView.removeChildView(view)`                   |
+| `win.getBrowserViews()`                  | `win.contentView.children`                                |
+| `win.setTopBrowserView(view)`            | `win.contentView.addChildView(view)` (re-adding reorders) |
+| `view.setAutoResize({ vertical: true })` | Manual resize via `win.on("resize", ...)` + `setBounds()` |
 
 **Gotcha:** WebContentsView defaults to a white background; BrowserView defaulted to transparent. Set `view.setBackgroundColor("#00000000")` for transparency.
 
@@ -288,7 +288,9 @@ Use the `screen` API to enumerate displays, find work areas, and place windows o
 const { screen } = require("electron");
 
 const displays = screen.getAllDisplays();
-const externalDisplay = displays.find((d) => d.bounds.x !== 0 || d.bounds.y !== 0);
+const externalDisplay = displays.find(
+  (d) => d.bounds.x !== 0 || d.bounds.y !== 0,
+);
 
 if (externalDisplay) {
   const win = new BrowserWindow({

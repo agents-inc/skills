@@ -22,18 +22,22 @@ interface ProcessResult {
 }
 
 export async function invokeProcessor(orderId: string): Promise<ProcessResult> {
-  const response = await lambda.send(new InvokeCommand({
-    FunctionName: "order-processor",
-    InvocationType: "RequestResponse", // Synchronous — waits for result
-    Payload: JSON.stringify({ orderId }),
-  }));
+  const response = await lambda.send(
+    new InvokeCommand({
+      FunctionName: "order-processor",
+      InvocationType: "RequestResponse", // Synchronous — waits for result
+      Payload: JSON.stringify({ orderId }),
+    }),
+  );
 
   if (response.FunctionError) {
     const errorPayload = JSON.parse(new TextDecoder().decode(response.Payload));
     throw new Error(`Lambda error: ${errorPayload.errorMessage}`);
   }
 
-  return JSON.parse(new TextDecoder().decode(response.Payload)) as ProcessResult;
+  return JSON.parse(
+    new TextDecoder().decode(response.Payload),
+  ) as ProcessResult;
 }
 ```
 
@@ -46,12 +50,17 @@ export async function invokeProcessor(orderId: string): Promise<ProcessResult> {
 ## Lambda — Asynchronous Invocation
 
 ```typescript
-export async function triggerAsync(functionName: string, payload: unknown): Promise<void> {
-  await lambda.send(new InvokeCommand({
-    FunctionName: functionName,
-    InvocationType: "Event", // Async — returns immediately, Lambda retries up to 2 times
-    Payload: JSON.stringify(payload),
-  }));
+export async function triggerAsync(
+  functionName: string,
+  payload: unknown,
+): Promise<void> {
+  await lambda.send(
+    new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: "Event", // Async — returns immediately, Lambda retries up to 2 times
+      Payload: JSON.stringify(payload),
+    }),
+  );
   // Returns 202 Accepted — no response payload
 }
 ```
@@ -88,7 +97,9 @@ interface DbCredentials {
   password: string;
 }
 
-export async function getDbCredentials(secretName: string): Promise<DbCredentials> {
+export async function getDbCredentials(
+  secretName: string,
+): Promise<DbCredentials> {
   const secretString = await getSecret(secretName);
   return JSON.parse(secretString) as DbCredentials;
 }
@@ -138,12 +149,15 @@ import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "./lib/aws-clients.js";
 
-const DOWNLOAD_EXPIRY_SECONDS = 3_600;    // 1 hour
-const UPLOAD_EXPIRY_SECONDS = 900;        // 15 minutes
+const DOWNLOAD_EXPIRY_SECONDS = 3_600; // 1 hour
+const UPLOAD_EXPIRY_SECONDS = 900; // 15 minutes
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
 
 // Generate a download URL
-export async function getDownloadUrl(bucket: string, key: string): Promise<string> {
+export async function getDownloadUrl(
+  bucket: string,
+  key: string,
+): Promise<string> {
   return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), {
     expiresIn: DOWNLOAD_EXPIRY_SECONDS,
   });
@@ -190,7 +204,9 @@ export async function downloadToFile(
   key: string,
   outputPath: string,
 ): Promise<void> {
-  const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  const response = await s3.send(
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+  );
   if (!response.Body) throw new Error(`Empty response for ${key}`);
 
   // Convert web ReadableStream to Node.js Readable
@@ -218,12 +234,14 @@ s3.middlewareStack.add(
     const result = await next(args);
     const duration = Date.now() - startTime;
 
-    console.log(JSON.stringify({
-      service: "s3",
-      operation: context.commandName,
-      durationMs: duration,
-      statusCode: result.response.statusCode,
-    }));
+    console.log(
+      JSON.stringify({
+        service: "s3",
+        operation: context.commandName,
+        durationMs: duration,
+        statusCode: result.response.statusCode,
+      }),
+    );
 
     return result;
   },
@@ -283,11 +301,13 @@ const sts = new STSClient({});
 const SESSION_DURATION_SECONDS = 3_600;
 
 export async function assumeRole(roleArn: string) {
-  const { Credentials } = await sts.send(new AssumeRoleCommand({
-    RoleArn: roleArn,
-    RoleSessionName: "my-app",
-    DurationSeconds: SESSION_DURATION_SECONDS,
-  }));
+  const { Credentials } = await sts.send(
+    new AssumeRoleCommand({
+      RoleArn: roleArn,
+      RoleSessionName: "my-app",
+      DurationSeconds: SESSION_DURATION_SECONDS,
+    }),
+  );
   return {
     accessKeyId: Credentials!.AccessKeyId!,
     secretAccessKey: Credentials!.SecretAccessKey!,

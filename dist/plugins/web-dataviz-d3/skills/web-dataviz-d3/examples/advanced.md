@@ -111,9 +111,7 @@ function renderForceGraph(
       .attr("x2", (d) => (d.target as GraphNode).x!)
       .attr("y2", (d) => (d.target as GraphNode).y!);
 
-    nodeElements
-      .attr("cx", (d) => d.x!)
-      .attr("cy", (d) => d.y!);
+    nodeElements.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
   });
 
   // Return cleanup function — MUST be called on unmount
@@ -127,20 +125,22 @@ function renderForceGraph(
 
 ```typescript
 // Repulsion between all nodes (negative = repel, positive = attract)
-forceManyBody().strength(-300)
+forceManyBody().strength(-300);
 
 // Attract connected nodes together
-forceLink(links).id((d) => d.id).distance(80)
+forceLink(links)
+  .id((d) => d.id)
+  .distance(80);
 
 // Pull everything toward a center point
-forceCenter(width / 2, height / 2)
+forceCenter(width / 2, height / 2);
 
 // Prevent node overlap
-forceCollide(nodeRadius)
+forceCollide(nodeRadius);
 
 // Pull nodes toward specific x/y positions
-forceX(targetX).strength(0.1)
-forceY(targetY).strength(0.1)
+forceX(targetX).strength(0.1);
+forceY(targetY).strength(0.1);
 ```
 
 ### Bad Example - No Simulation Cleanup
@@ -150,7 +150,9 @@ forceY(targetY).strength(0.1)
 function renderGraph(svg, nodes, links) {
   const simulation = forceSimulation(nodes)
     .force("charge", forceManyBody())
-    .on("tick", () => { /* update positions */ });
+    .on("tick", () => {
+      /* update positions */
+    });
   // No cleanup — simulation runs indefinitely via requestAnimationFrame
 }
 ```
@@ -221,19 +223,19 @@ function renderChoropleth(
 
 ```typescript
 import {
-  geoMercator,          // web maps, conformal (shape-preserving)
-  geoNaturalEarth1,     // world maps, pleasant shape/area compromise
-  geoAlbersUsa,         // US maps with Alaska/Hawaii insets
-  geoOrthographic,      // globe view (3D appearance)
-  geoEqualEarth,        // world maps, equal-area
+  geoMercator, // web maps, conformal (shape-preserving)
+  geoNaturalEarth1, // world maps, pleasant shape/area compromise
+  geoAlbersUsa, // US maps with Alaska/Hawaii insets
+  geoOrthographic, // globe view (3D appearance)
+  geoEqualEarth, // world maps, equal-area
 } from "d3-geo";
 
 // All projections support:
 const projection = geoMercator()
-  .center([longitude, latitude])       // geographic center
-  .scale(150)                          // zoom level
-  .translate([width / 2, height / 2])  // pixel center
-  .fitSize([width, height], geoJson);  // auto-fit (overrides center/scale/translate)
+  .center([longitude, latitude]) // geographic center
+  .scale(150) // zoom level
+  .translate([width / 2, height / 2]) // pixel center
+  .fitSize([width, height], geoJson); // auto-fit (overrides center/scale/translate)
 ```
 
 ### Interactive Map with Tooltips
@@ -249,8 +251,11 @@ svg
     select(event.currentTarget as SVGPathElement)
       .attr("stroke", "black")
       .attr("stroke-width", 2);
-    tooltip.style("opacity", 1)
-      .html(`<strong>${d.properties.name}</strong><br/>Value: ${dataByRegion.get(d.properties.id) ?? "N/A"}`);
+    tooltip
+      .style("opacity", 1)
+      .html(
+        `<strong>${d.properties.name}</strong><br/>Value: ${dataByRegion.get(d.properties.id) ?? "N/A"}`,
+      );
   })
   .on("mouseleave", (event: MouseEvent) => {
     select(event.currentTarget as SVGPathElement)
@@ -386,9 +391,7 @@ type ChartSelection = Selection<SVGGElement, unknown, HTMLElement, unknown>;
 type BarSelection = Selection<SVGRectElement, BarData, SVGGElement, unknown>;
 
 function styleBar(bar: BarSelection): BarSelection {
-  return bar
-    .attr("fill", "steelblue")
-    .attr("rx", 2);
+  return bar.attr("fill", "steelblue").attr("rx", 2);
 }
 ```
 
@@ -421,10 +424,9 @@ svg.on("click", (event: MouseEvent, d: BarData) => {
 
 ```typescript
 // Bad: no generics, any-typed selections
-const svg = d3.select("#chart");          // Selection<any, any, any, any>
-const bars = svg.selectAll("rect").data(data);  // no datum type
-bars.join("rect")
-  .attr("width", (d) => d.value);        // d is unknown/any
+const svg = d3.select("#chart"); // Selection<any, any, any, any>
+const bars = svg.selectAll("rect").data(data); // no datum type
+bars.join("rect").attr("width", (d) => d.value); // d is unknown/any
 ```
 
 **Why bad:** no type safety on datum access, no autocomplete for datum properties, typos in attribute names not caught at compile time

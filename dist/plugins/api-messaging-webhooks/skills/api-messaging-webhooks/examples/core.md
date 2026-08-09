@@ -55,7 +55,11 @@ export { verifyWebhookSignature };
 ```typescript
 import { createHmac } from "node:crypto";
 
-function verifySignature(parsedBody: object, signature: string, secret: string): boolean {
+function verifySignature(
+  parsedBody: object,
+  signature: string,
+  secret: string,
+): boolean {
   // BAD: Re-serializing parsed JSON -- key order and whitespace may differ from original
   const body = JSON.stringify(parsedBody);
   const expected = createHmac("sha256", secret).update(body).digest("hex");
@@ -166,9 +170,16 @@ async function handleWebhook(request: Request): Promise<Response> {
   const timestamp = request.headers.get("webhook-timestamp") ?? "";
   const secret = getWebhookSecret();
 
-  const result = verifyWebhookWithTimestamp(rawBody, signature, timestamp, secret);
+  const result = verifyWebhookWithTimestamp(
+    rawBody,
+    signature,
+    timestamp,
+    secret,
+  );
   if (!result.valid) {
-    return new Response(JSON.stringify({ error: result.reason }), { status: 401 });
+    return new Response(JSON.stringify({ error: result.reason }), {
+      status: 401,
+    });
   }
 
   // Parse JSON only AFTER verification succeeds
@@ -198,7 +209,11 @@ const MINUTES_PER_HOUR = 60;
 const SECONDS_PER_MINUTE = 60;
 const MS_PER_SECOND = 1000;
 const IDEMPOTENCY_TTL_MS =
-  IDEMPOTENCY_TTL_DAYS * HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  IDEMPOTENCY_TTL_DAYS *
+  HOURS_PER_DAY *
+  MINUTES_PER_HOUR *
+  SECONDS_PER_MINUTE *
+  MS_PER_SECOND;
 
 // Storage interface -- implement with your chosen data store
 interface IdempotencyStore {
@@ -310,7 +325,9 @@ async function routeWebhookEvent(rawPayload: string): Promise<void> {
   }
 
   const event = parsed.data;
-  const handler = handlers[event.type] as (data: WebhookEvent["data"]) => Promise<void>;
+  const handler = handlers[event.type] as (
+    data: WebhookEvent["data"],
+  ) => Promise<void>;
   await handler(event.data);
 }
 
@@ -323,7 +340,10 @@ export { routeWebhookEvent, WebhookEventSchema };
 
 ```typescript
 // BAD: No type safety, easy to forget a case
-async function routeEvent(event: { type: string; data: unknown }): Promise<void> {
+async function routeEvent(event: {
+  type: string;
+  data: unknown;
+}): Promise<void> {
   switch (event.type) {
     case "order.created":
       await handleOrderCreated(event.data);
@@ -374,14 +394,19 @@ async function handleIncomingWebhook(
 
   // 3. Verify signature (includes timestamp validation)
   const secret = process.env[WEBHOOK_SECRET_ENV];
-  if (!secret) throw new Error(`Missing ${WEBHOOK_SECRET_ENV} environment variable`);
+  if (!secret)
+    throw new Error(`Missing ${WEBHOOK_SECRET_ENV} environment variable`);
 
-  const verification = verifyWebhookWithTimestamp(rawBody, signature, timestamp, secret);
+  const verification = verifyWebhookWithTimestamp(
+    rawBody,
+    signature,
+    timestamp,
+    secret,
+  );
   if (!verification.valid) {
-    return new Response(
-      JSON.stringify({ error: "Invalid signature" }),
-      { status: 401 },
-    );
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      status: 401,
+    });
   }
 
   // 4. Idempotency check

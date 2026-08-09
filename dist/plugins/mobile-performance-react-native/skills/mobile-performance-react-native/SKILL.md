@@ -328,7 +328,9 @@ useEffect(() => {
   }
 
   fetchData();
-  return () => { isMounted = false; };
+  return () => {
+    isMounted = false;
+  };
 }, []);
 ```
 

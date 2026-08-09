@@ -320,12 +320,12 @@ Is this a third-party component that doesn't work with Unistyles styles?
 
 ### Responsive: Breakpoints vs Media Queries vs Display/Hide
 
-| Need | Solution |
-|------|----------|
-| Simple per-breakpoint values | Breakpoint object `{ xs: 8, md: 16 }` |
-| Precise pixel ranges | `mq.only.width(0, 500)` |
-| Show/hide entire components | `<Display mq={...}>` / `<Hide mq={...}>` |
-| Orientation-specific styles | Built-in `portrait` / `landscape` breakpoints |
+| Need                         | Solution                                      |
+| ---------------------------- | --------------------------------------------- |
+| Simple per-breakpoint values | Breakpoint object `{ xs: 8, md: 16 }`         |
+| Precise pixel ranges         | `mq.only.width(0, 500)`                       |
+| Show/hide entire components  | `<Display mq={...}>` / `<Hide mq={...}>`      |
+| Orientation-specific styles  | Built-in `portrait` / `landscape` breakpoints |
 
 </decision_framework>
 

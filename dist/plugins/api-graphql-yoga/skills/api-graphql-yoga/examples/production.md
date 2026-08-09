@@ -86,7 +86,10 @@ const yoga = createYoga({
 Use the Yoga-specific response cache plugin (not the Envelop equivalent) for HTTP-level caching that skips GraphQL execution entirely.
 
 ```typescript
-import { useResponseCache, createInMemoryCache } from "@graphql-yoga/plugin-response-cache";
+import {
+  useResponseCache,
+  createInMemoryCache,
+} from "@graphql-yoga/plugin-response-cache";
 
 const GLOBAL_TTL_MS = 5_000;
 const USER_TTL_MS = 1_000;
@@ -115,6 +118,7 @@ cache.invalidate([{ typename: "User", id: "user-123" }]);
 ```
 
 **Key points:**
+
 - `session` must return a string (user ID) for PRIVATE-scoped queries, or `null` for public queries
 - `ttlPerType` overrides global TTL for specific types (lowest TTL wins when result contains multiple types)
 - `scopePerSchemaCoordinate` marks fields as PRIVATE (cached per session) or PUBLIC (shared across users)

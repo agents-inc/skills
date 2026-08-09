@@ -95,12 +95,14 @@ async function applyOperation(op: CrudEntry): Promise<void> {
     case UpdateType.PATCH: {
       // PATCH = partial update (only changed fields)
       const { error } = await table.update(op.opData).eq("id", op.id);
-      if (error) throw new Error(`PATCH failed on ${op.table}: ${error.message}`);
+      if (error)
+        throw new Error(`PATCH failed on ${op.table}: ${error.message}`);
       break;
     }
     case UpdateType.DELETE: {
       const { error } = await table.delete().eq("id", op.id);
-      if (error) throw new Error(`DELETE failed on ${op.table}: ${error.message}`);
+      if (error)
+        throw new Error(`DELETE failed on ${op.table}: ${error.message}`);
       break;
     }
   }
@@ -161,7 +163,7 @@ bucket_definitions:
     data:
       - SELECT * FROM lists WHERE owner_id = bucket.user_id
       - SELECT * FROM todos WHERE list_id IN (
-          SELECT id FROM lists WHERE owner_id = bucket.user_id
+        SELECT id FROM lists WHERE owner_id = bucket.user_id
         )
 ```
 
@@ -187,7 +189,7 @@ bucket_definitions:
     data:
       - SELECT * FROM projects WHERE org_id = bucket.org_id
       - SELECT * FROM tasks WHERE project_id IN (
-          SELECT id FROM projects WHERE org_id = bucket.org_id
+        SELECT id FROM projects WHERE org_id = bucket.org_id
         )
 ```
 
@@ -204,6 +206,7 @@ bucket_definitions:
 ```
 
 Client-side:
+
 ```typescript
 await powersync.connect(connector, {
   params: { region: "us-west" },
@@ -211,6 +214,7 @@ await powersync.connect(connector, {
 ```
 
 **Constraints:**
+
 - Maximum 1,000 buckets per client (default, higher on Team/Enterprise plans)
 - Table names in data queries must match client-side schema table names
 - Only a subset of SQL is supported in sync rules

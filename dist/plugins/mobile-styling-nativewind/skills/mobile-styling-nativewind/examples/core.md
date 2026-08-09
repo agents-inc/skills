@@ -25,10 +25,7 @@ export function ProfileCard({
   return (
     <View className="mx-4 rounded-xl bg-white p-4 shadow-md dark:bg-gray-800">
       <View className="flex-row items-center gap-3">
-        <Image
-          source={{ uri: avatarUrl }}
-          className="h-12 w-12 rounded-full"
-        />
+        <Image source={{ uri: avatarUrl }} className="h-12 w-12 rounded-full" />
         <View className="flex-1">
           <Text className="text-lg font-bold text-gray-900 dark:text-white">
             {name}
@@ -80,7 +77,7 @@ export function Section({ title, children, className }: SectionProps) {
 // Usage
 <Section title="Account" className="px-4">
   <Text className="text-gray-900 dark:text-white">Settings content</Text>
-</Section>
+</Section>;
 ```
 
 **Why good:** className prop enables external customization, default styles set on the component, caller can override layout/spacing
@@ -161,7 +158,8 @@ interface ButtonProps {
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-blue-500 active:bg-blue-600",
-  secondary: "bg-gray-200 active:bg-gray-300 dark:bg-gray-700 dark:active:bg-gray-600",
+  secondary:
+    "bg-gray-200 active:bg-gray-300 dark:bg-gray-700 dark:active:bg-gray-600",
   ghost: "bg-transparent active:bg-gray-100 dark:active:bg-gray-800",
 };
 
@@ -273,9 +271,18 @@ interface ButtonProps {
   className?: string;
 }
 
-export function Button({ label, variant, size, onPress, className }: ButtonProps) {
+export function Button({
+  label,
+  variant,
+  size,
+  onPress,
+  className,
+}: ButtonProps) {
   return (
-    <Pressable className={button({ variant, size, className })} onPress={onPress}>
+    <Pressable
+      className={button({ variant, size, className })}
+      onPress={onPress}
+    >
       <Text className={buttonText({ variant, size })}>{label}</Text>
     </Pressable>
   );
@@ -307,7 +314,10 @@ const STATUS_COLORS = {
 
 export function StatusIndicator({ status, unreadCount }: StatusIndicatorProps) {
   const hasUnread = unreadCount > 0;
-  const displayCount = unreadCount > MAX_DISPLAY_COUNT ? `${MAX_DISPLAY_COUNT}+` : String(unreadCount);
+  const displayCount =
+    unreadCount > MAX_DISPLAY_COUNT
+      ? `${MAX_DISPLAY_COUNT}+`
+      : String(unreadCount);
 
   return (
     <View className="flex-row items-center gap-2">
@@ -343,11 +353,10 @@ export function ProgressBar({ progress, className }: ProgressBarProps) {
   const fillStyle: ViewStyle = { width: `${progress * 100}%` };
 
   return (
-    <View className={`h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 ${className ?? ""}`}>
-      <View
-        className="h-full rounded-full bg-blue-500"
-        style={fillStyle}
-      />
+    <View
+      className={`h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 ${className ?? ""}`}
+    >
+      <View className="h-full rounded-full bg-blue-500" style={fillStyle} />
     </View>
   );
 }

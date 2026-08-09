@@ -112,29 +112,31 @@ jobs:
 ### Key Workflow Details
 
 **Matrix strategy:**
+
 - `fail-fast: false` -- one platform failure does not cancel other builds
 - macOS builds target both Intel and Apple Silicon separately
 - Ubuntu 22.04 for Linux (22.04-arm for ARM64 builds)
 - `tauri-action` handles the build, bundling, and release upload
 
 **Platform dependencies:**
+
 - Linux requires `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`
 - macOS and Windows have no additional system dependencies
 
 **Secrets required:**
 
-| Secret                           | Platform | Purpose                         |
-| -------------------------------- | -------- | ------------------------------- |
-| `APPLE_CERTIFICATE`              | macOS    | Base64-encoded `.p12`           |
-| `APPLE_CERTIFICATE_PASSWORD`     | macOS    | `.p12` password                 |
-| `APPLE_SIGNING_IDENTITY`         | macOS    | Signing identity string         |
-| `APPLE_API_ISSUER`               | macOS    | Notarization API issuer         |
-| `APPLE_API_KEY`                  | macOS    | Notarization API key ID         |
-| `APPLE_API_KEY_PATH`             | macOS    | Path to `.p8` key file          |
-| `WINDOWS_CERTIFICATE`            | Windows  | Base64-encoded `.pfx`           |
-| `WINDOWS_CERTIFICATE_PASSWORD`   | Windows  | `.pfx` password                 |
-| `TAURI_SIGNING_PRIVATE_KEY`      | All      | Ed25519 key for updater sigs    |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | All  | Key password (optional)         |
+| Secret                               | Platform | Purpose                      |
+| ------------------------------------ | -------- | ---------------------------- |
+| `APPLE_CERTIFICATE`                  | macOS    | Base64-encoded `.p12`        |
+| `APPLE_CERTIFICATE_PASSWORD`         | macOS    | `.p12` password              |
+| `APPLE_SIGNING_IDENTITY`             | macOS    | Signing identity string      |
+| `APPLE_API_ISSUER`                   | macOS    | Notarization API issuer      |
+| `APPLE_API_KEY`                      | macOS    | Notarization API key ID      |
+| `APPLE_API_KEY_PATH`                 | macOS    | Path to `.p8` key file       |
+| `WINDOWS_CERTIFICATE`                | Windows  | Base64-encoded `.pfx`        |
+| `WINDOWS_CERTIFICATE_PASSWORD`       | Windows  | `.pfx` password              |
+| `TAURI_SIGNING_PRIVATE_KEY`          | All      | Ed25519 key for updater sigs |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | All      | Key password (optional)      |
 
 ---
 
@@ -146,18 +148,18 @@ jobs:
 - uses: tauri-apps/tauri-action@v0
   with:
     # Release settings
-    tagName: app-v__VERSION__         # __VERSION__ is replaced with app version
+    tagName: app-v__VERSION__ # __VERSION__ is replaced with app version
     releaseName: "App v__VERSION__"
     releaseBody: "Release notes here"
-    releaseDraft: true                 # Create as draft (review before publishing)
+    releaseDraft: true # Create as draft (review before publishing)
     prerelease: false
 
     # Build settings
-    args: "--target aarch64-apple-darwin"  # Rust target
-    tauriScript: "npx tauri"              # Custom tauri command
+    args: "--target aarch64-apple-darwin" # Rust target
+    tauriScript: "npx tauri" # Custom tauri command
 
     # Updater
-    updaterJsonPreferNsis: true           # Prefer NSIS over MSI for Windows
+    updaterJsonPreferNsis: true # Prefer NSIS over MSI for Windows
 ```
 
 ### macOS Universal Binary

@@ -72,7 +72,7 @@ description: Maestro mobile E2E testing - YAML flows, selectors, flow control, e
 
 ## Philosophy
 
-Maestro takes a fundamentally different approach from code-based testing frameworks: **tests are declarative YAML, not imperative code**. This makes flows readable by anyone on the team, not just developers. The framework handles the hard parts of mobile testing automatically -- waiting for elements, retrying taps, tolerating animation delays -- so flows focus on *what* to test, not *how* to wait.
+Maestro takes a fundamentally different approach from code-based testing frameworks: **tests are declarative YAML, not imperative code**. This makes flows readable by anyone on the team, not just developers. The framework handles the hard parts of mobile testing automatically -- waiting for elements, retrying taps, tolerating animation delays -- so flows focus on _what_ to test, not _how_ to wait.
 
 **Core principles:**
 

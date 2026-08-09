@@ -14,9 +14,9 @@ import { StyleSheet } from "react-native-unistyles";
 const styles = StyleSheet.create((theme) => ({
   container: {
     padding: {
-      xs: theme.spacing.sm,  // 0px and up
-      md: theme.spacing.md,  // 768px and up
-      xl: theme.spacing.xl,  // 1200px and up
+      xs: theme.spacing.sm, // 0px and up
+      md: theme.spacing.md, // 768px and up
+      xl: theme.spacing.xl, // 1200px and up
     },
     flexDirection: {
       xs: "column" as const,
@@ -85,18 +85,18 @@ const styles = StyleSheet.create((theme) => ({
 
 ```typescript
 // Width-only ranges
-mq.only.width(0, 500)        // 0px to 499px
-mq.only.width(500)           // 500px and up
-mq.only.width(null, 800)     // 0px to 799px
-mq.only.width("sm", "md")    // sm breakpoint to md breakpoint
+mq.only.width(0, 500); // 0px to 499px
+mq.only.width(500); // 500px and up
+mq.only.width(null, 800); // 0px to 799px
+mq.only.width("sm", "md"); // sm breakpoint to md breakpoint
 
 // Height-only ranges
-mq.only.height(300, 600)     // 300px to 599px height
-mq.only.height(600)          // 600px height and up
+mq.only.height(300, 600); // 300px to 599px height
+mq.only.height(600); // 600px height and up
 
 // Combined width AND height
-mq.width(240, 380).and.height(300)     // width 240-379 AND height 300+
-mq.height(500).and.width("sm")         // height 500+ AND width from sm breakpoint
+mq.width(240, 380).and.height(300); // width 240-379 AND height 300+
+mq.height(500).and.width("sm"); // height 500+ AND width from sm breakpoint
 ```
 
 **Gotcha:** Invalid ranges like `mq.only.width(500, 200)` or `mq.only.width("xl", "sm")` are silently ignored.
@@ -217,8 +217,7 @@ const styles = StyleSheet.create((_theme, rt) => ({
     height: rt.screen.width * IMAGE_ASPECT_RATIO,
   },
   gridItem: {
-    width:
-      (rt.screen.width - COLUMN_GAP * (COLUMN_COUNT + 1)) / COLUMN_COUNT,
+    width: (rt.screen.width - COLUMN_GAP * (COLUMN_COUNT + 1)) / COLUMN_COUNT,
   },
 }));
 ```

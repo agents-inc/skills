@@ -413,10 +413,10 @@ ipcMain.handle("clear-badge", () => {
 
 **Platform support:**
 
-| Method | macOS | Linux | Windows |
-|--------|-------|-------|---------|
-| `app.setBadgeCount(n)` | Numeric badge on dock icon | Unity launcher only | Not supported |
-| `app.dock.setBadge(text)` | Text badge on dock icon | N/A | N/A |
+| Method                    | macOS                      | Linux               | Windows       |
+| ------------------------- | -------------------------- | ------------------- | ------------- |
+| `app.setBadgeCount(n)`    | Numeric badge on dock icon | Unity launcher only | Not supported |
+| `app.dock.setBadge(text)` | Text badge on dock icon    | N/A                 | N/A           |
 
 **Gotchas:** `setBadgeCount()` requires notification permissions on macOS. On Linux, requires a `.desktop` launcher file and Unity desktop environment.
 
@@ -533,17 +533,17 @@ win.setVibrancy(null);
 
 **Common vibrancy values:**
 
-| Value | Use Case |
-|-------|----------|
-| `sidebar` | App sidebars (most common) |
-| `under-window` | Entire window background |
-| `content` | Content area background |
-| `header` | Header/toolbar area |
-| `titlebar` | Title bar area |
-| `tooltip` | Tooltip background |
-| `menu` | Menu background |
-| `popover` | Popover background |
-| `sheet` | Sheet/dialog background |
+| Value          | Use Case                   |
+| -------------- | -------------------------- |
+| `sidebar`      | App sidebars (most common) |
+| `under-window` | Entire window background   |
+| `content`      | Content area background    |
+| `header`       | Header/toolbar area        |
+| `titlebar`     | Title bar area             |
+| `tooltip`      | Tooltip background         |
+| `menu`         | Menu background            |
+| `popover`      | Popover background         |
+| `sheet`        | Sheet/dialog background    |
 
 **Note:** Values like `appearance-based` are deprecated. Prefer `sidebar` or `under-window`.
 

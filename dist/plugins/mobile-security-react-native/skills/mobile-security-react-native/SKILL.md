@@ -86,12 +86,12 @@ Think of mobile security as concentric rings. Each ring (secure storage, pinning
 
 **Platform differences that matter:**
 
-| Concern | iOS | Android |
-|---------|-----|---------|
-| Secure storage | Keychain (persists across reinstalls) | Keystore + SharedPreferences (cleared on uninstall) |
-| Biometrics | Face ID / Touch ID | Fingerprint / Face Unlock (weak vs strong) |
-| Network security | ATS (default HTTPS since iOS 9) | Network Security Config (clear text blocked API 28+) |
-| Code protection | Hermes bytecode (no ProGuard for JS) | Hermes bytecode + ProGuard/R8 for native/Java |
+| Concern               | iOS                                        | Android                                                        |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| Secure storage        | Keychain (persists across reinstalls)      | Keystore + SharedPreferences (cleared on uninstall)            |
+| Biometrics            | Face ID / Touch ID                         | Fingerprint / Face Unlock (weak vs strong)                     |
+| Network security      | ATS (default HTTPS since iOS 9)            | Network Security Config (clear text blocked API 28+)           |
+| Code protection       | Hermes bytecode (no ProGuard for JS)       | Hermes bytecode + ProGuard/R8 for native/Java                  |
 | Screenshot prevention | Effective (screen recording + screenshots) | FLAG_SECURE (effective for screenshots, partial for recording) |
 
 </philosophy>
@@ -237,9 +237,7 @@ const config = getDefaultConfig(__dirname);
 
 config.transformer = {
   ...config.transformer,
-  babelTransformerPath: require.resolve(
-    "react-native-obfuscating-transformer"
-  ),
+  babelTransformerPath: require.resolve("react-native-obfuscating-transformer"),
 };
 
 module.exports = config;

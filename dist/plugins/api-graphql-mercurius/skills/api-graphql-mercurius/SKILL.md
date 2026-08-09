@@ -61,7 +61,7 @@ description: GraphQL server for Fastify with Mercurius — loaders, subscription
 
 - [examples/core.md](examples/core.md) - Registration, resolvers, loaders, context, error handling, testing
 - [examples/subscriptions.md](examples/subscriptions.md) - Pubsub, subscription resolvers, withFilter, WebSocket config
-- [examples/federation.md](examples/federation.md) - Federated services, gateway, __resolveReference as loader
+- [examples/federation.md](examples/federation.md) - Federated services, gateway, \_\_resolveReference as loader
 - [reference.md](reference.md) - Decision frameworks, hook lifecycle, plugin options, anti-patterns
 
 ---
@@ -139,7 +139,10 @@ Loaders are Mercurius's primary mechanism for batch data fetching. Define them p
 ```typescript
 const loaders = {
   User: {
-    async posts(queries: Array<{ obj: User; params: Record<string, unknown> }>, context: MercuriusContext) {
+    async posts(
+      queries: Array<{ obj: User; params: Record<string, unknown> }>,
+      context: MercuriusContext,
+    ) {
       const userIds = queries.map(({ obj }) => obj.id);
       const allPosts = await fetchPostsByUserIds(userIds);
       // Return array matching queries order
@@ -166,10 +169,18 @@ Resolvers follow the standard GraphQL signature: `(parent, args, context, info)`
 ```typescript
 const resolvers = {
   Query: {
-    user: async (_parent: unknown, args: { id: string }, context: MercuriusContext) => {
+    user: async (
+      _parent: unknown,
+      args: { id: string },
+      context: MercuriusContext,
+    ) => {
       return context.reply.server.db.findUser(args.id);
     },
-    users: async (_parent: unknown, _args: unknown, context: MercuriusContext) => {
+    users: async (
+      _parent: unknown,
+      _args: unknown,
+      context: MercuriusContext,
+    ) => {
       return context.reply.server.db.listUsers();
     },
   },
@@ -198,8 +209,9 @@ const buildContext = async (req: FastifyRequest, _reply: FastifyReply) => {
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 declare module "mercurius" {
-  interface MercuriusContext
-    extends PromiseType<ReturnType<typeof buildContext>> {}
+  interface MercuriusContext extends PromiseType<
+    ReturnType<typeof buildContext>
+  > {}
 }
 
 // Registration
@@ -225,7 +237,11 @@ const NOTIFICATION_TOPIC = "NOTIFICATION_ADDED";
 
 const resolvers = {
   Mutation: {
-    addNotification: async (_parent: unknown, args: { message: string }, context: MercuriusContext) => {
+    addNotification: async (
+      _parent: unknown,
+      args: { message: string },
+      context: MercuriusContext,
+    ) => {
       const notification = { id: generateId(), message: args.message };
       await context.pubsub.publish({
         topic: NOTIFICATION_TOPIC,
@@ -236,7 +252,11 @@ const resolvers = {
   },
   Subscription: {
     notificationAdded: {
-      subscribe: async (_parent: unknown, _args: unknown, context: MercuriusContext) => {
+      subscribe: async (
+        _parent: unknown,
+        _args: unknown,
+        context: MercuriusContext,
+      ) => {
         return context.pubsub.subscribe(NOTIFICATION_TOPIC);
       },
     },

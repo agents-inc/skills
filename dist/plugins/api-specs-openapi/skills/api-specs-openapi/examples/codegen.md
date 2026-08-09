@@ -26,16 +26,16 @@ npx openapi-typescript ./api/openapi.yaml -o ./api/schema.d.ts \
 
 ### Useful CLI Flags
 
-| Flag | Default | Purpose |
-|------|---------|---------|
-| `--immutable` | `false` | Generate `readonly` properties and arrays |
-| `--alphabetize` | `false` | Sort generated types alphabetically |
-| `--export-type` | `false` | Export `type` instead of `interface` |
-| `--enum` | `false` | Generate TypeScript enums (vs string unions) |
-| `--default-non-nullable` | `true` | Properties with defaults are non-nullable |
-| `--path-params-as-types` | `false` | Enable dynamic string lookups on paths |
-| `--exclude-deprecated` | `false` | Omit deprecated fields |
-| `--check` | `false` | Verify types match current schema (CI) |
+| Flag                     | Default | Purpose                                      |
+| ------------------------ | ------- | -------------------------------------------- |
+| `--immutable`            | `false` | Generate `readonly` properties and arrays    |
+| `--alphabetize`          | `false` | Sort generated types alphabetically          |
+| `--export-type`          | `false` | Export `type` instead of `interface`         |
+| `--enum`                 | `false` | Generate TypeScript enums (vs string unions) |
+| `--default-non-nullable` | `true`  | Properties with defaults are non-nullable    |
+| `--path-params-as-types` | `false` | Enable dynamic string lookups on paths       |
+| `--exclude-deprecated`   | `false` | Omit deprecated fields                       |
+| `--check`                | `false` | Verify types match current schema (CI)       |
 
 ---
 
@@ -91,8 +91,7 @@ type Error = components["schemas"]["Error"];
 type CreateJobInput = components["schemas"]["CreateJobInput"];
 
 // Access path operation types
-type ListJobsQuery =
-  paths["/jobs"]["get"]["parameters"]["query"];
+type ListJobsQuery = paths["/jobs"]["get"]["parameters"]["query"];
 
 type ListJobsResponse =
   paths["/jobs"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -288,7 +287,8 @@ const ast = await openapiTS(new URL("./api/openapi.yaml", import.meta.url), {
   transform(schemaObject) {
     // Convert date-time strings to Date type
     if (schemaObject.format === "date-time") {
-      return Array.isArray(schemaObject.type) && schemaObject.type.includes("null")
+      return Array.isArray(schemaObject.type) &&
+        schemaObject.type.includes("null")
         ? ts.factory.createUnionTypeNode([DATE_TYPE, NULL_TYPE])
         : DATE_TYPE;
     }

@@ -121,11 +121,7 @@ Every Tauri 2 app needs at least one capability file in `src-tauri/capabilities/
   "identifier": "main-capability",
   "description": "Permissions for the main application window",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "event:default",
-    "window:default"
-  ]
+  "permissions": ["core:default", "event:default", "window:default"]
 }
 ```
 

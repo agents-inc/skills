@@ -69,7 +69,7 @@ export const appRouter = t.router({
       z.object({
         filePath: z.string().min(1),
         content: z.string().max(MAX_FILE_SIZE),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const resolved = path.resolve(app.getPath("userData"), input.filePath);
@@ -85,11 +85,13 @@ export const appRouter = t.router({
       z
         .object({
           filters: z
-            .array(z.object({ name: z.string(), extensions: z.array(z.string()) }))
+            .array(
+              z.object({ name: z.string(), extensions: z.array(z.string()) }),
+            )
             .optional(),
           multiSelect: z.boolean().optional(),
         })
-        .optional()
+        .optional(),
     )
     .mutation(async ({ input }) => {
       const result = await dialog.showOpenDialog({
@@ -240,7 +242,7 @@ const unsubscribe = trpc.onFileChanged.subscribe(
     onError: (err) => {
       console.error("Subscription error:", err);
     },
-  }
+  },
 );
 
 // Clean up when no longer needed

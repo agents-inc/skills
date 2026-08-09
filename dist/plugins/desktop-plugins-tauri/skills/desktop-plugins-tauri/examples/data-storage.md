@@ -47,6 +47,7 @@ await remove("old-config.json", { baseDir: BaseDirectory.AppData });
 ```
 
 **Key points:**
+
 - Always use `BaseDirectory` enum for portable paths across platforms
 - Always scope filesystem permissions to specific directories in the capability file
 - Binary files use `readFile` / `writeFile` (returns/accepts `Uint8Array`)
@@ -146,6 +147,7 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 **Key points:**
+
 - Store persists as a JSON file in the app data directory
 - `autoSave: true` saves after every `.set()`. `autoSave: false` requires manual `.save()`. A number value debounces saves by that many milliseconds.
 - Store data is NOT encrypted -- use Stronghold for sensitive data
@@ -212,22 +214,21 @@ import Database from "@tauri-apps/plugin-sql";
 const db = await Database.load("sqlite:app.db");
 
 // INSERT (SQLite uses $1, $2 placeholders)
-await db.execute(
-  "INSERT INTO users (name, email) VALUES ($1, $2)",
-  ["Alice", "alice@example.com"],
-);
+await db.execute("INSERT INTO users (name, email) VALUES ($1, $2)", [
+  "Alice",
+  "alice@example.com",
+]);
 
 // SELECT
-const users = await db.select<Array<{ id: number; name: string; email: string }>>(
-  "SELECT * FROM users WHERE name = $1",
-  ["Alice"],
-);
+const users = await db.select<
+  Array<{ id: number; name: string; email: string }>
+>("SELECT * FROM users WHERE name = $1", ["Alice"]);
 
 // UPDATE
-await db.execute(
-  "UPDATE users SET name = $1 WHERE id = $2",
-  ["Alice Smith", 1],
-);
+await db.execute("UPDATE users SET name = $1 WHERE id = $2", [
+  "Alice Smith",
+  1,
+]);
 
 // DELETE
 await db.execute("DELETE FROM users WHERE id = $1", [1]);
@@ -237,6 +238,7 @@ await db.close();
 ```
 
 **Key points:**
+
 - Default permissions only include read operations -- add `"sql:allow-execute"` for INSERT/UPDATE/DELETE
 - Migrations run automatically when the database is loaded (either via `preload` config or `Database.load()`)
 - Migrations execute in a transaction -- failures cause complete rollback
@@ -246,10 +248,7 @@ await db.close();
 
 ```json
 {
-  "permissions": [
-    "sql:default",
-    "sql:allow-execute"
-  ]
+  "permissions": ["sql:default", "sql:allow-execute"]
 }
 ```
 
@@ -327,6 +326,7 @@ await stronghold.unload(vaultPath);
 ```
 
 **Key points:**
+
 - Desktop-only plugin (Windows, macOS, Linux)
 - Data is stored as `Uint8Array`, not strings -- use `TextEncoder`/`TextDecoder` for conversion
 - `stronghold.save()` must be called to persist changes to disk

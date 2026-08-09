@@ -119,12 +119,14 @@ Every AWS service follows the same pattern: import the client and command, creat
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({ region: "us-east-1" });
-await s3.send(new PutObjectCommand({
-  Bucket: "my-bucket",
-  Key: "data.json",
-  Body: JSON.stringify({ hello: "world" }),
-  ContentType: "application/json",
-}));
+await s3.send(
+  new PutObjectCommand({
+    Bucket: "my-bucket",
+    Key: "data.json",
+    Body: JSON.stringify({ hello: "world" }),
+    ContentType: "application/json",
+  }),
+);
 ```
 
 **Why good:** modular import keeps bundle small, command pattern enables middleware and type safety, region is explicit
@@ -142,10 +144,12 @@ S3 is the most commonly used service. Key operations: `PutObject`, `GetObject`, 
 ```typescript
 import { GetObjectCommand, NoSuchKey } from "@aws-sdk/client-s3";
 
-const response = await s3.send(new GetObjectCommand({
-  Bucket: "my-bucket",
-  Key: "data.json",
-}));
+const response = await s3.send(
+  new GetObjectCommand({
+    Bucket: "my-bucket",
+    Key: "data.json",
+  }),
+);
 const body = await response.Body?.transformToString();
 ```
 
@@ -155,10 +159,14 @@ For presigned URLs, use the separate `@aws-sdk/s3-request-presigner` package:
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const PRESIGN_EXPIRY_SECONDS = 3_600;
-const url = await getSignedUrl(s3, new GetObjectCommand({
-  Bucket: "my-bucket",
-  Key: "file.pdf",
-}), { expiresIn: PRESIGN_EXPIRY_SECONDS });
+const url = await getSignedUrl(
+  s3,
+  new GetObjectCommand({
+    Bucket: "my-bucket",
+    Key: "file.pdf",
+  }),
+  { expiresIn: PRESIGN_EXPIRY_SECONDS },
+);
 ```
 
 See [examples/core.md](examples/core.md) for upload, download, delete, list, and streaming patterns.
@@ -171,14 +179,20 @@ Use `DynamoDBDocumentClient` from `@aws-sdk/lib-dynamodb` — it automatically m
 
 ```typescript
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
-const { Item } = await ddbDocClient.send(new GetCommand({
-  TableName: "users",
-  Key: { userId: "abc-123" },
-}));
+const { Item } = await ddbDocClient.send(
+  new GetCommand({
+    TableName: "users",
+    Key: { userId: "abc-123" },
+  }),
+);
 ```
 
 **Why good:** no manual `marshall()`/`unmarshall()` calls, native JS objects in and out, full type safety
@@ -194,7 +208,11 @@ See [examples/core.md](examples/core.md) for Put, Query, Update, Delete, and bat
 AWS SDK v3 errors extend service-specific base classes (e.g., `S3ServiceException`). Use `instanceof` for typed error handling.
 
 ```typescript
-import { GetObjectCommand, NoSuchKey, S3ServiceException } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  S3ServiceException,
+} from "@aws-sdk/client-s3";
 
 try {
   await s3.send(new GetObjectCommand({ Bucket: "b", Key: "k" }));
@@ -224,7 +242,10 @@ Use built-in paginator functions for any paginated API. They return async iterat
 ```typescript
 import { paginateListObjectsV2 } from "@aws-sdk/client-s3";
 
-for await (const page of paginateListObjectsV2({ client: s3 }, { Bucket: "my-bucket" })) {
+for await (const page of paginateListObjectsV2(
+  { client: s3 },
+  { Bucket: "my-bucket" },
+)) {
   // page.Contents is an array of objects for this page
 }
 ```
@@ -243,10 +264,12 @@ SQS uses `SendMessageCommand`, `ReceiveMessageCommand`, and `DeleteMessageComman
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 const sqs = new SQSClient({});
-await sqs.send(new SendMessageCommand({
-  QueueUrl: QUEUE_URL,
-  MessageBody: JSON.stringify({ orderId: "order-123" }),
-}));
+await sqs.send(
+  new SendMessageCommand({
+    QueueUrl: QUEUE_URL,
+    MessageBody: JSON.stringify({ orderId: "order-123" }),
+  }),
+);
 ```
 
 See [examples/messaging.md](examples/messaging.md) for receive/delete, long polling, FIFO queues, and dead-letter patterns.
@@ -261,13 +284,15 @@ SNS publishes messages to topics. Subscribers receive messages on their configur
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
 const sns = new SNSClient({});
-await sns.send(new PublishCommand({
-  TopicArn: TOPIC_ARN,
-  Message: JSON.stringify({ event: "order.created", orderId: "order-123" }),
-  MessageAttributes: {
-    eventType: { DataType: "String", StringValue: "order.created" },
-  },
-}));
+await sns.send(
+  new PublishCommand({
+    TopicArn: TOPIC_ARN,
+    Message: JSON.stringify({ event: "order.created", orderId: "order-123" }),
+    MessageAttributes: {
+      eventType: { DataType: "String", StringValue: "order.created" },
+    },
+  }),
+);
 ```
 
 See [examples/messaging.md](examples/messaging.md) for topic management and message filtering.
@@ -282,11 +307,13 @@ Invoke Lambda functions synchronously or asynchronously. Retrieve secrets from S
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 const lambda = new LambdaClient({});
-const response = await lambda.send(new InvokeCommand({
-  FunctionName: "process-order",
-  InvocationType: "RequestResponse", // synchronous
-  Payload: JSON.stringify({ orderId: "order-123" }),
-}));
+const response = await lambda.send(
+  new InvokeCommand({
+    FunctionName: "process-order",
+    InvocationType: "RequestResponse", // synchronous
+    Payload: JSON.stringify({ orderId: "order-123" }),
+  }),
+);
 const result = JSON.parse(new TextDecoder().decode(response.Payload));
 ```
 

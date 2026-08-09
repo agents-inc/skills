@@ -1,596 +1,321 @@
 # MongoDB Advanced Patterns
 
-> Schema design (embedding vs referencing), transactions, middleware hooks, and virtuals. See [SKILL.md](../SKILL.md) for core concepts.
+> Transactions, bulk writes, change streams, schema evolution and serverless usage with the native driver. See [SKILL.md](../SKILL.md) for the decisions behind these.
 
-**Core patterns:** See [core.md](core.md). **Queries:** See [queries.md](queries.md). **Aggregation:** See [aggregation.md](aggregation.md). **Indexes:** See [indexes.md](indexes.md).
-
----
-
-## Pattern 1: Embedding vs Referencing
-
-### Good Example -- Embedding (Co-Accessed Data)
-
-```typescript
-import { Schema, model } from "mongoose";
-
-// Embed addresses directly in the user document
-// Addresses are always accessed with the user and are bounded (few per user)
-const userSchema = new Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    addresses: [
-      {
-        label: { type: String, required: true }, // "home", "work", "shipping"
-        street: { type: String, required: true },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        zipCode: { type: String, required: true },
-        isDefault: { type: Boolean, default: false },
-      },
-    ],
-    preferences: {
-      theme: {
-        type: String,
-        enum: ["light", "dark"] as const,
-        default: "light",
-      },
-      language: { type: String, default: "en" },
-      notifications: {
-        email: { type: Boolean, default: true },
-        push: { type: Boolean, default: true },
-      },
-    },
-  },
-  { timestamps: true },
-);
-
-const User = model("User", userSchema);
-export { User };
-```
-
-**Why good:** Addresses are always accessed with the user, bounded (few per user), and never shared between users; preferences are a one-to-one relationship; single read fetches everything needed
-
-### Good Example -- Referencing (Independent Data)
-
-```typescript
-import { Schema, model } from "mongoose";
-
-// Reference posts from user -- posts are independent, unbounded, and accessed separately
-const userSchema = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  // Do NOT embed posts array -- it grows unbounded
-});
-
-const postSchema = new Schema(
-  {
-    authorId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    status: {
-      type: String,
-      enum: ["draft", "published", "archived"] as const,
-      default: "draft",
-    },
-    tags: [{ type: String }],
-  },
-  { timestamps: true },
-);
-
-const User = model("User", userSchema);
-const Post = model("Post", postSchema);
-
-export { User, Post };
-```
-
-**Why good:** Posts grow unbounded, are accessed independently, and can be queried/paginated without loading the user; index on `authorId` for efficient lookups
-
-### Bad Example -- Embedding Unbounded Data
-
-```typescript
-// BAD: Embedding an unbounded array
-const userSchema = new Schema({
-  name: String,
-  email: String,
-  // Posts array grows without limit -- will hit 16 MB document limit
-  posts: [
-    {
-      title: String,
-      content: String, // Large text per post
-      comments: [{ content: String, authorId: Schema.Types.ObjectId }],
-    },
-  ],
-});
-```
-
-**Why bad:** Posts grow unbounded and hit the 16 MB document size limit, deeply nested comments make querying difficult, updating one post requires reading/writing the entire user document
-
-### Good Example -- Hybrid Pattern (Denormalization)
-
-```typescript
-// Store frequently-accessed subset in the parent, full data in separate collection
-const orderSchema = new Schema(
-  {
-    customerId: {
-      type: Schema.Types.ObjectId,
-      ref: "Customer",
-      required: true,
-    },
-    // Denormalized customer info for display (avoids populate on every read)
-    customerSnapshot: {
-      name: { type: String, required: true },
-      email: { type: String, required: true },
-    },
-    items: [
-      {
-        productId: {
-          type: Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        // Denormalized product info (price at time of order)
-        name: { type: String, required: true },
-        unitPrice: { type: Number, required: true },
-        quantity: { type: Number, required: true, min: 1 },
-      },
-    ],
-    total: { type: Number, required: true },
-    status: {
-      type: String,
-      enum: ["pending", "shipped", "delivered"] as const,
-    },
-  },
-  { timestamps: true },
-);
-
-export { orderSchema };
-```
-
-**Why good:** Customer snapshot avoids populate on every order read, product price captured at order time (immutable), full customer data still available via `customerId` when needed
+**Core:** See [core.md](core.md). **Queries:** See [queries.md](queries.md). **Aggregation:** See [aggregation.md](aggregation.md). **Indexes:** See [indexes.md](indexes.md).
 
 ---
 
-## Pattern 2: Transactions
+## Pattern 1: Transactions
 
-### Good Example -- Transfer with Session
+### Good Example -- Transfer with a Session
 
 ```typescript
-import mongoose from "mongoose";
+import type { ClientSession, MongoClient, ObjectId } from "mongodb";
 
-async function transferFunds(
-  fromAccountId: string,
-  toAccountId: string,
+async function transfer(
+  client: MongoClient,
+  from: ObjectId,
+  to: ObjectId,
   amount: number,
 ): Promise<void> {
-  const session = await mongoose.startSession();
+  const session = client.startSession();
 
   try {
-    await session.withTransaction(async () => {
-      // Debit source account
-      const source = await Account.findOneAndUpdate(
-        { _id: fromAccountId, balance: { $gte: amount } },
-        { $inc: { balance: -amount } },
-        { new: true, session },
-      );
+    await session.withTransaction(
+      async () => {
+        const accounts = client.db(DB_NAME).collection<AccountDoc>("accounts");
 
-      if (!source) {
-        throw new Error("Insufficient funds or account not found");
-      }
+        const debited = await accounts.updateOne(
+          { _id: from, balance: { $gte: amount } }, // the guard is in the filter
+          { $inc: { balance: -amount } },
+          { session },
+        );
 
-      // Credit destination account
-      const destination = await Account.findOneAndUpdate(
-        { _id: toAccountId },
-        { $inc: { balance: amount } },
-        { new: true, session },
-      );
+        // Throwing aborts the transaction: the credit below never happens,
+        // and the debit above is rolled back.
+        if (debited.matchedCount === 0) {
+          throw new InsufficientFundsError(from);
+        }
 
-      if (!destination) {
-        throw new Error("Destination account not found");
-      }
-
-      // Record the transfer
-      await Transfer.create(
-        [
-          {
-            fromAccountId,
-            toAccountId,
-            amount,
-            status: "completed",
-          },
-        ],
-        { session },
-      );
-    });
+        await accounts.updateOne(
+          { _id: to },
+          { $inc: { balance: amount } },
+          { session },
+        );
+      },
+      {
+        readConcern: { level: "snapshot" },
+        writeConcern: { w: "majority" },
+      },
+    );
   } finally {
     await session.endSession();
   }
 }
 
-export { transferFunds };
+export { transfer };
 ```
 
-**Why good:** `withTransaction` handles commit/abort/retry automatically, `{ session }` passed to every operation, balance check with `$gte` prevents overdraft atomically, `finally` ensures session cleanup
+**Why good:** the balance check lives in the filter so it is evaluated atomically with the write rather than in a read-then-write race, `withTransaction` commits on return and aborts on throw, `w: "majority"` means a committed transfer survives a failover, and the `finally` releases the session on every path
 
-### Bad Example -- Missing Session
+### Bad Example -- A Missing Session
 
 ```typescript
-// BAD: Operations outside the transaction
-const session = await mongoose.startSession();
-session.startTransaction();
-
-await Account.findOneAndUpdate(
-  { _id: fromId },
-  { $inc: { balance: -amount } },
-  // Missing { session } -- this runs OUTSIDE the transaction!
-);
-
-await Account.findOneAndUpdate(
-  { _id: toId },
-  { $inc: { balance: amount } },
-  { session }, // Only this one is in the transaction
-);
-
-await session.commitTransaction();
+// BAD
+await session.withTransaction(async () => {
+  await accounts.updateOne(
+    { _id: from },
+    { $inc: { balance: -amount } },
+    { session },
+  );
+  await accounts.updateOne({ _id: to }, { $inc: { balance: amount } }); // no session
+});
 ```
 
-**Why bad:** First update runs outside the transaction and cannot be rolled back, inconsistent state if second update fails, must pass `{ session }` to EVERY operation
+**Why bad:** the credit runs outside the transaction and commits on its own, so if the transaction aborts the debit is rolled back and the credit is not — money is created, no error is raised, and the two accounts disagree
 
-### Good Example -- AsyncLocalStorage (Mongoose 8.4+)
+### Bad Example -- Side Effects Inside the Callback
 
 ```typescript
-// Enable automatic session propagation
-mongoose.set("transactionAsyncLocalStorage", true);
+// BAD
+await session.withTransaction(async () => {
+  await orders.insertOne(order, { session });
+  await sendConfirmationEmail(order); // not transactional, and retried
+});
+```
 
-async function createOrderWithTransaction(
-  orderData: OrderInput,
-): Promise<void> {
-  await mongoose.connection.transaction(async () => {
-    // No { session } needed -- automatically propagated
-    const order = await Order.create(orderData);
+**Why bad:** the driver re-runs the callback on transient errors, so a retry sends a second email for one order; nothing outside the database can be rolled back, so it must not be inside the callback. Record the intent in the transaction and act on it after the commit.
 
-    await Product.updateMany(
-      { _id: { $in: orderData.items.map((i) => i.productId) } },
-      { $inc: { stock: -1 } },
+### Good Example -- Parallel Work Is Not Allowed on One Session
+
+```typescript
+// BAD: a session is single-threaded
+await Promise.all([
+  accounts.updateOne(a, updateA, { session }),
+  accounts.updateOne(b, updateB, { session }),
+]);
+
+// GOOD: sequential within the transaction
+await accounts.updateOne(a, updateA, { session });
+await accounts.updateOne(b, updateB, { session });
+```
+
+**Why bad:** operations on one session must be ordered; issuing them concurrently produces errors that appear intermittently under load and not at all in a test
+
+### Good Example -- Not Using a Transaction
+
+```typescript
+// A single-document write is already atomic. A transaction around it
+// adds coordination cost and buys nothing.
+await accounts.updateOne(
+  { _id: id, balance: { $gte: amount } },
+  { $inc: { balance: -amount }, $push: { history: entry } },
+);
+```
+
+**Why good:** the guard, the decrement and the history append apply as one atomic document update, which is both cheaper than a transaction and available on a standalone server
+
+**Transactions require a replica set or sharded cluster.** A standalone server rejects them, which is how a transaction passes in staging and fails on a single-node development machine.
+
+---
+
+## Pattern 2: Bulk Writes
+
+### Good Example -- Batched Mixed Operations
+
+```typescript
+import type { AnyBulkWriteOperation } from "mongodb";
+
+const BULK_BATCH_SIZE = 1_000;
+
+async function syncProducts(
+  products: Collection<ProductDoc>,
+  incoming: ProductInput[],
+): Promise<number> {
+  let modified = 0;
+
+  for (let start = 0; start < incoming.length; start += BULK_BATCH_SIZE) {
+    const batch = incoming.slice(start, start + BULK_BATCH_SIZE);
+
+    const operations: AnyBulkWriteOperation<ProductDoc>[] = batch.map(
+      (item) => ({
+        updateOne: {
+          filter: { sku: item.sku },
+          update: { $set: item, $setOnInsert: { createdAt: new Date() } },
+          upsert: true,
+        },
+      }),
     );
 
-    await Customer.findByIdAndUpdate(orderData.customerId, {
-      $push: { orderIds: order._id },
-    });
-  });
+    // ordered: false lets the server apply operations in parallel and keep
+    // going past a failure, rather than stopping at the first one.
+    const result = await products.bulkWrite(operations, { ordered: false });
+    modified += result.modifiedCount + result.upsertedCount;
+  }
+
+  return modified;
 }
 
-export { createOrderWithTransaction };
+export { syncProducts };
 ```
 
-**Why good:** `transactionAsyncLocalStorage` eliminates manual session passing, cleaner code, no risk of forgetting `{ session }`
+**Why good:** one round trip per thousand documents instead of one per document, explicit batching keeps a single request from growing past the server's limits, and `ordered: false` means one bad record does not abandon the rest of the batch
 
-**When to use:** Mongoose 7.8+ projects where all operations within a request flow through the same async context (improved in 8.4)
-
----
-
-## Pattern 3: Middleware Hooks
-
-### Good Example -- Pre-Save Middleware
+### Bad Example -- A Round Trip per Document
 
 ```typescript
-import { Schema, model } from "mongoose";
-import bcrypt from "bcrypt";
-import slugify from "slugify";
-
-const SALT_ROUNDS = 12;
-
-const userSchema = new Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  name: { type: String, required: true },
-  slug: { type: String, unique: true },
-});
-
-// Hash password before saving -- only if modified
-userSchema.pre("save", async function () {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, SALT_ROUNDS);
-  }
-});
-
-// Generate slug from name
-userSchema.pre("save", function () {
-  if (this.isModified("name")) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
-  }
-});
-
-// MUST register middleware BEFORE model()
-const User = model("User", userSchema);
-export { User };
-```
-
-**Why good:** `isModified` check prevents re-hashing on every save, named constant for salt rounds, middleware defined before `model()` call, slug auto-generated from name
-
-### Good Example -- Post-Save for Side Effects
-
-```typescript
-// Capture isNew before save (isNew is false in post hooks)
-userSchema.pre("save", function () {
-  this.$locals.wasNew = this.isNew;
-});
-
-userSchema.post("save", function (doc) {
-  if (doc.$locals.wasNew) {
-    emailService.sendWelcome(doc.email, doc.name);
-  }
-});
-```
-
-**Why good:** `isNew` is always `false` in post-save hooks (Mongoose sets it to `false` after successful save), so `$locals.wasNew` captures the pre-save state
-
-### Good Example -- Error Handling Middleware
-
-```typescript
-const DUPLICATE_KEY_ERROR = 11000;
-
-userSchema.post(
-  "save",
-  function (
-    error: Error & { code?: number },
-    _doc: unknown,
-    next: (err?: Error) => void,
-  ) {
-    if (
-      error.name === "MongoServerError" &&
-      error.code === DUPLICATE_KEY_ERROR
-    ) {
-      next(new Error("Email already exists"));
-    } else {
-      next(error);
-    }
-  },
-);
-```
-
-**Why good:** Named constant for error code, transforms cryptic MongoDB error into user-friendly message, passes through other errors unchanged
-
-### Good Example -- Query Middleware
-
-```typescript
-// Automatically exclude soft-deleted documents from all find queries
-userSchema.pre("find", function () {
-  this.where({ deletedAt: { $exists: false } });
-});
-
-userSchema.pre("findOne", function () {
-  this.where({ deletedAt: { $exists: false } });
-});
-
-userSchema.pre("countDocuments", function () {
-  this.where({ deletedAt: { $exists: false } });
-});
-```
-
-**Why good:** Soft-delete filter applied automatically to all read queries, consistent across find/findOne/countDocuments
-
-### Bad Example -- Middleware After Model
-
-```typescript
-const User = model("User", userSchema);
-
-// BAD: Registered AFTER model() -- this hook is SILENTLY IGNORED
-userSchema.pre("save", function () {
-  this.updatedAt = new Date();
-});
-```
-
-**Why bad:** Middleware registered after `model()` is silently ignored, no error thrown, data integrity silently broken
-
----
-
-## Pattern 4: Virtuals
-
-### Good Example -- Computed Properties
-
-```typescript
-import { Schema, model } from "mongoose";
-
-const userSchema = new Schema(
-  {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true },
-  },
-  {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  },
-);
-
-// Read-only virtual
-userSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
-
-// Virtual with getter and setter
-userSchema
-  .virtual("displayName")
-  .get(function () {
-    return `${this.firstName} ${this.lastName}`;
-  })
-  .set(function (fullName: string) {
-    const parts = fullName.split(" ");
-    this.firstName = parts[0] ?? "";
-    this.lastName = parts.slice(1).join(" ");
-  });
-
-// Virtual for domain extraction
-userSchema.virtual("emailDomain").get(function () {
-  return this.email.slice(this.email.indexOf("@") + 1);
-});
-
-const User = model("User", userSchema);
-export { User };
-```
-
-**Why good:** Schema options enable virtuals in JSON/object conversion, getter + setter for two-way virtual, multiple virtuals for different computed values
-
-### Good Example -- Populate Virtual (Foreign Key on Other Collection)
-
-```typescript
-const authorSchema = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-});
-
-// Virtual populate -- look up posts where Post.authorId matches Author._id
-authorSchema.virtual("posts", {
-  ref: "Post",
-  localField: "_id",
-  foreignField: "authorId",
-  options: { sort: { createdAt: -1 } },
-});
-
-// Usage
-const author = await Author.findById(id).populate("posts");
-// author.posts is an array of Post documents
-```
-
-**Why good:** Virtual populate for reverse relationships, no array stored on author document, sort option for consistent ordering, avoids embedding posts in the author
-
----
-
-## Pattern 5: Soft Delete Pattern
-
-### Good Example -- Soft Delete with Middleware
-
-```typescript
-import { Schema, model, type Query } from "mongoose";
-
-interface ISoftDeletable {
-  deletedAt?: Date;
-  deletedBy?: string;
+// BAD
+for (const item of incoming) {
+  await products.updateOne({ sku: item.sku }, { $set: item }, { upsert: true });
 }
+```
 
-function applySoftDelete<T>(schema: Schema<T & ISoftDeletable>): void {
-  // Add fields
-  schema.add({
-    deletedAt: { type: Date, default: null },
-    deletedBy: { type: String, default: null },
-  });
+**Why bad:** network latency is paid once per document, so 10,000 items at 2 ms each spend 20 seconds waiting rather than working — the database is not the bottleneck, the round trips are
 
-  // Filter deleted documents from all queries
-  schema.pre("find", function () {
-    if (!this.getOptions().includeDeleted) {
-      this.where({ deletedAt: null });
+**Reading bulk errors:** with `ordered: false` a partial failure throws `MongoBulkWriteError`, whose `result` holds what did succeed and whose `writeErrors` names each failure by index. Discarding the error discards the record of what already applied.
+
+---
+
+## Pattern 3: Change Streams
+
+### Good Example -- Reacting to Writes
+
+```typescript
+const changeStream = orders.watch([{ $match: { operationType: "insert" } }], {
+  fullDocument: "updateLookup",
+});
+
+try {
+  for await (const change of changeStream) {
+    if (change.operationType === "insert") {
+      await onOrderCreated(change.fullDocument);
     }
-  });
+  }
+} finally {
+  await changeStream.close();
+}
+```
 
-  schema.pre("findOne", function () {
-    if (!this.getOptions().includeDeleted) {
-      this.where({ deletedAt: null });
-    }
-  });
+**Why good:** the pipeline filters server-side so uninteresting events never cross the network, and the `finally` closes the stream rather than leaving it open against the server
 
-  schema.pre("countDocuments", function () {
-    if (!this.getOptions().includeDeleted) {
-      this.where({ deletedAt: null });
-    }
-  });
+### Good Example -- Resuming After a Restart
 
-  // Add soft delete method
-  schema.methods.softDelete = async function (deletedBy?: string) {
-    this.deletedAt = new Date();
-    this.deletedBy = deletedBy ?? null;
-    return this.save();
-  };
+```typescript
+// Persist the resume token with the work it corresponds to, so a restart
+// continues from the last processed change instead of replaying or skipping.
+const resumeAfter = await loadResumeToken();
+const stream = orders.watch([], resumeAfter ? { resumeAfter } : {});
 
-  // Add restore method
-  schema.methods.restore = async function () {
-    this.deletedAt = null;
-    this.deletedBy = null;
-    return this.save();
+for await (const change of stream) {
+  await handle(change);
+  await saveResumeToken(change._id);
+}
+```
+
+**Why good:** without a stored token a restart resumes from now, silently losing every change that occurred while the process was down
+
+**Change streams need a replica set,** and resumability is bounded by the oplog window — a process down longer than the oplog retains cannot resume and must fall back to a reconciliation pass.
+
+---
+
+## Pattern 4: Schema Evolution Without a Schema
+
+### Good Example -- Versioned Documents
+
+```typescript
+const CURRENT_SCHEMA_VERSION = 2;
+
+type UserDocV2 = {
+  _id: ObjectId;
+  schemaVersion: number;
+  email: string;
+  name: { first: string; last: string }; // v1 had a single `fullName`
+};
+
+// Read path tolerates both shapes; the migration runs in the background.
+function normalizeUser(doc: WithId<Document>): UserDocV2 {
+  if (doc.schemaVersion === CURRENT_SCHEMA_VERSION) return doc as UserDocV2;
+
+  const [first = "", ...rest] = String(doc.fullName ?? "").split(" ");
+  return {
+    _id: doc._id,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    email: String(doc.email),
+    name: { first, last: rest.join(" ") },
   };
 }
 
-// Usage
-const postSchema = new Schema({
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-});
-
-applySoftDelete(postSchema);
-
-const Post = model("Post", postSchema);
-
-// Normal queries automatically exclude deleted
-const posts = await Post.find(); // Only non-deleted
-
-// Include deleted with option
-const allPosts = await Post.find().setOptions({ includeDeleted: true });
-
-export { Post, applySoftDelete };
+export { CURRENT_SCHEMA_VERSION, normalizeUser };
 ```
 
-**Why good:** Reusable plugin function, automatic filtering on all queries, escape hatch with `includeDeleted` option, `softDelete` and `restore` methods on documents
+**Why good:** a stored version field makes "which shape is this?" answerable rather than inferred from which fields happen to be present, and the tolerant read path means the migration does not have to complete before the new code ships
 
----
-
-## Pattern 6: Discriminators (Single Collection Inheritance)
-
-### Good Example -- Event System
+### Good Example -- Server-Side Validation
 
 ```typescript
-import { Schema, model } from "mongoose";
-
-// Base event schema
-const eventSchema = new Schema(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    timestamp: { type: Date, default: Date.now },
-    metadata: { type: Schema.Types.Mixed },
+// MongoDB can enforce a schema even though the driver does not.
+await db.command({
+  collMod: "users",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["email", "schemaVersion"],
+      properties: {
+        email: { bsonType: "string" },
+        schemaVersion: { bsonType: "int" },
+      },
+    },
   },
-  {
-    discriminatorKey: "eventType",
-    timestamps: true,
-  },
-);
-
-const Event = model("Event", eventSchema);
-
-// Discriminator for page views
-const PageViewEvent = Event.discriminator(
-  "PageView",
-  new Schema({
-    url: { type: String, required: true },
-    referrer: { type: String },
-    duration: { type: Number }, // seconds
-  }),
-);
-
-// Discriminator for purchases
-const PurchaseEvent = Event.discriminator(
-  "Purchase",
-  new Schema({
-    orderId: { type: Schema.Types.ObjectId, ref: "Order", required: true },
-    amount: { type: Number, required: true },
-    currency: { type: String, default: "USD" },
-  }),
-);
-
-// Query all events
-const allEvents = await Event.find({ userId });
-
-// Query only purchases
-const purchases = await PurchaseEvent.find({ userId, amount: { $gte: 100 } });
-
-export { Event, PageViewEvent, PurchaseEvent };
+  validationLevel: "moderate", // existing invalid documents are left alone
+});
 ```
 
-**Why good:** Single collection for all events (efficient indexing), discriminator key for type differentiation, each subtype has its own validation, can query base or specific types
+**Why good:** the guarantee lives with the data, so it holds for every writer including scripts and other services, and `moderate` applies it to new and valid-existing documents without rejecting a backlog that has not been migrated
 
 ---
 
-_For core patterns, see [core.md](core.md). For query patterns, see [queries.md](queries.md). For aggregation, see [aggregation.md](aggregation.md). For indexes, see [indexes.md](indexes.md)._
+## Pattern 5: Serverless and Edge
+
+### Good Example -- Reusing the Client Across Invocations
+
+```typescript
+const SERVERLESS_POOL_SIZE = 5;
+const MAX_IDLE_TIME_MS = 30_000;
+
+let clientPromise: Promise<MongoClient> | undefined;
+
+function getClient(): Promise<MongoClient> {
+  // Caching the promise rather than the client means concurrent cold
+  // invocations share one connect() instead of racing several.
+  clientPromise ??= new MongoClient(requireEnv("MONGODB_URI"), {
+    maxPoolSize: SERVERLESS_POOL_SIZE,
+    minPoolSize: 0,
+    maxIdleTimeMS: MAX_IDLE_TIME_MS,
+  }).connect();
+
+  return clientPromise;
+}
+
+export { getClient };
+```
+
+**Why good:** warm invocations reuse the pool and skip the handshake, caching the promise removes the race between simultaneous cold starts, and a small pool with `minPoolSize: 0` keeps total connections bounded when the platform scales out to many instances
+
+### Bad Example -- Closing the Client per Invocation
+
+```typescript
+// BAD
+export async function handler() {
+  const client = await getClient();
+  try {
+    return await doWork(client);
+  } finally {
+    await client.close(); // discards the pool the next invocation would reuse
+  }
+}
+```
+
+**Why bad:** every invocation becomes a cold connect, so the platform's reuse of the process buys nothing and each request pays the full TLS and auth handshake
+
+**Connection limits are the real constraint here.** Instances × `maxPoolSize` is the ceiling, and a platform that scales to 200 instances with a pool of 100 asks for 20,000 connections from a cluster that permits far fewer.

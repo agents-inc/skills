@@ -51,7 +51,11 @@ export function createDataChannel(win: BrowserWindow): MessagePortMain {
 function processRequest(request: PortRequest): PortResponse {
   switch (request.type) {
     case "process-chunk":
-      return { id: request.id, type: "chunk-result", data: heavyProcess(request.payload) };
+      return {
+        id: request.id,
+        type: "chunk-result",
+        data: heavyProcess(request.payload),
+      };
     case "stream-start":
       return { id: request.id, type: "stream-data", data: null };
     case "stream-stop":
@@ -143,7 +147,7 @@ import type { BrowserWindow } from "electron";
  */
 export function bridgeRenderers(
   windowA: BrowserWindow,
-  windowB: BrowserWindow
+  windowB: BrowserWindow,
 ): void {
   const { port1, port2 } = new MessageChannelMain();
 
@@ -200,11 +204,9 @@ import path from "node:path";
 import type { WorkerRequest, WorkerResponse } from "../shared/worker-messages";
 
 export function createBackgroundWorker(mainWindow: BrowserWindow) {
-  const worker = utilityProcess.fork(
-    path.join(__dirname, "worker.js"),
-    [],
-    { serviceName: "background-worker" }
-  );
+  const worker = utilityProcess.fork(path.join(__dirname, "worker.js"), [], {
+    serviceName: "background-worker",
+  });
 
   // Forward results from worker to renderer
   worker.on("message", (response: WorkerResponse) => {

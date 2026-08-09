@@ -53,8 +53,9 @@ const buildContext = async (req: FastifyRequest, _reply: FastifyReply) => {
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 declare module "mercurius" {
-  interface MercuriusContext
-    extends PromiseType<ReturnType<typeof buildContext>> {}
+  interface MercuriusContext extends PromiseType<
+    ReturnType<typeof buildContext>
+  > {}
 }
 
 const app = Fastify({ logger: true });
@@ -242,7 +243,8 @@ const loaders = {
         ctx: MercuriusContext,
       ) {
         const userIds = queries.map(({ obj }) => obj.id);
-        const allPosts = await ctx.reply.server.db.findPostsByAuthorIds(userIds);
+        const allPosts =
+          await ctx.reply.server.db.findPostsByAuthorIds(userIds);
         return queries.map(({ obj }) =>
           allPosts.filter((post) => post.authorId === obj.id),
         );

@@ -154,14 +154,17 @@ map.addLayer({
   slot: "middle",
   paint: {
     "fill-extrusion-color": [
-      "interpolate", ["linear"], ["get", "density"],
-      0, "#2ecc71",
-      500, "#f39c12",
-      1000, "#e74c3c",
+      "interpolate",
+      ["linear"],
+      ["get", "density"],
+      0,
+      "#2ecc71",
+      500,
+      "#f39c12",
+      1000,
+      "#e74c3c",
     ],
-    "fill-extrusion-height": [
-      "*", ["get", "density"], HEIGHT_MULTIPLIER,
-    ],
+    "fill-extrusion-height": ["*", ["get", "density"], HEIGHT_MULTIPLIER],
     "fill-extrusion-base": 0,
     "fill-extrusion-opacity": 0.7,
   },
@@ -188,37 +191,61 @@ map.addLayer({
   paint: {
     // Weight by property value
     "heatmap-weight": [
-      "interpolate", ["linear"], ["get", "severity"],
-      0, 0,
-      10, 1,
+      "interpolate",
+      ["linear"],
+      ["get", "severity"],
+      0,
+      0,
+      10,
+      1,
     ],
     // Intensity increases with zoom
     "heatmap-intensity": [
-      "interpolate", ["linear"], ["zoom"],
-      0, 1,
-      HEATMAP_MAX_ZOOM, 3,
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      0,
+      1,
+      HEATMAP_MAX_ZOOM,
+      3,
     ],
     // Color gradient
     "heatmap-color": [
-      "interpolate", ["linear"], ["heatmap-density"],
-      0, "rgba(33,102,172,0)",
-      0.2, "rgb(103,169,207)",
-      0.4, "rgb(209,229,240)",
-      0.6, "rgb(253,219,199)",
-      0.8, "rgb(239,138,98)",
-      1, "rgb(178,24,43)",
+      "interpolate",
+      ["linear"],
+      ["heatmap-density"],
+      0,
+      "rgba(33,102,172,0)",
+      0.2,
+      "rgb(103,169,207)",
+      0.4,
+      "rgb(209,229,240)",
+      0.6,
+      "rgb(253,219,199)",
+      0.8,
+      "rgb(239,138,98)",
+      1,
+      "rgb(178,24,43)",
     ],
     // Radius grows with zoom
     "heatmap-radius": [
-      "interpolate", ["linear"], ["zoom"],
-      0, 2,
-      HEATMAP_MAX_ZOOM, 20,
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      0,
+      2,
+      HEATMAP_MAX_ZOOM,
+      20,
     ],
     // Fade out at high zoom (transition to points)
     "heatmap-opacity": [
-      "interpolate", ["linear"], ["zoom"],
-      HEATMAP_TRANSITION_ZOOM - 1, 1,
-      HEATMAP_TRANSITION_ZOOM, 0,
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      HEATMAP_TRANSITION_ZOOM - 1,
+      1,
+      HEATMAP_TRANSITION_ZOOM,
+      0,
     ],
   },
 });
@@ -239,13 +266,14 @@ import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl,
-  marker: true,         // Add marker at result
+  marker: true, // Add marker at result
   placeholder: "Search for a place",
-  proximity: {          // Bias results toward current map center
+  proximity: {
+    // Bias results toward current map center
     longitude: map.getCenter().lng,
     latitude: map.getCenter().lat,
   },
-  countries: "us",      // Limit to country
+  countries: "us", // Limit to country
   types: "address,poi", // Limit result types
 });
 
@@ -294,13 +322,16 @@ directions.setOrigin([-73.9857, 40.7484]);
 directions.setDestination([-73.9654, 40.7829]);
 
 // Listen for route
-directions.on("route", (e: { route: Array<{ distance: number; duration: number }> }) => {
-  const route = e.route[0];
-  if (route) {
-    const distanceKm = route.distance / 1000;
-    const durationMin = route.duration / 60;
-  }
-});
+directions.on(
+  "route",
+  (e: { route: Array<{ distance: number; duration: number }> }) => {
+    const route = e.route[0];
+    if (route) {
+      const distanceKm = route.distance / 1000;
+      const durationMin = route.duration / 60;
+    }
+  },
+);
 ```
 
 **Why good:** Profile includes traffic data, alternatives enabled for multiple route options, programmatic origin/destination for integration with app logic
@@ -353,10 +384,10 @@ map.on("load", () => {
     type: "image",
     url: "/images/radar-snapshot.png",
     coordinates: [
-      [-80.425, 46.437],  // Top-left
-      [-71.516, 46.437],  // Top-right
-      [-71.516, 37.936],  // Bottom-right
-      [-80.425, 37.936],  // Bottom-left
+      [-80.425, 46.437], // Top-left
+      [-71.516, 46.437], // Top-right
+      [-71.516, 37.936], // Bottom-right
+      [-80.425, 37.936], // Bottom-left
     ],
   });
 

@@ -1,0 +1,9 @@
+{
+  "name": "web-ui-base-ui",
+  "version": "1.0.0",
+  "skills": "./skills/",
+  "description": "Unstyled accessible React component primitives",
+  "author": {
+    "name": "@vince"
+  }
+}

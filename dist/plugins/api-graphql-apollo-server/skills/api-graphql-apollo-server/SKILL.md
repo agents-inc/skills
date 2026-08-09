@@ -226,7 +226,9 @@ import DataLoader from "dataloader";
 
 const userLoader = new DataLoader<string, User>(async (ids) => {
   const users = await db.users.findMany({ where: { id: { in: [...ids] } } });
-  return ids.map((id) => users.find((u) => u.id === id) ?? new Error(`User ${id} not found`));
+  return ids.map(
+    (id) => users.find((u) => u.id === id) ?? new Error(`User ${id} not found`),
+  );
 });
 ```
 
@@ -270,7 +272,10 @@ Apollo Server does not include a built-in WebSocket transport. Use `graphql-ws` 
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/use/ws";
 
-const wsServer = new WebSocketServer({ server: httpServer, path: "/subscriptions" });
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: "/subscriptions",
+});
 const serverCleanup = useServer({ schema }, wsServer);
 ```
 

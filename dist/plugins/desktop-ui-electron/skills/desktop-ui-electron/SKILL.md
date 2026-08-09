@@ -150,7 +150,13 @@ const template = [
   {
     label: "File",
     submenu: [
-      { label: "Open", accelerator: "CmdOrCtrl+O", click: () => { /* ... */ } },
+      {
+        label: "Open",
+        accelerator: "CmdOrCtrl+O",
+        click: () => {
+          /* ... */
+        },
+      },
       process.platform === "darwin" ? { role: "close" } : { role: "quit" },
     ],
   },
@@ -172,16 +178,26 @@ const { Tray, Menu, nativeImage } = require("electron/main");
 let tray = null; // MUST keep reference -- GC destroys the icon silently
 
 function createTray(mainWindow) {
-  const icon = nativeImage.createFromPath(path.join(__dirname, "assets", "tray-icon.png"));
+  const icon = nativeImage.createFromPath(
+    path.join(__dirname, "assets", "tray-icon.png"),
+  );
   if (process.platform === "darwin") icon.setTemplateImage(true);
 
   tray = new Tray(icon);
   tray.setToolTip(app.name);
-  tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Show", click: () => { mainWindow.show(); mainWindow.focus(); } },
-    { type: "separator" },
-    { label: "Quit", click: () => app.quit() },
-  ]));
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: "Show",
+        click: () => {
+          mainWindow.show();
+          mainWindow.focus();
+        },
+      },
+      { type: "separator" },
+      { label: "Quit", click: () => app.quit() },
+    ]),
+  );
 }
 ```
 
@@ -195,12 +211,12 @@ Use `app.setBadgeCount()` (macOS, Linux/Unity) for numeric badges or `app.dock.s
 
 ```javascript
 // Numeric badge (macOS + Linux/Unity)
-app.setBadgeCount(5);   // Shows "5" on dock/taskbar icon
-app.setBadgeCount(0);   // Hides the badge
+app.setBadgeCount(5); // Shows "5" on dock/taskbar icon
+app.setBadgeCount(0); // Hides the badge
 
 // Text badge (macOS only)
-app.dock.setBadge("!");  // Shows "!" on dock icon
-app.dock.setBadge("");   // Clears the badge
+app.dock.setBadge("!"); // Shows "!" on dock icon
+app.dock.setBadge(""); // Clears the badge
 ```
 
 **Key point:** `setBadgeCount` returns `boolean` (false if platform doesn't support it). On Windows, use a third-party overlay solution -- native badge API is not available. See [examples/core.md](examples/core.md).
@@ -216,7 +232,10 @@ const WINDOW_STATE_FILE = "window-state.json";
 
 function loadWindowState() {
   try {
-    const data = fs.readFileSync(path.join(app.getPath("userData"), WINDOW_STATE_FILE), "utf-8");
+    const data = fs.readFileSync(
+      path.join(app.getPath("userData"), WINDOW_STATE_FILE),
+      "utf-8",
+    );
     return JSON.parse(data);
   } catch {
     return null;
@@ -226,7 +245,10 @@ function loadWindowState() {
 function saveWindowState(win) {
   const bounds = win.getBounds();
   const data = { ...bounds, isMaximized: win.isMaximized() };
-  fs.writeFileSync(path.join(app.getPath("userData"), WINDOW_STATE_FILE), JSON.stringify(data));
+  fs.writeFileSync(
+    path.join(app.getPath("userData"), WINDOW_STATE_FILE),
+    JSON.stringify(data),
+  );
 }
 ```
 
@@ -326,13 +348,13 @@ Need transparency?
 
 ### Title Bar Options by Platform
 
-| Option | macOS | Windows | Linux |
-|--------|-------|---------|-------|
-| `titleBarStyle: 'hidden'` | Hides title, keeps traffic lights | Hides title bar entirely | Hides title bar entirely |
-| `titleBarStyle: 'hiddenInset'` | Traffic lights inset further | N/A (same as hidden) | N/A (same as hidden) |
-| `titleBarOverlay` | Not needed (traffic lights stay) | Adds native min/max/close buttons | Adds native min/max/close buttons |
-| `trafficLightPosition` | Custom traffic light position | N/A | N/A |
-| `frame: false` | No chrome at all | No chrome at all | No chrome at all |
+| Option                         | macOS                             | Windows                           | Linux                             |
+| ------------------------------ | --------------------------------- | --------------------------------- | --------------------------------- |
+| `titleBarStyle: 'hidden'`      | Hides title, keeps traffic lights | Hides title bar entirely          | Hides title bar entirely          |
+| `titleBarStyle: 'hiddenInset'` | Traffic lights inset further      | N/A (same as hidden)              | N/A (same as hidden)              |
+| `titleBarOverlay`              | Not needed (traffic lights stay)  | Adds native min/max/close buttons | Adds native min/max/close buttons |
+| `trafficLightPosition`         | Custom traffic light position     | N/A                               | N/A                               |
+| `frame: false`                 | No chrome at all                  | No chrome at all                  | No chrome at all                  |
 
 ### System Tray vs Dock Badge
 

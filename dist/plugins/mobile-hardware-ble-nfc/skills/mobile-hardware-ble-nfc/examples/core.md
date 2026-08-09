@@ -94,7 +94,12 @@ Always request permissions before scanning. Filter by service UUID for battery e
 
 ```typescript
 import { Platform, PermissionsAndroid } from "react-native";
-import { BleManager, type Device, type Subscription, ScanMode } from "react-native-ble-plx";
+import {
+  BleManager,
+  type Device,
+  type Subscription,
+  ScanMode,
+} from "react-native-ble-plx";
 
 const HEART_RATE_SERVICE = "0000180d-0000-1000-8000-00805f9b34fb";
 const SCAN_TIMEOUT_MS = 15000;

@@ -27,7 +27,7 @@ description: File-based routing and navigation for Expo/React Native
 
 ---
 
-**Auto-detection:** expo-router, Expo Router, file-based routing, _layout.tsx, Stack.Screen, Tabs.Screen, useRouter, useLocalSearchParams, useSegments, usePathname, Link href, router.push, router.replace, router.dismiss, router.dismissTo, +api.ts, +not-found, Stack.Protected, generateStaticParams, expo-router/head, Slot, Redirect, useFocusEffect, NativeTabs, headless tabs, TabSlot, TabTrigger
+**Auto-detection:** expo-router, Expo Router, file-based routing, \_layout.tsx, Stack.Screen, Tabs.Screen, useRouter, useLocalSearchParams, useSegments, usePathname, Link href, router.push, router.replace, router.dismiss, router.dismissTo, +api.ts, +not-found, Stack.Protected, generateStaticParams, expo-router/head, Slot, Redirect, useFocusEffect, NativeTabs, headless tabs, TabSlot, TabTrigger
 
 **When to use:**
 
@@ -81,17 +81,17 @@ Expo Router maps the filesystem to your navigation hierarchy. Every file in `app
 
 Every file in `app/` maps to a route. Special characters change behavior:
 
-| File | URL | Purpose |
-|------|-----|---------|
-| `index.tsx` | `/` (or parent path) | Default route for directory |
-| `about.tsx` | `/about` | Static route |
-| `[id].tsx` | `/:id` | Dynamic segment |
-| `[...slug].tsx` | `/a/b/c` | Catch-all segments |
-| `_layout.tsx` | N/A | Wraps sibling routes in navigator |
-| `(group)/` | Not in URL | Organizes routes without URL impact |
-| `+not-found.tsx` | N/A | 404 fallback for unmatched routes |
-| `+api.ts` | Server endpoint | API route handler |
-| `+html.tsx` | N/A | Root HTML wrapper (web static rendering) |
+| File             | URL                  | Purpose                                  |
+| ---------------- | -------------------- | ---------------------------------------- |
+| `index.tsx`      | `/` (or parent path) | Default route for directory              |
+| `about.tsx`      | `/about`             | Static route                             |
+| `[id].tsx`       | `/:id`               | Dynamic segment                          |
+| `[...slug].tsx`  | `/a/b/c`             | Catch-all segments                       |
+| `_layout.tsx`    | N/A                  | Wraps sibling routes in navigator        |
+| `(group)/`       | Not in URL           | Organizes routes without URL impact      |
+| `+not-found.tsx` | N/A                  | 404 fallback for unmatched routes        |
+| `+api.ts`        | Server endpoint      | API route handler                        |
+| `+html.tsx`      | N/A                  | Root HTML wrapper (web static rendering) |
 
 **Key insight:** Groups `(name)/` are purely organizational. `(tabs)/home.tsx` and `home.tsx` both resolve to `/home`. Use groups to apply different layouts to different route sets without changing URLs.
 
@@ -138,15 +138,15 @@ import {
 
 // useRouter -- imperative navigation
 const router = useRouter();
-router.push("/users/123");           // Add to stack
-router.replace("/home");             // Replace current (no back)
-router.back();                       // Go back
-router.dismiss();                    // Pop one screen in nearest stack
-router.dismissTo("/home");           // Pop until reaching /home
-router.dismissAll();                 // Pop to first screen in stack
-router.canGoBack();                  // Check if back is possible
-router.canDismiss();                 // Check if dismiss is possible
-router.prefetch("/heavy-screen");    // Preload in background
+router.push("/users/123"); // Add to stack
+router.replace("/home"); // Replace current (no back)
+router.back(); // Go back
+router.dismiss(); // Pop one screen in nearest stack
+router.dismissTo("/home"); // Pop until reaching /home
+router.dismissAll(); // Pop to first screen in stack
+router.canGoBack(); // Check if back is possible
+router.canDismiss(); // Check if dismiss is possible
+router.prefetch("/heavy-screen"); // Preload in background
 
 // useLocalSearchParams -- route params for focused screen only
 const { id } = useLocalSearchParams<{ id: string }>();
@@ -264,11 +264,11 @@ Enable compile-time route validation by setting `experiments.typedRoutes: true` 
 
 ```typescript
 // With typedRoutes enabled:
-router.push("/about");                    // OK
-router.push("/nonexistent");              // TypeScript error
+router.push("/about"); // OK
+router.push("/nonexistent"); // TypeScript error
 router.push({
   pathname: "/users/[id]",
-  params: { id: "123" },                 // Typed params required
+  params: { id: "123" }, // Typed params required
 });
 
 // Typed search params

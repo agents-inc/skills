@@ -91,8 +91,8 @@ Automatically scrolls until a target element appears. More reliable than fixed s
     element:
       id: "item_50"
     direction: DOWN
-    timeout: 30000   # Max 30 seconds
-    speed: 60        # 0-100, higher = faster
+    timeout: 30000 # Max 30 seconds
+    speed: 60 # 0-100, higher = faster
 
 # Center element in viewport after finding it
 - scrollUntilVisible:
@@ -234,7 +234,7 @@ appId: com.example.app
 - startRecording:
     path: "recordings/onboarding"
     label: "Capture full onboarding sequence"
-    optional: true  # Don't fail test if recording engine has issues
+    optional: true # Don't fail test if recording engine has issues
 # ... test steps ...
 - stopRecording
 ```

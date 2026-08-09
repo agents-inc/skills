@@ -101,6 +101,7 @@ function EditProfileScreen() {
 ```
 
 **Limitations:**
+
 - Only fires for removal actions (back, pop, reset) -- NOT for screen being covered (push, tab switch)
 - Better alternative for data preservation: auto-save to persistent storage and offer restore on return
 
@@ -154,6 +155,7 @@ function ProductList({ products }: { products: Product[] }) {
 ```
 
 **Preloaded screen limitations:**
+
 - Cannot dispatch navigation actions
 - Cannot call `navigation.setOptions()`
 - Cannot listen to navigator events
@@ -216,6 +218,7 @@ export function App() {
 ```
 
 **Caveats:**
+
 - All params must be serializable (no functions, class instances, or circular references)
 - Consider clearing persisted state on app version updates or if the screen structure changes
 - If the app crashes on a specific screen, persisted state could cause a crash loop -- add error boundaries that clear state

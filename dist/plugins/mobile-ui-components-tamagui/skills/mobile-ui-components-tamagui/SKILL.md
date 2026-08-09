@@ -122,8 +122,8 @@ export type CardProps = GetProps<typeof Card>;
 ```tsx
 // BAD: raw values bypass token system
 export const Card = styled(View, {
-  padding: 16,           // raw pixel -- not theme-aware
-  borderRadius: 8,       // should be $4 or a radius token
+  padding: 16, // raw pixel -- not theme-aware
+  borderRadius: 8, // should be $4 or a radius token
   backgroundColor: "#fff", // hardcoded -- breaks dark mode
 });
 ```

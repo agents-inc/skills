@@ -6,15 +6,15 @@
 
 ## expo-linking API Quick Reference
 
-| Method | Returns | Purpose |
-|---|---|---|
-| `useURL()` | `string \| null` | Hook: initial URL + subsequent URL changes |
-| `getInitialURL()` | `Promise<string \| null>` | Cold start URL (one-time) |
-| `addEventListener('url', cb)` | `Subscription` | Listen for URL changes while app is running |
-| `createURL(path, opts?)` | `string` | Build a deep link URL for your app |
-| `parse(url)` | `ParsedURL` | Extract scheme, hostname, path, queryParams |
-| `openURL(url)` | `Promise<true>` | Open a URL in the appropriate app |
-| `canOpenURL(url)` | `Promise<boolean>` | Check if a URL can be handled |
+| Method                        | Returns                   | Purpose                                     |
+| ----------------------------- | ------------------------- | ------------------------------------------- |
+| `useURL()`                    | `string \| null`          | Hook: initial URL + subsequent URL changes  |
+| `getInitialURL()`             | `Promise<string \| null>` | Cold start URL (one-time)                   |
+| `addEventListener('url', cb)` | `Subscription`            | Listen for URL changes while app is running |
+| `createURL(path, opts?)`      | `string`                  | Build a deep link URL for your app          |
+| `parse(url)`                  | `ParsedURL`               | Extract scheme, hostname, path, queryParams |
+| `openURL(url)`                | `Promise<true>`           | Open a URL in the appropriate app           |
+| `canOpenURL(url)`             | `Promise<boolean>`        | Check if a URL can be handled               |
 
 ### ParsedURL Shape
 
@@ -36,15 +36,19 @@ interface LinkingOptions<ParamList> {
   prefixes: string[];
   config?: {
     screens: {
-      [ScreenName: string]: string | {
-        path: string;
-        exact?: boolean;
-        parse?: Record<string, (value: string) => unknown>;
-        stringify?: Record<string, (value: unknown) => string>;
-        screens?: { /* nested screens */ };
-        initialRouteName?: string;
-        alias?: string[];
-      };
+      [ScreenName: string]:
+        | string
+        | {
+            path: string;
+            exact?: boolean;
+            parse?: Record<string, (value: string) => unknown>;
+            stringify?: Record<string, (value: unknown) => string>;
+            screens?: {
+              /* nested screens */
+            };
+            initialRouteName?: string;
+            alias?: string[];
+          };
     };
   };
   getInitialURL?: () => Promise<string | null>;

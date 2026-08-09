@@ -83,11 +83,11 @@ description: Drag and drop with @dnd-kit - draggable, droppable, sortable, colli
 
 **Package overview:**
 
-| Package | Purpose |
-|---------|---------|
-| `@dnd-kit/core` | DndContext, useDraggable, useDroppable, DragOverlay, sensors, collision detection |
-| `@dnd-kit/sortable` | SortableContext, useSortable, sorting strategies, arrayMove, sortableKeyboardCoordinates |
-| `@dnd-kit/utilities` | CSS.Transform.toString, CSS.Transition.toString |
+| Package              | Purpose                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| `@dnd-kit/core`      | DndContext, useDraggable, useDroppable, DragOverlay, sensors, collision detection                |
+| `@dnd-kit/sortable`  | SortableContext, useSortable, sorting strategies, arrayMove, sortableKeyboardCoordinates         |
+| `@dnd-kit/utilities` | CSS.Transform.toString, CSS.Transition.toString                                                  |
 | `@dnd-kit/modifiers` | restrictToVerticalAxis, restrictToHorizontalAxis, restrictToParentElement, restrictToWindowEdges |
 
 </philosophy>
@@ -116,7 +116,9 @@ function App() {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <DraggableItem id="item-1" />
-      <DroppableZone id="zone-a">{parent === "zone-a" && <span>Dropped here</span>}</DroppableZone>
+      <DroppableZone id="zone-a">
+        {parent === "zone-a" && <span>Dropped here</span>}
+      </DroppableZone>
     </DndContext>
   );
 }
@@ -134,7 +136,11 @@ See [examples/core.md](examples/core.md) Pattern 1 for full useDraggable and use
 
 ```tsx
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
-import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 function SortableList() {
   const [items, setItems] = useState(["a", "b", "c", "d"]);
@@ -153,7 +159,9 @@ function SortableList() {
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((id) => <SortableItem key={id} id={id} />)}
+        {items.map((id) => (
+          <SortableItem key={id} id={id} />
+        ))}
       </SortableContext>
     </DndContext>
   );
@@ -171,21 +179,30 @@ See [examples/core.md](examples/core.md) Pattern 2 for the full SortableItem com
 Use `DragOverlay` instead of transforming the dragged element directly when items move between containers, live in scrollable/virtualized containers, or need custom drag previews.
 
 ```tsx
-import { DndContext, DragOverlay, type DragStartEvent, type DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragOverlay,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 
 function Board() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
     <DndContext
-      onDragStart={(event: DragStartEvent) => setActiveId(String(event.active.id))}
+      onDragStart={(event: DragStartEvent) =>
+        setActiveId(String(event.active.id))
+      }
       onDragEnd={(event: DragEndEvent) => {
         handleDragEnd(event);
         setActiveId(null);
       }}
     >
       {/* containers and sortable items */}
-      <DragOverlay>{activeId ? <ItemPreview id={activeId} /> : null}</DragOverlay>
+      <DragOverlay>
+        {activeId ? <ItemPreview id={activeId} /> : null}
+      </DragOverlay>
     </DndContext>
   );
 }
@@ -202,7 +219,12 @@ See [examples/advanced.md](examples/advanced.md) Pattern 1 for DragOverlay with 
 Sensors control which input methods activate dragging. Use `useSensors` to compose multiple sensors with activation constraints.
 
 ```tsx
-import { useSensor, useSensors, PointerSensor, KeyboardSensor } from "@dnd-kit/core";
+import {
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+} from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 const ACTIVATION_DISTANCE_PX = 8;
@@ -216,7 +238,7 @@ const sensors = useSensors(
   }),
 );
 
-<DndContext sensors={sensors}>{/* ... */}</DndContext>
+<DndContext sensors={sensors}>{/* ... */}</DndContext>;
 ```
 
 **Why good:** distance constraint prevents accidental drags on click, KeyboardSensor with sortableKeyboardCoordinates enables arrow-key reordering, named constant for distance threshold
@@ -231,12 +253,12 @@ See [examples/core.md](examples/core.md) Pattern 3 for all sensor configurations
 
 Choose the collision algorithm based on your layout.
 
-| Algorithm | Import | Best for |
-|-----------|--------|----------|
-| `rectIntersection` | `@dnd-kit/core` | General drop zones (default) |
-| `closestCenter` | `@dnd-kit/core` | Sortable lists -- forgiving, no overlap required |
-| `closestCorners` | `@dnd-kit/core` | Stacked/overlapping containers (Kanban columns) |
-| `pointerWithin` | `@dnd-kit/core` | Precision drop -- pointer must be inside target |
+| Algorithm          | Import          | Best for                                         |
+| ------------------ | --------------- | ------------------------------------------------ |
+| `rectIntersection` | `@dnd-kit/core` | General drop zones (default)                     |
+| `closestCenter`    | `@dnd-kit/core` | Sortable lists -- forgiving, no overlap required |
+| `closestCorners`   | `@dnd-kit/core` | Stacked/overlapping containers (Kanban columns)  |
+| `pointerWithin`    | `@dnd-kit/core` | Precision drop -- pointer must be inside target  |
 
 **Gotcha:** `pointerWithin` only works with pointer-based sensors. Compose it with a fallback for keyboard support.
 
@@ -248,12 +270,12 @@ See [examples/core.md](examples/core.md) Pattern 4 for collision detection selec
 
 Choose the strategy based on list orientation.
 
-| Strategy | Import | Use case |
-|----------|--------|----------|
-| `rectSortingStrategy` | `@dnd-kit/sortable` | Grids (default, does NOT support virtualized) |
-| `verticalListSortingStrategy` | `@dnd-kit/sortable` | Vertical lists (supports virtualized) |
-| `horizontalListSortingStrategy` | `@dnd-kit/sortable` | Horizontal lists (supports virtualized) |
-| `rectSwappingStrategy` | `@dnd-kit/sortable` | Swap mode (items trade positions) |
+| Strategy                        | Import              | Use case                                      |
+| ------------------------------- | ------------------- | --------------------------------------------- |
+| `rectSortingStrategy`           | `@dnd-kit/sortable` | Grids (default, does NOT support virtualized) |
+| `verticalListSortingStrategy`   | `@dnd-kit/sortable` | Vertical lists (supports virtualized)         |
+| `horizontalListSortingStrategy` | `@dnd-kit/sortable` | Horizontal lists (supports virtualized)       |
+| `rectSwappingStrategy`          | `@dnd-kit/sortable` | Swap mode (items trade positions)             |
 
 Always match the strategy to your layout -- using `rectSortingStrategy` on a vertical list produces suboptimal animations.
 
@@ -270,11 +292,23 @@ const announcements = {
   onDragStart({ active }: { active: { id: UniqueIdentifier } }) {
     return `Picked up item ${active.id}`;
   },
-  onDragOver({ active, over }: { active: { id: UniqueIdentifier }; over: { id: UniqueIdentifier } | null }) {
+  onDragOver({
+    active,
+    over,
+  }: {
+    active: { id: UniqueIdentifier };
+    over: { id: UniqueIdentifier } | null;
+  }) {
     if (over) return `Item ${active.id} moved over ${over.id}`;
     return `Item ${active.id} is no longer over a drop target`;
   },
-  onDragEnd({ active, over }: { active: { id: UniqueIdentifier }; over: { id: UniqueIdentifier } | null }) {
+  onDragEnd({
+    active,
+    over,
+  }: {
+    active: { id: UniqueIdentifier };
+    over: { id: UniqueIdentifier } | null;
+  }) {
     if (over) return `Item ${active.id} dropped on ${over.id}`;
     return `Item ${active.id} was dropped`;
   },
@@ -283,7 +317,7 @@ const announcements = {
   },
 };
 
-<DndContext announcements={announcements}>{/* ... */}</DndContext>
+<DndContext announcements={announcements}>{/* ... */}</DndContext>;
 ```
 
 **Why good:** Screen readers announce drag state changes in real time, position-based messages ("position 2 of 5") are more useful than generic "moved over" messages
@@ -312,17 +346,20 @@ See [examples/advanced.md](examples/advanced.md) Pattern 2 for the complete Kanb
 Modifiers constrain drag movement. Apply to `DndContext` (affects all dragging) or `DragOverlay` (affects overlay only).
 
 ```tsx
-import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
+import {
+  restrictToVerticalAxis,
+  restrictToParentElement,
+} from "@dnd-kit/modifiers";
 
-<DndContext modifiers={[restrictToVerticalAxis]}>{/* ... */}</DndContext>
+<DndContext modifiers={[restrictToVerticalAxis]}>{/* ... */}</DndContext>;
 ```
 
-| Modifier | Package | Effect |
-|----------|---------|--------|
-| `restrictToVerticalAxis` | `@dnd-kit/modifiers` | Lock movement to Y axis |
-| `restrictToHorizontalAxis` | `@dnd-kit/modifiers` | Lock movement to X axis |
-| `restrictToParentElement` | `@dnd-kit/modifiers` | Constrain to parent bounds |
-| `restrictToWindowEdges` | `@dnd-kit/modifiers` | Prevent dragging outside viewport |
+| Modifier                   | Package              | Effect                            |
+| -------------------------- | -------------------- | --------------------------------- |
+| `restrictToVerticalAxis`   | `@dnd-kit/modifiers` | Lock movement to Y axis           |
+| `restrictToHorizontalAxis` | `@dnd-kit/modifiers` | Lock movement to X axis           |
+| `restrictToParentElement`  | `@dnd-kit/modifiers` | Constrain to parent bounds        |
+| `restrictToWindowEdges`    | `@dnd-kit/modifiers` | Prevent dragging outside viewport |
 
 Different modifiers can be applied to DndContext and DragOverlay independently.
 

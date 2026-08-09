@@ -40,11 +40,21 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <ComposedChart
+        data={chartData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="month" />
-        <YAxis yAxisId="left" label={{ value: "Sales ($)", angle: -90, position: "insideLeft" }} />
-        <YAxis yAxisId="right" orientation="right" label={{ value: "Trend", angle: 90, position: "insideRight" }} />
+        <YAxis
+          yAxisId="left"
+          label={{ value: "Sales ($)", angle: -90, position: "insideLeft" }}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          label={{ value: "Trend", angle: 90, position: "insideRight" }}
+        />
         <Tooltip />
         <Legend />
         <Area
@@ -56,7 +66,12 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
           fillOpacity={FORECAST_OPACITY}
           name="Forecast"
         />
-        <Bar yAxisId="left" dataKey="sales" fill="#8884d8" name="Actual Sales" />
+        <Bar
+          yAxisId="left"
+          dataKey="sales"
+          fill="#8884d8"
+          name="Actual Sales"
+        />
         <Line
           yAxisId="right"
           type="monotone"
@@ -233,7 +248,12 @@ export function SyncedDashboard({ data }: SyncedDashboardProps) {
           <XAxis dataKey="time" />
           <YAxis />
           <Tooltip />
-          <Area type="monotone" dataKey="memory" fill="#82ca9d" stroke="#82ca9d" />
+          <Area
+            type="monotone"
+            dataKey="memory"
+            fill="#82ca9d"
+            stroke="#82ca9d"
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -369,7 +389,11 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
         <XAxis type="number" dataKey="x" name="X Value" />
         <YAxis type="number" dataKey="y" name="Y Value" />
         <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-        <Scatter name="Data Points" data={data} shape={<CustomDot cx={0} cy={0} payload={{ x: 0, y: 0, size: 0 }} />} />
+        <Scatter
+          name="Data Points"
+          data={data}
+          shape={<CustomDot cx={0} cy={0} payload={{ x: 0, y: 0, size: 0 }} />}
+        />
       </ScatterChart>
     </ResponsiveContainer>
   );
@@ -408,7 +432,10 @@ interface LabeledBarChartProps {
 export function LabeledBarChart({ data }: LabeledBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+      <BarChart
+        data={data}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis tickFormatter={VALUE_FORMAT} />

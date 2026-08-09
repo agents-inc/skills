@@ -318,12 +318,12 @@ Need to share fields across schemas?
 
 ### Type Generation Tooling
 
-| Need | Tool | When |
-|------|------|------|
-| TypeScript types from spec | `openapi-typescript` v7 | Always -- zero-runtime type generation |
-| Type-safe fetch client | `openapi-fetch` | Frontend or service-to-service calls |
-| Full SDK generation | `@hey-api/openapi-ts` | Need Zod schemas, query hooks, or full SDKs |
-| Spec validation/linting | Redocly CLI | CI pipeline, pre-commit checks |
+| Need                       | Tool                    | When                                        |
+| -------------------------- | ----------------------- | ------------------------------------------- |
+| TypeScript types from spec | `openapi-typescript` v7 | Always -- zero-runtime type generation      |
+| Type-safe fetch client     | `openapi-fetch`         | Frontend or service-to-service calls        |
+| Full SDK generation        | `@hey-api/openapi-ts`   | Need Zod schemas, query hooks, or full SDKs |
+| Spec validation/linting    | Redocly CLI             | CI pipeline, pre-commit checks              |
 
 </decision_framework>
 

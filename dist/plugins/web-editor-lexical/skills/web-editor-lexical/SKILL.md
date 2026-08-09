@@ -188,8 +188,10 @@ import {
 } from "lexical";
 
 // Create a typed command
-export const INSERT_IMAGE_COMMAND: LexicalCommand<{ src: string; alt: string }> =
-  createCommand("INSERT_IMAGE_COMMAND");
+export const INSERT_IMAGE_COMMAND: LexicalCommand<{
+  src: string;
+  alt: string;
+}> = createCommand("INSERT_IMAGE_COMMAND");
 
 // Dispatch from toolbar or UI
 editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
@@ -200,13 +202,13 @@ editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
 
 **Priority levels** (higher number = runs first, can intercept):
 
-| Priority | Value | Use case |
-|----------|-------|----------|
-| `COMMAND_PRIORITY_CRITICAL` | 4 | Emergency overrides |
-| `COMMAND_PRIORITY_HIGH` | 3 | Table navigation, critical plugins |
-| `COMMAND_PRIORITY_NORMAL` | 2 | Standard plugin behavior |
-| `COMMAND_PRIORITY_LOW` | 1 | Default for most plugins |
-| `COMMAND_PRIORITY_EDITOR` | 0 | Base editor behavior |
+| Priority                    | Value | Use case                           |
+| --------------------------- | ----- | ---------------------------------- |
+| `COMMAND_PRIORITY_CRITICAL` | 4     | Emergency overrides                |
+| `COMMAND_PRIORITY_HIGH`     | 3     | Table navigation, critical plugins |
+| `COMMAND_PRIORITY_NORMAL`   | 2     | Standard plugin behavior           |
+| `COMMAND_PRIORITY_LOW`      | 1     | Default for most plugins           |
+| `COMMAND_PRIORITY_EDITOR`   | 0     | Base editor behavior               |
 
 **Return `true`** from a listener to stop propagation to lower-priority listeners.
 
@@ -282,11 +284,11 @@ See [examples/core.md](examples/core.md) for transform registration with cleanup
 
 Lexical provides three extendable base nodes for custom content types:
 
-| Base Node | Purpose | Key method |
-|-----------|---------|------------|
-| `ElementNode` | Container nodes (blockquote, callout) | `createDOM()`, `updateDOM()` |
-| `TextNode` | Styled text variants (colored text, mentions) | `createDOM()`, `updateDOM()` |
-| `DecoratorNode<T>` | Embedded components (images, videos, polls) | `decorate()` returns a component |
+| Base Node          | Purpose                                       | Key method                       |
+| ------------------ | --------------------------------------------- | -------------------------------- |
+| `ElementNode`      | Container nodes (blockquote, callout)         | `createDOM()`, `updateDOM()`     |
+| `TextNode`         | Styled text variants (colored text, mentions) | `createDOM()`, `updateDOM()`     |
+| `DecoratorNode<T>` | Embedded components (images, videos, polls)   | `decorate()` returns a component |
 
 Every custom node requires:
 

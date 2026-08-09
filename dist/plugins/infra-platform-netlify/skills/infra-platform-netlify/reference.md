@@ -82,13 +82,13 @@ netlify status
 
 ## Function Limits
 
-| Type | Execution Time | Memory | Request Payload | Response Payload |
-|------|---------------|--------|----------------|-----------------|
-| Serverless (buffered) | 60s | 1 GB | 6 MB | 6 MB |
-| Serverless (streamed) | 60s | 1 GB | 6 MB | 20 MB |
-| Background | 15 min | 1 GB | 256 KB | N/A (202 returned) |
-| Scheduled | 60s | 1 GB | N/A | N/A |
-| Edge | 50ms CPU | 512 MB | N/A | N/A |
+| Type                  | Execution Time | Memory | Request Payload | Response Payload   |
+| --------------------- | -------------- | ------ | --------------- | ------------------ |
+| Serverless (buffered) | 60s            | 1 GB   | 6 MB            | 6 MB               |
+| Serverless (streamed) | 60s            | 1 GB   | 6 MB            | 20 MB              |
+| Background            | 15 min         | 1 GB   | 256 KB          | N/A (202 returned) |
+| Scheduled             | 60s            | 1 GB   | N/A             | N/A                |
+| Edge                  | 50ms CPU       | 512 MB | N/A             | N/A                |
 
 **Edge function notes:**
 
@@ -166,10 +166,10 @@ netlify status
 
 ### Redirect Placeholders
 
-| Placeholder | Description | Example |
-|------------|-------------|---------|
-| `:splat` | Wildcard match from `*` | `/api/*` -> `/:splat` captures everything after `/api/` |
-| `:paramName` | Named capture | `/users/:id` -> captures `id` |
+| Placeholder  | Description             | Example                                                 |
+| ------------ | ----------------------- | ------------------------------------------------------- |
+| `:splat`     | Wildcard match from `*` | `/api/*` -> `/:splat` captures everything after `/api/` |
+| `:paramName` | Named capture           | `/users/:id` -> captures `id`                           |
 
 ---
 
@@ -284,21 +284,21 @@ export const onError = ({ error }) => {
 
 ## Environment Variable Scopes
 
-| Scope | Available In |
-|-------|-------------|
-| Builds | Site builds, build plugins |
+| Scope     | Available In                         |
+| --------- | ------------------------------------ |
+| Builds    | Site builds, build plugins           |
 | Functions | Serverless functions, Edge functions |
-| (Both) | Default — available everywhere |
+| (Both)    | Default — available everywhere       |
 
 ### Context Overrides
 
-| Context | Applies To |
-|---------|-----------|
-| `production` | Published production deploys |
-| `deploy-preview` | PR/MR deploy previews |
-| `branch-deploy` | Non-production branch deploys |
-| `dev` | Local `netlify dev` |
-| `branch-name` | Specific branch (highest priority) |
+| Context          | Applies To                         |
+| ---------------- | ---------------------------------- |
+| `production`     | Published production deploys       |
+| `deploy-preview` | PR/MR deploy previews              |
+| `branch-deploy`  | Non-production branch deploys      |
+| `dev`            | Local `netlify dev`                |
+| `branch-name`    | Specific branch (highest priority) |
 
 ### Access Patterns
 
@@ -333,4 +333,3 @@ project-root/
 │       └── deploy/                 # File-based blob uploads (build time)
 └── public/                         # or dist/ — published static files
 ```
-
