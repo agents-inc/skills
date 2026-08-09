@@ -1,549 +1,364 @@
 # MongoDB Core Examples
 
-> Connection patterns, schema definition, model creation, and TypeScript typing. See [SKILL.md](../SKILL.md) for core concepts.
+> Client lifecycle, typed collections, CRUD and the result shapes each operation returns, and error handling. See [SKILL.md](../SKILL.md) for the decisions behind these.
 
-**Query patterns:** See [queries.md](queries.md). **Aggregation:** See [aggregation.md](aggregation.md). **Advanced:** See [patterns.md](patterns.md). **Indexes:** See [indexes.md](indexes.md).
+**Query patterns:** See [queries.md](queries.md). **Aggregation:** See [aggregation.md](aggregation.md). **Indexes:** See [indexes.md](indexes.md). **Advanced:** See [patterns.md](patterns.md).
 
 ---
 
-## Pattern 1: Connection Setup
+## Pattern 1: Client and Pool Lifecycle
 
-### Good Example -- Production Connection
+### Good Example -- One Client per Process
 
 ```typescript
-import mongoose from "mongoose";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import type { Db } from "mongodb";
 
-const POOL_SIZE_MAX = 10;
+const POOL_SIZE_MAX = 20;
 const POOL_SIZE_MIN = 2;
-const SERVER_SELECTION_TIMEOUT_MS = 5000;
-const SOCKET_TIMEOUT_MS = 45000;
+const SERVER_SELECTION_TIMEOUT_MS = 5_000;
+const MAX_IDLE_TIME_MS = 60_000;
 
-async function connectDatabase(): Promise<typeof mongoose> {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error("MONGODB_URI environment variable is required");
-  }
-
-  try {
-    const connection = await mongoose.connect(uri, {
-      maxPoolSize: POOL_SIZE_MAX,
-      minPoolSize: POOL_SIZE_MIN,
-      serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
-      socketTimeoutMS: SOCKET_TIMEOUT_MS,
-      retryWrites: true,
-      retryReads: true,
-    });
-
-    console.log(`Connected to MongoDB: ${mongoose.connection.name}`);
-    return connection;
-  } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    throw error;
-  }
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} environment variable is required`);
+  return value;
 }
 
-export { connectDatabase };
-```
+const client = new MongoClient(requireEnv("MONGODB_URI"), {
+  maxPoolSize: POOL_SIZE_MAX,
+  minPoolSize: POOL_SIZE_MIN,
+  serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+  maxIdleTimeMS: MAX_IDLE_TIME_MS,
+  retryWrites: true,
+  retryReads: true,
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
 
-**Why good:** Environment variable for URI, named constants for all numeric values, try/catch for initial connection errors, typed return
+let database: Db | undefined;
 
-### Good Example -- Connection Event Handling
+async function connectDatabase(): Promise<Db> {
+  if (database) return database;
 
-```typescript
-function setupConnectionEvents(): void {
-  mongoose.connection.on("connected", () => {
-    console.log("MongoDB connected");
-  });
-
-  mongoose.connection.on("error", (err) => {
-    console.error("MongoDB connection error:", err);
-  });
-
-  mongoose.connection.on("disconnected", () => {
-    console.warn("MongoDB disconnected -- attempting reconnect");
-  });
-
-  mongoose.connection.on("reconnected", () => {
-    console.log("MongoDB reconnected");
-  });
+  // Operations auto-connect, so this call is optional. It exists to turn bad
+  // credentials and DNS failures into a startup error instead of a runtime one.
+  await client.connect();
+  database = client.db(requireEnv("MONGODB_DB"));
+  return database;
 }
 
-export { setupConnectionEvents };
+export { client, connectDatabase };
 ```
 
-**Why good:** Handles all critical connection lifecycle events, different log levels for different events
+**Why good:** one client and one pool for the whole process, every numeric option is a named constant, the Stable API pins server behaviour across upgrades, `strict: true` rejects commands outside the versioned API rather than letting them break silently later
 
 ### Good Example -- Graceful Shutdown
 
 ```typescript
-async function disconnectDatabase(): Promise<void> {
-  await mongoose.connection.close();
-  console.log("MongoDB connection closed");
-}
+const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
 
-process.on("SIGINT", async () => {
-  await disconnectDatabase();
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  await disconnectDatabase();
-  process.exit(0);
-});
-
-export { disconnectDatabase };
-```
-
-### Bad Example -- Hardcoded Connection
-
-```typescript
-// BAD: Everything wrong
-mongoose.connect("mongodb://admin:password123@localhost:27017/mydb");
-```
-
-**Why bad:** Hardcoded credentials in source code, `localhost` fails on Node.js 18+ (IPv6 preference), no pool configuration, no error handling, no connection options
-
-### Good Example -- Multiple Connections
-
-```typescript
-import mongoose from "mongoose";
-
-const primaryConnection = await mongoose
-  .createConnection(process.env.PRIMARY_MONGODB_URI!)
-  .asPromise();
-
-const analyticsConnection = await mongoose
-  .createConnection(process.env.ANALYTICS_MONGODB_URI!)
-  .asPromise();
-
-// Models bound to specific connections
-const User = primaryConnection.model("User", userSchema);
-const AnalyticsEvent = analyticsConnection.model("AnalyticsEvent", eventSchema);
-
-export { User, AnalyticsEvent };
-```
-
-**Why good:** Separate connection pools for different workloads, `asPromise()` for await, models explicitly bound to connections
-
----
-
-## Pattern 2: Schema Definition
-
-### Good Example -- Complete Schema with Validation
-
-```typescript
-import { Schema, model } from "mongoose";
-
-const MIN_NAME_LENGTH = 2;
-const MAX_NAME_LENGTH = 100;
-const MIN_PRICE = 0;
-const SKU_PATTERN = /^[A-Z]{2}-\d{6}$/;
-
-const productSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Product name is required"],
-      minlength: [
-        MIN_NAME_LENGTH,
-        `Name must be at least ${MIN_NAME_LENGTH} characters`,
-      ],
-      maxlength: [
-        MAX_NAME_LENGTH,
-        `Name must be at most ${MAX_NAME_LENGTH} characters`,
-      ],
-      trim: true,
-      index: true,
-    },
-    description: {
-      type: String,
-      maxlength: 2000,
-    },
-    sku: {
-      type: String,
-      required: true,
-      unique: true,
-      uppercase: true,
-      match: [SKU_PATTERN, "SKU must match format XX-000000"],
-    },
-    price: {
-      type: Number,
-      required: true,
-      min: [MIN_PRICE, "Price cannot be negative"],
-      validate: {
-        validator: (v: number) => Number.isFinite(v),
-        message: "Price must be a finite number",
-      },
-    },
-    category: {
-      type: String,
-      required: true,
-      enum: {
-        values: ["electronics", "clothing", "food", "books"] as const,
-        message: "{VALUE} is not a valid category",
-      },
-    },
-    tags: {
-      type: [String],
-      default: [],
-    },
-    specifications: {
-      type: Map,
-      of: Schema.Types.Mixed,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  {
-    timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  },
-);
-
-const Product = model("Product", productSchema);
-export { Product, productSchema };
-```
-
-**Why good:** Named constants for validation limits, custom error messages on every validator, enum with `as const`, schema options for timestamps and virtual serialization, trim/uppercase transformations, Map type for flexible key-value data
-
-### Good Example -- Subdocument Schema
-
-```typescript
-import { Schema, model } from "mongoose";
-
-const addressSchema = new Schema(
-  {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    zipCode: { type: String, required: true, match: /^\d{5}(-\d{4})?$/ },
-    country: { type: String, default: "US" },
-  },
-  { _id: false }, // No separate _id for subdocuments
-);
-
-const orderSchema = new Schema(
-  {
-    customerId: {
-      type: Schema.Types.ObjectId,
-      ref: "Customer",
-      required: true,
-    },
-    items: [
-      {
-        productId: {
-          type: Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        quantity: { type: Number, required: true, min: 1 },
-        unitPrice: { type: Number, required: true, min: 0 },
-      },
-    ],
-    shippingAddress: { type: addressSchema, required: true },
-    billingAddress: { type: addressSchema, required: true },
-    status: {
-      type: String,
-      enum: [
-        "pending",
-        "confirmed",
-        "shipped",
-        "delivered",
-        "cancelled",
-      ] as const,
-      default: "pending",
-    },
-    total: { type: Number, required: true, min: 0 },
-  },
-  { timestamps: true },
-);
-
-const Order = model("Order", orderSchema);
-export { Order, orderSchema, addressSchema };
-```
-
-**Why good:** Reusable subdocument schema, `{ _id: false }` avoids unnecessary ObjectIds on embedded documents, ref fields for population, array of subdocuments for order items
-
-### Bad Example -- No Validation
-
-```typescript
-// BAD: No validation, no types, no constraints
-const userSchema = new Schema({
-  name: String,
-  email: String,
-  age: Number,
-  role: String,
-});
-```
-
-**Why bad:** No `required` constraints, no validation rules, no enum for role, no custom error messages, no trim/lowercase transforms on strings
-
----
-
-## Pattern 3: TypeScript Model Typing
-
-### Good Example -- Automatic Inference (Simple Models)
-
-```typescript
-import { Schema, model, type InferSchemaType } from "mongoose";
-
-const blogPostSchema = new Schema(
-  {
-    title: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
-    content: { type: String, required: true },
-    authorId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    tags: [{ type: String }],
-    isPublished: { type: Boolean, default: false },
-    publishedAt: { type: Date },
-    viewCount: { type: Number, default: 0 },
-  },
-  { timestamps: true },
-);
-
-// TypeScript automatically infers the document type
-const BlogPost = model("BlogPost", blogPostSchema);
-
-// Extract the inferred type for use in other files
-type BlogPostDocument = InferSchemaType<typeof blogPostSchema>;
-
-export { BlogPost, blogPostSchema };
-export type { BlogPostDocument };
-```
-
-**Why good:** No manual interface duplication, TypeScript infers types from schema, `InferSchemaType` exports the inferred type, named exports
-
-### Good Example -- Full Typing with Methods, Statics, Virtuals
-
-```typescript
-import {
-  Schema,
-  model,
-  type HydratedDocument,
-  type Model,
-  type Types,
-} from "mongoose";
-import bcrypt from "bcrypt";
-
-const SALT_ROUNDS = 12;
-const MIN_PASSWORD_LENGTH = 8;
-
-// Raw document interface
-interface IUser {
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  role: "admin" | "user" | "moderator";
-  lastLoginAt?: Date;
-}
-
-// Instance methods
-interface IUserMethods {
-  comparePassword(candidate: string): Promise<boolean>;
-  updateLastLogin(): Promise<void>;
-}
-
-// Virtuals
-interface IUserVirtuals {
-  fullName: string;
-}
-
-// Static methods
-interface IUserStatics {
-  findByEmail(email: string): Promise<UserDocument | null>;
-  findAdmins(): Promise<UserDocument[]>;
-}
-
-// Composed model type
-type UserModel = Model<IUser, {}, IUserMethods, IUserVirtuals> & IUserStatics;
-
-// Hydrated document type for external use
-type UserDocument = HydratedDocument<IUser, IUserMethods & IUserVirtuals>;
-
-const userSchema = new Schema<
-  IUser,
-  UserModel,
-  IUserMethods,
-  {},
-  IUserVirtuals
->(
-  {
-    email: { type: String, required: true, unique: true, lowercase: true },
-    passwordHash: { type: String, required: true },
-    firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
-    role: {
-      type: String,
-      enum: ["admin", "user", "moderator"],
-      default: "user",
-    },
-    lastLoginAt: { type: Date },
-  },
-  {
-    timestamps: true,
-    toJSON: {
-      virtuals: true,
-      transform(_doc, ret) {
-        delete ret.passwordHash;
-        return ret;
-      },
-    },
-  },
-);
-
-// Instance methods
-userSchema.methods.comparePassword = async function (
-  candidate: string,
-): Promise<boolean> {
-  return bcrypt.compare(candidate, this.passwordHash);
-};
-
-userSchema.methods.updateLastLogin = async function (): Promise<void> {
-  this.lastLoginAt = new Date();
-  await this.save();
-};
-
-// Virtuals
-userSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
-
-// Static methods
-userSchema.statics.findByEmail = function (email: string) {
-  return this.findOne({ email: email.toLowerCase() });
-};
-
-userSchema.statics.findAdmins = function () {
-  return this.find({ role: "admin" });
-};
-
-// Middleware -- MUST be defined before model()
-userSchema.pre("save", async function () {
-  if (this.isModified("passwordHash")) {
-    this.passwordHash = await bcrypt.hash(this.passwordHash, SALT_ROUNDS);
+function registerShutdown(): void {
+  for (const signal of SHUTDOWN_SIGNALS) {
+    process.once(signal, async () => {
+      // Waits for checked-out connections to return before closing the pool.
+      await client.close();
+      process.exit(0);
+    });
   }
-});
-
-// Model -- AFTER middleware registration
-const User = model<IUser, UserModel>("User", userSchema);
-
-export { User, userSchema };
-export type { IUser, IUserMethods, UserDocument };
-```
-
-**Why good:** Separate interfaces for document, methods, virtuals, statics; generic parameters in correct order; `HydratedDocument` type for external consumers; password excluded from JSON; middleware registered before `model()`; named constants for salt rounds
-
-### Bad Example -- Type Duplication
-
-```typescript
-// BAD: Interface duplicates schema -- they can drift apart
-interface IProduct {
-  name: string;
-  price: number;
-  category: string;
 }
 
-const productSchema = new Schema({
-  name: String, // No 'required' -- schema allows undefined
-  price: Number, // No validation
-  category: String, // No enum -- interface says string, could be anything
-});
-
-// Interface says name is always string, but schema allows it to be undefined
-const Product = model<IProduct>("Product", productSchema);
+export { registerShutdown };
 ```
 
-**Why bad:** Interface and schema define different constraints, interface claims `name` is always `string` but schema allows undefined, no validation, types will drift apart over time
+**Why good:** `close()` drains in-flight operations rather than severing them, and `once` avoids stacking a second handler if the signal repeats
+
+### Bad Example -- A Client per Request
+
+```typescript
+// BAD: a new pool on every call
+export async function getUser(id: string) {
+  const client = new MongoClient(process.env.MONGODB_URI!);
+  await client.connect();
+  const user = await client.db("app").collection("users").findOne({ _id: id });
+  await client.close();
+  return user;
+}
+```
+
+**Why bad:** each `MongoClient` opens its own pool, so 100 concurrent requests open 100 pools and the server hits its connection limit; the TLS and auth handshake is also paid per request, adding latency that profiling attributes to the query rather than to the connection
+
+### Good Example -- Serverless Client Reuse
+
+```typescript
+// Serverless runtimes freeze and thaw the same process, so a client cached
+// outside the handler survives between invocations and its pool is reused.
+const SERVERLESS_POOL_SIZE = 5;
+
+let cached: MongoClient | undefined;
+
+async function getClient(): Promise<MongoClient> {
+  if (cached) return cached;
+
+  cached = new MongoClient(requireEnv("MONGODB_URI"), {
+    maxPoolSize: SERVERLESS_POOL_SIZE,
+    minPoolSize: 0,
+    maxIdleTimeMS: MAX_IDLE_TIME_MS,
+  });
+  await cached.connect();
+  return cached;
+}
+
+export { getClient };
+```
+
+**Why good:** module scope outlives the handler so warm invocations skip the handshake entirely, a small pool keeps total connections bounded when the platform scales to many instances, and `minPoolSize: 0` lets idle instances release sockets instead of holding them
+
+**Why not `client.close()` here:** closing at the end of a handler discards the pool the next invocation would have reused, which turns every request back into a cold connect.
 
 ---
 
-## Pattern 4: ObjectId References
+## Pattern 2: Typed Collections
 
-### Good Example -- Typed References
+### Good Example -- Document Types and the Driver's Helpers
 
 ```typescript
-import { Schema, model, type Types } from "mongoose";
+import type {
+  Collection,
+  ObjectId,
+  OptionalUnlessRequiredId,
+  WithId,
+} from "mongodb";
 
-const commentSchema = new Schema(
-  {
-    postId: {
-      type: Schema.Types.ObjectId,
-      ref: "BlogPost",
-      required: true,
-      index: true,
-    },
-    authorId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
-    parentId: { type: Schema.Types.ObjectId, ref: "Comment", default: null }, // Self-reference for threads
-    content: { type: String, required: true, maxlength: 5000 },
-    likes: { type: Number, default: 0 },
-  },
-  { timestamps: true },
+type UserDoc = {
+  _id: ObjectId;
+  email: string;
+  displayName: string;
+  roles: string[];
+  createdAt: Date;
+};
+
+function usersCollection(db: Db): Collection<UserDoc> {
+  return db.collection<UserDoc>("users");
+}
+
+// Reads carry _id: WithId<UserDoc> is UserDoc with _id guaranteed present.
+async function findByEmail(
+  db: Db,
+  email: string,
+): Promise<WithId<UserDoc> | null> {
+  return usersCollection(db).findOne({ email });
+}
+
+// Inserts may omit _id and let the server generate one. That is what
+// OptionalUnlessRequiredId expresses, and insertOne accepts it directly.
+async function createUser(
+  db: Db,
+  input: OptionalUnlessRequiredId<UserDoc>,
+): Promise<ObjectId> {
+  const { insertedId } = await usersCollection(db).insertOne(input);
+  return insertedId;
+}
+
+export { createUser, findByEmail, usersCollection };
+```
+
+**Why good:** the generic checks filters, updates and projections against `UserDoc` so a misspelled field is a compile error rather than a query matching nothing, and the two helpers express the real difference between a document you read and one you are about to insert
+
+### Good Example -- Typed Projections
+
+```typescript
+type UserSummary = { email: string; displayName: string };
+
+// The projection changes the result shape, so the generic on project()
+// re-types the cursor to match what actually comes back.
+async function listSummaries(db: Db): Promise<UserSummary[]> {
+  return usersCollection(db)
+    .find({})
+    .project<UserSummary>({ email: 1, displayName: 1, _id: 0 })
+    .toArray();
+}
+
+export { listSummaries };
+```
+
+**Why good:** without the generic the results are still typed as full `UserDoc`, so code reads `createdAt` off an object that never contained it and gets `undefined` at runtime with no type error
+
+### Bad Example -- Trusting the Generic as Validation
+
+```typescript
+// BAD: treating a compile-time type as a runtime guarantee
+const user = await usersCollection(db).findOne({ _id: id });
+sendEmail(user!.email.toLowerCase()); // throws if email is missing or not a string
+```
+
+**Why bad:** the driver never validates documents against the generic, so a record written by an older schema version, a migration, or another service can be missing `email` entirely; the type says otherwise and the failure is a runtime `TypeError`
+
+### Good Example -- Validating at the Trust Boundary
+
+```typescript
+function toUserSummary(doc: WithId<UserDoc>): UserSummary {
+  if (typeof doc.email !== "string" || typeof doc.displayName !== "string") {
+    throw new Error(`User ${doc._id.toHexString()} is missing required fields`);
+  }
+  return { email: doc.email, displayName: doc.displayName };
+}
+
+export { toUserSummary };
+```
+
+**Why good:** the check runs once where documents enter application code, so downstream consumers get a type that has actually been verified, and a malformed record names itself in the error instead of surfacing as `undefined` three call frames away
+
+---
+
+## Pattern 3: CRUD and Result Shapes
+
+### Good Example -- Insert
+
+```typescript
+const insertResult = await users.insertOne({
+  email: "a@example.com",
+  displayName: "A",
+  roles: [],
+  createdAt: new Date(),
+});
+// { acknowledged: true, insertedId: ObjectId(...) }
+
+const manyResult = await users.insertMany(docs, { ordered: false });
+// { acknowledged: true, insertedCount: n, insertedIds: { 0: ObjectId(...) } }
+```
+
+**Why good:** `ordered: false` lets the remaining documents insert when one fails, instead of stopping at the first error -- the right default for bulk imports where partial progress is useful
+
+### Good Example -- Update, and Reading the Counts Correctly
+
+```typescript
+const result = await users.updateOne({ _id: id }, { $set: { displayName } });
+
+if (result.matchedCount === 0) {
+  throw new NotFoundError(`No user with id ${id.toHexString()}`);
+}
+// matchedCount 1 with modifiedCount 0 means the value was already correct.
+// That is a successful update, not a missing document.
+```
+
+**Why good:** the not-found check uses `matchedCount`, which is the count that actually answers it, so re-submitting an unchanged form does not produce a spurious 404
+
+### Good Example -- Returning the Updated Document
+
+```typescript
+// The findOneAnd* family is the only one that returns a document.
+const updated = await users.findOneAndUpdate(
+  { _id: id },
+  { $set: { displayName }, $currentDate: { updatedAt: true } },
+  { returnDocument: "after" },
 );
 
-// Index for efficient lookups
-commentSchema.index({ postId: 1, createdAt: -1 });
-
-const Comment = model("Comment", commentSchema);
-export { Comment, commentSchema };
+if (!updated) throw new NotFoundError(`No user with id ${id.toHexString()}`);
 ```
 
-**Why good:** `Schema.Types.ObjectId` in schema definition (not `Types.ObjectId`), `ref` for populate support, indexes on foreign keys, compound index for common query pattern
+**Why good:** one round trip instead of an update followed by a read, `returnDocument: "after"` returns the new state rather than the default pre-update state, and `$currentDate` timestamps from the server clock so it does not drift between application hosts
 
-### Bad Example -- Wrong ObjectId Type
+### Good Example -- Upsert
 
 ```typescript
-import { Types } from "mongoose";
+const result = await counters.updateOne(
+  { name: "signups" },
+  { $inc: { value: 1 }, $setOnInsert: { createdAt: new Date() } },
+  { upsert: true },
+);
 
-// BAD: Using Types.ObjectId in schema definition
-const schema = new Schema({
-  userId: { type: Types.ObjectId, ref: "User" }, // WRONG -- use Schema.Types.ObjectId
+const wasCreated = result.upsertedCount === 1;
+```
+
+**Why good:** `$setOnInsert` applies only when the document is created, so `createdAt` is not overwritten on subsequent increments, and `upsertedCount` distinguishes creation from update without a second query
+
+### Bad Example -- Expecting a Document Back
+
+```typescript
+// BAD
+const user = await users.insertOne(doc);
+console.log(user.email); // undefined
+const updated = await users.updateOne(filter, update);
+return updated.displayName; // undefined
+```
+
+**Why bad:** both return acknowledgements, so these reads are `undefined` rather than errors; the value flows onward and fails at whatever finally uses it, which is usually a serializer or a template far from the query
+
+### Good Example -- Delete
+
+```typescript
+const { deletedCount } = await users.deleteOne({ _id: id });
+if (deletedCount === 0) throw new NotFoundError(`No user with id ${id}`);
+
+const { deletedCount: purged } = await sessions.deleteMany({
+  expiresAt: { $lt: new Date() },
 });
 ```
 
-**Why bad:** `Types.ObjectId` is for TypeScript interfaces and runtime values; `Schema.Types.ObjectId` is the correct schema type declaration
-
 ---
 
-## Pattern 5: Schema Options
+## Pattern 4: Error Handling
 
-### Good Example -- Comprehensive Schema Options
+### Good Example -- Duplicate Key as an Expected Outcome
 
 ```typescript
-const auditLogSchema = new Schema(
-  {
-    action: { type: String, required: true },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    resource: { type: String, required: true },
-    details: { type: Schema.Types.Mixed },
-  },
-  {
-    timestamps: true,
-    // Include virtuals in JSON and object conversion
-    toJSON: { virtuals: true, versionKey: false },
-    toObject: { virtuals: true },
-    // Optimistic concurrency control
-    optimisticConcurrency: true,
-    // Collection name override (default: lowercase plural of model name)
-    collection: "audit_logs",
-    // Disable automatic index creation in production
-    autoIndex: process.env.NODE_ENV !== "production",
-  },
-);
+import { MongoServerError } from "mongodb";
 
-export { auditLogSchema };
+const DUPLICATE_KEY_CODE = 11000;
+
+async function registerUser(db: Db, input: OptionalUnlessRequiredId<UserDoc>) {
+  try {
+    return await usersCollection(db).insertOne(input);
+  } catch (error) {
+    if (
+      error instanceof MongoServerError &&
+      error.code === DUPLICATE_KEY_CODE
+    ) {
+      throw new ConflictError(`Email ${input.email} is already registered`);
+    }
+    throw error;
+  }
+}
+
+export { registerUser };
 ```
 
-**Why good:** Virtuals included in serialization, version key hidden from JSON, optimistic concurrency for safe updates, explicit collection name, autoIndex disabled in production
+**Why good:** two concurrent registrations are a race the unique index is there to settle, so the duplicate is an expected result to translate rather than a crash, and unrecognised errors rethrow instead of being swallowed
 
----
+### Good Example -- Distinguishing Connectivity from Query Errors
 
-_For query patterns, see [queries.md](queries.md). For aggregation, see [aggregation.md](aggregation.md). For advanced patterns, see [patterns.md](patterns.md). For indexes, see [indexes.md](indexes.md)._
+```typescript
+import { MongoServerSelectionError } from "mongodb";
+
+try {
+  await connectDatabase();
+} catch (error) {
+  if (error instanceof MongoServerSelectionError) {
+    // No reachable server within serverSelectionTimeoutMS: wrong URI, network,
+    // firewall, or an IP not on the cluster's allow list.
+    throw new Error(
+      "Database unreachable — check MONGODB_URI and network access",
+    );
+  }
+  throw error;
+}
+```
+
+**Why good:** server selection failures are infrastructure problems with completely different remedies from query errors, and naming them stops an operator debugging a query that was never sent
+
+### Bad Example -- Catching Everything
+
+```typescript
+// BAD
+try {
+  await users.insertOne(doc);
+} catch {
+  return null; // duplicate key, validation failure and network partition, indistinguishable
+}
+```
+
+**Why bad:** unrelated failures collapse into one silent `null`, so a network partition looks exactly like a duplicate email and the caller cannot act correctly on either

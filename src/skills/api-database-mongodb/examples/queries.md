@@ -1,355 +1,296 @@
 # MongoDB Query Examples
 
-> Complex queries, populate, lean, cursor, and pagination patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Filters, projection, cursors, streaming, pagination and counting with the native driver. See [SKILL.md](../SKILL.md) for the decisions behind these.
 
-**Core patterns:** See [core.md](core.md). **Aggregation:** See [aggregation.md](aggregation.md). **Advanced:** See [patterns.md](patterns.md). **Indexes:** See [indexes.md](indexes.md).
+**Core:** See [core.md](core.md). **Aggregation:** See [aggregation.md](aggregation.md). **Indexes:** See [indexes.md](indexes.md). **Advanced:** See [patterns.md](patterns.md).
 
 ---
 
-## Pattern 1: Lean Queries for Read-Only Responses
+## Pattern 1: Filters
 
-### Good Example -- API Response
+### Good Example -- Typed Filter Construction
 
 ```typescript
-const PAGE_SIZE = 20;
+import type { Filter } from "mongodb";
 
-async function getUsers(page: number = 1) {
-  const skip = (page - 1) * PAGE_SIZE;
+const MAX_RESULTS = 100;
 
-  const [users, total] = await Promise.all([
-    User.find({ isActive: true })
-      .select("name email role createdAt")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(PAGE_SIZE)
-      .lean(),
-    User.countDocuments({ isActive: true }),
-  ]);
+type OrderQuery = {
+  tenantId: ObjectId;
+  status?: OrderStatus;
+  minTotal?: number;
+  since?: Date;
+};
 
+function buildOrderFilter(query: OrderQuery): Filter<OrderDoc> {
+  const filter: Filter<OrderDoc> = { tenantId: query.tenantId };
+
+  if (query.status !== undefined) filter.status = query.status;
+  if (query.minTotal !== undefined) filter.total = { $gte: query.minTotal };
+  if (query.since !== undefined) filter.createdAt = { $gte: query.since };
+
+  return filter;
+}
+
+export { buildOrderFilter };
+```
+
+**Why good:** `Filter<OrderDoc>` checks every field name and operator against the document type, and the explicit `!== undefined` tests keep a legitimate `0` or empty string from being dropped the way a truthiness check would drop them
+
+### Bad Example -- User Input Straight into a Filter
+
+```typescript
+// BAD: the request body becomes the filter
+const orders = await collection
+  .find({ tenantId, status: req.body.status })
+  .toArray();
+```
+
+**Why bad:** a JSON body can supply an object rather than a string, so `{"status": {"$ne": null}}` turns the filter into an operator and returns every order in the tenant; the query is valid and nothing errors
+
+### Good Example -- Coercing Before Filtering
+
+```typescript
+const ORDER_STATUSES = ["pending", "complete", "cancelled"] as const;
+type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+function parseStatus(input: unknown): OrderStatus | undefined {
+  if (typeof input !== "string") return undefined;
+  return ORDER_STATUSES.find((status) => status === input);
+}
+
+export { ORDER_STATUSES, parseStatus };
+```
+
+**Why good:** the value reaching the filter is a primitive drawn from a known set, so an injected operator object cannot survive the parse
+
+### Good Example -- ObjectId Validation
+
+```typescript
+import { ObjectId } from "mongodb";
+
+const OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/;
+
+function parseObjectId(input: string): ObjectId | undefined {
+  // ObjectId.isValid() returns true for ANY 12-character string, so
+  // "123456789012" passes it. Test the hex representation instead.
+  if (!OBJECT_ID_PATTERN.test(input)) return undefined;
+  return new ObjectId(input);
+}
+
+export { parseObjectId };
+```
+
+**Why good:** rejects the 12-character strings `ObjectId.isValid()` accepts, so a malformed path parameter becomes a 400 rather than a query that quietly matches nothing
+
+---
+
+## Pattern 2: Projection
+
+### Good Example -- Fetching Only What Is Used
+
+```typescript
+type OrderListItem = { _id: ObjectId; total: number; createdAt: Date };
+
+const items = await orders
+  .find(filter)
+  .project<OrderListItem>({ total: 1, createdAt: 1 })
+  .limit(MAX_RESULTS)
+  .toArray();
+```
+
+**Why good:** projection happens on the server, so large unused fields never cross the network, and the generic re-types the cursor to the shape actually returned
+
+### Good Example -- Excluding Instead of Including
+
+```typescript
+// Inclusion and exclusion cannot be mixed in one projection, except for _id.
+const user = await users.findOne(
+  { _id: id },
+  { projection: { passwordHash: 0 } },
+);
+```
+
+**Why good:** an exclusion projection keeps returning new fields as the document evolves while guaranteeing the sensitive one is never among them, which an inclusion list would need updating to match
+
+### Bad Example -- Filtering Fields in Application Code
+
+```typescript
+// BAD
+const all = await orders.find(filter).toArray();
+const items = all.map(({ _id, total, createdAt }) => ({
+  _id,
+  total,
+  createdAt,
+}));
+```
+
+**Why bad:** every field of every document is serialised, transferred and parsed before being discarded, so the cost is paid in full and only the memory afterwards is saved
+
+---
+
+## Pattern 3: Cursors and Streaming
+
+### Good Example -- Streaming an Unbounded Read
+
+```typescript
+async function emailActiveUsers(users: Collection<UserDoc>): Promise<number> {
+  let sent = 0;
+
+  // for await pulls one batch at a time, so memory stays flat whether the
+  // collection holds a thousand documents or ten million.
+  for await (const user of users.find({ isActive: true })) {
+    await sendDigest(user.email);
+    sent += 1;
+  }
+
+  return sent;
+}
+
+export { emailActiveUsers };
+```
+
+**Why good:** the cursor is fully consumed so it closes on its own, and peak memory is one batch rather than the whole result set
+
+### Good Example -- Closing a Cursor You Abandon
+
+```typescript
+const cursor = orders.find({ status: "pending" });
+
+try {
+  for await (const order of cursor) {
+    if (await shouldStop(order)) break; // leaves the cursor open
+  }
+} finally {
+  await cursor.close();
+}
+```
+
+**Why good:** breaking out mid-iteration leaves an open server-side cursor holding resources until it times out; the `finally` releases it immediately and is harmless when the loop finished normally
+
+### Good Example -- Batch Size for Slow Per-Document Work
+
+```typescript
+const SLOW_CONSUMER_BATCH_SIZE = 20;
+
+const cursor = orders
+  .find({ status: "pending" })
+  .batchSize(SLOW_CONSUMER_BATCH_SIZE);
+```
+
+**Why good:** smaller batches shorten the pause when a batch is fetched and reduce the work discarded if the consumer stops early, which matters when each document triggers slow work
+
+### Bad Example -- Buffering Everything
+
+```typescript
+// BAD
+const everyone = await users.find({}).toArray();
+for (const user of everyone) await sendDigest(user.email);
+```
+
+**Why bad:** the entire collection is materialised before the first email is sent, so memory scales with the data and the process dies once the collection outgrows the heap -- which it will not do in development
+
+---
+
+## Pattern 4: Pagination
+
+### Good Example -- Keyset Pagination
+
+```typescript
+const PAGE_SIZE = 25;
+
+type Page<T> = { items: T[]; nextCursor: string | undefined };
+
+// Requires an index on the sort key. _id is monotonic enough for most feeds;
+// use a compound key when sorting on something else.
+async function pageOrders(
+  orders: Collection<OrderDoc>,
+  after: ObjectId | undefined,
+): Promise<Page<WithId<OrderDoc>>> {
+  const filter: Filter<OrderDoc> = after ? { _id: { $lt: after } } : {};
+
+  const items = await orders
+    .find(filter)
+    .sort({ _id: -1 })
+    .limit(PAGE_SIZE)
+    .toArray();
+
+  const last = items.at(-1);
   return {
-    data: users,
-    pagination: {
-      page,
-      pageSize: PAGE_SIZE,
-      total,
-      totalPages: Math.ceil(total / PAGE_SIZE),
-    },
+    items,
+    nextCursor:
+      items.length === PAGE_SIZE ? last?._id.toHexString() : undefined,
   };
 }
 
-export { getUsers };
+export { pageOrders };
 ```
 
-**Why good:** `.lean()` for read-only response (3x memory savings), `.select()` for minimal projection, named constant for page size, parallel count query, paginated response
-
-### Bad Example -- Lean Misuse
-
-```typescript
-// BAD: Using lean() then trying to save
-const user = await User.findById(id).lean();
-user.name = "Updated";
-await user.save(); // TypeError: user.save is not a function
-```
-
-**Why bad:** Lean returns plain objects without Mongoose methods, `.save()` does not exist on lean results
-
----
-
-## Pattern 2: Populate with Field Selection
-
-### Good Example -- Selective Population
-
-```typescript
-const MAX_COMMENTS = 50;
-
-const post = await BlogPost.findById(id)
-  .populate("authorId", "name email avatar")
-  .populate({
-    path: "comments",
-    select: "content authorId createdAt",
-    options: {
-      sort: { createdAt: -1 },
-      limit: MAX_COMMENTS,
-    },
-    populate: {
-      path: "authorId",
-      select: "name avatar",
-    },
-  })
-  .lean();
-```
-
-**Why good:** Field selection on every populate call, limit on nested array to prevent unbounded results, nested populate for comment authors, sorted by recency
-
-### Good Example -- Conditional Population
-
-```typescript
-interface PopulateConfig {
-  includeAuthor?: boolean;
-  includeComments?: boolean;
-}
-
-async function getPost(id: string, config: PopulateConfig = {}) {
-  let query = BlogPost.findById(id);
-
-  if (config.includeAuthor) {
-    query = query.populate("authorId", "name email");
-  }
-
-  if (config.includeComments) {
-    query = query.populate({
-      path: "comments",
-      select: "content createdAt",
-      options: { limit: 20, sort: { createdAt: -1 } },
-    });
-  }
-
-  return query.lean();
-}
-
-export { getPost };
-```
-
-**Why good:** Populate only when needed, avoids unnecessary database queries, chainable query builder pattern
-
-### Bad Example -- Unbounded Populate
-
-```typescript
-// BAD: Populating all fields, no limits
-const post = await BlogPost.findById(id)
-  .populate("authorId") // All author fields
-  .populate("comments") // ALL comments, could be thousands
-  .populate("relatedPosts"); // ALL related posts
-
-// Each populate is a separate DB query with no bounds
-```
-
-**Why bad:** No field selection wastes bandwidth, no limit on comments could return thousands of documents, each populate adds a database round-trip
-
----
-
-## Pattern 3: Complex Query Filters
-
-### Good Example -- Dynamic Query Builder
-
-```typescript
-interface UserFilters {
-  role?: string;
-  isActive?: boolean;
-  searchTerm?: string;
-  createdAfter?: Date;
-  createdBefore?: Date;
-  tags?: string[];
-}
-
-function buildUserQuery(filters: UserFilters): Record<string, unknown> {
-  const query: Record<string, unknown> = {};
-
-  if (filters.role) {
-    query.role = filters.role;
-  }
-
-  if (filters.isActive !== undefined) {
-    query.isActive = filters.isActive;
-  }
-
-  if (filters.searchTerm) {
-    query.$or = [
-      { name: { $regex: filters.searchTerm, $options: "i" } },
-      { email: { $regex: filters.searchTerm, $options: "i" } },
-    ];
-  }
-
-  if (filters.createdAfter || filters.createdBefore) {
-    query.createdAt = {};
-    if (filters.createdAfter) {
-      (query.createdAt as Record<string, Date>).$gte = filters.createdAfter;
-    }
-    if (filters.createdBefore) {
-      (query.createdAt as Record<string, Date>).$lte = filters.createdBefore;
-    }
-  }
-
-  if (filters.tags && filters.tags.length > 0) {
-    query.tags = { $all: filters.tags };
-  }
-
-  return query;
-}
-
-const PAGE_SIZE = 20;
-
-async function searchUsers(filters: UserFilters, page: number = 1) {
-  const query = buildUserQuery(filters);
-
-  const [users, total] = await Promise.all([
-    User.find(query)
-      .select("name email role tags createdAt")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .lean(),
-    User.countDocuments(query),
-  ]);
-
-  return { users, total, page, pageSize: PAGE_SIZE };
-}
-
-export { searchUsers, buildUserQuery };
-```
-
-**Why good:** Type-safe filter builder, only applies filters when values present, `$or` for multi-field search, `$all` for tag intersection, parallel count query
-
----
-
-## Pattern 4: Cursor-Based Iteration
-
-### Good Example -- Processing Large Datasets
-
-```typescript
-const BATCH_LOG_INTERVAL = 1000;
-
-async function processAllOrders(): Promise<number> {
-  let processed = 0;
-
-  const cursor = Order.find({ status: "pending" })
-    .sort({ createdAt: 1 })
-    .cursor();
-
-  for await (const order of cursor) {
-    await processOrder(order);
-    processed += 1;
-
-    if (processed % BATCH_LOG_INTERVAL === 0) {
-      console.log(`Processed ${processed} orders`);
-    }
-  }
-
-  return processed;
-}
-
-export { processAllOrders };
-```
-
-**Why good:** Cursor-based iteration keeps memory constant regardless of result size, `for await...of` for clean async iteration, progress logging at intervals
-
-### Bad Example -- Loading All Documents into Memory
-
-```typescript
-// BAD: Loads ALL matching documents into memory at once
-const orders = await Order.find({ status: "pending" });
-// If there are 1 million pending orders, this crashes with OOM
-
-for (const order of orders) {
-  await processOrder(order);
-}
-```
-
-**Why bad:** Loads entire result set into memory, can cause out-of-memory crashes for large collections, no progress feedback
-
----
-
-## Pattern 5: Cursor-Based Pagination (Keyset)
-
-### Good Example -- Efficient Pagination with Cursor
-
-```typescript
-const PAGE_SIZE = 20;
-
-interface PaginationResult<T> {
-  data: T[];
-  nextCursor: string | null;
-  hasMore: boolean;
-}
-
-async function getUsersWithCursor(
-  cursor?: string,
-): Promise<PaginationResult<Record<string, unknown>>> {
-  const query: Record<string, unknown> = { isActive: true };
-
-  if (cursor) {
-    query._id = { $gt: new mongoose.Types.ObjectId(cursor) };
-  }
-
-  const users = await User.find(query)
-    .select("name email role createdAt")
-    .sort({ _id: 1 })
-    .limit(PAGE_SIZE + 1) // Fetch one extra to check hasMore
-    .lean();
-
-  const hasMore = users.length > PAGE_SIZE;
-  const data = hasMore ? users.slice(0, PAGE_SIZE) : users;
-  const nextCursor = hasMore ? String(data[data.length - 1]._id) : null;
-
-  return { data, nextCursor, hasMore };
-}
-
-export { getUsersWithCursor };
-```
-
-**Why good:** Cursor-based pagination avoids skip/limit performance issues on large collections, fetch one extra to determine hasMore without separate count query, consistent performance regardless of page depth
+**Why good:** every page costs the same because the index seeks straight to the cursor position, and `nextCursor` is `undefined` on a short page so the caller knows the feed ended without an extra count query
 
 ### Bad Example -- Deep Offset Pagination
 
 ```typescript
-// BAD: Deep offset pagination is slow on large collections
-const PAGE_SIZE = 20;
-const page = 5000; // Page 5000
-
-const users = await User.find({ isActive: true })
-  .skip((page - 1) * PAGE_SIZE) // Skip 99,980 documents -- SLOW
-  .limit(PAGE_SIZE);
+// BAD
+const items = await orders
+  .find(filter)
+  .sort({ createdAt: -1 })
+  .skip(page * PAGE_SIZE) // page 500 walks 12,500 documents to discard them
+  .limit(PAGE_SIZE)
+  .toArray();
 ```
 
-**Why bad:** MongoDB must scan and discard all skipped documents, performance degrades linearly with page depth, page 5000 requires scanning ~100k documents
+**Why bad:** the server walks and discards every skipped document, so cost grows with page depth and the last pages time out; results also shift when a document is inserted between requests, so items can be seen twice or missed entirely
 
 ---
 
-## Pattern 6: Distinct and Count Queries
+## Pattern 5: Counting
 
-### Good Example -- Efficient Counting and Distinct Values
+### Good Example -- Choosing the Right Count
 
 ```typescript
-// Count with filter -- uses index when available
-const activeCount = await User.countDocuments({ isActive: true });
+// Accurate, but scans the index or collection to answer.
+const pending = await orders.countDocuments({ status: "pending" });
 
-// Estimated total count -- fast, uses collection metadata
-const estimatedTotal = await User.estimatedDocumentCount();
-
-// Distinct values for a field
-const uniqueRoles = await User.distinct("role", { isActive: true });
-
-// Check existence efficiently
-const exists = await User.exists({ email: "admin@example.com" });
+// Reads collection metadata: constant time, but approximate, and it takes
+// no filter. Fine for a dashboard total, wrong for anything that must reconcile.
+const approximateTotal = await orders.estimatedDocumentCount();
 ```
 
-**Why good:** `countDocuments` for filtered counts, `estimatedDocumentCount` for fast total counts (no filter), `distinct` for unique values with optional filter, `exists` returns only `_id` or `null` (faster than `findOne`)
+**Why good:** the choice is made explicitly on whether the number must be exact, rather than reaching for whichever is faster and discovering the imprecision later
 
----
-
-## Pattern 7: Projection and Field Selection
-
-### Good Example -- Selective Fields
+### Good Example -- Existence Without Counting
 
 ```typescript
-// Include specific fields (projection)
-const users = await User.find({ role: "admin" })
-  .select("name email role")
-  .lean();
-
-// Exclude specific fields
-const usersWithoutPassword = await User.find()
-  .select("-passwordHash -__v")
-  .lean();
-
-// Object syntax (equivalent)
-const result = await User.find()
-  .select({ name: 1, email: 1, role: 1, _id: 0 })
-  .lean();
+// findOne with a projection stops at the first match; counting does not.
+const exists =
+  (await users.findOne({ email }, { projection: { _id: 1 } })) !== null;
 ```
 
-**Why good:** Field selection reduces network transfer and memory usage, exclude syntax for removing sensitive fields, `_id: 0` to exclude the default `_id` field
+**Why good:** counting scans every match to produce a number the caller then compares to zero, while this stops as soon as one document is found
 
 ---
 
-_For aggregation patterns, see [aggregation.md](aggregation.md). For schema design patterns, see [patterns.md](patterns.md). For index strategies, see [indexes.md](indexes.md)._
+## Pattern 6: Distinct and Sorting
+
+### Good Example -- Distinct Values
+
+```typescript
+const statuses = await orders.distinct("status", { tenantId });
+```
+
+**Why good:** the deduplication happens on the server, so only the distinct values cross the network rather than every document
+
+**Limitation:** the result must fit in a single 16 MB reply. For a high-cardinality field use a `$group` pipeline, which streams instead.
+
+### Good Example -- Sorting on an Indexed Field
+
+```typescript
+const recent = await orders
+  .find({ tenantId })
+  .sort({ createdAt: -1 }) // needs an index whose keys match this sort
+  .limit(PAGE_SIZE)
+  .toArray();
+```
+
+**Why good:** a sort backed by an index reads in order and stops at the limit; an unindexed sort loads every match into memory first and fails outright once that exceeds the server's sort limit

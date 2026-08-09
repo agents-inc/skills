@@ -1,304 +1,191 @@
-# MongoDB / Mongoose Reference
+# MongoDB Native Driver Reference
 
-> Decision frameworks, quick reference, Atlas setup, migration strategies, and common connection options. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
-
----
-
-## Decision Framework
-
-### Schema Design: Embed vs Reference
-
-```
-Is the related data always accessed with the parent?
-├─ YES → Is the related data bounded (won't grow unbounded)?
-│   ├─ YES → Is the related data small (< 100 items)?
-│   │   ├─ YES → EMBED in the parent document
-│   │   └─ NO → Consider EMBED with pagination or REFERENCE
-│   └─ NO → REFERENCE (unbounded arrays hit 16 MB limit)
-└─ NO → Is the related data shared across many parents?
-    ├─ YES → REFERENCE with ObjectId
-    └─ NO → Is it updated independently from the parent?
-        ├─ YES → REFERENCE with ObjectId
-        └─ NO → EMBED in the parent document
-```
-
-### Query Strategy
-
-```
-Are you reading data to send as an API response?
-├─ YES → Will you modify the documents before sending?
-│   ├─ YES → Use normal query (need Mongoose document features)
-│   └─ NO → Use .lean() for 3x memory savings
-└─ NO → Are you updating data?
-    ├─ YES → Do you need middleware (pre/post save) to fire?
-    │   ├─ YES → Use findById() + .save()
-    │   └─ NO → Use findByIdAndUpdate() with runValidators: true
-    └─ NO → Are you aggregating/analyzing data?
-        ├─ YES → Use aggregation pipeline
-        └─ NO → Use find() with appropriate projection
-```
-
-### Index Strategy
-
-```
-What does your query filter on?
-├─ Single field → Single-field index
-├─ Multiple fields → Compound index (follow ESR rule)
-├─ Text search → Text index (one per collection)
-├─ Location queries → 2dsphere index
-└─ Expiring data → TTL index on date field
-
-ESR Rule for compound indexes:
-1. Equality fields first ($eq, $in)
-2. Sort fields second
-3. Range fields last ($gt, $lt, $gte, $lte)
-```
-
-### Populate vs Aggregation $lookup
-
-```
-Do you need to resolve references?
-├─ YES → Is it a simple parent-child relationship?
-│   ├─ YES → Use .populate() with field selection
-│   └─ NO → Do you need filtering/sorting on the joined data?
-│       ├─ YES → Use aggregation $lookup + $match
-│       └─ NO → Use .populate() with match option
-└─ NO → Skip population, use IDs directly
-```
+> Quick lookup: decision tables, connection options, result shapes, operators, and error codes. See [SKILL.md](SKILL.md) for patterns and [examples/](examples/) for full implementations.
 
 ---
 
-## Atlas Setup
+## Decision Tables
 
-### Connection String Format
+### Which read method
+
+| You need                         | Use                                           |
+| -------------------------------- | --------------------------------------------- |
+| One document                     | `findOne(filter)`                             |
+| A bounded page                   | `find(filter).limit(n).toArray()`             |
+| An unbounded set                 | `for await (const doc of find(filter))`       |
+| Reshaped, grouped or joined data | `aggregate(pipeline)`                         |
+| An exact count                   | `countDocuments(filter)`                      |
+| An approximate total, instantly  | `estimatedDocumentCount()` (takes no filter)  |
+| Unique values of a field         | `distinct(field, filter)` (16 MB result cap)  |
+| Existence only                   | `findOne(filter, { projection: { _id: 1 } })` |
+
+### Which write method
+
+| You need                          | Use                                                     |
+| --------------------------------- | ------------------------------------------------------- |
+| Insert one / many                 | `insertOne` / `insertMany(docs, { ordered: false })`    |
+| Change fields, discard the result | `updateOne` / `updateMany`                              |
+| Change fields, get the document   | `findOneAndUpdate(f, u, { returnDocument: "after" })`   |
+| Insert-or-update                  | `updateOne(f, u, { upsert: true })` with `$setOnInsert` |
+| Overwrite a whole document        | `replaceOne`                                            |
+| Many mixed operations             | `bulkWrite(ops, { ordered: false })`                    |
+| Delete                            | `deleteOne` / `deleteMany`                              |
+
+### Result shapes
+
+| Operation            | Returns                                                                    |
+| -------------------- | -------------------------------------------------------------------------- |
+| `insertOne`          | `{ acknowledged, insertedId }`                                             |
+| `insertMany`         | `{ acknowledged, insertedCount, insertedIds }`                             |
+| `updateOne/Many`     | `{ acknowledged, matchedCount, modifiedCount, upsertedCount, upsertedId }` |
+| `replaceOne`         | Same as `updateOne`                                                        |
+| `deleteOne/Many`     | `{ acknowledged, deletedCount }`                                           |
+| `bulkWrite`          | Counts per operation type, plus `insertedIds` / `upsertedIds`              |
+| `findOneAnd*`        | **The document, or `null`** — the only family that returns one             |
+| `find` / `aggregate` | A lazy cursor — nothing runs until it is iterated                          |
+
+`matchedCount` answers "did it exist". `modifiedCount` answers "did it change". They differ on a no-op update, and only the first one answers a not-found check.
+
+---
+
+## Connection Options
+
+| Option                       | What it controls                                 | Typical                                     |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------- |
+| `maxPoolSize`                | Max connections in the pool                      | 10–20 per process                           |
+| `minPoolSize`                | Connections kept warm                            | 2 (0 in serverless)                         |
+| `maxIdleTimeMS`              | Before an idle connection is closed              | 30–60 s                                     |
+| `serverSelectionTimeoutMS`   | How long to look for a reachable server          | 5 s                                         |
+| `connectTimeoutMS`           | TCP/TLS handshake timeout                        | 10 s                                        |
+| `socketTimeoutMS`            | Inactivity on an established socket              | Usually leave unset                         |
+| `timeoutMS`                  | One end-to-end budget covering a whole operation | Prefer over per-stage ones                  |
+| `retryWrites` / `retryReads` | Retry once after a transient network error       | `true` (the default)                        |
+| `writeConcern`               | How many nodes acknowledge a write               | `{ w: "majority" }`                         |
+| `readPreference`             | Which node serves reads                          | `primary` unless stale reads are acceptable |
+| `serverApi`                  | Pin the versioned API across server upgrades     | `{ version: v1, strict: true }`             |
+
+### Connection string
 
 ```
-mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
+mongodb+srv://<user>:<password>@<cluster>/<db>?retryWrites=true&w=majority
+mongodb://127.0.0.1:27017/<db>          # local — prefer 127.0.0.1 over localhost
 ```
 
-**Steps:**
+`mongodb+srv://` resolves hosts through DNS SRV records, so the host list is not hard-coded. Percent-encode any password containing reserved characters (`@`, `:`, `/`, `?`, `#`), or authentication fails with an error that names the wrong host.
 
-1. Create cluster at [cloud.mongodb.com](https://cloud.mongodb.com)
-2. Create database user (Database Access)
-3. Whitelist IP addresses (Network Access) -- use `0.0.0.0/0` for development only
-4. Get connection string (Connect > Drivers > Node.js)
-5. Store in environment variable as `MONGODB_URI`
+**Prefer `127.0.0.1` to `localhost` locally:** Node resolves `localhost` to IPv6 first on modern versions, and a server bound only to IPv4 then appears unreachable until server selection times out.
 
-### Atlas Search (Full-Text)
+---
 
-Atlas Search uses Apache Lucene indexes, separate from standard MongoDB indexes. Configure via Atlas UI or API:
+## Query Operators
+
+| Operator                   | Matches                                                      |
+| -------------------------- | ------------------------------------------------------------ |
+| `$eq` `$ne`                | Equal / not equal                                            |
+| `$gt` `$gte` `$lt` `$lte`  | Ranges                                                       |
+| `$in` `$nin`               | Membership of an array of values                             |
+| `$exists`                  | Field present or absent                                      |
+| `$type`                    | BSON type                                                    |
+| `$regex`                   | Pattern — anchored (`^`) can use an index; unanchored cannot |
+| `$and` `$or` `$nor` `$not` | Logical composition                                          |
+| `$all`                     | Array contains all listed values                             |
+| `$elemMatch`               | One array element matches every condition                    |
+| `$size`                    | Exact array length                                           |
+| `$expr`                    | Compare two fields of the same document                      |
+| `$text`                    | Text index search                                            |
+| `$near` `$geoWithin`       | Geospatial                                                   |
+
+`{ tags: { $gt: "a", $lt: "z" } }` matches a document where _some_ element beats each condition separately. Use `$elemMatch` when one element must satisfy all of them.
+
+## Update Operators
+
+| Operator                  | Effect                                               |
+| ------------------------- | ---------------------------------------------------- |
+| `$set` `$unset`           | Set or remove fields                                 |
+| `$setOnInsert`            | Apply only when an upsert creates the document       |
+| `$inc` `$mul`             | Arithmetic, atomically                               |
+| `$min` `$max`             | Set only if lower / higher than the current value    |
+| `$rename`                 | Rename a field                                       |
+| `$currentDate`            | Server clock, avoiding host clock drift              |
+| `$push` `$addToSet`       | Append / append-if-absent                            |
+| `$pull` `$pullAll` `$pop` | Remove elements                                      |
+| `$each` `$slice` `$sort`  | Modifiers for `$push` — bound an array as you append |
+| `arrayFilters`            | Update matching array elements by condition          |
+
+Bound an array as you write it rather than trimming it later:
 
 ```typescript
-// Atlas Search aggregation stage
-const results = await Product.aggregate([
-  {
-    $search: {
-      index: "product_search",
-      text: {
-        query: searchTerm,
-        path: ["name", "description"],
-        fuzzy: { maxEdits: 1 },
-      },
-    },
-  },
-  { $limit: 20 },
-  { $project: { name: 1, description: 1, score: { $meta: "searchScore" } } },
-]);
-```
+const MAX_HISTORY = 50;
 
----
-
-## Migration Strategies
-
-### Schema Changes
-
-MongoDB is schema-flexible, but Mongoose enforces structure at the application layer.
-
-**Adding a field:**
-
-```typescript
-// Add with default -- existing documents get default on next read/write
-const userSchema = new Schema({
-  // ... existing fields
-  preferences: { type: Schema.Types.Mixed, default: {} },
+await doc.updateOne(filter, {
+  $push: { history: { $each: [entry], $slice: -MAX_HISTORY } },
 });
 ```
 
-**Renaming a field:**
+## Aggregation Stages
 
-```typescript
-// Migration script -- run once
-await User.updateMany({}, { $rename: { oldField: "newField" } });
-```
-
-**Removing a field:**
-
-```typescript
-// Migration script -- run once
-await User.updateMany({}, { $unset: { deprecatedField: "" } });
-```
-
-### Data Migration Pattern
-
-```typescript
-const BATCH_SIZE = 500;
-
-async function migrateUsers(): Promise<void> {
-  let processed = 0;
-  const total = await User.countDocuments({ migratedAt: { $exists: false } });
-
-  const cursor = User.find({ migratedAt: { $exists: false } })
-    .batchSize(BATCH_SIZE)
-    .cursor();
-
-  for await (const user of cursor) {
-    user.displayName = `${user.firstName} ${user.lastName}`;
-    user.migratedAt = new Date();
-    await user.save();
-    processed += 1;
-
-    if (processed % BATCH_SIZE === 0) {
-      console.log(`Migrated ${processed}/${total}`);
-    }
-  }
-
-  console.log(`Migration complete: ${processed} documents`);
-}
-
-export { migrateUsers };
-```
+| Stage                            | Purpose                                                |
+| -------------------------------- | ------------------------------------------------------ |
+| `$match`                         | Filter — **first**, so it can use an index             |
+| `$project` `$addFields` `$unset` | Reshape; use early to shrink documents                 |
+| `$group`                         | Aggregate by key                                       |
+| `$sort` `$limit` `$skip`         | Order and slice — only a leading `$sort` uses an index |
+| `$lookup`                        | Join — index the `foreignField`                        |
+| `$unwind`                        | One document per array element                         |
+| `$facet`                         | Several sub-pipelines over one input                   |
+| `$bucket` `$bucketAuto`          | Group into ranges                                      |
+| `$merge` `$out`                  | Write results to a collection                          |
+| `$count`                         | Count into a single-field document                     |
+| `$setWindowFields`               | Running totals, rankings, moving averages              |
 
 ---
 
-## Common Connection Options
+## Error Codes
 
-| Option                     | Default    | Description                             |
-| -------------------------- | ---------- | --------------------------------------- |
-| `maxPoolSize`              | 100        | Maximum sockets in the connection pool  |
-| `minPoolSize`              | 0          | Minimum sockets maintained              |
-| `serverSelectionTimeoutMS` | 30000      | Time to find an available server        |
-| `socketTimeoutMS`          | 0          | Time before killing inactive sockets    |
-| `heartbeatFrequencyMS`     | 10000      | Interval for server status checks       |
-| `retryWrites`              | true       | Automatically retry failed writes       |
-| `retryReads`               | true       | Automatically retry failed reads        |
-| `family`                   | 0          | Force IPv4 (4) or IPv6 (6)              |
-| `authSource`               | -          | Database for user credentials           |
-| `w`                        | "majority" | Write concern (majority for durability) |
-| `bufferCommands`           | true       | Queue operations before connection      |
+| Condition                  | Detect with                                             |
+| -------------------------- | ------------------------------------------------------- |
+| Duplicate key              | `MongoServerError` with `code === 11000`                |
+| No reachable server        | `MongoServerSelectionError`                             |
+| Network failure mid-op     | `MongoNetworkError`                                     |
+| Partial bulk failure       | `MongoBulkWriteError` — read `result` and `writeErrors` |
+| Document failed validation | `MongoServerError` with `code === 121`                  |
+| Transaction can be retried | Error label `TransientTransactionError`                 |
+| Commit outcome unknown     | Error label `UnknownTransactionCommitResult`            |
 
-### Recommended Production Configuration
-
-```typescript
-const PRODUCTION_OPTIONS = {
-  maxPoolSize: 10,
-  minPoolSize: 2,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  retryWrites: true,
-  retryReads: true,
-  family: 4,
-} as const;
-```
-
-### Recommended Test Configuration
-
-```typescript
-const TEST_OPTIONS = {
-  maxPoolSize: 5,
-  serverSelectionTimeoutMS: 3000,
-  bufferCommands: false,
-} as const;
-```
+`withTransaction` already retries both transaction labels. Handle them by hand only outside it.
 
 ---
 
-## Mongoose CLI Commands
+## mongosh Commands
 
 ```bash
-# No official Mongoose CLI -- use mongosh for database operations:
+mongosh "mongodb+srv://cluster.example.net/appdb" --username admin
 
-# Connect to Atlas
-mongosh "mongodb+srv://cluster.mongodb.net/mydb" --username admin
-
-# Show databases
 show dbs
-
-# Switch database
-use mydb
-
-# Show collections
+use appdb
 show collections
 
-# Query documents
-db.users.find({ role: "admin" }).pretty()
+db.orders.findOne({ status: "pending" })
+db.orders.countDocuments({ tenantId })
 
-# Create index
-db.users.createIndex({ email: 1 }, { unique: true })
+db.orders.getIndexes()
+db.orders.createIndex({ tenantId: 1, createdAt: -1 }, { name: "tenant_created" })
+db.orders.dropIndex("tenant_created")
+db.orders.aggregate([{ $indexStats: {} }])
 
-# Explain query plan
-db.users.find({ role: "admin" }).explain("executionStats")
+db.orders.find({ tenantId }).sort({ createdAt: -1 }).explain("executionStats")
 
-# Drop index
-db.users.dropIndex("email_1")
+db.currentOp({ "secs_running": { $gt: 5 } })   # long-running operations
+db.serverStatus().connections                   # current vs available
 ```
 
 ---
 
-## Quick Reference
+## Version Notes
 
-### Schema Types
+The driver's major version determines several behaviours worth checking against the version actually installed:
 
-| Mongoose Type           | TypeScript Type  | Example                                  |
-| ----------------------- | ---------------- | ---------------------------------------- |
-| `String`                | `string`         | `name: { type: String }`                 |
-| `Number`                | `number`         | `age: { type: Number }`                  |
-| `Boolean`               | `boolean`        | `isActive: { type: Boolean }`            |
-| `Date`                  | `Date`           | `createdAt: { type: Date }`              |
-| `Buffer`                | `Buffer`         | `data: { type: Buffer }`                 |
-| `Schema.Types.ObjectId` | `Types.ObjectId` | `ref: { type: Schema.Types.ObjectId }`   |
-| `Schema.Types.Mixed`    | `any`            | `metadata: { type: Schema.Types.Mixed }` |
-| `[String]`              | `string[]`       | `tags: [{ type: String }]`               |
-| `Map`                   | `Map<string, V>` | `meta: { type: Map, of: String }`        |
-| `Schema.Types.UUID`     | `string`         | `uuid: { type: Schema.Types.UUID }`      |
-
-### Common Query Operators
-
-| Operator       | Description             | Example                                   |
-| -------------- | ----------------------- | ----------------------------------------- |
-| `$eq`          | Equal                   | `{ age: { $eq: 25 } }`                    |
-| `$ne`          | Not equal               | `{ status: { $ne: "deleted" } }`          |
-| `$gt` / `$gte` | Greater than (or equal) | `{ age: { $gte: 18 } }`                   |
-| `$lt` / `$lte` | Less than (or equal)    | `{ price: { $lt: 100 } }`                 |
-| `$in` / `$nin` | In / not in array       | `{ role: { $in: ["admin", "mod"] } }`     |
-| `$exists`      | Field exists            | `{ avatar: { $exists: true } }`           |
-| `$regex`       | Regular expression      | `{ name: { $regex: /^A/i } }`             |
-| `$or`          | Logical OR              | `{ $or: [{ a: 1 }, { b: 2 }] }`           |
-| `$and`         | Logical AND             | `{ $and: [{ a: 1 }, { b: 2 }] }`          |
-| `$elemMatch`   | Array element match     | `{ tags: { $elemMatch: { $eq: "js" } } }` |
-
-### Common Update Operators
-
-| Operator        | Description            | Example                             |
-| --------------- | ---------------------- | ----------------------------------- |
-| `$set`          | Set field value        | `{ $set: { name: "New" } }`         |
-| `$unset`        | Remove field           | `{ $unset: { temp: "" } }`          |
-| `$inc`          | Increment              | `{ $inc: { count: 1 } }`            |
-| `$push`         | Add to array           | `{ $push: { tags: "new" } }`        |
-| `$pull`         | Remove from array      | `{ $pull: { tags: "old" } }`        |
-| `$addToSet`     | Add unique to array    | `{ $addToSet: { tags: "unique" } }` |
-| `$rename`       | Rename field           | `{ $rename: { old: "new" } }`       |
-| `$min` / `$max` | Update if less/greater | `{ $min: { low: 5 } }`              |
-
-### Aggregation Stages
-
-| Stage              | Description         | Example                                                                                     |
-| ------------------ | ------------------- | ------------------------------------------------------------------------------------------- |
-| `$match`           | Filter documents    | `{ $match: { status: "active" } }`                                                          |
-| `$group`           | Group and aggregate | `{ $group: { _id: "$category", count: { $sum: 1 } } }`                                      |
-| `$project`         | Shape output fields | `{ $project: { name: 1, total: { $multiply: ["$price", "$qty"] } } }`                       |
-| `$sort`            | Order documents     | `{ $sort: { createdAt: -1 } }`                                                              |
-| `$limit` / `$skip` | Pagination          | `{ $limit: 20 }`                                                                            |
-| `$lookup`          | Join collections    | `{ $lookup: { from: "users", localField: "authorId", foreignField: "_id", as: "author" } }` |
-| `$unwind`          | Flatten arrays      | `{ $unwind: "$tags" }`                                                                      |
-| `$facet`           | Multiple pipelines  | `{ $facet: { data: [...], count: [...] } }`                                                 |
-| `$merge`           | Write to collection | `{ $merge: { into: "reports" } }`                                                           |
+- **Callbacks were removed** — every operation returns a promise. Callback-style code from older material throws.
+- **`findOneAnd*` returns the document directly.** Pass `includeResultMetadata: true` for the older `{ value, ok, lastErrorObject }` wrapper.
+- **`timeoutMS`** provides one end-to-end budget per operation, superseding the older per-stage timeout options.
+- **The `background` index option is ignored** — the driver still accepts it, but MongoDB 4.2+ builds every index without blocking, so the option no longer changes anything.
