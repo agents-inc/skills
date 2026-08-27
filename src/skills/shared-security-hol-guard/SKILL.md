@@ -78,10 +78,17 @@ HOL Guard is a local execution boundary, not a post-hoc report. Risky tool actio
 
 ### Pattern 1: Install and Verify
 
-Prefer an isolated CLI install and verify both availability and detected harnesses.
+Prefer an isolated CLI install. Try the tool directly first instead of relying on shell-specific discovery commands:
 
 ```bash
-command -v hol-guard || pipx install hol-guard
+hol-guard --version
+```
+
+If `hol-guard` is unavailable and the user asked for runtime protection, install it with `pipx`, then verify the runtime and detected harnesses:
+
+```bash
+pipx install hol-guard
+hol-guard --version
 hol-guard status
 hol-guard detect --json
 ```
@@ -143,10 +150,22 @@ Report what the commands actually show. Do not infer protection or approval stat
 
 ### Pattern 5: Scan Agent Packages
 
-`plugin-scanner` is a separate distribution. Check or install it independently, then scan the package root.
+`plugin-scanner` is a separate distribution. Try the scanner directly first:
 
 ```bash
-command -v plugin-scanner || pipx install plugin-scanner
+plugin-scanner --version
+```
+
+If it is unavailable and scanning is requested, install the separate package and verify it before scanning:
+
+```bash
+pipx install plugin-scanner
+plugin-scanner --version
+```
+
+Then scan the package root:
+
+```bash
 plugin-scanner lint .
 plugin-scanner verify .
 ```
