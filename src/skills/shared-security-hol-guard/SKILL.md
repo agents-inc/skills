@@ -121,7 +121,7 @@ List pending work and inspect its reason before making a decision.
 
 ```bash
 hol-guard approvals
-hol-guard approvals open
+hol-guard approvals open <request-id>
 hol-guard diff claude-code
 ```
 
