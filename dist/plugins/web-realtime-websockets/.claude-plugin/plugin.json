@@ -5,5 +5,6 @@
   "description": "Native WebSocket API patterns, connection lifecycle, reconnection strategies, heartbeat, message typing, binary data, custom hooks",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-realtime"
 }

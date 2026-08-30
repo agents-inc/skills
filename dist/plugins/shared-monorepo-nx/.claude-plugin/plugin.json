@@ -5,5 +5,6 @@
   "description": "Nx monorepo build system — workspace configuration, project graph, task pipelines, caching, generators, plugins, and release management",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "shared-task-runner"
 }

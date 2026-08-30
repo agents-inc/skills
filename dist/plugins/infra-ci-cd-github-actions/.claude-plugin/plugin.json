@@ -5,5 +5,6 @@
   "description": "GitHub Actions, pipelines, deployment",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "infra-ci-cd"
 }

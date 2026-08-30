@@ -5,5 +5,6 @@
   "description": "Tauri 2.x bundling, code signing, auto-updater, platform installers, CI/CD",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "desktop-packaging"
 }

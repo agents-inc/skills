@@ -5,5 +5,6 @@
   "description": "Recharts composable chart components - LineChart, BarChart, AreaChart, PieChart, ComposedChart, responsive sizing, custom tooltips, animations",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-dataviz"
 }

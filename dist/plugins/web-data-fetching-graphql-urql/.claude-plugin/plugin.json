@@ -5,5 +5,6 @@
   "description": "URQL GraphQL client patterns - useQuery, useMutation, exchange architecture, caching strategies, subscriptions",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-graphql-client"
 }

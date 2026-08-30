@@ -5,5 +5,6 @@
   "description": "Speech-to-text transcription and translation via OpenAI Audio API -- models, response formats, timestamps, prompting, streaming, chunking, and diarization",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "ai-provider"
 }

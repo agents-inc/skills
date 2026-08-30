@@ -5,5 +5,6 @@
   "description": "Qdrant vector database -- collection management, point operations, payload filtering, named vectors, quantization, recommendations, snapshots",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-vector-db"
 }

@@ -5,5 +5,6 @@
   "description": "Appwrite backend-as-a-service — Auth, TablesDB, Storage, Functions, Realtime, permissions model, typed client",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-baas"
 }

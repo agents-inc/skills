@@ -5,5 +5,6 @@
   "description": "Job queues, background processing, and task scheduling with BullMQ v5",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-queue"
 }

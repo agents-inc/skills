@@ -5,5 +5,6 @@
   "description": "Biome v2 unified linter, formatter, and import organizer — single Rust-powered tool replacing ESLint + Prettier with 97% Prettier compatibility and 20x faster performance",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "shared-lint"
 }

@@ -5,5 +5,6 @@
   "description": "SQL query builder for PostgreSQL, MySQL, SQLite, and MSSQL -- fluent queries, schema builder, migrations, seeds, transactions, raw queries",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-orm"
 }

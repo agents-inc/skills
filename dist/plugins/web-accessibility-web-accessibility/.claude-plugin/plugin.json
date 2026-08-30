@@ -5,5 +5,6 @@
   "description": "WCAG, ARIA, keyboard navigation",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-accessibility"
 }

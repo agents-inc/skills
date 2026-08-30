@@ -5,5 +5,6 @@
   "description": "Frameless windows, custom title bars, tray, menus, dock badges, vibrancy, kiosk mode, window state persistence",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "desktop-ui"
 }

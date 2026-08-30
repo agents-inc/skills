@@ -5,5 +5,6 @@
   "description": "Accessible React component library with style props and theming",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-ui-kit"
 }

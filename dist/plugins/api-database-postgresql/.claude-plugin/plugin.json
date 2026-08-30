@@ -5,5 +5,6 @@
   "description": "Direct PostgreSQL access with node-postgres (pg) -- connection pools, parameterized queries, transactions, streaming, LISTEN/NOTIFY, error handling",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-sql-engine"
 }

@@ -5,5 +5,6 @@
   "description": "D3.js data visualization — selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-dataviz"
 }

@@ -238,7 +238,7 @@ Had this been a hosted run with the mapping supplied alongside the catalog, each
 
 ```json
 {
-  "v": 3,
+  "v": 5,
   "matrixVersion": "1.0.0",
   "stackId": null,
   "skills": {
@@ -496,7 +496,7 @@ Two things the pick carries that the intent never asked for: `cli-framework-ocli
 
 ```json
 {
-  "v": 3,
+  "v": 5,
   "matrixVersion": "1.0.0",
   "stackId": "nextjs-saas-starter",
   "skills": {

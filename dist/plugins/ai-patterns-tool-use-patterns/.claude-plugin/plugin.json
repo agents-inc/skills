@@ -5,5 +5,6 @@
   "description": "Provider-agnostic patterns for LLM function calling, tool loops, and agentic workflows",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "ai-patterns"
 }

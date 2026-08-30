@@ -5,5 +5,6 @@
   "description": "Atomic state management with auto-dependency tracking",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-client-state"
 }

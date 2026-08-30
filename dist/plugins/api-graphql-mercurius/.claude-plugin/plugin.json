@@ -5,5 +5,6 @@
   "description": "GraphQL server for Fastify with Mercurius — loaders, subscriptions, federation, JIT compilation",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-graphql"
 }

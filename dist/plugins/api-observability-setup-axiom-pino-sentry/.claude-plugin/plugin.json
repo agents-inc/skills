@@ -5,5 +5,6 @@
   "description": "Pino, Axiom, Sentry installation - one-time project setup for logging and error tracking with source maps upload",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-observability"
 }

@@ -5,5 +5,6 @@
   "description": "MongoDB ODM with schemas, validation, middleware, and TypeScript support",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-document"
 }

@@ -5,5 +5,6 @@
   "description": "Zod schema validation patterns for TypeScript - schema definitions, type inference, refinements, transforms, discriminated unions",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-forms"
 }

@@ -5,5 +5,6 @@
   "description": "Pinecone serverless vector database -- index management, vector operations, metadata filtering, namespaces, hybrid search, inference API",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-vector-db"
 }

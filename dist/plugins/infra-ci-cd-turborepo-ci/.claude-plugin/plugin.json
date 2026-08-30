@@ -5,5 +5,6 @@
   "description": "Turborepo CI pipelines with remote caching and affected detection",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "infra-ci-cd"
 }

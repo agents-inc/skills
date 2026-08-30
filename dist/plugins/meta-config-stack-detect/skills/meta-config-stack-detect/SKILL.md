@@ -25,7 +25,7 @@ description: Inspect a codebase, a stack the user describes, or a description of
 
 **(You MUST acquire the built-in stacks the same way when intent is all the user has given you, offer candidates with the reason each is one, and wait for the USER to pick before any mapping runs — recommending is still proposing, never deciding)**
 
-**(You MUST emit the proposal as a `SeedPayload` for a surface the user confirms — never write config files, never run install commands, never report a configuration as applied)**
+**(You MUST emit the proposal as a `SeedPayload` and OFFER the command that publishes it — `agents-inc share --stdin` — for the user to run; never write config files, never run install commands, never POST the payload yourself, never report a configuration as applied)**
 
 **(You MUST mark each assignment's load state as the product's preload mapping has it, and `lazy` where you cannot read the mapping — never allocate slots, count preloads, or hold a budget of your own)**
 
@@ -363,7 +363,7 @@ Read the resolved MAJOR from the lockfile. A manifest range does not settle a ve
 | <styling>  | v3         | v4            | Configuration model differs; guidance may not apply |
 
 # ❌ Bad — a warnings array bolted onto the payload
-{ "v": 3, "warnings": ["version mismatch"], ... }
+{ "v": 5, "warnings": ["version mismatch"], ... }
 ```
 
 **Why bad:** the schema strips what it does not declare, so the warning silently disappears in transit and the decode still succeeds — the user gets the skill and never gets the caveat.
@@ -376,7 +376,7 @@ Two artifacts, always both.
 
 #### The `SeedPayload` contract
 
-Snapshot of `packages/matrix/src/seed.ts` at `SEED_VERSION = 3`. **This snapshot is validated downstream by the editor's shared-import path and the CLI's `--from` path — if validation rejects a payload built to this shape, regenerate the snapshot from `seed.ts` rather than working around the rejection.**
+Snapshot of `packages/matrix/src/seed.ts` at `SEED_VERSION = 5`. **`v` is a `z.literal`, so a payload built to an older snapshot is REFUSED rather than degraded** — by the editor's shared-import path, by the CLI's `--from` path, and by `agents-inc share --stdin`. This snapshot sat at `3` while the wire was at `5`, which made every payload this skill emitted unusable; if validation rejects a payload built to this shape, regenerate the snapshot from `seed.ts` rather than working around the rejection.
 
 ```typescript
 type SeedLoadState = "lazy" | "preloaded";
@@ -396,11 +396,16 @@ type SeedAgent = {
 };
 
 type SeedPayload = {
-  v: 3;
+  v: 5;
   matrixVersion: string; // Diagnostics only — a mismatch must never fail a decode.
   stackId: string | null; // null when detection proposed skills rather than a stack.
+  description?: string; // The sentence a configuration records about itself. Omit it.
+  marketplace?: string; // Where the skills come from, in the form `--marketplace` takes.
   skills: Record<string, SeedSkill>; // Sparse — presence is selection.
   agents: Record<string, SeedAgent>; // Sparse — an agent with nothing to say has no entry.
+  // `external?` also exists on the wire — whole skill directories carried inline for ids no
+  // catalog resolves. Omitted here because a traversal maps to catalog ids and never mints one;
+  // if you ever need it, take its shape from `seed.ts` rather than inventing one.
 };
 ```
 
@@ -429,7 +434,19 @@ type SeedPayload = {
 
 #### Where it goes
 
-Hand both artifacts to a surface where the user confirms before anything is written — a wizard pre-seed or the editor's import path. **The skill itself writes no configuration, runs no install command, and never reports a configuration as applied.** The payload loads exactly as if a shared link had arrived, and the user adjusts from there.
+Show the user the report. Then, if they want to act on it, hand the payload to the CLI:
+
+```
+cat <<'PAYLOAD' | agents-inc share --stdin
+{ … the SeedPayload … }
+PAYLOAD
+```
+
+It prints an id and both things anyone can do with it — `agents-inc init --from <id>` to install it, and an `agentsinc.sh/?fromId=<id>` link to open it in the editor and adjust it first. Nothing is written to this machine and no file is left behind.
+
+**Publish through the CLI, never by POSTing yourself.** Four things live in the command and would drift out here: `SEED_VERSION` is a `z.literal`, so a hardcoded wire shape starts being refused the day it moves — which has already happened to this skill once; `AGENTS_INC_API_URL` exists so tests never touch the network, and a hardcoded address ignores it; the caller's user-agent is what separates an install from someone merely looking; and a POST made during traversal has published before the user has confirmed anything.
+
+**The skill itself writes no configuration, runs no install command, and never reports a configuration as applied.** Offering the command above is not running it — the user does that, and the payload then loads exactly as if a shared link had arrived.
 
 See [examples/core.md](examples/core.md#step-6-output-assembly) for a complete payload and report.
 
@@ -554,7 +571,7 @@ Never: choose a load state by hand, count preloads per agent, or hold a budget.
 
 **(You MUST acquire the built-in stacks the same way when intent is all the user has given you, offer candidates with the reason each is one, and wait for the USER to pick before any mapping runs — recommending is still proposing, never deciding)**
 
-**(You MUST emit the proposal as a `SeedPayload` for a surface the user confirms — never write config files, never run install commands, never report a configuration as applied)**
+**(You MUST emit the proposal as a `SeedPayload` and OFFER the command that publishes it — `agents-inc share --stdin` — for the user to run; never write config files, never run install commands, never POST the payload yourself, never report a configuration as applied)**
 
 **(You MUST mark each assignment's load state as the product's preload mapping has it, and `lazy` where you cannot read the mapping — never allocate slots, count preloads, or hold a budget of your own)**
 

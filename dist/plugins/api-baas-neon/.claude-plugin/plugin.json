@@ -5,5 +5,6 @@
   "description": "Serverless PostgreSQL with branching, autoscaling, and edge-compatible driver",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-db-host"
 }

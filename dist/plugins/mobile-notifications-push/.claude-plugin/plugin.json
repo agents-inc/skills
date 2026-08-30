@@ -5,5 +5,6 @@
   "description": "Push notification patterns - expo-notifications (Expo) and @react-native-firebase/messaging (bare RN), permission handling, token management, foreground/background/tap listeners, local scheduling, Android channels, notification categories and actions, badge management, rich notifications",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-notifications"
 }

@@ -5,5 +5,6 @@
   "description": "Svelte 5 Runes reactivity - $state, $derived, $effect, $props, $bindable, components, snippets, event handling, context API",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-framework"
 }

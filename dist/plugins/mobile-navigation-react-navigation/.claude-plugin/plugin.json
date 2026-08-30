@@ -5,5 +5,6 @@
   "description": "React Navigation 7+ patterns - static and dynamic APIs, type-safe navigation, stack/tab/drawer navigators, deep linking, authentication flows, screen preloading, header customization",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-navigation"
 }

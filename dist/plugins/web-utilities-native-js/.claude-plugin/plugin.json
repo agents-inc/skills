@@ -5,5 +5,6 @@
   "description": "Modern native JavaScript (ES2022-ES2025) utility patterns that replace lodash",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-utilities"
 }

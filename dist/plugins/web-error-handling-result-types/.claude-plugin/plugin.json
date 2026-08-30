@@ -5,5 +5,6 @@
   "description": "TypeScript Result/Either types for type-safe error handling, railway-oriented programming patterns, error as values",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-error-handling"
 }

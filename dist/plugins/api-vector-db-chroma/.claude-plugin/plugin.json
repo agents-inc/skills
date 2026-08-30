@@ -5,5 +5,6 @@
   "description": "Chroma vector database -- collection management, automatic embedding, metadata filtering, document storage, query patterns",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-vector-db"
 }

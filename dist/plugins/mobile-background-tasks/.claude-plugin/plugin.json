@@ -5,5 +5,6 @@
   "description": "Background fetch, processing tasks, background location, headless JS, battery optimization - Expo and bare React Native",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-background"
 }

@@ -5,5 +5,6 @@
   "description": "Fastify routes, JSON Schema validation, plugin system, TypeScript type providers",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-api"
 }

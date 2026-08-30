@@ -5,5 +5,6 @@
   "description": "React Native Paper v5+ - Material Design 3 theming, PaperProvider, key components, dynamic color, accessibility, tree-shaking, custom fonts, navigation integration",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-ui-components"
 }

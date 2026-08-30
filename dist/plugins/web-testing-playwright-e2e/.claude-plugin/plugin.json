@@ -5,5 +5,6 @@
   "description": "Playwright E2E testing patterns - test structure, Page Object Model, locator strategies, assertions, network mocking, visual regression, parallel execution, fixtures, and configuration",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-e2e"
 }

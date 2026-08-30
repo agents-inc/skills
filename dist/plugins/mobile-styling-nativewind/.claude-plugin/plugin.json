@@ -5,5 +5,6 @@
   "description": "NativeWind v4+ - Tailwind CSS utility classes for React Native, className prop, CSS variables, dark mode, platform prefixes, animations, theming, third-party component integration",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-styling"
 }

@@ -5,5 +5,6 @@
   "description": "Client-side routing with data APIs — loaders, actions, error boundaries, search params, nested layouts, and code splitting",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-routing"
 }

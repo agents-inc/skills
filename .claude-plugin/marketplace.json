@@ -16,7 +16,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-infrastructure"
     },
     {
       "name": "ai-infrastructure-litellm",
@@ -25,7 +26,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-infrastructure"
     },
     {
       "name": "ai-infrastructure-modal",
@@ -34,7 +36,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-infrastructure"
     },
     {
       "name": "ai-infrastructure-ollama",
@@ -43,7 +46,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-infrastructure"
     },
     {
       "name": "ai-infrastructure-replicate",
@@ -52,7 +56,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-infrastructure"
     },
     {
       "name": "ai-infrastructure-together-ai",
@@ -61,7 +66,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-infrastructure"
     },
     {
       "name": "ai-observability-langfuse",
@@ -70,7 +76,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-observability"
     },
     {
       "name": "ai-observability-promptfoo",
@@ -79,7 +86,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-observability"
     },
     {
       "name": "ai-orchestration-langchain",
@@ -88,7 +96,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-orchestration"
     },
     {
       "name": "ai-orchestration-llamaindex",
@@ -97,7 +106,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-orchestration"
     },
     {
       "name": "ai-orchestration-vercel-ai-sdk",
@@ -106,7 +116,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-orchestration"
     },
     {
       "name": "ai-patterns-tool-use-patterns",
@@ -115,7 +126,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-patterns"
     },
     {
       "name": "ai-provider-anthropic-sdk",
@@ -124,7 +136,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-claude-vision",
@@ -133,7 +146,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-cohere-sdk",
@@ -142,7 +156,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-elevenlabs",
@@ -151,7 +166,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-google-gemini-sdk",
@@ -160,7 +176,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-mistral-sdk",
@@ -169,7 +186,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-openai-sdk",
@@ -178,7 +196,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "ai-provider-openai-whisper",
@@ -187,7 +206,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "ai-provider"
     },
     {
       "name": "api-analytics-posthog-analytics",
@@ -196,7 +216,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-analytics"
     },
     {
       "name": "api-analytics-setup-posthog",
@@ -205,7 +226,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-analytics"
     },
     {
       "name": "api-auth-better-auth-drizzle-hono",
@@ -214,7 +236,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-auth"
     },
     {
       "name": "api-auth-clerk",
@@ -223,7 +246,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-auth"
     },
     {
       "name": "api-auth-nextauth",
@@ -232,7 +256,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-auth"
     },
     {
       "name": "api-baas-appwrite",
@@ -241,7 +266,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-baas"
     },
     {
       "name": "api-baas-firebase",
@@ -250,7 +276,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-baas"
     },
     {
       "name": "api-baas-neon",
@@ -259,7 +286,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-db-host"
     },
     {
       "name": "api-baas-planetscale",
@@ -268,7 +296,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-db-host"
     },
     {
       "name": "api-baas-supabase",
@@ -277,7 +306,8 @@
       "version": "5.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-baas"
     },
     {
       "name": "api-baas-turso",
@@ -286,7 +316,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-db-host"
     },
     {
       "name": "api-caching-strategies",
@@ -295,7 +326,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-caching"
     },
     {
       "name": "api-cms-payload",
@@ -304,7 +336,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-cms"
     },
     {
       "name": "api-cms-sanity",
@@ -313,7 +346,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-cms"
     },
     {
       "name": "api-cms-strapi",
@@ -322,7 +356,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-cms"
     },
     {
       "name": "api-commerce-stripe",
@@ -331,7 +366,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-commerce"
     },
     {
       "name": "api-database-cockroachdb",
@@ -340,7 +376,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-sql-engine"
     },
     {
       "name": "api-database-drizzle",
@@ -349,7 +386,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-orm"
     },
     {
       "name": "api-database-edgedb",
@@ -358,7 +396,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-document"
     },
     {
       "name": "api-database-knex",
@@ -367,7 +406,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-orm"
     },
     {
       "name": "api-database-mongodb",
@@ -376,7 +416,8 @@
       "version": "6.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-document"
     },
     {
       "name": "api-database-mongoose",
@@ -385,7 +426,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-document"
     },
     {
       "name": "api-database-mysql",
@@ -394,7 +436,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-sql-engine"
     },
     {
       "name": "api-database-postgresql",
@@ -403,7 +446,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-sql-engine"
     },
     {
       "name": "api-database-prisma",
@@ -412,7 +456,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-orm"
     },
     {
       "name": "api-database-redis",
@@ -421,7 +466,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-kv"
     },
     {
       "name": "api-database-sequelize",
@@ -430,7 +476,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-orm"
     },
     {
       "name": "api-database-surrealdb",
@@ -439,7 +486,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-document"
     },
     {
       "name": "api-database-typeorm",
@@ -448,7 +496,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-orm"
     },
     {
       "name": "api-database-upstash",
@@ -457,7 +506,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-kv"
     },
     {
       "name": "api-database-vercel-kv",
@@ -466,7 +516,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-kv"
     },
     {
       "name": "api-database-vercel-postgres",
@@ -475,7 +526,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-db-host"
     },
     {
       "name": "api-email-resend-react-email",
@@ -484,7 +536,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-email"
     },
     {
       "name": "api-email-setup-resend",
@@ -493,7 +546,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-email"
     },
     {
       "name": "api-flags-posthog-flags",
@@ -502,7 +556,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-analytics"
     },
     {
       "name": "api-framework-elysia",
@@ -511,7 +566,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-api"
     },
     {
       "name": "api-framework-express",
@@ -520,7 +576,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-api"
     },
     {
       "name": "api-framework-fastify",
@@ -529,7 +586,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-api"
     },
     {
       "name": "api-framework-hono",
@@ -538,7 +596,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-api"
     },
     {
       "name": "api-framework-nestjs",
@@ -547,7 +606,8 @@
       "version": "5.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-api"
     },
     {
       "name": "api-graphql-apollo-server",
@@ -556,7 +616,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-graphql"
     },
     {
       "name": "api-graphql-mercurius",
@@ -565,7 +626,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-graphql"
     },
     {
       "name": "api-graphql-yoga",
@@ -574,7 +636,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-graphql"
     },
     {
       "name": "api-messaging-webhooks",
@@ -583,7 +646,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-messaging"
     },
     {
       "name": "api-observability-axiom-pino-sentry",
@@ -592,7 +656,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-observability"
     },
     {
       "name": "api-observability-setup-axiom-pino-sentry",
@@ -601,7 +666,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-observability"
     },
     {
       "name": "api-performance-api-performance",
@@ -610,7 +676,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-performance"
     },
     {
       "name": "api-queue-bullmq",
@@ -619,7 +686,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-queue"
     },
     {
       "name": "api-search-elasticsearch",
@@ -628,7 +696,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-search"
     },
     {
       "name": "api-search-meilisearch",
@@ -637,7 +706,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-search"
     },
     {
       "name": "api-search-xquik",
@@ -646,7 +716,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@kriptoburak"
-      }
+      },
+      "category": "api-search"
     },
     {
       "name": "api-specs-openapi",
@@ -655,7 +726,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-specs"
     },
     {
       "name": "api-vector-db-chroma",
@@ -664,7 +736,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-vector-db"
     },
     {
       "name": "api-vector-db-pinecone",
@@ -673,7 +746,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-vector-db"
     },
     {
       "name": "api-vector-db-qdrant",
@@ -682,7 +756,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-vector-db"
     },
     {
       "name": "api-vector-db-weaviate",
@@ -691,7 +766,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "api-vector-db"
     },
     {
       "name": "cli-framework-cli-commander",
@@ -700,7 +776,8 @@
       "version": "5.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "cli-framework"
     },
     {
       "name": "cli-framework-oclif-ink",
@@ -709,7 +786,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "cli-framework"
     },
     {
       "name": "cli-prompts-clack",
@@ -718,7 +796,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "cli-prompts"
     },
     {
       "name": "desktop-backend-tauri",
@@ -727,7 +806,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-backend"
     },
     {
       "name": "desktop-framework-electron",
@@ -736,7 +816,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-framework"
     },
     {
       "name": "desktop-framework-tauri",
@@ -745,7 +826,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-framework"
     },
     {
       "name": "desktop-ipc-electron",
@@ -754,7 +836,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-ipc"
     },
     {
       "name": "desktop-mobile-tauri",
@@ -763,7 +846,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-mobile"
     },
     {
       "name": "desktop-multiwindow-electron",
@@ -772,7 +856,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-multiwindow"
     },
     {
       "name": "desktop-multiwindow-tauri",
@@ -781,7 +866,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-multiwindow"
     },
     {
       "name": "desktop-packaging-electron-forge",
@@ -790,7 +876,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-packaging"
     },
     {
       "name": "desktop-packaging-tauri",
@@ -799,7 +886,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-packaging"
     },
     {
       "name": "desktop-plugins-tauri",
@@ -808,7 +896,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-plugins"
     },
     {
       "name": "desktop-security-electron",
@@ -817,7 +906,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-security"
     },
     {
       "name": "desktop-security-tauri",
@@ -826,7 +916,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-security"
     },
     {
       "name": "desktop-storage-electron",
@@ -835,7 +926,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-storage"
     },
     {
       "name": "desktop-testing-electron",
@@ -844,7 +936,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-testing"
     },
     {
       "name": "desktop-ui-electron",
@@ -853,7 +946,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-ui"
     },
     {
       "name": "desktop-updates-electron-updater",
@@ -862,7 +956,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "desktop-updates"
     },
     {
       "name": "infra-ci-cd-docker",
@@ -871,7 +966,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-containers"
     },
     {
       "name": "infra-ci-cd-github-actions",
@@ -880,7 +976,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-ci-cd"
     },
     {
       "name": "infra-ci-cd-turborepo-ci",
@@ -889,7 +986,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-ci-cd"
     },
     {
       "name": "infra-config-setup-env",
@@ -898,7 +996,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-config"
     },
     {
       "name": "infra-containers-kubernetes",
@@ -907,7 +1006,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-containers"
     },
     {
       "name": "infra-iac-pulumi",
@@ -916,7 +1016,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-iac"
     },
     {
       "name": "infra-iac-sst",
@@ -925,7 +1026,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-iac"
     },
     {
       "name": "infra-iac-terraform",
@@ -934,7 +1036,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-iac"
     },
     {
       "name": "infra-platform-aws-sdk",
@@ -943,7 +1046,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-platform"
     },
     {
       "name": "infra-platform-cloudflare-workers",
@@ -952,7 +1056,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-platform"
     },
     {
       "name": "infra-platform-netlify",
@@ -961,7 +1066,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-platform"
     },
     {
       "name": "infra-platform-vercel",
@@ -970,16 +1076,18 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "infra-platform"
     },
     {
       "name": "meta-config-stack-detect",
       "source": "./dist/plugins/meta-config-stack-detect",
       "description": "Inspect a codebase, a stack the user describes, or a description of what they want to build; map what is there to agents-inc catalog skills — or intent to candidate built-in stacks the user picks from — and emit a SeedPayload plus a human-readable proposal report. Use when seeding a configuration for a project that has none.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-tooling"
     },
     {
       "name": "meta-design-composable-components",
@@ -988,7 +1096,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-design"
     },
     {
       "name": "meta-design-expressive-typescript",
@@ -997,7 +1106,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-design"
     },
     {
       "name": "meta-methodology-research-methodology",
@@ -1006,7 +1116,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-methodology"
     },
     {
       "name": "meta-planning-ai-planning",
@@ -1015,7 +1126,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-planning"
     },
     {
       "name": "meta-planning-api-planning",
@@ -1024,7 +1136,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-planning"
     },
     {
       "name": "meta-planning-cli-planning",
@@ -1033,7 +1146,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-planning"
     },
     {
       "name": "meta-planning-web-planning",
@@ -1042,7 +1156,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-planning"
     },
     {
       "name": "meta-reviewing-ai-reviewing",
@@ -1051,7 +1166,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-reviewing"
     },
     {
       "name": "meta-reviewing-api-reviewing",
@@ -1060,7 +1176,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-reviewing"
     },
     {
       "name": "meta-reviewing-cli-reviewing",
@@ -1069,7 +1186,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-reviewing"
     },
     {
       "name": "meta-reviewing-infra-reviewing",
@@ -1078,7 +1196,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-reviewing"
     },
     {
       "name": "meta-reviewing-reviewing",
@@ -1087,7 +1206,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-reviewing"
     },
     {
       "name": "meta-reviewing-web-reviewing",
@@ -1096,7 +1216,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "meta-reviewing"
     },
     {
       "name": "mobile-animation-gesture-handler",
@@ -1105,7 +1226,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-animation"
     },
     {
       "name": "mobile-animation-reanimated",
@@ -1114,7 +1236,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-animation"
     },
     {
       "name": "mobile-animation-skia",
@@ -1123,7 +1246,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-animation"
     },
     {
       "name": "mobile-background-tasks",
@@ -1132,7 +1256,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-background"
     },
     {
       "name": "mobile-camera-vision-camera",
@@ -1141,7 +1266,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-camera"
     },
     {
       "name": "mobile-deep-linking-app-links",
@@ -1150,7 +1276,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-deep-linking"
     },
     {
       "name": "mobile-deployment-eas",
@@ -1159,7 +1286,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-deployment"
     },
     {
       "name": "mobile-framework-expo",
@@ -1168,7 +1296,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-framework"
     },
     {
       "name": "mobile-framework-react-native",
@@ -1177,7 +1306,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-framework"
     },
     {
       "name": "mobile-hardware-ble-nfc",
@@ -1186,7 +1316,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-hardware"
     },
     {
       "name": "mobile-navigation-expo-router",
@@ -1195,7 +1326,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-navigation"
     },
     {
       "name": "mobile-navigation-react-navigation",
@@ -1204,7 +1336,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-navigation"
     },
     {
       "name": "mobile-notifications-push",
@@ -1213,7 +1346,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-notifications"
     },
     {
       "name": "mobile-performance-react-native",
@@ -1222,7 +1356,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-performance"
     },
     {
       "name": "mobile-security-react-native",
@@ -1231,7 +1366,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-security"
     },
     {
       "name": "mobile-storage-mmkv",
@@ -1240,7 +1376,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-storage"
     },
     {
       "name": "mobile-storage-sqlite-powersync",
@@ -1249,7 +1386,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-storage"
     },
     {
       "name": "mobile-storage-watermelondb",
@@ -1258,7 +1396,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-storage"
     },
     {
       "name": "mobile-styling-nativewind",
@@ -1267,7 +1406,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-styling"
     },
     {
       "name": "mobile-styling-unistyles",
@@ -1276,7 +1416,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-styling"
     },
     {
       "name": "mobile-testing-detox",
@@ -1285,7 +1426,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-testing"
     },
     {
       "name": "mobile-testing-maestro",
@@ -1294,7 +1436,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-testing"
     },
     {
       "name": "mobile-ui-components-react-native-paper",
@@ -1303,7 +1446,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-ui-components"
     },
     {
       "name": "mobile-ui-components-tamagui",
@@ -1312,7 +1456,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "mobile-ui-components"
     },
     {
       "name": "shared-monorepo-nx",
@@ -1321,7 +1466,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-task-runner"
     },
     {
       "name": "shared-monorepo-pnpm-workspaces",
@@ -1330,7 +1476,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-monorepo"
     },
     {
       "name": "shared-monorepo-turborepo",
@@ -1339,7 +1486,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-task-runner"
     },
     {
       "name": "shared-security-auth-security",
@@ -1348,7 +1496,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-security"
     },
     {
       "name": "shared-tooling-biome",
@@ -1357,7 +1506,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-lint"
     },
     {
       "name": "shared-tooling-changesets",
@@ -1366,7 +1516,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-tooling"
     },
     {
       "name": "shared-tooling-eslint-prettier",
@@ -1375,7 +1526,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-lint"
     },
     {
       "name": "shared-tooling-git-hooks",
@@ -1384,7 +1536,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-tooling"
     },
     {
       "name": "shared-tooling-typescript-config",
@@ -1393,7 +1546,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "shared-tooling"
     },
     {
       "name": "web-3d-react-three-fiber",
@@ -1402,7 +1556,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-3d"
     },
     {
       "name": "web-accessibility-web-accessibility",
@@ -1411,7 +1566,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-accessibility"
     },
     {
       "name": "web-animation-css-animations",
@@ -1420,7 +1576,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-animation"
     },
     {
       "name": "web-animation-framer-motion",
@@ -1429,7 +1586,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-animation"
     },
     {
       "name": "web-animation-view-transitions",
@@ -1438,7 +1596,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-animation"
     },
     {
       "name": "web-data-fetching-graphql-apollo",
@@ -1447,7 +1606,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-graphql-client"
     },
     {
       "name": "web-data-fetching-graphql-urql",
@@ -1456,7 +1616,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-graphql-client"
     },
     {
       "name": "web-data-fetching-swr",
@@ -1465,7 +1626,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-server-state"
     },
     {
       "name": "web-data-fetching-trpc",
@@ -1474,7 +1636,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-rpc"
     },
     {
       "name": "web-dataviz-d3",
@@ -1483,7 +1646,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-dataviz"
     },
     {
       "name": "web-dataviz-recharts",
@@ -1492,7 +1656,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-dataviz"
     },
     {
       "name": "web-dnd-dnd-kit",
@@ -1501,7 +1666,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-dnd"
     },
     {
       "name": "web-editor-lexical",
@@ -1510,7 +1676,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-editor"
     },
     {
       "name": "web-editor-tiptap",
@@ -1519,7 +1686,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-editor"
     },
     {
       "name": "web-error-handling-error-boundaries",
@@ -1528,7 +1696,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-error-handling"
     },
     {
       "name": "web-error-handling-result-types",
@@ -1537,7 +1706,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-error-handling"
     },
     {
       "name": "web-files-file-upload-patterns",
@@ -1546,7 +1716,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-file-upload"
     },
     {
       "name": "web-files-image-handling",
@@ -1555,7 +1726,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-files"
     },
     {
       "name": "web-forms-react-hook-form",
@@ -1564,7 +1736,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-form-library"
     },
     {
       "name": "web-forms-tanstack-form",
@@ -1573,7 +1746,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-form-library"
     },
     {
       "name": "web-forms-vee-validate",
@@ -1582,7 +1756,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-form-library"
     },
     {
       "name": "web-forms-zod-validation",
@@ -1591,7 +1766,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-forms"
     },
     {
       "name": "web-framework-angular-standalone",
@@ -1600,7 +1776,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-framework"
     },
     {
       "name": "web-framework-react",
@@ -1609,7 +1786,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-framework"
     },
     {
       "name": "web-framework-solidjs",
@@ -1618,7 +1796,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-framework"
     },
     {
       "name": "web-framework-svelte",
@@ -1627,7 +1806,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-framework"
     },
     {
       "name": "web-framework-vue-composition-api",
@@ -1636,7 +1816,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-framework"
     },
     {
       "name": "web-i18n-next-intl",
@@ -1645,7 +1826,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-i18n"
     },
     {
       "name": "web-i18n-react-intl",
@@ -1654,7 +1836,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-i18n"
     },
     {
       "name": "web-i18n-vue-i18n",
@@ -1663,7 +1846,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-i18n"
     },
     {
       "name": "web-maps-leaflet",
@@ -1672,7 +1856,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-maps"
     },
     {
       "name": "web-maps-mapbox",
@@ -1681,7 +1866,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-maps"
     },
     {
       "name": "web-meta-framework-astro",
@@ -1690,7 +1876,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-meta-framework"
     },
     {
       "name": "web-meta-framework-docusaurus",
@@ -1699,7 +1886,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-docs"
     },
     {
       "name": "web-meta-framework-nextjs",
@@ -1708,7 +1896,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-meta-framework"
     },
     {
       "name": "web-meta-framework-nuxt",
@@ -1717,7 +1906,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-meta-framework"
     },
     {
       "name": "web-meta-framework-qwik",
@@ -1726,7 +1916,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-meta-framework"
     },
     {
       "name": "web-meta-framework-remix",
@@ -1735,7 +1926,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-meta-framework"
     },
     {
       "name": "web-meta-framework-sveltekit",
@@ -1744,7 +1936,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-meta-framework"
     },
     {
       "name": "web-meta-framework-vitepress",
@@ -1753,7 +1946,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-docs"
     },
     {
       "name": "web-mocks-msw",
@@ -1762,7 +1956,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-mocking"
     },
     {
       "name": "web-performance-web-performance",
@@ -1771,7 +1966,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-performance"
     },
     {
       "name": "web-pwa-offline-first",
@@ -1780,7 +1976,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-pwa"
     },
     {
       "name": "web-pwa-service-workers",
@@ -1789,7 +1986,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-pwa"
     },
     {
       "name": "web-realtime-socket-io",
@@ -1798,7 +1996,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-realtime"
     },
     {
       "name": "web-realtime-sse",
@@ -1807,7 +2006,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-streaming"
     },
     {
       "name": "web-realtime-websockets",
@@ -1816,7 +2016,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-realtime"
     },
     {
       "name": "web-routing-react-router",
@@ -1825,7 +2026,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-routing"
     },
     {
       "name": "web-routing-tanstack-router",
@@ -1834,7 +2036,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-routing"
     },
     {
       "name": "web-server-state-react-query",
@@ -1843,7 +2046,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-server-state"
     },
     {
       "name": "web-state-jotai",
@@ -1852,7 +2056,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-client-state"
     },
     {
       "name": "web-state-mobx",
@@ -1861,7 +2066,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-client-state"
     },
     {
       "name": "web-state-ngrx-signalstore",
@@ -1870,7 +2076,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-client-state"
     },
     {
       "name": "web-state-pinia",
@@ -1879,7 +2086,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-client-state"
     },
     {
       "name": "web-state-redux-toolkit",
@@ -1888,7 +2096,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-client-state"
     },
     {
       "name": "web-state-zustand",
@@ -1897,7 +2106,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-client-state"
     },
     {
       "name": "web-styling-cva",
@@ -1906,7 +2116,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-styling"
     },
     {
       "name": "web-styling-design-tokens",
@@ -1915,7 +2126,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-styling"
     },
     {
       "name": "web-styling-scss-modules",
@@ -1924,7 +2136,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-styling"
     },
     {
       "name": "web-styling-tailwind",
@@ -1933,7 +2146,8 @@
       "version": "5.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-styling"
     },
     {
       "name": "web-styling-theming",
@@ -1942,7 +2156,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-styling"
     },
     {
       "name": "web-testing-cypress-e2e",
@@ -1951,7 +2166,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-e2e"
     },
     {
       "name": "web-testing-playwright-e2e",
@@ -1960,7 +2176,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-e2e"
     },
     {
       "name": "web-testing-react-testing-library",
@@ -1969,7 +2186,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-testing"
     },
     {
       "name": "web-testing-visual-regression",
@@ -1978,7 +2196,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-testing"
     },
     {
       "name": "web-testing-vitest",
@@ -1987,7 +2206,8 @@
       "version": "7.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-testing"
     },
     {
       "name": "web-testing-vue-test-utils",
@@ -1996,7 +2216,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-testing"
     },
     {
       "name": "web-tooling-component-library",
@@ -2005,7 +2226,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-tooling"
     },
     {
       "name": "web-tooling-storybook",
@@ -2014,7 +2236,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-tooling"
     },
     {
       "name": "web-tooling-vite",
@@ -2023,7 +2246,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-tooling"
     },
     {
       "name": "web-ui-ant-design",
@@ -2032,7 +2256,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-kit"
     },
     {
       "name": "web-ui-base-ui",
@@ -2041,7 +2266,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-components"
     },
     {
       "name": "web-ui-chakra-ui",
@@ -2050,7 +2276,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-kit"
     },
     {
       "name": "web-ui-headless-ui",
@@ -2059,7 +2286,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-components"
     },
     {
       "name": "web-ui-mantine",
@@ -2068,7 +2296,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-kit"
     },
     {
       "name": "web-ui-mui",
@@ -2077,7 +2306,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-kit"
     },
     {
       "name": "web-ui-radix-ui",
@@ -2086,7 +2316,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-components"
     },
     {
       "name": "web-ui-shadcn-ui",
@@ -2095,7 +2326,8 @@
       "version": "4.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-kit"
     },
     {
       "name": "web-ui-tanstack-table",
@@ -2104,7 +2336,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-components"
     },
     {
       "name": "web-ui-vuetify",
@@ -2113,7 +2346,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-ui-kit"
     },
     {
       "name": "web-utilities-date-fns",
@@ -2122,7 +2356,8 @@
       "version": "3.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-utilities"
     },
     {
       "name": "web-utilities-native-js",
@@ -2131,7 +2366,8 @@
       "version": "2.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-utilities"
     },
     {
       "name": "web-utilities-rxjs",
@@ -2140,7 +2376,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-utilities"
     },
     {
       "name": "web-utilities-vueuse",
@@ -2149,7 +2386,8 @@
       "version": "1.0.0",
       "author": {
         "name": "@vince"
-      }
+      },
+      "category": "web-utilities"
     }
   ],
   "description": "Skills, stacks, and agents for Agents Inc"

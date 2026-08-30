@@ -5,5 +5,6 @@
   "description": "Multi-window management, WebContentsView, BaseWindow, window lifecycle, inter-window communication, state persistence",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "desktop-multiwindow"
 }

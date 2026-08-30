@@ -5,5 +5,6 @@
   "description": "Visual regression testing - screenshot baselines, determinism, diff review workflow, baseline custody, and CI wiring for catching unintended UI changes",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-testing"
 }

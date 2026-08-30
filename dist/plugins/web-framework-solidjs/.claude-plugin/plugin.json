@@ -5,5 +5,6 @@
   "description": "SolidJS fine-grained reactivity patterns - signals, effects, memos, stores, createResource, control flow components, Suspense, SolidStart",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-framework"
 }

@@ -5,5 +5,6 @@
   "description": "Turborepo, workspaces, package architecture, @repo/* naming, exports, tree-shaking",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "shared-task-runner"
 }

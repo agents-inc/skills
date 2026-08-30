@@ -5,5 +5,6 @@
   "description": "Tauri 2.x official plugin ecosystem, plugin APIs, permissions, and custom plugin development",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "desktop-plugins"
 }

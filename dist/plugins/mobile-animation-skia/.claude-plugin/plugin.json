@@ -5,5 +5,6 @@
   "description": "React Native Skia GPU-accelerated 2D graphics - Canvas, declarative drawing, shaders, image filters, Paragraph text, Atlas batch rendering, Reanimated animations",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-animation"
 }

@@ -5,5 +5,6 @@
   "description": "Tauri 2.x deny-by-default security model, capabilities, permissions, scopes, ACL",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "desktop-security"
 }

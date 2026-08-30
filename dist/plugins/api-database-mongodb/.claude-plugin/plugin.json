@@ -5,5 +5,6 @@
   "description": "Native MongoDB driver (the mongodb npm package) - MongoClient lifecycle, typed collections, CRUD result shapes, cursors, aggregation pipelines, index design, transactions",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-document"
 }

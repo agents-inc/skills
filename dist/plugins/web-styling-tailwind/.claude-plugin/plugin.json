@@ -5,5 +5,6 @@
   "description": "Tailwind CSS v4 - utility-first CSS framework with CSS-first configuration",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-styling"
 }

@@ -5,5 +5,6 @@
   "description": "Secure storage, certificate pinning, biometric auth, jailbreak detection, code obfuscation, network security, screenshot prevention for React Native",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-security"
 }

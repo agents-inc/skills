@@ -5,5 +5,6 @@
   "description": "CLI specification planning frameworks. Use when a spec touches a command surface, an interactive flow, config precedence, exit codes, or output modes. Covers flag contracts, prompt flow design, precedence tables, exit-code taxonomy, TTY/piped/JSON output, error text, signals, and cross-platform concerns.",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "meta-planning"
 }

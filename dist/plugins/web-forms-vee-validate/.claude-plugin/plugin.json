@@ -5,5 +5,6 @@
   "description": "VeeValidate v4 patterns - useForm, useField, defineField, useFieldArray, schema validation with Composition API",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-form-library"
 }

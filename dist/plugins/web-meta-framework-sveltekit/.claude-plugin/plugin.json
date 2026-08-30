@@ -5,5 +5,6 @@
   "description": "SvelteKit full-stack framework - file-based routing, load functions, form actions, server hooks, SSR/SSG, API routes, streaming, progressive enhancement",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-meta-framework"
 }

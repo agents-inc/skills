@@ -5,5 +5,6 @@
   "description": "BLE scanning/connecting/GATT operations with react-native-ble-plx, NFC tag reading/writing with react-native-nfc-manager, permissions, background mode, battery-efficient patterns",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "mobile-hardware"
 }

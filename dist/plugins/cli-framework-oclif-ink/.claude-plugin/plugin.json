@@ -5,5 +5,6 @@
   "description": "Modern CLI development combining oclif's command framework with Ink's React-based terminal rendering",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "cli-framework"
 }

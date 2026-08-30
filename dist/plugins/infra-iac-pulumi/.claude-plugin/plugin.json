@@ -5,5 +5,6 @@
   "description": "TypeScript-native Infrastructure as Code with Pulumi",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "infra-iac"
 }

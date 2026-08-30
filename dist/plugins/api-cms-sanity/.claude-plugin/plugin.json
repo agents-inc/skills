@@ -5,5 +5,6 @@
   "description": "Structured content platform — GROQ queries, schema definitions, @sanity/client, Portable Text, image handling, real-time listeners, mutations, TypeGen",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "api-cms"
 }

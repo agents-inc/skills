@@ -5,5 +5,6 @@
   "description": "Packaging React components as a consumable library — style delivery contracts, sideEffects, cascade layers, \"use client\" preservation, peer dependency ranges, server-safe vs client entries",
   "author": {
     "name": "@vince"
-  }
+  },
+  "category": "web-tooling"
 }
