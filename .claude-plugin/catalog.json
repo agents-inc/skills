@@ -921,6 +921,57 @@
       ],
       "path": "skills/ai-infrastructure-litellm/"
     },
+    "ai-infrastructure-ollama": {
+      "id": "ai-infrastructure-ollama",
+      "slug": "ollama",
+      "displayName": "Ollama",
+      "description": "Local LLM inference with the Ollama JavaScript client",
+      "usageGuidance": "Use when running LLMs locally with Ollama — chat completions, streaming, tool calling, vision, embeddings, model management, structured output with JSON schemas, and the OpenAI-compatible endpoint.",
+      "category": "ai-infrastructure",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "ai-provider-anthropic-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-openai-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-google-gemini-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-mistral-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-provider-cohere-sdk",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-together-ai",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-replicate",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-huggingface-inference",
+          "purpose": "AI Provider SDK"
+        },
+        {
+          "skillId": "ai-infrastructure-litellm",
+          "purpose": "AI Provider SDK"
+        }
+      ],
+      "path": "skills/ai-infrastructure-ollama/"
+    },
     "ai-infrastructure-replicate": {
       "id": "ai-infrastructure-replicate",
       "slug": "replicate",
@@ -971,20 +1022,6 @@
         }
       ],
       "path": "skills/ai-infrastructure-replicate/"
-    },
-    "ai-infrastructure-modal": {
-      "id": "ai-infrastructure-modal",
-      "slug": "modal",
-      "displayName": "Modal",
-      "description": "Serverless GPU compute for model deployment and inference",
-      "usageGuidance": "Use when deploying ML models or GPU workloads on Modal — web endpoints for API access from TypeScript, serverless GPU functions, model serving, scheduled jobs, and container-based deployments.",
-      "category": "ai-infrastructure",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [],
-      "path": "skills/ai-infrastructure-modal/"
     },
     "ai-infrastructure-together-ai": {
       "id": "ai-infrastructure-together-ai",
@@ -1037,56 +1074,38 @@
       ],
       "path": "skills/ai-infrastructure-together-ai/"
     },
-    "ai-infrastructure-ollama": {
-      "id": "ai-infrastructure-ollama",
-      "slug": "ollama",
-      "displayName": "Ollama",
-      "description": "Local LLM inference with the Ollama JavaScript client",
-      "usageGuidance": "Use when running LLMs locally with Ollama — chat completions, streaming, tool calling, vision, embeddings, model management, structured output with JSON schemas, and the OpenAI-compatible endpoint.",
-      "category": "ai-infrastructure",
+    "ai-observability-langfuse": {
+      "id": "ai-observability-langfuse",
+      "slug": "langfuse",
+      "displayName": "Langfuse",
+      "description": "LLM observability — tracing, evaluations, prompt management",
+      "usageGuidance": "Use when adding observability to LLM applications — tracing LLM calls, tracking costs, evaluations, prompt management, session tracking, user feedback, and datasets for testing with Langfuse.",
+      "category": "ai-observability",
       "author": "@vince",
       "conflictsWith": [],
       "discourages": [],
       "requires": [],
       "alternatives": [
         {
-          "skillId": "ai-provider-anthropic-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-openai-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-google-gemini-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-mistral-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-provider-cohere-sdk",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-together-ai",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-replicate",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-huggingface-inference",
-          "purpose": "AI Provider SDK"
-        },
-        {
-          "skillId": "ai-infrastructure-litellm",
-          "purpose": "AI Provider SDK"
+          "skillId": "ai-observability-promptfoo",
+          "purpose": "AI Evaluation / Observability"
         }
       ],
-      "path": "skills/ai-infrastructure-ollama/"
+      "path": "skills/ai-observability-langfuse/"
+    },
+    "ai-infrastructure-modal": {
+      "id": "ai-infrastructure-modal",
+      "slug": "modal",
+      "displayName": "Modal",
+      "description": "Serverless GPU compute for model deployment and inference",
+      "usageGuidance": "Use when deploying ML models or GPU workloads on Modal — web endpoints for API access from TypeScript, serverless GPU functions, model serving, scheduled jobs, and container-based deployments.",
+      "category": "ai-infrastructure",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [],
+      "path": "skills/ai-infrastructure-modal/"
     },
     "ai-observability-promptfoo": {
       "id": "ai-observability-promptfoo",
@@ -1106,25 +1125,6 @@
         }
       ],
       "path": "skills/ai-observability-promptfoo/"
-    },
-    "ai-observability-langfuse": {
-      "id": "ai-observability-langfuse",
-      "slug": "langfuse",
-      "displayName": "Langfuse",
-      "description": "LLM observability — tracing, evaluations, prompt management",
-      "usageGuidance": "Use when adding observability to LLM applications — tracing LLM calls, tracking costs, evaluations, prompt management, session tracking, user feedback, and datasets for testing with Langfuse.",
-      "category": "ai-observability",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "ai-observability-promptfoo",
-          "purpose": "AI Evaluation / Observability"
-        }
-      ],
-      "path": "skills/ai-observability-langfuse/"
     },
     "ai-orchestration-langchain": {
       "id": "ai-orchestration-langchain",
@@ -2064,25 +2064,6 @@
       ],
       "path": "skills/api-database-mongoose/"
     },
-    "api-database-postgresql": {
-      "id": "api-database-postgresql",
-      "slug": "postgresql",
-      "displayName": "PostgreSQL",
-      "description": "Direct PostgreSQL database access with node-postgres (pg)",
-      "usageGuidance": "Use when interacting directly with PostgreSQL -- connection pools, parameterized queries, transactions, migrations, and type-safe query results with pg.",
-      "category": "api-sql-engine",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [],
-      "alternatives": [
-        {
-          "skillId": "api-database-mysql",
-          "purpose": "SQL Database"
-        }
-      ],
-      "path": "skills/api-database-postgresql/"
-    },
     "api-database-mysql": {
       "id": "api-database-mysql",
       "slug": "mysql",
@@ -2101,6 +2082,25 @@
         }
       ],
       "path": "skills/api-database-mysql/"
+    },
+    "api-database-postgresql": {
+      "id": "api-database-postgresql",
+      "slug": "postgresql",
+      "displayName": "PostgreSQL",
+      "description": "Direct PostgreSQL database access with node-postgres (pg)",
+      "usageGuidance": "Use when interacting directly with PostgreSQL -- connection pools, parameterized queries, transactions, migrations, and type-safe query results with pg.",
+      "category": "api-sql-engine",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [],
+      "alternatives": [
+        {
+          "skillId": "api-database-mysql",
+          "purpose": "SQL Database"
+        }
+      ],
+      "path": "skills/api-database-postgresql/"
     },
     "api-database-prisma": {
       "id": "api-database-prisma",
@@ -3895,26 +3895,6 @@
       ],
       "path": "skills/mobile-framework-react-native/"
     },
-    "mobile-navigation-expo-router": {
-      "id": "mobile-navigation-expo-router",
-      "slug": "expo-router",
-      "displayName": "Expo Router",
-      "description": "File-based routing for React Native",
-      "usageGuidance": "Use when implementing navigation with Expo Router: file-based routing, layout routes, dynamic/catch-all routes, tab/stack navigation, modal routes, authentication flows with Stack.Protected, API routes, typed routes, deep linking, or static rendering for web.",
-      "category": "mobile-navigation",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [
-        {
-          "skillIds": ["mobile-framework-expo"],
-          "needsAny": false,
-          "reason": "Expo Router is built on the Expo SDK"
-        }
-      ],
-      "alternatives": [],
-      "path": "skills/mobile-navigation-expo-router/"
-    },
     "mobile-hardware-ble-nfc": {
       "id": "mobile-hardware-ble-nfc",
       "slug": "ble-nfc",
@@ -3937,6 +3917,26 @@
       ],
       "alternatives": [],
       "path": "skills/mobile-hardware-ble-nfc/"
+    },
+    "mobile-navigation-expo-router": {
+      "id": "mobile-navigation-expo-router",
+      "slug": "expo-router",
+      "displayName": "Expo Router",
+      "description": "File-based routing for React Native",
+      "usageGuidance": "Use when implementing navigation with Expo Router: file-based routing, layout routes, dynamic/catch-all routes, tab/stack navigation, modal routes, authentication flows with Stack.Protected, API routes, typed routes, deep linking, or static rendering for web.",
+      "category": "mobile-navigation",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [
+        {
+          "skillIds": ["mobile-framework-expo"],
+          "needsAny": false,
+          "reason": "Expo Router is built on the Expo SDK"
+        }
+      ],
+      "alternatives": [],
+      "path": "skills/mobile-navigation-expo-router/"
     },
     "mobile-navigation-react-navigation": {
       "id": "mobile-navigation-react-navigation",
@@ -4122,6 +4122,29 @@
       "alternatives": [],
       "path": "skills/mobile-styling-nativewind/"
     },
+    "mobile-styling-unistyles": {
+      "id": "mobile-styling-unistyles",
+      "slug": "unistyles",
+      "displayName": "Unistyles",
+      "description": "C++ powered React Native styling",
+      "usageGuidance": "Use when styling React Native components with Unistyles 3.0: theming with StyleSheet.configure, breakpoints and media queries, variants and compound variants, dynamic functions, runtime values (insets, screen, fontScale), scoped themes, or migrating from Unistyles 2.x.",
+      "category": "mobile-styling",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [
+        {
+          "skillIds": [
+            "mobile-framework-react-native",
+            "mobile-framework-expo"
+          ],
+          "needsAny": true,
+          "reason": "Unistyles styles React Native via Nitro Modules"
+        }
+      ],
+      "alternatives": [],
+      "path": "skills/mobile-styling-unistyles/"
+    },
     "mobile-testing-detox": {
       "id": "mobile-testing-detox",
       "slug": "detox",
@@ -4239,29 +4262,6 @@
         }
       ],
       "path": "skills/shared-monorepo-nx/"
-    },
-    "mobile-styling-unistyles": {
-      "id": "mobile-styling-unistyles",
-      "slug": "unistyles",
-      "displayName": "Unistyles",
-      "description": "C++ powered React Native styling",
-      "usageGuidance": "Use when styling React Native components with Unistyles 3.0: theming with StyleSheet.configure, breakpoints and media queries, variants and compound variants, dynamic functions, runtime values (insets, screen, fontScale), scoped themes, or migrating from Unistyles 2.x.",
-      "category": "mobile-styling",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [
-        {
-          "skillIds": [
-            "mobile-framework-react-native",
-            "mobile-framework-expo"
-          ],
-          "needsAny": true,
-          "reason": "Unistyles styles React Native via Nitro Modules"
-        }
-      ],
-      "alternatives": [],
-      "path": "skills/mobile-styling-unistyles/"
     },
     "shared-monorepo-pnpm-workspaces": {
       "id": "shared-monorepo-pnpm-workspaces",
@@ -4522,6 +4522,35 @@
       ],
       "path": "skills/web-animation-view-transitions/"
     },
+    "web-data-fetching-graphql-apollo": {
+      "id": "web-data-fetching-graphql-apollo",
+      "slug": "graphql-apollo",
+      "displayName": "Apollo Client",
+      "description": "Apollo GraphQL client",
+      "usageGuidance": "Use when working with Apollo Client for GraphQL queries and mutations.",
+      "category": "web-graphql-client",
+      "author": "@vince",
+      "conflictsWith": [],
+      "discourages": [],
+      "requires": [
+        {
+          "skillIds": [
+            "web-framework-react",
+            "web-meta-framework-nextjs",
+            "web-meta-framework-remix"
+          ],
+          "needsAny": true,
+          "reason": "Skill teaches React Apollo Client patterns"
+        }
+      ],
+      "alternatives": [
+        {
+          "skillId": "web-data-fetching-graphql-urql",
+          "purpose": "GraphQL Client"
+        }
+      ],
+      "path": "skills/web-data-fetching-graphql-apollo/"
+    },
     "web-data-fetching-graphql-urql": {
       "id": "web-data-fetching-graphql-urql",
       "slug": "graphql-urql",
@@ -4555,35 +4584,6 @@
         }
       ],
       "path": "skills/web-data-fetching-graphql-urql/"
-    },
-    "web-data-fetching-graphql-apollo": {
-      "id": "web-data-fetching-graphql-apollo",
-      "slug": "graphql-apollo",
-      "displayName": "Apollo Client",
-      "description": "Apollo GraphQL client",
-      "usageGuidance": "Use when working with Apollo Client for GraphQL queries and mutations.",
-      "category": "web-graphql-client",
-      "author": "@vince",
-      "conflictsWith": [],
-      "discourages": [],
-      "requires": [
-        {
-          "skillIds": [
-            "web-framework-react",
-            "web-meta-framework-nextjs",
-            "web-meta-framework-remix"
-          ],
-          "needsAny": true,
-          "reason": "Skill teaches React Apollo Client patterns"
-        }
-      ],
-      "alternatives": [
-        {
-          "skillId": "web-data-fetching-graphql-urql",
-          "purpose": "GraphQL Client"
-        }
-      ],
-      "path": "skills/web-data-fetching-graphql-apollo/"
     },
     "web-data-fetching-swr": {
       "id": "web-data-fetching-swr",
@@ -5144,36 +5144,6 @@
       ],
       "path": "skills/web-framework-svelte/"
     },
-    "web-i18n-next-intl": {
-      "id": "web-i18n-next-intl",
-      "slug": "next-intl",
-      "displayName": "next-intl",
-      "description": "Next.js internationalization",
-      "usageGuidance": "Use when implementing i18n in Next.js with next-intl.",
-      "category": "web-i18n",
-      "author": "@vince",
-      "conflictsWith": [
-        {
-          "skillId": "web-i18n-react-intl",
-          "reason": "React internationalization libraries are mutually exclusive"
-        }
-      ],
-      "discourages": [],
-      "requires": [
-        {
-          "skillIds": ["web-meta-framework-nextjs"],
-          "needsAny": false,
-          "reason": "Skill teaches next-intl's Next.js App Router surface — middleware, routing.ts, setRequestLocale, NextIntlClientProvider"
-        }
-      ],
-      "alternatives": [
-        {
-          "skillId": "web-i18n-react-intl",
-          "purpose": "Internationalization (React)"
-        }
-      ],
-      "path": "skills/web-i18n-next-intl/"
-    },
     "web-framework-vue-composition-api": {
       "id": "web-framework-vue-composition-api",
       "slug": "vue-composition-api",
@@ -5221,6 +5191,36 @@
         }
       ],
       "path": "skills/web-framework-vue-composition-api/"
+    },
+    "web-i18n-next-intl": {
+      "id": "web-i18n-next-intl",
+      "slug": "next-intl",
+      "displayName": "next-intl",
+      "description": "Next.js internationalization",
+      "usageGuidance": "Use when implementing i18n in Next.js with next-intl.",
+      "category": "web-i18n",
+      "author": "@vince",
+      "conflictsWith": [
+        {
+          "skillId": "web-i18n-react-intl",
+          "reason": "React internationalization libraries are mutually exclusive"
+        }
+      ],
+      "discourages": [],
+      "requires": [
+        {
+          "skillIds": ["web-meta-framework-nextjs"],
+          "needsAny": false,
+          "reason": "Skill teaches next-intl's Next.js App Router surface — middleware, routing.ts, setRequestLocale, NextIntlClientProvider"
+        }
+      ],
+      "alternatives": [
+        {
+          "skillId": "web-i18n-react-intl",
+          "purpose": "Internationalization (React)"
+        }
+      ],
+      "path": "skills/web-i18n-next-intl/"
     },
     "web-i18n-react-intl": {
       "id": "web-i18n-react-intl",
@@ -9318,12 +9318,12 @@
     "slugToId": {
       "huggingface-inference": "ai-infrastructure-huggingface-inference",
       "litellm": "ai-infrastructure-litellm",
-      "replicate": "ai-infrastructure-replicate",
-      "modal": "ai-infrastructure-modal",
-      "together-ai": "ai-infrastructure-together-ai",
       "ollama": "ai-infrastructure-ollama",
-      "promptfoo": "ai-observability-promptfoo",
+      "replicate": "ai-infrastructure-replicate",
+      "together-ai": "ai-infrastructure-together-ai",
       "langfuse": "ai-observability-langfuse",
+      "modal": "ai-infrastructure-modal",
+      "promptfoo": "ai-observability-promptfoo",
       "langchain": "ai-orchestration-langchain",
       "llamaindex": "ai-orchestration-llamaindex",
       "vercel-ai-sdk": "ai-orchestration-vercel-ai-sdk",
@@ -9358,8 +9358,8 @@
       "knex": "api-database-knex",
       "mongodb": "api-database-mongodb",
       "mongoose": "api-database-mongoose",
-      "postgresql": "api-database-postgresql",
       "mysql": "api-database-mysql",
+      "postgresql": "api-database-postgresql",
       "prisma": "api-database-prisma",
       "redis": "api-database-redis",
       "sequelize": "api-database-sequelize",
@@ -9446,8 +9446,8 @@
       "eas": "mobile-deployment-eas",
       "expo": "mobile-framework-expo",
       "react-native": "mobile-framework-react-native",
-      "expo-router": "mobile-navigation-expo-router",
       "ble-nfc": "mobile-hardware-ble-nfc",
+      "expo-router": "mobile-navigation-expo-router",
       "react-navigation": "mobile-navigation-react-navigation",
       "push": "mobile-notifications-push",
       "react-native-performance": "mobile-performance-react-native",
@@ -9456,12 +9456,12 @@
       "sqlite-powersync": "mobile-storage-sqlite-powersync",
       "watermelondb": "mobile-storage-watermelondb",
       "nativewind": "mobile-styling-nativewind",
+      "unistyles": "mobile-styling-unistyles",
       "detox": "mobile-testing-detox",
       "maestro": "mobile-testing-maestro",
       "react-native-paper": "mobile-ui-components-react-native-paper",
       "tamagui": "mobile-ui-components-tamagui",
       "nx": "shared-monorepo-nx",
-      "unistyles": "mobile-styling-unistyles",
       "pnpm-workspaces": "shared-monorepo-pnpm-workspaces",
       "turborepo": "shared-monorepo-turborepo",
       "auth-security": "shared-security-auth-security",
@@ -9475,8 +9475,8 @@
       "css-animations": "web-animation-css-animations",
       "framer-motion": "web-animation-framer-motion",
       "view-transitions": "web-animation-view-transitions",
-      "graphql-urql": "web-data-fetching-graphql-urql",
       "graphql-apollo": "web-data-fetching-graphql-apollo",
+      "graphql-urql": "web-data-fetching-graphql-urql",
       "swr": "web-data-fetching-swr",
       "trpc": "web-data-fetching-trpc",
       "d3": "web-dataviz-d3",
@@ -9496,8 +9496,8 @@
       "react": "web-framework-react",
       "solidjs": "web-framework-solidjs",
       "svelte": "web-framework-svelte",
-      "next-intl": "web-i18n-next-intl",
       "vue-composition-api": "web-framework-vue-composition-api",
+      "next-intl": "web-i18n-next-intl",
       "react-intl": "web-i18n-react-intl",
       "vue-i18n": "web-i18n-vue-i18n",
       "leaflet": "web-maps-leaflet",

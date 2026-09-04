@@ -244,7 +244,7 @@ Had this been a hosted run with the mapping supplied alongside the catalog, each
   "skills": {
     "web-framework-react": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": {
         "web-developer": "lazy",
         "web-tester": "lazy",
@@ -253,32 +253,32 @@ Had this been a hosted run with the mapping supplied alongside the catalog, each
     },
     "web-routing-tanstack-router": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy" }
     },
     "web-server-state-react-query": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy" }
     },
     "web-styling-tailwind": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy", "reviewer": "lazy" }
     },
     "web-styling-scss-modules": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy", "reviewer": "lazy" }
     },
     "web-tooling-vite": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy" }
     },
     "web-testing-vitest": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": {
         "web-developer": "lazy",
         "web-tester": "lazy",
@@ -287,7 +287,7 @@ Had this been a hosted run with the mapping supplied alongside the catalog, each
     },
     "api-framework-hono": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": {
         "api-developer": "lazy",
         "api-tester": "lazy",
@@ -296,27 +296,27 @@ Had this been a hosted run with the mapping supplied alongside the catalog, each
     },
     "api-database-drizzle": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "api-developer": "lazy", "reviewer": "lazy" }
     },
     "infra-platform-cloudflare-workers": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "api-developer": "lazy" }
     },
     "shared-monorepo-turborepo": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy", "api-developer": "lazy" }
     },
     "shared-tooling-typescript-config": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy", "api-developer": "lazy" }
     },
     "shared-tooling-eslint-prettier": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "lazy", "api-developer": "lazy" }
     }
   },
@@ -395,13 +395,13 @@ or split the work, before confirming.
 
 ### Assumptions (not findings — flip any of them)
 
-| Field         | Value     | Why                                                                                        |
-| ------------- | --------- | ------------------------------------------------------------------------------------------ |
-| install       | `plugin`  | Default install mode; detection says nothing about it                                      |
-| scope         | `project` | Default scope; detection says nothing about it                                             |
-| matrixVersion | `1.0.0`   | Derived from the marketplace checkout's `package.json` version, not from a catalog command |
-| stackId       | `null`    | Skills were proposed individually; the user picked no stack                                |
-| load states   | `lazy`    | The product's preload mapping was not readable from this run — see below                   |
+| Field         | Value    | Why                                                                                        |
+| ------------- | -------- | ------------------------------------------------------------------------------------------ |
+| install       | `plugin` | Default install mode; detection says nothing about it                                      |
+| scope         | `global` | Default scope; detection says nothing about it                                             |
+| matrixVersion | `1.0.0`  | Derived from the marketplace checkout's `package.json` version, not from a catalog command |
+| stackId       | `null`   | Skills were proposed individually; the user picked no stack                                |
+| load states   | `lazy`   | The product's preload mapping was not readable from this run — see below                   |
 
 ### Load states
 
@@ -502,7 +502,7 @@ Two things the pick carries that the intent never asked for: `cli-framework-ocli
   "skills": {
     "web-framework-react": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": {
         "web-developer": "preloaded",
         "web-pm": "preloaded",
@@ -511,12 +511,12 @@ Two things the pick carries that the intent never asked for: `cli-framework-ocli
     },
     "web-meta-framework-nextjs": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-developer": "preloaded", "reviewer": "preloaded" }
     },
     "api-auth-better-auth-drizzle-hono": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": {
         "api-developer": "preloaded",
         "api-researcher": "preloaded"
@@ -524,17 +524,17 @@ Two things the pick carries that the intent never asked for: `cli-framework-ocli
     },
     "api-commerce-stripe": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "api-developer": "lazy", "reviewer": "lazy" }
     },
     "web-testing-playwright-e2e": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "web-tester": "preloaded" }
     },
     "infra-ci-cd-github-actions": {
       "install": "plugin",
-      "scope": "project",
+      "scope": "global",
       "assignments": { "api-developer": "lazy" }
     }
   },
@@ -589,7 +589,7 @@ choice between the three stacks was.
 | Field       | Value                 | Why                                                |
 | ----------- | --------------------- | -------------------------------------------------- |
 | install     | `plugin`              | Default install mode; the description says nothing |
-| scope       | `project`             | Default scope; the description says nothing        |
+| scope       | `global`              | Default scope; the description says nothing        |
 | stackId     | `nextjs-saas-starter` | The stack you picked                               |
 | load states | per the mapping       | Route 1 supplied it; no load state was chosen here |
 

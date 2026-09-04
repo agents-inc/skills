@@ -1083,7 +1083,7 @@
       "name": "meta-config-stack-detect",
       "source": "./dist/plugins/meta-config-stack-detect",
       "description": "Inspect a codebase, a stack the user describes, or a description of what they want to build; map what is there to agents-inc catalog skills — or intent to candidate built-in stacks the user picks from — and emit a SeedPayload plus a human-readable proposal report. Use when seeding a configuration for a project that has none.",
-      "version": "4.0.0",
+      "version": "7.0.0",
       "author": {
         "name": "@vince"
       },
