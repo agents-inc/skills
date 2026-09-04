@@ -392,7 +392,7 @@ type SeedAgent = {
   on?: boolean; // The only way a sub-agent holding no skills can travel.
   model?: "opus" | "fable" | "sonnet" | "haiku";
   effort?: "low" | "medium" | "high" | "xhigh" | "max";
-  scope?: "project" | "global"; // Absent means "project".
+  scope?: "project" | "global"; // Absent means "global" — the product default.
 };
 
 type SeedPayload = {
@@ -413,7 +413,8 @@ type SeedPayload = {
 
 - Ids are full catalog ids, never indices and never abbreviations.
 - `stackId` names the built-in stack the user picked in intent mode, and is `null` in every other case — proposing skills from signals is the normal one, and a stack that merely resembles the findings is not a match. It travels as a label: nothing downstream expands it, so every skill a picked stack names must also appear in `skills` or it does not arrive.
-- `install` and `scope` are **not detection findings**. Emit `"plugin"` and `"project"` consistently and list them in the report as defaults the user can flip.
+- `install` and `scope` are **not detection findings**. Emit `"plugin"` and `"global"` consistently — the product's own defaults — and list them in the report as defaults the user can flip.
+- **`scope` is `"global"`, and emitting `"project"` here composes a payload the store refuses.** An `agents` entry is optional and an absent one rests on the same default, `"global"`. A project-scoped skill assigned to a sub-agent resting at global has nowhere to be written — the skill would go under one project's `.claude` while the sub-agent's front matter goes to `~/.claude`, where it names something that does not exist from anywhere else. Since the rule below keeps `agents` sparse, emitting `"project"` makes EVERY assignment unwritable and `share --stdin` refuses the whole payload. If a run genuinely wants project-scoped installs, it must also pin every assigned sub-agent with `{ "scope": "project" }`, which is the one case worth spending an `agents` entry on.
 - Load states are the preload mapping's answers, or `lazy` where it could not be read (Pattern 6) — never a per-agent allocation made here.
 - `agents` entries are sparse. Include an entry only to say something — `on: true` for an agent that carries no skills of its own, or a model/effort/scope override the user asked for.
 - Model and effort belong to the sub-agent, never to the skill.
