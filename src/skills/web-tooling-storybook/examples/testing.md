@@ -1,12 +1,10 @@
 # Storybook - Testing Examples
 
-> Play functions, interaction testing, visual testing. Reference from [SKILL.md](../SKILL.md).
+> Play functions, composed flows, keyboard navigation, and the parameters visual and accessibility checks read. See [../SKILL.md](../SKILL.md) for the decisions, and [core.md](core.md) for the story formats these build on.
 
 ---
 
 ## Play Function Basics
-
-### Simple Interaction Test
 
 ```typescript
 // button.stories.tsx
@@ -15,85 +13,48 @@ import { expect, fn, userEvent, within } from "@storybook/test";
 import { Button } from "./button";
 
 const meta = {
-  title: "Components/Button",
   component: Button,
   tags: ["autodocs"],
-  args: {
-    onClick: fn(), // Mock function to track calls
-  },
+  args: { onClick: fn() }, // records calls, so the assertion is about behaviour
 } satisfies Meta<typeof Button>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    children: "Click me",
-  },
+export const Clicked: Story = {
+  args: { children: "Click me" },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-
-    // Find the button
     const button = canvas.getByRole("button", { name: /click me/i });
 
-    // Assert it's rendered
-    await expect(button).toBeInTheDocument();
-
-    // Click it
     await userEvent.click(button);
 
-    // Assert the handler was called
     await expect(args.onClick).toHaveBeenCalled();
   },
 };
 ```
 
-**Why good:** Tests run in actual browser, uses Testing Library queries for consistency, `fn()` tracks function calls
+**Why good:** `fn()` makes the handler assertable, and every interaction is awaited so the assertion cannot outrun it.
 
 ---
 
-### Form Interaction Test
+## Forms
 
 ```typescript
-// login-form.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, fn, userEvent, within, waitFor } from "@storybook/test";
-import { LoginForm } from "./login-form";
+import { expect, fn, userEvent, waitFor, within } from "@storybook/test";
 
+// meta carries args: { onSubmit: fn() }
 const TEST_EMAIL = "test@example.com";
 const TEST_PASSWORD = "SecurePassword123";
-
-const meta = {
-  title: "Forms/LoginForm",
-  component: LoginForm,
-  tags: ["autodocs"],
-  args: {
-    onSubmit: fn(),
-  },
-} satisfies Meta<typeof LoginForm>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {};
 
 export const FilledAndSubmitted: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    // Find form elements
-    const emailInput = canvas.getByLabelText(/email/i);
-    const passwordInput = canvas.getByLabelText(/password/i);
-    const submitButton = canvas.getByRole("button", { name: /sign in/i });
+    await userEvent.type(canvas.getByLabelText(/email/i), TEST_EMAIL);
+    await userEvent.type(canvas.getByLabelText(/password/i), TEST_PASSWORD);
+    await userEvent.click(canvas.getByRole("button", { name: /sign in/i }));
 
-    // Fill the form
-    await userEvent.type(emailInput, TEST_EMAIL);
-    await userEvent.type(passwordInput, TEST_PASSWORD);
-
-    // Submit
-    await userEvent.click(submitButton);
-
-    // Verify submission
     await expect(args.onSubmit).toHaveBeenCalledWith({
       email: TEST_EMAIL,
       password: TEST_PASSWORD,
@@ -105,452 +66,179 @@ export const WithValidationErrors: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Submit without filling
-    const submitButton = canvas.getByRole("button", { name: /sign in/i });
-    await userEvent.click(submitButton);
+    await userEvent.click(canvas.getByRole("button", { name: /sign in/i }));
 
-    // Wait for validation errors
     await waitFor(() => {
       expect(canvas.getByText(/email is required/i)).toBeInTheDocument();
-      expect(canvas.getByText(/password is required/i)).toBeInTheDocument();
     });
   },
 };
 ```
 
-**Why good:** Tests actual user flow, validation errors verified, waitFor handles async validation
+**Why good:** the queries are the ones a user has available — a label, a button's accessible name — so the test fails when the form becomes unusable, not when its markup changes. `waitFor` covers validation that resolves asynchronously.
 
 ---
 
-## Advanced Play Functions
-
-### Testing Async Content
+## Content That Arrives Later
 
 ```typescript
-// user-profile.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within, waitFor } from "@storybook/test";
-import { UserProfile } from "./user-profile";
-
-const LOADING_TIMEOUT_MS = 5000;
-
-const meta = {
-  title: "Features/UserProfile",
-  component: UserProfile,
-  tags: ["autodocs"],
-} satisfies Meta<typeof UserProfile>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
 export const LoadsUserData: Story = {
-  args: {
-    userId: "123",
-  },
+  args: { userId: "123" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for loading to complete
     await waitFor(
       () => {
         expect(canvas.queryByText(/loading/i)).not.toBeInTheDocument();
       },
-      { timeout: LOADING_TIMEOUT_MS },
+      { timeout: 5000 }, // raise the wait only for a state that is genuinely slow
     );
 
-    // Verify user data appears
     await expect(canvas.getByText(/john doe/i)).toBeInTheDocument();
-    await expect(canvas.getByText(/john@example.com/i)).toBeInTheDocument();
   },
 };
 
 export const HandlesError: Story = {
-  args: {
-    userId: "invalid",
-  },
+  args: { userId: "invalid" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for error state
     const errorMessage = await canvas.findByRole("alert");
     await expect(errorMessage).toHaveTextContent(/failed to load/i);
   },
 };
 ```
 
-**Why good:** `waitFor` handles async state changes, `findBy` queries handle appearing elements
+**Why good:** play functions run after the first render, so anything asynchronous needs `waitFor` or a `findBy` query. A `getBy` here fails on the render before the data arrives.
 
 ---
 
-### Composing Play Functions
+## Composing Play Functions
+
+A story's play function is callable from another story, so a multi-step flow is a chain of states rather than one long test.
 
 ```typescript
-// checkout-flow.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within } from "@storybook/test";
-import { CheckoutForm } from "./checkout-form";
-
-const meta = {
-  title: "Features/CheckoutForm",
-  component: CheckoutForm,
-  tags: ["autodocs"],
-} satisfies Meta<typeof CheckoutForm>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Base story - just renders
-export const Default: Story = {};
-
-// Step 1: Fill shipping
 export const ShippingFilled: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await userEvent.type(canvas.getByLabelText(/address/i), "123 Main St");
     await userEvent.type(canvas.getByLabelText(/city/i), "New York");
-    await userEvent.type(canvas.getByLabelText(/zip/i), "10001");
-
     await expect(canvas.getByLabelText(/address/i)).toHaveValue("123 Main St");
   },
 };
 
-// Step 2: Continue to payment (builds on Step 1)
 export const PaymentStep: Story = {
   play: async (context) => {
-    // Run shipping step first
     await ShippingFilled.play?.(context);
 
     const canvas = within(context.canvasElement);
-
-    // Click next to go to payment
     await userEvent.click(canvas.getByRole("button", { name: /continue/i }));
-
-    // Verify we're on payment step
     await expect(canvas.getByText(/payment information/i)).toBeInTheDocument();
   },
 };
 
-// Step 3: Complete payment (builds on Step 2)
-export const PaymentFilled: Story = {
+export const OrderSubmitted: Story = {
   play: async (context) => {
-    // Run through to payment step
     await PaymentStep.play?.(context);
 
     const canvas = within(context.canvasElement);
-
-    // Fill payment details
-    await userEvent.type(
-      canvas.getByLabelText(/card number/i),
-      "4242424242424242",
-    );
-    await userEvent.type(canvas.getByLabelText(/expiry/i), "12/25");
-    await userEvent.type(canvas.getByLabelText(/cvc/i), "123");
-  },
-};
-
-// Final step: Submit order
-export const OrderSubmitted: Story = {
-  play: async (context) => {
-    // Run through payment
-    await PaymentFilled.play?.(context);
-
-    const canvas = within(context.canvasElement);
-
-    // Submit order
     await userEvent.click(canvas.getByRole("button", { name: /place order/i }));
-
-    // Verify confirmation
     await expect(canvas.getByText(/order confirmed/i)).toBeInTheDocument();
   },
 };
 ```
 
-**Why good:** Stories build on each other, tests multi-step flows, each story represents a meaningful state
+**Why good:** each step is a state someone can open and look at, and the last one is reachable in a click rather than by replaying the flow by hand. The optional call (`play?.`) is because a story is not required to have one.
 
 ---
 
-### Testing Keyboard Navigation
+## Keyboard Navigation
 
 ```typescript
-// dropdown.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within } from "@storybook/test";
-import { Dropdown, DropdownItem } from "./dropdown";
-
-const meta = {
-  title: "Components/Dropdown",
-  component: Dropdown,
-  tags: ["autodocs"],
-} satisfies Meta<typeof Dropdown>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
 export const KeyboardNavigation: Story = {
   render: () => (
     <Dropdown trigger="Select option">
       <DropdownItem>Option 1</DropdownItem>
       <DropdownItem>Option 2</DropdownItem>
-      <DropdownItem>Option 3</DropdownItem>
     </Dropdown>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("button", { name: /select option/i });
 
-    // Open with Enter
     trigger.focus();
     await userEvent.keyboard("{Enter}");
-
-    // Menu should be open
     await expect(canvas.getByRole("menu")).toBeInTheDocument();
 
-    // Navigate with arrow keys
     await userEvent.keyboard("{ArrowDown}");
     await expect(canvas.getByText("Option 1")).toHaveFocus();
 
-    await userEvent.keyboard("{ArrowDown}");
-    await expect(canvas.getByText("Option 2")).toHaveFocus();
-
-    // Select with Enter
-    await userEvent.keyboard("{Enter}");
-
-    // Menu should close
-    await expect(canvas.queryByRole("menu")).not.toBeInTheDocument();
-  },
-};
-
-export const EscapeToClose: Story = {
-  render: () => (
-    <Dropdown trigger="Select option">
-      <DropdownItem>Option 1</DropdownItem>
-    </Dropdown>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const trigger = canvas.getByRole("button");
-
-    // Open
-    await userEvent.click(trigger);
-    await expect(canvas.getByRole("menu")).toBeInTheDocument();
-
-    // Close with Escape
     await userEvent.keyboard("{Escape}");
     await expect(canvas.queryByRole("menu")).not.toBeInTheDocument();
-
-    // Focus should return to trigger
     await expect(trigger).toHaveFocus();
   },
 };
 ```
 
-**Why good:** Tests keyboard accessibility, verifies focus management, ensures ARIA patterns work
+**Why good:** keyboard behaviour and focus return are the parts of a menu that nothing else checks, and they are exactly what a mouse-driven story never exercises.
 
 ---
 
-## Visual Testing Parameters
+## Visual Regression Parameters
 
-### Configuring Visual Regression Snapshots
-
-Visual testing tools use the `chromatic` parameter key for snapshot configuration. These parameters control how your visual regression tool captures stories.
+Visual testing tools read the `chromatic` parameter namespace to decide what to capture.
 
 ```typescript
-// button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "./button";
-
 const meta = {
-  title: "Components/Button",
   component: Button,
-  tags: ["autodocs"],
   parameters: {
-    // Visual testing capture configuration
-    chromatic: {
-      viewports: [320, 768, 1200],  // Capture at multiple widths
-    },
+    chromatic: { viewports: [320, 768, 1200] },
   },
 } satisfies Meta<typeof Button>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const AllVariants: Story = {
-  render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <Button variant="primary">Primary</Button>
-      <Button variant="secondary">Secondary</Button>
-      <Button variant="outline">Outline</Button>
-      <Button variant="ghost">Ghost</Button>
-      <Button variant="destructive">Destructive</Button>
-    </div>
-  ),
-};
-
-// Skip this story from visual snapshots (animations cause flaky tests)
+// A story that animates produces a different image every run
 export const WithAnimation: Story = {
-  parameters: {
-    chromatic: { disableSnapshot: true },
-  },
-  args: {
-    children: "Animated Button",
-    isAnimating: true,
-  },
+  parameters: { chromatic: { disableSnapshot: true } },
+  args: { isAnimating: true },
 };
 
-// Delay snapshot for async content
+// Content that settles after render
 export const WithAsyncContent: Story = {
-  parameters: {
-    chromatic: {
-      delay: 500,  // Wait 500ms before snapshot
-    },
-  },
-  args: {
-    children: "Async Button",
-    loadContent: true,
-  },
+  parameters: { chromatic: { delay: 500 } },
 };
 ```
 
-**Why good:** Multiple viewports catch responsive issues, disableSnapshot skips problematic stories, delay handles async content
+**Why good:** `disableSnapshot` and `delay` are what make a capture deterministic — skip a story that cannot be, wait for one that only needs a moment.
 
 ---
 
-### Accessibility Testing
+## Accessibility Parameters
 
 ```typescript
-// card.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Card } from "./card";
-
 const meta = {
-  title: "Components/Card",
   component: Card,
-  tags: ["autodocs"],
   parameters: {
-    // a11y addon configuration
     a11y: {
       config: {
         rules: [
-          // Customize rules
           { id: "color-contrast", enabled: true },
-          { id: "landmark-one-main", enabled: false }, // Disable for component stories
+          // A component in isolation is not a page
+          { id: "landmark-one-main", enabled: false },
         ],
       },
     },
   },
 } satisfies Meta<typeof Card>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    title: "Card Title",
-    description: "Card description",
-  },
-};
-
-// Story with known a11y issues (for demonstration)
+// Deliberately non-conformant, kept as documentation
 export const LowContrast: Story = {
-  parameters: {
-    a11y: {
-      // Disable for this story only
-      disable: true,
-    },
-  },
-  args: {
-    title: "Low Contrast",
-    className: "text-gray-300 bg-gray-200", // Bad contrast
-  },
+  parameters: { a11y: { disable: true } },
 };
 ```
 
-**Why good:** a11y addon runs axe-core automatically, rules can be customized per-story
+**Why good:** rules that assume a whole document report failures no component can fix, and leaving them on trains people to ignore the panel.
 
 ---
 
-## Assertions Reference
-
-### Common Assertions
-
-```typescript
-import { expect, within } from "@storybook/test";
-
-export const AssertionExamples: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Element presence
-    await expect(canvas.getByRole("button")).toBeInTheDocument();
-    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
-
-    // Element visibility
-    await expect(canvas.getByRole("tooltip")).toBeVisible();
-    await expect(canvas.getByTestId("hidden")).not.toBeVisible();
-
-    // Element state
-    await expect(canvas.getByRole("button")).toBeEnabled();
-    await expect(canvas.getByRole("textbox")).toBeDisabled();
-    await expect(canvas.getByRole("checkbox")).toBeChecked();
-
-    // Element content
-    await expect(canvas.getByRole("heading")).toHaveTextContent("Title");
-    await expect(canvas.getByRole("textbox")).toHaveValue("input value");
-    await expect(canvas.getByRole("button")).toHaveAttribute("type", "submit");
-
-    // Element styling (use sparingly)
-    await expect(canvas.getByRole("alert")).toHaveClass("error");
-
-    // Focus
-    await expect(canvas.getByRole("textbox")).toHaveFocus();
-  },
-};
-```
-
-**Why good:** Testing Library matchers work seamlessly, assertions match user expectations
-
----
-
-### Mock Function Assertions
-
-```typescript
-import { expect, fn } from "@storybook/test";
-
-const meta = {
-  // ...
-  args: {
-    onClick: fn(),
-    onSubmit: fn(),
-  },
-};
-
-export const MockAssertions: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(canvas.getByRole("button"));
-
-    // Call count
-    await expect(args.onClick).toHaveBeenCalled();
-    await expect(args.onClick).toHaveBeenCalledTimes(1);
-
-    // Call arguments
-    await expect(args.onSubmit).toHaveBeenCalledWith({ name: "test" });
-    await expect(args.onSubmit).toHaveBeenLastCalledWith({ name: "test" });
-
-    // Not called
-    await expect(args.onCancel).not.toHaveBeenCalled();
-  },
-};
-```
-
-**Why good:** `fn()` creates spy functions, assertions verify handler behavior
-
----
-
-_For more patterns, see:_
-
-- [core.md](core.md) - CSF 3.0 format, args, controls
-- [docs.md](docs.md) - Autodocs and MDX documentation
-- [addons.md](addons.md) - Addon configuration, Storybook test addon setup, visual testing addon setup
+_See also:_ [core.md](core.md) · [docs.md](docs.md) · [addons.md](addons.md), and [../reference.md](../reference.md) for the `@storybook/test` API table.

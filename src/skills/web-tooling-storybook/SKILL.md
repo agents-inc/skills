@@ -5,662 +5,283 @@ description: Storybook patterns - CSF 3.0, args, controls, autodocs, play functi
 
 # Storybook Patterns
 
-> **Quick Guide:** Storybook is a component workshop for building and documenting UI in isolation. Use CSF 3.0 format with typed `meta` and story objects. Define component variants via `args`. Use play functions for interaction testing. Enable `autodocs` for automatic documentation. Configure addons in `.storybook/main.ts`.
+> **Quick Guide:** A story is a component in one state, written as a plain object in CSF 3.0: a default `meta` export describing the component, then one named export per state. Props come from `args` so the controls panel can edit them, `argTypes` shapes those controls, `tags: ["autodocs"]` turns the file into a documentation page, and a `play` function drives interactions with `@storybook/test` so the same story doubles as a test.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — CSF 3.0 files, args inheritance, argTypes, decorators, render functions, story organisation
+- [examples/testing.md](examples/testing.md) — play functions, composed flows, keyboard navigation, visual and accessibility parameters
+- [examples/docs.md](examples/docs.md) — autodocs, custom docs pages, MDX, source display, descriptions
+- [examples/addons.md](examples/addons.md) — addon setup, viewports, backgrounds, the test addon, configuration decisions
+- [reference.md](reference.md) — control types, parameters, addon list, `@storybook/test` API, file naming, migration notes
+
+---
+
+## Which path applies
+
+A story file usually serves both, but the two make different demands on how it is written.
+
+- **Documenting a component** — every meaningful state is an export, props are args so they can be edited, and `tags: ["autodocs"]` generates the page. Follow [examples/docs.md](examples/docs.md).
+- **Testing a component** — the story is a fixture, `fn()` args record calls, and a `play` function performs the interaction and asserts. Follow [examples/testing.md](examples/testing.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing stories
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Write CSF 3.0 with `satisfies Meta<typeof Component>`.** The `satisfies` clause type-checks `meta` against the component's props while keeping the inference `StoryObj<typeof meta>` needs, so every story's args are checked against the real prop types.
 
-**(You MUST use CSF 3.0 format with `satisfies Meta<typeof Component>` for type-safe story metadata)**
+**Give `meta` a `component`.** Controls are inferred from its props and autodocs documents it, so a meta without one produces a page with no props table and stories that may not render.
 
-**(You MUST define a default `meta` export with `component` property - stories without `component` won't render)**
+**Express state through `args`, not through JSX.** The controls panel edits args; props hardcoded in a `render` are invisible to it, and the story stops being explorable.
 
-**(You MUST use `args` for defining props - NOT rendering components with hardcoded props)**
+**Drive interactions from a `play` function using `@storybook/test`.** Its `userEvent` reproduces the event sequence a real input produces, and `fn()` args record calls so the assertion can be about behaviour rather than markup.
 
-**(You MUST use play functions with `@storybook/test` utilities for interaction testing - NOT custom event firing)**
-
-**(You MUST use named exports for stories - default export is reserved for meta object)**
+**Export stories as named exports.** The default export is the meta, and a file can only have one.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Storybook, .stories.tsx, .stories.ts, CSF, Component Story Format, meta, Meta, StoryObj, args, argTypes, play function, autodocs, @storybook/test, @storybook/addon-essentials
+**Auto-detection:** Storybook, .stories.tsx, .stories.ts, CSF, Meta, StoryObj, satisfies Meta, args, argTypes, play function, canvasElement, within, autodocs, decorators, parameters, @storybook/test, .storybook/main.ts, .storybook/preview.ts
 
-**When to use:**
+**Applies to:**
 
-- Developing UI components in isolation without full application context
-- Creating interactive documentation for component libraries
-- Testing component interactions and visual states
-- Building design systems with comprehensive examples
-- Generating automatic API documentation from TypeScript props
-- Visual regression testing
+- Building a component in isolation, without the app's routing, data or auth
+- Documenting a component API so the documentation cannot drift from the code
+- Interaction tests that run against the rendered component in a browser
+- Exposing every state of a component — loading, empty, error, disabled — as something reviewable
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- E2E user flow testing spanning multiple pages (use your E2E tool)
-- Unit testing pure functions without UI (use your test runner directly)
-- Integration testing with real backend services
-- Performance testing and load testing
-
-**Key patterns covered:**
-
-- CSF 3.0 story format with TypeScript
-- Args and ArgTypes for props control
-- Play functions for interaction testing
-- Autodocs for automatic documentation
-- MDX for custom documentation pages
-- Decorators and parameters
-- Addon configuration and customization
-- Visual testing integration
-
-**Detailed Resources:**
-
-- For code examples, see `examples/` folder:
-  - [examples/core.md](examples/core.md) - CSF 3.0 format, args, controls
-  - [examples/docs.md](examples/docs.md) - Autodocs, MDX documentation
-  - [examples/testing.md](examples/testing.md) - Play functions, interaction testing
-  - [examples/addons.md](examples/addons.md) - Addon configuration
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Full user journeys across pages, which need the whole application running
+- Unit tests of logic with no rendered output
+- The actual styling of components; stories render whatever the component already produces
+- Baseline custody and diff review for screenshots — this skill settles which stories are captured and with what parameters, not what happens to the images
+- Network responses the component depends on, which reach it through whatever mocking the project uses
 
 ---
 
 <philosophy>
 
-## Philosophy
+Storybook is component-driven development made concrete: build from the bottom up, and let each component exist before the screen that uses it does.
 
-Storybook enables **component-driven development** - building UI from the bottom up, starting with basic components and progressively combining them into complex interfaces.
-
-**Core Principles:**
-
-1. **Isolation** - Develop components without needing the full application, database, or authentication
-2. **Documentation** - Stories serve as living documentation that stays in sync with code
-3. **Testing** - Use stories as test fixtures for interaction, visual, and accessibility testing
-4. **Collaboration** - Designers, developers, and stakeholders can review components independently
-
-**The Story Paradigm:**
-
-A "story" captures a specific state of a component. Each story represents one meaningful variation - a button's primary state, disabled state, loading state, etc. Stories are not test cases; they are documented examples.
-
-**When to use Storybook:**
-
-- Building component libraries or design systems
-- Developing UI in parallel with backend work
-- Creating documentation for component APIs
-- Visual testing and regression detection
-- Reviewing UI changes in pull requests
-
-**When NOT to use:**
-
-- For user journey testing (use E2E tools)
-- For testing business logic without UI
-- For components that require full application context
+A story is a documented example rather than a test case. It captures one meaningful state — primary, disabled, loading, error — and its value is that a person can look at it. A `play` function then turns that same example into a test without changing what it documents, which is why the assertion belongs to the story rather than the story being written for the assertion.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Args or a render function
+
+```
+Do all the variations come from props?
+├─ YES → args only
+└─ NO  → Children or composition?
+    ├─ Simple (text, one element) → args.children
+    └─ Complex (several elements) → render: (args) => …
+        └─ Needs state to demonstrate? → render: function Render(args) { … }
+              (a named function, so hooks are legal)
+```
+
+A `render` that keeps growing is usually the component's API asking for the composition the render is faking.
+
+## What to add to a story
+
+```
+Interaction to verify?      → play function with @storybook/test
+Appearance to lock down?    → visual regression parameters on the story
+Accessibility to check?     → a11y parameters; the addon runs axe on every story
+Nothing to verify yet?      → leave it as a documented state
+```
+
+## Which components get stories
+
+Primitives document every variant; composed components show the compositions that are actually used; page-level components show the states that are hard to reach by hand — loading, empty, error. A component with no visual output gets none.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
 ### Pattern 1: CSF 3.0 Story Format
 
-Component Story Format 3.0 is the standard for writing stories. It uses typed objects for maximum type safety.
-
-#### Basic Story Structure
+A typed `meta` default export, then one named export per state.
 
 ```typescript
-// button.stories.tsx
-import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "./button";
-
-// Meta object describes the component
 const meta = {
   title: "Components/Button",
   component: Button,
   tags: ["autodocs"],
-  parameters: {
-    layout: "centered",
-  },
-  argTypes: {
-    onClick: { action: "clicked" },
-  },
 } satisfies Meta<typeof Button>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Each named export is a story
 export const Primary: Story = {
-  args: {
-    variant: "primary",
-    children: "Primary Button",
-  },
-};
-
-export const Secondary: Story = {
-  args: {
-    variant: "secondary",
-    children: "Secondary Button",
-  },
-};
-
-export const Disabled: Story = {
-  args: {
-    variant: "primary",
-    children: "Disabled Button",
-    disabled: true,
-  },
+  args: { variant: "primary", children: "Save" },
 };
 ```
 
-**Why good:** `satisfies Meta<typeof Button>` provides full type checking while allowing inference, stories are simple objects, `tags: ["autodocs"]` generates documentation automatically
+`title` decides where the component sits in the sidebar; nested segments (`"Components/Forms/Input"`) create the hierarchy.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Args and ArgTypes Configuration
+### Pattern 2: Args and ArgTypes
 
-Args define prop values for stories. ArgTypes configure controls in the Storybook UI.
-
-#### ArgTypes Configuration
+`args` are the props a story renders with; `argTypes` describe the control that edits them. Defaults on `meta` are inherited, so each story states only what makes it different.
 
 ```typescript
 const meta = {
-  title: "Components/Card",
   component: Card,
+  args: { title: "Card title" },
   argTypes: {
-    // Control type for enums
-    variant: {
-      control: { type: "select" },
-      options: ["default", "outline", "filled"],
-      description: "Visual variant of the card",
-    },
-    // Control type for booleans
-    isLoading: {
-      control: { type: "boolean" },
-      description: "Shows loading skeleton",
-    },
-    // Control type for strings
-    title: {
-      control: { type: "text" },
-      description: "Card title text",
-    },
-    // Range control for numbers
-    padding: {
-      control: { type: "range", min: 0, max: 64, step: 4 },
-      description: "Padding in pixels",
-    },
-    // Color picker
-    backgroundColor: {
-      control: { type: "color" },
-    },
-    // Hide from controls
-    internalId: {
-      table: { disable: true },
-    },
-    // Action handler
-    onClose: {
-      action: "closed",
-    },
+    variant: { control: { type: "select" }, options: ["default", "outline"] },
+    padding: { control: { type: "range", min: 0, max: 64, step: 4 } },
+    internalId: { table: { disable: true } },
   },
 } satisfies Meta<typeof Card>;
 ```
 
-#### Default Args
+Args must be serializable — a function arg is `fn()` from `@storybook/test`, and a non-serializable value such as a React element reaches a control through `mapping`.
 
-```typescript
-const meta = {
-  title: "Components/Input",
-  component: Input,
-  // Default args applied to all stories
-  args: {
-    placeholder: "Enter text...",
-    disabled: false,
-  },
-} satisfies Meta<typeof Input>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// Story inherits default args, only overrides what changes
-export const Default: Story = {};
-
-export const WithLabel: Story = {
-  args: {
-    label: "Email address",
-  },
-};
-
-export const Disabled: Story = {
-  args: {
-    disabled: true,
-  },
-};
-```
-
-**Why good:** centralized defaults reduce duplication, argTypes provide interactive documentation, control types match prop types for intuitive editing
+Full code, and the control type per prop type: [examples/core.md](examples/core.md) · [reference.md](reference.md)
 
 ---
 
 ### Pattern 3: Decorators for Context
 
-Decorators wrap stories with providers, layouts, or styling context.
-
-#### Component-Level Decorators
+A decorator wraps the story: providers a component needs, or layout it needs to be visible.
 
 ```typescript
 const meta = {
-  title: "Components/Modal",
   component: Modal,
   decorators: [
-    // Add padding around the story
     (Story) => (
       <div style={{ padding: "3rem" }}>
         <Story />
       </div>
     ),
-    // Wrap with theme provider
-    (Story) => (
-      <ThemeProvider theme="light">
-        <Story />
-      </ThemeProvider>
-    ),
   ],
 } satisfies Meta<typeof Modal>;
 ```
 
-#### Global Decorators
+Global decorators go in `.storybook/preview`, component decorators on `meta`, and story decorators on the story. They run outermost to innermost, so order matters wherever one provider depends on another.
 
-```typescript
-// .storybook/preview.tsx
-import type { Preview } from "@storybook/react";
-import { ThemeProvider } from "../src/theme-provider";
-
-const preview: Preview = {
-  decorators: [
-    (Story) => (
-      <ThemeProvider>
-        <Story />
-      </ThemeProvider>
-    ),
-  ],
-};
-
-export default preview;
-```
-
-#### Story-Level Decorators
-
-```typescript
-export const InDarkMode: Story = {
-  decorators: [
-    (Story) => (
-      <div className="dark" style={{ background: "#1a1a1a", padding: "2rem" }}>
-        <Story />
-      </div>
-    ),
-  ],
-  args: {
-    children: "Dark Mode Button",
-  },
-};
-```
-
-**Why good:** decorators keep component code clean, global decorators ensure consistent context, story decorators allow specific variations
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Parameters for Story Configuration
+### Pattern 4: Parameters
 
-Parameters configure Storybook features and addons per story, component, or globally.
-
-#### Common Parameters
+Parameters configure Storybook and its addons, at whichever level the setting belongs to — global, component or story.
 
 ```typescript
-const meta = {
-  title: "Components/Dialog",
-  component: Dialog,
-  parameters: {
-    // Layout options: centered, fullscreen, padded
-    layout: "centered",
-
-    // Background options
-    backgrounds: {
-      default: "light",
-      values: [
-        { name: "light", value: "#ffffff" },
-        { name: "dark", value: "#1a1a1a" },
-        { name: "brand", value: "#0066ff" },
-      ],
-    },
-
-    // Viewport configuration
-    viewport: {
-      defaultViewport: "mobile1",
-    },
-
-    // Disable specific controls panel
-    controls: {
-      expanded: true,
-      sort: "requiredFirst",
-    },
-
-    // Documentation page order
-    docs: {
-      description: {
-        component: "A modal dialog for user confirmations.",
-      },
-    },
-  },
-} satisfies Meta<typeof Dialog>;
+parameters: {
+  layout: "centered",
+  viewport: { defaultViewport: "mobile1" },
+  docs: { description: { component: "A modal dialog for confirmations." } },
+},
 ```
 
-#### Story-Specific Parameters
+A story-level parameter overrides the component's, which overrides the global one.
 
-```typescript
-export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile1",
-    },
-    chromatic: {
-      viewports: [320, 768],
-    },
-  },
-};
-
-export const FullPage: Story = {
-  parameters: {
-    layout: "fullscreen",
-  },
-};
-```
-
-**Why good:** parameters configure addon behavior declaratively, can be set at any level (global, component, story), consistent API across all addons
+Full list: [reference.md](reference.md)
 
 ---
 
-### Pattern 5: Play Functions for Interaction Testing
+### Pattern 5: Play Functions
 
-Play functions enable interaction testing within stories using the `@storybook/test` utilities.
-
-#### Basic Interaction Testing
+A `play` function runs after render, inside the rendered canvas.
 
 ```typescript
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, fn, userEvent, within } from "@storybook/test";
-import { LoginForm } from "./login-form";
-
-const meta = {
-  title: "Forms/LoginForm",
-  component: LoginForm,
-  args: {
-    onSubmit: fn(),
-  },
-} satisfies Meta<typeof LoginForm>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const FilledForm: Story = {
+export const Submitted: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-
-    // Find elements
-    const emailInput = canvas.getByLabelText(/email/i);
-    const passwordInput = canvas.getByLabelText(/password/i);
-    const submitButton = canvas.getByRole("button", { name: /sign in/i });
-
-    // Interact with form
-    await userEvent.type(emailInput, "test@example.com");
-    await userEvent.type(passwordInput, "password123");
-    await userEvent.click(submitButton);
-
-    // Assert callback was called
-    await expect(args.onSubmit).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "password123",
-    });
+    await userEvent.type(canvas.getByLabelText(/email/i), "user@example.com");
+    await userEvent.click(canvas.getByRole("button", { name: /sign in/i }));
+    await expect(args.onSubmit).toHaveBeenCalled();
   },
 };
 ```
 
-#### Composing Play Functions
+`within(canvasElement)` scopes queries to this story rather than the whole page. Every `userEvent` call is awaited, and a story's play function can be called from another's to build a multi-step flow.
 
-```typescript
-export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole("button")).toBeInTheDocument();
-  },
-};
-
-export const Clicked: Story = {
-  play: async (context) => {
-    // Run the Default story's play function first
-    await Default.play?.(context);
-
-    const canvas = within(context.canvasElement);
-    const button = canvas.getByRole("button");
-
-    await userEvent.click(button);
-    await expect(button).toHaveAttribute("data-state", "pressed");
-  },
-};
-```
-
-See [examples/testing.md](examples/testing.md) for more play function patterns.
-
-**Why good:** tests run in actual browser environment, reuses Testing Library queries for consistency, play functions double as documentation
+Full code: [examples/testing.md](examples/testing.md)
 
 ---
 
-### Pattern 6: Render Functions for Complex Stories
+### Pattern 6: Render Functions
 
-Use the `render` property when you need more control than `args` provides.
-
-#### Custom Render Function
+Use `render` when a story needs more than one element, or state to demonstrate the component.
 
 ```typescript
-export const WithMultipleItems: Story = {
+export const WithItems: Story = {
   render: (args) => (
-    <List>
-      <ListItem {...args} title="First Item" />
-      <ListItem {...args} title="Second Item" />
-      <ListItem {...args} title="Third Item" />
+    <List {...args}>
+      {ITEMS.map((item) => (
+        <ListItem key={item}>{item}</ListItem>
+      ))}
     </List>
   ),
-  args: {
-    isSelected: false,
-  },
+  args: { variant: "default" },
 };
 ```
 
-#### Render with Hooks
+Spread `args` into the component so the controls still work. A render function needing hooks is written as a named function (`render: function Render(args) { … }`), since hooks are only legal inside a component.
 
-```typescript
-export const Controlled: Story = {
-  render: function Render(args) {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-      <div>
-        <Button onClick={() => setIsOpen(true)}>Open Dialog</Button>
-        <Dialog {...args} open={isOpen} onClose={() => setIsOpen(false)} />
-      </div>
-    );
-  },
-  args: {
-    title: "Controlled Dialog",
-  },
-};
-```
-
-**Why good:** render functions allow complex compositions, named functions enable hooks, args still control individual props
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 7: Story Organization
+### Pattern 7: Tags
 
-Organize stories with a clear hierarchy that reflects your component structure.
-
-#### Title Hierarchy
+Tags decide where a story appears and what runs against it — `autodocs` generates the page, `dev` shows it in the sidebar, `test` includes it in test runs. Inherited tags are removed with a `!` prefix.
 
 ```typescript
-// Organized by category
-const meta = {
-  title: "Components/Forms/Input", // Creates nested navigation
-  component: Input,
-} satisfies Meta<typeof Input>;
-
-// Alternative structures:
-// "Design System/Atoms/Button"
-// "Pages/Dashboard/Header"
-// "Features/Authentication/LoginForm"
+export const Experimental: Story = {
+  tags: ["!test", "experimental"],
+};
 ```
 
-#### Naming Conventions
-
-```typescript
-// Good: Descriptive story names
-export const Default: Story = {};
-export const WithIcon: Story = {};
-export const Disabled: Story = {};
-export const Loading: Story = {};
-export const WithValidationError: Story = {};
-
-// Bad: Unclear names
-export const Story1: Story = {};
-export const Test: Story = {};
-```
-
-#### Story Order
-
-```typescript
-const meta = {
-  title: "Components/Button",
-  component: Button,
-  parameters: {
-    docs: {
-      // Control story order in docs
-      page: () => (
-        <>
-          <Title />
-          <Subtitle />
-          <Description />
-          <Primary />
-          <Controls />
-          <Stories />
-        </>
-      ),
-    },
-  },
-} satisfies Meta<typeof Button>;
-```
-
-**Why good:** hierarchical titles create intuitive navigation, descriptive names serve as documentation, consistent patterns across the codebase
+Full code: [examples/addons.md](examples/addons.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**Works with your component framework:**
-
-- Stories import and render your actual components
-- TypeScript types flow from component props to story args
-- Your styling solution works as-is in Storybook (CSS modules, utility classes, etc.)
-
-**Works with your testing tools:**
-
-- Play functions use Testing Library queries
-- Stories can be imported as test fixtures in your test runner
-- Visual testing tools use stories as test cases
-
-**Works with your CI/CD:**
-
-- `build-storybook` creates static site for deployment
-- Storybook test addon integrates with CI for interaction tests
-- Visual regression tools integrate via CI
-
-**Boundary guidance:**
-
-- Storybook handles: component isolation, documentation, controls, interaction testing, visual states
-- Your E2E tool handles: full user journeys, navigation flows
-- Your styling solution handles: actual CSS implementation
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Using default export for stories** - Default export is reserved for meta; stories must be named exports
-- **Hardcoding props in JSX instead of using args** - Defeats the purpose of controls; makes stories non-interactive
-- **Missing `component` property in meta** - Stories won't render correctly; autodocs won't work
-- **Using `fireEvent` instead of `userEvent` in play functions** - Doesn't simulate real user behavior
-- **Importing from `@storybook/testing-library`** - Deprecated; use `@storybook/test` instead
-- **Using `argTypesRegex` for play function handlers** - Implicit actions cannot be used in play functions; use explicit `fn()`
+- A second default export for a story — a module has one default export, which the meta already is
+- `meta` without `component` — controls have no props to infer from, autodocs has nothing to document, and the story may not render at all
+- `userEvent` calls that are not awaited — the assertion runs before the interaction finishes, so the story fails or passes depending on timing
+- A `render` function using hooks while written as an arrow expression — hooks need a named function that Storybook can treat as a component
+- A non-serializable arg passed directly — functions need `fn()`, and elements need `mapping`, or the control panel cannot round-trip the value
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Not using `satisfies Meta<typeof Component>`** - Loses type safety on story args
-- **Putting business logic in play functions** - Play functions are for interaction, not logic testing
-- **Missing `tags: ["autodocs"]`** - Won't generate automatic documentation
-- **Overly complex render functions** - If render is complex, component API may need refactoring
+- Props hardcoded in a `render` instead of passed as args — controls silently do nothing, and the docs page shows a component nobody can experiment with
+- `fireEvent` in a play function — it dispatches one event where a real interaction produces a sequence, so focus, hover and keyboard behaviour go untested
+- Actions inferred by pattern (`argTypesRegex`) rather than declared with `fn()` — an implicit action cannot be asserted on inside a play function
+- Assertions in a story body rather than in `play` — they run at module evaluation, before anything is rendered
+- Play functions run after render, so content that arrives asynchronously needs `waitFor` or a `findBy` query rather than a `getBy`
+- Decorators run outermost to innermost — a provider that depends on another has to be listed after it
+- Args edited in the controls panel survive a hot reload, so a change to the story's own `args` can appear to have no effect until the page is refreshed
+- Missing `tags: ["autodocs"]` produces a story with no documentation page and no warning that one was expected
+- Business logic inside a play function tests the logic through the DOM, where a unit test would say more and run faster
 
-**Common Mistakes:**
-
-- Forgetting to `await` userEvent actions in play functions
-- Using `any` type instead of `StoryObj<typeof meta>`
-- Not setting up global decorators for providers (ThemeProvider, etc.)
-- Putting test assertions in stories without play functions
-
-**Gotchas & Edge Cases:**
-
-- `args` are serializable - functions must use `action` or `fn()` from `@storybook/test`
-- Play functions run after render - use `waitFor` for async content
-- Decorators run outermost to innermost - order matters for context
-- `canvas.getByRole` uses Testing Library - same accessibility rules apply
-- Hot reload preserves args state - may need manual refresh for some changes
-- Storybook 8 uses `react-docgen` by default (not `react-docgen-typescript`) - imported types may not be extracted
-- In Storybook 8.2+, use `initialGlobals` instead of deprecated `globals` in preview.ts
-- Built-in tags: `dev` (sidebar visibility), `test` (test inclusion), `autodocs` (docs generation) - use `!tag` to remove inherited tags
-- Storybook test addon (8.4+) is recommended over legacy test-runner for Vite projects - provides Storybook UI integration
-- Storybook 10 is ESM-only - requires `"type": "module"` in package.json and Node 20.16+
+Version-specific behaviour — deprecated fields, renamed globals, removed packages — is in [reference.md](reference.md) rather than here, because which of them applies depends on the major you are on.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use CSF 3.0 format with `satisfies Meta<typeof Component>` for type-safe story metadata)**
-
-**(You MUST define a default `meta` export with `component` property - stories without `component` won't render)**
-
-**(You MUST use `args` for defining props - NOT rendering components with hardcoded props)**
-
-**(You MUST use play functions with `@storybook/test` utilities for interaction testing - NOT custom event firing)**
-
-**(You MUST use named exports for stories - default export is reserved for meta object)**
-
-**Failure to follow these rules will produce untestable stories, missing documentation, and broken controls.**
-
-</critical_reminders>
