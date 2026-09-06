@@ -1,13 +1,12 @@
-# Core Recharts Patterns
+# Recharts — Core Examples
 
-> Related: [SKILL.md](../SKILL.md) for decision frameworks, [advanced.md](advanced.md) for composed charts and animations.
+> Line, bar, area and pie charts, responsive sizing, custom tooltips, multi-axis, stacking. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for prop tables, [advanced.md](advanced.md) for composed charts, brushing and real-time data.
 
 ---
 
-## Pattern 1: Basic Line Chart with TypeScript
+## Pattern 1: Line Chart with TypeScript
 
 ```tsx
-import { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -32,14 +31,13 @@ interface RevenueChartProps {
   data: MonthlyRevenue[];
 }
 
+// `data` arrives from the caller with a stable identity, so there is nothing to memoize here.
+// Memoize where the array is DERIVED — `useMemo(() => aggregate(raw), [raw])`.
 export function RevenueChart({ data }: RevenueChartProps) {
-  // Memoize data to prevent unnecessary recalculation
-  const chartData = useMemo(() => data, [data]);
-
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
       <LineChart
-        data={chartData}
+        data={data}
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -67,23 +65,20 @@ export function RevenueChart({ data }: RevenueChartProps) {
 }
 ```
 
-**Why good:** TypeScript interface for data shape, memoized data prop, `ResponsiveContainer` handles sizing, named constants for dimensions.
+**Why good:** the data interface types every `dataKey` against a real field, `ResponsiveContainer` supplies the dimensions, and `activeDot` gives the hovered point a larger marker than the resting `dot`.
 
 ```tsx
-// BAD: Common mistakes
+// BAD
 function BadChart({ data }) {
   return (
-    // No ResponsiveContainer, no width/height -- renders nothing
     <LineChart data={data.map((d) => ({ ...d, value: d.value * 2 }))}>
-      {/* Inline .map() creates new array every render */}
       <Line dataKey="value" />
-      {/* Missing XAxis, YAxis, Tooltip -- chart is barely functional */}
     </LineChart>
   );
 }
 ```
 
-**Why bad:** No dimensions (renders nothing), inline `.map()` creates unstable reference, missing essential components.
+**Why bad:** no `ResponsiveContainer` and no `width`/`height`, so the SVG renders empty with no error to explain it. The inline `.map()` produces a new array on every render, which re-derives every point. And with no `XAxis` or `YAxis` there is nothing to read the line against.
 
 ---
 
@@ -131,7 +126,7 @@ export function SalesChart({ data }: SalesChartProps) {
 }
 ```
 
-**Why good:** `tickFormatter` and `Tooltip formatter` keep values consistent, `name` prop gives human-readable legend labels, `CURRENCY_FORMAT` defined once and reused.
+**Why good:** one formatter feeds both the axis ticks and the tooltip, so the same number never appears in two notations; `name` supplies the legend text, which otherwise falls back to the raw `dataKey`.
 
 ---
 
@@ -186,7 +181,7 @@ export function TimeSeriesChart({ data }: TimeSeriesChartProps) {
 }
 ```
 
-**Why good:** SVG `<defs>` for gradient fills, gradient ID as named constant to avoid string duplication, clean area chart with visual depth.
+**Why good:** the gradient is an ordinary SVG `<defs>` child, referenced by `fill="url(#id)"`. The id is global to the document, so a constant per chart keeps two charts on one page from claiming the same one.
 
 ---
 
@@ -230,22 +225,20 @@ export function CustomTooltip({
 <Tooltip content={(props) => <CustomTooltip {...props} currencySymbol="$" />} />
 ```
 
-**Why good:** Typed with Recharts types, handles `active`/`payload` guards, returns HTML elements (not SVG), custom props via element or function pattern.
+**Why good:** the `active`/`payload` guard covers the render before the first hover, extending `TooltipProps` keeps the extra prop typed alongside the injected ones, and passing an element rather than the component is what lets `currencySymbol` through.
 
 ```tsx
-// BAD: Untyped, returns SVG
+// BAD
 function BadTooltip({ active, payload }) {
-  // No null check -- crashes when tooltip is not active
   return (
     <svg>
-      {/* SVG elements cause rendering errors in Tooltip content */}
       <text>{payload[0].value}</text>
     </svg>
   );
 }
 ```
 
-**Why bad:** No TypeScript types, no `active`/`payload` guard, returns SVG (must return HTML), crashes on empty payload.
+**Why bad:** `payload` is empty until a mark is hovered, so `payload[0].value` throws on the first render. And the tooltip is an HTML overlay positioned above the chart, so the `<svg>` returned here renders nothing even once the crash is fixed.
 
 ---
 
@@ -341,7 +334,7 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
 }
 ```
 
-**Why good:** Custom `label` function skips tiny slices, `Cell` per slice for colors, donut style via `innerRadius`, percentage labels positioned inside slices.
+**Why good:** the label function returns `null` below a percentage threshold, which is what stops small slices' labels from piling up on each other; `labelLine={false}` removes the leader lines that make that pile worse. The label position is computed at the mid-radius from `midAngle`, so it sits inside the slice.
 
 ---
 
@@ -405,16 +398,16 @@ export function WeatherChart({ data }: WeatherChartProps) {
 }
 ```
 
-**Why good:** Dual Y-axes with unique IDs, right-side axis for second metric, matching `yAxisId` between axes and lines, tick formatters show units.
+**Why good:** each `Line` names the axis it is scaled against, so two metrics in different units keep their own ranges instead of sharing one that flattens the smaller of them. The tick formatters carry the units, which the legend does not.
 
 ```tsx
-// BAD: Missing yAxisId coordination
-<YAxis /> {/* default ID: 0 */}
-<YAxis orientation="right" /> {/* also default ID: 0 -- collision */}
-<Line dataKey="temperature" /> {/* which axis? ambiguous */}
+// BAD
+<YAxis />                      {/* id 0 */}
+<YAxis orientation="right" />  {/* also id 0 — collision */}
+<Line dataKey="temperature" /> {/* binds to id 0 — which one? */}
 ```
 
-**Why bad:** Duplicate default axis IDs cause rendering issues, lines don't specify which axis to use.
+**Why bad:** `yAxisId` defaults to `0`, so both axes claim the same id and the series cannot say which it belongs to. Humidity on a 0–100 scale and temperature on a 0–40 one end up sharing whichever domain resolves first.
 
 ---
 
@@ -463,13 +456,13 @@ export function TrafficChart({ data }: TrafficChartProps) {
 }
 ```
 
-**Why good:** Same `stackId` on all bars creates a stacked bar chart. Each `Bar` is an independent component with its own color and legend entry.
+**Why good:** the shared `stackId` is the only difference between a stacked and a grouped bar chart — each `Bar` keeps its own colour and legend entry either way. Bars with different `stackId` values sit side by side.
 
 ---
 
 ## Pattern 8: Responsive Approaches
 
-### ResponsiveContainer with aspect ratio
+### ResponsiveContainer with an aspect ratio
 
 ```tsx
 const ASPECT_RATIO = 16 / 9;
@@ -491,9 +484,9 @@ const MIN_WIDTH = 300;
 </div>
 ```
 
-**Key difference:** `ResponsiveContainer` uses ResizeObserver with optional debounce. The `responsive` prop uses standard CSS sizing rules from the parent element.
+**Key difference:** `ResponsiveContainer` measures with a ResizeObserver and can debounce; `responsive` takes the size from the parent's CSS box and saves a wrapper element.
 
-### SSR fallback
+### Server-rendered first paint
 
 ```tsx
 const FALLBACK_WIDTH = 800;
@@ -508,4 +501,4 @@ const FALLBACK_HEIGHT = 400;
 </ResponsiveContainer>;
 ```
 
-**Why good:** `initialDimension` provides fallback sizes for SSR where ResizeObserver hasn't fired yet.
+**Why good:** there is no ResizeObserver on the server, so the container measures nothing and the markup ships without a chart. `initialDimension` gives it a size to render at until the client measures for real.

@@ -1,17 +1,17 @@
-# CSS @keyframes Examples
+# CSS Animations - Keyframe Examples
 
-> Multi-step and looping animation patterns. See [core.md](core.md) for basic examples.
+> Multi-step, looping and scroll-driven animations, continuing the numbering from
+> [core.md](core.md) and [transitions.md](transitions.md).
+
+**Prerequisites:** the token set from [core.md](core.md) Pattern 1.
 
 ---
 
-## Pattern 1: Scroll-Driven Progress Bar
+## Pattern 21: Scroll-Driven Progress Bar
 
-Modern CSS allows animations tied to scroll position without JavaScript.
-
-### Good Example - Scroll Progress Indicator
+### Good Example - Reading Progress
 
 ```css
-/* Page scroll progress bar */
 .progress-bar {
   --progress-height: 4px;
 
@@ -36,17 +36,16 @@ Modern CSS allows animations tied to scroll position without JavaScript.
 }
 ```
 
-**Why good:** No JavaScript needed, uses scaleX (GPU-accelerated), linear is correct for progress representation
+**Why good:** `linear` is correct here because the keyframes map to scroll position rather than to
+time — any other curve would make the bar lag or lead the page.
 
-**Browser support:** Chrome/Edge 115+, Safari 26+, Firefox behind flag
+**Browser support:** Chrome/Edge 115+, Safari 26+, Firefox behind a flag.
 
 ---
 
-## Pattern 2: View-Based Scroll Animation
+## Pattern 22: Viewport-Entry Reveal
 
-Animate elements as they enter the viewport.
-
-### Good Example - Reveal on Scroll
+### Good Example - Fade as the Element Enters
 
 ```css
 .reveal-on-scroll {
@@ -66,7 +65,6 @@ Animate elements as they enter the viewport.
   }
 }
 
-/* Accessibility - disable scroll animations */
 @media (prefers-reduced-motion: reduce) {
   .reveal-on-scroll {
     animation: none;
@@ -76,15 +74,15 @@ Animate elements as they enter the viewport.
 }
 ```
 
-**Why good:** Native scroll-triggered animation, animation-range controls when it starts/ends, respects reduced motion
+**Why good:** `animation-range` finishes the reveal at 40% coverage rather than at full coverage, so
+the element is settled by the time the reader reaches it. `both` holds the end state once the range
+is passed.
 
 ---
 
-## Pattern 3: Parallax Effect
+## Pattern 23: Parallax Layer
 
-Create depth with scroll-driven parallax.
-
-### Good Example - CSS Parallax Layer
+### Good Example - Named Scroll Timeline
 
 ```css
 .parallax-container {
@@ -107,15 +105,14 @@ Create depth with scroll-driven parallax.
 }
 ```
 
-**Why good:** Pure CSS parallax, no JavaScript calculations needed, uses named scroll timeline
+**Why good:** A named timeline lets an element outside the scroller drive from it, which the anonymous
+`scroll()` cannot do.
 
 ---
 
-## Pattern 4: Typewriter Effect
+## Pattern 24: Typewriter
 
-Character-by-character reveal using steps().
-
-### Good Example - Typewriter Animation
+### Good Example - Discrete Character Reveal
 
 ```css
 .typewriter {
@@ -147,7 +144,6 @@ Character-by-character reveal using steps().
   }
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .typewriter {
     animation: none;
@@ -157,15 +153,15 @@ Character-by-character reveal using steps().
 }
 ```
 
-**Why good:** Uses steps() for discrete frames, ch unit for character width, cursor blinks independently
+**Why good:** `steps()` matched to the character count is what lands each frame on a glyph boundary;
+`ch` makes the width arithmetic exact for a monospace face. This is the rare case where animating
+`width` is intended — the reveal is the effect.
 
 ---
 
-## Pattern 5: Bouncing Animation
+## Pattern 25: Bounce In
 
-Physics-like bounce using keyframe percentages.
-
-### Good Example - Bounce In
+### Good Example - Overshoot and Settle
 
 ```css
 @keyframes bounce-in {
@@ -191,7 +187,6 @@ Physics-like bounce using keyframe percentages.
   animation: bounce-in var(--bounce-duration) var(--ease-default);
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .bounce-in {
     animation: fade-in calc(var(--bounce-duration) / 2) var(--ease-out);
@@ -199,15 +194,14 @@ Physics-like bounce using keyframe percentages.
 }
 ```
 
-**Why good:** Overshoots and settles for bouncy feel, reduced motion gets simple fade
+**Why good:** Decaying overshoot at 50% and 70% approximates a spring in pure keyframes; reduced
+motion swaps in a fade rather than dropping the entrance entirely.
 
 ---
 
-## Pattern 6: Shake for Error
+## Pattern 26: Error Shake
 
-Attention-grabbing shake animation.
-
-### Good Example - Error Shake
+### Good Example - Decaying Horizontal Shake
 
 ```css
 @keyframes shake {
@@ -236,7 +230,6 @@ Attention-grabbing shake animation.
   animation: shake var(--shake-duration) var(--ease-default);
 }
 
-/* Accessibility - no shake, just highlight */
 @media (prefers-reduced-motion: reduce) {
   .input-error {
     animation: none;
@@ -245,26 +238,19 @@ Attention-grabbing shake animation.
 }
 ```
 
-**Why good:** Decreasing amplitude feels natural, reduced motion provides visual alternative
+**Why good:** The reduced-motion branch replaces the shake with a static outline rather than removing
+it — the error still has to be noticeable without motion.
 
 ---
 
-## Pattern 7: Gradient Animation with @property
+## Pattern 27: Gradient Animation with @property
 
-Animate gradient properties using CSS Houdini.
-
-### Good Example - Animated Gradient Border
+### Good Example - Rotating Gradient Border
 
 ```css
 @property --gradient-angle {
   syntax: "<angle>";
   initial-value: 0deg;
-  inherits: false;
-}
-
-@property --gradient-position {
-  syntax: "<percentage>";
-  initial-value: 0%;
   inherits: false;
 }
 
@@ -289,7 +275,6 @@ Animate gradient properties using CSS Houdini.
   }
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .gradient-border {
     animation: none;
@@ -298,36 +283,24 @@ Animate gradient properties using CSS Houdini.
 }
 ```
 
-**Why good:** @property enables gradient animation, background-clip creates border effect
+**Why good:** `@property` gives the angle a type, which is what makes it interpolable; an
+unregistered custom property jumps from 0deg to 360deg with no frames in between. The two-layer
+background with `padding-box` and `border-box` is what confines the gradient to the border.
 
 ---
 
-## Pattern 8: Morphing Shape
+## Pattern 28: Morphing Shape
 
-SVG-like morphing using clip-path.
-
-### Good Example - Shape Morph
+### Good Example - clip-path Interpolation
 
 ```css
 @keyframes morph {
   0%,
   100% {
-    clip-path: polygon(
-      50% 0%,
-      100% 38%,
-      82% 100%,
-      18% 100%,
-      0% 38%
-    ); /* Pentagon */
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
   }
   50% {
-    clip-path: polygon(
-      50% 0%,
-      100% 50%,
-      50% 100%,
-      0% 50%,
-      0% 50%
-    ); /* Diamond */
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%, 0% 50%);
   }
 }
 
@@ -344,15 +317,14 @@ SVG-like morphing using clip-path.
 }
 ```
 
-**Why good:** clip-path is composited (GPU-friendly), smooth interpolation between polygon points
+**Why good:** Both polygons carry the same point count, which is the condition for interpolation —
+the diamond repeats its last point to reach five.
 
 ---
 
-## Pattern 9: Stagger with Animation Delay
+## Pattern 29: Stagger with Animation Delay
 
-Multiple elements with cascading delays.
-
-### Good Example - Staggered Grid Items
+### Good Example - Index-Driven Cascade
 
 ```css
 @keyframes scale-in {
@@ -374,7 +346,6 @@ Multiple elements with cascading delays.
   animation-delay: calc(var(--index) * var(--stagger-delay));
 }
 
-/* Set index via CSS custom property or inline style */
 .grid-item:nth-child(1) {
   --index: 0;
 }
@@ -384,7 +355,7 @@ Multiple elements with cascading delays.
 .grid-item:nth-child(3) {
   --index: 2;
 }
-/* ... or use inline: style="--index: 0" */
+/* or set it inline: style="--index: 0" for a list of unknown length */
 
 @media (prefers-reduced-motion: reduce) {
   .grid-item {
@@ -395,15 +366,14 @@ Multiple elements with cascading delays.
 }
 ```
 
-**Why good:** backwards fill mode shows initial state during delay, spring easing adds polish
+**Why good:** `backwards` fill is what holds the scaled-down start during the delay — without it
+every item renders full-size, then jumps back to start when its turn arrives.
 
 ---
 
-## Pattern 10: Chained Animations
+## Pattern 30: Chained Animations
 
-Sequential animations using animation-delay.
-
-### Good Example - Multi-Stage Entrance
+### Good Example - Two Animations, One Declaration
 
 ```css
 @keyframes fade-in {
@@ -441,4 +411,5 @@ Sequential animations using animation-delay.
 }
 ```
 
-**Why good:** Multiple animations with independent timing, delay creates sequence effect, reduced motion simplifies
+**Why good:** Two animations on one element, each with its own delay, sequence without any
+JavaScript; because each touches a different property they never fight over the same value.

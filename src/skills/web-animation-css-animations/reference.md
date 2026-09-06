@@ -1,51 +1,63 @@
 # CSS Animations Reference
 
-> Quick reference tables for CSS animation development. See [SKILL.md](SKILL.md) for decision frameworks and red flags, [examples/](examples/) for code examples.
+> Lookup tables for CSS animation work. See [SKILL.md](SKILL.md) for the decisions and the red flags,
+> [examples/](examples/) for full code.
 
 ---
 
-## Easing Functions Reference
+## Easing Catalogue
 
 ```css
-/* Standard easings */
---ease-in: cubic-bezier(0.4, 0, 1, 1); /* Exit animations */
---ease-out: cubic-bezier(0, 0, 0.2, 1); /* Enter animations */
---ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* Symmetric motion */
+/* Standard */
+--ease-in: cubic-bezier(0.4, 0, 1, 1); /* exit */
+--ease-out: cubic-bezier(0, 0, 0.2, 1); /* enter */
+--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* symmetric */
 
-/* Material Design easings */
---ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* General purpose */
---ease-decelerate: cubic-bezier(0, 0, 0.2, 1); /* Enter */
---ease-accelerate: cubic-bezier(0.4, 0, 1, 1); /* Exit */
+/* Material Design */
+--ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+--ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+--ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
 
-/* Bounce/spring easings */
---ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Playful overshoot */
---ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Heavier overshoot */
+/* Overshoot */
+--ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+--ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55); /* heavier */
 
-/* Smooth easings (Apple-style) */
+/* Smooth, symmetric, no overshoot */
 --ease-smooth: cubic-bezier(0.45, 0, 0.55, 1);
 ```
 
 ---
 
-## Properties by Performance Impact
+## Property Cost
 
-### Safe (Composite Only - GPU)
+At 60fps a frame has 16.67ms. A layout-triggering property spends most of that budget before
+painting starts.
 
-- `opacity`
-- `transform` (translate, scale, rotate, skew)
-- `filter` (on some browsers)
+| Cost               | Properties                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Composite (GPU)    | `opacity`, `transform` (translate, scale, rotate, skew), `filter` in most engines                                    |
+| Paint              | `color`, `background-color`, `border-color`, `visibility`, `text-decoration`                                         |
+| Layout, then paint | `width`, `height`, `top`, `right`, `bottom`, `left`, `margin`, `padding`, `border-width`, `font-size`, `line-height` |
 
-### Caution (Paint Only)
+### Transform substitutions
 
-- `color`, `background-color`, `border-color`
-- `visibility`, `text-decoration`
+| Instead of          | Use                                       |
+| ------------------- | ----------------------------------------- |
+| `top`, `left`       | `translate(x, y)`                         |
+| `width`, `height`   | `scale()`                                 |
+| `box-shadow`        | pseudo-element whose `opacity` animates   |
+| `margin`, `padding` | `translate()`, leaving the layout box put |
 
-### Avoid (Trigger Layout)
+---
 
-- `width`, `height`
-- `top`, `right`, `bottom`, `left`
-- `margin`, `padding`
-- `border-width`, `font-size`, `line-height`
+## Duration Guidance
+
+| Motion             | Duration   | Why                                    |
+| ------------------ | ---------- | -------------------------------------- |
+| Micro-interactions | 100–150ms  | Reads as instant feedback              |
+| UI transitions     | 200–300ms  | Perceived as motion without waiting    |
+| Page transitions   | 300–500ms  | A major context change earns the time  |
+| Complex sequences  | 500–1000ms | Only where the sequence is the content |
 
 ---
 
@@ -64,23 +76,18 @@
 
 ## Accessibility Checklist
 
-- [ ] Uses `@media (prefers-reduced-motion)` for all animations
-- [ ] Provides safe alternatives (opacity fade) for motion-sensitive effects
-- [ ] Auto-playing animations can be paused or have user control
-- [ ] Decorative animations don't interfere with content comprehension
-- [ ] Focus indicators remain visible during animations
-- [ ] Animation duration doesn't block interaction
-- [ ] Flashing content is under 3 flashes per second (WCAG 2.3.1)
-- [ ] Essential information isn't conveyed by animation alone
+- [ ] Every animation has a `prefers-reduced-motion` branch
+- [ ] Motion-sensitive effects degrade to an opacity fade rather than to nothing
+- [ ] Auto-playing motion can be paused or is short enough not to need it
+- [ ] Focus indicators stay visible while an animation runs
+- [ ] No animation blocks interaction with what it is animating
+- [ ] Flashing stays under three flashes per second (WCAG 2.3.1)
+- [ ] No information is carried by motion alone
 
 ---
 
-## Performance Testing
+## Measuring a Frame Budget
 
-1. Open DevTools Performance panel
-2. Enable "Paint flashing" in Rendering tab
-3. Record during animation
-4. Check for:
-   - Green flashes (repaints) -- minimize these
-   - Layout events in flame chart -- eliminate if possible
-   - Frame rate drops below 60fps
+Record in the DevTools Performance panel with "Paint flashing" enabled in the Rendering tab, then
+read three things off the trace: green repaint flashes, Layout events in the flame chart, and any
+frame over 16.67ms.

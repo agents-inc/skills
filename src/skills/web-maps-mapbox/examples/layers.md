@@ -42,7 +42,8 @@ map.addSource("parks", {
 });
 ```
 
-**Why good:** `generateId: true` enables feature-state for hover/selection without manually adding IDs, URL source lets Mapbox handle fetch
+**Why good:** `setFeatureState` needs a feature id and GeoJSON rarely carries one, so `generateId`
+is what makes hover and selection possible without editing the data
 
 ### Good Example - Updating GeoJSON Data
 
@@ -55,7 +56,8 @@ function updateStoreData(newFeatures: GeoJSON.FeatureCollection) {
 }
 ```
 
-**Why good:** Guard check on source existence, type narrowing before calling `setData`
+**Why good:** the `type` check narrows `getSource`'s union, so `setData` — which only exists on a
+GeoJSON source — type-checks and cannot be called on a vector or raster one
 
 ### Bad Example - No Source Guard
 
@@ -136,7 +138,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** Each layer type matched to its geometry, slot placement appropriate (labels on top, fills on bottom), text halo for readability
+**Why good:** the slot per layer reflects what it is — fills below roads, routes above them, labels
+at the top — and the text halo is what keeps a label readable over whatever it lands on
 
 ---
 
@@ -171,7 +174,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** Named color constants, fallback value handles unknown categories, `["get", "category"]` reads feature property
+**Why good:** the trailing fallback is required by `match` and is what a feature with a missing or
+unrecognised `category` renders as — without one those features would not draw
 
 ### Good Example - interpolate Expression (Continuous)
 
@@ -210,7 +214,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** Named range constants, linear interpolation scales smoothly between stops, both size and color driven by same property
+**Why good:** `interpolate` clamps outside its stops rather than extrapolating, so a value above
+`MAX_REVENUE` renders at the maximum radius instead of an unbounded one
 
 ### Good Example - case Expression (Conditional)
 
@@ -233,7 +238,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** Named opacity constants, `["boolean", ..., false]` provides safe fallback if property is missing
+**Why good:** `["boolean", value, false]` asserts the type and supplies the default in one step —
+`["get", "isActive"]` on a feature without the property yields `null`, which `case` cannot branch on
 
 ### Good Example - Zoom-Dependent Styling
 
@@ -261,7 +267,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** Circles grow as user zooms in, preventing visual clutter at low zoom and providing detail at high zoom
+**Why good:** interpolating over `["zoom"]` rather than a data property is what keeps a dense
+dataset legible at low zoom without shrinking it everywhere
 
 ---
 
@@ -302,7 +309,9 @@ map.setFilter("stores-circles", [
 map.setFilter("stores-circles", null);
 ```
 
-**Why good:** Named threshold constant, `"all"` for AND, `"any"` for OR, `"in"` for set membership, null to clear
+**Why good:** `setFilter` changes what the existing layer draws rather than rebuilding it, and
+`null` clears the filter — passing an always-true expression instead leaves a filter the next call
+has to reason about
 
 ---
 
@@ -420,7 +429,10 @@ map.on("mouseleave", "clusters", () => {
 });
 ```
 
-**Why good:** Named constants for all thresholds and sizes, three-layer pattern (clusters, labels, individual points), `step` expression for discrete size/color breaks, click handler expands clusters, guards on source and clusterId existence
+**Why good:** the three layers partition the source by `["has", "point_count"]`, so every feature is
+drawn exactly once; `step` gives discrete size and colour breaks where `interpolate` would give a
+continuous ramp; and `getClusterExpansionZoom` answers through a callback, so its error branch has
+to be handled rather than awaited
 
 ### Bad Example - No Clustering for Large Datasets
 
@@ -431,7 +443,8 @@ locations.forEach((loc) => {
 });
 ```
 
-**Why bad:** DOM markers don't scale -- each one is an HTML element. Use a circle layer with clustering enabled for large datasets
+**Why bad:** every Marker is an HTML element the browser lays out and composites on each frame; a
+circle layer draws the same points on the GPU in one pass
 
 ---
 
@@ -452,7 +465,8 @@ map.setLayoutProperty("stores-circles", "visibility", "visible");
 map.setLayoutProperty("stores-circles", "visibility", "none");
 ```
 
-**Why good:** Targeted property updates without removing/re-adding layers, visibility toggle without removing the layer
+**Why good:** toggling `visibility` keeps the layer and its source in place, so re-showing it costs
+nothing; removing and re-adding re-parses the source
 
 ---
 
@@ -479,7 +493,8 @@ map.addLayer({
 });
 ```
 
-**Why good:** `source-layer` is required for vector tile sources (specifies which layer within the tileset), filter reduces visual clutter
+**Why good:** a vector tileset contains several named layers, so `source-layer` picks which one this
+map layer draws — omitting it on a vector source renders nothing with no error
 
 ---
 
@@ -499,7 +514,8 @@ function removeLayerAndSource(layerId: string, sourceId: string) {
 }
 ```
 
-**Why good:** Checks existence before removing (avoids errors), removes layer before source (source can't be removed while layers reference it)
+**Why good:** the order is forced — a source cannot be removed while a layer references it — and the
+existence checks make the function safe to call from a cleanup path that may run twice
 
 ### Bad Example - Wrong Removal Order
 

@@ -1,148 +1,60 @@
 # View Transitions Reference
 
-> Decision frameworks, anti-patterns, and red flags for View Transitions API. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Naming rules, the pseudo-element tree, API tables and support. See [SKILL.md](SKILL.md) for the
+> decisions and the red flags, [examples/](examples/) for full code.
 
 ---
 
-## Decision Framework
+## view-transition-name Values
 
-### When to Use View Transitions vs CSS Transitions
-
-```
-Is this a page/state change affecting large portions of the UI?
-├─ YES → Is it a page navigation?
-│   ├─ YES → Is it MPA (multi-page)?
-│   │   ├─ YES → Use @view-transition CSS ✓
-│   │   └─ NO → Use startViewTransition() ✓
-│   └─ NO → Is it a significant state change (view toggle)?
-│       ├─ YES → Use startViewTransition() ✓
-│       └─ NO → CSS transitions may suffice
-└─ NO → Is it a small component animation?
-    ├─ YES → CSS transitions are simpler
-    └─ NO → What type of animation?
-        ├─ Hover/focus feedback → CSS transitions
-        ├─ Scroll-linked → Use animation library
-        └─ Complex physics → Use animation library
-```
-
-### When to Use Same-Document vs Cross-Document Transitions
-
-```
-What type of navigation is this?
-├─ SPA (single-page app with client routing)
-│   └─ Use document.startViewTransition() ✓
-├─ MPA (traditional server-rendered pages)
-│   └─ Use @view-transition { navigation: auto } ✓
-├─ Hybrid (some pages SPA, some MPA)
-│   ├─ SPA routes → startViewTransition()
-│   └─ MPA routes → @view-transition CSS
-└─ State change within same page
-    └─ Use startViewTransition() ✓
-```
-
-### When to Use Shared Elements
-
-```
-Are there visually related elements before and after?
-├─ YES → Do they represent the same conceptual item?
-│   ├─ YES → Use same view-transition-name ✓
-│   │   └─ Example: thumbnail → full image
-│   └─ NO → Different transition names or none
-└─ NO → Use default root transition
-    └─ Customize via ::view-transition-old/new(root)
-```
-
-### When to Use Custom Animations vs Default
-
-```
-Is the default cross-fade appropriate?
-├─ YES → Keep defaults, customize duration only
-├─ NO → What effect do you need?
-│   ├─ Slide (left/right) → Custom CSS keyframes
-│   ├─ Scale/zoom → Custom CSS keyframes
-│   ├─ Reveal (circle, wipe) → Web Animations API
-│   └─ Direction-aware → :active-view-transition-type()
-```
-
----
-
-## view-transition-name Rules
-
-### Valid Names
-
-| Value            | Description                                                         |
+| Value            | Meaning                                                             |
 | ---------------- | ------------------------------------------------------------------- |
-| `none`           | Element doesn't participate (default)                               |
-| `<custom-ident>` | Unique identifier for the element                                   |
-| `match-element`  | Auto-generate based on element identity (Chrome 137+, Safari 18.4+) |
-| `root`           | Reserved for document root (auto-applied)                           |
-
-### Naming Requirements
+| `none`           | Element does not participate — the default                          |
+| `<custom-ident>` | Identifier for this element, unique among visible elements          |
+| `match-element`  | Browser derives an identity per element (Chrome 137+, Safari 18.4+) |
+| `root`           | Reserved for the document root, applied automatically               |
 
 ```css
-/* VALID names */
+/* valid */
 view-transition-name: hero-image;
 view-transition-name: product-123;
 view-transition-name: my_element;
 view-transition-name: card--expanded;
 
-/* INVALID names */
-view-transition-name: auto; /* Reserved word */
-view-transition-name: inherit; /* Reserved word */
-view-transition-name: 123-product; /* Starts with number */
-view-transition-name: item/detail; /* Contains slash */
+/* invalid */
+view-transition-name: auto; /* CSS-wide keyword */
+view-transition-name: inherit; /* CSS-wide keyword */
+view-transition-name: 123-product; /* identifiers cannot start with a digit */
+view-transition-name: item/detail; /* slash is not an identifier character */
 ```
 
 ---
 
-## Pseudo-Element Reference
-
-### Pseudo-Element Hierarchy
+## Pseudo-Element Tree
 
 ```
-::view-transition                          /* Root overlay */
-├── ::view-transition-group(root)          /* Container for root */
+::view-transition                          root overlay
+├── ::view-transition-group(root)
 │   └── ::view-transition-image-pair(root)
-│       ├── ::view-transition-old(root)    /* Old state screenshot */
-│       └── ::view-transition-new(root)    /* New state (live) */
-└── ::view-transition-group(hero)          /* Named element */
+│       ├── ::view-transition-old(root)    screenshot of the old state
+│       └── ::view-transition-new(root)    live new state
+└── ::view-transition-group(hero)          one per named element
     └── ::view-transition-image-pair(hero)
         ├── ::view-transition-old(hero)
         └── ::view-transition-new(hero)
 ```
 
-### Pseudo-Element Purposes
+| Pseudo-element                    | Carries                        | Default animation        |
+| --------------------------------- | ------------------------------ | ------------------------ |
+| `::view-transition`               | Overlay above the page         | none                     |
+| `::view-transition-group(*)`      | Position and size of the pair  | width, height, transform |
+| `::view-transition-image-pair(*)` | The two snapshots, stacked     | none                     |
+| `::view-transition-old(*)`        | Screenshot of the old state    | `opacity: 1 -> 0`        |
+| `::view-transition-new(*)`        | Live representation of the new | `opacity: 0 -> 1`        |
 
-| Pseudo-Element                    | Purpose                          | Default Animation      |
-| --------------------------------- | -------------------------------- | ---------------------- |
-| `::view-transition`               | Root overlay                     | None                   |
-| `::view-transition-group(*)`      | Container for snapshot pair      | Width/height/transform |
-| `::view-transition-image-pair(*)` | Wraps old and new snapshots      | None                   |
-| `::view-transition-old(*)`        | Static screenshot of old state   | `opacity: 1 → 0`       |
-| `::view-transition-new(*)`        | Live representation of new state | `opacity: 0 → 1`       |
-
-### Styling Examples
+### Grouped styling with view-transition-class
 
 ```css
-:root {
-  --vt-duration: 400ms;
-  --hero-duration: 300ms;
-  --card-duration: 250ms;
-}
-
-/* Customize duration for all transitions */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--vt-duration);
-}
-
-/* Target specific named element */
-::view-transition-group(hero-image) {
-  animation-duration: var(--hero-duration);
-  animation-timing-function: ease-out;
-}
-
-/* Use view-transition-class for grouped styling */
 .card {
   view-transition-class: card;
 }
@@ -152,173 +64,31 @@ view-transition-name: item/detail; /* Contains slash */
 }
 ```
 
----
-
-## Anti-Patterns
-
-> For the full RED FLAGS list, see [SKILL.md](SKILL.md) `<red_flags>` section.
-
-### No Feature Detection
-
-```typescript
-// WRONG - crashes in unsupported browsers
-document.startViewTransition(() => {
-  updateDOM();
-});
-
-// CORRECT - graceful fallback
-if (document.startViewTransition) {
-  document.startViewTransition(() => updateDOM());
-} else {
-  updateDOM();
-}
-```
-
-### Duplicate Transition Names
-
-```css
-/* WRONG - all cards have same name, transition breaks */
-.card {
-  view-transition-name: card;
-}
-
-/* CORRECT - unique names via CSS or JavaScript */
-.card:nth-child(1) {
-  view-transition-name: card-1;
-}
-.card:nth-child(2) {
-  view-transition-name: card-2;
-}
-
-/* BETTER - use match-element for auto-naming */
-.card {
-  view-transition-name: match-element;
-  view-transition-class: card;
-}
-```
-
-### Forgetting Name Cleanup
-
-```typescript
-// WRONG - name persists, causes conflicts later
-element.style.viewTransitionName = "hero";
-document.startViewTransition(updateFn);
-// Name never removed!
-
-// CORRECT - clean up after transition
-element.style.viewTransitionName = "hero";
-const transition = document.startViewTransition(updateFn);
-transition.finished.then(() => {
-  element.style.viewTransitionName = "";
-});
-```
-
-### Missing Reduced Motion Support
-
-```css
-/* WRONG - no reduced motion consideration */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 500ms;
-}
-
-/* CORRECT - respect user preferences */
-:root {
-  --vt-duration: 300ms;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--vt-duration);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 0.01ms !important;
-  }
-}
-```
-
-### Using Obsolete Syntax
-
-```html
-<!-- WRONG - obsolete meta tag -->
-<meta name="view-transition" content="same-origin" />
-
-<!-- CORRECT - CSS at-rule -->
-<style>
-  @view-transition {
-    navigation: auto;
-  }
-</style>
-```
-
-### Long Animation Durations
-
-```css
-/* WRONG - blocks interaction too long, hurts INP */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 2s;
-}
-
-/* CORRECT - keep under 300ms for page transitions */
-:root {
-  --vt-page-duration: 200ms;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--vt-page-duration);
-}
-```
-
-### Custom Animation Without Waiting for Ready
-
-```typescript
-// WRONG - pseudo-elements may not exist yet
-const transition = document.startViewTransition(updateFn);
-document.documentElement.animate(
-  { clipPath: [...] },
-  { pseudoElement: "::view-transition-new(root)" }
-);
-
-// CORRECT - wait for ready promise
-const transition = document.startViewTransition(updateFn);
-await transition.ready;
-document.documentElement.animate(
-  { clipPath: [...] },
-  { pseudoElement: "::view-transition-new(root)" }
-);
-```
+One rule reaches every element carrying the class, which is what keeps a list of individually-named
+items from needing an individually-written rule each.
 
 ---
 
-## Performance Considerations
+## Performance
 
-### Core Web Vitals Impact
+| Metric | Effect                                                                             |
+| ------ | ---------------------------------------------------------------------------------- |
+| LCP    | Roughly 70ms added on repeat mobile pageviews                                      |
+| INP    | The page is inert for the animation's duration, so it lands in interaction latency |
+| CPU    | The penalty grows on slower devices, where the snapshot itself costs more          |
 
-- **LCP:** ~70ms added to Largest Contentful Paint for repeat mobile pageviews
-- **INP:** Long animations can harm Interaction to Next Paint
-- **CPU correlation:** Slower CPUs experience more pronounced negative effects
+Keep page transitions to 200–300ms, animate `transform`, `opacity` and `clip-path`, and name only the
+elements a reader would follow. Prerendering the destination through speculation rules removes the
+navigation cost the transition would otherwise sit on top of.
 
-### Optimization Strategies
-
-1. **Keep animations short** - Max 200-300ms for page transitions
-2. **Use GPU-accelerated properties** - transform, opacity, clip-path
-3. **Limit named elements** - Each named element creates additional pseudo-elements
-4. **Use speculation rules for MPA** - Prerender makes transitions feel instant
-5. **Disable on slow connections** - Check `navigator.connection.saveData`
+### Opting out on constrained connections
 
 ```typescript
 function shouldEnableTransitions(): boolean {
-  // Check reduced motion
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return false;
   }
 
-  // Check for data saver
   const connection = (
     navigator as Navigator & {
       connection?: { saveData?: boolean; effectiveType?: string };
@@ -335,7 +105,7 @@ function shouldEnableTransitions(): boolean {
 
 ---
 
-## Browser Support Quick Reference
+## Browser Support
 
 | Feature                        | Chrome | Safari | Firefox | Edge |
 | ------------------------------ | ------ | ------ | ------- | ---- |
@@ -347,47 +117,35 @@ function shouldEnableTransitions(): boolean {
 
 ---
 
-## Quick Reference
+## API
 
-### Essential API
+| API                                               | Purpose                                        |
+| ------------------------------------------------- | ---------------------------------------------- |
+| `document.startViewTransition(callback)`          | Start a same-document transition               |
+| `document.startViewTransition({ update, types })` | Start one classified by type                   |
+| `@view-transition { navigation: auto }`           | Opt a document into cross-document transitions |
+| `view-transition-name: <name>`                    | Lift an element into its own snapshot pair     |
+| `view-transition-class: <class>`                  | Group elements for shared styling              |
+| `transition.updateCallbackDone`                   | Promise: the DOM update finished               |
+| `transition.ready`                                | Promise: pseudo-elements exist                 |
+| `transition.finished`                             | Promise: animation over                        |
+| `transition.types`                                | Mutable set of types for CSS selection         |
+| `transition.skipTransition()`                     | Jump to the final state immediately            |
 
-| API                                               | Purpose                                    |
-| ------------------------------------------------- | ------------------------------------------ |
-| `document.startViewTransition(callback)`          | Start same-document transition             |
-| `document.startViewTransition({ update, types })` | Start transition with typed classification |
-| `@view-transition { navigation: auto }`           | Enable cross-document transitions          |
-| `view-transition-name: <name>`                    | Name element for individual transition     |
-| `view-transition-class: <class>`                  | Group elements for shared styling          |
-| `transition.ready`                                | Promise: pseudo-elements created           |
-| `transition.updateCallbackDone`                   | Promise: DOM update complete               |
-| `transition.finished`                             | Promise: animation complete                |
-| `transition.types`                                | ViewTransitionTypeSet for classification   |
-| `transition.skipTransition()`                     | Skip to final state immediately            |
+### Cross-document events
 
-### Essential Pseudo-Elements
-
-| Pseudo-Element                  | Target                      |
-| ------------------------------- | --------------------------- |
-| `::view-transition`             | Root overlay                |
-| `::view-transition-group(name)` | Container for named element |
-| `::view-transition-old(name)`   | Old state snapshot          |
-| `::view-transition-new(name)`   | New state (live)            |
-
-### Essential Events (MPA)
-
-| Event        | When                              | Use For                           |
-| ------------ | --------------------------------- | --------------------------------- |
-| `pageswap`   | Before final frame on old page    | Set names on source elements      |
-| `pagereveal` | After DOM initialized on new page | Set names on destination elements |
+| Event        | Fires                                     | Used for                           |
+| ------------ | ----------------------------------------- | ---------------------------------- |
+| `pageswap`   | Before the last frame of the old document | Naming elements on the source      |
+| `pagereveal` | After the new document's DOM is ready     | Naming elements on the destination |
 
 ---
 
 ## Accessibility Checklist
 
-- [ ] Feature detection prevents errors in unsupported browsers
-- [ ] prefers-reduced-motion respected via CSS media query
-- [ ] prefers-reduced-motion checked in JavaScript before starting transitions
-- [ ] Animations kept under 300ms to avoid vestibular issues
-- [ ] User can still interact after transition (no infinite animations)
-- [ ] Content remains accessible during and after transition
-- [ ] Decorative transitions can be disabled without losing functionality
+- [ ] Feature detection keeps the DOM update working where the API is absent
+- [ ] `prefers-reduced-motion` handled in CSS, and in script where the transition is skipped outright
+- [ ] Animations stay under 300ms, so the inert window is short
+- [ ] No transition loops or runs indefinitely
+- [ ] Content is reachable during and after the transition
+- [ ] Removing every transition leaves the application fully usable

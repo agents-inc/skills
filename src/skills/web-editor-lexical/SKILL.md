@@ -1,470 +1,357 @@
 ---
 name: web-editor-lexical
-description: Extensible text editor framework by Meta
+description: Extensible text editor framework by Meta. Use when building a rich text editor on Lexical — editor setup, custom nodes, commands, transforms, and serialization.
 ---
 
 # Lexical Editor Patterns
 
-> **Quick Guide:** Lexical is a lightweight (22kb min+gzip) extensible text editor framework. Use `LexicalComposer` for React setup with plugins as child components. Extend via the node system (ElementNode, TextNode, DecoratorNode), command system (createCommand + priorities), and transforms. EditorState is immutable -- all mutations happen inside `editor.update()`. Use `$`-prefixed functions only inside update/read closures. **Current: v0.42.x (pre-1.0)**
+> **Quick Guide:** Lexical is an editor framework rather than an editor: the core gives you a node
+> tree, a selection model, a reconciler, a command bus and an update lifecycle, and everything else
+> is a plugin. EditorState is immutable, so every read and every mutation happens inside an
+> `editor.update()` or `editor.read()` closure, and the `$`-prefixed functions are the ones that
+> require that context. Extend the tree through `ElementNode`, `TextNode` or `DecoratorNode`, and
+> react to content through transforms rather than listeners. **Current: v0.42.x, pre-1.0 — APIs
+> still move between minors.**
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — editor setup, plugins with cleanup, toolbars, transforms, persistence
+- [examples/custom-nodes.md](examples/custom-nodes.md) — ElementNode, TextNode and DecoratorNode classes, the NodeState and `$config` APIs
+- [examples/serialization.md](examples/serialization.md) — JSON and HTML round trips, `exportDOM`/`importDOM`, headless editors
+- [reference.md](reference.md) — package map, command priorities, built-in commands, node hierarchy, plugin list, custom-node checklist
+
+---
+
+## Which path applies
+
+- **A React app** — `LexicalComposer` owns the editor and every plugin is a child component
+  reaching it through `useLexicalComposerContext()`. Start at
+  [examples/core.md](examples/core.md).
+- **A server or a build step, with no DOM** — `createHeadlessEditor` from `@lexical/headless` runs
+  the same node classes for search indexing, email rendering and content transforms. Register the
+  same nodes as the client. See [examples/serialization.md](examples/serialization.md).
+- **Adding a content type** — the work is a node class plus its registration, and the branch that
+  matters is which base node it extends. See the decision framework below and
+  [examples/custom-nodes.md](examples/custom-nodes.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Lexical code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Call `$`-prefixed functions inside an `editor.update()` or `editor.read()` closure.** `$getRoot`,
+`$getSelection`, `$createTextNode` and their siblings read the active editor state from a context
+that only exists inside those closures; outside one they throw at runtime, and nothing catches it at
+compile time.
 
-**(You MUST call `$`-prefixed functions (`$getRoot`, `$getSelection`, `$createTextNode`) ONLY inside `editor.update()` or `editor.read()` closures -- calling them outside throws runtime errors)**
+**Register every custom node in `initialConfig.nodes`.** An unregistered node throws or silently
+drops content the moment the editor meets it, including on deserialization of previously saved
+documents.
 
-**(You MUST register custom nodes in the `nodes` array of `initialConfig` -- unregistered nodes cause silent failures or runtime errors)**
+**Return the unsubscribe function from the `useEffect` that registers a command, transform or
+listener.** Every `register*` method hands one back, and dropping it leaks a listener per render.
 
-**(You MUST return a cleanup function from `useEffect` when registering commands, transforms, or listeners -- Lexical register methods return unsubscribe functions)**
-
-**(You MUST include preconditions in transforms to prevent infinite loops -- a transform that unconditionally modifies its target node re-triggers itself)**
+**Open every transform with a precondition that the mutation makes false.** A transform that
+mutates its target unconditionally marks the node dirty, which re-triggers the transform and freezes
+the editor.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Lexical, lexical, @lexical/react, @lexical/rich-text, @lexical/list, @lexical/code, @lexical/link, @lexical/html, @lexical/headless, LexicalComposer, EditorState, LexicalNode, ElementNode, TextNode, DecoratorNode, createCommand, dispatchCommand, registerCommand, COMMAND_PRIORITY, $getRoot, $getSelection, $createParagraphNode, $createTextNode, RichTextPlugin, OnChangePlugin, HistoryPlugin, useLexicalComposerContext, editor.update, editor.read, registerNodeTransform, exportJSON, importJSON, exportDOM, importDOM, NodeState, createState
+**Auto-detection:** Lexical, `@lexical/react`, `@lexical/rich-text`, `@lexical/list`, `@lexical/code`, `@lexical/link`, `@lexical/html`, `@lexical/headless`, LexicalComposer, EditorState, LexicalNode, ElementNode, TextNode, DecoratorNode, createCommand, dispatchCommand, registerCommand, COMMAND_PRIORITY, `$getRoot`, `$getSelection`, `$createParagraphNode`, `$createTextNode`, RichTextPlugin, OnChangePlugin, HistoryPlugin, useLexicalComposerContext, editor.update, editor.read, registerNodeTransform, exportJSON, importJSON, exportDOM, importDOM, NodeState, createState
 
-**When to use:**
+**Applies to:**
 
-- Building rich text editors with custom formatting and embedded content
-- Creating editors with custom node types (mentions, embeds, code blocks)
-- Implementing collaborative editing with operational transforms
-- Building structured content editors (not just plain text)
+- Rich text editing with custom formatting and embedded content
+- Custom content types — mentions, embeds, callouts, polls — as node classes
+- Structured document output rather than an HTML string
+- Server-side or build-time processing of editor content
+- Collaborative editing, where Lexical supplies the binding point
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Plain text inputs without formatting (use a standard `<textarea>`)
-- Simple markdown editing without live preview (use a textarea with markdown parsing)
-- Editors that need pure decorations without document mutation (Lexical decorator nodes mutate content)
-
-**Key patterns covered:**
-
-- React setup with LexicalComposer, plugins, and initialConfig
-- Node system: ElementNode, TextNode, DecoratorNode, custom nodes
-- Command system: createCommand, priorities, dispatching, propagation
-- Transforms for automatic node mutations
-- EditorState immutability and the update lifecycle
-- JSON and HTML serialization
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Editor setup, plugins, commands, transforms
-- [examples/custom-nodes.md](examples/custom-nodes.md) - Custom ElementNode, TextNode, DecoratorNode, NodeState API
-- [examples/serialization.md](examples/serialization.md) - JSON/HTML serialization, import/export, headless usage
-- [reference.md](reference.md) - Decision frameworks, command priority table, anti-patterns
+- Visual design of the editor — the theme maps class names onto nodes, and what those classes
+  contain is settled by whatever owns styling
+- Where the serialized document goes — the editor hands back JSON, and the transport and store are
+  not its concern
+- Real-time sync between clients — Lexical exposes the state to bind, and the sync layer itself is
+  a separate concern
+- Sanitizing HTML entering or leaving the editor — `$generateNodesFromDOM` trusts what it is given
 
 ---
 
 <philosophy>
 
-## Philosophy
+Lexical ships a core and no editor. The tree, selection, reconciler, command bus and update
+lifecycle are the product; toolbars, lists, links, embeds and formatting are all plugins, including
+the ones Meta writes.
 
-Lexical is an editor framework, not a batteries-included editor. The core is intentionally minimal -- it provides the node tree, selection, reconciler, command system, and update lifecycle. Everything else (toolbars, formatting, lists, links, embeds) is a plugin.
+**EditorState is immutable.** The editor holds a frozen snapshot. `editor.update()` clones it,
+applies the closure's changes, and reconciles the difference to the DOM — which is why a stale read
+outside a closure has no state to read and throws.
 
-**Key architectural principles:**
+**A plugin is a React component.** It renders as a child of `<LexicalComposer>`, reaches the editor
+through `useLexicalComposerContext()`, and registers its commands, transforms and listeners in a
+`useEffect` that returns their unsubscribes. Many plugins render `null`.
 
-- **Immutable EditorState:** The editor maintains a frozen state snapshot. Mutations happen inside `editor.update()` closures that clone the state, apply changes, then reconcile to DOM.
-- **`$`-function convention:** Functions prefixed with `$` (like `$getRoot()`, `$getSelection()`) must run inside `editor.update()` or `editor.read()` closures -- similar to React hooks requiring a component context.
-- **Plugin = React component:** In the React binding, a plugin is a React component rendered as a child of `<LexicalComposer>`. It accesses the editor via `useLexicalComposerContext()` and registers commands/transforms/listeners in `useEffect`.
-- **Command-driven architecture:** User interactions and plugin communication flow through typed commands with priority-based listeners, enabling plugins to intercept or augment behavior.
-- **Node-driven content model:** Content is a tree of typed nodes. Custom content types (mentions, embeds, polls) are custom node classes.
+**Commands are the bus.** Typed commands with priority-ordered listeners let one plugin intercept
+or augment another's behaviour without either knowing about the other.
 
-**When to use Lexical:**
+**Content is typed nodes.** A new kind of content is a new node class, not a new attribute.
 
-- Rich text editing with custom formatting and embedded content
-- Content editors requiring structured output (not just HTML strings)
-- Editors needing accessibility and screen reader support
-- Applications requiring server-side rendering or headless processing of editor content
-
-**When NOT to use Lexical:**
-
-- Simple text inputs (a `<textarea>` is simpler and lighter)
-- Editors needing pure decorations that don't affect document content
-- Projects requiring a stable 1.0 API (Lexical is pre-1.0, APIs may change)
+Lexical is pre-1.0, so a project that needs a frozen API surface should weigh that before adopting
+it. Weigh the node model too: a `DecoratorNode` is a real node in the tree, so it serializes and
+moves with the content around it. An editor whose requirement is a purely visual overlay —
+highlights or annotations that must never enter the saved document — is asking for something
+Lexical's decorators do not do.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+### Which node type to extend
+
+```
+Does the content contain child nodes?
+├─ YES → ElementNode (paragraphs, blockquotes, callouts)
+└─ NO → Is it text carrying extra formatting or behaviour?
+    ├─ YES → TextNode (coloured text, mentions)
+    └─ NO → Is it an embedded component (image, video, widget)?
+        └─ YES → DecoratorNode, whose decorate() returns the component
+```
+
+### Plugin, transform or listener
+
+```
+Does the reaction modify nodes?
+├─ YES → Transform — runs before reconciliation, so one DOM update covers it
+└─ NO → Is it observing state?
+    ├─ YES → registerUpdateListener, which runs after reconciliation
+    └─ NO → A command, for user actions and toolbar clicks
+```
+
+### Which command priority
+
+```
+Base editor behaviour?          → COMMAND_PRIORITY_EDITOR (0)
+An ordinary plugin?             → COMMAND_PRIORITY_LOW (1) or _NORMAL (2)
+Must override other plugins?    → COMMAND_PRIORITY_HIGH (3), as table navigation does
+Nothing else may win?           → COMMAND_PRIORITY_CRITICAL (4)
+```
+
+Higher runs first, and returning `true` stops propagation to everything below. Full table in
+[reference.md](reference.md).
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: React Editor Setup
+### Pattern 1: React editor setup
 
-The minimal setup uses `LexicalComposer` wrapping plugin components. Each plugin is a React component that accesses the editor via context.
+`LexicalComposer` takes one `initialConfig` and wraps the plugins as children. Define the config
+outside the component so it is not rebuilt every render.
 
 ```typescript
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-
-const EDITOR_NAMESPACE = "MyEditor";
-
-const theme = {
-  paragraph: "editor-paragraph",
-  text: {
-    bold: "editor-text-bold",
-    italic: "editor-text-italic",
-  },
-};
-
-function onError(error: Error) {
-  console.error(error);
-}
-
 const initialConfig = {
-  namespace: EDITOR_NAMESPACE,
-  theme,
-  onError,
-  nodes: [], // Register custom nodes here
+  namespace: "MyEditor",
+  theme, // class names per node type
+  onError, // rethrow, or report — see red flags
+  nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode], // every node the plugins need
 };
 
-export function Editor() {
-  return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <RichTextPlugin
-        contentEditable={<ContentEditable className="editor-input" />}
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      <HistoryPlugin />
-    </LexicalComposer>
-  );
-}
+<LexicalComposer initialConfig={initialConfig}>
+  <RichTextPlugin contentEditable={<ContentEditable />} ErrorBoundary={LexicalErrorBoundary} />
+  <HistoryPlugin />
+</LexicalComposer>;
 ```
 
-**Why good:** Plugins compose as children, initialConfig centralizes node registration and theming, error boundary catches update errors gracefully
-
-See [examples/core.md](examples/core.md) for the full setup with OnChangePlugin, AutoFocusPlugin, and custom plugins.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: The `$`-Function Convention and Update Lifecycle
+### Pattern 2: The update lifecycle
 
-All state reads and mutations use `$`-prefixed functions inside `editor.update()` (mutable) or `editor.read()` (read-only) closures. This ensures state consistency and prevents stale reads.
+`editor.update()` mutates, `editor.read()` observes, and the `$` prefix marks the functions that
+need one of them open.
 
 ```typescript
-import { $getRoot, $createParagraphNode, $createTextNode } from "lexical";
-
-// Writing: editor.update() clones state, applies changes, reconciles DOM
 editor.update(() => {
-  const root = $getRoot();
   const paragraph = $createParagraphNode();
-  const text = $createTextNode("Hello world");
-  paragraph.append(text);
-  root.append(paragraph);
+  paragraph.append($createTextNode("Hello world"));
+  $getRoot().append(paragraph);
 });
 
-// Reading: editor.read() provides safe read-only access
-editor.read(() => {
-  const root = $getRoot();
-  const textContent = root.getTextContent();
-});
+editor.read(() => $getRoot().getTextContent());
 ```
 
-**Why good:** Immutable state model prevents race conditions, `$` prefix signals context requirement (like React hooks), update batching minimizes DOM reconciliation
+Updates batch synchronously and reconcile asynchronously; pass `{ discrete: true }` when the DOM has
+to be committed before the next statement reads it.
 
-**Gotcha:** `$`-functions called outside update/read closures throw runtime errors. There is no compile-time check.
+Full code: [examples/serialization.md](examples/serialization.md)
 
 ---
 
-### Pattern 3: Command System
+### Pattern 3: The command system
 
-Commands are the communication bus between plugins, toolbars, and the editor core. Create typed commands, dispatch them from UI, and register listeners with priorities.
+Commands carry a typed payload and are dispatched from anywhere. Listeners register at a priority
+and return `true` to consume the command.
 
 ```typescript
-import {
-  createCommand,
-  COMMAND_PRIORITY_EDITOR,
-  COMMAND_PRIORITY_LOW,
-  type LexicalCommand,
-} from "lexical";
-
-// Create a typed command
 export const INSERT_IMAGE_COMMAND: LexicalCommand<{
   src: string;
   alt: string;
 }> = createCommand("INSERT_IMAGE_COMMAND");
 
-// Dispatch from toolbar or UI
 editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
   src: "/image.png",
   alt: "Photo",
 });
 ```
 
-**Priority levels** (higher number = runs first, can intercept):
-
-| Priority                    | Value | Use case                           |
-| --------------------------- | ----- | ---------------------------------- |
-| `COMMAND_PRIORITY_CRITICAL` | 4     | Emergency overrides                |
-| `COMMAND_PRIORITY_HIGH`     | 3     | Table navigation, critical plugins |
-| `COMMAND_PRIORITY_NORMAL`   | 2     | Standard plugin behavior           |
-| `COMMAND_PRIORITY_LOW`      | 1     | Default for most plugins           |
-| `COMMAND_PRIORITY_EDITOR`   | 0     | Base editor behavior               |
-
-**Return `true`** from a listener to stop propagation to lower-priority listeners.
-
-See [examples/core.md](examples/core.md) for the full command registration pattern with cleanup.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Custom Plugins (React)
+### Pattern 4: A plugin as a React component
 
-A plugin is a React component that registers commands, transforms, or listeners via `useLexicalComposerContext`. Always return cleanup functions from `useEffect`.
+The plugin reads the editor from context and owns its registrations for the life of the component.
 
 ```typescript
-import { useEffect } from "react";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  COMMAND_PRIORITY_LOW,
-  FORMAT_TEXT_COMMAND,
-  type TextFormatType,
-} from "lexical";
-
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
-
-  const handleFormat = (format: TextFormatType) => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
-  };
-
   return (
-    <div className="toolbar">
-      <button onClick={() => handleFormat("bold")} type="button">
-        Bold
-      </button>
-      <button onClick={() => handleFormat("italic")} type="button">
-        Italic
-      </button>
-    </div>
+    <button type="button" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}>
+      Bold
+    </button>
   );
 }
 ```
 
-**Why good:** Plugin accesses editor through context hook, dispatches built-in FORMAT_TEXT_COMMAND, renders null or UI as needed
-
-See [examples/core.md](examples/core.md) for plugins that register commands with useEffect cleanup.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Node Transforms
+### Pattern 5: Node transforms
 
-Transforms automatically mutate nodes when conditions are met. They run before DOM reconciliation, making them the most efficient way to react to content changes.
+A transform runs on every dirty node of its type before reconciliation, which makes it the cheapest
+place to react to content. The precondition is what stops it re-triggering itself.
 
 ```typescript
-import { TextNode } from "lexical";
-
-// Transform: auto-capitalize first letter of paragraphs
 editor.registerNodeTransform(TextNode, (textNode) => {
   const text = textNode.getTextContent();
-  // CRITICAL: Precondition prevents infinite loop
   if (text.length > 0 && text[0] !== text[0].toUpperCase()) {
     textNode.setTextContent(text[0].toUpperCase() + text.slice(1));
   }
 });
 ```
 
-**Why preconditions matter:** Without the check, `setTextContent` marks the node dirty, re-triggering the transform infinitely.
+Leaf nodes transform first, then elements, then the root, and the whole cascade produces a single
+DOM reconciliation.
 
-**Transform execution order:** Leaf nodes first, then element nodes, then RootNode. Multiple transforms produce a single DOM reconciliation.
-
-See [examples/core.md](examples/core.md) for transform registration with cleanup and use cases.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 6: Custom Nodes
+### Pattern 6: Custom nodes
 
-Lexical provides three extendable base nodes for custom content types:
-
-| Base Node          | Purpose                                       | Key method                       |
-| ------------------ | --------------------------------------------- | -------------------------------- |
-| `ElementNode`      | Container nodes (blockquote, callout)         | `createDOM()`, `updateDOM()`     |
-| `TextNode`         | Styled text variants (colored text, mentions) | `createDOM()`, `updateDOM()`     |
-| `DecoratorNode<T>` | Embedded components (images, videos, polls)   | `decorate()` returns a component |
-
-Every custom node requires:
-
-1. `static getType()` -- unique string identifier
-2. `static clone(node)` -- create copy for state snapshots
-3. `createDOM()` -- return the HTMLElement representation
-4. `updateDOM()` -- return `false` if existing DOM can be reused
-5. `exportJSON()` / `static importJSON()` -- serialization
-6. Registration in `initialConfig.nodes`
+Every custom node needs `static getType()`, `static clone()`, `createDOM()`, `updateDOM()`,
+`exportJSON()` / `static importJSON()`, and an entry in `initialConfig.nodes`. Private properties
+take a double-underscore prefix so minifiers leave them alone, and every one of them has to be
+JSON-serializable.
 
 ```typescript
-import { DecoratorNode } from "lexical";
-import type { LexicalNode, NodeKey, EditorConfig } from "lexical";
-
 export class ImageNode extends DecoratorNode<JSX.Element> {
   __src: string;
-  __alt: string;
 
   static getType(): string {
     return "image";
   }
-
   static clone(node: ImageNode): ImageNode {
-    return new ImageNode(node.__src, node.__alt, node.__key);
+    return new ImageNode(node.__src, node.__key);
   }
-
-  constructor(src: string, alt: string, key?: NodeKey) {
-    super(key);
-    this.__src = src;
-    this.__alt = alt;
-  }
-
-  createDOM(_config: EditorConfig): HTMLElement {
-    return document.createElement("div");
-  }
-
   updateDOM(): boolean {
-    return false;
+    return false; // the existing element can be reused
   }
-
   decorate(): JSX.Element {
-    return <img src={this.__src} alt={this.__alt} />;
+    return <img src={this.__src} alt="" />;
   }
 }
 ```
 
-**Property convention:** Prefix private properties with `__` (double underscore) to prevent minification issues. All properties must be JSON-serializable.
+Reach a node through its `$createXxxNode()` factory rather than `new`, so `$applyNodeReplacement`
+can run.
 
-See [examples/custom-nodes.md](examples/custom-nodes.md) for complete ElementNode, TextNode, DecoratorNode examples with serialization and the NodeState API.
+Full code: [examples/custom-nodes.md](examples/custom-nodes.md)
 
 ---
 
-### Pattern 7: EditorState Serialization
+### Pattern 7: Serialization
 
-Lexical supports JSON (preferred for persistence) and HTML (for display or interop).
+JSON is the persistence format — it round-trips the whole tree including custom node properties.
+HTML is for display and interop, and it is lossy.
 
 ```typescript
-import { $generateHtmlFromNodes } from "@lexical/html";
+const jsonString = JSON.stringify(editor.getEditorState().toJSON());
 
-// JSON: lossless round-trip
-const json = editor.getEditorState().toJSON();
-const jsonString = JSON.stringify(json);
+editor.setEditorState(editor.parseEditorState(jsonString).clone(null));
 
-// Restore from JSON
-const editorState = editor.parseEditorState(jsonString);
-editor.setEditorState(editorState);
-
-// HTML: for rendering or export
-editor.read(() => {
-  const html = $generateHtmlFromNodes(editor, null);
-});
+editor.read(() => $generateHtmlFromNodes(editor, null));
 ```
 
-**JSON vs HTML:** JSON preserves the full node tree and is the recommended format for persistence. HTML is lossy (loses custom node properties) but useful for display or email content.
-
-See [examples/serialization.md](examples/serialization.md) for complete import/export patterns, HTML-to-Lexical conversion, and headless editor usage.
+Full code: [examples/serialization.md](examples/serialization.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Which Node Type to Extend
-
-```
-Does your content contain child nodes?
-├─ YES → ElementNode (paragraphs, blockquotes, callouts)
-└─ NO → Is it text with special formatting or behavior?
-    ├─ YES → TextNode (colored text, mentions)
-    └─ NO → Is it an embedded component (image, video, widget)?
-        ├─ YES → DecoratorNode (renders arbitrary UI)
-        └─ NO → Re-evaluate: most content fits one of the above
-```
-
-### Plugin vs Transform vs Listener
-
-```
-Need to react to content changes?
-├─ YES → Does the reaction modify nodes?
-│   ├─ YES → Transform (most efficient, runs before DOM reconciliation)
-│   └─ NO → Update listener (read-only, runs after reconciliation)
-└─ NO → Need to handle user actions or toolbar clicks?
-    ├─ YES → Command (typed, priority-based, interceptable)
-    └─ NO → Listener (registerUpdateListener for state observation)
-```
-
-### Command Priority Selection
-
-```
-Is this the base editor behavior?
-├─ YES → COMMAND_PRIORITY_EDITOR (0)
-└─ NO → Is this a standard plugin?
-    ├─ YES → COMMAND_PRIORITY_LOW (1) or COMMAND_PRIORITY_NORMAL (2)
-    └─ NO → Must it override other plugins (e.g., table navigation)?
-        ├─ YES → COMMAND_PRIORITY_HIGH (3)
-        └─ NO → Emergency override only?
-            └─ YES → COMMAND_PRIORITY_CRITICAL (4)
-```
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Calling `$`-prefixed functions outside `editor.update()` or `editor.read()` -- causes runtime errors with no compile-time warning
-- Missing node registration in `initialConfig.nodes` -- custom nodes silently fail or throw when the editor encounters them
-- Transforms without preconditions -- unconditional mutations retrigger the transform infinitely, freezing the editor
-- Using `editor.update()` inside an update listener to modify state -- breaks undo/redo history and causes extra renders; use transforms instead
-- Forgetting `useEffect` cleanup for register calls -- leaks listeners, causes stale references after component unmount
+- A `$`-function called outside `editor.update()` / `editor.read()` — throws, with no compile-time
+  warning — move the call inside the closure
+- A custom node missing from `initialConfig.nodes` — the editor throws or drops the content when it
+  meets the node — register it in the same place the plugin is added
+- A transform with no precondition — the mutation marks the node dirty, re-triggering the transform
+  until the editor freezes — guard on the condition the mutation removes
+- A `register*` call whose unsubscribe is dropped — one leaked listener per render and stale
+  references after unmount — return it from `useEffect`
+- A node property holding a function, `Map` or `Set` — serialization breaks quietly — keep every
+  property JSON-serializable
+- Two nodes sharing a `getType()` string — deserialization resolves the wrong class — namespace the
+  type
+- `new MyNode()` instead of `$createMyNode()` — bypasses `$applyNodeReplacement`, so any registered
+  replacement never runs
+- A single-underscore node property — minifiers mangle it — use `__`
+- Direct DOM mutation of editor content — bypasses the reconciler and desyncs state from DOM — go
+  through nodes and commands
+- `editor.update()` called from inside an update listener — breaks undo/redo history and forces an
+  extra render — use a transform
+- `console.log` in `onError` with no rethrow — swallows every editor error — rethrow or report it
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Direct DOM manipulation instead of using the node/command system -- bypasses the reconciler, causes state-DOM desync
-- Storing non-JSON-serializable values in node properties (functions, Maps, Sets) -- breaks serialization silently
-- Using `editor.setEditorState()` without cloning -- can cause unexpected focus changes; use `editorState.clone(null)` to prevent auto-focus
-- Naming custom node `getType()` with a non-unique string -- collides with other nodes, causes deserialization failures
-- Using `new MyNode()` directly instead of `$createMyNode()` factory -- bypasses the node replacement system (`$applyNodeReplacement`)
-- Single underscore node properties (`_value` instead of `__value`) -- may be mangled by minifiers, breaking node access
-- `console.log` in `onError` callback with no rethrow -- silently swallows editor errors; rethrow or send to error tracking
-
-**Gotchas & Edge Cases:**
-
-- `editor.update()` batches synchronously but reconciles asynchronously -- use `{ discrete: true }` option when you need synchronous DOM commit (e.g., before reading DOM measurements)
-- Node property names must use `__` prefix convention -- single underscore properties may be mangled by minifiers
-- `DecoratorNode.decorate()` returns a component that Lexical renders outside the normal React tree -- state management in decorator components needs care
-- The `onError` callback in `initialConfig` receives errors from update closures -- if you don't rethrow, Lexical tries to recover gracefully
-- `TextNode` modes: `"token"` makes text immutable (like a chip), `"segmented"` deletes word-by-word
-- CSS `transition` does not work for animations based on node removal -- Lexical reconciles by removing DOM nodes, not hiding them
-- The NodeState API (v0.26+) is experimental -- APIs may change without extended deprecation
+- Updates batch synchronously but reconcile asynchronously, so a DOM measurement taken straight
+  after an update reads the old layout unless the update passed `{ discrete: true }`
+- `setEditorState` steals focus unless the state is passed through `editorState.clone(null)`
+- `DecoratorNode.decorate()` renders its component outside the normal React tree, so state and
+  context in it need care
+- `onError` that does not rethrow lets Lexical attempt its own recovery, which can mask a broken
+  node class
+- `TextNode` modes change deletion: `"token"` makes the text an immutable chip, `"segmented"`
+  deletes it word by word
+- CSS `transition` never fires on node removal, because the reconciler removes the element rather
+  than hiding it
+- The NodeState API (v0.26+) is experimental and can change without an extended deprecation
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST call `$`-prefixed functions (`$getRoot`, `$getSelection`, `$createTextNode`) ONLY inside `editor.update()` or `editor.read()` closures -- calling them outside throws runtime errors)**
-
-**(You MUST register custom nodes in the `nodes` array of `initialConfig` -- unregistered nodes cause silent failures or runtime errors)**
-
-**(You MUST return a cleanup function from `useEffect` when registering commands, transforms, or listeners -- Lexical register methods return unsubscribe functions)**
-
-**(You MUST include preconditions in transforms to prevent infinite loops -- a transform that unconditionally modifies its target node re-triggers itself)**
-
-**Failure to follow these rules will cause runtime errors, memory leaks, frozen editors, and broken undo/redo history.**
-
-</critical_reminders>

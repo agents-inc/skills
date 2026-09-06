@@ -1,6 +1,8 @@
 # TipTap - Custom Extensions
 
-> Custom nodes, marks, extensions, input rules, keyboard shortcuts, and React node views. See [core.md](core.md) for editor setup, [menus.md](menus.md) for bubble/floating menus.
+> Custom nodes and marks, input and paste rules, keyboard shortcuts, node views, extending
+> built-ins. See [SKILL.md](../SKILL.md) for which extension type to reach for, [core.md](core.md)
+> for editor setup, [menus.md](menus.md) for menus.
 
 ---
 
@@ -88,7 +90,9 @@ export const Callout = Node.create({
 });
 ```
 
-**Why good:** `declare module` adds type-safe commands to editor, `mergeAttributes` preserves user-added attributes, `data-*` attributes for HTML serialization, keyboard shortcut for quick access, configurable options with `.configure()`
+**Why good:** the `declare module` block is what makes `editor.commands.toggleCallout()` type-check
+at every call site; the attribute round-trips through matching `parseHTML`/`renderHTML` on
+`data-callout-type`, and `mergeAttributes` keeps whatever the caller passed
 
 ### Bad Example
 
@@ -107,7 +111,9 @@ const BadCallout = Node.create({
 });
 ```
 
-**Why bad:** missing `parseHTML` means content cannot be restored from saved data, no `mergeAttributes` drops user attributes, hardcoded `class` instead of data attributes, no commands or keyboard shortcuts for inserting the node
+**Why bad:** without `parseHTML` the node renders once and can never be parsed back, so saved
+content loses it; without `mergeAttributes` the hardcoded `class` overwrites anything the caller
+passed; and with no command there is no way to insert the node at all
 
 ---
 
@@ -186,7 +192,9 @@ export const Mention = Node.create({
 });
 ```
 
-**Why good:** `atom: true` makes the mention a single selectable unit, `renderText` provides plain-text fallback for `getText()`, custom backspace deletes entire mention, type-safe command declaration
+**Why good:** `atom: true` makes the mention one unit rather than editable text, `renderText` is what
+`getText()` uses so search indexes see `@name` instead of nothing, and the backspace handler returns
+`false` whenever the node before the cursor is not a mention, leaving normal deletion alone
 
 ---
 
@@ -296,12 +304,13 @@ export const CustomHighlight = Mark.create({
 });
 ```
 
-**Why good:** input rule converts `==text==` to highlight as user types (regex ends with `$`), paste rule applies on paste (uses `/g` flag), configurable multicolor via options, all three commands (set/toggle/unset) for full control
+**Why good:** `addAttributes` returns `{}` when `multicolor` is off, so the schema carries no
+attribute the editor cannot use; set, toggle and unset are all present, which a toolbar and a
+keyboard shortcut need between them.
 
-**Input rule vs paste rule regex:**
-
-- Input rules: regex must end with `$` (matches at cursor position as you type)
-- Paste rules: regex must NOT end with `$` but must use `/g` (matches all occurrences in pasted content)
+**Input rule vs paste rule regex:** an input rule matches at the cursor, so its regex ends with `$`;
+a paste rule matches every occurrence in the pasted text, so its regex carries `/g` and must not end
+with `$`.
 
 ---
 
@@ -406,7 +415,10 @@ export const Counter = Node.create({
 });
 ```
 
-**Why good:** `NodeViewWrapper` is required as outer element, `contentEditable={false}` on interactive controls prevents TipTap from capturing button clicks, `NodeViewContent` renders editable area, `selected` prop for visual feedback, `deleteNode` for self-removal, `updateAttributes` persists changes to document
+**Why good:** `updateAttributes` writes through a transaction, so the count is part of the document
+and survives undo and serialization rather than living in component state; `contentEditable={false}`
+keeps the editor from treating the buttons as text, and `NodeViewContent` marks the one region that
+is editable
 
 ---
 
@@ -441,7 +453,8 @@ export const HeadingWithId = Heading.extend({
 });
 ```
 
-**Why good:** `this.parent?.()` preserves all existing behavior from the base extension, only adds what's new -- avoids reimplementing the entire extension
+**Why good:** `this.parent?.()` spreads the base extension's own result, so omitting it silently
+replaces every attribute and shortcut Heading already defined rather than adding to them
 
 ---
 
@@ -494,4 +507,6 @@ export const WordCount = Extension.create({
 // editor.storage.wordCount.words
 ```
 
-**Why good:** `addStorage` provides reactive state accessible from components, `filterTransaction` enforces character limit at the ProseMirror level, no schema changes needed for functionality-only extensions
+**Why good:** `filterTransaction` rejects the transaction before it applies, which is why the limit
+cannot be exceeded even momentarily; `addStorage` gives components a place to read the counts from
+without a schema change

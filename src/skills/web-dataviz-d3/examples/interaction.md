@@ -1,22 +1,17 @@
-# D3.js - Interaction Examples
+# D3.js — Interaction Examples
 
-> Transitions, zoom, brush, drag, and tooltips. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
-
-**Related examples:**
-
-- [core.md](core.md) - Selections, data joins, scales, axes, shapes
-- [advanced.md](advanced.md) - Force layouts, geo projections, framework integration
+> Transitions, zoom, brush, drag, tooltips. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for the easing table, [core.md](core.md) for selections and scales, [advanced.md](advanced.md) for force, geo and framework integration.
 
 ---
 
 ## Pattern 1: Transitions — Animated Updates
 
-### Good Example - Animated Bar Chart Update
+### Good — animated bar chart update
 
 ```typescript
-import "d3-transition"; // MUST import for side-effect prototype extension
+import "d3-transition"; // side-effect import: adds .transition() to the selection prototype
 import { select } from "d3-selection";
-import { easeCubicOut, easeExpOut } from "d3-ease";
+import { easeCubicOut } from "d3-ease";
 
 const TRANSITION_DURATION_MS = 750;
 const STAGGER_DELAY_MS = 30;
@@ -65,9 +60,9 @@ function updateBars(svgEl: SVGSVGElement, data: BarData[]): void {
 }
 ```
 
-**Why good:** `d3-transition` imported for side effect, staggered enter with `.delay()`, exiting bars shrink to baseline before removal, easing makes motion feel natural
+**Why good:** entering bars grow from the baseline with an index-proportional `.delay()`, updating bars move directly, and exiting bars shrink back to the baseline before `.remove()` detaches them
 
-### Chained Transitions
+### Chained transitions
 
 ```typescript
 const FIRST_PHASE_MS = 300;
@@ -83,60 +78,44 @@ select(element)
   .attr("r", FINAL_RADIUS);
 ```
 
-**Why good:** chained `.transition()` runs sequentially — second transition starts after first ends, no manual setTimeout needed
+**Why good:** a `.transition()` chained onto a transition starts when the previous one ends, so phases sequence without `setTimeout`
 
-### Common Easing Functions
+Easing functions are listed in [reference.md](../reference.md).
 
-```typescript
-import {
-  easeLinear,
-  easeCubicOut,
-  easeCubicInOut,
-  easeElasticOut,
-  easeBounceOut,
-  easeExpOut,
-} from "d3-ease";
-
-// easeLinear      — constant speed (mechanical)
-// easeCubicOut    — fast start, slow end (most common for data transitions)
-// easeCubicInOut  — slow start, fast middle, slow end (page transitions)
-// easeElasticOut  — springy overshoot (playful UI)
-// easeBounceOut   — bounce at end (attention-grabbing)
-// easeExpOut      — very fast deceleration (snappy)
-```
-
-### Bad Example - Transition Without Import
+### Bad — transition without the import
 
 ```typescript
-// Bad: selection.transition() is undefined without the import
-// import "d3-transition";  // forgot this import
+// import "d3-transition";  // omitted
 
 select(svg)
   .selectAll("rect")
   .data(data)
   .join("rect")
   .transition() // TypeError: .transition is not a function
-  .duration(500) // magic number
-  .attr("width", (d) => d);
+  .duration(TRANSITION_DURATION_MS)
+  .attr("width", (d) => xScale(d.value));
 ```
 
-**Why bad:** `d3-transition` extends the selection prototype via side effect — must be imported even if no named exports are used, magic duration
+**Why bad:** `d3-transition` adds `.transition()` to the selection prototype as a side effect, so it has to be imported even when nothing from it is named — and a bundler configured to drop side-effect-free imports will remove it if the package is misdeclared.
 
 ---
 
 ## Pattern 2: Zoom and Pan
 
-### Good Example - Geometric Zoom on Chart
+### Good — geometric zoom on a chart
 
 ```typescript
 import { zoom, zoomIdentity } from "d3-zoom";
 import { select } from "d3-selection";
-import type { D3ZoomEvent } from "d3-zoom";
+import type { ZoomBehavior, D3ZoomEvent } from "d3-zoom";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 20;
 
-function setupZoom(svgEl: SVGSVGElement, chartGroup: SVGGElement): void {
+function setupZoom(
+  svgEl: SVGSVGElement,
+  chartGroup: SVGGElement,
+): ZoomBehavior<SVGSVGElement, unknown> {
   const zoomBehavior = zoom<SVGSVGElement, unknown>()
     .scaleExtent([MIN_ZOOM, MAX_ZOOM])
     .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
@@ -145,10 +124,13 @@ function setupZoom(svgEl: SVGSVGElement, chartGroup: SVGGElement): void {
     });
 
   select(svgEl).call(zoomBehavior);
+  return zoomBehavior; // the caller needs it to drive zoom programmatically
 }
 
-// Programmatic zoom reset
-function resetZoom(svgEl: SVGSVGElement): void {
+function resetZoom(
+  svgEl: SVGSVGElement,
+  zoomBehavior: ZoomBehavior<SVGSVGElement, unknown>,
+): void {
   select(svgEl)
     .transition()
     .duration(TRANSITION_DURATION_MS)
@@ -156,9 +138,9 @@ function resetZoom(svgEl: SVGSVGElement): void {
 }
 ```
 
-**Why good:** transform applied to inner `<g>` group (not SVG root — that would clip content), typed generics, `scaleExtent` prevents over-zoom, programmatic reset with smooth transition
+**Why good:** the transform lands on the inner `<g>` rather than the SVG root, `scaleExtent` bounds the range, and `setupZoom` returns the behaviour so `resetZoom` has the same instance to drive — `zoomBehavior.transform` on a different instance resets nothing
 
-### Semantic Zoom (Rescale Axes)
+### Semantic zoom — rescale the axes
 
 ```typescript
 const zoomBehavior = zoom<SVGSVGElement, unknown>()
@@ -177,24 +159,23 @@ const zoomBehavior = zoom<SVGSVGElement, unknown>()
   });
 ```
 
-**Why good:** axes rescale with zoom level (labels update), data elements reposition precisely, no geometric distortion of shapes
+**Why good:** the tick labels update to the zoomed domain and the marks reposition at full resolution — geometric zoom instead scales the rendered pixels, so strokes thicken and text stretches
 
-### Bad Example - Transform on SVG Root
+### Bad — transform on the SVG root
 
 ```typescript
-// Bad: transforming the SVG root clips content when panning
 const zoomBehavior = zoom().on("zoom", (event) => {
-  select("svg").attr("transform", event.transform); // clips!
+  select("svg").attr("transform", event.transform); // clips
 });
 ```
 
-**Why bad:** transforming the SVG root moves the entire SVG viewport, clipping content outside the original bounds — use an inner `<g>` group instead
+**Why bad:** the root SVG establishes the viewport, so transforming it moves the whole element rather than its contents — panned content leaves the original bounds and is clipped away.
 
 ---
 
 ## Pattern 3: Brush Selection
 
-### Good Example - Brush for Range Selection
+### Good — brush for range selection
 
 ```typescript
 import { brushX } from "d3-brush";
@@ -221,12 +202,11 @@ function setupBrush(
 }
 ```
 
-**Why good:** `.extent()` constrains brush to chart area, `.invert()` converts pixel range back to data domain, null check for cleared brush, callback pattern for decoupled filtering
+**Why good:** `.extent()` confines the brushable region to the plotting area, `.invert()` turns the pixel range back into data values, and the null check handles a cleared brush — which fires `end` with `event.selection === null` rather than not firing
 
-### Clear Brush Programmatically
+### Clear the brush programmatically
 
 ```typescript
-// Clear brush selection
 select(".brush").call(brush.move, null);
 ```
 
@@ -234,7 +214,7 @@ select(".brush").call(brush.move, null);
 
 ## Pattern 4: Drag Interaction
 
-### Good Example - Draggable Elements
+### Good — draggable elements
 
 ```typescript
 import { drag } from "d3-drag";
@@ -273,25 +253,23 @@ function setupDrag(svgEl: SVGSVGElement): void {
 }
 ```
 
-**Why good:** typed drag events and element generics, `.raise()` brings dragged element to front (prevents occlusion), visual feedback on drag start/end, `function` keyword required for `this` context in D3 event handlers
+**Why good:** `.raise()` moves the dragged element to the end of its parent so it draws above its siblings, and the handlers use `function` because D3 binds the element to `this`
 
-### Bad Example - Arrow Function in D3 Event Handler
+### Bad — arrow function where the handler needs `this`
 
 ```typescript
-// Bad: arrow function loses `this` binding
 const dragBehavior = drag().on("drag", (event) => {
-  select(this) // `this` is lexical scope, not the DOM element!
-    .attr("cx", event.x);
+  select(this).attr("cx", event.x); // `this` is the enclosing scope
 });
 ```
 
-**Why bad:** D3 event handlers use `this` to reference the DOM element — arrow functions capture lexical `this` instead, causing `select(this)` to select the wrong element. Use `function` keyword or `select(event.currentTarget)`.
+**Why bad:** D3 calls handlers with the element as `this`, and an arrow function keeps the lexical `this` instead — so `select(this)` selects the module scope or `undefined`, not the dragged element. Use `function`, or `select(event.currentTarget)`.
 
 ---
 
 ## Pattern 5: Tooltips
 
-### Good Example - HTML Tooltip Positioned by Mouse
+### Good — HTML tooltip positioned by the mouse
 
 ```typescript
 const TOOLTIP_OFFSET_X = 12;
@@ -323,9 +301,9 @@ select(svgEl)
   });
 ```
 
-**Why good:** HTML tooltip (not SVG text) supports rich formatting, `pointer-events: none` prevents tooltip from intercepting mouse events, positioned with page coordinates, opacity toggle for show/hide
+**Why good:** an HTML div takes rich markup where SVG `<text>` would need manual line breaking, and `pointer-events: none` stops the tooltip from sitting under the cursor and firing its own `mouseleave` on the mark beneath
 
-### SVG Title Tooltip (Simple Alternative)
+### `<title>` — the no-CSS alternative
 
 ```typescript
 // Native browser tooltip via <title> element
@@ -339,4 +317,4 @@ svg
   .text((d) => `${d.label}: ${d.value}`);
 ```
 
-**When to use:** quick prototyping where custom styling isn't needed — browser handles positioning and rendering
+**When to use:** when the browser's own positioning and delay are acceptable. A `<title>` child is also what screen readers announce for the shape, which a positioned div is not.

@@ -1,6 +1,8 @@
 # Leaflet Advanced Patterns
 
-> Related: [core.md](core.md) for map setup, markers, GeoJSON, and events
+> Custom controls, clustering, TypeScript, canvas rendering, bounds and viewport. See
+> [SKILL.md](../SKILL.md) for the decisions, [core.md](core.md) for map setup, markers, GeoJSON and
+> events.
 
 ---
 
@@ -66,10 +68,14 @@ infoControl({ position: "topright", title: "Details" }).addTo(map);
 
 **Key rules:**
 
-- Call `L.DomEvent.disableClickPropagation(container)` to prevent map clicks through the control
-- Call `L.DomEvent.disableScrollPropagation(container)` if the control has scrollable content
-- Use `L.DomEvent.on()` / `L.DomEvent.off()` for control event binding (not native addEventListener)
-- Use `L.DomUtil.create(tagName, className, parent)` to build the DOM hierarchy
+- `L.DomEvent.disableClickPropagation(container)`, or a click on the control is also a click on the
+  map beneath it
+- `L.DomEvent.disableScrollPropagation(container)` where the control scrolls, or scrolling it zooms
+  the map
+- `L.DomEvent.on()` / `.off()` rather than `addEventListener`, so Leaflet's own teardown reaches the
+  handler
+- `L.DomUtil.create(tagName, className, parent)` to build the hierarchy, since it appends as it
+  creates
 
 ### Control with Updatable Content
 
@@ -142,7 +148,7 @@ const clusterGroup = L.markerClusterGroup({
   animate: true,
 });
 
-// Bulk add is more efficient than individual addLayer calls
+// addLayers once beats addLayer per marker -- each call re-clusters
 const markers = locations.map((loc) =>
   L.marker([loc.lat, loc.lng]).bindPopup(loc.name),
 );
@@ -330,7 +336,8 @@ const SearchControl = L.Control.extend({
 
 ## Pattern 4: Canvas Rendering for Vector Layers
 
-When displaying many vector shapes (circles, polylines, polygons), use the canvas renderer instead of the default SVG renderer for better performance.
+The default renderer gives every vector shape its own SVG element. Past roughly a thousand shapes
+that stops scaling, and the canvas renderer draws them all into one element instead.
 
 ### Enable Canvas Globally
 
@@ -357,13 +364,11 @@ locations.forEach((loc) => {
 });
 ```
 
-**When to use canvas:**
+**When to use canvas:** a thousand or more circles, polylines or polygons, or many overlapping
+shapes where redraw cost matters more than crisp edges.
 
-- Rendering 1000+ circles, polylines, or polygons
-- Data visualization with many overlapping shapes
-- Performance is more important than crisp SVG rendering
-
-**Limitation:** Canvas-rendered layers do not support CSS styling or SVG filters. Hover styles must be applied via Leaflet events, not CSS pseudo-classes.
+**Limitation:** a canvas-rendered layer has no element to style, so CSS rules and SVG filters do not
+reach it and hover effects have to come from Leaflet events calling `setStyle`.
 
 ---
 

@@ -1,17 +1,12 @@
-# D3.js - Advanced Examples
+# D3.js — Advanced Examples
 
-> Force layouts, geographic projections, and framework integration. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
-
-**Related examples:**
-
-- [core.md](core.md) - Selections, data joins, scales, axes, shapes
-- [interaction.md](interaction.md) - Transitions, zoom, brush, drag, tooltips
+> Force layouts, geographic projections, framework integration, TypeScript typing. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for lookup tables, [core.md](core.md) for selections and scales, [interaction.md](interaction.md) for transitions and behaviours.
 
 ---
 
 ## Pattern 1: Force-Directed Graph Layout
 
-### Good Example - Complete Force Graph with Drag
+### Good — force graph with drag and cleanup
 
 ```typescript
 import {
@@ -119,54 +114,43 @@ function renderForceGraph(
 }
 ```
 
-**Why good:** typed `SimulationNodeDatum` and `SimulationLinkDatum` generics, `.alphaTarget()` warms simulation during drag, `fx`/`fy` pins nodes during drag (released on drag end), cleanup function stops the async simulation on unmount
+**Why good:** extending `SimulationNodeDatum` is what gives the nodes their `x`/`y`/`fx`/`fy` fields; `.alphaTarget(0.3).restart()` keeps the simulation warm while a node is held, and setting `fx`/`fy` pins it until drag end releases them to `null`; the returned cleanup stops the animation frame loop
 
-### Key Force Types
+### The forces
 
 ```typescript
-// Repulsion between all nodes (negative = repel, positive = attract)
-forceManyBody().strength(-300);
-
-// Attract connected nodes together
+forceManyBody().strength(-300); // repulsion between every pair; positive attracts
 forceLink(links)
   .id((d) => d.id)
-  .distance(80);
-
-// Pull everything toward a center point
-forceCenter(width / 2, height / 2);
-
-// Prevent node overlap
-forceCollide(nodeRadius);
-
-// Pull nodes toward specific x/y positions
-forceX(targetX).strength(0.1);
+  .distance(80); // springs along the edges
+forceCenter(width / 2, height / 2); // translates the whole graph to a centre
+forceCollide(nodeRadius); // hard radius, stops overlap
+forceX(targetX).strength(0.1); // pull toward a position — useful for grouping
 forceY(targetY).strength(0.1);
 ```
 
-### Bad Example - No Simulation Cleanup
+### Bad — no cleanup
 
 ```typescript
-// Bad: simulation keeps running after component unmounts
 function renderGraph(svg, nodes, links) {
-  const simulation = forceSimulation(nodes)
+  forceSimulation(nodes)
     .force("charge", forceManyBody())
     .on("tick", () => {
-      /* update positions */
+      /* write positions */
     });
-  // No cleanup — simulation runs indefinitely via requestAnimationFrame
 }
 ```
 
-**Why bad:** `forceSimulation` uses `requestAnimationFrame` internally — without `.stop()` on unmount, it causes memory leaks and updates to detached DOM elements
+**Why bad:** the simulation drives itself with `requestAnimationFrame` and only stops when `alpha` decays or `.stop()` is called. Unmount the component and the tick handler keeps writing attributes on detached elements, holding the whole node array and its DOM alive.
 
 ---
 
 ## Pattern 2: Geographic Projections and Choropleth Maps
 
-### Good Example - Choropleth Map
+### Good — choropleth map
 
 ```typescript
-import { geoNaturalEarth1, geoPath, geoMercator } from "d3-geo";
+import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { select } from "d3-selection";
 import { scaleSequential } from "d3-scale";
 import { interpolateBlues } from "d3-scale-chromatic";
@@ -217,28 +201,23 @@ function renderChoropleth(
 }
 ```
 
-**Why good:** `fitSize()` auto-scales projection to container (no manual scale/translate), `geoNaturalEarth1` is a good default for world maps, sequential color scale with `interpolateBlues`, fallback color for missing data, typed GeoJSON features
+**Why good:** `fitSize()` derives scale and translate from the data's own bounding box, so the map fits without hand-tuned constants; the distinct grey for a region absent from the map keeps "no data" visually separate from "lowest value", which the colour ramp's own light end would not
 
-### Common Projections
+### Configuring a projection
 
 ```typescript
-import {
-  geoMercator, // web maps, conformal (shape-preserving)
-  geoNaturalEarth1, // world maps, pleasant shape/area compromise
-  geoAlbersUsa, // US maps with Alaska/Hawaii insets
-  geoOrthographic, // globe view (3D appearance)
-  geoEqualEarth, // world maps, equal-area
-} from "d3-geo";
-
-// All projections support:
 const projection = geoMercator()
-  .center([longitude, latitude]) // geographic center
+  .center([longitude, latitude]) // geographic centre
   .scale(150) // zoom level
-  .translate([width / 2, height / 2]) // pixel center
-  .fitSize([width, height], geoJson); // auto-fit (overrides center/scale/translate)
+  .translate([width / 2, height / 2]); // pixel centre
+
+// fitSize computes all three from the data — it overrides whatever was set above
+projection.fitSize([width, height], geoJson);
 ```
 
-### Interactive Map with Tooltips
+Projection characters are tabulated in [reference.md](../reference.md).
+
+### Interactive map with tooltips
 
 ```typescript
 svg
@@ -269,27 +248,15 @@ svg
 
 ## Pattern 3: Framework Integration
 
-### Strategy: D3 for Computation, Framework for DOM
+### Strategy: D3 computes, the framework renders
 
-When using D3 with a component framework, separate concerns:
-
-- **D3 computes:** scales, layouts, shape paths, axis ticks, force positions, projections
-- **Framework renders:** DOM elements, event handlers, component lifecycle
+D3 supplies scales, layouts, path strings, axis ticks, force positions and projections; the framework owns elements, listeners and lifecycle.
 
 ```typescript
-// Example: compute in your component, render declaratively
 import { scaleLinear, scaleBand } from "d3-scale";
-import { line, curveMonotoneX } from "d3-shape";
 import { max } from "d3-array";
 
-interface ChartProps {
-  data: DataPoint[];
-  width: number;
-  height: number;
-}
-
-// D3 computes scales and paths — no DOM manipulation
-function useChartScales(data: DataPoint[], width: number, height: number) {
+function chartGeometry(data: DataPoint[], width: number, height: number) {
   const xScale = scaleBand<string>()
     .domain(data.map((d) => d.label))
     .range([0, width])
@@ -316,72 +283,46 @@ function useChartScales(data: DataPoint[], width: number, height: number) {
 // </svg>
 ```
 
-**Why good:** framework manages DOM lifecycle and reactivity, D3 provides the math, no imperative DOM manipulation, full type safety from framework's template system
+**Why good:** nothing is imperative, so there is no cleanup and no ordering problem between D3 and the framework's render — and the datum type flows into the template, where the framework type-checks it
 
-### Strategy: D3 Owns the DOM (via Ref)
+### Strategy: D3 owns the DOM, behind a ref
 
-When D3 must own the DOM — zoom, brush, drag, force tick — use a ref and lifecycle hooks.
+Zoom, brush, drag and force tick all write attributes on their own schedule, so D3 needs the element.
 
 ```typescript
-// Generic pattern for any component framework:
-// 1. Create a ref to an SVG element
-// 2. In a mount/effect lifecycle hook, pass the ref to D3
-// 3. D3 appends/modifies children of that SVG
-// 4. On unmount, clean up simulations/behaviors
-
 function setupChart(svgEl: SVGSVGElement, data: DataPoint[]): () => void {
-  // D3 takes over this SVG element
   const svg = select(svgEl);
+  const simulation = /* ... bind data, render marks, attach zoom or brush ... */;
 
-  // ... binddata, render elements, set up zoom/brush ...
-
-  // Return cleanup function for your framework to call on unmount
   return () => {
-    simulation?.stop();
+    simulation.stop();
     svg.selectAll("*").remove();
   };
 }
 
-// In your framework's lifecycle:
-// onMount: cleanup = setupChart(svgRef.current, data)
-// onUnmount: cleanup()
+// Lifecycle: on mount, cleanup = setupChart(svgRef.current, data)
+//            on unmount, cleanup()
 ```
 
-**Why good:** D3 controls DOM inside the ref boundary, framework controls everything outside, cleanup prevents memory leaks from simulations and event listeners
+**Why good:** the ref is the boundary — D3 owns everything inside that SVG and the framework owns everything outside, so neither re-renders over the other. The returned function is what the framework calls on unmount.
 
-### Bad Example - D3 and Framework Fight Over DOM
+### Bad — both systems writing the same elements
 
 ```typescript
-// Bad: framework renders elements AND D3 modifies them
-// This causes conflicts where both systems overwrite each other
-
-// Framework template renders bars
+// The framework's template renders the bars:
 // <svg>{data.map((d) => <rect key={d.id} width={d.value} />)}</svg>
 
-// Then D3 also tries to manage the same elements
-// select(svgRef).selectAll("rect").data(data).join("rect")...
+// ...and D3 also joins against them:
+select(svgRef.current).selectAll("rect").data(data).join("rect");
 ```
 
-**Why bad:** two systems managing the same DOM elements causes unpredictable behavior — framework may re-render and destroy D3's changes, or D3 may add elements the framework doesn't track
-
-### Decision: Which Strategy?
-
-```
-Does the visualization use zoom, brush, drag, or force simulation?
-|
-+-> NO  -> D3 for computation, framework for DOM
-|          (cleanest, most maintainable)
-|
-+-> YES -> D3 owns the SVG via ref
-           (necessary for D3 behaviors that need DOM control)
-           Clean up on unmount!
-```
+**Why bad:** the framework re-renders from its own state and overwrites D3's attributes, while D3's `.join()` appends elements the framework's reconciler does not know about and will not remove. Which one wins depends on render timing.
 
 ---
 
 ## Pattern 4: TypeScript Patterns for D3
 
-### Typing Selections
+### Typing selections
 
 ```typescript
 import type { Selection } from "d3-selection";
@@ -395,38 +336,36 @@ function styleBar(bar: BarSelection): BarSelection {
 }
 ```
 
-### Typing Scales
+### Typing scales
 
 ```typescript
 import type { ScaleLinear, ScaleBand, ScaleTime, ScaleOrdinal } from "d3-scale";
 
-type XScale = ScaleLinear<number, number>;
-type YScale = ScaleBand<string>;
+type XScale = ScaleLinear<number, number>; // <Range, Output>
+type YScale = ScaleBand<string>; // <Domain>
 type TimeScale = ScaleTime<number, number>;
-type ColorScale = ScaleOrdinal<string, string>;
+type ColorScale = ScaleOrdinal<string, string>; // <Domain, Range>
 ```
 
-### Typing Event Handlers
+### Typing event handlers
 
 ```typescript
 import type { D3ZoomEvent } from "d3-zoom";
 import type { D3BrushEvent } from "d3-brush";
 import type { D3DragEvent } from "d3-drag";
 
-// D3 v7 event handlers receive (event, datum) — not (datum, index, group)
+// v7 handlers receive (event, datum) — v5 and earlier received (datum, index, group)
 svg.on("click", (event: MouseEvent, d: BarData) => {
-  // event is the native DOM event
-  // d is the bound datum
+  /* event is the native DOM event, d the bound datum */
 });
 ```
 
-### Bad Example - Untyped D3 Code
+### Bad — untyped selections
 
 ```typescript
-// Bad: no generics, any-typed selections
-const svg = d3.select("#chart"); // Selection<any, any, any, any>
-const bars = svg.selectAll("rect").data(data); // no datum type
-bars.join("rect").attr("width", (d) => d.value); // d is unknown/any
+const svg = select("#chart"); // Selection<any, any, any, any>
+const bars = svg.selectAll("rect").data(data);
+bars.join("rect").attr("width", (d) => d.value); // d is any
 ```
 
-**Why bad:** no type safety on datum access, no autocomplete for datum properties, typos in attribute names not caught at compile time
+**Why bad:** the datum type is `any` from the first untyped `selectAll` onward, so every accessor in the chain is unchecked — a renamed field on the data reads `undefined` and the chart renders blank rather than failing to compile.

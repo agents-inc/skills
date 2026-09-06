@@ -1,17 +1,12 @@
-# D3.js - Core Examples
+# D3.js — Core Examples
 
-> Selections, data joins, scales, axes, shape generators, and responsive SVG. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
-
-**Related examples:**
-
-- [interaction.md](interaction.md) - Transitions, zoom, brush, drag, tooltips
-- [advanced.md](advanced.md) - Force layouts, geo projections, framework integration
+> Selections, data joins, scales, axes, shape generators, responsive SVG, the margin convention. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for lookup tables, [interaction.md](interaction.md) for transitions and behaviours, [advanced.md](advanced.md) for force, geo and framework integration.
 
 ---
 
 ## Pattern 1: Selections and the Data Join
 
-### Good Example - join() with Key Function
+### Good — join() with a key function
 
 ```typescript
 import { select } from "d3-selection";
@@ -45,9 +40,9 @@ function renderBars(svgEl: SVGSVGElement, data: BarData[]): void {
 }
 ```
 
-**Why good:** key function ensures correct element-data identity across updates, typed `selectAll` generics, `max()` with fallback for empty arrays, `.nice()` rounds domain to clean values
+**Why good:** the key function holds element-datum identity across updates, `max()` has a fallback for the empty array, `.nice()` rounds the domain to clean tick values
 
-### Good Example - join() with Enter/Update/Exit Callbacks
+### Good — join() with enter/update/exit callbacks
 
 ```typescript
 select(svgEl)
@@ -79,31 +74,29 @@ select(svgEl)
   );
 ```
 
-**Why good:** separate enter/update/exit animations, new elements grow from 0, exiting elements shrink before removal, `.call()` chains transitions cleanly
+**Why good:** enter, update and exit each animate differently; new elements grow from 0 and exiting ones shrink before removal; `.call()` keeps the transitions off the chained selection
 
-### Bad Example - Manual Enter/Merge/Exit
+### Bad — manual enter/merge/exit
 
 ```typescript
-// Bad: verbose and error-prone boilerplate
 const bars = select(svg).selectAll("rect").data(data);
 
 bars
   .enter()
   .append("rect")
-  .merge(bars) // easy to forget, causes update bugs
-  .attr("width", (d) => d.value * 5) // magic number
-  .attr("height", 20); // magic number
+  .merge(bars) // easy to forget
+  .attr("width", (d) => xScale(d.value));
 
 bars.exit().remove();
 ```
 
-**Why bad:** manual enter/merge/exit is verbose and forgetting `.merge()` means updates don't apply to existing elements, magic numbers for dimensions, no key function
+**Why bad:** dropping `.merge()` leaves updates applying to newly entered elements only, and the existing bars silently keep their old widths. No key function either, so the binding is by index.
 
 ---
 
 ## Pattern 2: Scales
 
-### Good Example - Linear, Band, and Time Scales
+### Good — linear, band, time and ordinal
 
 ```typescript
 import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
@@ -142,28 +135,27 @@ const colorScale = scaleOrdinal<string>()
   .range(schemeCategory10);
 ```
 
-**Why good:** margin convention separates outer SVG from inner chart area, `extent()` for min/max in one call, `.nice()` rounds to clean tick values, `.padding()` for bar gaps, typed generics on every scale
+**Why good:** the margin convention separates the outer SVG from the inner chart area, `extent()` gives min and max in one call, `.nice()` rounds to clean tick values, `.padding()` produces the bar gaps
 
-### Bad Example - Hardcoded Scale Values
+### Bad — pixel arithmetic instead of scales
 
 ```typescript
-// Bad: no scales, hardcoded pixel math
 svg
   .selectAll("rect")
   .data(data)
   .join("rect")
-  .attr("x", (d) => d.value * 3.7) // magic multiplier
-  .attr("width", 40) // hardcoded bar width
-  .attr("fill", (d) => (d.type === "A" ? "red" : "blue")); // manual color logic
+  .attr("x", (d) => d.value * 3.7)
+  .attr("width", 40)
+  .attr("fill", (d) => (d.type === "A" ? "red" : "blue"));
 ```
 
-**Why bad:** magic multiplier breaks when data range changes, hardcoded width doesn't adapt to number of categories, manual color mapping doesn't scale
+**Why bad:** the multiplier is tuned to one data range and overflows the chart when the data grows; the fixed width overlaps once there are more categories than fit; and the colour branch has to be edited every time a category is added. All three are what a scale computes.
 
 ---
 
 ## Pattern 3: Axes
 
-### Good Example - X and Y Axes with Formatting
+### Good — formatted axes and grid lines
 
 ```typescript
 import { axisBottom, axisLeft } from "d3-axis";
@@ -203,36 +195,23 @@ svg
   .call((g) => g.selectAll(".tick line").attr("stroke-opacity", 0.1));
 ```
 
-**Why good:** `.ticks()` with named constant, `d3-format` for number formatting, `d3-time-format` for dates, grid lines via negative tick size with invisible labels
+**Why good:** `d3-format` and `d3-time-format` control tick labels; grid lines come free from a second axis with a negative `tickSize` and empty labels, with the domain line removed
 
-### Updating Axes (Not Duplicating)
+### Updating an axis without duplicating it
 
 ```typescript
-// On data update, select existing group and call axis again
+// Call the axis on the SAME group the first render created
 xAxisGroup.transition().duration(TRANSITION_DURATION_MS).call(xAxis);
 yAxisGroup.transition().duration(TRANSITION_DURATION_MS).call(axisLeft(yScale));
 ```
 
-**Why good:** reuses existing `<g>` — calling `.call(axis)` on the same group replaces tick marks instead of duplicating them
-
-### Bad Example - Appending Axes on Every Update
-
-```typescript
-// Bad: appends new axis group on every data update
-function update(data) {
-  svg
-    .append("g") // duplicates axis every call
-    .call(axisBottom(xScale));
-}
-```
-
-**Why bad:** each update adds a new `<g>` with tick marks, creating duplicated overlapping axes
+**Why good:** `.call(axis)` on an existing `<g>` replaces its tick marks. `svg.append("g").call(axis)` inside an update function adds a fresh group each time, so the tick marks stack up and render on top of each other.
 
 ---
 
 ## Pattern 4: Shape Generators
 
-### Good Example - Line Chart
+### Good — line chart
 
 ```typescript
 import { line, curveMonotoneX } from "d3-shape";
@@ -267,9 +246,9 @@ svg
   .attr("stroke", (_, i) => colorScale(String(i)));
 ```
 
-**Why good:** typed line generator with `TimeSeriesPoint`, `.datum()` for single path vs `.data()` for multiple, `.curve()` for smooth lines, no fill on line paths
+**Why good:** `.datum()` for a single path against `.data()` + `.join()` for several, `.curve()` for smooth interpolation, and `fill: none` so the path is a line rather than a filled shape
 
-### Good Example - Pie/Donut Chart
+### Good — pie / donut chart
 
 ```typescript
 import { pie, arc } from "d3-shape";
@@ -311,9 +290,9 @@ svg
   .text((d) => d.data.label);
 ```
 
-**Why good:** typed `PieArcDatum<SliceData>` generic flows through, `.sort(null)` preserves input order, `.padAngle()` adds visual separation, `arcGen.centroid()` places labels at the arc midpoint
+**Why good:** the `PieArcDatum<SliceData>` generic flows into every accessor, `.sort(null)` keeps input order where the default would sort by value, and `arcGen.centroid()` gives the label position
 
-### Good Example - Area Chart
+### Good — area chart
 
 ```typescript
 import { area, curveMonotoneX } from "d3-shape";
@@ -332,13 +311,13 @@ svg
   .attr("fill-opacity", 0.3);
 ```
 
-**Why good:** `.y0()` sets baseline, `.y1()` maps data values, opacity for layered area visibility
+**Why good:** `.y0()` is the baseline and `.y1()` the data edge — an area is a line with a second boundary
 
 ---
 
 ## Pattern 5: Responsive SVG
 
-### Good Example - viewBox Pattern
+### Good — the viewBox pattern
 
 ```typescript
 const VIEWBOX_WIDTH = 960;
@@ -357,47 +336,39 @@ function createResponsiveSvg(container: HTMLElement): SVGSVGElement {
 }
 ```
 
-**Why good:** SVG scales automatically to container width, consistent internal coordinate system, no resize listeners needed
+**Why good:** the internal coordinate system stays fixed while the rendered size follows the container, so every scale keeps its range and no resize listener is needed
 
-### Good Example - ResizeObserver for Dynamic Re-rendering
+### Good — ResizeObserver, where the chart must re-layout
 
 ```typescript
-function useChartDimensions(containerRef: { current: HTMLElement | null }) {
-  // Track container dimensions, re-render chart when they change
+function observeChartSize(container: HTMLElement): () => void {
   const observer = new ResizeObserver((entries) => {
     const { width, height } = entries[0].contentRect;
-    // Recompute scales with new width/height and re-render
-    renderChart(width, height);
+    renderChart(width, height); // recompute scales, then re-render
   });
-
-  if (containerRef.current) {
-    observer.observe(containerRef.current);
-  }
-
-  // Cleanup: observer.disconnect() on unmount
+  observer.observe(container);
   return () => observer.disconnect();
 }
 ```
 
-**When to use:** when the chart must re-layout (not just scale) on resize, or when aspect ratio should not be fixed
+`viewBox` scales a chart uniformly, which stretches text and thins strokes. Reach for `ResizeObserver` when tick density or aspect ratio has to change with the container, and disconnect it on unmount.
 
-### Bad Example - Fixed Pixel Dimensions
+### Bad — fixed pixel dimensions
 
 ```typescript
-// Bad: chart doesn't resize
 const svg = select("#chart")
   .append("svg")
-  .attr("width", 960) // fixed pixels
-  .attr("height", 500); // fixed pixels
+  .attr("width", 960)
+  .attr("height", 500);
 ```
 
-**Why bad:** chart overflows or underflows its container on different screen sizes, no responsive behavior
+**Why bad:** the chart overflows narrow containers and leaves whitespace in wide ones, with no way to adapt short of re-rendering on every resize.
 
 ---
 
 ## Pattern 6: The Margin Convention
 
-### Good Example - Standard D3 Margin Convention
+### Good — margins reserved by an offset inner group
 
 ```typescript
 const MARGIN = { top: 20, right: 30, bottom: 40, left: 50 } as const;
@@ -429,12 +400,11 @@ chart
 chart.append("g").call(axisLeft(yScale));
 ```
 
-**Why good:** margins reserve space for axes and labels, inner group simplifies all positioning (coordinates relative to chart area, not SVG), y-scale inverted because SVG origin is top-left
+**Why good:** the margins reserve space for tick labels, the inner group makes every coordinate relative to the plotting area rather than to the SVG, and the y range is inverted because SVG y=0 is the top edge
 
-### Bad Example - No Margin Convention
+### Bad — no margins
 
 ```typescript
-// Bad: axes and data compete for the same space
 const svg = select("#chart")
   .append("svg")
   .attr("width", 800)
@@ -443,9 +413,8 @@ svg
   .selectAll("rect")
   .data(data)
   .join("rect")
-  .attr("x", (d) => d.x) // no offset for y-axis space
-  .attr("y", (d) => d.y); // bars overlap with axis labels
-svg.append("g").call(axisLeft(yScale)); // axis renders on top of bars
+  .attr("x", (d) => d.x);
+svg.append("g").call(axisLeft(yScale));
 ```
 
-**Why bad:** axes overlap with data elements, no reserved space for tick labels, chart content starts at SVG origin instead of being offset
+**Why bad:** data starts at x=0, which is exactly where the y-axis and its tick labels render, so the axis draws on top of the bars and the leftmost values are unreadable.

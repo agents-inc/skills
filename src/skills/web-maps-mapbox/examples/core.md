@@ -44,24 +44,26 @@ function cleanup() {
 }
 ```
 
-**Why good:** Named constants for all map options, explicit projection, cleanup function prevents memory leaks, load event guard for safe source/layer operations
+**Why good:** `cleanup` releases the WebGL context, which browsers allow only a limited number of at
+once, and everything touching data sits inside the `load` handler where a style exists
 
 ### Bad Example - Missing Load Guard
 
 ```typescript
 const map = new mapboxgl.Map({
   container: "map",
-  center: [-74.006, 40.7128], // Bad: magic numbers
-  zoom: 12, // Bad: magic number
+  center: [-74.006, 40.7128],
+  zoom: 12,
 });
 
-// Bad: addSource before style is loaded -- throws error
+// Bad: addSource before the style is loaded -- throws
 map.addSource("data", { type: "geojson", data: myData });
 map.addLayer({ id: "layer", type: "circle", source: "data" });
-// Bad: no cleanup -- leaks GPU memory
+// Bad: nothing ever calls map.remove()
 ```
 
-**Why bad:** Magic numbers, addSource/addLayer called before `load` event throws "Style is not done loading", no cleanup causes WebGL context leaks
+**Why bad:** `addSource`/`addLayer` run before the style exists and throw "Style is not done
+loading", and the map is never removed, so its WebGL context outlives it
 
 ---
 
@@ -87,7 +89,8 @@ const marker = new mapboxgl.Marker({ color: MARKER_COLOR })
   .addTo(map);
 ```
 
-**Why good:** Named constants, popup options explicit, marker-popup binding (click to open/close automatically)
+**Why good:** `setPopup` binds the two, so clicking the marker opens and closes the popup with no
+handler of your own; `offset` keeps the popup clear of the marker graphic
 
 ### Good Example - Custom HTML Marker Element
 
@@ -104,7 +107,8 @@ new mapboxgl.Marker({ element: el, anchor: "bottom" })
   .addTo(map);
 ```
 
-**Why good:** Custom element for unique marker designs, `anchor: "bottom"` places the point of the pin at the coordinate
+**Why good:** `anchor: "bottom"` puts the tip of the pin on the coordinate; the default centres the
+element, which for a pin graphic places it half a pin north of where it belongs
 
 ### Good Example - Controls
 
@@ -136,7 +140,8 @@ map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-left");
 map.addControl(new mapboxgl.FullscreenControl(), "top-right");
 ```
 
-**Why good:** Each control positioned explicitly, geolocation with high accuracy and heading, scale in metric units
+**Why good:** each control names its corner, and controls sharing one corner stack in the order they
+were added
 
 ### Good Example - Programmatic Popup on Map Location
 
@@ -148,7 +153,8 @@ new mapboxgl.Popup({ closeOnClick: false, closeOnMove: true })
   .addTo(map);
 ```
 
-**Why good:** `setText` instead of `setHTML` prevents XSS, `closeOnMove` auto-dismisses when user pans
+**Why good:** `setText` escapes its content, so no input can inject markup; `closeOnMove` dismisses a
+popup whose anchor the user has panned away from
 
 ### Bad Example - setHTML with User Input
 
@@ -162,7 +168,8 @@ new mapboxgl.Popup()
   .addTo(map);
 ```
 
-**Why bad:** `setHTML` renders raw HTML, user input could contain `<script>` tags. Use `setText()` for plain text or `setDOMContent()` with sanitized elements
+**Why bad:** `setHTML` renders the string as markup with no sanitization, so untrusted content
+executes. `setText()` for plain text, `setDOMContent()` where the popup needs structure.
 
 ---
 
@@ -206,7 +213,9 @@ function removeAllMarkers() {
 }
 ```
 
-**Why good:** Tracks markers for cleanup, removes previous markers before re-rendering, `setText` for XSS safety
+**Why good:** Markers are DOM elements the map does not own, so nothing removes them when the data
+changes unless you keep the references and do it — this is also why the pattern stops scaling past
+a hundred or so points
 
 ---
 
@@ -254,16 +263,10 @@ map.on("moveend", () => {
 });
 ```
 
-**Why good:** Named constants, `essential: true` only on navigation (not decorative), `fitBounds` keeps data in view with padding, `moveend` listener for state sync
-
-### Bad Example - Hardcoded Animation
-
-```typescript
-// Bad: magic numbers, no constants, no essential flag context
-map.flyTo({ center: [-122.4194, 37.7749], zoom: 15, speed: 1.2 });
-```
-
-**Why bad:** Magic numbers for coordinates and zoom are unmaintainable, no documentation of whether `essential` should be true
+**Why good:** `essential: true` sits on the navigation flight and nowhere else, since it overrides
+the user's reduced-motion preference; `fitBounds` derives the camera from the data rather than from a
+guessed centre and zoom; and `moveend` is the point at which the camera has settled enough to write
+into a URL or store
 
 ---
 
@@ -319,7 +322,9 @@ map.addLayer({
 });
 ```
 
-**Why good:** Feature-state updates are instant (no GeoJSON re-parsing), cursor changes signal interactivity, previous hover cleared before setting new one, null guard on feature id
+**Why good:** feature-state changes a feature's appearance without re-parsing the source, which
+`setData` would; the previous id is cleared before the new one is set, or features stay stuck in the
+hover state behind the cursor
 
 ### Good Example - Click to Show Popup
 
@@ -344,7 +349,9 @@ map.on("click", "cities-layer", (e) => {
 });
 ```
 
-**Why good:** Event scoped to layer, null checks on features and properties, popup positioned at click location
+**Why good:** the layer id on `map.on` both scopes the handler and populates `e.features`. This
+example builds HTML from feature properties — safe only where the data is yours; anything
+user-supplied belongs in `setText` or `setDOMContent`.
 
 ---
 
@@ -387,4 +394,6 @@ class ResetViewControl implements mapboxgl.IControl {
 map.addControl(new ResetViewControl(), "top-right");
 ```
 
-**Why good:** Implements `IControl` interface correctly, cleanup in `onRemove`, uses `mapboxgl-ctrl` class for consistent styling, button has accessible title attribute
+**Why good:** `onRemove` drops both the element and the map reference, so a removed control holds
+nothing; the `mapboxgl-ctrl mapboxgl-ctrl-group` classes are what make it match the built-in
+controls beside it

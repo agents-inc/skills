@@ -5,461 +5,377 @@ description: Drag and drop with @dnd-kit - draggable, droppable, sortable, colli
 
 # @dnd-kit Drag and Drop Patterns
 
-> **Quick Guide:** Use `@dnd-kit/core` for basic drag/drop (`useDraggable`, `useDroppable`, `DndContext`). Use `@dnd-kit/sortable` for sortable lists (`useSortable`, `SortableContext`, `arrayMove`). Use `DragOverlay` for cross-container drag, scrollable containers, and smooth drop animations. Configure sensors for pointer/touch/keyboard input with activation constraints. Always provide keyboard and screen reader accessibility via `KeyboardSensor` and custom `announcements`.
+> **Quick Guide:** `@dnd-kit/core` supplies the primitives — `DndContext`, `useDraggable`, `useDroppable` — and `@dnd-kit/sortable` adds `useSortable`, `SortableContext` and `arrayMove` for reorderable lists. Nothing in the DOM is reordered during a drag: elements are moved by CSS transform and the state update happens on drop. Input arrives through sensors, which are separate plugins, so keyboard support is a sensor you add rather than a behaviour you get. Collision detection is pluggable and the choice depends on the layout. `DragOverlay` is needed whenever the dragged element would be clipped or unmounted mid-drag.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — draggable and droppable components, sortable lists, sensor setup, collision composition, announcements, drag handles
+- [examples/advanced.md](examples/advanced.md) — DragOverlay with sortables, multi-container Kanban, modifiers, custom collision detection, disabled items, item metadata
+- [reference.md](reference.md) — hook signatures and return values, event handler types, sorting strategies, collision algorithms, modifiers, default key bindings, applied ARIA attributes
+
+---
+
+## Which path applies
+
+- **One list, items stay put.** A single `SortableContext`, `closestCenter`, and the transform on the item itself. Simplest, nothing extra to keep mounted. Follow [examples/core.md](examples/core.md).
+- **Items cross containers, or the list scrolls.** Both unmount or clip the dragged element mid-drag, so it needs a `DragOverlay` and an `activeId` in state. Multi-container also wants `closestCorners` and an `onDragOver` handler for the transfer. Follow [examples/advanced.md](examples/advanced.md).
+- **Drop zones rather than reordering** — a trash bin, an upload target, category bins. `@dnd-kit/core` alone, no sortable package, and usually `pointerWithin`. Follow [examples/core.md](examples/core.md) Patterns 1 and 4.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing @dnd-kit code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap every participant in one `<DndContext>`.** The hooks read sensors, collision state and the active drag from its context, and outside it they return inert values rather than throwing — so a missing provider looks like nothing happening.
 
-**(You MUST wrap all drag-and-drop content in a `<DndContext>` provider -- hooks only work inside DndContext)**
+**Add a `KeyboardSensor`, with `sortableKeyboardCoordinates` where the list is sortable.** Sensors are opt-in, so a context configured with pointer input alone cannot be operated from the keyboard at all. The coordinate getter is what makes arrow keys step between items instead of by fixed pixel offsets.
 
-**(You MUST use `DragOverlay` when items move between containers or live in scrollable containers -- transform alone breaks in these cases)**
+**Give `PointerSensor` an activation constraint** — a `distance`, or a `delay` with a `tolerance` for touch. Without one, every click begins a drag, and an item that is also a link or a button stops being clickable.
 
-**(You MUST configure `KeyboardSensor` with `sortableKeyboardCoordinates` for sortable lists -- keyboard users cannot reorder without it)**
+**Keep `DragOverlay` mounted and render its children conditionally.** The drop animation is played by the overlay as it unmounts its child; unmounting the overlay itself removes the thing that would animate.
 
-**(You MUST keep `DragOverlay` always mounted and conditionally render its children -- unmounting DragOverlay breaks drop animations)**
-
-**(You MUST use named constants for all activation constraints, distances, and timing values -- NO magic numbers)**
+**Return a new array from the drop handler.** `arrayMove` is pure and returns the reordered copy — it does not touch state, and mutating the existing array in place leaves React with nothing to re-render from.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** @dnd-kit, dnd-kit, DndContext, useDraggable, useDroppable, useSortable, SortableContext, DragOverlay, useSensors, useSensor, PointerSensor, KeyboardSensor, closestCenter, closestCorners, rectIntersection, pointerWithin, arrayMove, sortableKeyboardCoordinates, CSS.Transform, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, @dnd-kit/modifiers
+**Auto-detection:** @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, @dnd-kit/modifiers, DndContext, useDraggable, useDroppable, useSortable, SortableContext, DragOverlay, useSensor, useSensors, PointerSensor, KeyboardSensor, TouchSensor, closestCenter, closestCorners, rectIntersection, pointerWithin, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, setActivatorNodeRef, CSS.Transform, restrictToVerticalAxis
 
-**When to use:**
+**Applies to:**
 
-- Building sortable lists (reorderable todo, playlist, sidebar navigation)
-- Building Kanban boards with cross-container item movement
-- Implementing drag handles for specific activation areas
-- Creating droppable zones (file upload targets, trash bins, category bins)
-- Adding keyboard and screen reader accessible drag interactions
+- Sortable lists — reorderable todos, playlists, navigation, form field ordering
+- Kanban boards and any layout where items move between containers
+- Drop zones: trash bins, category bins, in-page upload targets
+- Drag handles that restrict which part of an item starts a drag
+- Keyboard-operable and screen-reader-announced drag interactions
+- Constraining movement to an axis, a parent, or the viewport
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Simple reordering without drag UX (use array manipulation + buttons instead)
-- Drag interactions that only need native HTML5 drag-and-drop (e.g., file drops from OS)
-- Complex physics-based drag (consider a gesture/spring animation library instead)
-
-**Key patterns covered:**
-
-- DndContext + useDraggable + useDroppable for basic drag/drop
-- SortableContext + useSortable + arrayMove for sortable lists
-- DragOverlay for cross-container drag and smooth animations
-- Sensor configuration (pointer, touch, keyboard) with activation constraints
-- Collision detection strategies (closestCenter, closestCorners, pointerWithin, rectIntersection)
-- Sorting strategies (vertical, horizontal, rect/grid)
-- Keyboard and screen reader accessibility
-- Multi-container sortable (Kanban boards)
-- Modifiers for axis locking and boundary constraints
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - DndContext, useDraggable, useDroppable, useSortable, sensors, collision detection, accessibility
-- [examples/advanced.md](examples/advanced.md) - Multi-container Kanban, DragOverlay, modifiers, custom collision detection
-- [reference.md](reference.md) - Decision frameworks, API quick reference, sorting strategies, anti-patterns
+- Reordering without a drag interaction — move-up/move-down controls are ordinary buttons over the same array operation
+- Files dragged in from the operating system, which is the browser's own drag-and-drop and does not pass through a sensor
+- Physics- or gesture-driven motion, where the interesting part is the animation rather than the drop target
+- How dragged and hovered items look — every component here takes `style` and `className`, and the visual language is settled by whatever owns it
+- Persisting the new order — the drop handler produces an array, and where it is written is not this skill's concern
 
 ---
 
 <philosophy>
 
-## Philosophy
+**Nothing in the DOM moves during a drag.** Items are displaced by CSS transform and the array is reordered once, on drop. That is why `SortableContext`'s `items` must list the same ids in the same order as the rendered children — the strategy computes each item's displacement from its index in that array, and a mismatch computes the wrong offsets.
 
-@dnd-kit is a modular, lightweight drag-and-drop toolkit for React built around hooks. It separates concerns into focused packages: `@dnd-kit/core` for the drag/drop primitives, `@dnd-kit/sortable` for list reordering, `@dnd-kit/utilities` for CSS transform helpers, and `@dnd-kit/modifiers` for movement constraints.
+**Input is plugins, not behaviour.** A `DndContext` with no sensors responds to nothing. This is what makes keyboard support a deliberate addition rather than something that comes free, and it is the most common thing left out.
 
-**Core principles:**
-
-1. **Hooks-first** -- `useDraggable`, `useDroppable`, and `useSortable` keep drag logic colocated with components
-2. **Sensor-driven input** -- Pointer, touch, and keyboard inputs are separate sensor plugins, not hardcoded behavior
-3. **Collision detection is pluggable** -- Choose the right algorithm for your layout (list vs grid vs stacked containers)
-4. **Accessibility by default** -- Built-in ARIA attributes, keyboard navigation, and screen reader announcements
-5. **No DOM manipulation** -- Uses CSS transforms for positioning, not DOM reordering during drag
-
-**Package overview:**
-
-| Package              | Purpose                                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| `@dnd-kit/core`      | DndContext, useDraggable, useDroppable, DragOverlay, sensors, collision detection                |
-| `@dnd-kit/sortable`  | SortableContext, useSortable, sorting strategies, arrayMove, sortableKeyboardCoordinates         |
-| `@dnd-kit/utilities` | CSS.Transform.toString, CSS.Transition.toString                                                  |
-| `@dnd-kit/modifiers` | restrictToVerticalAxis, restrictToHorizontalAxis, restrictToParentElement, restrictToWindowEdges |
+**Accessibility is built in but not automatic.** `useDraggable` applies `role`, `aria-roledescription`, `tabindex` and `aria-describedby` on its own; the announcements it makes default to the item's id, which tells a screen reader user nothing. Supplying `announcements` that describe position is the work.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which packages
+
+```
+Reorderable lists    -> @dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities
+Drop zones only      -> @dnd-kit/core
+Constrained movement -> add @dnd-kit/modifiers
+```
+
+## Transform or DragOverlay
+
+```
+Items move between containers?        -> DragOverlay (source unmounts mid-drag)
+Draggable inside a scrolling or
+  virtualized container?              -> DragOverlay (transform is clipped by overflow)
+Preview should differ from the item?  -> DragOverlay
+None of these                         -> transform on the item; simpler, less state
+```
+
+## Which collision algorithm
+
+```
+Single sortable list            -> closestCenter    forgiving, needs no overlap
+Stacked containers (Kanban)     -> closestCorners   resolves nested targets
+Precise zones (trash, bins)     -> pointerWithin    pointer must be inside
+General drop targets            -> rectIntersection the default
+```
+
+`pointerWithin` has no pointer to test during a keyboard drag, so it returns nothing — compose it with `closestCenter` as a fallback rather than using it alone.
+
+Sorting strategies, modifiers and the full algorithm table are in [reference.md](reference.md).
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic Drag and Drop
+### Pattern 1: Basic drag and drop
 
-`DndContext` is the provider that connects draggable and droppable elements. `useDraggable` makes an element draggable. `useDroppable` makes an element a drop target.
-
-```tsx
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
-
-function App() {
-  const [parent, setParent] = useState<string | null>(null);
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { over } = event;
-    setParent(over ? String(over.id) : null);
-  }
-
-  return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <DraggableItem id="item-1" />
-      <DroppableZone id="zone-a">
-        {parent === "zone-a" && <span>Dropped here</span>}
-      </DroppableZone>
-    </DndContext>
-  );
-}
-```
-
-**Why good:** DndContext wraps all participants, event handler updates state on drop, draggable and droppable use unique string IDs
-
-See [examples/core.md](examples/core.md) Pattern 1 for full useDraggable and useDroppable implementations with TypeScript types.
-
----
-
-### Pattern 2: Sortable Lists
-
-`SortableContext` + `useSortable` provides reorderable lists. Use `arrayMove` from `@dnd-kit/sortable` to update state on drag end.
+`DndContext` connects the two hooks. `useDraggable` gives the element its listeners and ARIA attributes; `useDroppable` registers a target and reports when something is over it.
 
 ```tsx
-import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-
-function SortableList() {
-  const [items, setItems] = useState(["a", "b", "c", "d"]);
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setItems((prev) => {
-        const oldIndex = prev.indexOf(String(active.id));
-        const newIndex = prev.indexOf(String(over.id));
-        return arrayMove(prev, oldIndex, newIndex);
-      });
-    }
-  }
-
+function Draggable({ id, children }: DraggableProps) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((id) => (
-          <SortableItem key={id} id={id} />
-        ))}
-      </SortableContext>
-    </DndContext>
-  );
-}
-```
-
-**Why good:** closestCenter is forgiving for vertical lists, verticalListSortingStrategy optimizes transform calculations, arrayMove produces a new array (immutable)
-
-See [examples/core.md](examples/core.md) Pattern 2 for the full SortableItem component using useSortable and CSS.Transform.
-
----
-
-### Pattern 3: DragOverlay
-
-Use `DragOverlay` instead of transforming the dragged element directly when items move between containers, live in scrollable/virtualized containers, or need custom drag previews.
-
-```tsx
-import {
-  DndContext,
-  DragOverlay,
-  type DragStartEvent,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-
-function Board() {
-  const [activeId, setActiveId] = useState<string | null>(null);
-
-  return (
-    <DndContext
-      onDragStart={(event: DragStartEvent) =>
-        setActiveId(String(event.active.id))
-      }
-      onDragEnd={(event: DragEndEvent) => {
-        handleDragEnd(event);
-        setActiveId(null);
-      }}
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform) }}
+      {...listeners}
+      {...attributes}
     >
-      {/* containers and sortable items */}
-      <DragOverlay>
-        {activeId ? <ItemPreview id={activeId} /> : null}
-      </DragOverlay>
-    </DndContext>
+      {children}
+    </div>
   );
 }
+
+<DndContext
+  onDragEnd={({ over }) => setDroppedIn(over ? String(over.id) : null)}
+>
+  <Draggable id="item-1">Drag me</Draggable>
+  <Droppable id="zone-a">Drop zone</Droppable>
+</DndContext>;
 ```
 
-**Key rules:** Keep `DragOverlay` always mounted (conditionally render children, not the component). Children rendered inside DragOverlay must NOT use `useDraggable`. Default drop animation is 250ms ease -- disable with `dropAnimation={null}`.
+`over` is `null` when the drag ended outside every target, which is the cancel case.
 
-See [examples/advanced.md](examples/advanced.md) Pattern 1 for DragOverlay with sortable lists and custom drop animations.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Sensors and Activation Constraints
+### Pattern 2: Sortable lists
 
-Sensors control which input methods activate dragging. Use `useSensors` to compose multiple sensors with activation constraints.
+`useSortable` is `useDraggable` and `useDroppable` combined, so its id must be unique across both. `arrayMove` produces the reordered array on drop.
 
 ```tsx
-import {
-  useSensor,
-  useSensors,
-  PointerSensor,
-  KeyboardSensor,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+function handleDragEnd({ active, over }: DragEndEvent) {
+  if (!over || active.id === over.id) return;
+  setItems((prev) => {
+    const oldIndex = prev.findIndex((i) => i.id === active.id);
+    const newIndex = prev.findIndex((i) => i.id === over.id);
+    return arrayMove(prev, oldIndex, newIndex);
+  });
+}
 
-const ACTIVATION_DISTANCE_PX = 8;
+<DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+  <SortableContext
+    items={items.map((i) => i.id)} // same ids, same order as the children below
+    strategy={verticalListSortingStrategy}
+  >
+    {items.map((item) => (
+      <SortableItem key={item.id} id={item.id}>
+        {item.label}
+      </SortableItem>
+    ))}
+  </SortableContext>
+</DndContext>;
+```
 
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 3: Sensors and activation constraints
+
+Sensors decide what starts a drag. Compose them with `useSensors`.
+
+```tsx
 const sensors = useSensors(
   useSensor(PointerSensor, {
-    activationConstraint: { distance: ACTIVATION_DISTANCE_PX },
+    activationConstraint: { distance: ACTIVATION_DISTANCE_PX }, // click stays a click
   }),
   useSensor(KeyboardSensor, {
-    coordinateGetter: sortableKeyboardCoordinates,
+    coordinateGetter: sortableKeyboardCoordinates, // arrow keys step item to item
   }),
 );
 
 <DndContext sensors={sensors}>{/* ... */}</DndContext>;
 ```
 
-**Why good:** distance constraint prevents accidental drags on click, KeyboardSensor with sortableKeyboardCoordinates enables arrow-key reordering, named constant for distance threshold
+Separate `MouseSensor` and `TouchSensor` in place of `PointerSensor` where the two need different constraints — touch usually wants a `delay` and a `tolerance`, so that a scroll gesture is not read as a drag.
 
-**Sensor types:** `PointerSensor` (unified pointer events), `MouseSensor` (mouse only), `TouchSensor` (touch with delay support), `KeyboardSensor` (arrow keys + Space/Enter)
-
-See [examples/core.md](examples/core.md) Pattern 3 for all sensor configurations including touch delay and tolerance.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Collision Detection
+### Pattern 4: Collision detection
 
-Choose the collision algorithm based on your layout.
-
-| Algorithm          | Import          | Best for                                         |
-| ------------------ | --------------- | ------------------------------------------------ |
-| `rectIntersection` | `@dnd-kit/core` | General drop zones (default)                     |
-| `closestCenter`    | `@dnd-kit/core` | Sortable lists -- forgiving, no overlap required |
-| `closestCorners`   | `@dnd-kit/core` | Stacked/overlapping containers (Kanban columns)  |
-| `pointerWithin`    | `@dnd-kit/core` | Precision drop -- pointer must be inside target  |
-
-**Gotcha:** `pointerWithin` only works with pointer-based sensors. Compose it with a fallback for keyboard support.
-
-See [examples/core.md](examples/core.md) Pattern 4 for collision detection selection and custom composition.
-
----
-
-### Pattern 6: Sorting Strategies
-
-Choose the strategy based on list orientation.
-
-| Strategy                        | Import              | Use case                                      |
-| ------------------------------- | ------------------- | --------------------------------------------- |
-| `rectSortingStrategy`           | `@dnd-kit/sortable` | Grids (default, does NOT support virtualized) |
-| `verticalListSortingStrategy`   | `@dnd-kit/sortable` | Vertical lists (supports virtualized)         |
-| `horizontalListSortingStrategy` | `@dnd-kit/sortable` | Horizontal lists (supports virtualized)       |
-| `rectSwappingStrategy`          | `@dnd-kit/sortable` | Swap mode (items trade positions)             |
-
-Always match the strategy to your layout -- using `rectSortingStrategy` on a vertical list produces suboptimal animations.
-
----
-
-### Pattern 7: Keyboard and Screen Reader Accessibility
-
-@dnd-kit provides built-in accessibility. `useDraggable` applies `role="button"`, `aria-roledescription="draggable"`, `tabindex="0"`, and links to screen reader instructions via `aria-describedby`.
-
-Customize announcements via the `announcements` prop on DndContext:
+Pass one of the built-in algorithms, or compose them into a function when different targets need different behaviour.
 
 ```tsx
-const announcements = {
-  onDragStart({ active }: { active: { id: UniqueIdentifier } }) {
-    return `Picked up item ${active.id}`;
-  },
-  onDragOver({
-    active,
-    over,
-  }: {
-    active: { id: UniqueIdentifier };
-    over: { id: UniqueIdentifier } | null;
-  }) {
-    if (over) return `Item ${active.id} moved over ${over.id}`;
-    return `Item ${active.id} is no longer over a drop target`;
-  },
-  onDragEnd({
-    active,
-    over,
-  }: {
-    active: { id: UniqueIdentifier };
-    over: { id: UniqueIdentifier } | null;
-  }) {
-    if (over) return `Item ${active.id} dropped on ${over.id}`;
-    return `Item ${active.id} was dropped`;
-  },
-  onDragCancel({ active }: { active: { id: UniqueIdentifier } }) {
-    return `Dragging cancelled. Item ${active.id} was dropped`;
-  },
+const composedCollision: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) return pointerCollisions;
+  return closestCenter(args); // fallback: pointerWithin returns nothing for keyboard drags
 };
 
-<DndContext announcements={announcements}>{/* ... */}</DndContext>;
+<DndContext collisionDetection={composedCollision}>{/* ... */}</DndContext>;
 ```
 
-**Why good:** Screen readers announce drag state changes in real time, position-based messages ("position 2 of 5") are more useful than generic "moved over" messages
+Filtering `args.droppableContainers` before delegating is how one algorithm is applied to a trash zone and another to the list around it.
 
-See [examples/core.md](examples/core.md) Pattern 5 for position-based announcements and custom screen reader instructions.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 8: Multi-Container Sortable (Kanban)
+### Pattern 5: DragOverlay
 
-For Kanban boards, each column has its own `SortableContext`. Items move between containers via `onDragOver` (update state as item crosses boundaries) and `onDragEnd` (finalize position).
+The overlay renders the drag preview in its own layer, outside the list's overflow and independent of whether the source item still exists.
 
-Key decisions for multi-container:
+```tsx
+<DndContext
+  onDragStart={({ active }) => setActiveId(String(active.id))}
+  onDragEnd={(event) => {
+    handleDragEnd(event);
+    setActiveId(null);
+  }}
+  onDragCancel={() => setActiveId(null)} // Escape ends the drag too
+>
+  {/* containers and sortable items */}
+  <DragOverlay>
+    {activeItem ? <ItemPreview item={activeItem} /> : null}
+  </DragOverlay>
+</DndContext>
+```
 
-- Use `closestCorners` collision detection (handles stacked columns better than closestCenter)
-- Use `DragOverlay` (items unmount from source container during cross-container drag)
-- Track `activeId` to render the drag preview in the overlay
-- Use `onDragOver` for real-time container transfers, `onDragEnd` for final placement
+The child is presentational — calling `useDraggable` inside the overlay registers a second draggable for the item already being dragged.
 
-See [examples/advanced.md](examples/advanced.md) Pattern 2 for the complete Kanban implementation.
+Full code: [examples/advanced.md](examples/advanced.md)
+
+---
+
+### Pattern 6: Multi-container sortable (Kanban)
+
+Each column is a droppable that also wraps its own `SortableContext`. `onDragOver` performs the transfer as the item crosses a boundary; `onDragEnd` settles the order within a column.
+
+```tsx
+function handleDragOver({ active, over }: DragOverEvent) {
+  if (!over) return;
+  const from = findContainer(active.id);
+  const to = findContainer(over.id);
+  if (!from || !to || from === to) return; // same column: onDragEnd handles it
+  setColumns((prev) => moveBetweenColumns(prev, active.id, over.id, from, to));
+}
+
+<DndContext
+  collisionDetection={closestCorners}
+  onDragOver={handleDragOver}
+  onDragEnd={handleDragEnd}
+>
+  {Object.entries(columns).map(([id, items]) => (
+    <KanbanColumn key={id} id={id} items={items} />
+  ))}
+  <DragOverlay>
+    {activeItem ? <KanbanCard item={activeItem} /> : null}
+  </DragOverlay>
+</DndContext>;
+```
+
+`findContainer` has to answer for both a column id and an item id, since `over.id` is whichever the collision resolved to.
+
+Full code: [examples/advanced.md](examples/advanced.md)
+
+---
+
+### Pattern 7: Keyboard and screen reader announcements
+
+The built-in announcements name the item by id. Replace them with position, which is what a screen reader user needs to track a move.
+
+```tsx
+function createAnnouncements(items: string[]) {
+  const at = (id: UniqueIdentifier) =>
+    `position ${items.indexOf(String(id)) + 1} of ${items.length}`;
+
+  return {
+    onDragStart: ({ active }) => `Picked up item at ${at(active.id)}`,
+    onDragOver: ({ over }) =>
+      over ? `Moved to ${at(over.id)}` : "No longer over a drop target",
+    onDragEnd: ({ over }) =>
+      over ? `Dropped at ${at(over.id)}` : "Dropped outside a valid target",
+    onDragCancel: ({ active }) => `Cancelled. Returned to ${at(active.id)}`,
+  };
+}
+
+<DndContext announcements={createAnnouncements(itemIds)}>
+  {/* ... */}
+</DndContext>;
+```
+
+`screenReaderInstructions` covers the other half — the instructions read when a draggable is focused, which default to English.
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 8: Drag handles
+
+`setActivatorNodeRef` marks the element that starts the drag, separately from the element that moves.
+
+```tsx
+<div ref={setNodeRef} style={style}>
+  <button
+    ref={setActivatorNodeRef}
+    {...listeners}
+    {...attributes}
+    aria-label={`Reorder ${label}`}
+  >
+    ☰
+  </button>
+  {children}
+</div>
+```
+
+The listeners and attributes go on the handle rather than the container, which is what leaves the rest of the item clickable and selectable.
+
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 9: Modifiers
 
-Modifiers constrain drag movement. Apply to `DndContext` (affects all dragging) or `DragOverlay` (affects overlay only).
+Modifiers transform the drag position before it is applied. `DndContext` and `DragOverlay` take their own, independently.
 
 ```tsx
-import {
-  restrictToVerticalAxis,
-  restrictToParentElement,
-} from "@dnd-kit/modifiers";
-
-<DndContext modifiers={[restrictToVerticalAxis]}>{/* ... */}</DndContext>;
+<DndContext modifiers={[restrictToParentElement]}>
+  <DragOverlay modifiers={[restrictToWindowEdges]}>
+    {activeItem ? <ItemPreview item={activeItem} /> : null}
+  </DragOverlay>
+</DndContext>
 ```
 
-| Modifier                   | Package              | Effect                            |
-| -------------------------- | -------------------- | --------------------------------- |
-| `restrictToVerticalAxis`   | `@dnd-kit/modifiers` | Lock movement to Y axis           |
-| `restrictToHorizontalAxis` | `@dnd-kit/modifiers` | Lock movement to X axis           |
-| `restrictToParentElement`  | `@dnd-kit/modifiers` | Constrain to parent bounds        |
-| `restrictToWindowEdges`    | `@dnd-kit/modifiers` | Prevent dragging outside viewport |
+`restrictToVerticalAxis` on a vertical list removes the sideways drift that makes a reorder feel imprecise.
 
-Different modifiers can be applied to DndContext and DragOverlay independently.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Which Package Do I Need?
-
-```
-Do you need sortable lists?
-|-- YES -> @dnd-kit/core + @dnd-kit/sortable (+ @dnd-kit/utilities for CSS.Transform)
-+-- NO  -> Just drag/drop zones?
-    +-- YES -> @dnd-kit/core only
-```
-
-### Transform vs DragOverlay
-
-```
-Do items move between containers?
-|-- YES -> Use DragOverlay (items unmount from source during drag)
-+-- NO  -> Is the draggable inside a scrollable/virtualized container?
-    |-- YES -> Use DragOverlay (avoids overflow clipping)
-    +-- NO  -> Do you need a custom drag preview different from the source?
-        |-- YES -> Use DragOverlay
-        +-- NO  -> Transform approach is sufficient (simpler)
-```
-
-### Collision Detection
-
-```
-Single sortable list?
-|-- YES -> closestCenter (forgiving, no overlap needed)
-+-- NO  -> Stacked containers (Kanban columns)?
-    |-- YES -> closestCorners (better for overlapping droppables)
-    +-- NO  -> Precision drop targets (trash bin, category bins)?
-        |-- YES -> pointerWithin (only triggers when pointer is inside)
-        +-- NO  -> rectIntersection (default, general purpose)
-```
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Missing `DndContext` wrapper -- useDraggable/useDroppable/useSortable fail silently without it
-- Conditionally mounting/unmounting `DragOverlay` -- breaks drop animations; always mount it, conditionally render children
-- Missing `KeyboardSensor` -- keyboard users cannot interact with drag-and-drop at all
-- Using `closestCenter` for stacked containers (Kanban) -- often selects the column instead of items within; use `closestCorners`
-- Forgetting `sortableKeyboardCoordinates` on KeyboardSensor for sortable lists -- arrow keys move by pixels instead of to next item
-- Mutating state in onDragEnd instead of producing new arrays -- `arrayMove` returns a new array; do not use `.splice()` directly on state
+- `useDraggable` on a `DragOverlay` child — registers a second draggable for the item already being dragged
+- `SortableContext`'s `items` not matching the rendered children in id and order — displacement is computed from index in that array, so the animations and drop positions come out wrong
+- `useSortable` sharing an id with another draggable or droppable — it registers as both, so its id must be unique across both sets, where a plain `useDraggable` and `useDroppable` may share one id because they register in separate stores
+- `pointerWithin` used alone — a keyboard drag has no pointer, so it resolves no target and dropping does nothing
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using `rectSortingStrategy` (default) for vertical-only lists -- `verticalListSortingStrategy` is more performant and supports virtualization
-- Missing activation constraints on PointerSensor -- accidental drags fire on every click
-- Not providing custom `announcements` -- default messages use IDs which are meaningless to screen reader users
-- Applying `useDraggable` inside DragOverlay children -- the overlay renders a preview, not an interactive draggable
-
-**Gotchas & Edge Cases:**
-
-- `useDraggable` and `useDroppable` can share the same `id` (they use separate stores), but `useSortable` combines both so its `id` must be unique across draggables AND droppables
-- `SortableContext` `items` prop must match the order of rendered children -- mismatches cause animation glitches
-- `pointerWithin` only works with pointer-based sensors -- compose with `closestCenter` fallback for keyboard support
-- `CSS.Transform.toString()` returns `undefined` when transform is `null` -- safe to pass directly to `style.transform`
-- Transform values include `scaleX`/`scaleY` -- if you don't want scaling, destructure and only use `x`/`y` with `CSS.Translate.toString()`
-- `DragOverlay` is NOT rendered in a portal by default -- use `createPortal` if you need it to escape overflow/stacking contexts
-- The `data` argument on useDraggable/useDroppable is available in event handlers via `active.data.current` and `over.data.current` -- useful for carrying metadata (type, container ID)
-- `arrayMove` is a pure utility -- it does not update state; you must call your setter with its return value
-- Screen reader instructions default to English only -- provide `screenReaderInstructions` prop for localization
+- `closestCenter` on stacked containers resolves to the column rather than the card inside it; `closestCorners` measures all four corners and resolves the nested target
+- `rectSortingStrategy` is the default and does not support virtualization — the vertical and horizontal list strategies do
+- `CSS.Transform.toString()` includes `scaleX`/`scaleY`; `CSS.Translate.toString()` is the position-only form, which is usually what a list wants
+- `CSS.Transform.toString(null)` returns `undefined`, which is safe to assign to `style.transform`
+- `DragOverlay` is not portalled by default, so it is still subject to an ancestor's `overflow` and stacking context — wrap it in `createPortal` to escape them
+- `active.data.current` and `over.data.current` carry whatever was passed as `data`, which is how one handler tells a card from a column without looking either up
+- Screen reader instructions and announcements default to English, and are replaced rather than translated
+- Default keys are Space or Enter to pick up and drop, arrows to move, Escape to cancel — `onDragCancel` is the Escape path and has to reset the same state `onDragEnd` does
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap all drag-and-drop content in a `<DndContext>` provider -- hooks only work inside DndContext)**
-
-**(You MUST use `DragOverlay` when items move between containers or live in scrollable containers -- transform alone breaks in these cases)**
-
-**(You MUST configure `KeyboardSensor` with `sortableKeyboardCoordinates` for sortable lists -- keyboard users cannot reorder without it)**
-
-**(You MUST keep `DragOverlay` always mounted and conditionally render its children -- unmounting DragOverlay breaks drop animations)**
-
-**(You MUST use named constants for all activation constraints, distances, and timing values -- NO magic numbers)**
-
-**Failure to follow these rules will break drag interactions, keyboard accessibility, and drop animations.**
-
-</critical_reminders>

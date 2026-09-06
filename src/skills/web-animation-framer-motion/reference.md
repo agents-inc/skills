@@ -1,408 +1,126 @@
 # Motion Reference
 
-> Decision frameworks, anti-patterns, and quick reference for Motion (formerly Framer Motion) development. See [SKILL.md](SKILL.md) for core concepts and red flags, and [examples/](examples/) for code examples.
+> Migration notes, presets and API tables. See [SKILL.md](SKILL.md) for the decisions and the red
+> flags, [examples/](examples/) for full code.
 
 ---
 
-## v11/v12 Migration Guide
+## v11 / v12 Migration
 
-### Package Rename (CRITICAL - v11+)
-
-The package has been renamed from `framer-motion` to `motion`:
+### Package rename (v11)
 
 ```bash
 npm uninstall framer-motion
 npm install motion
 ```
 
-Update imports:
-
 ```typescript
-// Old (framer-motion)
+// before
 import { motion } from "framer-motion";
 
-// New (motion v11+)
+// v11+
 import { motion } from "motion/react";
 ```
 
-### Breaking Changes in v11
+### Breaking changes in v11
 
-#### Render Scheduling
-
-Motion component renders moved from synchronous to microtask scheduling. Update tests accordingly:
+**Renders are scheduled on a microtask** rather than synchronously. Any code that reads a computed
+style straight after mounting a `motion` element now reads the pre-animation value; await a frame
+first, using Motion's own scheduler:
 
 ```typescript
-// Before v11 - synchronous
-render(<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} />);
-expect(element).toHaveStyle("opacity: 1");
-
-// v11+ - await animation frame
 import { frame } from "motion";
 
-async function nextFrame() {
-  return new Promise<void>((resolve) => {
-    frame.postRender(() => resolve());
-  });
-}
-
-render(<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} />);
-await nextFrame();
-expect(element).toHaveStyle("opacity: 1");
+const nextFrame = () =>
+  new Promise<void>((resolve) => frame.postRender(() => resolve()));
 ```
 
-#### Velocity Calculation
-
-Velocity is now calculated based on the value at end of previous frame, not intermediate synchronous updates:
+**Velocity is measured against the previous frame's value**, not against intermediate synchronous
+writes. Two `set` calls inside one frame report the velocity from the frame's start to the last
+value, rather than between the two writes.
 
 ```typescript
-// v11+ behavior
 const x = motionValue(0);
 
 requestAnimationFrame(() => {
   x.set(100);
-  x.getVelocity(); // Velocity of 0 -> 100
+  x.getVelocity(); // 0 -> 100
   x.set(200);
-  x.getVelocity(); // Velocity of 0 -> 200 (not 100 -> 200)
+  x.getVelocity(); // 0 -> 200, not 100 -> 200
 });
 ```
 
-#### Removed APIs
-
-- `glide` function removed - use `type: "inertia"` instead:
+**`glide` was removed** — `type: "inertia"` replaces it.
 
 ```typescript
-// Old
-animate(element, { x: 100 }, { type: "glide" });
-
-// New
 animate(element, { x: 100 }, { type: "inertia" });
 ```
 
-### New in v12
+### Added in v12
 
-**No breaking changes in v12 for React.** New features include:
+No breaking changes for React. New surface:
 
-- **usePageInView** (v12.19+): Pause animations when tab is in background
-- **Enhanced stagger()**: Now accepts `from` ("first", "center", "last", index) and `ease` options
-- **resize()** (v12.16+): New function for resize-linked animations
-- **useDragControls.stop()/cancel()**: Programmatic control over drag operations
-- **animateView** (v12.6+): Renamed from `view`, with `interrupt: "wait"` as default
-
-```typescript
-// v12 enhanced stagger example
-import { stagger } from "motion/react";
-
-const containerVariants = {
-  visible: {
-    transition: {
-      delayChildren: stagger(0.05, {
-        from: "center", // Ripple from center
-        ease: "easeOut",
-      }),
-    },
-  },
-};
-```
+| Addition                             | Since  | What it gives                                           |
+| ------------------------------------ | ------ | ------------------------------------------------------- |
+| `usePageInView`                      | 12.19+ | Tab visibility, for pausing loops in background tabs    |
+| `stagger()` on `delayChildren`       | 12+    | `from` ("first", "center", "last", index) and `ease`    |
+| `resize()`                           | 12.16+ | Resize-linked animations                                |
+| `useDragControls().stop()/.cancel()` | 12+    | Programmatic end to an in-flight drag                   |
+| `animateView`                        | 12.6+  | Renamed from `view`; `interrupt: "wait"` is the default |
 
 ---
 
-## Decision Framework
-
-### When to Use Motion vs CSS
-
-```
-Is this animation triggered by user interaction?
-├─ YES → Is it complex (multi-step, physics-based)?
-│   ├─ YES → Use Motion ✓
-│   └─ NO → Is it hover/focus only?
-│       ├─ YES → CSS transitions work fine
-│       └─ NO → Use Motion for consistency
-└─ NO → Is it a simple infinite loop (pulse, spin)?
-    ├─ YES → CSS animation is sufficient
-    └─ NO → Does it need to animate on mount/unmount?
-        ├─ YES → Use Motion (AnimatePresence) ✓
-        └─ NO → Either works, prefer consistency
-```
-
-### When to Use Variants vs Direct Props
-
-```
-Are you animating multiple elements together?
-├─ YES → Do they need coordinated timing (stagger)?
-│   ├─ YES → Use variants with staggerChildren ✓
-│   └─ NO → Do they share animation states?
-│       ├─ YES → Use variants for reusability ✓
-│       └─ NO → Direct props are fine
-└─ NO → Is the animation complex (many properties)?
-    ├─ YES → Variants improve readability
-    └─ NO → Direct props are simpler
-```
-
-### When to Use Spring vs Tween
-
-```
-What type of motion do you want?
-├─ Natural, physics-based bounce → Use spring ✓
-├─ Precise timing control → Use tween
-├─ Interactive element feedback → Use spring ✓
-└─ UI transitions (modals, pages) → Use tween with easing
-```
-
-### When to Use layout vs layoutId
-
-```
-What are you animating?
-├─ Single element changing size/position → Use layout ✓
-├─ Element moving between containers → Use layoutId ✓
-├─ List reordering → Use layout on items ✓
-└─ Shared element between routes → Use layoutId ✓
-```
-
-### When to Use useAnimation vs Declarative
-
-```
-How is the animation triggered?
-├─ React state change → Declarative (animate prop) ✓
-├─ External event (timer, API response) → useAnimation ✓
-├─ Complex sequence/chain → useAnimation ✓
-└─ User gesture → Gesture props (whileHover, etc.) ✓
-```
-
-### When to Use AnimatePresence Modes
-
-```
-What's the transition behavior?
-├─ Elements should animate simultaneously → mode="sync" (default)
-├─ New element waits for old to exit → mode="wait" ✓
-│   └─ Best for: page transitions, modals
-├─ Layout should animate during exit → mode="popLayout" ✓
-│   └─ Best for: shared layout transitions
-```
-
----
-
-## Transition Type Reference
-
-### Spring Configuration
+## Transition Presets
 
 ```typescript
-// Bouncy - playful, attention-grabbing
+// Springs
 const BOUNCY_SPRING = { type: "spring", stiffness: 300, damping: 10 };
-
-// Snappy - responsive, professional
 const SNAPPY_SPRING = { type: "spring", stiffness: 500, damping: 30 };
-
-// Gentle - subtle, elegant
 const GENTLE_SPRING = { type: "spring", stiffness: 100, damping: 20 };
-
-// No bounce - smooth stop
 const NO_BOUNCE_SPRING = { type: "spring", stiffness: 300, damping: 30 };
-```
 
-### Tween Easing Reference
-
-```typescript
-// Enter animations - ease out (fast start, slow end)
+// Tweens
 const ENTER_EASE = { type: "tween", ease: "easeOut", duration: 0.3 };
-
-// Exit animations - ease in (slow start, fast end)
 const EXIT_EASE = { type: "tween", ease: "easeIn", duration: 0.2 };
-
-// Symmetric - ease in-out
 const SYMMETRIC_EASE = { type: "tween", ease: "easeInOut", duration: 0.3 };
-
-// Custom cubic bezier - Material Design style
 const MATERIAL_EASE = { type: "tween", ease: [0.4, 0, 0.2, 1], duration: 0.3 };
 ```
 
----
-
-## Anti-Patterns
-
-### Animating Layout-Triggering Properties
-
-Animating properties that trigger layout recalculations causes jank on every frame.
-
-```typescript
-// WRONG - triggers layout on every frame
-<motion.div
-  initial={{ height: 0, marginTop: 20 }}
-  animate={{ height: 100, marginTop: 0 }}
-/>
-
-// CORRECT - GPU-accelerated transform
-<motion.div
-  initial={{ scaleY: 0, y: 20 }}
-  animate={{ scaleY: 1, y: 0 }}
-  style={{ transformOrigin: "top" }}
-/>
-```
-
-### Missing Keys on AnimatePresence Children
-
-AnimatePresence tracks components by key. Missing or unstable keys break exit animations.
-
-```typescript
-// WRONG - index changes when list changes
-<AnimatePresence>
-  {items.map((item, index) => (
-    <motion.div key={index} exit={{ opacity: 0 }}>
-      {item.name}
-    </motion.div>
-  ))}
-</AnimatePresence>
-
-// CORRECT - stable unique ID
-<AnimatePresence>
-  {items.map((item) => (
-    <motion.div key={item.id} exit={{ opacity: 0 }}>
-      {item.name}
-    </motion.div>
-  ))}
-</AnimatePresence>
-```
-
-### Fragments Inside AnimatePresence
-
-React fragments break AnimatePresence tracking because they don't support keys.
-
-```typescript
-// WRONG - fragment has no key
-<AnimatePresence>
-  {isOpen && (
-    <>
-      <motion.div exit={{ opacity: 0 }}>Backdrop</motion.div>
-      <motion.div exit={{ opacity: 0 }}>Modal</motion.div>
-    </>
-  )}
-</AnimatePresence>
-
-// CORRECT - keyed motion components
-<AnimatePresence>
-  {isOpen && (
-    <motion.div key="backdrop" exit={{ opacity: 0 }}>Backdrop</motion.div>
-  )}
-  {isOpen && (
-    <motion.div key="modal" exit={{ opacity: 0 }}>Modal</motion.div>
-  )}
-</AnimatePresence>
-```
-
-### Magic Numbers in Transitions
-
-Magic numbers make animations hard to maintain and adjust consistently.
-
-```typescript
-// WRONG - magic numbers everywhere
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.3, delay: 0.1 }}
-/>
-
-// CORRECT - named constants
-const FADE_DURATION_S = 0.3;
-const FADE_DELAY_S = 0.1;
-const FADE_DISTANCE_PX = 20;
-
-<motion.div
-  initial={{ opacity: 0, y: FADE_DISTANCE_PX }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: FADE_DURATION_S, delay: FADE_DELAY_S }}
-/>
-```
-
-### Ignoring Reduced Motion
-
-Animations can cause motion sickness. Always provide reduced motion support.
-
-```typescript
-// WRONG - no reduced motion support
-<motion.div
-  initial={{ x: -100, rotate: 360 }}
-  animate={{ x: 0, rotate: 0 }}
-/>
-
-// CORRECT - respects user preferences
-const shouldReduceMotion = useReducedMotion();
-
-<motion.div
-  initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -100 }}
-  animate={{ opacity: 1, x: 0 }}
-  transition={{ duration: shouldReduceMotion ? 0.2 : 0.5 }}
-/>
-```
-
-### Overusing willChange
-
-willChange creates GPU layers. Too many layers waste memory and can hurt performance.
-
-```typescript
-// WRONG - willChange on every element
-{items.map((item) => (
-  <motion.div
-    key={item.id}
-    style={{ willChange: "transform" }}  // Creates layer for every item
-    whileHover={{ scale: 1.05 }}
-  />
-))}
-
-// CORRECT - only when needed, typically handled by Motion automatically
-{items.map((item) => (
-  <motion.div
-    key={item.id}
-    whileHover={{ scale: 1.05 }}  // Motion handles optimization
-  />
-))}
-```
+With Motion's default `mass: 1`, a spring stops overshooting once `damping` reaches `2 × √stiffness`.
+`GENTLE_SPRING` sits exactly on that line, `NO_BOUNCE_SPRING` just under it, and `BOUNCY_SPRING` far
+below — which is why it bounces.
 
 ---
 
-## Performance Checklist
+## Property Cost
 
-### Properties to Animate (GPU-Accelerated)
+| Animate these                             | Instead of                         |
+| ----------------------------------------- | ---------------------------------- |
+| `opacity`                                 | —                                  |
+| `x`, `y`                                  | `top`, `left`, `right`, `bottom`   |
+| `scale`, `scaleX`, `scaleY`               | `width`, `height`                  |
+| `rotate`, `rotateX`, `rotateY`, `rotateZ` | —                                  |
+| `skew`, `skewX`, `skewY`                  | —                                  |
+| `filter: "drop-shadow(...)"`              | `boxShadow`                        |
+| `clipPath: "inset(... round ...)"`        | `borderRadius`                     |
+| a `layout` animation                      | `margin`, `padding`, `borderWidth` |
 
-- `opacity` - Always safe
-- `x`, `y` - Transform translate
-- `scale`, `scaleX`, `scaleY` - Transform scale
-- `rotate`, `rotateX`, `rotateY`, `rotateZ` - Transform rotate
-- `skew`, `skewX`, `skewY` - Transform skew
-
-### Properties to Avoid Animating
-
-- `width`, `height` - Use scale instead
-- `top`, `left`, `right`, `bottom` - Use x, y instead
-- `margin`, `padding` - Use transform or change layout
-- `border-width` - Triggers layout
-- `box-shadow` - Use filter: drop-shadow() instead
-- `border-radius` - Use clipPath: inset() instead
-
-### Optimization Techniques
+### Keeping work off the render path
 
 ```typescript
-// Use motion values to avoid React re-renders
+// A motion value updates without re-rendering the component
 const x = useMotionValue(0);
 const scale = useTransform(x, [0, 100], [1, 1.5]);
 
-// Lazy load off-screen animations
-<motion.div
-  initial={false}  // Skip initial animation
-  whileInView={{ opacity: 1 }}
-  viewport={{ once: true }}
-/>
-
-// Use layout="position" on children to prevent distortion
-<motion.div layout>
-  <motion.h2 layout="position">Title</motion.h2>
-  <motion.p layout="position">Content</motion.p>
-</motion.div>
+// initial={false} skips the mount animation for content already on screen
+<motion.div initial={false} whileInView={{ opacity: 1 }} viewport={{ once: true }} />
 ```
 
 ---
 
-## Quick Reference
+## API Tables
 
-### Essential Props
+### Props
 
 | Prop          | Purpose          | Example                                        |
 | ------------- | ---------------- | ---------------------------------------------- |
@@ -419,38 +137,37 @@ const scale = useTransform(x, [0, 100], [1, 1.5]);
 | `layoutId`    | Shared element   | `layoutId="unique-id"`                         |
 | `drag`        | Enable dragging  | `drag` or `drag="x"`                           |
 
-### Essential Hooks
+### Hooks
 
-| Hook               | Purpose                  | Returns                                                |
-| ------------------ | ------------------------ | ------------------------------------------------------ |
-| `useAnimation`     | Imperative control       | AnimationControls                                      |
-| `useMotionValue`   | Non-reactive value       | MotionValue                                            |
-| `useTransform`     | Derived value            | MotionValue                                            |
-| `useSpring`        | Springy value            | MotionValue                                            |
-| `useScroll`        | Scroll position          | { scrollX, scrollY, scrollXProgress, scrollYProgress } |
-| `useInView`        | Visibility               | boolean                                                |
-| `usePageInView`    | Tab visibility (v12.19+) | boolean                                                |
-| `useReducedMotion` | Accessibility            | boolean \| null                                        |
-| `useDragControls`  | Programmatic drag        | DragControls (with .stop()/.cancel() in v12)           |
+| Hook               | Purpose                            | Returns                                                |
+| ------------------ | ---------------------------------- | ------------------------------------------------------ |
+| `useAnimation`     | Imperative start, stop and chain   | AnimationControls                                      |
+| `useMotionValue`   | A value held outside React state   | MotionValue, updated outside React                     |
+| `useTransform`     | Map one motion value onto another  | MotionValue derived from another                       |
+| `useSpring`        | Spring-smooth another motion value | MotionValue that springs toward its source             |
+| `useScroll`        | Scroll position and progress       | { scrollX, scrollY, scrollXProgress, scrollYProgress } |
+| `useInView`        | Is the element in the viewport     | boolean (false during server rendering)                |
+| `usePageInView`    | Is the tab visible                 | boolean (true during server rendering)                 |
+| `useReducedMotion` | Has the user asked for less motion | boolean \| null                                        |
+| `useDragControls`  | Start a drag from another element  | DragControls, with `.stop()`/`.cancel()` from v12      |
 
-### Essential Components
+### Components
 
-| Component         | Purpose                   |
-| ----------------- | ------------------------- |
-| `motion.*`        | Animatable element        |
-| `AnimatePresence` | Exit animation wrapper    |
-| `LayoutGroup`     | Scope layoutId            |
-| `MotionConfig`    | Global configuration      |
-| `LazyMotion`      | Tree-shaking optimization |
+| Component         | Purpose                                            |
+| ----------------- | -------------------------------------------------- |
+| `motion.*`        | Animatable element                                 |
+| `AnimatePresence` | Holds removed children until `exit` completes      |
+| `LayoutGroup`     | Scopes `layoutId` to an instance                   |
+| `MotionConfig`    | Defaults for the subtree, including reduced motion |
+| `LazyMotion`      | Defers the feature bundle                          |
 
 ---
 
 ## Accessibility Checklist
 
-- [ ] Uses MotionConfig reducedMotion="user" at app root
-- [ ] Complex animations have useReducedMotion fallback
-- [ ] Decorative animations have aria-hidden="true"
-- [ ] Interactive elements maintain keyboard accessibility
-- [ ] Motion doesn't interfere with screen reader announcements
-- [ ] Auto-playing animations can be paused
-- [ ] Large-scale motion respects prefers-reduced-motion
+- [ ] `MotionConfig reducedMotion="user"` at the app root
+- [ ] Components whose reduced form differs from "no transform" use `useReducedMotion`
+- [ ] Decorative motion carries `aria-hidden="true"`
+- [ ] Elements made interactive by a gesture prop keep a keyboard path and a role
+- [ ] Content that changes as a result of motion is announced, not just moved
+- [ ] Looping motion is pausable, or gated on tab visibility

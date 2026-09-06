@@ -1,21 +1,21 @@
-# @dnd-kit Quick Reference
+# @dnd-kit Reference
 
-> Decision frameworks, API quick reference, and anti-patterns for @dnd-kit development. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
-
----
-
-## Package Versions
-
-| Package              | Latest Stable | Peer Dependencies            |
-| -------------------- | ------------- | ---------------------------- |
-| `@dnd-kit/core`      | 6.3.x         | React 16.8+                  |
-| `@dnd-kit/sortable`  | 10.0.x        | `@dnd-kit/core`, React 16.8+ |
-| `@dnd-kit/utilities` | 3.2.x         | React 16.8+                  |
-| `@dnd-kit/modifiers` | 9.0.x         | `@dnd-kit/core`, React 16.8+ |
+> Hook signatures, event types, strategy and algorithm tables, key bindings, applied ARIA. See [SKILL.md](SKILL.md) for decisions and red flags, [examples/](examples/) for code.
 
 ---
 
-## Core Hooks API
+## Packages
+
+| Package              | Depends on                   |
+| -------------------- | ---------------------------- |
+| `@dnd-kit/core`      | React 16.8+                  |
+| `@dnd-kit/sortable`  | `@dnd-kit/core`, React 16.8+ |
+| `@dnd-kit/utilities` | React 16.8+                  |
+| `@dnd-kit/modifiers` | `@dnd-kit/core`, React 16.8+ |
+
+---
+
+## Core hooks
 
 ### useDraggable
 
@@ -81,7 +81,7 @@ const {
 
 ---
 
-## DndContext Event Handlers
+## DndContext props and event types
 
 ```typescript
 interface DndContextProps {
@@ -106,7 +106,7 @@ interface DragEvent {
 
 ---
 
-## CSS Transform Utilities
+## CSS transform utilities
 
 ```typescript
 import { CSS } from "@dnd-kit/utilities";
@@ -118,11 +118,11 @@ CSS.Transform.toString(transform); // "translate3d(10px, 20px, 0) scaleX(1) scal
 CSS.Translate.toString(transform); // "translate3d(10px, 20px, 0)"
 ```
 
-**Key distinction:** `CSS.Transform` includes `scaleX`/`scaleY` from the transform object. If you only want position movement (common in sortable lists), use `CSS.Translate` instead.
+**Key distinction:** `CSS.Transform` applies `scaleX`/`scaleY` from the transform object, which stretches an item whose neighbours are a different size. `CSS.Translate` moves without scaling and is usually what a sortable list wants.
 
 ---
 
-## Sorting Strategies
+## Sorting strategies
 
 | Strategy                        | Import from         | Virtualization | Best for               |
 | ------------------------------- | ------------------- | -------------- | ---------------------- |
@@ -133,7 +133,7 @@ CSS.Translate.toString(transform); // "translate3d(10px, 20px, 0)"
 
 ---
 
-## Collision Detection Algorithms
+## Collision detection algorithms
 
 | Algorithm          | Import from     | Mechanism                | Best for                        |
 | ------------------ | --------------- | ------------------------ | ------------------------------- |
@@ -157,24 +157,7 @@ CSS.Translate.toString(transform); // "translate3d(10px, 20px, 0)"
 
 ---
 
-## Anti-Patterns
-
-| Anti-Pattern                          | Problem                         | Fix                                                     |
-| ------------------------------------- | ------------------------------- | ------------------------------------------------------- |
-| No DndContext wrapper                 | Hooks fail silently             | Always wrap drag/drop content in DndContext             |
-| Unmounting DragOverlay                | Drop animation breaks           | Always mount DragOverlay, conditionally render children |
-| No KeyboardSensor                     | Keyboard users excluded         | Always include KeyboardSensor in sensors                |
-| closestCenter for Kanban              | Selects column instead of items | Use closestCorners for stacked containers               |
-| No activation constraint              | Clicks trigger drags            | Add distance/delay to PointerSensor                     |
-| Mutating state directly               | React state corruption          | Use arrayMove (returns new array)                       |
-| useDraggable inside DragOverlay       | Unintended behavior             | DragOverlay children are presentational only            |
-| Missing sortableKeyboardCoordinates   | Arrow keys move by pixels       | Pass to KeyboardSensor coordinateGetter                 |
-| SortableContext items mismatch        | Animation glitches              | items array must match rendered children IDs            |
-| rectSortingStrategy for vertical list | Suboptimal animations           | Use verticalListSortingStrategy                         |
-
----
-
-## Keyboard Shortcuts (Default)
+## Default key bindings
 
 | Action       | Key(s)         |
 | ------------ | -------------- |
@@ -185,7 +168,7 @@ CSS.Translate.toString(transform); // "translate3d(10px, 20px, 0)"
 
 ---
 
-## ARIA Attributes Applied by useDraggable
+## ARIA attributes applied by useDraggable
 
 | Attribute              | Default Value | Purpose                        |
 | ---------------------- | ------------- | ------------------------------ |

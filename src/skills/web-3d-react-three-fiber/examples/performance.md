@@ -1,17 +1,12 @@
-# React Three Fiber - Performance Examples
+# React Three Fiber — Performance Examples
 
-> Instancing, LOD, disposal, frame loop control, and performance monitoring. See [SKILL.md](../SKILL.md) for concepts and [reference.md](../reference.md) for decision frameworks.
-
-**Related examples:**
-
-- [core.md](core.md) - Canvas, meshes, materials, lights, camera, useFrame
-- [interaction.md](interaction.md) - Events, raycasting, hover/click, drag
+> Instancing, LOD, on-demand rendering, resource sharing, disposal, adaptive quality. See [SKILL.md](../SKILL.md) for decisions, [reference.md](../reference.md) for Canvas props, [core.md](core.md) for scene setup, [interaction.md](interaction.md) for events.
 
 ---
 
 ## Pattern 1: Instanced Mesh with Animation
 
-### Good Example - Animated Particles via instancedMesh
+### Good — animated particles via instancedMesh
 
 ```tsx
 import { useRef, useEffect, useMemo } from "react";
@@ -56,12 +51,11 @@ export function AnimatedParticles() {
 }
 ```
 
-**Why good:** Single draw call for 2000 objects, dummy Object3D allocated once via useMemo, positions pre-calculated, instanceMatrix.needsUpdate set after batch update
+**Why good:** one draw call for 2000 objects. The `dummy` is a scratch `Object3D` used only to compose a matrix — allocated once, rewritten 2000 times a frame. The random positions live in a memo so they are stable across frames rather than re-rolled on each one, and `needsUpdate` is set once after the whole batch, not per instance.
 
-### Bad Example - Individual Meshes
+### Bad — one mesh per object
 
 ```tsx
-// BAD: 2000 draw calls, 2000 React components
 function BadParticles() {
   return (
     <>
@@ -83,11 +77,11 @@ function BadParticles() {
 }
 ```
 
-**Why bad:** Each mesh is a separate draw call (2000 total), each creates its own geometry and material instances, React reconciles 2000 components
+**Why bad:** 2000 draw calls against 1, plus 2000 geometry and 2000 material uploads, plus 2000 components for React to reconcile. And `Math.random()` in the render body re-rolls every position on every render.
 
-### Drei Instances Helper
+### Drei's Instances helper
 
-Drei provides a higher-level `<Instances>` API for common use cases.
+Same single draw call, written declaratively — worth it when the instances are static or driven by props rather than by a per-frame loop.
 
 ```tsx
 import { Instances, Instance } from "@react-three/drei";
@@ -153,15 +147,13 @@ export function LODSphere() {
 }
 ```
 
-**Why good:** Reduces vertex count by 75%+ at distance, named constants for distance thresholds and segment counts, children ordered by increasing distance
+**Why good:** children are matched to `distances` by position, so the order is the contract — highest detail first. A sphere at 32 segments is roughly sixteen times the triangles of one at 8, and past 30 units that difference is invisible.
 
 ---
 
 ## Pattern 3: On-Demand Rendering
 
-For mostly-static scenes, render only when something changes.
-
-### Good Example - Demand Mode with Invalidation
+### Good — demand mode with invalidation
 
 ```tsx
 import { Canvas, useThree } from "@react-three/fiber";
@@ -190,21 +182,21 @@ function InvalidateOnControlsChange() {
 }
 ```
 
-**Why good:** Scene only re-renders when the user interacts (orbits, zooms); saves battery and GPU cycles for static content
+**Why good:** a static scene under `"always"` re-renders an identical frame sixty times a second forever. Under `"demand"` it draws once and then only when something asks. Drei's controls call `invalidate` themselves; anything else that mutates the scene imperatively has to.
 
-### frameloop Options
+### frameloop options
 
-```
-"always"  -- render every frame (default, for animated scenes)
-"demand"  -- render only when invalidate() is called
-"never"   -- manual control only (advanced use case)
-```
+| Value      | Renders                                        |
+| ---------- | ---------------------------------------------- |
+| `"always"` | Every frame — the default, right for animation |
+| `"demand"` | Only when `invalidate()` is called             |
+| `"never"`  | Only when driven manually                      |
 
 ---
 
 ## Pattern 4: Geometry and Material Sharing
 
-### Good Example - Shared Resources
+### Good — one geometry and one material across many meshes
 
 ```tsx
 import * as THREE from "three";
@@ -246,12 +238,11 @@ export function SphereGrid() {
 }
 ```
 
-**Why good:** One geometry + one material in GPU memory for 25 meshes; useMemo prevents re-creation on re-render
+**Why good:** one geometry and one material on the GPU serving 25 meshes. Passing them as props rather than as children is what makes the sharing possible — a `<sphereGeometry>` child is constructed per parent.
 
-### Bad Example - Duplicate Resources
+### Bad — a fresh geometry and material per mesh
 
 ```tsx
-// BAD: each mesh creates its own geometry and material
 function BadGrid() {
   return (
     <>
@@ -266,13 +257,13 @@ function BadGrid() {
 }
 ```
 
-**Why bad:** 25 identical geometries and materials in GPU memory instead of 1; R3F does NOT automatically deduplicate declarative children
+**Why bad:** 25 identical geometries and 25 identical materials uploaded instead of one of each. R3F does not deduplicate declarative children — identical JSX produces distinct GPU allocations.
 
 ---
 
 ## Pattern 5: Resource Disposal
 
-R3F auto-disposes resources for declaratively created objects when they unmount. But manually created Three.js objects (`new THREE.*()`) need explicit cleanup.
+R3F disposes what it created declaratively when the component unmounts. Anything built with `new` is outside that, and needs disposing explicitly.
 
 ```tsx
 import { useEffect, useMemo } from "react";
@@ -316,9 +307,9 @@ export function ManualResourceComponent() {
 
 ---
 
-## Pattern 6: PerformanceMonitor (Adaptive Quality)
+## Pattern 6: PerformanceMonitor — adaptive quality
 
-Drei's `PerformanceMonitor` tracks FPS and triggers quality adjustments.
+Drei's `PerformanceMonitor` watches the frame rate and calls back when there is room to raise quality, or a need to lower it.
 
 ```tsx
 import { useState } from "react";
@@ -344,13 +335,13 @@ export function AdaptiveScene() {
 }
 ```
 
-**How it works:** Monitors frame rate over time. `onIncline` fires when FPS is consistently high (room to increase quality). `onDecline` fires when FPS drops (reduce quality to maintain smoothness).
+**How it works:** the frame rate is sampled over a window rather than per frame, so a single slow frame does not trigger a change. `dpr` is the usual dial because it scales the pixel count quadratically — dropping 2 to 1 quarters the work.
 
 ---
 
 ## Pattern 7: Movement Regression
 
-Temporarily reduce quality during user interaction (camera orbit, drag) for smooth responsiveness.
+Drop quality only while the user is moving the camera, and restore it when they stop.
 
 ```tsx
 import { useThree } from "@react-three/fiber";
@@ -371,30 +362,15 @@ function RegressOnOrbit() {
 }
 ```
 
-Pair with `AdaptivePixelRatio` or `AdaptiveDpr` from drei to respond to regression events:
+`regress()` only raises a flag; something has to act on it. `AdaptiveDpr` is the piece that does:
 
 ```tsx
 import { AdaptiveDpr } from "@react-three/drei";
 
 <Canvas>
   <AdaptiveDpr pixelated />
-  {/* Automatically lowers DPR during regression, restores after */}
+  {/* lowers dpr while regressed, restores it once motion stops */}
 </Canvas>;
 ```
 
----
-
-## Performance Checklist
-
-```
-[ ] Draw calls under 200 (use instancing for repeated objects)
-[ ] Shared geometries/materials (useMemo or module-level)
-[ ] useFrame never calls setState
-[ ] No new THREE.Vector3/Matrix4 inside useFrame (allocate via useMemo)
-[ ] Static scenes use frameloop="demand"
-[ ] Assets preloaded (useGLTF.preload, useLoader.preload)
-[ ] LOD for objects visible at multiple distances
-[ ] Manual Three.js resources disposed on unmount
-[ ] dpr clamped with [min, max] (not unbounded)
-[ ] Suspense boundaries around async components
-```
+This differs from `PerformanceMonitor` in what it reacts to: the monitor responds to measured frame rate over time, regression responds to interaction immediately. A scene that stutters only while orbiting wants regression; one that is slow on weaker hardware wants the monitor.

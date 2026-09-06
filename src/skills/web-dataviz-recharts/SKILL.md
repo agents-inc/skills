@@ -5,115 +5,106 @@ description: Recharts composable chart components - LineChart, BarChart, AreaCha
 
 # Recharts Patterns
 
-> **Quick Guide:** Recharts wraps D3 in composable React components for declarative charting. Each chart is composed from independent child components (`XAxis`, `YAxis`, `Tooltip`, `Legend`, `CartesianGrid`, data series). Use `ResponsiveContainer` or the `responsive` prop for adaptive sizing. Memoize `data` and callback props to avoid unnecessary recalculations. Custom tooltips use the `content` prop. In v3, `accessibilityLayer` defaults to `true`, and internal state is accessed via hooks, not cloned props.
+> **Quick Guide:** A Recharts chart is an assembly of independent child components — `XAxis`, `YAxis`, `Tooltip`, `Legend`, `CartesianGrid` and one or more data series — rather than one component taking a config object. Features are added and removed by adding and removing children. Charts render nothing without dimensions, so every chart needs `ResponsiveContainer`, the `responsive` prop, or explicit `width`/`height`. Data and callback props are compared by reference, so an inline `.map()` recomputes the whole chart every render. In v3 `accessibilityLayer` defaults to `true` and internal state is read through hooks rather than cloned props.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — line, bar, area and pie charts, responsive sizing, custom tooltips, multi-axis, stacking
+- [examples/advanced.md](examples/advanced.md) — ComposedChart, Brush, reference lines, synchronized charts, real-time updates, scatter shapes, radar
+- [reference.md](reference.md) — chart type table and prop cheat sheets for every component
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Recharts code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Give every chart dimensions** — `ResponsiveContainer`, the `responsive` prop, or explicit `width` and `height`. A chart with none renders an empty SVG and no error.
 
-**(You MUST wrap charts in `ResponsiveContainer` or set the `responsive` prop for adaptive sizing -- charts without responsive handling render at fixed dimensions)**
+**Give `ResponsiveContainer` a parent with a resolved height.** It measures its parent, so a parent at `height: 0` or `display: none` measures zero and the chart never appears.
 
-**(You MUST memoize data arrays and callback functions passed as props -- unstable references cause Recharts to recalculate all data points)**
+**Hold data arrays and callback props stable across renders** with `useMemo` and `useCallback`. Recharts compares them by reference, so a fresh array or arrow function each render re-derives every point.
 
-**(You MUST provide explicit `width` and `height` to chart components when NOT using `ResponsiveContainer` -- charts render nothing without dimensions)**
-
-**(You MUST use the `content` prop on `Tooltip` for custom tooltips -- return HTML elements, NOT SVG elements)**
+**Return HTML from a custom `Tooltip` `content` component.** The tooltip renders into an HTML overlay positioned above the SVG, so SVG elements inside it do not display.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Recharts, recharts, LineChart, BarChart, AreaChart, PieChart, ComposedChart, ScatterChart, RadarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Line, Bar, Area, Pie, Cell, LabelList, Brush, ReferenceLine, ReferenceArea, customized tooltip, chart data visualization
+**Auto-detection:** recharts, LineChart, BarChart, AreaChart, PieChart, ComposedChart, ScatterChart, RadarChart, RadialBarChart, FunnelChart, Treemap, ResponsiveContainer, XAxis, YAxis, CartesianGrid, dataKey, yAxisId, stackId, syncId, LabelList, ReferenceLine, ReferenceArea, Brush, PolarAngleAxis, isAnimationActive, throttleDelay, accessibilityLayer
 
-**When to use:**
+**Applies to:**
 
-- Building line, bar, area, pie, scatter, radar, or composed charts
-- Creating responsive dashboards with multiple chart types
-- Implementing custom tooltips, legends, or axis formatting
-- Composing multiple data series in a single chart
-- Adding reference lines, areas, or brushes for data exploration
+- Line, bar, area, pie, scatter, radar, radial, funnel and treemap charts
+- Composing several series, or several chart types, into one plot
+- Multi-axis charts where series carry different units or scales
+- Custom tooltips, legends, axis tick formatting and data labels
+- Reference lines and areas, brush range selection, cross-chart tooltip sync
+- Animation control and real-time update strategies
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Highly custom, non-standard visualizations (use D3 directly)
-- Canvas-based rendering for very large datasets (50K+ points) -- Recharts uses SVG
-- 3D visualizations or globe/map projections
-
-**Key patterns covered:**
-
-- Chart composition with child components
-- Responsive sizing (`ResponsiveContainer` vs `responsive` prop)
-- Custom tooltips with typed props
-- Multi-axis and multi-series charts
-- ComposedChart for mixing chart types
-- PieChart with custom labels and donut variants
-- Animations and real-time data updates
-- Performance optimization for large datasets
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Basic charts, responsive container, axes, tooltips, legends
-- [examples/advanced.md](examples/advanced.md) - Composed charts, custom shapes, animations, real-time data, Brush
-- [reference.md](reference.md) - Component quick reference, decision frameworks, prop cheat sheets
+- Visualizations with no standard chart shape — building marks from scales and path generators is a different job from composing chart components
+- Canvas or WebGL rendering for very large point counts — Recharts emits SVG, so every mark is a DOM node
+- Physics-based or gesture-driven motion — a series animates between two data states on a duration and an easing, and there is no spring model and no drag-to-animate
+- Geographic projections and 3D scenes
+- Which colours the series use — `stroke` and `fill` take whatever values a product's visual language supplies
+- Accessibility conformance targets — `accessibilityLayer` supplies keyboard navigation and ARIA on the chart, and which level a product must meet is settled elsewhere
 
 ---
 
 <philosophy>
 
-## Philosophy
+Recharts is composition rather than configuration. Adding a `<Tooltip />` adds tooltips; deleting it removes them. There is no options object, and no feature flag — the child list is the configuration.
 
-Recharts treats charts as **compositions of independent React components**. A `LineChart` is not a monolith -- it's an assembly of `XAxis`, `YAxis`, `Tooltip`, `Legend`, `CartesianGrid`, and one or more `Line` components. This composable architecture means you add features by adding child components, not by passing configuration objects.
-
-**Core principles:**
-
-1. **Composition over configuration** -- Add a `Tooltip` component to get tooltips, add `CartesianGrid` for grid lines. Remove them to remove the feature.
-2. **Declarative data binding** -- Pass a `data` array to the chart, use `dataKey` on child components to bind to fields.
-3. **SVG-based rendering** -- All output is SVG, enabling CSS styling and DOM inspection.
-4. **Headless by default** -- Charts have minimal default styling. You control appearance through props and CSS.
-
-**When to use Recharts:**
-
-- Standard chart types (line, bar, area, pie, scatter, radar, funnel)
-- Dashboards with multiple chart types sharing consistent patterns
-- Projects that value a declarative, component-based API over imperative drawing
-
-**When NOT to use:**
-
-- Datasets exceeding ~50K data points (SVG performance degrades -- consider Canvas-based alternatives)
-- Highly custom visualizations that don't map to standard chart types
-- Animations requiring physics-based or gesture-driven interactions
+Two consequences follow. **JSX order is z-order**, because SVG has no `z-index`: an `Area` written before a `Bar` renders behind it. And **`dataKey` is the whole binding contract** — the chart takes one `data` array and each child names the field it reads, so a series without a `dataKey` has nothing to draw.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which chart type
+
+```
+Change over time?
+  Continuous trend        -> LineChart or AreaChart
+  Discrete periods        -> BarChart
+  Trend over totals       -> ComposedChart (Bar + Line)
+Part of a whole?
+  Few categories (< 8)    -> PieChart; innerRadius > 0 for a donut
+Correlation?
+  Two variables           -> ScatterChart; encode a third in the shape's radius
+Multi-dimensional?
+  3+ measures per item    -> RadarChart
+Stages of a process?
+  Successive drop-off     -> FunnelChart
+Hierarchy?
+  Nested proportions      -> Treemap
+```
+
+## Which responsive approach
+
+`ResponsiveContainer` where `debounce`, `aspect`, `onResize`, `minWidth` or `maxHeight` is needed — it measures with a ResizeObserver. The `responsive` prop otherwise, which takes the size from the parent's CSS box and saves a wrapper element.
+
+## When to turn animation off
+
+Data updating more than once a second, point counts in the thousands, print and export, and dashboards rendering many charts at once. Animation redraws the series on every data change.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Chart Composition
+### Pattern 1: Chart composition
 
-Every Recharts chart follows the same composition pattern: a chart container wrapping axis, grid, data series, and overlay components.
+A container holding grid, axes, overlays and one child per series. Each child is an independent feature.
 
 ```tsx
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-
-const CHART_HEIGHT = 400;
-const STROKE_WIDTH = 2;
-
 <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
   <LineChart data={data}>
     <CartesianGrid strokeDasharray="3 3" />
@@ -121,78 +112,46 @@ const STROKE_WIDTH = 2;
     <YAxis />
     <Tooltip />
     <Legend />
-    <Line
-      type="monotone"
-      dataKey="revenue"
-      stroke="#8884d8"
-      strokeWidth={STROKE_WIDTH}
-    />
-    <Line
-      type="monotone"
-      dataKey="expenses"
-      stroke="#82ca9d"
-      strokeWidth={STROKE_WIDTH}
-    />
+    <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
+    <Line type="monotone" dataKey="expenses" stroke="#82ca9d" />
   </LineChart>
-</ResponsiveContainer>;
+</ResponsiveContainer>
 ```
 
-**Why good:** Each child component is an independent feature -- remove `Tooltip` to remove tooltips, remove `CartesianGrid` to remove grid lines. Data binding is declarative via `dataKey`.
-
-See [examples/core.md](examples/core.md) for full chart setup with TypeScript typing.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Responsive Sizing
+### Pattern 2: Responsive sizing
 
-Charts require explicit dimensions. Two approaches for responsive behavior:
-
-#### ResponsiveContainer (recommended for most cases)
+`ResponsiveContainer` measures its parent and passes concrete pixel dimensions down. The `responsive` prop uses the parent's CSS box directly.
 
 ```tsx
-const CHART_HEIGHT = 300;
+<ResponsiveContainer width="100%" aspect={16 / 9} minWidth={MIN_WIDTH}>
+  <LineChart data={data}>{/* ... */}</LineChart>
+</ResponsiveContainer>
 
-<ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-  <BarChart data={data}>{/* ... */}</BarChart>
-</ResponsiveContainer>;
+// Or, with the parent sized in CSS:
+<BarChart data={data} responsive>{/* ... */}</BarChart>
 ```
 
-#### `responsive` prop (v3+ -- simpler, CSS-based)
+Server rendering has no ResizeObserver, so `initialDimension` supplies the first paint's size.
 
-```tsx
-<BarChart data={data} responsive>
-  {/* chart uses standard CSS sizing from parent */}
-</BarChart>
-```
-
-**When to use `ResponsiveContainer`:** When you need `debounce`, `aspect` ratio, `onResize` callback, or `minWidth`/`maxHeight` constraints.
-
-**When to use `responsive` prop:** When standard CSS sizing from the parent element is sufficient and you want to avoid an extra wrapper.
-
-**Gotcha:** `ResponsiveContainer` must have a parent with defined dimensions. If the parent has `height: 0` or is `display: none`, the chart will not render.
-
-See [examples/core.md](examples/core.md) for responsive patterns and SSR considerations.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Custom Tooltips
+### Pattern 3: Custom tooltips
 
-Use the `content` prop on `Tooltip` to render a custom tooltip component. The component receives `active`, `payload`, and `label` props.
+`content` takes an element or a function. The component receives `active`, `payload` and `label`, and `payload` is empty until a mark is hovered.
 
 ```tsx
-import type { TooltipProps } from "recharts";
-import type {
-  ValueType,
-  NameType,
-} from "recharts/types/component/DefaultTooltipContent";
-
 function CustomTooltip({
   active,
   payload,
   label,
 }: TooltipProps<ValueType, NameType>) {
   if (!active || !payload?.length) return null;
-
   return (
     <div className="custom-tooltip">
       <p>{label}</p>
@@ -205,63 +164,35 @@ function CustomTooltip({
   );
 }
 
-// Usage
 <Tooltip content={<CustomTooltip />} />;
 ```
 
-**Why good:** Full control over tooltip markup and styling, TypeScript types from Recharts, HTML elements (not SVG).
+Passing an element rather than the component is how extra props reach it: `content={<CustomTooltip currencySymbol="EUR " />}`.
 
-**Gotcha:** Custom tooltip `content` must return HTML elements, not SVG. Returning SVG causes rendering errors.
-
-See [examples/core.md](examples/core.md) for formatted tooltips and passing extra props.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Axis Configuration
+### Pattern 4: Axis configuration
 
-`XAxis` and `YAxis` accept `type`, `dataKey`, `tickFormatter`, `domain`, and `scale` for controlling axis behavior.
+`domain` accepts literals, `"auto"`, `"dataMin"`, `"dataMax"` and arithmetic on those. `tickFormatter` owns label text.
 
 ```tsx
-const CURRENCY_FORMATTER = (value: number) => `$${value.toLocaleString()}`;
-const DATE_FORMATTER = (value: string) => new Date(value).toLocaleDateString();
-
-<XAxis
-  dataKey="date"
-  tickFormatter={DATE_FORMATTER}
-  angle={-45}
-  textAnchor="end"
-  height={60}
-/>
-<YAxis
-  tickFormatter={CURRENCY_FORMATTER}
-  domain={[0, "dataMax + 1000"]}
-  width={80}
-/>
+<XAxis dataKey="date" tickFormatter={DATE_FORMATTER} angle={-45} textAnchor="end" height={60} />
+<YAxis tickFormatter={CURRENCY_FORMATTER} domain={[0, "dataMax + 1000"]} width={80} />
 ```
 
-**Key props:**
+`XAxis` defaults to `type="category"` and `YAxis` to `type="number"` — a numeric x-axis needs `type="number"` set explicitly, or the values are treated as labels and spaced evenly.
 
-- `type`: `"category"` (default for XAxis) or `"number"` (default for YAxis)
-- `domain`: `[min, max]` -- accepts numbers, `"auto"`, `"dataMin"`, `"dataMax"`, or expressions like `"dataMax + 100"`
-- `tickFormatter`: Function to format tick labels
-- `scale`: `"auto"`, `"log"`, `"symlog"`, or custom D3 scale
-
-See [examples/core.md](examples/core.md) for multi-axis, hidden axes, and label configuration.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: PieChart and Donut Charts
+### Pattern 5: Pie and donut charts
 
-PieChart uses the `Pie` component (not `PieChart` alone). Use `Cell` components for per-slice coloring. Set `innerRadius` for donut style.
+`PieChart` is the container and `Pie` the series. `Cell` children colour slices individually; `innerRadius` above zero makes it a donut.
 
 ```tsx
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-const CHART_SIZE = 400;
-const OUTER_RADIUS = 150;
-const INNER_RADIUS = 80; // > 0 for donut
-
 <PieChart width={CHART_SIZE} height={CHART_SIZE}>
   <Pie
     data={data}
@@ -278,211 +209,97 @@ const INNER_RADIUS = 80; // > 0 for donut
     ))}
   </Pie>
   <Tooltip />
-  <Legend />
-</PieChart>;
+</PieChart>
 ```
 
-**Why good:** `Cell` components give per-slice control. `innerRadius > 0` creates donut chart. `label` prop enables sector labels.
-
-See [examples/core.md](examples/core.md) for custom labels and nested pie charts.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 6: ComposedChart
+### Pattern 6: Multiple axes and multiple series
 
-Mix different chart types (Line, Bar, Area) in a single chart using `ComposedChart`.
+`yAxisId` pairs a series with an axis. Two axes without distinct ids collide on the default id `0`.
 
 ```tsx
-import {
-  ComposedChart,
-  Line,
-  Bar,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
-
 <ComposedChart data={data}>
   <XAxis dataKey="month" />
   <YAxis yAxisId="left" />
   <YAxis yAxisId="right" orientation="right" />
-  <Tooltip />
-  <Legend />
   <Bar dataKey="sales" yAxisId="left" fill="#8884d8" />
   <Line type="monotone" dataKey="trend" yAxisId="right" stroke="#ff7300" />
-  <Area
-    type="monotone"
-    dataKey="forecast"
-    yAxisId="left"
-    fill="#82ca9d"
-    opacity={0.3}
-  />
-</ComposedChart>;
+</ComposedChart>
 ```
 
-**Why good:** Dual Y-axes via `yAxisId`, different visual types in one chart. Use when data has different scales or units.
+`stackId` is the equivalent for stacking — bars sharing one `stackId` stack rather than group.
 
-See [examples/advanced.md](examples/advanced.md) for full ComposedChart patterns.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 ---
 
-### Pattern 7: Animations and Transitions
+### Pattern 7: Animation control
 
-Recharts animates data changes by default. Control with `isAnimationActive`, `animationDuration`, and `animationEasing` on data series components.
+Series animate on mount and on data change. The three props are per series.
 
 ```tsx
-const ANIMATION_DURATION = 800;
-
 <Line
   dataKey="value"
-  isAnimationActive={true}
+  isAnimationActive
   animationDuration={ANIMATION_DURATION}
   animationEasing="ease-in-out"
   animationBegin={0}
-/>;
+/>
 ```
 
-**Disable animations** for real-time data or performance-critical scenarios:
+`animationBegin` staggers series that would otherwise all start together.
 
-```tsx
-<Line dataKey="value" isAnimationActive={false} />
-```
-
-**Gotcha:** When animation is enabled, the entire chart redraws on every data update. For high-frequency updates (>1 update/second), disable animations and use the chart's `throttleDelay` prop.
-
-See [examples/advanced.md](examples/advanced.md) for real-time data patterns.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 ---
 
-### Pattern 8: Performance Optimization
+### Pattern 8: Keeping large or fast-changing charts responsive
 
-For large datasets or frequent updates, apply these patterns:
+Reference stability first, then node count, then event rate.
 
 ```tsx
-// 1. Memoize data to prevent recalculation
-const chartData = useMemo(() => transformData(rawData), [rawData]);
-
-// 2. Memoize callback props
+const chartData = useMemo(() => aggregate(rawData), [rawData]); // stable identity
 const formatTick = useCallback((value: number) => `$${value}`, []);
 
-// 3. Disable animation for frequent updates
-<Line dataKey="value" isAnimationActive={false} />
-
-// 4. Throttle mouse events on the chart
-<LineChart data={chartData} throttleDelay={100}>
+<LineChart data={chartData} throttleDelay={THROTTLE_DELAY_MS}>
+  <Line dataKey="value" isAnimationActive={false} dot={false} />
+</LineChart>;
 ```
 
-**Key strategies:**
+`dot={false}` removes one DOM node per point, which is usually the largest single win — aggregating 50,000 rows to 500 before rendering is the next.
 
-- Memoize `data` arrays -- unstable references force full recalculation
-- Memoize `dataKey` functions -- changes trigger point recalculation
-- Disable animations for real-time or rapidly updating charts
-- Use `throttleDelay` on chart components for mouse event throttling
-- Aggregate data before rendering -- show 500 points instead of 50,000
-
-See [examples/advanced.md](examples/advanced.md) for data sampling and throttling patterns.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Which Chart Type?
-
-```
-What relationship are you showing?
-|
-+-> Change over time?
-|   +-> Continuous trend -> LineChart or AreaChart
-|   +-> Discrete periods -> BarChart
-|   +-> Both overlaid -> ComposedChart
-|
-+-> Part of a whole?
-|   +-> Few categories (< 8) -> PieChart
-|   +-> With center content -> PieChart (donut: innerRadius > 0)
-|
-+-> Correlation between variables?
-|   +-> Two variables -> ScatterChart
-|
-+-> Multi-dimensional comparison?
-|   +-> 3+ variables per item -> RadarChart
-|
-+-> Mixing types?
-    +-> Bar + Line + Area -> ComposedChart
-```
-
-### Responsive Approach?
-
-```
-Need debounce, aspect ratio, onResize callback?
-+-> YES -> ResponsiveContainer
-+-> NO  -> responsive prop (v3+, simpler)
-```
-
-### When to Disable Animations?
-
-- Data updates more than once per second
-- Large datasets (1000+ points)
-- Print or export scenarios
-- Performance-sensitive dashboards with many charts
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- **Chart renders nothing** -- Missing `width`/`height` props and no `ResponsiveContainer`. Charts require explicit dimensions.
-- **Unstable data reference** -- Passing `data={fetchedData.map(...)}` inline creates a new array every render, forcing full recalculation. Memoize with `useMemo`.
-- **Custom tooltip returns SVG** -- The `content` prop on `Tooltip` must return HTML elements. SVG elements cause rendering errors.
-- **`ResponsiveContainer` parent has no dimensions** -- If the parent has `height: 0`, the chart will not render. Ensure the parent has defined height.
+- A series with no `dataKey` — `Line`, `Bar`, `Area` and `Pie` each need one to know which field to read
+- A custom tooltip with no `active`/`payload` guard — `payload` is empty before the first hover, so `payload[0].value` throws
+- `data={rawData.map(...)}` written inline — a new array identity every render, so the chart re-derives everything
+- An arrow function as `dataKey` or `tickFormatter` written inline — same reference churn, per tick
+- Two `YAxis` elements without distinct `yAxisId` — both claim id `0` and the series bind ambiguously
+- `CartesianGrid` left on the default ids while the axes use custom `xAxisId`/`yAxisId` — no grid lines drawn
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- **Missing `dataKey` on data series** -- `Line`, `Bar`, `Area`, and `Pie` require `dataKey` to bind to data fields. Without it, nothing renders.
-- **`CartesianGrid` with non-default axis IDs** -- In v3, `CartesianGrid` requires `xAxisId`/`yAxisId` matching the axes. Mismatched IDs produce no grid lines.
-- **Inline function as `dataKey`** -- Causes recalculation on every render. Memoize with `useCallback` or define outside the component.
-- **PieChart without `Cell` components** -- All slices render in the same default color. Use `Cell` for per-slice coloring.
-
-**Gotchas & Edge Cases:**
-
-- `ResponsiveContainer` uses ResizeObserver -- may not fire on initial render in some SSR scenarios. Set `initialDimension` as a fallback.
-- `XAxis type="category"` is the default -- for numeric axes, explicitly set `type="number"`.
-- `domain` on YAxis resets when data changes unless you set `allowDataOverflow={true}`.
-- Z-index in SVG follows render order, not CSS `z-index` -- place important elements later in JSX to render on top.
-- `syncId` synchronizes tooltips and brushes across charts -- all charts with the same `syncId` share hover state.
-- `Brush` component enables range selection but adds significant DOM elements. Avoid on dashboards with many charts.
-- PieChart `label` prop can be `true` (default labels), an element, or a render function -- but complex labels may overlap on small slices. Use `LabelList` or a custom `label` function with collision detection.
-- `animationBegin` defaults to 0 but animations stack -- multiple series animate simultaneously unless you stagger `animationBegin`.
-- `accessibilityLayer` defaults to `true` in v3 -- keyboard controls and ARIA attributes are enabled automatically.
+- SVG has no `z-index` — stacking follows JSX order, so a series written later draws on top
+- `ResponsiveContainer` measures with a ResizeObserver, which has not fired during server rendering; `initialDimension` covers the first paint
+- `domain` on an axis re-derives when data changes unless `allowDataOverflow` is set
+- `syncId` couples every chart carrying the same value — hover and brush state are shared, including with charts elsewhere in the tree
+- `Brush` adds a second miniature chart's worth of DOM, which is heavy on a dashboard of many charts
+- Pie `label` accepts `true`, an element or a function, and the default labels overlap on small slices — a label function returning `null` below a percentage threshold is the usual fix
+- All slices render the same colour until `Cell` children are added
+- `accessibilityLayer` is on by default in v3, so keyboard navigation and ARIA attributes are present without being asked for
+- Animation redraws the series on every data change, so a chart updating each second is redrawing continuously
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap charts in `ResponsiveContainer` or set the `responsive` prop for adaptive sizing -- charts without responsive handling render at fixed dimensions)**
-
-**(You MUST memoize data arrays and callback functions passed as props -- unstable references cause Recharts to recalculate all data points)**
-
-**(You MUST provide explicit `width` and `height` to chart components when NOT using `ResponsiveContainer` -- charts render nothing without dimensions)**
-
-**(You MUST use the `content` prop on `Tooltip` for custom tooltips -- return HTML elements, NOT SVG elements)**
-
-**Failure to follow these rules will cause charts to render nothing, performance degradation from unnecessary recalculations, and tooltip rendering errors.**
-
-</critical_reminders>

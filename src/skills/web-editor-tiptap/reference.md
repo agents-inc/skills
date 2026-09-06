@@ -1,6 +1,8 @@
 # TipTap Quick Reference
 
-> Decision frameworks, StarterKit contents, extension API cheat sheet, and anti-patterns. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples. **Current: v3.x (2025)**
+> StarterKit contents, the schema and extension API tables, content expressions and the v2 → v3
+> migration. See [SKILL.md](SKILL.md) for the decisions and the red flags, [examples/](examples/)
+> for code. **Current: v3.x**
 
 ---
 
@@ -99,79 +101,3 @@ StarterKit.configure({
 | `CollaborationCursor`                        | `CollaborationCaret`                                | Renamed                          |
 | Link and Underline added separately          | Included in StarterKit                              | New defaults                     |
 | `editor.getCharacterCount()`                 | Use CharacterCount extension                        | Method removed                   |
-
----
-
-## Decision Frameworks
-
-### When to Use StarterKit vs Individual Extensions
-
-```
-Do you need most standard formatting (headings, lists, bold, italic)?
-+-> YES -> Start with StarterKit, disable what you don't need
-+-> NO  -> Install individual extensions for precise control
-```
-
-### When to Use Node Views
-
-```
-Does the node need interactivity beyond text editing?
-+-> NO  -> renderHTML is sufficient
-+-> YES -> Does it need editable child content?
-    +-> YES -> ReactNodeViewRenderer + NodeViewContent
-    +-> NO  -> ReactNodeViewRenderer (atom node, no content hole)
-```
-
-### Menu Type Selection
-
-```
-When should the menu appear?
-+-> On text selection? -> BubbleMenu
-+-> On empty lines / new blocks? -> FloatingMenu
-+-> Always visible? -> Fixed toolbar (regular component reading editor state)
-+-> On "/" or trigger character? -> Custom extension with suggestion plugin
-```
-
----
-
-## Anti-Patterns
-
-### Bad: Direct DOM Manipulation
-
-```typescript
-// Never do this -- bypasses ProseMirror state
-document.querySelector(".ProseMirror p").textContent = "Changed";
-```
-
-**Fix:** Use `editor.commands.setContent()` or transactions.
-
-### Bad: Forgetting to Guard editor null
-
-```typescript
-// editor is null on first render and during SSR
-const isBold = editor.isActive("bold"); // TypeError on first render
-```
-
-**Fix:** Guard with optional chaining or early return:
-
-```typescript
-if (!editor) return null;
-const isBold = editor.isActive("bold");
-```
-
-### Bad: Duplicate Extensions
-
-```typescript
-// StarterKit v3 already includes Link -- this causes errors
-const editor = useEditor({
-  extensions: [StarterKit, Link], // Duplicate extension "link"
-});
-```
-
-**Fix:** Configure via StarterKit or disable and add separately:
-
-```typescript
-StarterKit.configure({ link: { openOnClick: false } });
-// OR
-(StarterKit.configure({ link: false }), Link.configure({ openOnClick: false }));
-```

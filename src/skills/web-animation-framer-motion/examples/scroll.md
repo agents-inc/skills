@@ -1,10 +1,10 @@
 # Motion - Scroll Animation Examples
 
-> Scroll-linked animations including progress bars, reveal effects, and parallax. See [core.md](core.md) for basic patterns.
+> Scroll-linked and scroll-triggered motion, continuing the numbering from [core.md](core.md).
 
 ---
 
-## Scroll Progress Indicator
+## Pattern 8: Scroll Progress Indicator
 
 ### Good Example - Page Progress Bar
 
@@ -36,13 +36,15 @@ export const ScrollProgressBar = () => {
 };
 ```
 
-**Why good:** useSpring smooths scroll progress, scaleX is GPU-accelerated, transformOrigin ensures correct anchor, aria-hidden for decorative element
+**Why good:** `scaleX` is handed a motion value directly, so the bar updates outside React and no
+render runs per scroll frame. `useSpring` smooths the discrete scroll steps a trackpad produces, and
+`transformOrigin: "0%"` is what makes it grow from the left rather than from the middle.
 
 ---
 
-## Section Reveal on Scroll
+## Pattern 9: Reveal on Entering View
 
-### Good Example - Fade In When Visible
+### Good Example - Section Fade
 
 ```typescript
 import { motion, useInView } from "motion/react";
@@ -66,7 +68,11 @@ export const SectionReveal = ({ children, className }: SectionRevealProps) => {
       ref={ref}
       className={className}
       initial={{ opacity: 0, y: REVEAL_DISTANCE_PX }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: REVEAL_DISTANCE_PX }}
+      animate={
+        isInView
+          ? { opacity: 1, y: 0 }
+          : { opacity: 0, y: REVEAL_DISTANCE_PX }
+      }
       transition={{
         duration: REVEAL_DURATION_S,
         delay: REVEAL_DELAY_S,
@@ -79,13 +85,15 @@ export const SectionReveal = ({ children, className }: SectionRevealProps) => {
 };
 ```
 
-**Why good:** useInView with once: true prevents re-animation, negative margin triggers before element is fully visible, custom easing for polish
+**Why good:** `once: true` stops the section re-animating every time it scrolls back into view, which
+otherwise makes a long page feel unstable. The negative margin shrinks the trigger area so the reveal
+starts before the element is fully on screen and is settled by the time it is read.
 
 ---
 
-## Parallax Effect
+## Pattern 10: Parallax
 
-### Good Example - Parallax Image Container
+### Good Example - Image Drifting Against the Scroll
 
 ```typescript
 import { motion, useScroll, useTransform } from "motion/react";
@@ -104,25 +112,17 @@ export const ParallaxImage = ({ src, alt, className }: ParallaxImageProps) => {
     offset: ["start end", "end start"],
   });
 
-  const y = useTransform(
-    scrollYProgress,
-    [0, 1],
-    ["-20%", "20%"]
-  );
+  const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
 
   return (
     <div ref={ref} style={{ overflow: "hidden" }} className={className}>
-      <motion.img
-        src={src}
-        alt={alt}
-        style={{
-          y,
-          scale: 1.2,
-        }}
-      />
+      <motion.img src={src} alt={alt} style={{ y, scale: 1.2 }} />
     </div>
   );
 };
 ```
 
-**Why good:** overflow: hidden contains the parallax movement, scale: 1.2 prevents gaps at edges, offset tracks element through viewport
+**Why good:** The `offset` pair tracks the element from entering the viewport to leaving it, so
+progress runs 0 to 1 over exactly the window the reader sees it in. `scale: 1.2` gives the drift
+somewhere to come from — without the oversize the parallax would expose empty space at one edge, and
+`overflow: hidden` is what crops the surplus.

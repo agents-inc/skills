@@ -3,340 +3,312 @@ name: web-dataviz-d3
 description: D3.js data visualization — selections, data joins, scales, axes, shapes, transitions, force layouts, geo projections, framework integration
 ---
 
-# D3.js Data Visualization Patterns
+# D3.js Patterns
 
-> **Quick Guide:** D3 v7 is fully modular ES modules. Use `selection.join()` for the data join (replaces manual enter/update/exit). Prefer modular imports (`d3-selection`, `d3-scale`, etc.) to reduce bundle size. Scales map data domains to visual ranges; axes render tick marks from scales. Shape generators (`d3.line`, `d3.arc`, `d3.area`) produce SVG path strings from data arrays. Transitions animate attribute/style changes with automatic interpolation. For framework integration, let D3 handle data computation (scales, layouts, shapes) and let your framework own the DOM.
+> **Quick Guide:** D3 v7 is pure ES modules, so import from the individual packages (`d3-selection`, `d3-scale`, `d3-shape`) rather than the `d3` bundle. `selection.join()` replaces manual enter/update/exit chains. Scales map a data domain to a visual range, axes render tick marks from a scale, and shape generators turn data arrays into SVG path strings. `d3-transition` extends the selection prototype by side effect, so `.transition()` does not exist until it is imported. The largest decision is who owns the DOM — D3, or the component framework around it.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — selections, data joins, scales, axes, shape generators, responsive SVG, the margin convention
+- [examples/interaction.md](examples/interaction.md) — transitions, zoom, brush, drag, tooltips
+- [examples/advanced.md](examples/advanced.md) — force layouts, geo projections, framework integration, TypeScript typing
+- [reference.md](reference.md) — module table, scale selection guide, shape generator signatures
+
+---
+
+## Which path applies
+
+- **D3 owns the DOM.** Needed for zoom, brush, drag and force tick, which all attach listeners and write attributes on their own schedule. Hand D3 a ref to one SVG element, call it from a mount hook, and return a cleanup that stops simulations and behaviours. Follow [examples/core.md](examples/core.md) and [examples/interaction.md](examples/interaction.md).
+- **D3 computes, the framework renders.** For static charts, D3 supplies scales, layouts and path strings while the framework emits the SVG declaratively. Cleaner, and nothing has to be cleaned up. Follow [examples/advanced.md](examples/advanced.md) Pattern 3.
+
+Two systems writing the same elements is the failure both branches avoid — pick one owner per SVG subtree.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing D3 code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Join data with `selection.join()`.** One call covers enter, update and exit, where the manual `enter().append().merge()` chain silently drops updates whenever `.merge()` is forgotten.
 
-**(You MUST use `selection.join()` for data joins — NOT manual enter/append/merge/exit chains)**
+**Import from the individual modules — `d3-selection`, `d3-scale`, `d3-shape`.** `import * as d3 from "d3"` pulls 240KB+ of packages the chart never calls, and none of it tree-shakes.
 
-**(You MUST use modular imports (`d3-selection`, `d3-scale`, `d3-shape`) — NOT `import * as d3 from "d3"` in production bundles)**
+**Pass a key function to `.data(array, key)` whenever elements have identity.** Without one D3 binds by index, so a sort or a removal re-binds every element to the wrong datum.
 
-**(You MUST use named constants for ALL visual dimensions, colors, and timing values — NO magic numbers)**
-
-**(You MUST type D3 selections and scales with TypeScript generics — `Selection<SVGGElement, Datum, ...>`, `ScaleLinear<number, number>`)**
+**Type selections and scales through their generics** — `Selection<SVGRectElement, Datum, ...>`, `ScaleLinear<number, number>`. D3's defaults widen to `any` at the first untyped `selectAll`, and the datum type is what makes accessor callbacks checkable.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** D3, d3, d3.js, d3-selection, d3-scale, d3-shape, d3-axis, d3-transition, d3-force, d3-geo, d3-zoom, d3-brush, d3-drag, d3-array, selection.join, data join, enter update exit, scaleLinear, scaleBand, scaleTime, axisBottom, axisLeft, forceSimulation, geoPath, geoMercator, line generator, arc generator, SVG visualization, data-driven documents
+**Auto-detection:** d3, d3-selection, d3-scale, d3-shape, d3-axis, d3-transition, d3-force, d3-geo, d3-zoom, d3-brush, d3-drag, d3-array, d3-scale-chromatic, d3-hierarchy, selection.join, scaleLinear, scaleBand, scaleTime, scaleOrdinal, axisBottom, axisLeft, forceSimulation, forceManyBody, geoPath, geoMercator, curveMonotoneX, PieArcDatum, D3ZoomEvent
 
-**When to use:**
+**Applies to:**
 
-- Building custom SVG/Canvas data visualizations from scratch
-- Bindings between data arrays and DOM elements (the data join)
-- Mapping data domains to pixel ranges (scales and axes)
-- Generating SVG paths from data (lines, arcs, areas, pies)
-- Animating data transitions with interpolated attributes
-- Force-directed graph layouts and geographic map projections
-- Adding zoom, brush, and drag interactions to visualizations
+- Custom SVG and Canvas visualizations built from primitives
+- Binding data arrays to DOM elements — the data join
+- Mapping data domains to pixel ranges, and rendering axes from those scales
+- Generating SVG path strings from data: lines, areas, arcs, pies, stacks
+- Animating attribute changes with interpolation and easing
+- Force-directed graph layouts and geographic projections
+- Zoom, brush and drag behaviours
+- Giving a component framework computed geometry to render
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Standard chart types (bar, line, pie) with minimal customization — use a charting library built on D3
-- Dashboards with many chart widgets — use a higher-level charting library
-- Simple data tables or non-graphical data display
-
-**Key patterns covered:**
-
-- Selections and the data join (`selection.data().join()`)
-- Scales (linear, band, time, ordinal) and axes
-- Shape generators (line, area, arc, pie, stack)
-- Transitions and animated updates
-- Force-directed graph layouts
-- Geographic projections and choropleth maps
-- Zoom, brush, and drag interactions
-- Framework integration: D3 for math, framework for DOM
-- Responsive SVG with viewBox
-- TypeScript typing for D3
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Selections, data joins, scales, axes, shapes, responsive SVG
-- [examples/interaction.md](examples/interaction.md) - Transitions, zoom, brush, drag, tooltips
-- [examples/advanced.md](examples/advanced.md) - Force layouts, geo projections, framework integration patterns
-- [reference.md](reference.md) - Module reference, decision frameworks, anti-patterns
+- Standard bar, line and pie charts with little customization — a component layer that ships chart types out of the box settles those, and this skill is the primitive toolkit underneath it
+- Dashboard composition and widget layout — arranging many charts on a page is not a visualization primitive
+- Which colours a product uses — `d3-scale-chromatic` supplies interpolators and schemes, and the palette they are fed is settled by whatever owns the visual language
+- Accessibility conformance targets — an SVG takes `role`, `aria-label` and `<title>` like any element, and which level a product must meet is settled elsewhere
 
 ---
 
 <philosophy>
 
-## Philosophy
+D3 is a visualization grammar rather than a charting library: primitives for binding data to elements and deriving visual attributes from it. Maximum control, more code.
 
-D3 is a low-level visualization grammar, not a charting library. It provides primitives for binding data to DOM elements and applying data-driven transformations. This gives maximum control at the cost of more code than higher-level alternatives.
-
-**Core mental model:**
-
-1. **Select** elements (existing or placeholder)
-2. **Bind** data to selections with `.data()`
-3. **Join** to create/update/remove elements with `.join()`
-4. **Encode** data as visual attributes with scales
-5. **Annotate** with axes, labels, legends
-6. **Animate** changes with transitions
-
-**D3 v7 key decisions:**
-
-- Pure ES modules — use modular imports for tree-shaking
-- `selection.join()` replaces manual enter/update/exit boilerplate
-- TypeScript types ship with each module (no `@types/d3` needed for core packages, but available for convenience)
-- Works with any framework — D3 handles computation, your framework handles DOM rendering
-
-**When NOT to use D3 directly:**
-
-- Standard charts with minimal customization (use a charting library)
-- Rapid prototyping where development speed matters more than customization
-- Teams without SVG/visualization experience
+The pipeline is **select → bind → join → encode → annotate → animate**. Scales are the hinge — everything visual is a function of data through a scale, so a chart that hardcodes pixel arithmetic has skipped the one abstraction D3 exists to provide.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Which modules to install
+
+```
+Bar / line / area chart  -> d3-selection, d3-scale, d3-axis, d3-shape, d3-array
+Pie / donut chart        -> d3-shape (pie + arc), d3-scale
+Force-directed graph     -> d3-force, d3-selection, d3-drag
+Geographic map           -> d3-geo, d3-selection, d3-scale
+Animated updates         -> d3-transition, d3-ease, d3-interpolate
+Zoom or brush            -> d3-zoom or d3-brush, d3-selection
+Tree / treemap / pack    -> d3-hierarchy, d3-selection
+```
+
+Scale-by-data-type is a lookup rather than a decision — see [reference.md](reference.md).
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Selections and the Data Join
+### Pattern 1: Selections and the data join
 
-The data join is D3's core pattern: bind an array of data to DOM elements, then use `.join()` to create, update, and remove elements as data changes.
+Bind an array to elements, then let `.join()` create, update and remove them as the array changes.
 
 ```typescript
 import { select } from "d3-selection";
 
-const BAR_HEIGHT = 30;
-const BAR_GAP = 5;
-
-// Select, bind data, join
 select(svgElement)
-  .selectAll<SVGRectElement, number>("rect")
-  .data(values, (d) => String(d)) // key function for identity
-  .join("rect") // enter + update merged
+  .selectAll<SVGRectElement, BarData>("rect")
+  .data(data, (d) => d.id) // key function binds by identity, not index
+  .join("rect")
   .attr("y", (_, i) => i * (BAR_HEIGHT + BAR_GAP))
-  .attr("width", (d) => xScale(d))
+  .attr("width", (d) => xScale(d.value))
   .attr("height", BAR_HEIGHT);
 ```
 
-**Why good:** `join("rect")` handles enter/update/exit in one call, key function ensures correct element-data binding across updates, typed selection generics
+`.join()` also takes three callbacks when enter, update and exit need distinct animations.
 
-For advanced join with separate enter/update/exit callbacks, see [examples/core.md](examples/core.md) Pattern 1.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Scales — Mapping Data to Pixels
+### Pattern 2: Scales — mapping data to pixels
 
-Scales are functions that map an input domain (data values) to an output range (pixel positions, colors).
+A scale is a function from a data domain to a visual range. Continuous data takes `scaleLinear`, categories take `scaleBand`, dates take `scaleTime`.
 
 ```typescript
-import { scaleLinear, scaleBand, scaleTime, scaleOrdinal } from "d3-scale";
+import { scaleLinear, scaleBand } from "d3-scale";
+import { max } from "d3-array";
 
-const CHART_WIDTH = 600;
-const CHART_HEIGHT = 400;
-
-// Continuous: numbers -> pixels
 const x = scaleLinear<number>()
-  .domain([0, max(data, (d) => d.value)!])
-  .range([0, CHART_WIDTH]);
+  .domain([0, max(data, (d) => d.value) ?? 0])
+  .range([0, innerWidth])
+  .nice(); // rounds the domain to clean tick values
 
-// Categorical: strings -> pixel bands (bar charts)
 const y = scaleBand<string>()
   .domain(data.map((d) => d.label))
-  .range([0, CHART_HEIGHT])
-  .padding(0.1);
-
-// Time: Date -> pixels
-const timeScale = scaleTime<number>()
-  .domain([startDate, endDate])
-  .range([0, CHART_WIDTH]);
+  .range([0, innerHeight])
+  .padding(0.2); // y.bandwidth() is then the computed bar width
 ```
 
-**Why good:** TypeScript generics on scales, domain derived from data with `max()`, `.padding()` on band scale for gaps between bars
-
-See [examples/core.md](examples/core.md) Pattern 2 for ordinal color scales and `scaleLog`/`scaleSqrt` patterns.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Axes — Rendering Scale Tick Marks
+### Pattern 3: Axes — tick marks generated from a scale
 
-Axes are SVG groups generated from a scale. Render with `selection.call(axis)`.
+An axis is a generator that renders into a `<g>` via `selection.call()`, so it stays in sync with the scale it was built from.
 
 ```typescript
 import { axisBottom, axisLeft } from "d3-axis";
 import { format } from "d3-format";
 
-const TICK_COUNT = 5;
-
-// Create axes from scales
-const xAxis = axisBottom(xScale).ticks(TICK_COUNT).tickFormat(format(",.0f"));
-const yAxis = axisLeft(yScale);
-
-// Render into <g> containers
-svg
+const xAxisGroup = svg
   .append("g")
-  .attr("transform", `translate(0,${CHART_HEIGHT - MARGIN_BOTTOM})`)
-  .call(xAxis);
+  .attr("transform", `translate(0,${innerHeight})`)
+  .call(axisBottom(xScale).ticks(TICK_COUNT).tickFormat(format(",.0f")));
 
-svg.append("g").attr("transform", `translate(${MARGIN_LEFT},0)`).call(yAxis);
+// On update, call the axis on the SAME group — appending a new one duplicates ticks
+xAxisGroup
+  .transition()
+  .duration(TRANSITION_DURATION_MS)
+  .call(axisBottom(xScale));
 ```
 
-**Why good:** axes derived from scales (always in sync), `selection.call()` pattern for reusable rendering, `d3-format` for tick label formatting
-
-See [examples/core.md](examples/core.md) Pattern 3 for time axes and grid line patterns.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Shape Generators — SVG Paths from Data
+### Pattern 4: Shape generators — SVG paths from data
 
-Shape generators are functions that take data arrays and produce SVG `d` attribute strings.
+`line`, `area`, `arc`, `pie` and `stack` are configured once with accessors, then called with data to produce a `d` string.
 
 ```typescript
-import { line, area, arc, pie, curveMonotoneX } from "d3-shape";
+import { line, arc, pie, curveMonotoneX } from "d3-shape";
 import type { PieArcDatum } from "d3-shape";
 
-// Line generator
-const lineGen = line<DataPoint>()
+const lineGen = line<TimeSeriesPoint>()
   .x((d) => xScale(d.date))
   .y((d) => yScale(d.value))
   .curve(curveMonotoneX);
 
-svg
-  .append("path")
-  .datum(data)
-  .attr("d", lineGen)
-  .attr("fill", "none")
-  .attr("stroke", "steelblue");
-
-// Pie + arc generators
-const INNER_RADIUS = 0;
-const OUTER_RADIUS = 150;
-
-const pieGen = pie<SliceData>().value((d) => d.value);
+const pieGen = pie<SliceData>()
+  .value((d) => d.value)
+  .sort(null);
 const arcGen = arc<PieArcDatum<SliceData>>()
   .innerRadius(INNER_RADIUS)
   .outerRadius(OUTER_RADIUS);
-
-svg
-  .selectAll("path")
-  .data(pieGen(sliceData))
-  .join("path")
-  .attr("d", arcGen)
-  .attr("fill", (d) => colorScale(d.data.label));
 ```
 
-**Why good:** generators configured once then reused, `.curve()` for smooth interpolation, typed `PieArcDatum` generic for pie data, named radius constants
-
-See [examples/core.md](examples/core.md) Pattern 4 for area charts and stacked layouts.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Responsive SVG with viewBox
+### Pattern 5: The margin convention and responsive sizing
 
-Use the `viewBox` attribute so SVG scales to its container without JS resize handlers.
+Reserve space for axes with a margin object and an offset inner `<g>`; size with `viewBox` so the SVG scales without a resize listener.
 
 ```typescript
-const VIEWBOX_WIDTH = 960;
-const VIEWBOX_HEIGHT = 500;
+const MARGIN = { top: 20, right: 30, bottom: 40, left: 50 } as const;
+const innerWidth = SVG_WIDTH - MARGIN.left - MARGIN.right;
+const innerHeight = SVG_HEIGHT - MARGIN.top - MARGIN.bottom;
 
 const svg = select(container)
   .append("svg")
-  .attr("viewBox", `0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`)
-  .attr("preserveAspectRatio", "xMidYMid meet")
-  .style("width", "100%")
-  .style("height", "auto");
+  .attr("viewBox", `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`)
+  .style("width", "100%");
+
+const chart = svg
+  .append("g")
+  .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
 ```
 
-**Why good:** SVG scales automatically, no resize listeners needed, chart dimensions stay consistent regardless of container size
+`ResizeObserver` is the escalation, for charts that must re-layout rather than scale.
 
-For dynamic resizing with `ResizeObserver`, see [examples/core.md](examples/core.md) Pattern 5.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 6: Transitions — Animated Data Updates
+### Pattern 6: Transitions — animated updates
 
-Transitions interpolate attributes and styles over time with easing.
+Transitions interpolate numeric attributes and colours over a duration. Give enter, update and exit their own behaviour.
 
 ```typescript
-import { transition } from "d3-transition";
+import "d3-transition"; // side-effect import: adds .transition() to selections
 import { easeCubicOut } from "d3-ease";
 
-const TRANSITION_DURATION_MS = 750;
-const STAGGER_DELAY_MS = 50;
-
-select(svgElement)
-  .selectAll<SVGRectElement, DataPoint>("rect")
-  .data(newData, (d) => d.id)
-  .join(
-    (enter) =>
-      enter
-        .append("rect")
-        .attr("width", 0)
-        .call((s) =>
-          s
-            .transition()
-            .duration(TRANSITION_DURATION_MS)
-            .attr("width", (d) => xScale(d.value)),
-        ),
-    (update) =>
-      update.call((s) =>
+selection.join(
+  (enter) =>
+    enter
+      .append("rect")
+      .attr("height", 0)
+      .call((s) =>
         s
           .transition()
           .duration(TRANSITION_DURATION_MS)
-          .attr("width", (d) => xScale(d.value)),
+          .ease(easeCubicOut)
+          .delay((_, i) => i * STAGGER_DELAY_MS)
+          .attr("height", (d) => innerHeight - yScale(d.value)),
       ),
-    (exit) =>
-      exit.call((s) =>
-        s
-          .transition()
-          .duration(TRANSITION_DURATION_MS)
-          .attr("width", 0)
-          .remove(),
-      ),
-  );
+  (update) =>
+    update.call((s) =>
+      s
+        .transition()
+        .duration(TRANSITION_DURATION_MS)
+        .attr("height", (d) => innerHeight - yScale(d.value)),
+    ),
+  (exit) =>
+    exit.call((s) =>
+      s
+        .transition()
+        .duration(TRANSITION_DURATION_MS)
+        .attr("height", 0)
+        .remove(),
+    ),
+);
 ```
 
-**Why good:** enter/update/exit each have distinct animated behavior, stagger creates cascading effect, named timing constants
-
-See [examples/interaction.md](examples/interaction.md) Pattern 1 for easing functions and chained transitions.
+Full code: [examples/interaction.md](examples/interaction.md)
 
 ---
 
-### Pattern 7: Zoom and Pan
+### Pattern 7: Zoom and pan
 
-Apply zoom behavior with `d3.zoom()` and transform the visualization on zoom events.
+`zoom()` writes a transform on every wheel and drag. Apply it to an inner group — transforming the SVG root moves the viewport and clips panned content.
 
 ```typescript
-import { zoom, zoomIdentity } from "d3-zoom";
+import { zoom } from "d3-zoom";
 import type { D3ZoomEvent } from "d3-zoom";
-
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 32;
 
 const zoomBehavior = zoom<SVGSVGElement, unknown>()
   .scaleExtent([MIN_ZOOM, MAX_ZOOM])
   .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
-    chartGroup.attr("transform", event.transform.toString());
+    select(chartGroup).attr("transform", event.transform.toString());
   });
 
-svg.call(zoomBehavior);
+select(svgEl).call(zoomBehavior);
 ```
 
-**Why good:** typed zoom event and element generics, scale extent prevents over-zoom, transform applied to inner group (not the SVG itself)
+Semantic zoom rescales the axes instead — `event.transform.rescaleX(xScale)`.
 
-See [examples/interaction.md](examples/interaction.md) Pattern 2 for semantic zoom and programmatic zoom controls.
+Full code: [examples/interaction.md](examples/interaction.md)
 
 ---
 
-### Pattern 8: Force-Directed Graph Layout
+### Pattern 8: Brush and drag
 
-Force simulations position nodes using physics-based forces (repulsion, attraction, centering).
+`brushX` returns a pixel range; `.invert()` turns it back into data values. `drag` reports positions and needs `function` rather than an arrow when the handler uses `this`.
+
+```typescript
+import { brushX } from "d3-brush";
+import type { D3BrushEvent } from "d3-brush";
+
+const brush = brushX<unknown>()
+  .extent([
+    [0, 0],
+    [innerWidth, innerHeight],
+  ])
+  .on("end", (event: D3BrushEvent<unknown>) => {
+    if (!event.selection) return; // brush was cleared
+    const [x0, x1] = event.selection as [number, number];
+    onBrush([xScale.invert(x0), xScale.invert(x1)]);
+  });
+```
+
+Full code: [examples/interaction.md](examples/interaction.md)
+
+---
+
+### Pattern 9: Force-directed graph layout
+
+A simulation mutates `x`/`y` on the node objects each tick; the tick handler copies them onto elements. It runs on `requestAnimationFrame` until stopped.
 
 ```typescript
 import {
@@ -347,193 +319,101 @@ import {
   forceCollide,
 } from "d3-force";
 
-const CHARGE_STRENGTH = -300;
-const COLLISION_RADIUS = 5;
-
-const simulation = forceSimulation(nodes)
+const simulation = forceSimulation<GraphNode>(nodes)
   .force(
     "link",
-    forceLink(links)
-      .id((d: NodeDatum) => d.id)
-      .distance(100),
+    forceLink<GraphNode, GraphLink>(links)
+      .id((d) => d.id)
+      .distance(LINK_DISTANCE),
   )
   .force("charge", forceManyBody().strength(CHARGE_STRENGTH))
   .force("center", forceCenter(width / 2, height / 2))
   .force("collide", forceCollide(COLLISION_RADIUS))
   .on("tick", () => {
-    // Update node and link positions from simulation
+    nodeElements.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
   });
+
+return () => simulation.stop(); // cleanup, called on unmount
 ```
 
-**Why good:** named force constants, `.id()` accessor for node identity, `.distance()` for link length, collision prevents overlap
-
-See [examples/advanced.md](examples/advanced.md) Pattern 1 for complete graph rendering with drag interaction.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 ---
 
-### Pattern 9: Geographic Projections
+### Pattern 10: Geographic projections
 
-Project geographic coordinates onto a 2D plane and render GeoJSON features as SVG paths.
+A projection converts longitude/latitude to pixels; `geoPath` turns projected GeoJSON into `d` strings. `fitSize` derives scale and translate from the data.
 
 ```typescript
-import { geoMercator, geoPath, geoNaturalEarth1 } from "d3-geo";
-import type { GeoPermissibleObjects } from "d3-geo";
+import { geoNaturalEarth1, geoPath } from "d3-geo";
 
 const projection = geoNaturalEarth1().fitSize(
   [CHART_WIDTH, CHART_HEIGHT],
-  geoJsonData,
+  geoData,
 );
-
 const pathGenerator = geoPath().projection(projection);
 
 svg
   .selectAll("path")
-  .data(geoJsonData.features)
+  .data(geoData.features)
   .join("path")
   .attr("d", pathGenerator)
   .attr("fill", (d) => colorScale(dataByRegion.get(d.properties.id) ?? 0));
 ```
 
-**Why good:** `fitSize` auto-scales projection to container, path generator produces `d` strings from GeoJSON, color encodes data values per region
-
-See [examples/advanced.md](examples/advanced.md) Pattern 2 for choropleth maps and interactive tooltips.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 ---
 
-### Pattern 10: Framework Integration
+### Pattern 11: Handing computed geometry to a framework
 
-When using D3 with a component framework, split responsibilities: D3 computes layouts, scales, and shapes; your framework renders the DOM.
+For static charts, expose the scales and path strings and let the framework emit the SVG. Nothing to clean up, and the datum types flow into the template.
 
 ```typescript
-// Pattern: D3 for computation, framework for rendering
-// In your component:
+function chartGeometry(data: DataPoint[], width: number, height: number) {
+  const xScale = scaleBand<string>()
+    .domain(data.map((d) => d.label))
+    .range([0, width])
+    .padding(0.2);
+  const yScale = scaleLinear<number>()
+    .domain([0, max(data, (d) => d.value) ?? 0])
+    .range([height, 0])
+    .nice();
+  return { xScale, yScale };
+}
 
-const xScale = scaleLinear().domain([0, maxValue]).range([0, width]);
-const yScale = scaleBand().domain(labels).range([0, height]).padding(0.1);
-const linePath = line<DataPoint>()
-  .x((d) => xScale(d.x))
-  .y((d) => yScale(d.y)!)(data);
-
-// Your framework renders SVG with computed values
-// <svg><path d={linePath} /><rect width={xScale(d.value)} /></svg>
+// The framework then renders: <rect x={xScale(d.label)} width={xScale.bandwidth()} />
 ```
 
-**When D3 must own the DOM** (zoom, brush, drag, force tick): use a ref to an SVG element and call D3 in a lifecycle hook. Clean up the simulation/behavior on unmount.
-
-See [examples/advanced.md](examples/advanced.md) Pattern 3 for the ref-based integration pattern and cleanup.
+Full code: [examples/advanced.md](examples/advanced.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### D3 Module Selection
-
-```
-What are you building?
-|
-+-> Bar/line/area chart?
-|   -> d3-selection, d3-scale, d3-axis, d3-shape, d3-array
-|
-+-> Pie/donut chart?
-|   -> d3-shape (pie + arc generators), d3-scale (color)
-|
-+-> Force-directed graph?
-|   -> d3-force, d3-selection, d3-drag
-|
-+-> Geographic map?
-|   -> d3-geo, d3-selection, d3-scale (color)
-|
-+-> Animated transitions?
-|   -> d3-transition, d3-ease, d3-interpolate
-|
-+-> Interactive (zoom/brush)?
-    -> d3-zoom or d3-brush, d3-selection
-```
-
-### Framework Integration Strategy
-
-```
-Does the visualization need zoom, brush, drag, or force tick?
-|
-+-> NO -> D3 for computation only (scales, shapes, layouts)
-|         Your framework renders SVG/HTML directly
-|         Cleanest integration, fully declarative
-|
-+-> YES -> D3 owns the SVG via a ref element
-           Call D3 in a lifecycle hook (mount/update)
-           Clean up behaviors on unmount
-```
-
-### Scale Selection
-
-| Data Type        | Scale        | Example                  |
-| ---------------- | ------------ | ------------------------ |
-| Continuous       | scaleLinear  | Revenue, temperature     |
-| Categorical      | scaleBand    | Categories on bar chart  |
-| Categorical dots | scalePoint   | Categories without width |
-| Time series      | scaleTime    | Dates on x-axis          |
-| Logarithmic      | scaleLog     | Exponential data ranges  |
-| Square root      | scaleSqrt    | Bubble chart radius      |
-| Color categories | scaleOrdinal | Category -> color        |
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Using `import * as d3 from "d3"` in production — imports the entire 240KB+ bundle. Use modular imports: `import { select } from "d3-selection"`
-- Manual enter/append/merge/exit chains — use `selection.join()` instead (simpler, fewer bugs)
-- Animating non-interpolable attributes (class names, boolean attributes) — only animate numeric attributes and colors
-- Missing key function in `.data(array, key)` when data identity matters — causes incorrect element-data binding on updates
-- Mutating data arrays bound to selections — D3 stores references; mutations cause stale renders
+- `.transition()` without `import "d3-transition"` — TypeError, the method is added by side effect and does not exist otherwise
+- Mutating an array already bound to a selection — D3 stores the reference, so the next render reads values that were never joined
+- `svg.append("g").call(axis)` on every update — a new axis group each time, overlapping tick marks
+- A force simulation left running after unmount — `requestAnimationFrame` keeps writing to detached nodes; return `simulation.stop()` as cleanup
+- An arrow function in a handler that calls `select(this)` — `this` is the enclosing scope, not the element; use `function` or `event.currentTarget`
+- Exit transitions without `.remove()` — elements finish animating and stay in the DOM
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Magic numbers for margins, radii, durations, colors — use named constants
-- Creating a new SVG on every data update — select the existing SVG, update data bindings
-- Appending axes on every update (duplicated tick marks) — select existing `<g>` and `.call(axis)` again, or use `.join()` pattern
-- Forgetting `transition.remove()` on exit — exiting elements stay in the DOM invisible
-- Not using `.nice()` on linear scales — domain ends at awkward values like `[0, 473]`
-
-**Gotchas & Edge Cases:**
-
-- `selection.join()` returns the merged enter+update selection — chained attributes apply to both new and existing elements
-- `scaleBand().bandwidth()` returns the computed bar width — use it for rect width, not a hardcoded value
-- `d3.max()` returns `undefined` for empty arrays — guard with `?? 0` or check array length first
-- `transition.duration()` is per-element, not total — a 750ms transition on 100 elements still takes 750ms (not 75,000ms)
-- `forceSimulation` runs asynchronously via `requestAnimationFrame` — stop it on unmount to prevent memory leaks
-- `geoPath` without a projection renders pre-projected coordinates — only omit projection if GeoJSON is already projected
-- Zoom transform applied to the SVG root clips panned content — apply transform to an inner `<g>` group instead
-- `d3-transition` must be imported for `selection.transition()` to exist — it extends the selection prototype via side effect
-- `.datum()` binds data to a single element without computing a join — use `.data()` for arrays, `.datum()` for single objects
+- `.join("rect")` returns the merged enter+update selection, so attributes chained after it apply to new and existing elements alike
+- `max()` and `extent()` return `undefined` for an empty array — guard with `?? 0` before feeding a domain
+- `.duration()` is per element, not total: 750ms across 100 elements is still 750ms
+- A zoom transform on the SVG root moves the viewport and clips panned content; it belongs on an inner `<g>`
+- `geoPath()` with no projection renders coordinates as-is, which is correct only for pre-projected GeoJSON
+- `.datum()` binds one object to one element and computes no join; `.data()` is for arrays
+- `scaleBand().bandwidth()` is the computed band width — reading it beats hardcoding a bar width that stops matching when the category count changes
+- Without `.nice()` a linear domain ends wherever the data does, giving ticks like `[0, 473]`
+- Only numbers and colours interpolate; class names and boolean attributes jump at the end of the transition
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use `selection.join()` for data joins — NOT manual enter/append/merge/exit chains)**
-
-**(You MUST use modular imports (`d3-selection`, `d3-scale`, `d3-shape`) — NOT `import * as d3 from "d3"` in production bundles)**
-
-**(You MUST use named constants for ALL visual dimensions, colors, and timing values — NO magic numbers)**
-
-**(You MUST type D3 selections and scales with TypeScript generics — `Selection<SVGGElement, Datum, ...>`, `ScaleLinear<number, number>`)**
-
-**Failure to follow these rules will cause bloated bundles, incorrect data binding, and untyped visualization code.**
-
-</critical_reminders>

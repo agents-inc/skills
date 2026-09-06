@@ -1,6 +1,8 @@
 # Leaflet Core Patterns
 
-> Related: [advanced.md](advanced.md) for custom controls, clustering, and performance
+> Map setup, tile providers, markers and icons, GeoJSON, layer groups and control, events. See
+> [SKILL.md](../SKILL.md) for the decisions, [advanced.md](advanced.md) for custom controls,
+> clustering, TypeScript and canvas rendering.
 
 ---
 
@@ -28,8 +30,10 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 ### Alternative Tile Providers
 
+Any XYZ raster endpoint works. `{s}` is a subdomain placeholder and `{r}` expands to `@2x` on retina
+displays; check the provider's own terms for what attribution and what usage they require.
+
 ```typescript
-// Carto light basemap (no API key for light use)
 const CARTO_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, ' +
   '&copy; <a href="https://carto.com/attributions">CARTO</a>';
@@ -43,7 +47,8 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
 
 ### Handling Container Resize
 
-When the map container changes size (accordion expand, sidebar toggle, tab switch), call `invalidateSize`:
+Leaflet caches the container's size, so a resize it did not observe leaves the map rendering to the
+old dimensions — grey tiles and clicks landing off-target:
 
 ```typescript
 // After container CSS transition completes
@@ -135,11 +140,14 @@ const badgeIcon = L.divIcon({
 L.marker([51.5, -0.09], { icon: badgeIcon }).addTo(map);
 ```
 
-**When to use `L.divIcon`:** When markers need dynamic HTML content (counts, status indicators, SVG icons). Lighter than image-based icons for simple shapes.
+**When to use `L.divIcon`:** markers whose content is dynamic — counts, status badges, inline SVG.
+It is also lighter than an image icon for a simple shape, since there is no request.
 
 ### Fix Default Icon Path (Bundler Issue)
 
-Bundlers break Leaflet's default icon path because the CSS is no longer relative to the expected image location. Fix with explicit configuration:
+Leaflet's default icon resolves its images relative to the stylesheet, and a bundler moves the CSS
+somewhere those paths no longer reach — markers render as broken images. Point at the assets
+explicitly:
 
 ```typescript
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -241,7 +249,8 @@ geoLayer.addData(freshData);
 
 ### GeoJSON Coordinate Order
 
-GeoJSON spec uses `[longitude, latitude]`. Leaflet's `L.latLng` uses `[latitude, longitude]`. This is the most common coordinate bug.
+The GeoJSON spec is `[longitude, latitude]` and `L.latLng` is `[latitude, longitude]`. `L.geoJSON`
+flips them for you, so the bug only appears in coordinates written by hand:
 
 ```typescript
 // GeoJSON feature -- longitude first
@@ -290,7 +299,9 @@ if (bounds.isValid()) {
 featureGroup.bindPopup("This group contains multiple features");
 ```
 
-**Key difference:** `L.layerGroup` is a simple container. `L.featureGroup` extends it with `getBounds()`, `bindPopup()`, `bindTooltip()`, and `setStyle()`.
+**Key difference:** `L.layerGroup` is a container and nothing more. `L.featureGroup` adds
+`getBounds()`, `bindPopup()`, `bindTooltip()` and `setStyle()` — reach for it whenever the group has
+to be fitted, styled or clicked as a unit.
 
 ### Layer Control (Base Layers + Overlays)
 
@@ -300,6 +311,7 @@ const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: MAX_ZOOM,
 });
 
+// Stand-in URL and attribution -- substitute your satellite provider's own
 const satellite = L.tileLayer(
   "https://{s}.tile.provider.com/sat/{z}/{x}/{y}.png",
   {

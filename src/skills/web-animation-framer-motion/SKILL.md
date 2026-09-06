@@ -1,344 +1,365 @@
 ---
 name: web-animation-framer-motion
-description: Motion (formerly Framer Motion) animation patterns - motion components, variants, gestures, layout animations, scroll-linked animations, accessibility
+description: Motion (formerly Framer Motion) patterns - motion components, variants, AnimatePresence, gestures, layout animations, scroll-linked motion, reduced-motion handling
 ---
 
 # Motion Animation Patterns
 
-> **Quick Guide:** Use Motion for declarative React animations. `motion.*` components for basic animations, variants for orchestrated sequences, AnimatePresence for exit animations, `layout`/`layoutId` for FLIP animations, `useScroll`/`useInView` for scroll-triggered effects. Always animate transform properties (x, y, scale, rotate, opacity) for GPU performance. Always respect reduced motion via `MotionConfig reducedMotion="user"`.
+> **Quick Guide:** `motion.*` components take `initial`, `animate`, `exit` and `transition` props;
+> variants lift those states into named sets a parent can orchestrate; `AnimatePresence` is what
+> keeps a removed component mounted long enough to animate out; `layout` and `layoutId` run FLIP
+> animations over layout changes; `useScroll` and `useInView` drive motion from scroll position.
+> Animate `x`, `y`, `scale`, `rotate` and `opacity`, and set `MotionConfig reducedMotion="user"` at
+> the root.
 
-> **Import:** `import { motion } from "motion/react"` (v11+ package rename from `framer-motion`)
+> **Import:** `import { motion } from "motion/react"` — the package was renamed from `framer-motion`
+> at v11.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — motion components, variants, AnimatePresence, gestures, reduced motion
+- [examples/layout.md](examples/layout.md) — `layout`, `layoutId`, expandable cards, tab indicators
+- [examples/scroll.md](examples/scroll.md) — scroll progress, reveal on view, parallax
+- [examples/sequences.md](examples/sequences.md) — `useAnimation` chains, keyframe arrays, `stagger()` shaping
+- [examples/svg.md](examples/svg.md) — `pathLength` drawing effects
+- [reference.md](reference.md) — v11/v12 migration, transition presets, prop and hook tables
+
+---
+
+## Which path applies
+
+- **The element enters or leaves the React tree** — the animation needs `AnimatePresence` around it
+  and a `key` on it; follow [examples/core.md](examples/core.md).
+- **The element stays mounted while its size or position changes** — `layout` measures before and
+  after and animates the difference; follow [examples/layout.md](examples/layout.md).
+- **The same element appears in two places at different times** — a shared `layoutId` makes one
+  travel into the other; follow [examples/layout.md](examples/layout.md).
+- **Scroll position drives the value** — `useScroll` with `useTransform`, or `whileInView` for a
+  one-shot trigger; follow [examples/scroll.md](examples/scroll.md).
+- **Something outside React state triggers the animation** — a timer, a response, an error — then
+  `useAnimation` gives the imperative handle; follow [examples/sequences.md](examples/sequences.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Motion code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Wrap anything that animates on removal in `AnimatePresence`.** React unmounts the node the instant
+its condition goes false, so `exit` has nothing left to run against without the wrapper holding the
+node in the tree until the animation finishes.
 
-**(You MUST wrap exiting components in AnimatePresence for exit animations to work)**
+**Give every direct child of `AnimatePresence` a stable, unique `key`.** The key is what
+`AnimatePresence` matches the departing element against; an index key re-points to a different item
+when the list changes and animates the wrong element out.
 
-**(You MUST provide unique `key` prop to direct children of AnimatePresence)**
+**Animate `x`, `y`, `scale`, `rotate` and `opacity`.** Motion writes these to `transform` and
+`opacity`, which the compositor owns; `height`, `width` and `marginTop` re-run layout on each frame
+instead.
 
-**(You MUST animate transform properties (x, y, scale, rotate, opacity) for GPU-accelerated performance)**
-
-**(You MUST respect reduced motion preferences using MotionConfig or useReducedMotion)**
-
-**(You MUST use named constants for all animation timing values - NO magic numbers)**
+**Set `MotionConfig reducedMotion="user"` at the app root.** Transform and layout animations then
+disable themselves for users who asked their OS for reduced motion, while opacity and colour keep
+working — so state changes stay legible rather than becoming instant.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Motion, Framer Motion, motion.div, motion.button, AnimatePresence, useAnimation, useScroll, useInView, usePageInView, variants, whileHover, whileTap, layoutId, spring, tween, stagger, "motion/react", "framer-motion"
+**Auto-detection:** motion/react, framer-motion, motion.div, AnimatePresence, MotionConfig,
+LayoutGroup, LazyMotion, layoutId, whileHover, whileTap, whileDrag, whileInView, useAnimation,
+useScroll, useTransform, useMotionValue, useSpring, useInView, usePageInView, useReducedMotion,
+useDragControls, staggerChildren, delayChildren, Variants
 
-**When to use:**
+**Applies to:**
 
-- Animating component enter/exit/presence
-- Orchestrating complex multi-element animations with variants
-- Implementing gesture-based interactions (hover, tap, drag)
-- Creating scroll-triggered or scroll-linked animations
-- Animating layout changes and shared element transitions
-- Building micro-interactions and UI feedback
+- Enter, exit and presence animation tied to React's mount lifecycle
+- Orchestrating several elements from one parent with variants and stagger
+- Gesture-driven motion — hover, tap, drag, focus
+- Scroll-triggered and scroll-linked effects
+- Layout changes and shared-element transitions between containers
+- Imperative sequences fired by events React state does not model
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Simple CSS transitions (use CSS transitions instead)
-- Complex timeline-based animations requiring frame-level control (consider a dedicated timeline animation library)
-- Performance-critical animations on low-powered devices without careful optimization
-
-**Key patterns covered:**
-
-- motion components and animation props (initial, animate, exit, transition)
-- Variants for reusable, orchestrated animations
-- AnimatePresence for exit animations and animation modes
-- Gesture props (whileHover, whileTap, whileDrag, drag)
-- Layout animations (layout prop, layoutId, LayoutGroup)
-- Scroll animations (useScroll, useInView, whileInView)
-- Spring and tween transitions
-- useAnimation for imperative control
-- Reduced motion accessibility
-- v12: usePageInView, enhanced stagger(), drag stop/cancel
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Motion components, variants, AnimatePresence, gestures, accessibility
-- [examples/layout.md](examples/layout.md) - Layout animations, shared elements, expandable cards
-- [examples/scroll.md](examples/scroll.md) - Scroll progress, reveal, parallax
-- [examples/sequences.md](examples/sequences.md) - Complex sequences, keyframes
-- [examples/svg.md](examples/svg.md) - SVG path animations
-- [reference.md](reference.md) - Decision frameworks, migration guide, anti-patterns, performance, quick reference
+- Purely declarative state feedback — a hover colour, a focus ring — where nothing mounts, unmounts
+  or moves. The styling layer settles those without a component wrapper
+- Frame-level timeline authoring, where the deliverable is a scrubbable timeline rather than a set of
+  component states
+- Whole-document view swaps where the browser composites an outgoing and incoming page together
 
 ---
 
 <philosophy>
 
-## Philosophy
-
-Motion is a declarative animation library for React that makes animations feel natural and accessible. It uses a physics-based approach with spring animations as defaults, creating fluid motion that matches real-world expectations.
-
-**Core principles:**
-
-1. **Declarative over imperative** - Describe what the animation should look like, not how to achieve it
-2. **Props over keyframes** - Use `initial`, `animate`, `exit` props instead of CSS keyframes
-3. **Variants for orchestration** - Group related animations and control timing with parent-child relationships
-4. **Performance through transforms** - Animate GPU-accelerated properties (transform, opacity) for smooth 60fps
-5. **Accessibility built-in** - Respect user preferences for reduced motion
+Motion animates state rather than time. A component declares what it looks like in each state, and
+Motion works out the interpolation, the interruption and the velocity carried across it — which is
+why a spring interrupted mid-flight continues from where it was rather than restarting.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## When Motion earns its place
+
+Motion is worth the component wrapper and the bundle when at least one is true:
+
+- The element is being **removed** from the tree and must animate before it goes
+- The **from** value is measured rather than authored — a layout change, a drag release, an
+  interrupted spring
+- Several elements must be **orchestrated** from one trigger, with stagger and reverse-on-exit
+- The animated value is **derived from a continuous input** such as scroll progress
+
+None of those true means the motion is a state change with both ends known in advance, which needs no
+runtime.
+
+## Variants or direct props
+
+Reach for variants once more than one element shares the animation, or once the parent needs to
+control child timing — `staggerChildren` and `delayChildren` only exist on the variant path, and
+children inherit the parent's variant name without being passed anything. A single element with two
+states is clearer with `initial`/`animate` written inline.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic Motion Components
+### Pattern 1: Motion Components
 
-Prefix any HTML or SVG element with `motion.` to make it animatable. Use `initial`, `animate`, `exit`, and `transition` props.
+Any HTML or SVG tag prefixed with `motion.` accepts `initial`, `animate`, `exit` and `transition`.
 
 ```typescript
 import { motion } from "motion/react";
 
-const FADE_DURATION_S = 0.3;
-const SLIDE_DISTANCE_PX = 20;
-
 export const FadeIn = ({ children }: { children: React.ReactNode }) => (
   <motion.div
-    initial={{ opacity: 0, y: SLIDE_DISTANCE_PX }}
+    initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: FADE_DURATION_S }}
+    transition={{ duration: 0.3 }}
   >
     {children}
   </motion.div>
 );
 ```
 
-**Why good:** Named constants, declarative intent, `y` is GPU-accelerated (never animate `top`/`left`/`margin`)
+`y` compiles to a transform; `marginTop` or `top` would relayout each frame.
 
-See [examples/core.md](examples/core.md) Pattern 1 for full examples with className, delay props, and bad examples.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Variants for Orchestrated Animations
+### Pattern 2: Variants for Orchestration
 
-Variants define reusable animation states and enable parent-child orchestration with `staggerChildren`.
+Variants name animation states so a parent can drive its children by name and control their timing.
 
 ```typescript
 import { motion, type Variants } from "motion/react";
 
-const STAGGER_DELAY_S = 0.1;
-
-const ITEM_DISTANCE_PX = 20;
-
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: STAGGER_DELAY_S } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: ITEM_DISTANCE_PX },
+  hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
 };
 ```
 
-Children automatically inherit animation state from parent. Use `staggerDirection: -1` for reverse stagger on exit.
+Children inherit the parent's current variant name, so the item elements carry no `animate` prop of
+their own. `staggerDirection: -1` reverses the cascade on exit, so a list unwinds from the bottom.
 
-See [examples/core.md](examples/core.md) Pattern 2 for complete list animation with exit variants.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: AnimatePresence for Exit Animations
+### Pattern 3: AnimatePresence
 
-AnimatePresence enables exit animations for components being removed from the React tree. Direct children **must** have unique `key` props.
+Keeps a removed component in the tree until its `exit` animation finishes.
 
 ```typescript
 import { AnimatePresence, motion } from "motion/react";
-
-const MODAL_SCALE_HIDDEN = 0.95;
 
 <AnimatePresence>
   {isOpen && (
     <motion.div
       key="modal"
-      initial={{ opacity: 0, scale: MODAL_SCALE_HIDDEN }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: MODAL_SCALE_HIDDEN }}
+      exit={{ opacity: 0, scale: 0.95 }}
     />
   )}
 </AnimatePresence>
 ```
 
-**Animation modes:** `mode="sync"` (default, simultaneous), `mode="wait"` (wait for exit before enter - ideal for page transitions), `mode="popLayout"` (for shared layout transitions).
+`mode="sync"` (default) overlaps the exit and the enter; `mode="wait"` holds the enter until the exit
+finishes, which is what page transitions want; `mode="popLayout"` takes the exiting element out of
+flow so the remaining siblings animate into place.
 
-See [examples/core.md](examples/core.md) Pattern 3 for modal and page transition examples.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Gesture Animations
+### Pattern 4: Gestures
 
-Gesture props enable hover, tap, focus, and drag interactions.
+`whileHover`, `whileTap`, `whileFocus` and `whileDrag` describe a state that holds for the duration
+of the gesture and unwinds when it ends.
 
 ```typescript
-const HOVER_SCALE = 1.05;
-const TAP_SCALE = 0.95;
-const GESTURE_SPRING = { type: "spring" as const, stiffness: 400, damping: 17 };
-
 <motion.button
-  whileHover={{ scale: HOVER_SCALE }}
-  whileTap={{ scale: TAP_SCALE }}
-  transition={GESTURE_SPRING}
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  transition={{ type: "spring", stiffness: 400, damping: 17 }}
 />
 ```
 
-For drag: use `drag`, `dragConstraints`, `dragElastic`, `whileDrag`. Use `useDragControls` for programmatic drag (v12+ adds `.stop()`/`.cancel()`).
+Drag adds `drag`, `dragConstraints` (a ref or a pixel box), `dragElastic` for resistance past the
+bounds, and `useDragControls` when something other than the element itself starts the drag.
 
-See [examples/core.md](examples/core.md) Pattern 4 for interactive card and draggable element examples.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
 ### Pattern 5: Layout Animations
 
-The `layout` prop animates layout changes automatically using FLIP technique. Use `layout="position"` on children to prevent text distortion. Use `layoutId` for shared element transitions across different containers.
+`layout` measures the element before and after a React commit and animates the difference, so a
+change to flex order, grid placement or content size animates without any from-value being authored.
 
 ```typescript
 <motion.div layout transition={LAYOUT_SPRING}>
   <motion.h2 layout="position">Title</motion.h2>
 </motion.div>
 
-// Shared element: layoutId creates seamless transitions
 {activeTab === tab && <motion.div layoutId="indicator" />}
 ```
 
-Use `LayoutGroup` with `id` prop to scope `layoutId` to component instances (layoutId is global by default).
+`layout="position"` animates a child's position but not its scale, which is what keeps text from
+stretching while the parent resizes. `layoutId` matches two elements that are never mounted at once
+and animates one into the other; the id is global, so `LayoutGroup id={...}` scopes it when the
+component can appear more than once on a page.
 
-See [examples/layout.md](examples/layout.md) for expandable cards and tab indicator examples.
+Full code: [examples/layout.md](examples/layout.md)
 
 ---
 
-### Pattern 6: Scroll-Triggered Animations
+### Pattern 6: Scroll-Driven Motion
 
-`whileInView` for scroll-triggered animations. `useScroll` + `useTransform` for scroll-linked effects.
+`whileInView` fires once on entry; `useScroll` with `useTransform` maps continuous scroll progress
+onto a value.
 
 ```typescript
-const REVEAL_DISTANCE_PX = 50;
-const PARALLAX_RANGE_PX = 100;
-
-// Scroll-triggered (fires once)
 <motion.div
-  initial={{ opacity: 0, y: REVEAL_DISTANCE_PX }}
+  initial={{ opacity: 0, y: 50 }}
   whileInView={{ opacity: 1, y: 0 }}
   viewport={{ once: true, margin: "-100px" }}
-/>
+/>;
 
-// Scroll-linked (continuous)
-const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-const y = useTransform(scrollYProgress, [0, 1], [-PARALLAX_RANGE_PX, PARALLAX_RANGE_PX]);
+const { scrollYProgress } = useScroll({
+  target: ref,
+  offset: ["start end", "end start"],
+});
+const y = useTransform(scrollYProgress, [0, 1], [-100, 100]);
 ```
 
-Motion values from `useScroll` update without React re-renders.
+The value returned by `useScroll` is a motion value, which updates outside React — no re-render runs
+per scroll frame.
 
-See [examples/scroll.md](examples/scroll.md) for progress bar, parallax, and reveal examples.
+Full code: [examples/scroll.md](examples/scroll.md)
 
 ---
 
 ### Pattern 7: Spring and Tween Transitions
 
 ```typescript
-// Springs - physics-based, natural feel
-const BOUNCY = { type: "spring", stiffness: 300, damping: 10 }; // Playful
-const SNAPPY = { type: "spring", stiffness: 500, damping: 30 }; // Responsive
-const GENTLE = { type: "spring", stiffness: 100, damping: 20 }; // Subtle
+// Springs: physics, no fixed duration, survive interruption
+const BOUNCY = { type: "spring", stiffness: 300, damping: 10 };
+const SNAPPY = { type: "spring", stiffness: 500, damping: 30 };
 
-// Tweens - duration-based, precise control
-const ENTER = { type: "tween", ease: "easeOut", duration: 0.3 }; // Enter
-const EXIT = { type: "tween", ease: "easeIn", duration: 0.2 }; // Exit
+// Tweens: fixed duration and curve
+const ENTER = { type: "tween", ease: "easeOut", duration: 0.3 };
+const EXIT = { type: "tween", ease: "easeIn", duration: 0.2 };
 ```
 
-**Rule of thumb:** Springs for interactive elements (buttons, cards), tweens for UI transitions (modals, page changes).
+Springs suit anything a user can interrupt — buttons, cards, drags — because velocity carries across
+the interruption. Tweens suit motion that has to finish in a known time, such as a modal or a page
+change coordinated with something else.
 
-See [reference.md](reference.md) for full transition type reference with additional presets.
+Presets: [reference.md](reference.md)
 
 ---
 
-### Pattern 8: useAnimation for Imperative Control
+### Pattern 8: Imperative Control with useAnimation
 
-Use `useAnimation` when you need programmatic control over animations triggered by external events, complex sequences, or start/stop behavior.
+For animations triggered by something React state does not represent — a timer, a response, an
+error.
 
 ```typescript
-const SHAKE_DISTANCE_PX = 10;
-const SHAKE_DURATION_S = 0.3;
-
 const controls = useAnimation();
 
 useEffect(() => {
   if (hasError) {
-    controls.start({
-      x: [0, -SHAKE_DISTANCE_PX, SHAKE_DISTANCE_PX, -SHAKE_DISTANCE_PX, 0],
-      transition: { duration: SHAKE_DURATION_S },
-    });
+    controls.start({ x: [0, -10, 10, -10, 0], transition: { duration: 0.3 } });
   }
 }, [hasError, controls]);
 
-<motion.div animate={controls}>{children}</motion.div>
+<motion.div animate={controls}>{children}</motion.div>;
 ```
 
-See [examples/sequences.md](examples/sequences.md) for multi-step sequences and keyframe animations.
+Passing an array to `controls.start` runs the steps in sequence, each awaiting the last.
+
+Full code: [examples/sequences.md](examples/sequences.md)
 
 ---
 
-### Pattern 9: Reduced Motion Accessibility
-
-Always respect user preferences for reduced motion.
+### Pattern 9: Reduced Motion
 
 ```typescript
-// Site-wide: wrap app root
+// Whole app
 <MotionConfig reducedMotion="user">{children}</MotionConfig>
 
-// Per-component: custom handling
-const FULL_DISTANCE_PX = 50;
-const FULL_DURATION_S = 0.5;
-const REDUCED_DURATION_S = 0.2;
-
+// One component, where the reduced form is different rather than absent
 const shouldReduceMotion = useReducedMotion();
 <motion.div
-  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : FULL_DISTANCE_PX }}
+  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 50 }}
   animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: shouldReduceMotion ? REDUCED_DURATION_S : FULL_DURATION_S }}
+  transition={{ duration: shouldReduceMotion ? 0.2 : 0.5 }}
 />
 ```
 
-`MotionConfig reducedMotion="user"` automatically disables transform/layout animations when reduced motion is preferred. Opacity and color animations still work.
+`reducedMotion="user"` disables transform and layout animation while leaving opacity and colour
+alone, so the app still shows that something changed. Reach for `useReducedMotion` when the reduced
+form needs its own values rather than the transform simply being dropped.
 
-See [examples/core.md](examples/core.md) Pattern 5 for complete accessible animation component.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 10: v12 Features
+### Pattern 10: Stagger Shaping and Tab Visibility
 
-**usePageInView** (v12.19+): Detect when page/tab is visible to pause animations or videos in background tabs. Returns `boolean`, defaults to `true` on server.
-
-```typescript
-import { usePageInView } from "motion/react";
-const isPageVisible = usePageInView();
-```
-
-**Enhanced stagger()** (v12+): Pass `stagger()` to `delayChildren` in variants for `from` and `ease` options.
+`stagger()` (v12+) goes on `delayChildren`, not `staggerChildren` — it returns a function that
+computes each child's delay, which is what lets the cascade start from the centre or run to an
+easing curve.
 
 ```typescript
-import { stagger } from "motion/react";
+import { stagger, usePageInView } from "motion/react";
 
-// stagger() is passed to delayChildren, NOT staggerChildren
 const transition = {
   delayChildren: stagger(0.05, { from: "center", ease: "easeOut" }),
 };
-// from options: "first" (default), "center", "last", or number (index)
+// from: "first" (default) | "center" | "last" | an index
+
+const isPageVisible = usePageInView(); // v12.19+, true on the server
 ```
 
-**Drag Controls** (v12+): `useDragControls` gains `.stop()` and `.cancel()` methods.
+`usePageInView` reports tab visibility, which is what a looping animation should be gated on so it
+stops burning frames in a background tab.
+
+Full code: [examples/sequences.md](examples/sequences.md)
 
 </patterns>
 
@@ -346,56 +367,40 @@ const transition = {
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Missing AnimatePresence for exit animations - exit prop has no effect without it
-- Missing unique key on AnimatePresence children - cannot track elements
-- Animating layout-triggering properties (height, width, top, left, margin, padding) - use transform (x, y, scale) instead
-- Magic numbers for timing values - all durations, delays, distances must be named constants
-- Ignoring reduced motion - always use `MotionConfig reducedMotion="user"` or `useReducedMotion`
+- `exit` on a component with no `AnimatePresence` above it — React removes the node first and the
+  prop never runs — wrap the conditional
+- A React Fragment as the direct child of `AnimatePresence` — fragments take no `key`, so nothing is
+  tracked and every exit is skipped — give each element its own keyed conditional
+- `key={index}` on animated list children — the key re-points to a different item on insert or sort,
+  and the wrong element animates out — key by a stable id
+- Animating `height`, `width`, `top`, `left`, `margin` or `padding` — relayouts each frame — animate
+  `scale` and `x`/`y`, with `transformOrigin` set where the growth should start
+- A parent with `layout` whose text children lack `layout="position"` — the children scale with the
+  box and the type visibly stretches — add the prop to each child
+- No reduced-motion handling — full-travel motion reaches users who asked their OS for none — set
+  `MotionConfig reducedMotion="user"` at the root
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using index as key in animated lists - causes incorrect animations when list changes
-- Missing `layout="position"` on children during parent layout animation - children will distort
-- Overusing `willChange` - creates GPU layers; Motion handles optimization automatically
-- Not cleaning up `useAnimation` in useEffect - can cause memory leaks
-
-**Gotchas & Edge Cases:**
-
-- `layoutId` is global - use LayoutGroup with id prop to scope to component instances
-- `AnimatePresence mode="wait"` blocks enter until exit completes - may cause perceived delay
-- `whileInView` uses `viewport` not `offset` for configuration (unlike `useScroll`)
-- SVG animations require `motion.path`, `motion.circle`, etc. - regular SVG elements won't animate
-- `useInView` returns `false` on server - default to visible state for SSR
-- Motion values don't trigger re-renders (by design) - use `useMotionValueEvent` for side effects
-- React Fragments inside AnimatePresence break tracking - each direct child must have a key
-- `drag` with `layout` can conflict - disable layout during drag or use `dragListener`
-- Spring animations can overshoot - high stiffness + low damping; test with real content
-- v12 `stagger()` goes on `delayChildren`, not `staggerChildren` - they serve different purposes
+- `layoutId` is global, so two instances of the same component on one page fight over it — scope them
+  with `LayoutGroup id={...}`
+- `mode="wait"` serialises exit and enter, so the perceived delay is the sum of both durations
+- `whileInView` is configured by `viewport`, while `useScroll` is configured by `offset` — the two
+  prop names are not interchangeable
+- Only `motion.path`, `motion.circle` and their siblings animate; a plain `<path>` inside a
+  `motion.svg` is inert
+- `useInView` returns `false` during server rendering, so the server markup is the hidden state
+  unless the initial state is set to visible
+- Motion values deliberately do not re-render — read them through `useMotionValueEvent` when a side
+  effect has to run
+- `drag` and `layout` on one element contest the same transform; disable layout during the drag
+- A spring with high stiffness and low damping overshoots far enough to clip real content, which a
+  short placeholder string will not reveal
+- `willChange` set by hand competes with Motion's own layer management, which already promotes what
+  it is animating
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap exiting components in AnimatePresence for exit animations to work)**
-
-**(You MUST provide unique `key` prop to direct children of AnimatePresence)**
-
-**(You MUST animate transform properties (x, y, scale, rotate, opacity) for GPU-accelerated performance)**
-
-**(You MUST respect reduced motion preferences using MotionConfig or useReducedMotion)**
-
-**(You MUST use named constants for all animation timing values - NO magic numbers)**
-
-**Failure to follow these rules will break exit animations, cause performance issues, and create inaccessible experiences.**
-
-</critical_reminders>

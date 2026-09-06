@@ -1,12 +1,12 @@
 # Motion - SVG Animation Examples
 
-> SVG path animations and drawing effects. See [core.md](core.md) for basic patterns.
+> Path drawing, continuing the numbering from [core.md](core.md).
 
 ---
 
-## Animated Checkmark
+## Pattern 14: Path Drawing with pathLength
 
-### Good Example - Drawing Effect with pathLength
+### Good Example - Animated Checkmark
 
 ```typescript
 import { motion } from "motion/react";
@@ -59,4 +59,7 @@ export const AnimatedCheck = ({
 };
 ```
 
-**Why good:** pathLength creates drawing effect, staggered opacity and pathLength for polish, aria-hidden when not visible
+**Why good:** `pathLength` is normalised to 0–1 regardless of the path's real length, so the circle
+and the tick draw over the same span without either being measured. Both shapes are `motion.*`
+elements — a plain `<path>` here would appear instantly while its sibling drew. Per-property
+transitions let the opacity settle faster than the stroke, so the shape is visible while it draws.

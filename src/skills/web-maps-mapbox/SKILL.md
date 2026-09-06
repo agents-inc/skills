@@ -1,193 +1,226 @@
 ---
 name: web-maps-mapbox
-description: Mapbox GL JS interactive maps - map initialization, markers, popups, sources, layers, expressions, clustering, 3D terrain, geocoding, directions
+description: Mapbox GL JS interactive vector maps. Use when building a map with sources and layers, expressions, clustering, 3D terrain, geocoding or directions.
 ---
 
 # Mapbox GL JS Patterns
 
-> **Quick Guide:** Use Mapbox GL JS v3 for interactive vector maps. Initialize with `new mapboxgl.Map()`, add data via sources (GeoJSON, vector), visualize with layers (fill, line, circle, symbol, fill-extrusion, heatmap), style dynamically with expressions. Use the Standard style as the default base with slots (`bottom`, `middle`, `top`) for layer placement. Enable clustering on GeoJSON sources for large point datasets. Use `setTerrain` + `setFog` for 3D terrain. Types are included in the `mapbox-gl` package (no `@types/mapbox-gl` needed).
+> **Quick Guide:** Mapbox GL JS renders vector tiles on the GPU, and the whole mental model is
+> **sources hold data, layers visualize them, expressions make the visualization data-driven**. One
+> source can feed several layers, and a layer's appearance is decided by a JSON expression rather
+> than by JavaScript touching features. Everything that adds data waits for the style — `load` or
+> `style.load` — because the map has no style at construction. Clustering is a flag on a GeoJSON
+> source, not a plugin. **Current: v3**, where the Standard style is the default and custom layers
+> are placed into named slots rather than before a layer id.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — map setup and cleanup, markers, popups, controls, camera animation, feature-state hover, custom controls
+- [examples/layers.md](examples/layers.md) — sources, every layer type, expressions, filters, clustering, safe removal
+- [examples/interaction.md](examples/interaction.md) — 3D terrain, fog, fill-extrusion, heatmaps, geocoder and directions plugins, `queryRenderedFeatures`, image sources
+- [reference.md](reference.md) — v3 migration, slots and configuration, layer and source tables, the full expression operator list, event table, performance tuning
+
+---
+
+## Which path applies
+
+- **The Standard style** (v3's default, `mapbox://styles/mapbox/standard`) — place custom layers with
+  `slot: "bottom" | "middle" | "top"`, and change the basemap's own appearance through
+  `setConfigProperty` rather than by editing its layers.
+- **A classic or custom style** — there are no slots; `addLayer(layer, beforeId)` positions a layer
+  relative to an existing one, which means reading `map.getStyle().layers` to find the id.
+- **Terrain, fog or anything that must survive a style switch** — register it on `style.load`, which
+  fires again on every `setStyle`, rather than on `load`, which fires once. See
+  [examples/interaction.md](examples/interaction.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Mapbox GL JS code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Add a source before any layer that references it.** A layer naming a source that does not exist
+throws, and layers cannot be reordered around that.
 
-**(You MUST add sources before layers that reference them -- adding a layer without its source throws a runtime error)**
+**Do source and layer work inside a `load` or `style.load` handler.** The map has no style when the
+constructor returns, so `addSource` immediately after `new mapboxgl.Map()` fails with "Style is not
+done loading".
 
-**(You MUST listen for `load` or `style.load` before calling `addSource`/`addLayer` -- the style is not ready on construction)**
+**Call `map.remove()` when the map goes away.** It releases the WebGL context, and browsers cap how
+many can exist at once — a leaked map makes the next one fail to initialize.
 
-**(You MUST clean up map instances with `map.remove()` on unmount -- leaks GPU memory and event listeners)**
+**Style with expressions rather than by looping over features.** An expression runs on the GPU for
+every feature at once; a JavaScript loop that sets styles individually gives up the rendering model
+the library exists for.
 
-**(You MUST use named constants for coordinates, zoom levels, and style values -- NO magic numbers)**
-
-**(You MUST use expressions for data-driven styling instead of iterating features and setting styles individually)**
+**Put untrusted content through `setText()` or `setDOMContent()`.** `Popup.setHTML()` renders what
+it is given without sanitizing it.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Mapbox, mapbox-gl, mapboxgl, Map, Marker, Popup, NavigationControl, GeolocateControl, addSource, addLayer, GeoJSON source, vector source, expressions, flyTo, easeTo, fitBounds, setTerrain, setFog, fill-extrusion, clustering, slot, Standard style, mapbox-gl-geocoder, mapbox-gl-directions, mapbox-gl-draw
+**Auto-detection:** Mapbox, mapbox-gl, mapboxgl, `mapboxgl.Map`, `mapboxgl.Marker`, `mapboxgl.Popup`, NavigationControl, GeolocateControl, ScaleControl, addSource, addLayer, setPaintProperty, setLayoutProperty, setFilter, setFeatureState, queryRenderedFeatures, querySourceFeatures, getClusterExpansionZoom, fill-extrusion, raster-dem, setTerrain, setFog, setConfigProperty, `mapbox://styles/mapbox/standard`, `@mapbox/mapbox-gl-geocoder`, `@mapbox/mapbox-gl-directions`, `@mapbox/mapbox-gl-draw`
 
-**When to use:**
+**Applies to:**
 
-- Rendering interactive vector tile maps with custom styling
-- Displaying point/line/polygon data on a map with data-driven styling
-- Building map-based UIs with markers, popups, and custom controls
-- Visualizing large datasets with clustering, heatmaps, or 3D extrusions
-- Adding geocoding search, routing directions, or drawing tools
-- Creating 3D terrain visualizations with elevation data
+- Interactive vector maps with custom styling
+- Point, line and polygon data styled from its own properties
+- Markers, popups and map controls, including custom ones through `IControl`
+- Large datasets through clustering, heatmaps and GPU-rendered layers
+- 3D — terrain, fog, extruded buildings
+- Camera animation and layer-scoped event handling
+- The Standard style's slot system and configuration API
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Static map images without interactivity (use Mapbox Static Images API)
-- Simple embedded maps without custom data (a basic iframe embed suffices)
-- Applications requiring offline-only maps without a Mapbox access token
-
-**Key patterns covered:**
-
-- Map initialization with Standard style and access token
-- Markers, popups, and built-in controls
-- Source/layer model (GeoJSON, vector, raster-dem)
-- Expression-based data-driven styling
-- Clustering with automatic expansion on click
-- 3D terrain, fog, and fill-extrusion buildings
-- Camera animation (flyTo, easeTo, fitBounds)
-- Event handling (click, mouseenter, mouseleave on layers)
-- v3 slot system and Standard style configuration
-
----
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Map setup, markers, popups, controls, events, camera animation
-- [examples/layers.md](examples/layers.md) - Sources, layers, expressions, clustering, data-driven styling
-- [examples/interaction.md](examples/interaction.md) - 3D terrain, fog, fill-extrusion, drawing, geocoding, directions
-- [reference.md](reference.md) - Decision frameworks, layer types, expression operators, anti-patterns
+- Where the GeoJSON comes from — a source takes an object or a URL, and fetching, caching and paging
+  it are not the map's concern
+- Sanitizing content before it reaches `setHTML` — the popup renders raw markup and cleans nothing
+- Provisioning and restricting the access token — the map reads a token, and where it is stored and
+  what it is scoped to is a deployment decision
+- How markers, popups and controls look — the library supplies elements and class names, and the CSS
+  in them is settled by whatever owns styling
+- Rendering a map as a static image server-side — this is a WebGL client
 
 ---
 
 <philosophy>
 
-## Philosophy
+**Sources, layers, expressions**, and the separation between them is the point:
 
-Mapbox GL JS renders vector tiles on the GPU using WebGL 2, enabling smooth 60fps map interactions with large datasets. The core mental model is **sources + layers + expressions**:
+1. **Sources** hold data — GeoJSON, vector tiles, raster tiles, elevation, images
+2. **Layers** decide how a source is drawn — fill, line, circle, symbol, fill-extrusion, heatmap,
+   raster
+3. **Expressions** make a layer data-driven — colour by property, size by zoom, filter by attribute
 
-1. **Sources** hold the data (GeoJSON, vector tiles, raster tiles, images)
-2. **Layers** define how to visualize sources (fill, line, circle, symbol, fill-extrusion, heatmap, raster)
-3. **Expressions** make layers data-driven (color by property, size by zoom, filter by attribute)
+So one GeoJSON source can be a fill layer and a line layer at once, and restyling is a change to a
+layer's paint properties with the data untouched.
 
-This separation means one source can power multiple layers (e.g., same GeoJSON rendered as both a fill layer and a line layer for borders), and layers can be styled entirely through expressions without touching the data.
+**Styling is declarative and runs on the GPU.** An expression is a JSON array evaluated per feature
+per frame by the renderer, which is why the same expression costs the same on ten features and on a
+hundred thousand.
 
-**v3 Standard style:** The default style is `mapbox://styles/mapbox/standard`, which includes 3D buildings, terrain-aware rendering, and a slot system (`bottom`, `middle`, `top`) for inserting custom layers at predetermined positions in the visual stack. Use `setConfigProperty` to customize the Standard style's appearance without replacing it.
-
-**TypeScript:** Types are bundled with `mapbox-gl` since v3 -- do not install `@types/mapbox-gl`.
+**The style is a document the map loads**, and the Standard style in v3 is a live one: slots are the
+insertion points it publishes for your layers, and `setConfigProperty` is how you change what it
+draws without knowing what is inside it.
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+### Which layer type
+
+```
+Points
+├─ Fewer than ~100, with custom HTML?   → Markers (DOM elements)
+├─ Many, or styled from data?           → circle layer, or symbol for icons and labels
+└─ Density rather than individuals?     → heatmap layer
+
+Lines and routes                        → line layer
+Polygons
+├─ Flat areas?                          → fill layer
+└─ Extruded?                            → fill-extrusion layer
+Imagery                                 → raster layer
+```
+
+### Which source type
+
+```
+GeoJSON, local or from an API   → type: "geojson"; setData() to replace, cluster: true past ~500 points
+A tileset or third-party tiles  → type: "vector"; every layer needs "source-layer"
+Elevation                       → type: "raster-dem", consumed by setTerrain
+A georeferenced image           → type: "image", with its four corner coordinates
+```
+
+### Markers or a circle layer
+
+```
+< 100, needing custom HTML or their own interaction   → Markers
+100 – 10,000                                          → circle layer
+10,000+                                               → circle layer, cluster: true on the source
+```
+
+### Which expression
+
+```
+Same for every feature?         → a literal paint value
+Discrete categories?            → "match"
+A continuous range?             → "interpolate"
+Conditional logic?              → "case"
+Changing with zoom?             → "interpolate" over ["zoom"]
+Hover or selection state?       → "case" over ["feature-state", ...], updated by setFeatureState
+```
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Map Initialization
-
-Initialize with container, style, center, zoom. Always wait for `load` event before adding sources/layers.
+### Pattern 1: Map initialization
 
 ```typescript
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const DEFAULT_CENTER: [number, number] = [-74.006, 40.7128]; // [lng, lat]
-const DEFAULT_ZOOM = 12;
-
 mapboxgl.accessToken = process.env.MAPBOX_ACCESS_TOKEN!;
 
 const map = new mapboxgl.Map({
-  container: "map", // HTML element ID or element reference
+  container: "map", // element id or the element itself
   style: "mapbox://styles/mapbox/standard",
-  center: DEFAULT_CENTER,
-  zoom: DEFAULT_ZOOM,
+  center: [-74.006, 40.7128], // [lng, lat]
+  zoom: 12,
 });
 
 map.on("load", () => {
-  // Safe to add sources and layers here
+  // sources and layers from here
 });
 ```
 
-**Why good:** Named constants for coordinates/zoom, waits for `load` before data operations, uses Standard style
-
-See [examples/core.md](examples/core.md) Pattern 1 for cleanup patterns and bad examples.
+Full code, including teardown: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Markers, Popups, and Controls
+### Pattern 2: Markers, popups and controls
 
-Markers are DOM elements placed at coordinates. Popups display content on click. Controls add navigation UI.
+A Marker is a DOM element pinned to a coordinate; a Popup is content anchored to one.
 
 ```typescript
-const MARKER_COLOR = "#e74c3c";
+const popup = new mapboxgl.Popup({ offset: 25 }).setText("Description");
 
-const popup = new mapboxgl.Popup({ offset: 25, maxWidth: "300px" }).setHTML(
-  "<h3>Location</h3><p>Description</p>",
-);
-
-new mapboxgl.Marker({ color: MARKER_COLOR })
+new mapboxgl.Marker({ color: "#e74c3c" })
   .setLngLat([-74.006, 40.7128])
   .setPopup(popup)
   .addTo(map);
 
 map.addControl(new mapboxgl.NavigationControl(), "top-right");
-map.addControl(
-  new mapboxgl.GeolocateControl({ trackUserLocation: true }),
-  "top-right",
-);
-map.addControl(new mapboxgl.ScaleControl({ unit: "metric" }), "bottom-left");
 ```
 
-**Why good:** Popup bound to marker (opens on click automatically), controls positioned explicitly, named color constant
+Binding the popup to the marker is what makes it open and close on click without a handler.
 
-See [examples/core.md](examples/core.md) Pattern 2 for custom marker elements and programmatic popup examples.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Source and Layer Model
+### Pattern 3: Sources and layers
 
-Add a GeoJSON source, then one or more layers that reference it. Sources and layers are independent -- one source can feed multiple layers.
+Add the source once; add as many layers over it as the visualization needs.
 
 ```typescript
 map.on("load", () => {
-  map.addSource("parks", {
-    type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: [
-              /* ... */
-            ],
-          },
-          properties: { name: "Central Park", area: 3.41 },
-        },
-      ],
-    },
-  });
+  map.addSource("parks", { type: "geojson", data: parksGeoJSON });
 
   map.addLayer({
     id: "parks-fill",
     type: "fill",
     source: "parks",
-    slot: "middle", // v3 Standard style slot
-    paint: {
-      "fill-color": "#2ecc71",
-      "fill-opacity": 0.5,
-    },
+    slot: "middle", // Standard style placement
+    paint: { "fill-color": "#2ecc71", "fill-opacity": 0.5 },
   });
 
   map.addLayer({
@@ -195,336 +228,189 @@ map.on("load", () => {
     type: "line",
     source: "parks",
     slot: "middle",
-    paint: {
-      "line-color": "#27ae60",
-      "line-width": 2,
-    },
+    paint: { "line-color": "#27ae60", "line-width": 2 },
   });
 });
 ```
 
-**Why good:** Source defined once, two layers visualize it differently, `slot: "middle"` places layers correctly in Standard style
-
-See [examples/layers.md](examples/layers.md) Pattern 1-2 for all source types and layer configuration.
+Full code: [examples/layers.md](examples/layers.md)
 
 ---
 
-### Pattern 4: Data-Driven Styling with Expressions
+### Pattern 4: Data-driven styling with expressions
 
-Expressions are JSON arrays that style features based on their properties or zoom level.
+An expression is a JSON array the renderer evaluates per feature.
 
 ```typescript
-map.addLayer({
-  id: "population-circles",
-  type: "circle",
-  source: "cities",
-  paint: {
-    // Size by population
-    "circle-radius": [
-      "interpolate",
-      ["linear"],
-      ["get", "population"],
-      10000,
-      5,
-      100000,
-      15,
-      1000000,
-      30,
-    ],
-    // Color by category
-    "circle-color": [
-      "match",
-      ["get", "type"],
-      "capital",
-      "#e74c3c",
-      "major",
-      "#3498db",
-      "#95a5a6", // fallback
-    ],
-  },
-});
+paint: {
+  "circle-radius": ["interpolate", ["linear"], ["get", "population"],
+    10_000, 5, 1_000_000, 30],
+  "circle-color": ["match", ["get", "type"],
+    "capital", "#e74c3c",
+    "major", "#3498db",
+    "#95a5a6"],  // the fallback is required, and covers missing properties
+}
 ```
 
-**Why good:** Expressions handle all styling on the GPU -- no JavaScript loops over features, scales with any dataset size
-
-See [examples/layers.md](examples/layers.md) Pattern 3-4 for expression operators and filter expressions.
+Full operator list in [reference.md](reference.md). Full code:
+[examples/layers.md](examples/layers.md)
 
 ---
 
 ### Pattern 5: Clustering
 
-Enable clustering on a GeoJSON source for large point datasets. Use three layers: cluster circles, count labels, unclustered points.
+Clustering is a property of the source, and the three layers over it split by whether a feature is a
+cluster.
 
 ```typescript
-const CLUSTER_RADIUS = 50;
-const CLUSTER_MAX_ZOOM = 14;
-
 map.addSource("earthquakes", {
   type: "geojson",
   data: "/data/earthquakes.geojson",
   cluster: true,
-  clusterMaxZoom: CLUSTER_MAX_ZOOM,
-  clusterRadius: CLUSTER_RADIUS,
+  clusterMaxZoom: 14,
+  clusterRadius: 50,
 });
 ```
 
-**Why good:** Clustering is handled entirely by the source -- no external library needed, automatic `point_count` property on clusters
+The source then adds `point_count` and `cluster_id` to every cluster feature, which is what
+`filter: ["has", "point_count"]` selects on.
 
-See [examples/layers.md](examples/layers.md) Pattern 5 for complete cluster layers and click-to-expand interaction.
+Full code, all three layers and click-to-expand: [examples/layers.md](examples/layers.md)
 
 ---
 
-### Pattern 6: Camera Animation
-
-`flyTo` for dramatic transitions, `easeTo` for smooth pans, `fitBounds` for fitting data in view.
+### Pattern 6: Camera animation
 
 ```typescript
-const FLY_ZOOM = 15;
-const FLY_SPEED = 1.2;
-const BOUNDS_PADDING_PX = 50;
-
-map.flyTo({
-  center: [-122.4194, 37.7749],
-  zoom: FLY_ZOOM,
-  speed: FLY_SPEED,
-  essential: true, // not affected by prefers-reduced-motion
-});
-
-map.fitBounds(
-  [
-    [-122.5, 37.7],
-    [-122.3, 37.8],
-  ], // [sw, ne]
-  { padding: BOUNDS_PADDING_PX },
-);
+map.flyTo({ center: [-122.4194, 37.7749], zoom: 15, essential: true });
+map.easeTo({ center, zoom, duration: 2000, bearing: 45, pitch: 60 });
+map.fitBounds([sw, ne], { padding: 50 });
 ```
 
-**Why good:** `essential: true` ensures critical navigation animations still play even with reduced-motion preferences, padding keeps data away from edges
+`flyTo` arcs, `easeTo` is a direct transition, and `fitBounds` derives the camera from data extent.
+`essential: true` makes the animation ignore `prefers-reduced-motion`, so it belongs on navigation
+the user asked for and nowhere else.
 
-See [examples/core.md](examples/core.md) Pattern 4 for easeTo, moveend listener, and bearing/pitch animation.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 7: Layer Event Handling
+### Pattern 7: Layer-scoped events
 
-Listen for events on specific layers for interactive features (click popups, hover effects).
+Passing a layer id scopes the handler to features in that layer and puts them on the event.
 
 ```typescript
 map.on("click", "parks-fill", (e) => {
   const feature = e.features?.[0];
   if (!feature) return;
-
-  const coordinates = e.lngLat;
-  const name = feature.properties?.name ?? "Unknown";
-
   new mapboxgl.Popup()
-    .setLngLat(coordinates)
-    .setHTML(`<strong>${name}</strong>`)
+    .setLngLat(e.lngLat)
+    .setText(feature.properties?.name ?? "")
     .addTo(map);
 });
 
-// Cursor feedback on hover
-map.on("mouseenter", "parks-fill", () => {
-  map.getCanvas().style.cursor = "pointer";
-});
-map.on("mouseleave", "parks-fill", () => {
-  map.getCanvas().style.cursor = "";
-});
+map.on(
+  "mouseenter",
+  "parks-fill",
+  () => (map.getCanvas().style.cursor = "pointer"),
+);
+map.on("mouseleave", "parks-fill", () => (map.getCanvas().style.cursor = ""));
 ```
 
-**Why good:** Events scoped to a specific layer (not the whole map), cursor change signals interactivity
+Without the cursor change nothing tells the user the feature is clickable.
 
-See [examples/core.md](examples/core.md) Pattern 5 for feature-state hover highlighting.
+Full code, including feature-state hover: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 8: 3D Terrain and Fog
+### Pattern 8: 3D terrain and fog
 
-Add elevation with a raster-dem source and atmospheric effects with fog.
+Elevation is a `raster-dem` source consumed by `setTerrain`; fog is what makes the horizon read as
+distance rather than as a cut-off.
 
 ```typescript
-const TERRAIN_EXAGGERATION = 1.5;
-const TERRAIN_MAX_ZOOM = 14;
-const TERRAIN_TILE_SIZE = 512;
-
 map.on("style.load", () => {
   map.addSource("mapbox-dem", {
     type: "raster-dem",
     url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-    tileSize: TERRAIN_TILE_SIZE,
-    maxzoom: TERRAIN_MAX_ZOOM,
+    tileSize: 512,
+    maxzoom: 14,
   });
-
-  map.setTerrain({ source: "mapbox-dem", exaggeration: TERRAIN_EXAGGERATION });
-
-  map.setFog({
-    range: [-1, 2],
-    "horizon-blend": 0.3,
-    color: "white",
-    "high-color": "#add8e6",
-    "space-color": "#d8f2ff",
-    "star-intensity": 0.0,
-  });
+  map.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 });
+  map.setFog({ range: [-1, 2], "horizon-blend": 0.3, color: "white" });
 });
 ```
 
-**Why good:** Named exaggeration constant, terrain source separate from visual layers, fog adds atmospheric depth
+`style.load` rather than `load`, so terrain survives a `setStyle`.
 
-See [examples/interaction.md](examples/interaction.md) Pattern 1-2 for fog presets and fill-extrusion 3D buildings.
+Full code: [examples/interaction.md](examples/interaction.md)
 
 ---
 
-### Pattern 9: v3 Standard Style Configuration
+### Pattern 9: Standard style configuration
 
-Customize the Standard style's built-in appearance without replacing it.
+Change what the basemap draws without replacing it or reaching into its layers.
 
 ```typescript
-// At initialization
-const map = new mapboxgl.Map({
-  container: "map",
+new mapboxgl.Map({
   style: "mapbox://styles/mapbox/standard",
   config: {
-    basemap: {
-      lightPreset: "dusk",
-      showPointOfInterestLabels: false,
-    },
+    basemap: { lightPreset: "dusk", showPointOfInterestLabels: false },
   },
 });
 
-// At runtime
 map.setConfigProperty("basemap", "lightPreset", "night");
-map.setConfigProperty("basemap", "showPlaceLabels", true);
 ```
 
-**Why good:** Configuration API modifies the Standard style's built-in features without needing to understand its internal layer structure
+Full property list in [reference.md](reference.md).
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### Choosing a Layer Type
-
-```
-What geometry are you displaying?
-|
-+-> Points?
-|   +-> Few (<100) with custom HTML? -> Markers (DOM-based)
-|   +-> Many or data-driven styling? -> circle layer or symbol layer
-|   +-> Heatmap visualization? -> heatmap layer
-|
-+-> Lines/routes?
-|   +-> line layer (width, color, dash patterns)
-|
-+-> Polygons?
-|   +-> Flat colored areas? -> fill layer
-|   +-> 3D extruded shapes? -> fill-extrusion layer
-|
-+-> Raster imagery?
-    +-> raster layer (satellite, custom tiles)
-```
-
-### Choosing a Source Type
-
-```
-Where is your data?
-|
-+-> Local/API GeoJSON? -> type: "geojson"
-|   +-> Dynamic updates? -> Use map.getSource(id).setData(newData)
-|   +-> Large point dataset? -> Enable cluster: true
-|
-+-> Mapbox tileset or third-party vector tiles? -> type: "vector"
-|
-+-> Elevation data? -> type: "raster-dem"
-|
-+-> Image overlay? -> type: "image" (with coordinates bounds)
-```
-
-### Markers vs Circle Layers
-
-```
-How many points?
-|
-+-> < 100 with custom HTML/interaction? -> Markers (DOM elements)
-+-> 100-10,000? -> circle layer (GPU-rendered)
-+-> 10,000+? -> circle layer with clustering enabled on source
-```
-
-### Styling Approach
-
-```
-Is the style static (same for all features)?
-|
-+-> YES -> Use literal paint values: "circle-color": "#e74c3c"
-+-> NO -> Does it depend on a data property?
-    +-> Discrete categories? -> "match" expression
-    +-> Continuous range? -> "interpolate" expression
-    +-> Conditional logic? -> "case" expression
-    +-> Zoom-dependent? -> "interpolate" with ["zoom"]
-```
-
-</decision_framework>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Calling `addSource`/`addLayer` before the `load` event -- style is not ready, throws error
-- Adding a layer that references a source that doesn't exist -- must add source first
-- Not calling `map.remove()` on component unmount -- leaks GPU memory, WebGL contexts, and event listeners
-- Using `Popup.setHTML()` with unsanitized user input -- XSS vulnerability. Use `setText()` or `setDOMContent()` for user data
-- Iterating features to set individual styles instead of using expressions -- defeats GPU rendering, O(n) JavaScript vs O(1) GPU expressions
+- `addSource`/`addLayer` called before the style loads — "Style is not done loading" — move them into
+  a `load` or `style.load` handler
+- A layer naming a source that has not been added — throws — add the source first
+- `map.getSource(id)` used without a guard — it returns `undefined` for an unknown id — check it, and
+  narrow on `source.type` before calling `setData`
+- `removeSource` before `removeLayer` — a source cannot be removed while a layer references it —
+  remove the layers first
+- No `map.remove()` on unmount — leaks the WebGL context, and browsers cap how many can exist, so a
+  later map silently fails to initialize
+- `Popup.setHTML()` with user input — the content is rendered unsanitized — use `setText()`, or
+  `setDOMContent()` with elements you built
+- A `fill-extrusion` layer with no `fill-extrusion-height` — the extrusions render flat, so the layer
+  looks like it is not working
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Using Markers for large datasets (100+ points) -- DOM elements are expensive, use circle/symbol layers instead
-- Not scoping layer events to a specific layer -- `map.on("click", handler)` fires for any click, `map.on("click", "layer-id", handler)` targets one layer
-- Missing cursor feedback on interactive layers -- users don't know features are clickable without `mouseenter`/`mouseleave` cursor changes
-- Hardcoding coordinates, zoom levels, or style values -- use named constants
-- Using `@types/mapbox-gl` package -- types are included in `mapbox-gl` since v3
-
-**Gotchas & Edge Cases:**
-
-- Coordinates are `[longitude, latitude]` -- reversed from the common `[lat, lng]` order used by some libraries
-- `queryRenderedFeatures` only returns features currently visible in the viewport -- for all features use `querySourceFeatures`
-- GeoJSON source `setData()` replaces the entire dataset -- for partial updates use `featureState` via `map.setFeatureState()`
-- `style.load` fires every time the style changes (including `setStyle`), `load` fires only once -- use `style.load` for operations that must survive style switches
-- Expression property access returns `null` for missing properties -- always provide fallback values in `match`/`case`/`coalesce`
-- Popup `setHTML` does not sanitize HTML -- any user-provided content must be sanitized before passing
-- `flyTo` with `essential: true` overrides `prefers-reduced-motion` -- use only for critical navigation, not decorative animations
-- Clustered sources automatically add `point_count` and `cluster_id` properties -- do not create these manually
-- `getClusterExpansionZoom` is async (callback-based) -- handle errors and check if map still exists before calling `easeTo`
-- `map.getSource()` returns `undefined` if the source doesn't exist -- always guard the return value
-- Layer `slot` property only works with the Standard style -- classic styles use `beforeId` parameter in `addLayer`
-- `fill-extrusion` layers require `fill-extrusion-height` property -- without it extrusions are flat (0 height)
+- Coordinates are `[longitude, latitude]`, the reverse of the `[lat, lng]` order most mapping code
+  uses — a swapped pair lands in the wrong hemisphere rather than erroring
+- `queryRenderedFeatures` only sees what is currently drawn in the viewport; `querySourceFeatures`
+  reaches the rest
+- `setData()` replaces the entire dataset and re-parses it — for visual state per feature use
+  `setFeatureState` instead
+- `style.load` fires on every `setStyle`; `load` fires once — anything that has to survive a style
+  switch belongs on the first
+- An expression reading a missing property yields `null`, so `match`, `case` and `coalesce` need
+  their fallback branch
+- `essential: true` overrides `prefers-reduced-motion` — correct for navigation, wrong for
+  decoration
+- A clustered source writes `point_count` and `cluster_id` onto cluster features; do not add
+  properties by those names
+- `getClusterExpansionZoom` answers through a callback, so handle its error and check the map still
+  exists before animating
+- `slot` is ignored outside the Standard style — a classic style positions layers with `beforeId`
+- Markers past a hundred or so points are DOM elements and cost like DOM elements; a circle layer
+  renders on the GPU
+- `map.on("click", handler)` with no layer id fires on every click anywhere on the map, including
+  clicks the user meant for a feature
+- `@types/mapbox-gl` is a deprecated stub — types ship inside `mapbox-gl` from v3
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST add sources before layers that reference them -- adding a layer without its source throws a runtime error)**
-
-**(You MUST listen for `load` or `style.load` before calling `addSource`/`addLayer` -- the style is not ready on construction)**
-
-**(You MUST clean up map instances with `map.remove()` on unmount -- leaks GPU memory and event listeners)**
-
-**(You MUST use named constants for coordinates, zoom levels, and style values -- NO magic numbers)**
-
-**(You MUST use expressions for data-driven styling instead of iterating features and setting styles individually)**
-
-**Failure to follow these rules will cause runtime errors, memory leaks, and XSS vulnerabilities.**
-
-</critical_reminders>

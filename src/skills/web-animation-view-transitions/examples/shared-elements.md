@@ -1,12 +1,13 @@
-# Shared Element Transitions
+# View Transitions - Shared Element Examples
 
-> Hero animations and shared element patterns. See [core.md](core.md) for basic patterns.
+> Elements that travel between two views, continuing the numbering from [core.md](core.md).
 
-**Prerequisites**: Understand basic transitions from [core.md](core.md) first.
+**Prerequisites:** feature detection from [core.md](core.md) Pattern 1, and the naming rules in
+[reference.md](../reference.md).
 
 ---
 
-## Basic Shared Element
+## Pattern 13: Basic Shared Element
 
 ### Good Example - Product List to Detail
 
@@ -21,82 +22,23 @@ interface Product {
   imageUrl: string;
 }
 
-let currentView: "list" | "detail" = "list";
 let selectedProduct: Product | null = null;
 
+function productImage(productId: string): HTMLElement | null {
+  return document.querySelector(`[data-product-image="${productId}"]`);
+}
+
 function setSharedElementName(element: HTMLElement | null, name: string): void {
-  if (element) {
-    element.style.viewTransitionName = name;
-  }
+  if (element) element.style.viewTransitionName = name;
 }
 
-function clearSharedElementName(element: HTMLElement | null): void {
-  if (element) {
-    element.style.viewTransitionName = "";
-  }
-}
-
-function renderList(products: Product[]): void {
-  const container = document.getElementById("content");
-  if (!container) return;
-
-  container.innerHTML = `
-    <ul class="product-grid">
-      ${products
-        .map(
-          (p) => `
-        <li>
-          <button data-product-id="${p.id}" class="product-card">
-            <img
-              src="${p.imageUrl}"
-              alt="${p.name}"
-              data-product-image="${p.id}"
-            />
-            <span>${p.name}</span>
-          </button>
-        </li>
-      `,
-        )
-        .join("")}
-    </ul>
-  `;
-}
-
-function renderDetail(product: Product): void {
-  const container = document.getElementById("content");
-  if (!container) return;
-
-  container.innerHTML = `
-    <article class="product-detail">
-      <img
-        src="${product.imageUrl}"
-        alt="${product.name}"
-        data-product-image="${product.id}"
-      />
-      <h1>${product.name}</h1>
-      <p>Product details...</p>
-      <button id="back-btn">Back to list</button>
-    </article>
-  `;
-}
-
-export function showProductDetail(product: Product, products: Product[]): void {
+export function showProductDetail(product: Product): void {
   selectedProduct = product;
 
-  // Get the source image element
-  const sourceImage = document.querySelector(
-    `[data-product-image="${product.id}"]`,
-  ) as HTMLElement | null;
-
   const updateFn = () => {
-    currentView = "detail";
     renderDetail(product);
-
-    // Set name on destination image
-    const destImage = document.querySelector(
-      `[data-product-image="${product.id}"]`,
-    ) as HTMLElement | null;
-    setSharedElementName(destImage, HERO_TRANSITION_NAME);
+    // The destination element is a different node; name it inside the callback
+    setSharedElementName(productImage(product.id), HERO_TRANSITION_NAME);
   };
 
   if (!document.startViewTransition) {
@@ -104,61 +46,46 @@ export function showProductDetail(product: Product, products: Product[]): void {
     return;
   }
 
-  // Set name on source image before transition
-  setSharedElementName(sourceImage, HERO_TRANSITION_NAME);
+  // The source element must carry the name before the old snapshot is taken
+  setSharedElementName(productImage(product.id), HERO_TRANSITION_NAME);
 
   const transition = document.startViewTransition(updateFn);
 
   transition.finished.then(() => {
-    // Clean up names after transition
-    const image = document.querySelector(
-      `[data-product-image="${product.id}"]`,
-    ) as HTMLElement | null;
-    clearSharedElementName(image);
+    setSharedElementName(productImage(product.id), "");
   });
 }
 
 export function backToList(products: Product[]): void {
-  const sourceImage = document.querySelector(
-    `[data-product-image="${selectedProduct?.id}"]`,
-  ) as HTMLElement | null;
+  const returning = selectedProduct;
 
   const updateFn = () => {
-    currentView = "list";
     renderList(products);
-
-    // Set name on destination image in list
-    if (selectedProduct) {
-      const destImage = document.querySelector(
-        `[data-product-image="${selectedProduct.id}"]`,
-      ) as HTMLElement | null;
-      setSharedElementName(destImage, HERO_TRANSITION_NAME);
+    if (returning) {
+      setSharedElementName(productImage(returning.id), HERO_TRANSITION_NAME);
     }
   };
 
-  if (!document.startViewTransition) {
+  if (!document.startViewTransition || !returning) {
     updateFn();
     selectedProduct = null;
     return;
   }
 
-  // Set name on source image before transition
-  setSharedElementName(sourceImage, HERO_TRANSITION_NAME);
+  setSharedElementName(productImage(returning.id), HERO_TRANSITION_NAME);
 
   const transition = document.startViewTransition(updateFn);
 
   transition.finished.then(() => {
-    // Clean up
-    if (selectedProduct) {
-      const image = document.querySelector(
-        `[data-product-image="${selectedProduct.id}"]`,
-      ) as HTMLElement | null;
-      clearSharedElementName(image);
-    }
+    setSharedElementName(productImage(returning.id), "");
     selectedProduct = null;
   });
 }
 ```
+
+`renderList` and `renderDetail` are the application's own render steps. Both emit an
+`<img data-product-image="{id}">` for the product, and that attribute is the only thing the
+transition code needs from the markup.
 
 **CSS:**
 
@@ -173,30 +100,25 @@ export function backToList(products: Product[]): void {
   animation-timing-function: var(--hero-easing);
 }
 
-/* Prevent aspect ratio distortion during transition */
+/* The two sides differ in aspect ratio; without this the snapshot squashes */
 ::view-transition-old(product-hero),
 ::view-transition-new(product-hero) {
   object-fit: cover;
 }
 ```
 
-**Why good:** Names set before transition, cleaned up after, handles both directions
+**Why good:** The name goes on before the transition starts and on the destination inside the
+callback — one name, two nodes, at the two moments the browser samples. Clearing it in `finished` is
+what lets the return journey assign it again.
 
 ---
 
-## Multiple Shared Elements
+## Pattern 14: Several Elements Travelling Together
 
-### Good Example - Card with Multiple Animated Parts
+### Good Example - Card Expanding Into a Detail View
 
 ```typescript
 // multi-shared-element.ts
-
-interface CardData {
-  id: string;
-  title: string;
-  imageUrl: string;
-  description: string;
-}
 
 const TRANSITION_NAMES = {
   image: (id: string) => `card-image-${id}`,
@@ -204,65 +126,46 @@ const TRANSITION_NAMES = {
   container: (id: string) => `card-container-${id}`,
 } as const;
 
-function setMultipleTransitionNames(
-  cardId: string,
-  elements: {
-    image?: HTMLElement | null;
-    title?: HTMLElement | null;
-    container?: HTMLElement | null;
-  },
-): void {
-  if (elements.image) {
-    elements.image.style.viewTransitionName = TRANSITION_NAMES.image(cardId);
+type CardParts = {
+  image: HTMLElement | null;
+  title: HTMLElement | null;
+  container: HTMLElement | null;
+};
+
+function findCardParts(cardId: string): CardParts {
+  const container = document.querySelector<HTMLElement>(
+    `[data-card="${cardId}"]`,
+  );
+  return {
+    container,
+    image: container?.querySelector<HTMLElement>("[data-card-image]") ?? null,
+    title: container?.querySelector<HTMLElement>("[data-card-title]") ?? null,
+  };
+}
+
+function nameCardParts(cardId: string, parts: CardParts): void {
+  if (parts.image) {
+    parts.image.style.viewTransitionName = TRANSITION_NAMES.image(cardId);
   }
-  if (elements.title) {
-    elements.title.style.viewTransitionName = TRANSITION_NAMES.title(cardId);
+  if (parts.title) {
+    parts.title.style.viewTransitionName = TRANSITION_NAMES.title(cardId);
   }
-  if (elements.container) {
-    elements.container.style.viewTransitionName =
+  if (parts.container) {
+    parts.container.style.viewTransitionName =
       TRANSITION_NAMES.container(cardId);
   }
 }
 
-function clearMultipleTransitionNames(elements: (HTMLElement | null)[]): void {
-  elements.forEach((el) => {
-    if (el) {
-      el.style.viewTransitionName = "";
-    }
+function clearCardParts(parts: CardParts): void {
+  [parts.container, parts.image, parts.title].forEach((el) => {
+    if (el) el.style.viewTransitionName = "";
   });
 }
 
 export async function expandCard(cardId: string): Promise<void> {
-  // Find source elements
-  const sourceContainer = document.querySelector(
-    `[data-card="${cardId}"]`,
-  ) as HTMLElement | null;
-  const sourceImage = sourceContainer?.querySelector(
-    "[data-card-image]",
-  ) as HTMLElement | null;
-  const sourceTitle = sourceContainer?.querySelector(
-    "[data-card-title]",
-  ) as HTMLElement | null;
-
   const updateFn = () => {
     renderExpandedCard(cardId);
-
-    // Set names on destination elements
-    const destContainer = document.querySelector(
-      `[data-card="${cardId}"]`,
-    ) as HTMLElement | null;
-    const destImage = destContainer?.querySelector(
-      "[data-card-image]",
-    ) as HTMLElement | null;
-    const destTitle = destContainer?.querySelector(
-      "[data-card-title]",
-    ) as HTMLElement | null;
-
-    setMultipleTransitionNames(cardId, {
-      image: destImage,
-      title: destTitle,
-      container: destContainer,
-    });
+    nameCardParts(cardId, findCardParts(cardId));
   };
 
   if (!document.startViewTransition) {
@@ -270,35 +173,17 @@ export async function expandCard(cardId: string): Promise<void> {
     return;
   }
 
-  // Set names on source elements
-  setMultipleTransitionNames(cardId, {
-    image: sourceImage,
-    title: sourceTitle,
-    container: sourceContainer,
-  });
+  nameCardParts(cardId, findCardParts(cardId));
 
   const transition = document.startViewTransition(updateFn);
-
   await transition.finished;
 
-  // Clean up all names
-  const container = document.querySelector(
-    `[data-card="${cardId}"]`,
-  ) as HTMLElement | null;
-  const image = container?.querySelector(
-    "[data-card-image]",
-  ) as HTMLElement | null;
-  const title = container?.querySelector(
-    "[data-card-title]",
-  ) as HTMLElement | null;
-
-  clearMultipleTransitionNames([container, image, title]);
-}
-
-function renderExpandedCard(cardId: string): void {
-  // Render expanded card view
+  clearCardParts(findCardParts(cardId));
 }
 ```
+
+`renderExpandedCard` is the application's own render step; the transition code only needs the
+`data-card`, `data-card-image` and `data-card-title` attributes to survive it.
 
 **CSS:**
 
@@ -308,8 +193,10 @@ function renderExpandedCard(cardId: string): void {
   --card-easing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Style all card transitions with view-transition-class */
-[style*="view-transition-name: card-"] {
+/* Every part carries the class, whether or not it currently carries a name */
+[data-card],
+[data-card-image],
+[data-card-title] {
   view-transition-class: card-element;
 }
 
@@ -319,13 +206,16 @@ function renderExpandedCard(cardId: string): void {
 }
 ```
 
-**Why good:** Multiple elements transition together, factory functions for consistent naming, grouped CSS styling
+**Why good:** Each part carries the card id in its name, so several cards on one page never collide.
+The name factories keep the source and destination spellings from drifting apart, which is the defect
+that shows up as one part travelling and the rest cross-fading. A `view-transition-class` on the
+parts lets one CSS rule cover all three groups rather than three near-identical rules.
 
 ---
 
-## MPA Cross-Document Shared Elements
+## Pattern 15: Cross-Document Shared Elements
 
-### Good Example - Product Gallery MPA
+### Good Example - Product Gallery Across Two Documents
 
 **list-page.html:**
 
@@ -343,25 +233,20 @@ function renderExpandedCard(cardId: string): void {
       }
     </style>
     <script>
-      // Set dynamic name before navigation
+      // Name the thumbnail the navigation is heading towards
       window.addEventListener("pageswap", (e) => {
         if (!e.viewTransition) return;
 
         const targetUrl = new URL(e.activation.entry.url);
         const productId = targetUrl.searchParams.get("id");
+        if (!productId) return;
 
-        if (productId) {
-          const thumbnail = document.querySelector(
-            `[data-product="${productId}"] img`,
-          );
-          if (thumbnail) {
-            thumbnail.style.viewTransitionName = "product-hero";
-          }
+        const thumbnail = document.querySelector(
+          `[data-product="${productId}"] img`,
+        );
+        if (thumbnail) {
+          thumbnail.style.viewTransitionName = "product-hero";
         }
-
-        e.viewTransition.finished.then(() => {
-          // Cleanup happens on old page, but good practice
-        });
       });
     </script>
   </head>
@@ -408,7 +293,7 @@ function renderExpandedCard(cardId: string): void {
       }
     </style>
     <script>
-      // Register early for pagereveal
+      // Registered in <head> so the event is not missed
       window.addEventListener("pagereveal", (e) => {
         if (!e.viewTransition) return;
 
@@ -418,7 +303,6 @@ function renderExpandedCard(cardId: string): void {
         }
 
         e.viewTransition.ready.then(() => {
-          // Names can be removed after snapshots taken
           heroImage?.style.removeProperty("view-transition-name");
         });
       });
@@ -435,35 +319,37 @@ function renderExpandedCard(cardId: string): void {
 </html>
 ```
 
-**Why good:** Names set on both pages, pageswap on source and pagereveal on destination, cleanup after ready
+**Why good:** `pageswap` reads the destination URL, which is what lets the source name only the
+thumbnail actually being navigated to instead of naming every one and colliding. The destination
+clears its name at `ready` rather than `finished`, because the snapshots are already taken by then.
 
 ---
 
-## Dynamic Name Assignment with match-element
+## Pattern 16: Names the Browser Derives
 
-### Good Example - Auto-Naming for Lists (Chrome 137+)
+### Good Example - match-element for Lists (Chrome 137+, Safari 18.4+)
 
 ```css
 :root {
   --product-transition-duration: 300ms;
 }
 
-/* Browser generates unique internal names */
 .product-card {
   view-transition-name: match-element;
   view-transition-class: product;
 }
 
-/* Style all product transitions together */
 ::view-transition-group(.product) {
   animation-duration: var(--product-transition-duration);
   animation-timing-function: ease-out;
 }
 ```
 
-**Why good:** No manual naming for large lists, browser tracks element identity
+**Why good:** The browser tracks element identity itself, so a list of unknown length needs no
+per-item scripting and no cleanup. The class is what gives the derived names something to be styled
+by, since there is no name to write a selector against.
 
-### Good Example - Dynamic Names with attr() (Chrome 133+)
+### Good Example - attr() Naming (Chrome 133+)
 
 ```html
 <div class="card" id="product-001">Product 1</div>
@@ -481,13 +367,14 @@ function renderExpandedCard(cardId: string): void {
 }
 ```
 
-**Why good:** Uses element ID as transition name automatically, fallback to none
+**Why good:** The id is already unique per element, so it makes a valid name for free; the `none`
+fallback keeps an element without an id out of the transition rather than breaking it.
 
 ---
 
-## Scoped Shared Elements
+## Pattern 17: Scoped Names for Repeated Components
 
-### Good Example - Isolated Card Transitions
+### Good Example - Per-Instance Suffix
 
 ```typescript
 // scoped-transitions.ts
@@ -507,62 +394,51 @@ function getScopedName(baseId: string, name: string): string {
   return `${name}-${scopeId}`;
 }
 
+function cardImage(cardId: string): HTMLElement | null {
+  return document.querySelector(`[data-card="${cardId}"] img`);
+}
+
 export function transitionScopedCard(
   cardId: string,
   updateFn: () => void,
 ): void {
   const scopedName = getScopedName(cardId, "card-hero");
 
-  const sourceImage = document.querySelector(
-    `[data-card="${cardId}"] img`,
-  ) as HTMLElement | null;
-
-  if (sourceImage) {
-    sourceImage.style.viewTransitionName = scopedName;
-  }
-
   if (!document.startViewTransition) {
     updateFn();
     return;
   }
 
+  const source = cardImage(cardId);
+  if (source) source.style.viewTransitionName = scopedName;
+
   const transition = document.startViewTransition(() => {
     updateFn();
-
-    const destImage = document.querySelector(
-      `[data-card="${cardId}"] img`,
-    ) as HTMLElement | null;
-
-    if (destImage) {
-      destImage.style.viewTransitionName = scopedName;
-    }
+    const destination = cardImage(cardId);
+    if (destination) destination.style.viewTransitionName = scopedName;
   });
 
   transition.finished.then(() => {
-    const image = document.querySelector(
-      `[data-card="${cardId}"] img`,
-    ) as HTMLElement | null;
-
-    if (image) {
-      image.style.viewTransitionName = "";
-    }
+    const image = cardImage(cardId);
+    if (image) image.style.viewTransitionName = "";
   });
 }
 ```
 
-**Why good:** Scoped names prevent conflicts between multiple card instances
+**Why good:** The scope map keeps a component instance's name stable across repeat transitions while
+keeping it distinct from another instance of the same component — the case a name derived from the
+data id alone cannot cover.
 
 ---
 
-## Modal with Shared Origin
+## Pattern 18: Modal Growing From Its Trigger
 
-### Good Example - Button to Modal Expansion
+### Good Example - Expansion and Return
 
 ```typescript
 // modal-shared-transition.ts
 
 const MODAL_ORIGIN_NAME = "modal-origin";
-const MODAL_DURATION_MS = 300;
 
 let currentOriginElement: HTMLElement | null = null;
 
@@ -573,7 +449,6 @@ export function openModalFromElement(
   currentOriginElement = triggerElement;
 
   const updateFn = () => {
-    // Render modal
     const modal = document.createElement("div");
     modal.className = "modal-overlay";
     modal.innerHTML = `
@@ -584,10 +459,9 @@ export function openModalFromElement(
     `;
     document.body.appendChild(modal);
 
-    // Set name on modal content
-    const modalContentEl = modal.querySelector(
+    const modalContentEl = modal.querySelector<HTMLElement>(
       "[data-modal-content]",
-    ) as HTMLElement;
+    );
     if (modalContentEl) {
       modalContentEl.style.viewTransitionName = MODAL_ORIGIN_NAME;
     }
@@ -598,28 +472,20 @@ export function openModalFromElement(
     return;
   }
 
-  // Set name on trigger before transition
   triggerElement.style.viewTransitionName = MODAL_ORIGIN_NAME;
 
   const transition = document.startViewTransition(updateFn);
 
   transition.finished.then(() => {
-    // Clean up origin name
     triggerElement.style.viewTransitionName = "";
   });
 }
 
 export function closeModal(): void {
-  const modalContentEl = document.querySelector(
-    "[data-modal-content]",
-  ) as HTMLElement;
   const modal = document.querySelector(".modal-overlay");
-
   if (!modal) return;
 
-  const updateFn = () => {
-    modal.remove();
-  };
+  const updateFn = () => modal.remove();
 
   if (!document.startViewTransition || !currentOriginElement) {
     updateFn();
@@ -627,9 +493,12 @@ export function closeModal(): void {
     return;
   }
 
-  // Set name on origin element for return transition
+  // The trigger is the destination this time; the modal content is the source
   currentOriginElement.style.viewTransitionName = MODAL_ORIGIN_NAME;
 
+  const modalContentEl = document.querySelector<HTMLElement>(
+    "[data-modal-content]",
+  );
   if (modalContentEl) {
     modalContentEl.style.viewTransitionName = MODAL_ORIGIN_NAME;
   }
@@ -673,4 +542,6 @@ export function closeModal(): void {
 }
 ```
 
-**Why good:** Tracks origin element for return transition, cleans up names bidirectionally
+**Why good:** Holding the trigger element in a module variable is what makes the return journey
+possible — by the time the modal closes, the click that opened it is long gone. Source and
+destination swap roles between open and close while the name stays the same.

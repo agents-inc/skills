@@ -1,6 +1,8 @@
 # Lexical - Custom Nodes
 
-> Custom ElementNode, TextNode, DecoratorNode, and the NodeState API. See [SKILL.md](../SKILL.md) for which node type to extend and [core.md](core.md) for editor setup.
+> ElementNode, TextNode and DecoratorNode classes, plus the NodeState and `$config` APIs. See
+> [SKILL.md](../SKILL.md) for which base to extend, [core.md](core.md) for editor setup,
+> [serialization.md](serialization.md) for the JSON and HTML methods.
 
 ---
 
@@ -97,17 +99,11 @@ export function $isCalloutNode(
 }
 ```
 
-**Why good:** `__variant` uses double-underscore convention, getWritable() ensures immutable consistency, $applyNodeReplacement enables node replacement, updateDOM returns false for DOM reuse, constructor has zero required args (needed for collaboration), type guard follows $-prefix convention
+**Why good:** the setter goes through `getWritable()`, so the mutation lands on the clone the current update owns rather than on the frozen snapshot; `updateDOM` returning `false` reuses the element; and every constructor argument has a default, which deserialization and collaborative reconstruction both need
 
 ### Bad Example - Missing Conventions
 
 ```typescript
-// BAD: Missing static getType and clone
-// BAD: Constructor requires arguments (breaks collab/deserialization)
-// BAD: Single underscore property (_variant)
-// BAD: No $-prefixed factory function
-// BAD: No $applyNodeReplacement wrapper
-
 class CalloutNode extends ElementNode {
   _variant: string; // BAD: single underscore
 
@@ -130,7 +126,7 @@ class CalloutNode extends ElementNode {
 // which doesn't support node replacement
 ```
 
-**Why bad:** Missing getType/clone breaks serialization, required constructor args break collaboration, single underscore may be mangled by minifiers, no factory function bypasses node replacement system
+**Why bad:** without `getType`/`clone` the node cannot be serialized or snapshotted, a required constructor argument breaks reconstruction from JSON, a single underscore is mangled by minifiers, and calling `new` directly skips `$applyNodeReplacement`
 
 ---
 
@@ -233,7 +229,7 @@ export function $isColoredTextNode(
 }
 ```
 
-**Why good:** Extends TextNode preserving text formatting, calls super.createDOM/updateDOM for base text behavior, color applied via DOM style, all defaults allow zero-arg construction
+**Why good:** `super.createDOM`/`super.updateDOM` keep the base text behaviour — formats, modes, splitting — and the subclass only adds the colour on top
 
 ---
 
@@ -359,7 +355,7 @@ export function $isImageNode(
 }
 ```
 
-**Why good:** DecoratorNode renders a React component via decorate(), createDOM returns a minimal container, the actual UI lives in the ImageComponent, isInline() controls block vs inline behavior, all properties are JSON-serializable
+**Why good:** `createDOM` returns only the container Lexical reconciles; the UI lives in the component `decorate()` returns, and `isInline()` decides whether text can sit beside it
 
 ### Good Example - Image Component (used by DecoratorNode)
 
@@ -416,7 +412,7 @@ export function ImageComponent({
 }
 ```
 
-**Why good:** Decorator component accesses editor via context, mutations happen inside editor.update(), $getNodeByKey used for safe node lookup, accessible delete button
+**Why good:** the component holds a node key rather than a node — keys survive the clone-per-update, node instances do not — and resolves it inside `editor.update()`
 
 ---
 
@@ -464,13 +460,14 @@ export function ImagePlugin() {
 // <ImagePlugin />
 ```
 
-**Why good:** Validates node registration with editor.hasNodes(), throws a clear error message if missing, $insertNodeToNearestRoot handles insertion correctly regardless of selection state
+**Why good:** `editor.hasNodes` turns the commonest setup mistake into a named error at mount instead of a confusing failure later, and `$insertNodeToNearestRoot` places a block node correctly whatever the selection is
 
 ---
 
 ## Pattern 5: NodeState API (v0.26+, Experimental)
 
-The NodeState API allows attaching arbitrary state to any node without subclassing. State participates in reconciliation, history, and JSON serialization.
+NodeState attaches arbitrary state to any node without subclassing it, and that state takes part in
+reconciliation, history and JSON serialization.
 
 ### Good Example - Attaching Metadata to Any Node
 
@@ -505,15 +502,18 @@ editor.update(() => {
 });
 ```
 
-**Why good:** No subclassing needed, state is JSON-serializable automatically (stored under `$` key), parse function handles validation and defaults, works with any node type including RootNode
+**Why good:** the `parse` function is both the validator and the default, so a document written by an
+older version of the app still loads; state serializes automatically under the `$` key, and works on
+any node including RootNode.
 
-**Caveat:** The NodeState API is experimental. APIs may change in future Lexical versions without extended deprecation periods.
+**Caveat:** experimental — this API can change without an extended deprecation.
 
 ---
 
 ## Pattern 6: Node with $config (v0.33+)
 
-The `$config` method reduces boilerplate by auto-generating `clone`, `importJSON`, `updateFromJSON`, `afterCloneFrom`, and `exportJSON`.
+`$config` generates `clone`, `importJSON`, `updateFromJSON`, `afterCloneFrom` and `exportJSON`, so
+the class carries only what is genuinely its own.
 
 ### Good Example - Simplified Node Definition
 
@@ -555,6 +555,7 @@ export class CollapsibleNode extends ElementNode {
 }
 ```
 
-**Why good:** $config eliminates manual clone/importJSON/exportJSON boilerplate, static getType inferred from config call, focus on the unique behavior (createDOM/updateDOM) only
+**Why good:** the type string comes from the `config` call, so `getType` and the generated
+serialization cannot drift apart, and the class body is only `createDOM`/`updateDOM`.
 
-**Caveat:** This approach requires Lexical v0.33+. Use the traditional pattern (Pattern 1-3) for broader version compatibility.
+**Caveat:** v0.33+. Patterns 1-3 are the form that works on earlier versions.

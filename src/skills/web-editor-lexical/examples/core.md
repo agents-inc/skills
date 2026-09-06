@@ -1,6 +1,8 @@
 # Lexical - Core Examples
 
-> Editor setup, plugins, commands, and transforms. See [SKILL.md](../SKILL.md) for architecture decisions and [custom-nodes.md](custom-nodes.md) for node creation.
+> Editor setup, plugins, commands and transforms. See [SKILL.md](../SKILL.md) for the decisions,
+> [custom-nodes.md](custom-nodes.md) for node classes, [serialization.md](serialization.md) for
+> JSON and HTML.
 
 ---
 
@@ -54,7 +56,7 @@ function onError(error: Error) {
   console.error(error);
 }
 
-// Register ALL custom and package nodes here
+// Every node any plugin below needs, package nodes included
 const EDITOR_NODES = [
   HeadingNode,
   QuoteNode,
@@ -113,7 +115,7 @@ export function Editor() {
 }
 ```
 
-**Why good:** All nodes registered in initialConfig, plugins compose as children, theme maps CSS classes to editor elements, OnChangePlugin ignores selection-only changes for performance, error boundary catches update errors
+**Why good:** every node the plugins need is registered, `ignoreSelectionChange` keeps `onChange` off cursor movement, the error boundary catches update errors instead of unmounting the app
 
 ### Bad Example - Missing Node Registration and Inline Config
 
@@ -143,7 +145,7 @@ export function Editor() {
 }
 ```
 
-**Why bad:** Missing node registration causes ListPlugin to fail silently, inline initialConfig recreates on every render, missing ErrorBoundary means update errors crash the app, raw contentEditable div instead of ContentEditable component
+**Why bad:** `ListPlugin` fails silently without `ListNode` and `ListItemNode` registered, the inline `initialConfig` is a new object every render, a missing `ErrorBoundary` lets an update error crash the app, and a raw `contentEditable` div is not wired to the reconciler
 
 ---
 
@@ -192,7 +194,6 @@ export function CalloutPlugin() {
       COMMAND_PRIORITY_LOW,
     );
 
-    // CRITICAL: Return cleanup function
     return unregister;
   }, [editor]);
 
@@ -204,7 +205,7 @@ export function CalloutPlugin() {
 // editor.dispatchCommand(INSERT_CALLOUT_COMMAND, "Important note");
 ```
 
-**Why good:** useEffect returns cleanup function from registerCommand, command is typed with payload, returns false to allow propagation when selection is wrong type, returns true to stop propagation on success
+**Why good:** the effect returns `registerCommand`'s unsubscribe, the command carries a typed payload, and the listener returns `false` on a selection it cannot handle so lower priorities still get their turn
 
 ### Bad Example - Missing Cleanup and Wrong Context
 
@@ -231,7 +232,7 @@ export function BrokenPlugin() {
 }
 ```
 
-**Why bad:** registerCommand called outside useEffect leaks a new listener every render, $getRoot outside update/read closure throws runtime error, no cleanup function returned
+**Why bad:** `registerCommand` outside `useEffect` leaks a listener every render with no unsubscribe kept, and `$getRoot` outside an update/read closure throws
 
 ---
 
@@ -312,7 +313,7 @@ export function ToolbarPlugin() {
 }
 ```
 
-**Why good:** Listens to SELECTION_CHANGE_COMMAND to track active formats, returns false to avoid blocking other selection listeners, dispatches built-in FORMAT_TEXT_COMMAND, accessible toolbar with aria attributes
+**Why good:** the listener returns `false` so other plugins still see the selection change, and the button state comes from `selection.hasFormat` rather than from a guess about what the last click did
 
 ---
 
@@ -360,7 +361,7 @@ export function AutoDetectLinkPlugin() {
 }
 ```
 
-**Why good:** Preconditions prevent infinite loop (checks if text contains URL and isn't already processed), resets regex lastIndex for global patterns, returns cleanup function
+**Why good:** the two preconditions leave nothing for a second pass to change, and `lastIndex` is reset because a global regex carries it between calls
 
 ### Bad Example - Transform Without Precondition
 
@@ -373,7 +374,7 @@ editor.registerNodeTransform(TextNode, (textNode) => {
 });
 ```
 
-**Why bad:** `setTextContent` marks the node dirty, which retriggers the transform. If the text has no whitespace to trim, `trim()` returns the same string, but `setTextContent` still marks it dirty. The editor freezes in an infinite loop.
+**Why bad:** `setTextContent` marks the node dirty whether or not the value changed, so text with no whitespace to trim still re-triggers the transform and the editor freezes.
 
 ---
 
@@ -422,7 +423,7 @@ export function PersistencePlugin({
 }
 ```
 
-**Why good:** Debounces saves to avoid excessive writes, cleans up both the listener and the timer on unmount, serializes via toJSON (not direct state access), named constant for delay
+**Why good:** unmount clears the pending timer as well as the listener, so a save cannot fire against a destroyed editor
 
 ---
 
@@ -455,7 +456,7 @@ export function RestoreStatePlugin({
 }
 ```
 
-**Why good:** Uses parseEditorState for safe deserialization, clones with null to prevent unexpected focus changes, guard clause for missing data
+**Why good:** `clone(null)` is what stops the restore stealing focus from wherever the user was
 
 ---
 
@@ -481,4 +482,4 @@ export function ReadOnlyPlugin({ isReadOnly }: { isReadOnly: boolean }) {
 // <ReadOnlyPlugin isReadOnly={!canEdit} />
 ```
 
-**Why good:** Simple plugin that controls editability reactively, uses editor.setEditable which is the proper Lexical API (not the contentEditable HTML attribute)
+**Why good:** `editor.setEditable` is the editor's own switch; setting the `contentEditable` attribute directly leaves the editor believing it is still editable

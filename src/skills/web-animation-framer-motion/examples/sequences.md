@@ -1,12 +1,12 @@
 # Motion - Sequence Examples
 
-> Complex animation sequences using useAnimation and keyframes. See [core.md](core.md) for basic patterns.
+> Imperative sequences and keyframe arrays, continuing the numbering from [core.md](core.md).
 
 ---
 
-## Multi-Step Animation with useAnimation
+## Pattern 11: Multi-Step Sequence with useAnimation
 
-### Good Example - Notification Badge Sequence
+### Good Example - Notification Badge
 
 ```typescript
 import { motion, useAnimation } from "motion/react";
@@ -21,12 +21,14 @@ type NotificationBadgeProps = {
   className?: string;
 };
 
-export const NotificationBadge = ({ count, className }: NotificationBadgeProps) => {
+export const NotificationBadge = ({
+  count,
+  className,
+}: NotificationBadgeProps) => {
   const controls = useAnimation();
 
   useEffect(() => {
     if (count > 0) {
-      // Sequence: scale up, shake, settle
       controls.start([
         { scale: BOUNCE_SCALE, transition: { duration: STEP_DURATION_S / 2 } },
         {
@@ -51,11 +53,13 @@ export const NotificationBadge = ({ count, className }: NotificationBadgeProps) 
 };
 ```
 
-**Why good:** Sequenced animations create attention-grabbing effect, aria-live announces changes to screen readers, effect triggers on count change
+**Why good:** An array passed to `controls.start` runs the steps in order, each awaiting the last —
+the same sequence written as three `animate` props would run all at once. `aria-live` carries the
+change to a screen reader, which the motion cannot.
 
 ---
 
-## Keyframe Animations
+## Pattern 12: Keyframe Arrays
 
 ### Good Example - Pulsing Indicator
 
@@ -71,7 +75,10 @@ type PulsingDotProps = {
   className?: string;
 };
 
-export const PulsingDot = ({ color = "currentColor", className }: PulsingDotProps) => {
+export const PulsingDot = ({
+  color = "currentColor",
+  className,
+}: PulsingDotProps) => {
   return (
     <motion.span
       className={className}
@@ -97,4 +104,40 @@ export const PulsingDot = ({ color = "currentColor", className }: PulsingDotProp
 };
 ```
 
-**Why good:** Keyframe arrays create smooth loop, repeat: Infinity for continuous animation, aria-hidden for decorative element
+**Why good:** The array starts and ends on the same value, which is what hides the seam when
+`repeat: Infinity` loops it. `aria-hidden` keeps a purely decorative pulse out of the accessibility
+tree.
+
+---
+
+## Pattern 13: Stagger Shaping
+
+### Good Example - Ripple from the Centre
+
+```typescript
+import { motion, stagger, type Variants } from "motion/react";
+
+const STAGGER_STEP_S = 0.05;
+
+const gridVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      delayChildren: stagger(STAGGER_STEP_S, {
+        from: "center",
+        ease: "easeOut",
+      }),
+    },
+  },
+};
+
+const cellVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1 },
+};
+```
+
+**Why good:** `stagger()` belongs on `delayChildren` because it returns a per-child delay function;
+`staggerChildren` takes a plain number and has no `from` or `ease` to give. `from: "center"` makes
+the cascade read as a ripple out of the middle rather than a sweep from one corner.
