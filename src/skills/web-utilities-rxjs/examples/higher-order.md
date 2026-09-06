@@ -1,37 +1,33 @@
 # RxJS Higher-Order Mapping Examples
 
-> switchMap, mergeMap, concatMap, exhaustMap patterns. See [core.md](core.md) for basics.
+> `switchMap`, `mergeMap`, `concatMap` and `exhaustMap` worked through. See [SKILL.md](../SKILL.md)
+> for the choice between them and [core.md](core.md) for creation and error recovery.
 
-**Prerequisites**: Understand Observable creation and pipe operators from core examples first.
+All four subscribe to an inner Observable per outer value. They differ only in what happens when a
+new outer value arrives while an inner one is still running.
 
 ---
 
-## switchMap - Cancel Previous
-
-Use when only the latest inner Observable matters. Previous inner subscriptions are cancelled.
-
-### Good Example - Type-Ahead Search
+## switchMap — cancel the previous
 
 ```typescript
-import { fromEvent } from "rxjs";
 import {
-  switchMap,
+  fromEvent,
+  from,
+  of,
+  map,
   debounceTime,
   distinctUntilChanged,
-  map,
   filter,
+  switchMap,
   catchError,
-} from "rxjs/operators";
-import { from, of } from "rxjs";
-
-const DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 2;
+} from "rxjs";
 
 const searchResults$ = fromEvent<InputEvent>(searchInput, "input").pipe(
-  map((e) => (e.target as HTMLInputElement).value.trim()),
-  debounceTime(DEBOUNCE_MS),
+  map((event) => (event.target as HTMLInputElement).value.trim()),
+  debounceTime(300),
   distinctUntilChanged(),
-  filter((query) => query.length >= MIN_QUERY_LENGTH),
+  filter((query) => query.length >= 2),
   switchMap((query) =>
     from(
       fetch(`/api/search?q=${encodeURIComponent(query)}`).then((r) => r.json()),
@@ -40,43 +36,28 @@ const searchResults$ = fromEvent<InputEvent>(searchInput, "input").pipe(
 );
 ```
 
-**Why good:** `switchMap` cancels the previous HTTP request when the user types a new character, preventing stale results from overwriting fresh ones
+`mergeMap` here is a race: typing `a` then `ab` issues both requests, and if `a` returns second its
+results overwrite the correct ones. The bug appears only under latency, which is why it reaches
+production.
 
-### Bad Example - mergeMap for Search
-
-```typescript
-// BAD: mergeMap doesn't cancel previous requests
-const searchResults$ = searchInput$.pipe(
-  mergeMap((query) => from(fetch(`/api/search?q=${query}`))),
-);
-// User types "a", then "ab" -- both requests run in parallel
-// If "a" response returns AFTER "ab", stale results overwrite correct ones
-```
-
-**Why bad:** `mergeMap` runs all requests in parallel, race conditions cause stale data to appear
+`switchMap` cancels by unsubscribing, so an inner Observable that ignores unsubscription — a bare
+promise, for instance — keeps running even though its result is discarded. Only an inner source
+that honours teardown is genuinely cancelled.
 
 ---
 
-## mergeMap - Parallel Processing
-
-Use when all inner Observables should run concurrently.
-
-### Good Example - Parallel File Uploads with Concurrency Limit
+## mergeMap — run in parallel
 
 ```typescript
-import { from } from "rxjs";
-import { mergeMap, map, catchError, toArray } from "rxjs/operators";
-
-const MAX_CONCURRENT_UPLOADS = 3;
+import { from, of, mergeMap, map, catchError, toArray } from "rxjs";
 
 interface UploadResult {
   fileName: string;
   success: boolean;
   url?: string;
-  error?: string;
 }
 
-const uploadResults$ = from(selectedFiles).pipe(
+const uploads$ = from(selectedFiles).pipe(
   mergeMap(
     (file) =>
       from(uploadToServer(file)).pipe(
@@ -87,34 +68,29 @@ const uploadResults$ = from(selectedFiles).pipe(
             url: response.url,
           }),
         ),
-        catchError(
-          (error): Observable<UploadResult> =>
-            of({
-              fileName: file.name,
-              success: false,
-              error: error.message,
-            }),
-        ),
+        // Per-file recovery: one failure must not abandon the rest
+        catchError(() => of({ fileName: file.name, success: false })),
       ),
-    MAX_CONCURRENT_UPLOADS, // second argument: concurrency limit
+    3, // concurrency limit
   ),
-  toArray(), // collect all results when all uploads complete
+  toArray(),
 );
 ```
 
-**Why good:** concurrency limit prevents overwhelming the server, per-file `catchError` ensures one failure doesn't abort all uploads, `toArray` collects final results
+Two details carry this pattern. The concurrency limit is the second argument and defaults to
+`Infinity`, so without it a thousand files open a thousand connections. And the `catchError` is
+inside the inner pipe: outside it, the first failed upload would end the whole stream and
+`toArray` would never emit.
+
+Output order follows completion, not input order — attach the identity to the result, as
+`fileName` does above, rather than relying on position.
 
 ---
 
-## concatMap - Sequential Processing
-
-Use when order matters and each operation must complete before the next starts.
-
-### Good Example - Sequential API Calls
+## concatMap — queue, in order
 
 ```typescript
-import { from, of } from "rxjs";
-import { concatMap, delay, tap } from "rxjs/operators";
+import { from, concatMap, tap } from "rxjs";
 
 interface Step {
   name: string;
@@ -125,72 +101,45 @@ const steps: Step[] = [
   { name: "validate", execute: () => validateData() },
   { name: "transform", execute: () => transformData() },
   { name: "save", execute: () => saveData() },
-  { name: "notify", execute: () => sendNotification() },
 ];
 
-// Process steps one at a time, in order
 const pipeline$ = from(steps).pipe(
   concatMap((step) =>
-    from(step.execute()).pipe(
-      tap(() => console.log(`Completed: ${step.name}`)),
-    ),
+    from(step.execute()).pipe(tap(() => console.log(`done: ${step.name}`))),
   ),
 );
 ```
 
-**Why good:** `concatMap` ensures each step completes before the next begins, maintains execution order
+Each inner Observable must complete before the next begins, so `concatMap` over a source that
+emits faster than the inner work completes builds an unbounded queue. That is the trade against
+`mergeMap`: order for backpressure.
 
 ---
 
-## exhaustMap - Ignore While Busy
-
-Use when new requests should be ignored while one is in progress.
-
-### Good Example - Form Submission / Login Button
+## exhaustMap — ignore while busy
 
 ```typescript
-import { fromEvent, from } from "rxjs";
-import { exhaustMap, tap, finalize, catchError, of } from "rxjs";
+import {
+  fromEvent,
+  from,
+  of,
+  exhaustMap,
+  tap,
+  catchError,
+  finalize,
+} from "rxjs";
 
-const submitButton = document.getElementById("submit");
-
-const submission$ = fromEvent(submitButton!, "click").pipe(
-  tap(() => {
-    submitButton!.setAttribute("disabled", "true");
-  }),
+const submission$ = fromEvent(submitButton, "click").pipe(
+  tap(() => submitButton.setAttribute("disabled", "true")),
   exhaustMap(() =>
     from(submitForm(formData)).pipe(
-      catchError((error) => {
-        console.error("Submission failed:", error);
-        return of({ success: false, error });
-      }),
-      finalize(() => {
-        submitButton!.removeAttribute("disabled");
-      }),
+      catchError((error) => of({ success: false, error })),
+      finalize(() => submitButton.removeAttribute("disabled")),
     ),
   ),
 );
 ```
 
-**Why good:** `exhaustMap` prevents double-submission -- rapid clicks are ignored while the first request is in flight
-
----
-
-## Decision Framework
-
-```
-Need to make an async call for each emission?
-│
-├── Should previous call be cancelled?
-│   └── YES → switchMap (search, route navigation, autocomplete)
-│
-├── Should all calls run in parallel?
-│   └── YES → mergeMap (file uploads, batch operations, logging)
-│          └── Need concurrency limit? Pass second arg: mergeMap(fn, 3)
-│
-├── Must calls execute one at a time in order?
-│   └── YES → concatMap (sequential saves, ordered operations, queues)
-│
-└── Should new emissions be ignored while busy?
-    └── YES → exhaustMap (form submit, login, refresh button)
-```
+Clicks arriving during the request are dropped, not queued — which is the point for a submit
+button and wrong for anything the user expects to be honoured. The `disabled` attribute makes the
+behaviour visible; `exhaustMap` is what makes it correct even when the attribute is bypassed.

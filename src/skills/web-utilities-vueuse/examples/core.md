@@ -1,80 +1,71 @@
 # VueUse Core Examples
 
-> Core utilities, browser APIs, and event listeners. See [SKILL.md](../SKILL.md) for concepts.
+> Storage, event listeners, media queries and the small state utilities. See [SKILL.md](../SKILL.md)
+> for the decisions, [sensors.md](sensors.md) for DOM measurement, [state.md](state.md) for shared
+> state, [component.md](component.md) for component helpers.
 
 ---
 
-## useLocalStorage with Custom Serializer
-
-### Good Example - Complex Object Storage
+## Reactive Storage
 
 ```vue
 <script setup lang="ts">
-import { useLocalStorage } from "@vueuse/core";
+import { useLocalStorage, useSessionStorage } from "@vueuse/core";
 
 interface AppSettings {
   theme: "light" | "dark" | "auto";
   language: string;
-  notifications: boolean;
   recentSearches: string[];
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "auto",
   language: "en",
-  notifications: true,
   recentSearches: [],
 };
-
-const MAX_RECENT_SEARCHES = 10;
 
 const settings = useLocalStorage<AppSettings>(
   "app-settings",
   DEFAULT_SETTINGS,
   {
-    mergeDefaults: true, // merges stored data with defaults (handles new fields)
+    // Without this, a stored object written before `language` existed
+    // replaces the default wholesale and the new field is undefined
+    mergeDefaults: true,
   },
 );
 
-function addRecentSearch(query: string): void {
-  const searches = settings.value.recentSearches.filter((s) => s !== query);
-  searches.unshift(query);
-  settings.value.recentSearches = searches.slice(0, MAX_RECENT_SEARCHES);
-}
+const sessionToken = useSessionStorage("session-token", "");
 
-function resetSettings(): void {
-  settings.value = { ...DEFAULT_SETTINGS };
+function addRecentSearch(query: string): void {
+  settings.value.recentSearches = [
+    query,
+    ...settings.value.recentSearches.filter((s) => s !== query),
+  ].slice(0, 10);
 }
 </script>
 ```
 
-**Why good:** `mergeDefaults: true` handles schema evolution (new fields added without losing existing data), named constants for limits, typed generics
+What the composable does that a `ref` plus a `watch` does not: serialise and revive, listen for the
+`storage` event so other tabs stay in step, and return the default rather than throwing when there
+is no `localStorage` — during server rendering, or in a browser with storage disabled.
 
-### Bad Example - Manual JSON Storage
+`settings.value = null` removes the key. To reset without removing it, assign the default:
+`settings.value = { ...DEFAULT_SETTINGS }`.
+
+A custom `serializer` is the escape hatch for values JSON cannot round-trip — `Date`, `Map`, `Set`:
 
 ```typescript
-// BAD: manual serialization, no tab sync, no SSR safety
-const settings = ref<AppSettings>(
-  JSON.parse(localStorage.getItem("app-settings") || "null") ??
-    DEFAULT_SETTINGS,
-);
-
-watch(
-  settings,
-  (val) => {
-    localStorage.setItem("app-settings", JSON.stringify(val));
+const lastSeen = useLocalStorage("last-seen", new Date(), {
+  serializer: {
+    read: (raw) => new Date(raw),
+    write: (value) => value.toISOString(),
   },
-  { deep: true },
-);
+});
 ```
-
-**Why bad:** no cross-tab synchronization, crashes in SSR, deep watcher fires on every nested change, manual JSON handling
 
 ---
 
-## useEventListener Patterns
-
-### Good Example - Multiple Events with Cleanup
+## Event Listeners
 
 ```vue
 <script setup lang="ts">
@@ -83,35 +74,31 @@ import { useTemplateRef, ref } from "vue";
 
 const dropZone = useTemplateRef("drop-zone");
 const isDragging = ref(false);
-const droppedFiles = ref<File[]>([]);
+const files = ref<File[]>([]);
 
-// All listeners auto-cleaned on unmount
-useEventListener(dropZone, "dragenter", (e: DragEvent) => {
-  e.preventDefault();
+// Passing the ref rather than the element: the composable attaches once the
+// element exists and re-attaches if it is replaced
+useEventListener(dropZone, "dragenter", (event: DragEvent) => {
+  event.preventDefault();
   isDragging.value = true;
+});
+
+useEventListener(dropZone, "dragover", (event: DragEvent) => {
+  event.preventDefault(); // without this the drop event never fires
 });
 
 useEventListener(dropZone, "dragleave", () => {
   isDragging.value = false;
 });
 
-useEventListener(dropZone, "dragover", (e: DragEvent) => {
-  e.preventDefault(); // required to allow drop
-});
-
-useEventListener(dropZone, "drop", (e: DragEvent) => {
-  e.preventDefault();
+useEventListener(dropZone, "drop", (event: DragEvent) => {
+  event.preventDefault();
   isDragging.value = false;
-  if (e.dataTransfer?.files) {
-    droppedFiles.value = [...e.dataTransfer.files];
-  }
+  files.value = [...(event.dataTransfer?.files ?? [])];
 });
 
-// Keyboard shortcut
-useEventListener(window, "keydown", (e: KeyboardEvent) => {
-  if (e.key === "Escape") {
-    isDragging.value = false;
-  }
+useEventListener(window, "keydown", (event: KeyboardEvent) => {
+  if (event.key === "Escape") isDragging.value = false;
 });
 </script>
 
@@ -122,13 +109,12 @@ useEventListener(window, "keydown", (e: KeyboardEvent) => {
 </template>
 ```
 
-**Why good:** all event listeners automatically removed on unmount, template ref handling built-in, no manual cleanup code needed
+Every listener is removed when the scope ends. The return value is a `stop` function for the cases
+where a listener should end earlier than its component.
 
 ---
 
-## useMediaQuery Responsive Patterns
-
-### Good Example - Breakpoint System
+## Media Queries and Preferences
 
 ```vue
 <script setup lang="ts">
@@ -136,21 +122,24 @@ import {
   useMediaQuery,
   usePreferredColorScheme,
   usePreferredLanguages,
+  useDark,
+  useToggle,
 } from "@vueuse/core";
 import { computed } from "vue";
 
-// Named breakpoint constants
-const BREAKPOINT_SM = "(min-width: 640px)";
-const BREAKPOINT_MD = "(min-width: 768px)";
-const BREAKPOINT_LG = "(min-width: 1024px)";
-const BREAKPOINT_XL = "(min-width: 1280px)";
+const BREAKPOINTS = {
+  sm: "(min-width: 640px)",
+  md: "(min-width: 768px)",
+  lg: "(min-width: 1024px)",
+  xl: "(min-width: 1280px)",
+} as const;
 
-const isSmUp = useMediaQuery(BREAKPOINT_SM);
-const isMdUp = useMediaQuery(BREAKPOINT_MD);
-const isLgUp = useMediaQuery(BREAKPOINT_LG);
-const isXlUp = useMediaQuery(BREAKPOINT_XL);
+const isSmUp = useMediaQuery(BREAKPOINTS.sm);
+const isMdUp = useMediaQuery(BREAKPOINTS.md);
+const isLgUp = useMediaQuery(BREAKPOINTS.lg);
+const isXlUp = useMediaQuery(BREAKPOINTS.xl);
 
-const currentBreakpoint = computed(() => {
+const breakpoint = computed(() => {
   if (isXlUp.value) return "xl";
   if (isLgUp.value) return "lg";
   if (isMdUp.value) return "md";
@@ -158,55 +147,56 @@ const currentBreakpoint = computed(() => {
   return "xs";
 });
 
-// System preferences
 const colorScheme = usePreferredColorScheme(); // "dark" | "light" | "no-preference"
-const languages = usePreferredLanguages(); // readonly Ref<string[]>
+const languages = usePreferredLanguages();
+
+// useDark reads the preference, persists an override and toggles a class
+const isDark = useDark();
+const toggleDark = useToggle(isDark);
 </script>
 ```
 
-**Why good:** named constants for breakpoints, composable breakpoint detection, system preference integration
+Each `useMediaQuery` registers its own `MediaQueryList` listener; the browser evaluates these, so a
+handful is cheap and there is no resize handler involved.
+
+During server rendering a media query has no answer, so it resolves `false` and corrects on
+hydration — which means a layout switched purely on `isMobile` renders its desktop branch first.
 
 ---
 
-## useToggle and Composable Composition
-
-### Good Example - Composing Multiple Utilities
+## Toggles, Counters and Debounced Work
 
 ```vue
 <script setup lang="ts">
-import { useToggle, useCounter, useDebounceFn } from "@vueuse/core";
-import { ref } from "vue";
+import {
+  useToggle,
+  useCounter,
+  useDebounceFn,
+  useCycleList,
+} from "@vueuse/core";
+import { watch } from "vue";
 
-// Modal with toggle
 const [isModalOpen, toggleModal] = useToggle(false);
 
-// Counter with debounced API call
-const DEBOUNCE_MS = 500;
-const MIN_QUANTITY = 1;
-const MAX_QUANTITY = 99;
+// The clamp lives in the composable, so no call site can push past the bounds
+const { count: quantity, inc, dec } = useCounter(1, { min: 1, max: 99 });
 
-const {
-  count: quantity,
-  inc,
-  dec,
-  set: setQuantity,
-} = useCounter(1, {
-  min: MIN_QUANTITY,
-  max: MAX_QUANTITY,
-});
-
-const updateCartItem = useDebounceFn(async (qty: number) => {
+const updateCart = useDebounceFn(async (value: number) => {
   await fetch("/api/cart", {
     method: "PATCH",
-    body: JSON.stringify({ quantity: qty }),
+    body: JSON.stringify({ quantity: value }),
   });
-}, DEBOUNCE_MS);
+}, 500);
 
-// Watch quantity and debounce API update
-watch(quantity, (newQty) => {
-  updateCartItem(newQty);
-});
+watch(quantity, updateCart);
+
+const { state: theme, next: nextTheme } = useCycleList([
+  "light",
+  "dark",
+  "auto",
+]);
 </script>
 ```
 
-**Why good:** composing multiple VueUse utilities together, debounced API call prevents rapid-fire requests, counter enforces bounds
+`useDebounceFn` wraps a function; `watchDebounced` debounces a source directly and is the shorter
+form when the only consumer is one watcher.

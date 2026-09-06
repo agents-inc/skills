@@ -1,78 +1,89 @@
 ---
 name: web-i18n-vue-i18n
-description: Type-safe i18n for Vue 3 Composition API
+description: Type-safe i18n for Vue 3 Composition API — useI18n, pipe-syntax plurals, i18n-t/d/n components, lazy-loaded locales. Load when a project imports vue-i18n.
 ---
 
 # vue-i18n Internationalization Patterns
 
-> **Quick Guide:** Use vue-i18n v11+ for type-safe internationalization in Vue 3. `useI18n` composable for translations, `d()` for dates, `n()` for numbers, `i18n-t` component for rich text. Set `legacy: false` for Composition API mode (Legacy API is deprecated in v11, removed in v12).
+> **Quick Guide:** `createI18n({ legacy: false })` selects Composition API mode, and `useI18n()`
+> returns `t` for messages, `d` for dates, `n` for numbers and `locale` as a writable ref. Plurals
+> are pipe-separated rather than ICU. `<i18n-t>`, `<i18n-d>` and `<i18n-n>` put components and
+> styling inside a formatted result. Version boundary: Legacy API mode, the `v-t` directive and the
+> Rails `%{var}` format are deprecated in v11 and removed in v12; `$tc()` is already gone.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — setup, useI18n, interpolation, linked messages, plurals, `<i18n-t>`/`<i18n-d>`, types, locale switching
+- [examples/formatting.md](examples/formatting.md) — datetime and number format configuration, `<i18n-d>`/`<i18n-n>` scoped slots, dynamic currency
+- [examples/lazy-loading.md](examples/lazy-loading.md) — dynamic imports, loading before render, feature splitting, retry and fallback, SSR-safe detection
+- [reference.md](reference.md) — decision trees, anti-pattern code, checklists, plural-rule tables, v8→v9 migration and v11/v12 removals
+
+---
+
+## Which path applies
+
+- **Messages shared across the app** — global scope, the default. `useI18n()` reads the instance
+  created by `createI18n`. Follow [examples/core.md](examples/core.md).
+- **Messages belonging to one component** — local scope, `useI18n({ messages: { en: { ... } } })`.
+  Linked messages (`@:key`) resolve against global messages only, so a locally-scoped message cannot
+  reference one.
+- **Locales loaded on demand rather than bundled** — `setLocaleMessage` after a dynamic import, and
+  the locale is not switched until the import resolves. Follow
+  [examples/lazy-loading.md](examples/lazy-loading.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing vue-i18n code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Set `legacy: false` in `createI18n`.** It is what enables `useI18n()`; the default is the Options
+API mode that v11 deprecates and v12 removes.
 
-**(You MUST set `legacy: false` in createI18n for Composition API mode)**
+**Take everything from one `useI18n()` call per component.** Destructure `t`, `d`, `n` and `locale`
+together — separate calls can resolve to separate composer instances that then disagree about the
+current locale.
 
-**(You MUST use a SINGLE `useI18n()` call per component - destructure all needed functions from one call)**
+**Await the message load before assigning `locale.value`.** Switching first renders the raw keys
+until the import resolves.
 
-**(You MUST await locale message loading before setting `locale.value` - setting locale before messages are loaded shows raw keys)**
-
-**(You MUST use named constants for locale codes - NO inline locale strings)**
+**Set `fallbackLocale`.** Without it a key missing from the active locale renders as the key rather
+than as the default locale's text.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** vue-i18n, useI18n, createI18n, i18n-t, i18n-d, i18n-n, locale detection, pluralization, Vue 3 i18n, Composition API i18n
+**Auto-detection:** vue-i18n, useI18n, createI18n, legacy: false, setLocaleMessage, i18n-t, i18n-d,
+i18n-n, keypath, pluralRules, datetimeFormats, numberFormats, fallbackLocale, globalInjection
 
-**When to use:**
+**Applies to:**
 
-- Implementing internationalization in Vue 3 applications
-- Rendering localized messages with interpolation and pluralization
-- Formatting dates, numbers, and currency per locale
-- Setting up locale-based routing and lazy loading
-- Building type-safe translation systems with TypeScript
+- Message rendering with named interpolation, linked messages and pipe-syntax pluralization
+- Locale-aware date and number formatting through named format definitions
+- Putting components or per-part styling inside a formatted result
+- Loading and swapping locale message sets at runtime
+- Typing message keys and format names so a wrong one fails at compile time
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Project setup with createI18n and Composition API
-- useI18n composable for messages, dates, numbers
-- Pluralization with pipe syntax and custom rules
-- Component interpolation with i18n-t, i18n-d, i18n-n
-- Lazy loading translations for performance
-- TypeScript integration for type-safe keys
-
-**When NOT to use:**
-
-- Simple single-locale applications (skip i18n complexity)
-- Legacy Vue 2 applications (use vue-i18n v8)
-- Non-Vue applications (use framework-specific i18n solution)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) -- Setup, useI18n, interpolation, pluralization, component interpolation, TypeScript, locale switching
-- [examples/formatting.md](examples/formatting.md) -- DateTime formats, number formats, i18n-d/i18n-n components with scoped slots
-- [examples/lazy-loading.md](examples/lazy-loading.md) -- Dynamic imports, route-based loading, feature splitting, error handling, SSR
-- [reference.md](reference.md) -- Decision frameworks, anti-patterns, checklists, pluralization rules, migration notes
+- Locale-aware routing — this skill settles loading messages before a view renders, not how URLs map
+  to locales; the hook shape is in [examples/lazy-loading.md](examples/lazy-loading.md)
+- Component authoring and reactivity — `locale` is an ordinary ref and needs nothing special
+- Where the preferred locale is stored and how it is detected — this skill consumes a locale code
+- Bundling and build configuration, beyond the message pre-compilation options in
+  [reference.md](reference.md)
 
 ---
 
 <philosophy>
 
-## Philosophy
-
-vue-i18n follows the principle of **locale-aware, reactive rendering** with support for complex message formatting. Translations are organized as JSON objects, loaded globally or per-component. The Composition API mode (`legacy: false`) provides a modern, type-safe approach using the `useI18n` composable.
-
-**Core principles:**
-
-1. **Composition API first**: Use `useI18n()` composable with `legacy: false` for modern Vue 3 patterns
-2. **Single composable call**: Destructure all functions (`t`, `d`, `n`, `locale`) from ONE `useI18n()` call
-3. **Locale reactivity**: Locale changes automatically trigger re-renders via Vue's reactivity system
-4. **Message format standard**: Use pipe-separated plurals and named interpolation for translator-friendly messages
+Messages are plain JSON resolved through a reactive locale ref, so a locale change re-renders every
+component that read a message — no subscription, no invalidation step. Two consequences shape the
+API. Because the composer holds that ref, one component wants one composer, which is why repeated
+`useI18n()` calls are the recurring bug. And because `t()` returns a string rather than a VNode,
+anything needing markup inside a translation goes through `<i18n-t>` instead — which is also what
+keeps `v-html` out of translated content.
 
 </philosophy>
 
@@ -80,471 +91,177 @@ vue-i18n follows the principle of **locale-aware, reactive rendering** with supp
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Project Setup
+### Pattern 1: Project setup
 
-Set up vue-i18n with Composition API mode using the standard file structure.
-
-#### File Structure
-
-```
-src/
-  i18n/
-    index.ts         # Main i18n configuration
-    types.ts         # TypeScript type declarations
-  locales/
-    en.json          # English translations
-    ja.json          # Japanese translations
-    fr.json          # French translations
-main.ts              # App entry with i18n plugin
-```
-
-#### Configuration
+One instance, registered once on the app.
 
 ```typescript
-// src/i18n/index.ts
-import { createI18n } from "vue-i18n";
-import en from "../locales/en.json";
-
-export const SUPPORTED_LOCALES = ["en", "ja", "fr"] as const;
-export const DEFAULT_LOCALE = "en";
-
-export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
-
 export const i18n = createI18n({
-  legacy: false, // REQUIRED for Composition API
+  legacy: false, // enables useI18n()
   locale: DEFAULT_LOCALE,
   fallbackLocale: DEFAULT_LOCALE,
-  // globalInjection defaults to true - injects $t, $d, $n into templates
-  messages: {
-    en,
-  },
+  messages: { en },
 });
-```
 
-**Why good:** `legacy: false` enables Composition API mode, named constants for locales enable type-safe usage, fallbackLocale prevents missing translation errors, globalInjection enables template shorthand (default true since v9.2)
-
-```typescript
-// main.ts
-import { createApp } from "vue";
-import { i18n } from "./i18n";
-import App from "./App.vue";
-
-const app = createApp(App);
 app.use(i18n);
-app.mount("#app");
 ```
 
-**Why good:** i18n plugin registered once at app root, all components inherit translation capability
+`globalInjection` defaults to `true`, which is what puts `$t`, `$d` and `$n` in templates.
 
----
+Full code: [examples/core.md](examples/core.md)
 
-### Pattern 2: useI18n Composable
+### Pattern 2: useI18n
 
-Use the useI18n composable in components for translations, formatting, and locale management.
-
-#### Basic Usage
+One call, everything destructured from it.
 
 ```vue
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
-
-// CRITICAL: Single call, destructure all needed functions
 const { t, d, n, locale, availableLocales } = useI18n();
-
-const switchLocale = (newLocale: string) => {
-  locale.value = newLocale;
-};
 </script>
 
 <template>
-  <h1>{{ t("greeting") }}</h1>
-  <p>{{ t("messages.welcome", { name: "Vue" }) }}</p>
-  <p>{{ d(new Date(), "long") }}</p>
-  <p>{{ n(1000, "currency") }}</p>
-
-  <select :value="locale" @change="switchLocale($event.target.value)">
-    <option v-for="loc in availableLocales" :key="loc" :value="loc">
-      {{ loc }}
-    </option>
-  </select>
+  <h1>{{ t("dashboard.title") }}</h1>
+  <p>{{ d(updatedAt, "long") }} · {{ n(total, "currency") }}</p>
 </template>
 ```
 
-**Why good:** single useI18n call prevents sync issues, locale.value is reactive and triggers re-renders, destructuring provides all needed functions
+Full code: [examples/core.md](examples/core.md)
 
-```vue
-<!-- BAD - Multiple useI18n calls cause sync issues -->
-<script setup lang="ts">
-const { t } = useI18n();
-const { locale } = useI18n(); // WRONG: Second call!
-const { d } = useI18n(); // WRONG: Third call!
-</script>
-```
+### Pattern 3: Interpolation and linked messages
 
-**Why bad:** multiple useI18n calls create separate instances that may not stay synchronized, leads to subtle bugs
-
----
-
-### Pattern 3: Message Interpolation
-
-Use named placeholders and linked messages for flexible translations.
-
-#### Named Interpolation
+Named placeholders, `{'@'}` to escape a literal, and `@:key` to reference another message with an
+optional case modifier.
 
 ```json
-// locales/en.json
 {
+  "app": { "name": "My App" },
   "greeting": "Hello, {name}!",
-  "items": "You have {count} items in your cart.",
-  "email": "{account}{'@'}{domain}"
-}
-```
-
-```typescript
-const { t } = useI18n();
-
-t("greeting", { name: "John" }); // "Hello, John!"
-t("items", { count: 5 }); // "You have 5 items in your cart."
-t("email", { account: "user", domain: "example.com" }); // "user@example.com"
-```
-
-**Why good:** named placeholders are explicit and refactorable, literal interpolation (`{'@'}`) escapes special characters
-
-#### Linked Messages
-
-```json
-{
-  "app": {
-    "name": "My App"
-  },
   "welcome": "Welcome to @:app.name!",
-  "brand": "vue i18n",
-  "message": {
-    "upper": "@.upper:brand",
-    "lower": "@.lower:brand",
-    "capitalize": "@.capitalize:brand"
-  }
+  "shout": "@.upper:app.name"
 }
 ```
 
-```typescript
-t("welcome"); // "Welcome to My App!"
-t("message.upper"); // "VUE I18N"
-t("message.capitalize"); // "Vue i18n"
-```
-
-**Why good:** linked messages (`@:key`) avoid duplication, built-in modifiers (upper, lower, capitalize) transform referenced values
-
----
+Full code: [examples/core.md](examples/core.md)
 
 ### Pattern 4: Pluralization
 
-Use pipe-separated syntax for plural forms with automatic `{n}` and `{count}` injection.
-
-#### Basic Plural Syntax
+Pipe-separated forms rather than ICU. `{n}` and `{count}` both resolve to the value passed as the
+second argument.
 
 ```json
 {
   "car": "car | cars",
-  "apple": "no apples | one apple | {count} apples",
-  "items": "no items | {n} item | {n} items"
+  "apple": "no apples | one apple | {count} apples"
 }
 ```
 
-```typescript
-const { t } = useI18n();
+Languages needing more than three forms take a `pluralRules` function per locale, which returns the
+index of the form to use.
 
-t("car", 1); // "car"
-t("car", 2); // "cars"
+Full code: [examples/core.md](examples/core.md)
 
-t("apple", 0); // "no apples"
-t("apple", 1); // "one apple"
-t("apple", 10); // "10 apples"
+### Pattern 5: Component interpolation
 
-t("items", 5); // "5 items"
-```
-
-**Why good:** pipe syntax is translator-friendly, `{n}` and `{count}` are auto-injected with the plural value, three forms handle zero/one/many
-
-#### Custom Plural Rules
-
-```typescript
-// For languages with complex rules (Russian, Arabic, Polish)
-const i18n = createI18n({
-  legacy: false,
-  locale: "ru",
-  pluralRules: {
-    ru: (choice: number, choicesLength: number) => {
-      if (choice === 0) return 0;
-
-      const teen = choice > 10 && choice < 20;
-      const endsWithOne = choice % 10 === 1;
-
-      if (!teen && endsWithOne) return 1;
-      if (!teen && choice % 10 >= 2 && choice % 10 <= 4) return 2;
-      return choicesLength < 4 ? 2 : 3;
-    },
-  },
-  messages: {
-    ru: {
-      apple: "нет яблок | {n} яблоко | {n} яблока | {n} яблок",
-    },
-  },
-});
-```
-
-**Why good:** custom pluralRules handle languages with more than two forms, function receives choice count and returns index into plural array
-
----
-
-### Pattern 5: Component Interpolation
-
-Use `i18n-t`, `i18n-d`, and `i18n-n` components for rich text with Vue components inside translations.
-
-#### i18n-t for Rich Text
-
-```json
-{
-  "tos": "I agree to the {terms}.",
-  "termsLink": "Terms of Service"
-}
-```
+`<i18n-t>` puts components into a message through named slots, keeping the sentence whole.
 
 ```vue
-<template>
-  <i18n-t keypath="tos" tag="p">
-    <template #terms>
-      <a href="/terms">{{ t("termsLink") }}</a>
-    </template>
-  </i18n-t>
-</template>
+<i18n-t keypath="tos" tag="p">
+  <template #terms>
+    <a href="/terms">{{ t("termsLink") }}</a>
+  </template>
+</i18n-t>
 ```
 
-**Why good:** translation string stays translatable, Vue components can be inserted via named slots, `tag` prop controls wrapper element
+`:plural` selects the form, and `<i18n-d>` / `<i18n-n>` expose each formatted part — `month`, `day`,
+`currency`, `integer` — as its own scoped slot.
 
-#### i18n-t with Pluralization
+Full code: [examples/core.md](examples/core.md), scoped-slot styling in
+[examples/formatting.md](examples/formatting.md)
 
-```json
-{
-  "items": "no items | {n} item | {n} items"
-}
-```
+### Pattern 6: Named datetime and number formats
 
-```vue
-<template>
-  <i18n-t keypath="items" :plural="count" tag="p">
-    <template #n>
-      <strong>{{ count }}</strong>
-    </template>
-  </i18n-t>
-</template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-const count = ref(5);
-</script>
-```
-
-**Why good:** plural value passed via `:plural` prop, `#n` slot allows styling the number, result: "**5** items"
-
-#### i18n-d and i18n-n for Styled Parts
-
-```vue
-<template>
-  <!-- DateTime with styled parts -->
-  <i18n-d :value="date" format="long" tag="time">
-    <template #month="{ month }">
-      <span class="month">{{ month }}</span>
-    </template>
-    <template #day="{ day }">
-      <span class="day">{{ day }}</span>
-    </template>
-  </i18n-d>
-
-  <!-- Number with styled parts -->
-  <i18n-n :value="price" format="currency" tag="span">
-    <template #currency="{ currency }">
-      <span class="currency-symbol">{{ currency }}</span>
-    </template>
-    <template #integer="{ integer }">
-      <span class="integer">{{ integer }}</span>
-    </template>
-  </i18n-n>
-</template>
-```
-
-**Why good:** scoped slots expose formatted parts (month, day, currency, integer), enables fine-grained styling of formatted values
-
----
-
-### Pattern 6: DateTime and Number Formatting
-
-Configure and use locale-aware formatting for dates, times, and numbers.
-
-#### DateTime Format Configuration
+Define the formats per locale once and refer to them by name, so a change lands everywhere.
 
 ```typescript
-const datetimeFormats = {
-  "en-US": {
-    short: {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    },
-    long: {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "long",
-      hour: "numeric",
-      minute: "numeric",
-    },
-  },
-  "ja-JP": {
-    short: {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    },
-    long: {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "long",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: false,
-    },
-  },
-};
-
-const i18n = createI18n({
+createI18n({
   legacy: false,
   locale: "en-US",
-  datetimeFormats, // Note: camelCase, not dateTimeFormats
-});
-```
-
-```typescript
-const { d } = useI18n();
-
-d(new Date(), "short"); // "Apr 19, 2024"
-d(new Date(), "long"); // "Friday, April 19, 2024 at 2:30 PM"
-```
-
-**Why good:** named formats ensure consistency across app, locale-specific formats handle cultural differences (12h vs 24h time)
-
-#### Number Format Configuration
-
-```typescript
-const numberFormats = {
-  "en-US": {
-    currency: {
-      style: "currency",
-      currency: "USD",
-      notation: "standard",
-    },
-    decimal: {
-      style: "decimal",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    },
-    percent: {
-      style: "percent",
-      useGrouping: false,
-    },
-  },
-  "ja-JP": {
-    currency: {
-      style: "currency",
-      currency: "JPY",
-      useGrouping: true,
-      currencyDisplay: "symbol",
-    },
-  },
-};
-
-const i18n = createI18n({
-  legacy: false,
-  locale: "en-US",
+  datetimeFormats, // note the lowercase 't'
   numberFormats,
 });
+
+d(new Date(), "long"); // "Friday, April 19, 2024 at 2:30 PM"
+n(10000, "currency"); // "$10,000.00"
 ```
+
+Full code: [examples/formatting.md](examples/formatting.md)
+
+### Pattern 7: Lazy-loaded locales
+
+Register the messages, then move the locale — never the other way round.
 
 ```typescript
-const { n } = useI18n();
-
-n(10000, "currency"); // "$10,000.00"
-n(0.15, "percent"); // "15%"
+export async function setLocale(locale: SupportedLocale): Promise<void> {
+  const messages = await import(`../locales/${locale}.json`);
+  i18n.global.setLocaleMessage(locale, messages.default);
+  i18n.global.locale.value = locale;
+  document.documentElement.setAttribute("lang", locale);
+}
 ```
 
-**Why good:** Intl.NumberFormat under the hood, handles locale-specific separators and symbols automatically
+Full code: [examples/lazy-loading.md](examples/lazy-loading.md)
+
+### Pattern 8: Type-safe keys and formats
+
+Augment `DefineLocaleMessage` with the shape of a message file, and `DefineDateTimeFormat` /
+`DefineNumberFormat` with the format names.
+
+```typescript
+declare module "vue-i18n" {
+  export interface DefineLocaleMessage extends MessageSchema {}
+}
+```
+
+A wrong key, or a format name that was never defined, then fails at compile time.
+
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**vue-i18n integrates with Vue's reactivity system** for automatic re-renders on locale change.
-
-**Locale state guidance:**
-
-- Locale state is managed by vue-i18n -- use `locale.value` from useI18n to read/write
-- Locale changes are reactive -- all components using `t()`, `d()`, `n()` update automatically
-- `globalInjection` defaults to `true`, injecting `$t`, `$d`, `$n` into templates
-
-**Locale-based routing:** vue-i18n works with navigation guards to load translations before route renders. See [examples/lazy-loading.md](examples/lazy-loading.md) for patterns.
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-- **Missing `legacy: false`** -- defaults to deprecated Options API mode (removed in v12)
-- **Multiple `useI18n()` calls in same component** -- creates separate instances that desync
-- **Hardcoded locale strings** -- use named constants for type safety
-- **Missing `fallbackLocale`** -- missing translations cause visible errors instead of graceful fallback
-- **Using `v-html` with translations** -- XSS vulnerability, use `<i18n-t>` instead
-- **String concatenation** -- word order varies by language, use complete messages with interpolation
-- **Setting locale before messages load** -- shows raw keys, always await loading first
-- **Using `dateTimeFormats` instead of `datetimeFormats`** -- the config key uses lowercase 't'
-- **Using `$tc()`** -- removed in v11, use `t()` with count parameter
-- **Using `v-t` directive** -- deprecated in v11, removed in v12, use `t()` or `<i18n-t>`
+**Breaks at runtime:**
 
-**Gotchas & Edge Cases:**
+- `createI18n` without `legacy: false` — `useI18n()` is unavailable, and the Options API mode it
+  falls back to is removed in v12
+- Assigning `locale` directly instead of `locale.value` — it is a ref, so the assignment does nothing
+- `$tc()` — removed in v11; `t(key, count)` replaces it
+- The `v-t` directive — deprecated in v11 and removed in v12; use `t()` or `<i18n-t>`
+- `dateTimeFormats` as the config key — the option is `datetimeFormats`, and the misspelled key is
+  silently ignored, so every named format resolves to nothing
 
-- `locale.value` is a ref -- assign with `.value`, not direct assignment
-- `@:linked.message` syntax only works with global scope, not local scope
-- Custom `pluralRules` function returns an index into the array, not the form itself
+**Surprising behaviour:**
 
-> See [reference.md](reference.md) for full anti-pattern code examples and decision frameworks.
+- Two `useI18n()` calls in one component can yield two composers, and a locale change in one is
+  invisible to the other
+- Setting `locale.value` before the messages load renders the raw keys until the import resolves
+- Without `fallbackLocale`, a key missing from the active locale renders as the key itself
+- `@:linked.key` resolves against global messages only — it finds nothing from a locally-scoped
+  `useI18n({ messages })`
+- A `pluralRules` function returns the index of the form, not the form
+- `t()` returns a string, so markup in a message needs `<i18n-t>`; reaching for `v-html` instead puts
+  whatever is in the message straight into the DOM
+- The document's `lang` attribute does not follow `locale` — update it on every switch; screen
+  readers choose their pronunciation from it, and crawlers read it as the page's language
+- Concatenating translated fragments assumes English word order, which most languages do not share
+
+Anti-patterns with the code that fixes them, and the full v8→v9 and v11/v12 migration tables:
+[reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST set `legacy: false` in createI18n for Composition API mode)**
-
-**(You MUST use a SINGLE `useI18n()` call per component - destructure all needed functions from one call)**
-
-**(You MUST await locale message loading before setting `locale.value` - setting locale before messages are loaded shows raw keys)**
-
-**(You MUST use named constants for locale codes - NO inline locale strings)**
-
-**Failure to follow these rules will break i18n reactivity and cause translation inconsistencies.**
-
-</critical_reminders>

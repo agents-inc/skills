@@ -29,7 +29,7 @@ function LastUpdated({ timestamp }: { timestamp: Date }) {
 }
 ```
 
-**Why good:** useNow with updateInterval creates reactive "now" value, relative time updates automatically without manual intervals, named constant for interval
+**Why good:** useNow with updateInterval supplies a reactive "now", so the relative time re-renders without a hand-rolled interval
 
 ### Good Example - Relative Time Without Auto-Update
 

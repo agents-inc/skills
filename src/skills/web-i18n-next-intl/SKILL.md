@@ -1,75 +1,88 @@
 ---
 name: web-i18n-next-intl
-description: Type-safe i18n for Next.js App Router
+description: Type-safe i18n for the App Router — locale routing, message rendering, formatting and static generation. Load when a project imports next-intl.
 ---
 
 # next-intl Internationalization Patterns
 
-> **Quick Guide:** Use next-intl for type-safe internationalization in Next.js App Router. `useTranslations` for messages, `useFormatter` for dates/numbers, middleware for locale detection. Call `setRequestLocale(locale)` for static rendering.
+> **Quick Guide:** `useTranslations` renders messages, `useFormatter` renders dates, numbers and
+> lists, and `createMiddleware` detects the locale. `setRequestLocale(locale)` at the top of a
+> page or layout is what keeps it statically renderable. v4.0+ registers types through the
+> `AppConfig` interface and sets the locale cookie only when the user switches away from their
+> Accept-Language preference. Every pattern here is App Router — the Pages Router integration is a
+> separate API and none of this transfers to it.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — setup, provider, `useTranslations`, plurals, formatting, static rendering, locale switching, types
+- [examples/formatting.md](examples/formatting.md) — relative time with auto-update, list formatting, combined format patterns
+- [examples/pluralization.md](examples/pluralization.md) — ordinals, plural nested in select, zero-case handling
+- [examples/markup.md](examples/markup.md) — `t.markup()` for HTML strings: email bodies, feeds, sanitisation
+- [reference.md](reference.md) — decision trees, anti-pattern code, ICU syntax tables, setup checklists
+
+---
+
+## Which path applies
+
+- **Rendering inside a component** — `useTranslations` and `useFormatter`, with
+  `NextIntlClientProvider` above any Client Component that calls them. Follow
+  [examples/core.md](examples/core.md).
+- **Rendering outside the component tree** — metadata, Server Actions and other async contexts take
+  `getTranslations({ locale, namespace })`, which needs the locale passed explicitly. Also in
+  [examples/core.md](examples/core.md).
+- **Producing an HTML string rather than elements** — `t.markup()` instead of `t.rich()`, and the
+  sanitisation that goes with it. Follow [examples/markup.md](examples/markup.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing next-intl code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Call `setRequestLocale(locale)` at the top of every page and layout, before any hook.** It is what
+lets next-intl resolve the locale without a request, which is what keeps the route statically
+renderable.
 
-**(You MUST call `setRequestLocale(locale)` at the top of ALL page/layout components for static rendering)**
+**Validate the locale with `hasLocale(routing.locales, locale)` before using it.** An unvalidated
+segment reaches the message loader and fails there, well away from the route that produced it.
 
-**(You MUST validate locale against `routing.locales` before using it)**
-
-**(You MUST use `NextIntlClientProvider` in the root layout to enable client-side hooks)**
-
-**(You MUST use named constants for locale codes - NO inline locale strings)**
+**Wrap the tree in `NextIntlClientProvider`.** Client Components read their messages from that
+context and render nothing without it.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** next-intl, useTranslations, useFormatter, useLocale, NextIntlClientProvider, i18n routing, locale detection, ICU message format
+**Auto-detection:** next-intl, useTranslations, useFormatter, useLocale, getTranslations,
+setRequestLocale, NextIntlClientProvider, defineRouting, createNavigation, hasLocale, ICU message
+format
 
-**When to use:**
+**Applies to:**
 
-- Implementing internationalization in Next.js App Router
-- Rendering localized messages with interpolation and pluralization
-- Formatting dates, numbers, and relative time per locale
-- Setting up locale-based routing and middleware
-- Generating static pages for multiple locales
+- Locale-segment routing, locale detection and the locale-aware navigation APIs
+- Rendering messages with interpolation, pluralization and embedded markup
+- Formatting dates, numbers, relative time and lists per locale
+- Generating every locale variant of a route at build time
+- Typing message keys and formats so a missing key fails at compile time
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Project setup with routing.ts, request.ts, and middleware
-- useTranslations hook for messages with ICU syntax
-- useFormatter hook for dates, numbers, and lists
-- Static rendering with generateStaticParams and setRequestLocale
-- TypeScript integration for type-safe translation keys
-
-**When NOT to use:**
-
-- Simple single-locale applications (skip i18n complexity)
-- Pages Router (different API - use Pages Router docs)
-- Non-Next.js React applications (use react-intl instead)
-
-**Detailed Resources:**
-
-- For code examples, see [examples/](examples/) (core.md, formatting.md, pluralization.md, markup.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Framework routing and rendering beyond the locale segment — this skill settles what next-intl adds
+  to a route, not how routes are defined
+- Translation file authoring and sync with a translation vendor — messages arrive as JSON and where
+  they came from is not this skill's concern
+- Client state other than the locale — the locale is read with `useLocale()` and never mirrored
+- Date arithmetic — formatting a `Date` is this skill's job; producing one is not
 
 ---
 
 <philosophy>
 
-## Philosophy
-
-next-intl follows the principle of **type-safe, locale-aware rendering** with ICU message format support. Translations are organized as namespaced JSON objects, loaded per-request for Server Components and provided via context for Client Components. The middleware handles locale detection automatically, while `setRequestLocale` enables static rendering at build time.
-
-**Core principles:**
-
-1. **Server-first**: Load translations in Server Components for better performance
-2. **Type-safe keys**: TypeScript augmentation catches missing translations at compile time
-3. **ICU standard**: Use industry-standard ICU message syntax for pluralization and formatting
-4. **Static-friendly**: Support static generation with explicit locale parameters
+Translations are namespaced JSON, resolved per request on the server and handed to the client
+through context. Two decisions follow from that. Locale-aware rendering is a server concern by
+default, so the client tree carries only what interactivity needs. And because a request is what
+normally supplies the locale, static rendering needs it supplied another way — which is what
+`setRequestLocale` is for, and why it has to run before anything reads the locale.
 
 </philosophy>
 
@@ -77,426 +90,145 @@ next-intl follows the principle of **type-safe, locale-aware rendering** with IC
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Project Setup
+### Pattern 1: Project setup
 
-Set up next-intl with the App Router using the standard file structure.
-
-#### File Structure
-
-```
-src/
-  i18n/
-    routing.ts       # Locale configuration
-    request.ts       # Server-side locale resolution
-    navigation.ts    # Locale-aware Link, useRouter
-  proxy.ts           # Locale detection and routing (middleware.ts before Next.js 16)
-  app/
-    [locale]/
-      layout.tsx     # Root layout with NextIntlClientProvider
-      page.tsx       # Pages within locale segment
-messages/
-  en.json            # English translations
-  de.json            # German translations
-```
-
-> **Note:** In Next.js 16+, `middleware.ts` was renamed to `proxy.ts`. If using Next.js 15 or earlier, use `middleware.ts`.
-
-#### Configuration Files
+Four modules and a proxy: `routing.ts` declares the locales, `request.ts` resolves one per request,
+`navigation.ts` produces locale-aware navigation APIs, and the proxy detects the locale from URL,
+cookie and `Accept-Language`.
 
 ```typescript
-// src/i18n/routing.ts
+// i18n/routing.ts
 import { defineRouting } from "next-intl/routing";
 
-export const SUPPORTED_LOCALES = ["en", "de", "fr"] as const;
-export const DEFAULT_LOCALE = "en";
-
 export const routing = defineRouting({
-  locales: SUPPORTED_LOCALES,
-  defaultLocale: DEFAULT_LOCALE,
+  locales: ["en", "de", "fr"],
+  defaultLocale: "en",
 });
 
 export type Locale = (typeof routing.locales)[number];
 ```
 
-**Why good:** named constants for locales enable type-safe usage throughout app, exported Locale type enables type checking of locale parameters
+The proxy file is `proxy.ts` from Next.js 16 onwards and `middleware.ts` before it; the export is
+`createMiddleware(routing)` either way.
+
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 2: Root layout with provider
+
+Validate the locale, set it, load the messages, and wrap the tree.
 
 ```typescript
-// src/i18n/request.ts
-import { getRequestConfig } from "next-intl/server";
-import { hasLocale } from "next-intl";
-import { routing } from "./routing";
+if (!hasLocale(routing.locales, locale)) notFound();
+setRequestLocale(locale);
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested)
-    ? requested
-    : routing.defaultLocale;
-
-  return {
-    locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
-  };
-});
+return (
+  <html lang={locale}>
+    <body>
+      <NextIntlClientProvider messages={await getMessages()}>{children}</NextIntlClientProvider>
+    </body>
+  </html>
+);
 ```
 
-**Why good:** validates locale against supported list, falls back to default for invalid locales, dynamically imports only needed translation file
+From v4.0 the provider inherits messages from the server config, so the `messages` prop is optional.
 
-```typescript
-// src/i18n/navigation.ts
-import { createNavigation } from "next-intl/navigation";
-import { routing } from "./routing";
+Full code: [examples/core.md](examples/core.md)
 
-export const { Link, redirect, usePathname, useRouter, getPathname } =
-  createNavigation(routing);
-```
+### Pattern 3: useTranslations
 
-**Why good:** wraps Next.js navigation APIs with locale awareness, Link automatically includes locale prefix
-
-```typescript
-// src/proxy.ts (Next.js 16+) or src/middleware.ts (Next.js 15 and earlier)
-import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
-
-export default createMiddleware(routing);
-
-export const config = {
-  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
-};
-```
-
-**Why good:** proxy/middleware handles locale detection from URL, cookies, and Accept-Language header, matcher excludes API routes and static files. Add additional exclusions for your API framework routes as needed.
-
----
-
-### Pattern 2: Root Layout with Provider
-
-Wrap the application with NextIntlClientProvider and validate the locale.
-
-```typescript
-// src/app/[locale]/layout.tsx
-import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { notFound } from "next/navigation";
-import { getMessages, setRequestLocale } from "next-intl/server";
-import { routing, type Locale } from "@/i18n/routing";
-
-type Props = {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-};
-
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
-
-export default async function LocaleLayout({ children, params }: Props) {
-  const { locale } = await params;
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
-
-  setRequestLocale(locale);
-  const messages = await getMessages();
-
-  return (
-    <html lang={locale}>
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
-  );
-}
-```
-
-**Why good:** validates locale and returns 404 for invalid locales, setRequestLocale enables static rendering, generateStaticParams pre-renders all locale variants, explicit messages prop ensures Client Components receive translations, html lang attribute improves accessibility
-
-> **Note:** In next-intl v4.0+, `NextIntlClientProvider` auto-inherits messages from server config. Passing `messages` explicitly is optional but recommended for clarity.
-
----
-
-### Pattern 3: useTranslations Hook
-
-Use the useTranslations hook for rendering localized messages.
-
-#### Basic Usage
-
-```typescript
-// src/app/[locale]/about/page.tsx
-import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-
-type Props = {
-  params: Promise<{ locale: string }>;
-};
-
-export default async function AboutPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-
-  const t = useTranslations("About");
-
-  return (
-    <article>
-      <h1>{t("title")}</h1>
-      <p>{t("description")}</p>
-    </article>
-  );
-}
-```
-
-```json
-// messages/en.json
-{
-  "About": {
-    "title": "About Us",
-    "description": "Learn more about our company."
-  }
-}
-```
-
-**Why good:** namespaced translations keep messages organized, setRequestLocale at top of component enables static rendering
-
-#### With Interpolation
+A namespace scopes the keys, and values are named placeholders.
 
 ```typescript
 const t = useTranslations("Profile");
 
-// Message: "Hello, {name}!"
 t("greeting", { name: user.name }); // "Hello, Jane!"
-
-// Message: "You have {count} unread messages"
-t("unreadCount", { count: messages.length }); // "You have 5 unread messages"
+t("unreadCount", { count: messages.length });
 ```
 
-**Why good:** named placeholders are explicit and refactorable, TypeScript can validate placeholder names with augmentation
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 4: Pluralization with ICU syntax
 
-### Pattern 4: Pluralization with ICU Syntax
-
-Use ICU plural syntax for count-based messages.
-
-```typescript
-const t = useTranslations("Notifications");
-
-// Renders correct plural form based on locale rules
-t("itemCount", { count: items.length });
-```
+The plural form is chosen by the locale's own CLDR rules, and `#` renders the formatted count. `=0`
+matches exactly zero, which is distinct from the `zero` CLDR category.
 
 ```json
-// messages/en.json
 {
-  "Notifications": {
-    "itemCount": "{count, plural, =0 {No items} one {# item} other {# items}}"
-  }
+  "itemCount": "{count, plural, =0 {No items} one {# item} other {# items}}"
 }
 ```
 
-**Plural categories by language:**
+Ordinals use `selectordinal`; enum-valued messages use `select`.
 
-- English: `one`, `other`
-- Russian: `one`, `few`, `many`, `other`
-- Arabic: `zero`, `one`, `two`, `few`, `many`, `other`
+Full code: [examples/core.md](examples/core.md), ordinals and nesting in
+[examples/pluralization.md](examples/pluralization.md)
 
-**Why good:** ICU plural syntax handles locale-specific plural rules automatically, `#` is replaced with the formatted count
+### Pattern 5: Rich text with t.rich()
 
-#### Ordinal Pluralization
-
-```typescript
-// Message: "It's your {year, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} birthday!"
-t("birthday", { year: 21 }); // "It's your 21st birthday!"
-```
-
----
-
-### Pattern 5: Rich Text Formatting
-
-Use `t.rich()` for messages containing markup.
+Tags in the message are developer-defined and map to components, so the sentence stays whole for the
+translator.
 
 ```typescript
-const t = useTranslations("Legal");
-
-const content = t.rich("terms", {
+t.rich("terms", {
   link: (chunks) => <a href="/terms">{chunks}</a>,
   bold: (chunks) => <strong>{chunks}</strong>,
 });
-
-return <p>{content}</p>;
 ```
 
-```json
-{
-  "Legal": {
-    "terms": "By signing up, you agree to our <link>Terms of Service</link> and <bold>Privacy Policy</bold>."
-  }
-}
-```
+Full code: [examples/core.md](examples/core.md)
 
-**Why good:** keeps translation strings complete and translatable, markup tags are defined by developers and can be React components
+### Pattern 6: useFormatter
 
----
-
-### Pattern 6: useFormatter Hook
-
-Use useFormatter for locale-aware formatting of dates, numbers, and lists.
-
-#### Date and Time Formatting
+One hook covers dates, numbers, lists and relative time, each backed by the matching `Intl`
+formatter.
 
 ```typescript
-import { useFormatter } from "next-intl";
+const format = useFormatter();
 
-function EventDate({ date }: { date: Date }) {
-  const format = useFormatter();
-
-  return (
-    <time dateTime={date.toISOString()}>
-      {format.dateTime(date, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}
-    </time>
-  );
-}
+format.dateTime(date, { year: "numeric", month: "long", day: "numeric" });
+format.number(amount, { style: "currency", currency });
+format.relativeTime(date, useNow({ updateInterval: 60_000 }));
 ```
 
-**Why good:** uses Intl.DateTimeFormat under the hood, respects locale-specific date formats automatically
+Full code: [examples/core.md](examples/core.md), auto-updating relative time and lists in
+[examples/formatting.md](examples/formatting.md)
 
-#### Relative Time with useNow
+### Pattern 7: Static rendering
 
-```typescript
-import { useFormatter, useNow } from "next-intl";
-
-const UPDATE_INTERVAL_MS = 60000;
-
-function RelativeTime({ date }: { date: Date }) {
-  const format = useFormatter();
-  const now = useNow({ updateInterval: UPDATE_INTERVAL_MS });
-
-  return <time>{format.relativeTime(date, now)}</time>;
-}
-```
-
-**Why good:** useNow provides a reactive "now" value that updates on interval, relative time updates automatically
-
-#### Number and Currency Formatting
+`generateStaticParams` enumerates the locale variants, and `setRequestLocale` makes each one
+renderable without a request.
 
 ```typescript
-import { useFormatter } from "next-intl";
-
-function Price({ amount, currency }: { amount: number; currency: string }) {
-  const format = useFormatter();
-
-  return (
-    <span>
-      {format.number(amount, {
-        style: "currency",
-        currency,
-      })}
-    </span>
-  );
-}
-```
-
-**Why good:** handles locale-specific number formatting (1,234.56 vs 1.234,56), currency symbols and positions vary by locale
-
----
-
-### Pattern 7: Static Rendering with generateStaticParams
-
-Enable static generation for all locale variants.
-
-```typescript
-// src/app/[locale]/blog/[slug]/page.tsx
-import { setRequestLocale } from "next-intl/server";
-import { routing } from "@/i18n/routing";
-
-type Props = {
-  params: Promise<{ locale: string; slug: string }>;
-};
-
 export function generateStaticParams() {
-  const slugs = ["getting-started", "advanced-features", "faq"];
-
   return routing.locales.flatMap((locale) =>
     slugs.map((slug) => ({ locale, slug })),
   );
 }
-
-export default async function BlogPost({ params }: Props) {
-  const { locale, slug } = await params;
-  setRequestLocale(locale);
-
-  // Component implementation
-}
 ```
 
-**Why good:** generates all combinations of locales and slugs at build time, setRequestLocale enables next-intl to work in static context
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 8: Locale switching
 
-### Pattern 8: Locale Switching
-
-Implement a locale switcher component using next-intl navigation.
+The navigation APIs from `createNavigation` swap the locale while preserving the current path.
 
 ```typescript
-"use client";
+const router = useRouter();
+const pathname = usePathname();
 
-import { useLocale } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
-
-const LOCALE_LABELS: Record<Locale, string> = {
-  en: "English",
-  de: "Deutsch",
-  fr: "Francais",
-};
-
-export function LocaleSwitcher() {
-  const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const handleChange = (newLocale: Locale) => {
-    router.replace(pathname, { locale: newLocale });
-  };
-
-  return (
-    <select
-      value={locale}
-      onChange={(e) => handleChange(e.target.value as Locale)}
-      aria-label="Select language"
-    >
-      {routing.locales.map((loc) => (
-        <option key={loc} value={loc}>
-          {LOCALE_LABELS[loc]}
-        </option>
-      ))}
-    </select>
-  );
-}
+router.replace(pathname, { locale: newLocale });
 ```
 
-**Why good:** uses next-intl navigation APIs to preserve current path, aria-label provides accessibility, type-safe locale handling
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 9: Type-safe keys
 
-### Pattern 9: TypeScript Integration
-
-Enable type-safe translation keys with TypeScript augmentation using the `AppConfig` interface (next-intl v4.0+).
-
-#### Configuration
+Register the message shape on the `AppConfig` interface (v4.0+) and a wrong key becomes a compile
+error.
 
 ```typescript
-// src/i18n/types.ts (or global.d.ts)
-import type en from "../../messages/en.json";
-import { routing } from "./routing";
-import type { formats } from "./request";
-
 declare module "next-intl" {
   interface AppConfig {
     Locale: (typeof routing.locales)[number];
@@ -506,137 +238,55 @@ declare module "next-intl" {
 }
 ```
 
-```json
-// tsconfig.json (add to compilerOptions)
-{
-  "compilerOptions": {
-    "allowArbitraryExtensions": true
-  }
-}
-```
+Set `allowArbitraryExtensions: true` in `tsconfig.json` to import the JSON. For inferred argument
+types, the plugin's `experimental.createMessagesDeclaration` generates them.
 
-**Why good:** typos in translation keys become compile-time errors, IDE autocomplete for translation keys, strictly-typed locales prevent invalid locale strings, Formats registration enables type-safe formatting
+Full code: [examples/core.md](examples/core.md)
 
-#### Optional: Type-Safe Message Arguments (Experimental)
+### Pattern 10: Async contexts
 
-For automatic type inference of ICU message arguments, configure `createMessagesDeclaration`:
+`getTranslations` works where hooks cannot. Metadata runs outside the component tree, so the locale
+is passed rather than inferred.
 
 ```typescript
-// next.config.mjs
-import { createNextIntlPlugin } from "next-intl/plugin";
+const t = await getTranslations({ locale, namespace: "Metadata" });
 
-const withNextIntl = createNextIntlPlugin({
-  experimental: {
-    createMessagesDeclaration: "./messages/en.json",
-  },
-});
-
-export default withNextIntl({});
+return { title: t("title"), description: t("description") };
 ```
 
-This generates type declarations enabling autocomplete for message arguments like `{name}` or `{count, plural, ...}`.
-
----
-
-### Pattern 10: Server Actions and Metadata
-
-Use async getTranslations for Server Actions and Metadata.
-
-```typescript
-// src/app/[locale]/page.tsx
-import { getTranslations, setRequestLocale } from "next-intl/server";
-
-type Props = {
-  params: Promise<{ locale: string }>;
-};
-
-export async function generateMetadata({ params }: Props) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Metadata" });
-
-  return {
-    title: t("title"),
-    description: t("description"),
-  };
-}
-
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-
-  const t = await getTranslations("Home");
-
-  return <h1>{t("welcome")}</h1>;
-}
-```
-
-**Why good:** getTranslations works in async contexts like generateMetadata, locale parameter is required for metadata since it runs outside component tree
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Notes
-
-- **Server Components first**: Load translations in Server Components for performance; use `useTranslations` (sync) or `getTranslations` (async)
-- **Client Components**: Wrap with `NextIntlClientProvider` for hooks access; locale switching and interactive features live here
-- **Locale state**: Managed entirely by next-intl - read with `useLocale()`, never store separately
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Missing `setRequestLocale(locale)` in page/layout components -- breaks static rendering
-- Not awaiting `params` in App Router -- params is a Promise in Next.js 15+, causes runtime errors
-- Missing `NextIntlClientProvider` in root layout -- Client Components cannot access translations
-- Hardcoded locale strings -- use named constants from routing.ts
-- Not validating locale against `routing.locales` -- invalid locales cause cryptic errors
-- Using `middleware.ts` on Next.js 16+ -- must rename to `proxy.ts`
+- Reading `params` without awaiting it — it is a Promise from Next.js 15 onwards
+- Calling `setRequestLocale` after a hook has already read the locale — the hook fails, and the
+  error names the hook rather than the ordering
+- Client Components rendered outside `NextIntlClientProvider` — no messages reach them
+- Using an unvalidated locale segment — the message import fails on a path the route never declared
+- A proxy still named `middleware.ts` on Next.js 16 — it is not picked up, so no locale is detected
+- `t()` on a message containing markup — it returns the tags as literal text
+- `useTranslations` inside `generateMetadata` or a Server Action — it is a hook, and both run outside
+  the component tree; `getTranslations({ locale, namespace })` is what works there
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Missing `generateStaticParams` for static routes -- forces dynamic rendering
-- Using `t()` instead of `t.rich()` for messages with markup -- returns string, not ReactNode
-- Missing namespace in `useTranslations` -- all keys become global, conflicts likely
-- Using `useTranslations` in `generateMetadata` -- use `getTranslations` instead
+- Omitting `setRequestLocale` costs static rendering silently: the route still works, dynamically.
+  `generateStaticParams` is the other half, and a route missing either one is rendered per request
+- `t.rich()` tag functions receive `chunks` as an array, not a single element
+- `useNow()` only ticks on the client, so SSR shows the initial value until hydration
+- Omitting the namespace in `useTranslations` puts every key in one global space, where names collide
+- From v4.0 the locale cookie is a session cookie and is written only when the user switches away
+  from their `Accept-Language` preference — `localeCookie` in the routing config changes both
+- On Next.js 16 the proxy runs on the Node runtime rather than the Edge runtime
 
-**Gotchas & Edge Cases:**
-
-- `setRequestLocale(locale)` must be called at the TOP of components, before any hooks
-- `generateMetadata` runs outside the component tree -- requires explicit locale param to `getTranslations`
-- `t.rich()` tag functions receive `chunks` (ReactNode[]), not a single element
-- `useNow()` only updates on client -- SSR shows initial value until hydration
-- v4.0+ GDPR cookie changes: locale cookies now expire when browser closes and are only set when user switches locale
-- Next.js 16: `proxy.ts` runs on Node.js runtime, not Edge
-
-> For full anti-patterns with code examples, see [reference.md](reference.md).
+Anti-patterns with the code that fixes them: [reference.md](reference.md).
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST call `setRequestLocale(locale)` at the top of ALL page/layout components for static rendering)**
-
-**(You MUST validate locale against `routing.locales` before using it)**
-
-**(You MUST use `NextIntlClientProvider` in the root layout to enable client-side hooks)**
-
-**(You MUST use named constants for locale codes - NO inline locale strings)**
-
-**Failure to follow these rules will break static generation and cause runtime errors with invalid locales.**
-
-</critical_reminders>

@@ -2,6 +2,9 @@
 
 > Core code examples for next-intl internationalization. See other files in this folder for advanced patterns.
 
+Each snippet's first comment gives the file's own path, and its imports are written relative to that
+path.
+
 ---
 
 ## Setup Examples
@@ -63,7 +66,7 @@ export const config = {
 };
 ```
 
-**Why good:** modular file structure separates concerns, named constants for locales enable type safety, Locale type exported for use throughout app, proxy/middleware matcher excludes API routes and static files. Add additional exclusions for your API framework routes as needed.
+**Why good:** one source of truth for the locale list, `Locale` exported so every consumer is typed against it, matcher excludes API routes and static files — add any other server-route prefix the project serves
 
 ### Bad Example - Inline Configuration
 
@@ -81,7 +84,7 @@ export const config = {
 };
 ```
 
-**Why bad:** locale strings are duplicated if used elsewhere, no type safety for locale values, incomplete matcher will miss nested routes, configuration not reusable in navigation.ts
+**Why bad:** the locale list is now duplicated wherever else it is needed, the values are untyped, the matcher misses every nested route, and `navigation.ts` cannot reuse the configuration
 
 ---
 
@@ -94,7 +97,7 @@ export const config = {
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import { routing } from "../../i18n/routing";
 
 type Props = {
   children: React.ReactNode;
@@ -127,7 +130,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 }
 ```
 
-**Why good:** validates locale and returns 404 for invalid values, setRequestLocale called before any hooks, generateStaticParams enables SSG, messages passed to client provider explicitly
+**Why good:** an invalid locale 404s rather than reaching the message loader, setRequestLocale runs before any hook, generateStaticParams enables SSG, messages reach Client Components through the provider
 
 ---
 
@@ -174,23 +177,26 @@ export default async function DashboardPage({ params }: Props) {
 }
 ```
 
-**Why good:** namespace ("Dashboard") groups related translations, nested keys (stats.heading) organize complex pages, setRequestLocale at top enables static rendering
+**Why good:** the namespace scopes the keys and nested keys carry the page's own structure, and setRequestLocale above the hook keeps the route static
 
 ### Good Example - Interpolation with Type Safety
 
 ```typescript
 import { useTranslations } from "next-intl";
 
-const MIN_PASSWORD_LENGTH = 8;
+type Props = {
+  user: { name: string; email: string };
+  minPasswordLength: number;
+};
 
-function WelcomeMessage({ user }: { user: { name: string; email: string } }) {
+function WelcomeMessage({ user, minPasswordLength }: Props) {
   const t = useTranslations("Welcome");
 
   return (
     <div>
       <h1>{t("greeting", { name: user.name })}</h1>
       <p>{t("accountInfo", { name: user.name, email: user.email })}</p>
-      <p>{t("passwordHint", { minLength: MIN_PASSWORD_LENGTH })}</p>
+      <p>{t("passwordHint", { minLength: minPasswordLength })}</p>
     </div>
   );
 }
@@ -206,7 +212,7 @@ function WelcomeMessage({ user }: { user: { name: string; email: string } }) {
 }
 ```
 
-**Why good:** placeholder names are explicit and refactorable, named constant avoids magic number in translation, TypeScript augmentation validates placeholder names
+**Why good:** placeholder names are explicit and refactorable, and TypeScript augmentation validates them against the message
 
 ---
 
@@ -275,7 +281,7 @@ function StatusBadge({ status }: { status: Status }) {
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link } from "../i18n/navigation";
 
 function TermsNotice() {
   const t = useTranslations("Legal");
@@ -395,7 +401,7 @@ function ProductPrice({ product }: { product: Product }) {
 // src/app/[locale]/blog/[slug]/page.tsx
 import { useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { routing } from "@/i18n/routing";
+import { routing } from "../../../../i18n/routing";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -430,7 +436,7 @@ export default async function BlogPostPage({ params }: Props) {
 ```typescript
 // src/app/[locale]/products/page.tsx
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { routing } from "@/i18n/routing";
+import { routing } from "../../../i18n/routing";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -490,8 +496,8 @@ export default async function ProductsPage({ params }: Props) {
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import { usePathname, useRouter } from "../i18n/navigation";
+import { routing, type Locale } from "../i18n/routing";
 
 const LOCALE_NAMES: Record<Locale, string> = {
   en: "English",
@@ -539,8 +545,8 @@ export function LocaleSwitcher() {
 "use client";
 
 import { useLocale } from "next-intl";
-import { Link, usePathname } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import { Link, usePathname } from "../i18n/navigation";
+import { routing, type Locale } from "../i18n/routing";
 
 const LOCALE_NAMES: Record<Locale, string> = {
   en: "English",

@@ -1,313 +1,138 @@
 # date-fns Relative Time Examples
 
-> Relative time formatting and distance patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Distances, durations and choosing between relative and absolute display. See
+> [SKILL.md](../SKILL.md) for the decisions and [i18n.md](i18n.md) for passing a locale.
 
 ---
 
-## Relative Time Formatting
+## Distance Between Two Instants
 
-### Good Example - formatDistance and formatDistanceToNow
+Four functions, differing in how much they smooth.
 
 ```typescript
 import {
   formatDistance,
   formatDistanceToNow,
   formatDistanceStrict,
-  formatRelative,
 } from "date-fns";
 
 const pastDate = new Date(2026, 0, 1);
-const futureDate = new Date(2026, 1, 15);
 const now = new Date(2026, 0, 15);
 
-// Basic distance (approximate, human-friendly)
-const distance = formatDistance(pastDate, now);
-// "14 days"
+formatDistance(pastDate, now); // "14 days"
+formatDistance(pastDate, now, { addSuffix: true }); // "14 days ago"
+formatDistanceToNow(pastDate, { addSuffix: true }); // same, against Date.now()
 
-// With suffix (includes "ago" or "in")
-const distanceWithSuffix = formatDistance(pastDate, now, { addSuffix: true });
-// "14 days ago"
+// Strict drops the hedging words
+formatDistance(new Date(2026, 1, 15), now); // "about 1 month"
+formatDistanceStrict(new Date(2026, 1, 15), now); // "1 month"
 
-const futureDistance = formatDistance(futureDate, now, { addSuffix: true });
-// "about 1 month"
+// It still picks its own unit — past 30 days that unit is months, so name
+// the one you want when the number matters more than the phrasing
+formatDistanceStrict(pastDate, now, { unit: "hour" }); // "336 hours"
 
-// Convenience: distance to now (most common use case)
-const toNow = formatDistanceToNow(pastDate);
-// "14 days"
-
-const toNowWithSuffix = formatDistanceToNow(pastDate, { addSuffix: true });
-// "14 days ago"
-
-// Strict distance (no "about", "almost", "over")
-const strict = formatDistanceStrict(pastDate, now);
-// "14 days"
-
-// Force specific unit
-const strictHours = formatDistanceStrict(pastDate, now, { unit: "hour" });
-// "336 hours"
-
-// Include seconds for recent times
-const recentDate = new Date(Date.now() - 30000); // 30 seconds ago
-const withSeconds = formatDistanceToNow(recentDate, { includeSeconds: true });
-// "half a minute ago" (instead of "less than a minute ago")
+// Under a minute, the default says "less than a minute"
+formatDistanceToNow(new Date(Date.now() - 30_000), { includeSeconds: true });
+// "half a minute" — `addSuffix` is what adds the "ago"
 ```
 
-**Why good:** human-friendly output, handles singular/plural automatically, configurable precision
+`addSuffix` reads the sign, so the same call produces "in 3 days" for a future date.
 
 ---
 
-## Relative Calendar Formatting
+## Calendar-Relative Phrasing
 
-### Good Example - formatRelative for Calendar Context
+`formatRelative` names the day the way a person would, but only within roughly a week either side —
+outside that window it falls back to a plain date, which is usually not what you want on its own.
 
 ```typescript
-import { formatRelative, differenceInDays, format } from "date-fns";
-import { enUS, de } from "date-fns/locale";
+import { formatRelative, differenceInCalendarDays, format } from "date-fns";
 
-const now = new Date(2026, 0, 15, 14, 0); // Wednesday, Jan 15, 2026
+const now = new Date(2026, 0, 15, 14, 0);
 
-// formatRelative provides context-aware formatting
-const yesterday = new Date(2026, 0, 14, 10, 0);
-const lastWeek = new Date(2026, 0, 8, 10, 0);
-const tomorrow = new Date(2026, 0, 16, 10, 0);
-const nextWeek = new Date(2026, 0, 22, 10, 0);
+formatRelative(new Date(2026, 0, 14, 10, 0), now); // "yesterday at 10:00 AM"
+formatRelative(new Date(2026, 0, 9, 10, 0), now); // "last Friday at 10:00 AM"
+formatRelative(new Date(2026, 0, 16, 10, 0), now); // "tomorrow at 10:00 AM"
+formatRelative(new Date(2026, 0, 8, 10, 0), now); // "01/08/2026" — 7 days out
 
-// English output
-formatRelative(yesterday, now); // "yesterday at 10:00 AM"
-formatRelative(lastWeek, now); // "last Thursday at 10:00 AM"
-formatRelative(tomorrow, now); // "tomorrow at 10:00 AM"
-formatRelative(nextWeek, now); // "Thursday at 10:00 AM"
-
-// German output
-formatRelative(yesterday, now, { locale: de });
-// "gestern um 10:00"
-
-// Utility: Smart relative formatting with fallback
-function smartFormatRelative(
-  date: Date,
-  baseDate: Date = new Date(),
-  fallbackFormat: string = "PPp",
-): string {
-  const daysDiff = Math.abs(differenceInDays(date, baseDate));
-
-  // Use formatRelative for nearby dates (within a week)
-  const RELATIVE_THRESHOLD_DAYS = 7;
-  if (daysDiff <= RELATIVE_THRESHOLD_DAYS) {
-    return formatRelative(date, baseDate);
-  }
-
-  // Fall back to absolute format for distant dates
-  return format(date, fallbackFormat);
+function relativeOrAbsolute(date: Date, base = new Date()): string {
+  const days = Math.abs(differenceInCalendarDays(date, base));
+  return days <= 6 ? formatRelative(date, base) : format(date, "PPp");
 }
 ```
 
-**Why good:** context-aware (shows "yesterday", "last Monday"), natural language output
-
 ---
 
-## Duration Formatting
+## Durations
 
-### Good Example - formatDuration and intervalToDuration
+`intervalToDuration` decomposes a span into calendar units; `formatDuration` renders one.
 
 ```typescript
-import { formatDuration, intervalToDuration, add } from "date-fns";
+import { formatDuration, intervalToDuration } from "date-fns";
+import type { Duration } from "date-fns";
 
-// Create duration from interval
-const start = new Date(2026, 0, 1);
-const end = new Date(2026, 5, 15, 14, 30);
-
-const duration = intervalToDuration({ start, end });
+const duration = intervalToDuration({
+  start: new Date(2026, 0, 1),
+  end: new Date(2026, 5, 15, 14, 30),
+});
 // { months: 5, days: 14, hours: 14, minutes: 30 }
 
-// Format duration to human-readable string
-const formatted = formatDuration(duration);
-// "5 months 14 days 14 hours 30 minutes"
-
-// Customize which units to show
-const formattedShort = formatDuration(duration, {
-  format: ["months", "days"],
-});
-// "5 months 14 days"
-
-// Custom delimiter
-const formattedDelim = formatDuration(duration, {
+formatDuration(duration); // "5 months 14 days 14 hours 30 minutes"
+formatDuration(duration, { format: ["months", "days"] }); // "5 months 14 days"
+formatDuration(duration, {
   format: ["days", "hours", "minutes"],
   delimiter: ", ",
-});
-// "14 days, 14 hours, 30 minutes"
+}); // "14 days, 14 hours, 30 minutes"
 
-// Zero padding
-const formattedPadded = formatDuration(duration, {
-  format: ["hours", "minutes"],
-  zero: true,
-});
-// "14 hours 30 minutes" (would show "0 hours" if hours was 0)
+// Zero-valued units are omitted unless asked for
+formatDuration({ hours: 0, minutes: 30 }); // "30 minutes"
+formatDuration({ hours: 0, minutes: 30 }, { zero: true }); // "0 hours 30 minutes"
 
-// Utility: Format duration concisely
+// Show the two largest units that are actually populated
 function formatDurationConcise(duration: Duration): string {
-  if (duration.years && duration.years > 0) {
-    return formatDuration(duration, { format: ["years", "months"] });
-  }
-  if (duration.months && duration.months > 0) {
-    return formatDuration(duration, { format: ["months", "days"] });
-  }
-  if (duration.days && duration.days > 0) {
-    return formatDuration(duration, { format: ["days", "hours"] });
-  }
-  return formatDuration(duration, { format: ["hours", "minutes"] });
+  const pairs: [keyof Duration, keyof Duration][] = [
+    ["years", "months"],
+    ["months", "days"],
+    ["days", "hours"],
+  ];
+
+  const chosen = pairs.find(([unit]) => (duration[unit] ?? 0) > 0);
+  return formatDuration(duration, {
+    format: chosen ?? ["hours", "minutes"],
+  });
 }
 ```
 
-**Why good:** handles all duration units, customizable output format, locale-aware
+`intervalToDuration` works in calendar units, so a 31-day February-to-March span is `{ months: 1 }`
+while the same 31 days in one month is `{ days: 31 }`.
 
 ---
 
-## Smart Relative vs Absolute Time
+## Relative or Absolute
 
-### Good Example - Choose Format Based on Age
+Relative time is friendly while it is short and useless once it is long — "8 months ago" tells a
+reader less than a date does. Switch on age.
 
 ```typescript
 import {
   formatDistanceToNow,
   format,
-  differenceInDays,
-  differenceInHours,
+  differenceInCalendarDays,
 } from "date-fns";
 
-// Thresholds for switching format
-const RELATIVE_THRESHOLD_DAYS = 7;
-const SHOW_TIME_THRESHOLD_HOURS = 24;
+const RELATIVE_WINDOW_DAYS = 7;
 
-interface SmartDateFormatOptions {
-  absoluteFormat?: string;
-  todayFormat?: string;
-  relativeThresholdDays?: number;
+function formatSmartDate(date: Date, absolutePattern = "MMM d, yyyy"): string {
+  const days = Math.abs(differenceInCalendarDays(date, new Date()));
+
+  if (days <= RELATIVE_WINDOW_DAYS) {
+    return formatDistanceToNow(date, { addSuffix: true }); // "3 days ago"
+  }
+
+  return format(date, absolutePattern); // "Jan 8, 2026"
 }
-
-const DEFAULT_ABSOLUTE_FORMAT = "MMM d, yyyy";
-const DEFAULT_TODAY_FORMAT = "h:mm a";
-
-function formatSmartDate(
-  date: Date,
-  options: SmartDateFormatOptions = {},
-): string {
-  const {
-    absoluteFormat = DEFAULT_ABSOLUTE_FORMAT,
-    todayFormat = DEFAULT_TODAY_FORMAT,
-    relativeThresholdDays = RELATIVE_THRESHOLD_DAYS,
-  } = options;
-
-  const now = new Date();
-  const hoursDiff = Math.abs(differenceInHours(date, now));
-  const daysDiff = Math.abs(differenceInDays(date, now));
-
-  // Within last day: show time
-  if (hoursDiff < SHOW_TIME_THRESHOLD_HOURS) {
-    const relative = formatDistanceToNow(date, { addSuffix: true });
-    return relative; // "2 hours ago"
-  }
-
-  // Within threshold: use relative
-  if (daysDiff <= relativeThresholdDays) {
-    return formatDistanceToNow(date, { addSuffix: true });
-    // "3 days ago"
-  }
-
-  // Older: use absolute date
-  return format(date, absoluteFormat);
-  // "Jan 8, 2026"
-}
-
-// Extended version with time for recent dates
-function formatSmartDateTime(
-  date: Date,
-  options: SmartDateFormatOptions = {},
-): string {
-  const now = new Date();
-  const hoursDiff = Math.abs(differenceInHours(date, now));
-
-  // Very recent: relative time
-  if (hoursDiff < SHOW_TIME_THRESHOLD_HOURS) {
-    return formatDistanceToNow(date, { addSuffix: true });
-  }
-
-  // Within a week: show day and time
-  const daysDiff = Math.abs(differenceInDays(date, now));
-  if (daysDiff <= RELATIVE_THRESHOLD_DAYS) {
-    return format(date, "EEEE 'at' h:mm a"); // "Monday at 2:30 PM"
-  }
-
-  // Older: full date and time
-  return format(date, "MMM d, yyyy 'at' h:mm a"); // "Jan 8, 2026 at 2:30 PM"
-}
-
-// Usage
-const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-
-formatSmartDate(twoHoursAgo); // "2 hours ago"
-formatSmartDate(threeDaysAgo); // "3 days ago"
-formatSmartDate(twoWeeksAgo); // "Jan 1, 2026"
 ```
 
-**Why good:** balances readability with precision, user-friendly for recent dates, unambiguous for old dates
-
----
-
-## Localized Relative Time
-
-### Good Example - Multi-Language Relative Formatting
-
-```typescript
-import { formatDistanceToNow, formatRelative } from "date-fns";
-import { enUS, de, fr, ja, es, zhCN } from "date-fns/locale";
-import type { Locale } from "date-fns";
-
-// Locale map
-const locales: Record<string, Locale> = {
-  "en-US": enUS,
-  "en-GB": enUS, // Use enUS as fallback
-  "de-DE": de,
-  "fr-FR": fr,
-  "ja-JP": ja,
-  "es-ES": es,
-  "zh-CN": zhCN,
-};
-
-function getLocale(localeCode: string): Locale {
-  return locales[localeCode] || enUS;
-}
-
-// Localized relative time
-function formatRelativeLocalized(
-  date: Date,
-  localeCode: string,
-  addSuffix: boolean = true,
-): string {
-  const locale = getLocale(localeCode);
-  return formatDistanceToNow(date, { locale, addSuffix });
-}
-
-// Localized calendar-style relative
-function formatRelativeCalendarLocalized(
-  date: Date,
-  localeCode: string,
-  baseDate: Date = new Date(),
-): string {
-  const locale = getLocale(localeCode);
-  return formatRelative(date, baseDate, { locale });
-}
-
-// Usage
-const pastDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // 14 days ago
-
-formatRelativeLocalized(pastDate, "en-US"); // "14 days ago"
-formatRelativeLocalized(pastDate, "de-DE"); // "vor 14 Tagen"
-formatRelativeLocalized(pastDate, "fr-FR"); // "il y a 14 jours"
-formatRelativeLocalized(pastDate, "ja-JP"); // "14日前"
-formatRelativeLocalized(pastDate, "es-ES"); // "hace 14 días"
-formatRelativeLocalized(pastDate, "zh-CN"); // "14 天前"
-```
-
-**Why good:** proper localization of relative time phrases, easy locale switching, fallback to English
+Two refinements worth knowing: a `title`/`aria-label` carrying the absolute date keeps the exact
+value reachable from a relative label, and a relative label rendered on a server goes stale the
+moment it is cached — compute it where the clock is live.

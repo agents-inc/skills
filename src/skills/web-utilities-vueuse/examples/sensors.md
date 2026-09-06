@@ -1,207 +1,159 @@
 # VueUse Sensor Examples
 
-> Mouse, scroll, intersection, resize, and visibility composables. See [core.md](core.md) for basics.
+> Pointer position, scroll, intersection, resize and visibility. See [SKILL.md](../SKILL.md) for
+> the decisions and [core.md](core.md) for storage and listeners.
 
-**Prerequisites**: Understand VueUse composable calling conventions from core examples first.
+Every composable here needs a DOM, so all of them belong inside a client-only boundary when the app
+is server-rendered.
 
 ---
 
-## useMouse - Mouse Position Tracking
-
-### Good Example - Reactive Mouse Coordinates
+## Pointer Position
 
 ```vue
 <script setup lang="ts">
 import { useMouse, useMouseInElement } from "@vueuse/core";
 import { useTemplateRef } from "vue";
 
-// Global mouse position
-const { x, y, sourceType } = useMouse();
-// sourceType: "mouse" | "touch" | null
+const { x, y, sourceType } = useMouse(); // sourceType: "mouse" | "touch" | null
 
-// Mouse position relative to element
-const targetEl = useTemplateRef("target");
-const { elementX, elementY, isOutside, elementWidth, elementHeight } =
-  useMouseInElement(targetEl);
+const target = useTemplateRef("target");
+const { elementX, elementY, isOutside } = useMouseInElement(target);
 </script>
 
 <template>
-  <div>
-    <p>Global: {{ x }}, {{ y }} ({{ sourceType }})</p>
-    <div ref="target" style="width: 300px; height: 200px; background: #eee;">
-      <p v-if="!isOutside">Element: {{ elementX }}, {{ elementY }}</p>
-    </div>
+  <div ref="target">
+    <span v-if="!isOutside">{{ elementX }}, {{ elementY }}</span>
   </div>
 </template>
 ```
 
-**Why good:** reactive coordinates update automatically, `useMouseInElement` provides element-relative positioning, `isOutside` for hover detection
+`useMouse` updates on every pointer move, so anything expensive downstream wants a
+`watchThrottled` or an `auditTime`-shaped guard rather than a plain `computed`.
+
+`useMouseInElement` measures against the element's current bounding box, which it re-reads — an
+element that moves under a stationary pointer updates correctly.
 
 ---
 
-## useScroll - Scroll Position and Direction
-
-### Good Example - Scroll-Aware Header
+## Scroll
 
 ```vue
 <script setup lang="ts">
 import { useScroll } from "@vueuse/core";
 import { computed, useTemplateRef } from "vue";
 
-const HEADER_HIDE_THRESHOLD = 100;
+const HIDE_AFTER_PX = 100;
 
-// Track window scroll
-const { y: scrollY, isScrolling, directions } = useScroll(window);
+const { y: pageY, directions } = useScroll(window);
 
-const isHeaderHidden = computed(
-  () => scrollY.value > HEADER_HIDE_THRESHOLD && directions.bottom,
+// Hide on the way down, reveal on the way up — the pattern that needs direction,
+// not just position
+const headerHidden = computed(
+  () => pageY.value > HIDE_AFTER_PX && directions.bottom,
 );
 
-// Track scrollable container
-const scrollContainer = useTemplateRef("container");
-const {
-  x: containerX,
-  y: containerY,
-  arrivedState,
-} = useScroll(scrollContainer);
+const container = useTemplateRef("container");
+const { arrivedState } = useScroll(container, { offset: { bottom: 100 } });
 
-// arrivedState: { top, bottom, left, right } - true when scrolled to edge
-const isAtBottom = computed(() => arrivedState.bottom);
+// arrivedState.bottom becomes true 100px early, thanks to the offset above
+const nearEnd = computed(() => arrivedState.bottom);
 </script>
-
-<template>
-  <header :class="{ 'header--hidden': isHeaderHidden }">Navigation</header>
-  <div ref="container" style="overflow-y: auto; height: 400px;">
-    <!-- content -->
-    <p v-if="isAtBottom">You've reached the bottom!</p>
-  </div>
-</template>
 ```
 
-**Why good:** `directions` tracks scroll direction for show/hide patterns, `arrivedState` detects scroll edges without manual calculation
+`arrivedState` replaces the `scrollTop + clientHeight >= scrollHeight` arithmetic, including the
+sub-pixel rounding that makes the naive version intermittently miss the bottom.
 
 ---
 
-## useIntersectionObserver - Visibility Detection
-
-### Good Example - Lazy Loading and Infinite Scroll
+## Intersection
 
 ```vue
 <script setup lang="ts">
 import { useIntersectionObserver } from "@vueuse/core";
 import { shallowRef, useTemplateRef } from "vue";
 
-// Pattern 1: Element visibility detection
 const target = useTemplateRef("observed");
-const targetIsVisible = shallowRef(false);
+const isVisible = shallowRef(false);
 
 const { stop } = useIntersectionObserver(
   target,
   ([entry]) => {
-    targetIsVisible.value = entry?.isIntersecting ?? false;
+    isVisible.value = entry?.isIntersecting ?? false;
   },
-  { threshold: 0.5 }, // 50% visible triggers callback
+  { threshold: 0.5 }, // half the element in view
 );
 
-// Pattern 2: Infinite scroll sentinel
 const sentinel = useTemplateRef("sentinel");
-const isLoadingMore = shallowRef(false);
+const isLoading = shallowRef(false);
 
 useIntersectionObserver(
   sentinel,
   ([entry]) => {
-    if (entry?.isIntersecting && !isLoadingMore.value) {
-      loadMoreItems();
-    }
+    if (entry?.isIntersecting && !isLoading.value) loadMore();
   },
-  { rootMargin: "200px" }, // trigger 200px before visible
+  { rootMargin: "200px" }, // start loading before the sentinel is on screen
 );
-
-async function loadMoreItems(): Promise<void> {
-  isLoadingMore.value = true;
-  await fetchNextPage();
-  isLoadingMore.value = false;
-}
 </script>
-
-<template>
-  <div ref="observed" :class="{ 'fade-in': targetIsVisible }">
-    Animated content
-  </div>
-
-  <div ref="sentinel" style="height: 1px;" />
-</template>
 ```
 
-**Why good:** `rootMargin` pre-fetches data before the sentinel is visible, `stop()` allows manual cleanup, `threshold` controls sensitivity
+The callback runs once at registration with the element's current state, so an animation that
+should fire on _becoming_ visible needs to compare against the previous value — a bare
+`if (isIntersecting)` fires for an element that was already on screen.
+
+`stop()` is for observers that should end before their component does — a one-shot reveal
+animation calls it from inside its own callback.
 
 ---
 
-## useResizeObserver - Element Size Tracking
-
-### Good Example - Responsive Component
+## Element Size
 
 ```vue
 <script setup lang="ts">
-import { useResizeObserver } from "@vueuse/core";
-import { shallowRef, useTemplateRef, computed } from "vue";
+import { useElementSize, useResizeObserver } from "@vueuse/core";
+import { computed, shallowRef, useTemplateRef } from "vue";
 
-const containerRef = useTemplateRef("container");
-const containerWidth = shallowRef(0);
-const containerHeight = shallowRef(0);
+const container = useTemplateRef("container");
 
-const COMPACT_THRESHOLD = 400;
+// The common case: reactive width and height
+const { width, height } = useElementSize(container);
+const isCompact = computed(() => width.value < 400);
 
-useResizeObserver(containerRef, (entries) => {
-  const entry = entries[0];
-  if (entry) {
-    containerWidth.value = entry.contentRect.width;
-    containerHeight.value = entry.contentRect.height;
-  }
+// The observer itself, when the entry's own fields are needed
+const borderBoxWidth = shallowRef(0);
+useResizeObserver(container, ([entry]) => {
+  borderBoxWidth.value = entry?.borderBoxSize[0]?.inlineSize ?? 0;
 });
-
-const isCompact = computed(() => containerWidth.value < COMPACT_THRESHOLD);
 </script>
-
-<template>
-  <div ref="container" :class="{ compact: isCompact }">
-    <span>{{ containerWidth }}px x {{ containerHeight }}px</span>
-  </div>
-</template>
 ```
 
-**Why good:** reactive element dimensions without polling, `shallowRef` for performance, named threshold constant
+This is container-relative sizing rather than viewport-relative: a component that lays itself out
+from `width` works in a sidebar and in a full-width page without a media query knowing about
+either.
+
+A layout that both reads and writes size can loop — the observer fires, the handler resizes the
+element, the observer fires again. Write to a different axis, or to a child.
 
 ---
 
-## useElementVisibility - Simple Visibility Check
-
-### Good Example - Animation Trigger
+## Element Visibility
 
 ```vue
 <script setup lang="ts">
 import { useElementVisibility } from "@vueuse/core";
 import { shallowRef, useTemplateRef, watch } from "vue";
 
-const sectionRef = useTemplateRef("section");
-const isVisible = useElementVisibility(sectionRef);
+const section = useTemplateRef("section");
+const isVisible = useElementVisibility(section);
 
-// Trigger animation once when element becomes visible
 const hasAnimated = shallowRef(false);
 
 watch(isVisible, (visible) => {
-  if (visible && !hasAnimated.value) {
-    hasAnimated.value = true;
-    // trigger one-time animation
-  }
+  if (visible && !hasAnimated.value) hasAnimated.value = true;
 });
 </script>
-
-<template>
-  <section ref="section" :class="{ 'animate-in': hasAnimated }">
-    Content that animates when scrolled into view
-  </section>
-</template>
 ```
 
-**Why good:** simpler API than `useIntersectionObserver` for basic visibility, one-time animation guard prevents re-triggering
+A boolean ref where `useIntersectionObserver` gives a callback and entries — reach for this when
+the question is "is it on screen" and for the observer when the threshold, the root or the entry
+data matter.

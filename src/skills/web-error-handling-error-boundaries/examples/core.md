@@ -1,21 +1,18 @@
-# Error Boundaries - Core Examples
+# Error Boundaries — Core Examples
 
-> Complete code examples for error boundary patterns. See [SKILL.md](../SKILL.md) for core concepts.
+> Full code for the patterns in [SKILL.md](../SKILL.md).
 
-**Extended Examples:**
+**Extended examples:**
 
-- [react-19-hooks.md](react-19-hooks.md) - React 19+ createRoot error options, `captureOwnerStack()`, error filtering
-- [recovery.md](recovery.md) - Retry limits, exponential backoff, error classification
-- [testing.md](testing.md) - Testing boundaries, async errors, resetKeys
+- [react-19-hooks.md](react-19-hooks.md) — `createRoot` error options, `captureOwnerStack()`, filtering
+- [recovery.md](recovery.md) — retry limits, exponential backoff, error classification
+- [testing.md](testing.md) — what makes a boundary testable
 
 ---
 
-## Pattern 1: Class-Based Error Boundary
-
-### Good Example - Complete Error Boundary Implementation
+## Pattern 1: Class-based boundary
 
 ```typescript
-// src/components/error-boundary/error-boundary.tsx
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
@@ -23,11 +20,9 @@ export interface ErrorBoundaryProps {
   children: ReactNode;
   /** Static fallback UI */
   fallback?: ReactNode;
-  /** Function that receives error and reset function */
+  /** Receives the error and a reset function */
   fallbackRender?: (props: { error: Error; resetErrorBoundary: () => void }) => ReactNode;
-  /** Called when error is caught */
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  /** Called before boundary resets */
   onReset?: () => void;
 }
 
@@ -42,14 +37,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.state = { hasError: false, error: null };
   }
 
-  // Render phase - update state to show fallback
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  // Commit phase - side effects allowed
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Call error callback for logging
     this.props.onError?.(error, errorInfo);
   }
 
@@ -63,31 +55,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { children, fallback, fallbackRender } = this.props;
 
     if (hasError && error) {
-      // Priority: fallbackRender > fallback > default
       if (fallbackRender) {
-        return fallbackRender({
-          error,
-          resetErrorBoundary: this.resetErrorBoundary,
-        });
+        return fallbackRender({ error, resetErrorBoundary: this.resetErrorBoundary });
       }
+      if (fallback) return fallback;
 
-      if (fallback) {
-        return fallback;
-      }
-
-      // Default fallback
       return (
-        <div role="alert" style={{ padding: "1rem", textAlign: "center" }}>
+        <div role="alert">
           <h2>Something went wrong</h2>
-          <pre style={{ color: "red", whiteSpace: "pre-wrap" }}>
-            {error.message}
-          </pre>
-          <button
-            onClick={this.resetErrorBoundary}
-            style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}
-          >
-            Try again
-          </button>
+          <pre>{error.message}</pre>
+          <button onClick={this.resetErrorBoundary}>Try again</button>
         </div>
       );
     }
@@ -97,100 +74,53 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 ```
 
-**Why good:** Complete implementation with all common features, supports multiple fallback patterns, proper lifecycle method separation, TypeScript types exported for consumers
+**Why good:** the two phases stay separate, `onError` keeps the boundary independent of any
+reporting client, and the three fallback forms cover static UI, a render prop and a default.
 
 ---
 
-## Pattern 2: react-error-boundary Library Usage
-
-### Good Example - Basic Usage with FallbackComponent
+## Pattern 2: `react-error-boundary`
 
 ```typescript
-// src/app.tsx
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
 
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
-    <div role="alert" style={{ padding: "2rem", textAlign: "center" }}>
+    <div role="alert">
       <h2>Something went wrong</h2>
-      <pre style={{ color: "red", whiteSpace: "pre-wrap" }}>
-        {error.message}
-      </pre>
+      <pre>{error.message}</pre>
       <button onClick={resetErrorBoundary}>Try again</button>
     </div>
   );
 }
 
 function logError(error: Error, info: { componentStack?: string | null }) {
-  // Send to your error tracking service
-  console.error("Error boundary caught:", error);
-  console.error("Component stack:", info.componentStack);
+  reportToMonitoring(error, info.componentStack);
 }
 
 export function App() {
   return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onError={logError}
-      onReset={() => {
-        // Reset application state if needed
-      }}
-    >
+    <ErrorBoundary FallbackComponent={ErrorFallback} onError={logError} onReset={clearStaleState}>
       <MainContent />
     </ErrorBoundary>
   );
 }
 ```
 
-**Why good:** Uses typed FallbackProps from library, separates error logging into dedicated function, provides reset capability
+**Why good:** `FallbackProps` types the fallback for you, and `onReset` is where state that caused
+the error gets cleared before the children mount again.
 
 ---
 
-### Good Example - Using resetKeys for Automatic Reset
+## Pattern 3: `showBoundary()` for async failures
 
 ```typescript
-// src/features/user-profile/user-profile.tsx
-import { ErrorBoundary } from "react-error-boundary";
-
-interface UserProfileProps {
-  userId: string;
-}
-
-export function UserProfile({ userId }: UserProfileProps) {
-  return (
-    <ErrorBoundary
-      FallbackComponent={ProfileErrorFallback}
-      resetKeys={[userId]}
-    >
-      <ProfileContent userId={userId} />
-    </ErrorBoundary>
-  );
-}
-
-function ProfileErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  return (
-    <div role="alert">
-      <p>Failed to load profile</p>
-      <button onClick={resetErrorBoundary}>Retry</button>
-    </div>
-  );
-}
-```
-
-**Why good:** Boundary automatically resets when userId changes, prevents stale error state when navigating between users
-
----
-
-### Good Example - useErrorBoundary Hook for Async Errors
-
-```typescript
-// src/features/data-loader/data-loader.tsx
 import { useState } from "react";
 import { useErrorBoundary, ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
 
-const API_ENDPOINT = "/api/items";
+const ITEMS_ENDPOINT = "/api/items";
 
 interface Item {
   id: string;
@@ -205,14 +135,10 @@ function DataLoaderContent() {
   const handleLoadData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(API_ENDPOINT);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: HTTP ${response.status}`);
-      }
-      const data = await response.json();
-      setItems(data);
+      const response = await fetch(ITEMS_ENDPOINT);
+      if (!response.ok) throw new Error(`Failed to fetch: HTTP ${response.status}`);
+      setItems(await response.json());
     } catch (error) {
-      // Propagate to nearest error boundary
       showBoundary(error);
     } finally {
       setIsLoading(false);
@@ -251,114 +177,88 @@ export function DataLoader() {
 }
 ```
 
-**Why good:** useErrorBoundary hook propagates async errors to boundary, consistent error UI for both sync and async failures, named constant for API endpoint
+**Why good:** the component that throws and the boundary that catches are separate — `showBoundary`
+has to be called from inside the boundary, so the content is its own component.
 
 ---
 
-## Pattern 3: Granular Boundary Placement
-
-### Good Example - Dashboard with Isolated Widgets
+## Pattern 4: `resetKeys`
 
 ```typescript
-// src/features/dashboard/multi-boundary-dashboard.tsx
 import { ErrorBoundary } from "react-error-boundary";
 import type { FallbackProps } from "react-error-boundary";
 
-function WidgetFallback({ error, resetErrorBoundary }: FallbackProps) {
+export function UserProfile({ userId }: { userId: string }) {
   return (
-    <div role="alert" className="widget-error">
+    <ErrorBoundary FallbackComponent={ProfileErrorFallback} resetKeys={[userId]}>
+      <ProfileContent userId={userId} />
+    </ErrorBoundary>
+  );
+}
+
+function ProfileErrorFallback({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <div role="alert">
+      <p>Failed to load profile</p>
+      <button onClick={resetErrorBoundary}>Retry</button>
+    </div>
+  );
+}
+```
+
+**Why good:** switching user clears the previous user's error without the reader having to press
+anything, and `userId` is a primitive so the shallow compare behaves.
+
+---
+
+## Pattern 5: Granular placement
+
+```typescript
+import { ErrorBoundary } from "react-error-boundary";
+import type { FallbackProps } from "react-error-boundary";
+
+function WidgetFallback({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <div role="alert">
       <p>Widget unavailable</p>
       <button onClick={resetErrorBoundary}>Retry</button>
     </div>
   );
 }
 
-function logWidgetError(widgetName: string) {
-  return (error: Error, info: { componentStack?: string | null }) => {
-    // Log with widget context
-    console.error(`${widgetName} error:`, error, info.componentStack);
-  };
-}
+const logWidgetError =
+  (widgetName: string) => (error: Error, info: { componentStack?: string | null }) =>
+    reportToMonitoring(`${widgetName}: ${error.message}`, info.componentStack);
 
 export function Dashboard() {
   return (
-    <div className="dashboard">
-      <header>
-        <h1>Dashboard</h1>
-      </header>
+    <div>
+      <ErrorBoundary FallbackComponent={WidgetFallback} onError={logWidgetError("RevenueChart")}>
+        <RevenueChart />
+      </ErrorBoundary>
 
-      <div className="widgets-grid">
-        <ErrorBoundary
-          FallbackComponent={WidgetFallback}
-          onError={logWidgetError("RevenueChart")}
-        >
-          <RevenueChart />
-        </ErrorBoundary>
+      <ErrorBoundary FallbackComponent={WidgetFallback} onError={logWidgetError("UserStats")}>
+        <UserStats />
+      </ErrorBoundary>
 
-        <ErrorBoundary
-          FallbackComponent={WidgetFallback}
-          onError={logWidgetError("UserStats")}
-        >
-          <UserStats />
-        </ErrorBoundary>
-
-        <ErrorBoundary
-          FallbackComponent={WidgetFallback}
-          onError={logWidgetError("ActivityFeed")}
-        >
-          <ActivityFeed />
-        </ErrorBoundary>
-
-        <ErrorBoundary
-          FallbackComponent={WidgetFallback}
-          onError={logWidgetError("RecentOrders")}
-        >
-          <RecentOrders />
-        </ErrorBoundary>
-      </div>
+      <ErrorBoundary FallbackComponent={WidgetFallback} onError={logWidgetError("ActivityFeed")}>
+        <ActivityFeed />
+      </ErrorBoundary>
     </div>
   );
 }
 ```
 
-**Why good:** Each widget has isolated failure domain, reusable fallback component, error logging includes widget context
-
----
-
-## Pattern 4: Minimal Accessible Fallback
-
-### Good Example - Basic Accessible Fallback
+**Why good:** one shared fallback component, one failure domain per widget, and the widget name
+reaches the report without the fallback knowing anything about it.
 
 ```typescript
-// src/components/fallbacks/minimal-fallback.tsx
-import type { FallbackProps } from "react-error-boundary";
-
-export function MinimalFallback({ resetErrorBoundary }: FallbackProps) {
-  return (
-    <div role="alert" aria-live="assertive">
-      <p>Failed to load content</p>
-      <button onClick={resetErrorBoundary}>Try again</button>
-    </div>
-  );
-}
-```
-
-**Why good:** Minimal but functional, role="alert" announces to screen readers, aria-live ensures immediate announcement
-
----
-
-## Anti-Pattern Examples
-
-### Bad Example - Single Root Boundary Only
-
-```typescript
-// BAD: Single boundary for entire app
+// Bad — one boundary for the whole page
 function App() {
   return (
     <ErrorBoundary fallback={<div>App crashed</div>}>
       <Header />
       <Sidebar />
-      <MainContent />
       <Dashboard />
       <Footer />
     </ErrorBoundary>
@@ -366,27 +266,31 @@ function App() {
 }
 ```
 
-**Why bad:** One error anywhere crashes the entire app, no isolation between features, poor user experience
+**Why bad:** any error anywhere replaces the header, the sidebar and the footer too, and the message
+cannot say which of them failed.
 
 ---
 
-### Bad Example - No Retry Functionality
+## Pattern 6: Fallback UI
 
 ```typescript
-// BAD: No way to recover
-function BadFallback() {
-  return <div>Error occurred. Please refresh the page.</div>;
+import type { FallbackProps } from "react-error-boundary";
+
+export function MinimalFallback({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <div role="alert">
+      <p>Failed to load content</p>
+      <button onClick={resetErrorBoundary}>Try again</button>
+    </div>
+  );
 }
 ```
 
-**Why bad:** Forces full page refresh to recover, loses user state, poor UX for transient errors
-
----
-
-### Bad Example - Missing Accessibility
+**Why good:** `role="alert"` announces the swap, and the retry is a real button — reachable by Tab
+and activated by Enter or Space.
 
 ```typescript
-// BAD: No accessibility attributes
+// Bad — silent and unreachable
 function InaccessibleFallback() {
   return (
     <div>
@@ -397,12 +301,15 @@ function InaccessibleFallback() {
 }
 ```
 
-**Why bad:** No role="alert" means screen readers don't announce error, span with onClick is not keyboard accessible, screen reader users don't know an error occurred
+**Why bad:** no announcement when the subtree disappears, and the only way to recover is a mouse
+click on a `<span>` that never receives focus.
 
----
+```typescript
+// Bad — no way back at all
+function BadFallback() {
+  return <div>Error occurred. Please refresh the page.</div>;
+}
+```
 
-> **See also:**
->
-> - [react-19-hooks.md](react-19-hooks.md) - React 19+ createRoot error options, captureOwnerStack
-> - [recovery.md](recovery.md) - Retry limits, exponential backoff, error classification
-> - [testing.md](testing.md) - Testing error boundary behavior
+**Why bad:** a reload throws away everything the user had entered, for what may have been a single
+transient failure.

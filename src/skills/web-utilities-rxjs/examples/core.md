@@ -1,234 +1,165 @@
 # RxJS Core Examples
 
-> Observable creation, subscription, basic operators, and error handling. See [SKILL.md](../SKILL.md) for core concepts.
+> Creation and laziness, transformation, error recovery, and Promise interop. See
+> [SKILL.md](../SKILL.md) for the decisions, [memory-leaks.md](memory-leaks.md) for ending
+> subscriptions, [higher-order.md](higher-order.md) for flattening.
+
+Everything here imports from `"rxjs"`. Since v7.2 operators are exported from the package root, so
+the separate `"rxjs/operators"` path is no longer needed.
 
 ---
 
-## Observable Creation
-
-### Good Example - defer for Lazy Execution
+## Laziness and defer
 
 ```typescript
-import { defer, from, of, timer, EMPTY } from "rxjs";
-import { switchMap, catchError, retry } from "rxjs/operators";
+import { defer, from } from "rxjs";
 
-const MAX_RETRIES = 3;
-
-// defer ensures a fresh fetch per subscriber
+// Fresh request per subscriber
 const users$ = defer(() => from(fetch("/api/users").then((r) => r.json())));
 
-// Each subscription triggers a new HTTP request
-users$.subscribe((data) => console.log("Subscriber A:", data));
-users$.subscribe((data) => console.log("Subscriber B:", data)); // independent request
+users$.subscribe((data) => console.log("A:", data));
+users$.subscribe((data) => console.log("B:", data)); // second, independent request
 ```
 
-**Why good:** `defer` wraps the factory so each subscriber gets a fresh `fetch` call, no shared/stale promises
-
-### Bad Example - Shared Promise
-
 ```typescript
-// BAD: fetch fires immediately when Observable is created
+// ❌ The fetch has already fired by the time this line finishes evaluating
 const users$ = from(fetch("/api/users").then((r) => r.json()));
 
-// Both subscribers share the same promise result
 users$.subscribe((data) => console.log("A:", data));
-users$.subscribe((data) => console.log("B:", data)); // same stale data
+users$.subscribe((data) => console.log("B:", data)); // same settled promise
 ```
 
-**Why bad:** `from(promise)` evaluates the promise eagerly, both subscribers get the same cached result
+The second form is not merely inefficient — it breaks the model. `retry` cannot re-run it, a
+`switchMap` cannot cancel it, and it runs whether or not anyone ever subscribes.
 
 ---
 
-## Subscription Management
+## Transformation
 
-### Good Example - Explicit Unsubscribe
-
-```typescript
-import { interval } from "rxjs";
-
-const POLL_INTERVAL_MS = 5000;
-const poll$ = interval(POLL_INTERVAL_MS);
-
-const subscription = poll$.subscribe((count) => {
-  console.log("Poll:", count);
-});
-
-// Later: clean up
-subscription.unsubscribe();
-```
-
-**Why good:** explicit unsubscription prevents the interval from running forever
-
-### Good Example - Using take for Auto-Complete
+`scan` emits every intermediate accumulation; `reduce` emits once, on completion. On a source that
+never completes, `reduce` never emits at all.
 
 ```typescript
-import { interval } from "rxjs";
-import { take } from "rxjs/operators";
-
-const EMISSION_COUNT = 5;
-const INTERVAL_MS = 1000;
-
-// Automatically completes after 5 emissions -- no manual unsubscribe needed
-const fiveValues$ = interval(INTERVAL_MS).pipe(take(EMISSION_COUNT));
-
-fiveValues$.subscribe({
-  next: (v) => console.log(v), // 0, 1, 2, 3, 4
-  complete: () => console.log("Done"),
-});
-```
-
-**Why good:** `take` auto-completes the Observable, no cleanup code required
-
----
-
-## Transformation Operators
-
-### Good Example - map, filter, scan
-
-```typescript
-import { from } from "rxjs";
-import { map, filter, scan, reduce } from "rxjs/operators";
+import { from, scan, reduce, filter } from "rxjs";
 
 interface Transaction {
   amount: number;
   type: "credit" | "debit";
 }
 
-const INITIAL_BALANCE = 0;
-
 const transactions$ = from<Transaction[]>([
   { amount: 100, type: "credit" },
   { amount: 30, type: "debit" },
   { amount: 50, type: "credit" },
-  { amount: 20, type: "debit" },
 ]);
 
-// Running balance with scan (emits each intermediate value)
+// Running balance — one emission per transaction
 const balance$ = transactions$.pipe(
-  scan((balance, tx) => {
-    return tx.type === "credit" ? balance + tx.amount : balance - tx.amount;
-  }, INITIAL_BALANCE),
+  scan(
+    (total, tx) =>
+      tx.type === "credit" ? total + tx.amount : total - tx.amount,
+    0,
+  ),
 );
-// Emits: 100, 70, 120, 100
+// 100, 70, 120
 
-// Final total with reduce (emits only final value on complete)
-const total$ = transactions$.pipe(
+// Final total — one emission, on complete
+const credits$ = transactions$.pipe(
   filter((tx) => tx.type === "credit"),
-  reduce((sum, tx) => sum + tx.amount, INITIAL_BALANCE),
+  reduce((total, tx) => total + tx.amount, 0),
 );
-// Emits: 150 (then completes)
+// 150
 ```
-
-**Why good:** `scan` for running accumulation (reactive), `reduce` for final value, clear type annotations
 
 ---
 
-## Error Handling
-
-### Good Example - catchError with Recovery
+## Error Recovery
 
 ```typescript
-import { of, from, defer, timer, EMPTY } from "rxjs";
-import { catchError, retry, switchMap } from "rxjs/operators";
+import {
+  defer,
+  from,
+  of,
+  timer,
+  EMPTY,
+  catchError,
+  retry,
+  switchMap,
+} from "rxjs";
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
-
-// Pattern 1: Fallback value
-const withFallback$ = defer(() => from(fetch("/api/config"))).pipe(
-  retry(MAX_RETRIES),
-  catchError((error) => {
-    console.error("Config fetch failed:", error);
-    return of({ theme: "default", lang: "en" }); // fallback config
-  }),
+// Fall back to a usable value
+const config$ = defer(() =>
+  from(fetch("/api/config").then((r) => r.json())),
+).pipe(
+  retry(3),
+  catchError(() => of({ theme: "default", lang: "en" })),
 );
 
-// Pattern 2: Exponential backoff retry
-const withBackoff$ = defer(() => from(fetch("/api/data"))).pipe(
+// Exponential backoff, then give up quietly
+const data$ = defer(() => from(fetch("/api/data"))).pipe(
   retry({
-    count: MAX_RETRIES,
-    delay: (_error, retryCount) =>
-      timer(RETRY_DELAY_MS * Math.pow(2, retryCount - 1)),
+    count: 3,
+    delay: (_error, attempt) => timer(1000 * 2 ** (attempt - 1)), // 1s, 2s, 4s
   }),
-  catchError(() => EMPTY), // silently complete on exhausted retries
+  catchError(() => EMPTY), // completes without emitting
 );
 
-// Pattern 3: Error in inner Observable (most common)
-const search$ = searchQuery$.pipe(
+// The important one: recover inside the inner pipe
+const search$ = query$.pipe(
   switchMap((query) =>
-    defer(() => from(fetch(`/api/search?q=${query}`))).pipe(
-      catchError((error) => {
-        console.error("Search failed:", error);
-        return of({ results: [], error: true }); // inner fallback
-      }),
+    defer(() => from(search(query))).pipe(
+      catchError(() => of({ results: [], failed: true })),
     ),
   ),
 );
 ```
 
-**Why good:** `catchError` inside the inner Observable keeps the outer stream alive, exponential backoff prevents server hammering
+Move that inner `catchError` outside the `switchMap` and the first network failure ends `search$`
+for the lifetime of the page — no error, no further searches, nothing in the console.
 
-### Bad Example - Error Kills the Stream
-
-```typescript
-// BAD: no error handling -- one failure terminates everything
-const search$ = searchQuery$.pipe(
-  switchMap((query) => from(fetch(`/api/search?q=${query}`))),
-);
-// After first network error, search$ is dead forever -- no more searches
-```
-
-**Why bad:** unhandled error in the Observable chain causes permanent termination, subsequent emissions are silently dropped
+`retry` re-subscribes to the source, so the source must be safe to run again. A `defer` wrapping a
+`POST` will re-send it.
 
 ---
 
 ## Utility Operators
 
-### Good Example - tap, delay, finalize
-
 ```typescript
-import { tap, delay, finalize, timeout } from "rxjs/operators";
-
-const REQUEST_TIMEOUT_MS = 10000;
+import { tap, timeout, finalize } from "rxjs";
 
 const data$ = source$.pipe(
-  tap((v) => console.log("Before transform:", v)), // side effect: logging
-  map((v) => v * 2),
-  timeout(REQUEST_TIMEOUT_MS), // throw TimeoutError if no emission in 10s
-  finalize(() => console.log("Stream completed or errored")), // always runs
+  tap({
+    next: (value) => console.log("value", value),
+    error: (error) => console.error(error), // tap sees errors without handling them
+  }),
+  timeout(10_000), // throws TimeoutError if 10s pass with no emission
+  finalize(() => setLoading(false)), // runs on complete, error and unsubscribe
 );
 ```
 
-**Why good:** `tap` for logging without affecting the stream, `timeout` prevents hanging streams, `finalize` for guaranteed cleanup regardless of how stream ends
+`finalize` is the only one of the three that runs on unsubscription as well as completion, which
+makes it the right place for teardown that must happen however the stream ended.
 
 ---
 
-## firstValueFrom and lastValueFrom
-
-### Good Example - Converting Observable to Promise
+## Promise Interop
 
 ```typescript
-import { firstValueFrom, lastValueFrom } from "rxjs";
+import { firstValueFrom, lastValueFrom, toArray } from "rxjs";
 
-// When you need a single value from an Observable (e.g., in async/await code)
-async function getUser(id: string): Promise<User> {
-  return firstValueFrom(userService.getUser(id));
-  // Rejects if Observable completes without emitting
-}
+// First emission, then unsubscribe
+const user = await firstValueFrom(loadUser(id));
 
-// Last emitted value before completion
-async function getAllLogs(): Promise<string[]> {
-  return lastValueFrom(logStream$.pipe(toArray()));
-}
+// Everything, once the stream completes
+const allLogs = await lastValueFrom(logStream$.pipe(toArray()));
+
+// Both reject when the Observable completes without emitting.
+// Supply a default rather than catching, where empty is legitimate:
+const settings = await firstValueFrom(settings$, { defaultValue: DEFAULTS });
 ```
 
-**Why good:** `firstValueFrom`/`lastValueFrom` (v7+) bridge Observable to Promise for interop with `async`/`await`, reject on empty Observable unlike deprecated `.toPromise()`
+`lastValueFrom` on a source that never completes never settles — the promise simply hangs, holding
+the subscription open. Use `firstValueFrom`, or bound the stream with `take`.
 
-### Bad Example - Using Deprecated toPromise
-
-```typescript
-// BAD: toPromise is deprecated in RxJS 7, resolves undefined for empty Observable
-const data = await source$.toPromise();
-```
-
-**Why bad:** `.toPromise()` is deprecated, resolves `undefined` if Observable completes empty instead of rejecting
+The deprecated `.toPromise()` resolved `undefined` for an empty Observable rather than rejecting,
+so a codebase migrating from it gains a rejection where it previously got a silent `undefined`.

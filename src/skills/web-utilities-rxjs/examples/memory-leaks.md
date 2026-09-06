@@ -1,191 +1,153 @@
-# RxJS Memory Leak Prevention Examples
+# RxJS Subscription Lifetime Examples
 
-> Unsubscription patterns, takeUntil, and cleanup strategies. See [SKILL.md](../SKILL.md) for core concepts.
+> Ending subscriptions: `takeUntil`, subscription collections, and the streams that end themselves.
+> See [SKILL.md](../SKILL.md) for which path applies.
 
-**Prerequisites**: Understand Observable creation and subscription from core examples first.
+---
+
+## Which Sources Need an Ending
+
+```typescript
+// Complete on their own — nothing to clean up
+of(1, 2, 3);
+from([1, 2, 3]);
+from(fetch("/api/data")); // one response, then complete
+timer(1000); // one emission, then complete
+
+// Run until stopped — every subscription needs an ending
+interval(1000);
+fromEvent(element, "click");
+new Subject(); // until .complete()
+webSocket("wss://…");
+```
+
+A `take`, `first`, `takeWhile` or `takeUntil` anywhere in the pipe moves a source from the second
+list to the first, which is why the cheapest cleanup is often an operator rather than a teardown
+hook.
 
 ---
 
 ## The takeUntil Pattern
 
-The standard approach for cleaning up multiple subscriptions with a single destroy signal.
-
-### Good Example - Service with Multiple Subscriptions
+One destroy signal ends every subscription that pipes through it.
 
 ```typescript
-import { Subject, interval, fromEvent, merge } from "rxjs";
 import {
+  Subject,
+  interval,
+  fromEvent,
   takeUntil,
   switchMap,
   debounceTime,
   map,
-  filter,
-} from "rxjs/operators";
-
-const POLL_INTERVAL_MS = 30000;
-const RESIZE_DEBOUNCE_MS = 200;
+} from "rxjs";
 
 class DashboardController {
   private readonly destroy$ = new Subject<void>();
 
-  initialize(): void {
-    // All subscriptions share the same destroy signal
-    interval(POLL_INTERVAL_MS)
+  start(): void {
+    interval(30_000)
       .pipe(
         switchMap(() => this.fetchData()),
-        takeUntil(this.destroy$), // LAST in pipe
+        takeUntil(this.destroy$), // last
       )
-      .subscribe((data) => this.updateDashboard(data));
+      .subscribe((data) => this.update(data));
 
     fromEvent(window, "resize")
       .pipe(
-        debounceTime(RESIZE_DEBOUNCE_MS),
+        debounceTime(200),
         map(() => ({ width: window.innerWidth, height: window.innerHeight })),
-        takeUntil(this.destroy$), // LAST in pipe
+        takeUntil(this.destroy$), // last
       )
-      .subscribe((size) => this.handleResize(size));
-
-    this.websocketMessages$
-      .pipe(
-        filter((msg) => msg.type === "update"),
-        takeUntil(this.destroy$), // LAST in pipe
-      )
-      .subscribe((msg) => this.handleUpdate(msg));
+      .subscribe((size) => this.resize(size));
   }
 
-  cleanup(): void {
-    this.destroy$.next(); // signals all takeUntil operators
-    this.destroy$.complete(); // prevents further use
+  stop(): void {
+    this.destroy$.next(); // every takeUntil above completes
+    this.destroy$.complete(); // and the Subject itself is released
   }
 }
 ```
 
-**Why good:** single `destroy$` Subject cleans up ALL subscriptions at once, `takeUntil` is always last in the pipe chain
+The `complete()` matters as much as the `next()`: without it the Subject stays alive holding
+references, and a later `next()` on a controller that has already stopped silently does nothing.
 
 ---
 
-## Critical: takeUntil Placement
-
-### Good Example - takeUntil AFTER Higher-Order Operators
+## Placement Is the Whole Trick
 
 ```typescript
-// ✅ CORRECT: takeUntil AFTER switchMap
+// ✅ takeUntil last — the outer source AND the inner Observable both end
 source$
   .pipe(
-    switchMap((id) => this.fetchDetails(id)), // inner Observable
-    takeUntil(this.destroy$), // cleans up BOTH outer and inner
+    switchMap((id) => this.fetchDetails(id)),
+    takeUntil(this.destroy$),
+  )
+  .subscribe();
+
+// ❌ takeUntil first — the outer source ends, the inner request runs to completion
+source$
+  .pipe(
+    takeUntil(this.destroy$),
+    switchMap((id) => this.longRunningRequest(id)),
   )
   .subscribe();
 ```
 
-**Why good:** `takeUntil` after `switchMap` unsubscribes from both the outer source and any active inner Observable
+An operator only sees what precedes it. In the second form `takeUntil` unsubscribes from
+`source$` and never learns that `switchMap` created a subscription downstream of it — so the
+request completes, its handler runs, and it does so against a controller that has already torn
+down. Nothing errors, which is why this survives review.
 
-### Bad Example - takeUntil BEFORE Higher-Order Operators
-
-```typescript
-// ❌ WRONG: takeUntil BEFORE switchMap
-source$
-  .pipe(
-    takeUntil(this.destroy$), // only unsubscribes outer source
-    switchMap((id) => this.longRunningRequest(id)), // inner Observable survives!
-  )
-  .subscribe();
-```
-
-**Why bad:** the inner Observable created by `switchMap` is NOT affected by `takeUntil` because `takeUntil` only operates on what comes before it in the pipe chain -- the inner subscription continues running after cleanup
+The rule generalises: `takeUntil` goes after every higher-order operator in the chain, which in
+practice means last.
 
 ---
 
-## Subscription Collection
-
-Alternative approach when you need fine-grained control.
-
-### Good Example - Subscription Object
+## Subscription Collections
 
 ```typescript
 import { Subscription, interval, fromEvent } from "rxjs";
 
-const POLL_INTERVAL_MS = 5000;
-
 class WidgetController {
   private readonly subscriptions = new Subscription();
 
-  initialize(): void {
-    // .add() collects subscriptions for batch unsubscribe
+  start(): void {
+    this.subscriptions.add(interval(5000).subscribe(() => this.refresh()));
     this.subscriptions.add(
-      interval(POLL_INTERVAL_MS).subscribe(() => this.refresh()),
-    );
-
-    this.subscriptions.add(
-      fromEvent(this.element, "click").subscribe(() => this.handleClick()),
+      fromEvent(this.element, "click").subscribe(() => this.click()),
     );
   }
 
-  cleanup(): void {
-    this.subscriptions.unsubscribe(); // unsubscribes all collected
+  stop(): void {
+    this.subscriptions.unsubscribe();
   }
 }
 ```
 
-**Why good:** `Subscription.add()` collects multiple subscriptions, single `.unsubscribe()` cleans up all
+Equivalent in effect, and it does not need a `takeUntil` on each pipe. The catch is that a
+`Subscription` cannot be reused: after `unsubscribe()`, anything added to it is unsubscribed
+immediately, so a controller that restarts needs a fresh one.
 
 ---
 
-## Auto-Completing Operators
-
-Some operators automatically complete the Observable, removing the need for manual cleanup.
-
-### Good Example - Self-Completing Patterns
+## Self-Completing Operators
 
 ```typescript
-import { interval, fromEvent, timer } from "rxjs";
-import { take, first, takeWhile } from "rxjs/operators";
+import { interval, fromEvent, take, first, takeWhile } from "rxjs";
 
-const MAX_ITEMS = 10;
-const INTERVAL_MS = 1000;
-const TIMEOUT_MS = 5000;
+interval(1000).pipe(take(10)).subscribe(); // ends after 10 emissions
+fromEvent(document, "click").pipe(first()).subscribe(); // ends after the first click
 
-// take(n) - complete after N emissions
-interval(INTERVAL_MS).pipe(take(MAX_ITEMS)).subscribe(); // auto-completes after 10 emissions
-
-// first() - complete after first emission (or first matching)
-fromEvent(document, "click").pipe(first()).subscribe(); // auto-completes after first click
-
-// first with predicate - complete on first match
 fromEvent<KeyboardEvent>(document, "keydown")
-  .pipe(first((e) => e.key === "Enter"))
-  .subscribe(); // auto-completes on first Enter press
+  .pipe(first((event) => event.key === "Enter"))
+  .subscribe();
 
-// takeWhile - complete when predicate becomes false
-const countdown$ = interval(INTERVAL_MS).pipe(
-  takeWhile((count) => count < MAX_ITEMS),
-);
-
-// timer - single emission then completes
-timer(TIMEOUT_MS).subscribe(); // emits 0 after 5s, then completes
+interval(1000)
+  .pipe(takeWhile((count) => count < 10))
+  .subscribe();
 ```
 
-**Why good:** auto-completing operators eliminate the need for manual unsubscription, reducing cleanup code
-
----
-
-## Observables That Don't Need Unsubscription
-
-Not all Observables need explicit cleanup:
-
-```typescript
-// ✅ These auto-complete (safe without unsubscribe):
-of(1, 2, 3); // finite values, completes after last
-from([1, 2, 3]); // finite iterable, completes after last
-from(fetch("/api/data")); // HTTP request, completes after response
-timer(1000); // single emission, completes
-ajax("/api/data"); // single HTTP response, completes
-
-// ❌ These run forever (MUST unsubscribe):
-interval(1000); // emits every second forever
-fromEvent(el, "click"); // listens forever
-new Subject(); // never completes unless you call .complete()
-webSocket("ws://..."); // stays connected
-```
-
-**Why good:** knowing which Observables auto-complete saves unnecessary cleanup code while ensuring infinite streams are always cleaned up
+`first()` errors with `EmptyError` when the source completes before matching, where `take(1)`
+simply completes. Where "no match" is a normal outcome, `take(1)` is the one that does not need a
+handler.

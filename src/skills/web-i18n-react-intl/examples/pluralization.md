@@ -134,37 +134,6 @@ export function RankingBadge({ position }: Props) {
 
 **Why good:** `selectordinal` handles language-specific ordinal rules, English has four categories (one, two, few, other), `#` is replaced with formatted number
 
-### Good Example - Ordinal with Context
-
-```typescript
-// src/components/anniversary-message.tsx
-import { FormattedMessage } from "react-intl";
-
-type Props = {
-  years: number;
-  userName: string;
-};
-
-export function AnniversaryMessage({ years, userName }: Props) {
-  return (
-    <p>
-      <FormattedMessage
-        id="anniversary.celebration"
-        defaultMessage="Happy {years, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} anniversary, {name}!"
-        values={{ years, name: userName }}
-      />
-    </p>
-  );
-}
-
-// Output: "Happy 1st anniversary, Alice!"
-// Output: "Happy 3rd anniversary, Bob!"
-// Output: "Happy 10th anniversary, Carol!"
-
-```
-
-**Why good:** ordinal combined with other interpolation, celebratory context clear for translators
-
 ---
 
 ## Select (Enum/Gender)
@@ -338,7 +307,10 @@ export function ExpirationNotice({ daysRemaining, expirationDate }: Props) {
 
 ---
 
-## Common Pluralization Patterns
+## Splitting a Message That Changes Shape
+
+When the sentence itself differs rather than just a count, use separate message IDs — a single
+message with every branch inside it is unreadable for the translator.
 
 ### Good Example - Time Durations
 
@@ -393,38 +365,7 @@ export function DurationDisplay({ hours, minutes }: Props) {
 
 ```
 
-**Why good:** handles edge cases (zero hours, zero minutes), separate message IDs for different formats, clean composition
-
-### Good Example - File Count
-
-```typescript
-// src/components/file-selection.tsx
-import { FormattedMessage } from "react-intl";
-
-type Props = {
-  selectedCount: number;
-  totalCount: number;
-};
-
-export function FileSelection({ selectedCount, totalCount }: Props) {
-  return (
-    <p>
-      <FormattedMessage
-        id="files.selection"
-        defaultMessage="{selected, plural, =0 {No files selected} one {# file selected} other {# files selected}} of {total, plural, one {# file} other {# files}}"
-        values={{ selected: selectedCount, total: totalCount }}
-      />
-    </p>
-  );
-}
-
-// Output: "No files selected of 10 files"
-// Output: "1 file selected of 10 files"
-// Output: "5 files selected of 10 files"
-
-```
-
-**Why good:** `=0` provides meaningful zero state, two pluralizations in one message, maintains sentence flow
+**Why good:** each shape is its own message, so a translator sees three short sentences rather than one nested expression, and the zero cases read naturally
 
 ---
 

@@ -69,9 +69,9 @@ const i18n = createI18n({
 ```vue
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import type { SupportedLocale } from "@/i18n";
+import type { SupportedLocale } from "../i18n";
 
-// CRITICAL: Single call, destructure everything needed
+// One call, everything destructured from it
 const { t, d, n, locale, availableLocales, tm, te } = useI18n();
 
 const switchLocale = (newLocale: SupportedLocale) => {
@@ -412,7 +412,7 @@ export const i18n = createI18n<[MessageSchema], "en" | "ja">({
 ```vue
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import type { MessageSchema } from "@/i18n/types";
+import type { MessageSchema } from "../i18n/types";
 
 const { t } = useI18n<{ message: MessageSchema }>();
 
@@ -477,7 +477,7 @@ declare module "vue-i18n" {
 ```vue
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
+import { SUPPORTED_LOCALES, type SupportedLocale } from "../i18n";
 
 const { locale, t } = useI18n();
 
@@ -533,7 +533,7 @@ const handleLocaleChange = (newLocale: SupportedLocale) => {
 ```vue
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
+import { SUPPORTED_LOCALES, type SupportedLocale } from "../i18n";
 
 const { locale } = useI18n();
 

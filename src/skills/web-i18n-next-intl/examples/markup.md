@@ -147,12 +147,14 @@ async function generateRssItem(
 
 ```typescript
 import { useTranslations } from "next-intl";
+// Your own HTML sanitiser — DOMPurify or equivalent
+import { sanitize } from "./sanitize";
 
 function UserGeneratedContent({ userContent }: { userContent: string }) {
   const t = useTranslations("Content");
 
   const html = t.markup("userPost", {
-    content: () => sanitize(userContent), // Use your HTML sanitization solution
+    content: () => sanitize(userContent),
   });
 
   return <div dangerouslySetInnerHTML={{ __html: html }} />;

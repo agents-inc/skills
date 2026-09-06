@@ -1,134 +1,79 @@
 # next-intl Reference
 
-> Decision frameworks, anti-patterns, and red flags for next-intl internationalization. See [SKILL.md](SKILL.md) for core concepts and [examples/](examples/) for code examples.
+> Decision trees, anti-pattern code, ICU syntax tables and setup checklists. Red flags and pattern
+> guidance live in [SKILL.md](SKILL.md); runnable code lives in [examples/](examples/).
 
 ---
 
 ## Decision Framework
 
-### When to Use useTranslations vs getTranslations
+### useTranslations vs getTranslations
 
 ```
 Are you in a React component?
-├─ YES → Is it a Server Component?
-│   ├─ YES → useTranslations (sync) ✓
-│   └─ NO → useTranslations (via NextIntlClientProvider) ✓
-└─ NO → Is it async context (generateMetadata, Server Action)?
-    ├─ YES → getTranslations (async) ✓
-    └─ NO → Not supported outside React/async contexts
+├─ YES → Server Component → useTranslations (sync)
+│        Client Component → useTranslations, under NextIntlClientProvider
+└─ NO  → Async context (generateMetadata, Server Action) → getTranslations, with an explicit locale
 ```
 
-### When to Use ICU Pluralization
+### Which ICU construct
 
 ```
-Does the message include a count?
-├─ YES → Is it a cardinal number (1, 2, 3...)?
-│   ├─ YES → Use {count, plural, ...} ✓
-│   └─ NO → Is it an ordinal (1st, 2nd, 3rd...)?
-│       ├─ YES → Use {count, selectordinal, ...} ✓
-│       └─ NO → Use simple interpolation {count}
-└─ NO → Does the message vary by enum value?
-    ├─ YES → Use {value, select, ...} ✓
-    └─ NO → Use simple interpolation or static text
+Message includes a count?
+├─ YES → Cardinal (1, 2, 3) → {count, plural, ...}
+│        Ordinal (1st, 2nd)  → {count, selectordinal, ...}
+│        Neither             → plain {count}
+└─ NO  → Varies by enum value → {value, select, ...}
+         Otherwise            → plain interpolation
 ```
 
-### When to Use t.rich vs t.markup
+### t vs t.rich vs t.markup
 
 ```
-Do you need React components in translation?
-├─ YES → Use t.rich() ✓ (returns ReactNode)
-└─ NO → Do you need HTML string output?
-    ├─ YES → Use t.markup() ✓ (returns string)
-    └─ NO → Use t() for plain text ✓
+React components inside the message?  → t.rich()   (ReactNode)
+An HTML string?                       → t.markup() (string)
+Plain text?                           → t()        (string)
 ```
 
-### When to Use useFormatter
+### Which formatter
 
 ```
-Are you formatting a value?
-├─ YES → Is it a date or time?
-│   ├─ YES → format.dateTime() ✓
-│   └─ NO → Is it a relative time ("2 hours ago")?
-│       ├─ YES → format.relativeTime() with useNow() ✓
-│       └─ NO → Is it a number or currency?
-│           ├─ YES → format.number() ✓
-│           └─ NO → Is it a list?
-│               ├─ YES → format.list() ✓
-│               └─ NO → Consider t() interpolation
-└─ NO → Use t() for messages
+Date or time                 → format.dateTime()
+Relative time ("2 hours ago")→ format.relativeTime(), with useNow() to keep it live
+Number or currency           → format.number()
+List                         → format.list()
 ```
 
-### Static vs Dynamic Rendering
+### Static vs dynamic rendering
 
 ```
-Do you need static generation (SSG)?
-├─ YES → Have you added generateStaticParams?
-│   ├─ YES → Have you called setRequestLocale(locale)?
-│   │   ├─ YES → Static rendering enabled ✓
-│   │   └─ NO → Add setRequestLocale() at top of component
-│   └─ NO → Add generateStaticParams() to layout/page
-└─ NO → Dynamic rendering (no changes needed)
+Want SSG?
+├─ YES → generateStaticParams present?  → no  → add it to the layout or page
+│        setRequestLocale(locale) called? → no → add it above every hook
+│        Both present → statically rendered
+└─ NO  → nothing to do; dynamic is the default
 ```
-
----
-
-## RED FLAGS
-
-### High Priority Issues
-
-- **Missing `setRequestLocale(locale)` in page/layout components** - Breaks static rendering, next-intl cannot determine locale
-- **Not awaiting `params` in App Router** - params is a Promise in Next.js 15+, causes runtime errors
-- **Missing `NextIntlClientProvider` in root layout** - Client Components cannot access translations
-- **Hardcoded locale strings** - Use named constants from routing.ts for type safety
-- **Not validating locale against routing.locales** - Invalid locales cause cryptic errors
-- **Using middleware.ts on Next.js 16+** - Must rename to proxy.ts (see Next.js 16 migration)
-
-### Medium Priority Issues
-
-- **Missing `generateStaticParams` for static routes** - Forces dynamic rendering, worse performance
-- **Using t() instead of t.rich() for messages with markup** - Returns string, not ReactNode
-- **Missing namespace in useTranslations** - All keys become global, conflicts likely
-- **Inline format options repeated** - Define formats in request.ts for consistency
-- **Missing aria-label on locale switcher** - Accessibility violation
-
-### Common Mistakes
-
-- Forgetting to call `setRequestLocale` before using any next-intl hooks
-- Using `useTranslations` in `generateMetadata` (use `getTranslations` instead)
-- Not passing locale to `getTranslations` in async contexts
-- Using browser APIs without checking for SSR
-- Missing `html lang` attribute in layout
-
-### Gotchas & Edge Cases
-
-- `setRequestLocale(locale)` must be called at the TOP of components, before any hooks
-- `generateMetadata` runs outside the component tree - requires explicit locale param
-- `t.rich()` tag functions receive `chunks` (ReactNode[]), not a single element
-- `useNow()` only updates on client - SSR shows initial value until hydration
-- Proxy/middleware runs on every request - keep it lightweight
-- **v4.0+ GDPR cookie changes**: Locale cookies now expire when browser closes (session cookies) and are only set when user switches to a locale different from Accept-Language header. Customize with `localeCookie` config if needed.
-- **Next.js 16 proxy.ts**: `middleware.ts` was renamed to `proxy.ts` - runs on Node.js runtime, not Edge
 
 ---
 
 ## Anti-Patterns
 
-### Missing Locale Validation
+### Missing locale validation
 
-Components MUST validate the locale parameter before using it. Invalid locales cause silent failures or cryptic errors.
+An unvalidated segment reaches the message loader and fails there.
 
 ```typescript
-// WRONG - No validation
+// WRONG - no validation
 export default async function Layout({ params }) {
   const { locale } = await params;
-  setRequestLocale(locale); // May be invalid!
+  setRequestLocale(locale); // may be anything the URL contained
   return <div>...</div>;
 }
 
-// CORRECT - Validate and 404 for invalid
+// CORRECT - validate, then 404
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
-import { routing } from "@/i18n/routing";
+import { routing } from "../i18n/routing";
 
 export default async function Layout({ params }) {
   const { locale } = await params;
@@ -142,95 +87,72 @@ export default async function Layout({ params }) {
 }
 ```
 
-### Hardcoded Locale Strings
+### Hardcoded locale strings
 
-Never hardcode locale strings. Use named constants from routing.ts for type safety and single source of truth.
+`routing` is the single source of truth for which locales exist.
 
 ```typescript
-// WRONG - Hardcoded strings
+// WRONG
 if (locale === "en") { ... }
 const locales = ["en", "de", "fr"];
 
-// CORRECT - Use routing constants
-import { routing, type Locale } from "@/i18n/routing";
+// CORRECT
+import { routing } from "../i18n/routing";
 
 if (locale === routing.defaultLocale) { ... }
 const locales = routing.locales;
 ```
 
-### setRequestLocale Called After Hooks
-
-`setRequestLocale` must be called before any next-intl hooks. Calling it after causes the hooks to fail.
+### setRequestLocale called after a hook
 
 ```typescript
-// WRONG - Called after useTranslations
-export default async function Page({ params }) {
-  const { locale } = await params;
-  const t = useTranslations("Page"); // Fails! Locale not set
-  setRequestLocale(locale);
-  return <h1>{t("title")}</h1>;
-}
+// WRONG - the hook runs with no locale set
+const t = useTranslations("Page");
+setRequestLocale(locale);
 
-// CORRECT - Called first
-export default async function Page({ params }) {
-  const { locale } = await params;
-  setRequestLocale(locale); // Set locale first
-  const t = useTranslations("Page"); // Now works
-  return <h1>{t("title")}</h1>;
-}
+// CORRECT
+setRequestLocale(locale);
+const t = useTranslations("Page");
 ```
 
-### Using t() for Messages with Markup
+### t() on a message with markup
 
-`t()` returns a string. For messages containing markup, use `t.rich()` which returns ReactNode.
+`t()` returns a string, so the tags render as literal text.
 
 ```typescript
-// WRONG - Returns string, markup not rendered
-const message = t("terms"); // "<link>Terms</link>" as string
+// WRONG
+const message = t("terms"); // "<link>Terms</link>"
 
-// CORRECT - Returns ReactNode with rendered components
+// CORRECT
 const message = t.rich("terms", {
   link: (chunks) => <a href="/terms">{chunks}</a>,
 });
 ```
 
-### Flat Translation Keys with Dots
+### Flat keys with dots
 
-Avoid dots in translation keys. Use nested objects for organization.
+Dots are the namespace separator, so a key containing one is ambiguous.
 
 ```json
-// WRONG - Flat keys with dots
+// WRONG
 {
   "Dashboard.title": "Dashboard",
   "Dashboard.stats.count": "5 items"
 }
 
-// CORRECT - Nested structure
+// CORRECT
 {
   "Dashboard": {
     "title": "Dashboard",
-    "stats": {
-      "count": "5 items"
-    }
+    "stats": { "count": "5 items" }
   }
 }
 ```
 
-### Missing Error Handling for Message Loading
-
-Message loading can fail. Handle errors gracefully.
+### No fallback when a message file fails to load
 
 ```typescript
-// WRONG - No error handling
-export default getRequestConfig(async ({ requestLocale }) => {
-  const locale = await requestLocale;
-  return {
-    locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
-  };
-});
-
-// CORRECT - With fallback
+// CORRECT - validated locale, and a fallback if the import still fails
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested)
@@ -251,50 +173,43 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
 ---
 
-## Quick Reference
+## Checklists
 
-### Page Component Checklist
+### Page component
 
-- [ ] Await `params` (Promise in Next.js 15+)
-- [ ] Validate locale with `hasLocale(routing.locales, locale)`
-- [ ] Return `notFound()` for invalid locales
-- [ ] Call `setRequestLocale(locale)` before any hooks
-- [ ] Add `generateStaticParams()` for static rendering
-- [ ] Use namespace in `useTranslations("Namespace")`
+- [ ] `params` awaited
+- [ ] Locale validated with `hasLocale(routing.locales, locale)`, `notFound()` otherwise
+- [ ] `setRequestLocale(locale)` above every hook
+- [ ] `generateStaticParams()` present if the route should be static
+- [ ] `useTranslations("Namespace")` rather than an unnamespaced call
 
-### Layout Component Checklist
+### Layout component
 
-- [ ] Wrap children with `NextIntlClientProvider`
-- [ ] Set `<html lang={locale}>` attribute
-- [ ] Include `generateStaticParams()` for all locales
-- [ ] Call `setRequestLocale(locale)` before hooks
+- [ ] Children wrapped in `NextIntlClientProvider`
+- [ ] `<html lang={locale}>` set
+- [ ] `generateStaticParams()` covering every locale
+- [ ] `setRequestLocale(locale)` above every hook
 
-### Message File Checklist
+### Message files
 
-- [ ] Use nested structure, not flat keys with dots
-- [ ] Use ICU syntax for pluralization
-- [ ] Keep markup tags translatable (`<link>text</link>`)
-- [ ] Include all locales defined in routing.ts
-- [ ] Match structure across all locale files
+- [ ] Nested structure rather than flat dotted keys
+- [ ] ICU syntax for anything count-dependent
+- [ ] Markup tags left inside the translated string
+- [ ] Same key structure in every locale file listed in `routing.locales`
 
-### Proxy/Middleware Checklist
+### Proxy / middleware
 
-- [ ] File is named `proxy.ts` (Next.js 16+) or `middleware.ts` (Next.js 15 and earlier)
-- [ ] Import `createMiddleware` from `next-intl/middleware`
-- [ ] Pass `routing` configuration
-- [ ] Configure matcher to exclude:
-  - `/api` routes
-  - `/_next` system files
-  - `/_vercel` system files
-  - Files with extensions (`.*\\..*)`)
-  - Any additional API framework routes your project uses
-- [ ] If using Next.js 16+, ensure file is `proxy.ts` not `middleware.ts`
+- [ ] Named `proxy.ts` on Next.js 16+, `middleware.ts` before that
+- [ ] `createMiddleware` imported from `next-intl/middleware` and passed `routing`
+- [ ] Matcher excludes API routes, `/_next`, `/_vercel`, anything with a file extension, and any
+      other server-route prefix the project serves — everything the matcher admits runs the proxy on
+      every request for it, so the exclusions are what keep it off the hot path
 
 ---
 
 ## Message Format Reference
 
-### ICU Plural Categories by Language
+### ICU plural categories by language
 
 | Language | Categories                       |
 | -------- | -------------------------------- |
@@ -306,30 +221,22 @@ export default getRequestConfig(async ({ requestLocale }) => {
 | Polish   | one, few, many, other            |
 | Japanese | other (no plural forms)          |
 
-### ICU Syntax Quick Reference
+### ICU syntax
 
 ```
-Simple interpolation:   {name}
-Plural (cardinal):      {count, plural, =0 {none} one {# item} other {# items}}
-Plural (ordinal):       {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}
-Select (enum):          {gender, select, male {He} female {She} other {They}}
-Number format:          {amount, number, currency}
-Date format:            {date, date, medium}
-Rich text:              <tag>content</tag>
+Interpolation:     {name}
+Plural (cardinal): {count, plural, =0 {none} one {# item} other {# items}}
+Plural (ordinal):  {n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}
+Select (enum):     {gender, select, male {He} female {She} other {They}}
+Number:            {amount, number, currency}
+Date:              {date, date, medium}
+Rich text:         <tag>content</tag>
 ```
 
-### Format Options Reference
+### Named format output
 
-**Date/Time Formats:**
+**Date/time:** `short` "12/31/2024" · `medium` "Dec 31, 2024" · `long` "December 31, 2024" ·
+`full` "Tuesday, December 31, 2024"
 
-- `short`: "12/31/2024"
-- `medium`: "Dec 31, 2024"
-- `long`: "December 31, 2024"
-- `full`: "Tuesday, December 31, 2024"
-
-**Number Styles:**
-
-- `decimal`: "1,234.56"
-- `currency`: "$1,234.56"
-- `percent`: "12%"
-- `unit`: "5 kilometers"
+**Number styles:** `decimal` "1,234.56" · `currency` "$1,234.56" · `percent` "12%" ·
+`unit` "5 kilometers"

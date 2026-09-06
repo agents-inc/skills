@@ -110,97 +110,72 @@ bootstrap().catch((error) => {
 
 ---
 
-## Router Integration
+## Loading Before a View Renders
 
-### Good Example - Locale-Based Routing
+Putting the locale in the URL is what makes a translated page shareable and separately indexable per
+language. It also means the messages have to be registered before the view that reads them renders —
+otherwise the first paint shows raw keys. Whatever owns routing supplies the before-navigation hook;
+these functions are the i18n half of it, and take the locale segment as a plain string.
+
+### Good Example - Resolve and Load the Segment
 
 ```typescript
-// src/router/index.ts
-import {
-  createRouter,
-  createWebHistory,
-  type RouteRecordRaw,
-} from "vue-router";
+// src/i18n/route-locale.ts
 import {
   setLocale,
   SUPPORTED_LOCALES,
   DEFAULT_LOCALE,
   type SupportedLocale,
-} from "@/i18n";
+} from "./index";
 
-const routes: RouteRecordRaw[] = [
-  {
-    path: "/:locale",
-    children: [
-      {
-        path: "",
-        name: "home",
-        component: () => import("../views/HomeView.vue"),
-      },
-      {
-        path: "about",
-        name: "about",
-        component: () => import("../views/AboutView.vue"),
-      },
-      {
-        path: "products",
-        name: "products",
-        component: () => import("../views/ProductsView.vue"),
-      },
-    ],
-  },
-  {
-    // Redirect root to default locale
-    path: "/",
-    redirect: `/${DEFAULT_LOCALE}`,
-  },
-];
+export function isSupportedLocale(value: string): value is SupportedLocale {
+  return SUPPORTED_LOCALES.includes(value as SupportedLocale);
+}
 
-export const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
+/** The locale to use when the URL segment names one that does not exist. */
+export function fallbackForUnknownSegment(): SupportedLocale {
+  const browserLang = navigator.language.split("-")[0];
+  return isSupportedLocale(browserLang) ? browserLang : DEFAULT_LOCALE;
+}
 
-// Navigation guard for locale handling
-router.beforeEach(async (to, from, next) => {
-  const paramsLocale = to.params.locale as string;
+/**
+ * Call before the target view renders. Resolves to the locale that was applied,
+ * which differs from the segment when the segment was unsupported.
+ */
+export async function applyRouteLocale(
+  segment: string,
+): Promise<SupportedLocale> {
+  const locale = isSupportedLocale(segment)
+    ? segment
+    : fallbackForUnknownSegment();
 
-  // Check if locale is supported
-  if (!SUPPORTED_LOCALES.includes(paramsLocale as SupportedLocale)) {
-    // Redirect to browser locale or default
-    const browserLang = navigator.language.split("-")[0];
-    const fallbackLocale = SUPPORTED_LOCALES.includes(
-      browserLang as SupportedLocale,
-    )
-      ? browserLang
-      : DEFAULT_LOCALE;
-
-    return next({
-      path: `/${fallbackLocale}${to.path}`,
-      query: to.query,
-    });
-  }
-
-  // Load and set locale
-  await setLocale(paramsLocale as SupportedLocale);
-
-  next();
-});
+  await setLocale(locale);
+  return locale;
+}
 ```
 
-**Why good:** locale in URL path for SEO and shareability, navigation guard loads locale before route renders, unsupported locales redirect gracefully, browser language detection
+```typescript
+// Wired into whatever runs before navigation completes. `targetLocaleSegment`
+// is the locale segment of the URL being navigated to.
+const applied = await applyRouteLocale(targetLocaleSegment);
 
-### Good Example - Locale Switcher with Router
+if (applied !== targetLocaleSegment) {
+  // Redirect to the same path under `applied`, carrying the query string over.
+  // A locale change should leave the reader on the page they asked for, with
+  // their filters and pagination intact.
+}
+```
+
+**Why good:** messages are registered before the view renders, an unsupported segment resolves to a locale that exists rather than erroring, and the caller decides how to redirect — so this works under any routing approach
+
+### Good Example - Switcher That Reports the Chosen Locale
 
 ```vue
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { useRouter, useRoute } from "vue-router";
-import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
+import { SUPPORTED_LOCALES, type SupportedLocale } from "../i18n";
 
 const { locale } = useI18n();
-const router = useRouter();
-const route = useRoute();
 
 const LOCALE_NAMES: Record<SupportedLocale, string> = {
   en: "English",
@@ -209,14 +184,9 @@ const LOCALE_NAMES: Record<SupportedLocale, string> = {
   de: "Deutsch",
 };
 
-const switchLocale = (newLocale: SupportedLocale) => {
-  // Navigate to same path with new locale
-  const currentPath = route.path.replace(`/${locale.value}`, "");
-  router.push({
-    path: `/${newLocale}${currentPath}`,
-    query: route.query,
-  });
-};
+// The parent navigates; this component only reports the choice, so the
+// before-navigation hook stays the single place that loads messages.
+defineEmits<{ select: [locale: SupportedLocale] }>();
 </script>
 
 <template>
@@ -224,7 +194,12 @@ const switchLocale = (newLocale: SupportedLocale) => {
     <select
       :value="locale"
       aria-label="Select language"
-      @change="switchLocale($event.target.value as SupportedLocale)"
+      @change="
+        $emit(
+          'select',
+          ($event.target as HTMLSelectElement).value as SupportedLocale,
+        )
+      "
     >
       <option v-for="loc in SUPPORTED_LOCALES" :key="loc" :value="loc">
         {{ LOCALE_NAMES[loc] }}
@@ -234,7 +209,7 @@ const switchLocale = (newLocale: SupportedLocale) => {
 </template>
 ```
 
-**Why good:** preserves current path and query when switching, router handles locale loading via navigation guard, URL updates for bookmarkability
+**Why good:** message loading stays in one place rather than being duplicated between the switcher and the navigation hook; the component works whether the locale lives in the URL or in storage; and because the parent navigates, it can preserve the current path and query rather than dropping the reader at the site root
 
 ---
 
@@ -340,7 +315,7 @@ export async function loadRouteMessages(
 ```vue
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { loadLocaleMessages, type SupportedLocale } from "@/i18n";
+import { loadLocaleMessages, type SupportedLocale } from "../i18n";
 
 const { locale } = useI18n();
 
@@ -527,11 +502,11 @@ export function getInitialLocale(): SupportedLocale {
     .find((row) => row.startsWith("locale="))
     ?.split("=")[1];
 
+  // navigator.language stands in for the Accept-Language header on the client,
+  // so the same priority order applies on both sides
   const browserLang = navigator.language.split("-")[0];
 
-  return detectLocale(undefined, cookieLocale) || browserLang !== undefined
-    ? (browserLang as SupportedLocale)
-    : DEFAULT_LOCALE;
+  return detectLocale(browserLang, cookieLocale);
 }
 ```
 

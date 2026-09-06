@@ -5,204 +5,186 @@ description: Modern native JavaScript (ES2022-ES2025) utility patterns that repl
 
 # Native JavaScript Utility Patterns
 
-> **Quick Guide:** Prefer native JavaScript (ES2022-ES2025) over utility libraries. Use `structuredClone` for deep cloning, `Object.groupBy` for grouping, ES2023 immutable array methods (`toSorted`, `toReversed`, `with`), and ES2025 Set methods for set operations. Only reach for utility libraries when native alternatives genuinely don't exist or lack needed features (cancel/flush on debounce, deep merge with array strategies).
+> **Quick Guide:** Most utility-library calls now have a native equivalent with no bundle cost.
+> The four that change how code is written are `structuredClone` for deep copies, the ES2023
+> immutable array methods (`toSorted`, `toReversed`, `toSpliced`, `with`), `Object.groupBy` /
+> `Map.groupBy`, and the ES2025 Set operations. The two facts that catch people out: a structured
+> clone drops prototypes and throws on functions, and the immutable array methods copy one level
+> deep.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — cloning, immutable updates, negative indexing, searching from the end
+- [examples/arrays.md](examples/arrays.md) — deduplication, set operations, grouping, chunking, sorting, compacting
+- [examples/objects.md](examples/objects.md) — typed pick/omit/mapValues, deep merge, lookup maps, freezing
+- [reference.md](reference.md) — lodash-to-native table, function utilities (debounce, throttle, memoize), availability
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing utility code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Reach for the native method before adding a dependency.** The lodash-to-native table in
+[reference.md](reference.md) settles most of it in one lookup, and the native call ships nothing.
 
-**(You MUST use native ES2022+ methods before considering utility libraries - check this skill first)**
+**Deep-copy with `structuredClone`.** A JSON round trip turns a `Date` into a string and a `Map` or
+`Set` into `{}`, and it does so silently — the failure surfaces later, at the first `.getTime()`.
 
-**(You MUST use immutable array methods (`toSorted`, `toReversed`, `toSpliced`, `with`) instead of mutating methods)**
+**Use the `to*` array methods where the array is shared.** `sort`, `reverse` and `splice` rewrite
+the array in place, so a function that "returns a sorted copy" with `sort` has changed its caller's
+data.
 
-**(You MUST use `structuredClone` for deep cloning - NOT JSON.parse/JSON.stringify hacks)**
-
-**(You MUST define named constants for all numeric values - NO magic numbers in utility functions)**
+**Convert to a `Set` before repeated membership checks.** `includes` inside a `filter` is O(n²), and
+the difference shows up at a few thousand elements.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** native JavaScript utilities, lodash alternative, ES2023 array methods, toSorted, toReversed, structuredClone, Object.groupBy, Set union, Set intersection, optional chaining, nullish coalescing, at(), findLast
+**Auto-detection:** structuredClone, Object.groupBy, Map.groupBy, toSorted, toReversed, toSpliced,
+Array.prototype.with, findLast, findLastIndex, at(-1), Object.hasOwn, Object.fromEntries,
+Set.prototype.union, Set.prototype.intersection, Set.prototype.difference, symmetricDifference,
+isSubsetOf, isDisjointFrom, lodash alternative, native JavaScript utilities
 
-**When to use:**
+**Applies to:**
 
-- Array manipulation (find, filter, sort, reverse, chunk, unique, group)
-- Object operations (pick, omit, merge, clone, groupBy)
-- Set operations (union, intersection, difference)
-- Deep cloning without external libraries
-- Function utilities (debounce, throttle, memoize)
+- Array work — deduplicating, grouping, chunking, flattening, sorting immutably, searching from the end
+- Object work — picking, omitting, merging, key/value transformation, lookup maps
+- Set algebra — union, intersection, difference, subset tests
+- Deep copying without a dependency
+- Hand-rolled function utilities — debounce, throttle, memoize, once
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Complex deep merge with custom array-handling strategies - use a library
-- Lazy evaluation chains over large datasets - lodash chains are optimized for this
-- Objects containing functions that need cloning - `structuredClone` cannot clone functions
-- Full-featured debounce/throttle with cancel, flush, leading/trailing - use a library
-
-**Key patterns covered:**
-
-- Safe property access (optional chaining + nullish coalescing replaces `_.get`)
-- Immutable array operations (`toSorted`, `toReversed`, `toSpliced`, `with`)
-- Deep cloning with `structuredClone` (handles Map, Set, Date, circular refs)
-- `Object.groupBy` / `Map.groupBy` (ES2024 - replaces reduce-based grouping)
-- ES2025 Set methods (union, intersection, difference, symmetricDifference)
-- Object pick/omit, unique values, chunking, flattening
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Safe access, deep cloning, immutable arrays, findLast
-- [examples/arrays.md](examples/arrays.md) - Unique values, set operations, grouping, chunking, sorting
-- [examples/objects.md](examples/objects.md) - Pick, omit, merge, mapKeys/mapValues, freeze
-- [reference.md](reference.md) - Decision frameworks, lodash-to-native table, red flags, anti-patterns
+- Date arithmetic, parsing and formatting — `Date` alone does not cover it
+- Reactive updates — these methods produce new references, and what consumes a new reference is the concern of whatever owns the state
+- Schema validation and runtime parsing — these utilities reshape data that is already trusted
 
 ---
 
-<philosophy>
+<decision_framework>
 
-## Philosophy
+## Native or a dependency
 
-Modern JavaScript (ES2022-ES2025) provides native alternatives for ~80% of common utility library functions. Using native methods means:
+Three cases, in order:
 
-1. **Zero bundle cost** - No additional bytes shipped to users
-2. **Better performance** - Native implementations are engine-optimized
-3. **Future-proof** - Standards evolve, libraries may not
-4. **Simpler debugging** - No library internals to step through
+- **A native method exists** — use it. The table in [reference.md](reference.md) is the lookup.
+- **No native method, but the implementation is ten lines** — write it. `chunk`, `pick`, `omit`,
+  `compact`, `deepMerge`, `debounce`, `throttle`, `memoize` and `once` are all in this skill,
+  written out and typed.
+- **The edge cases are the feature** — take the dependency. A debounce with `cancel`, `flush` and
+  leading/trailing edges; a deep merge with per-key array strategies; lazy evaluation over a
+  dataset large enough that intermediate arrays matter. Reimplementing these badly costs more than
+  the bytes.
 
-**Key principle:** Check native JavaScript first. Only use utility libraries for genuinely missing functionality.
-
-```typescript
-// Native is free - no imports needed
-const unique = [...new Set(items)];
-const last = items.at(-1);
-const sorted = items.toSorted((a, b) => a.name.localeCompare(b.name));
-const cloned = structuredClone(complexObject);
-const grouped = Object.groupBy(items, (item) => item.category);
-```
-
-**ES Version Reference:**
-
-| Feature                          | ES Version | Browser Support           |
-| -------------------------------- | ---------- | ------------------------- |
-| Optional chaining (`?.`)         | ES2020     | All modern browsers       |
-| Nullish coalescing (`??`)        | ES2020     | All modern browsers       |
-| `at()` negative indexing         | ES2022     | All modern browsers       |
-| `toSorted`, `toReversed`, `with` | ES2023     | All modern browsers       |
-| `Object.groupBy`, `Map.groupBy`  | ES2024     | Chrome 117+, Safari 17.4+ |
-| Set methods (union, etc.)        | ES2025     | Chrome 122+, Safari 17+   |
-
-</philosophy>
+</decision_framework>
 
 ---
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Safe Property Access
+### Pattern 1: structuredClone for deep copies
 
-Optional chaining + nullish coalescing replaces `_.get` with zero bundle cost.
+Preserves `Date`, `Map`, `Set`, `RegExp`, typed arrays and circular references — everything a JSON
+round trip destroys.
 
 ```typescript
-const DEFAULT_CITY = "Unknown";
-const city = user?.address?.city ?? DEFAULT_CITY;
-const result = service?.logger?.log?.("message"); // method call
-const first = data?.items?.[0]?.name ?? "No items"; // array access
+const snapshot = structuredClone(state);
+// Preserved: Date, Map, Set, RegExp, ArrayBuffer, circular refs
+// Throws on: functions, DOM nodes, Proxy, symbols
+// Silently lost: the prototype — a class instance clones to a plain object
 ```
 
-**Why this matters:** Handles null/undefined gracefully, type-safe with TypeScript, no runtime cost.
-
-See [examples/core.md](examples/core.md) for full patterns.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Immutable Array Operations (ES2023)
+### Pattern 2: Immutable array methods (ES2023)
 
-Always use immutable variants - critical for reactive frameworks and shared state.
+Four `to*` methods return a new array where the classic method rewrote the old one.
 
 ```typescript
-const sorted = items.toSorted((a, b) => a.price - b.price); // not .sort()
-const reversed = items.toReversed(); // not .reverse()
-const updated = items.with(1, newItem); // not items[1] = x
-const removed = items.toSpliced(1, 1); // not .splice()
+items.toSorted((a, b) => a.price - b.price); // vs .sort()
+items.toReversed(); // vs .reverse()
+items.toSpliced(index, 1); // vs .splice()
+items.with(index, { ...items[index], done: true }); // vs items[i] = x
 ```
 
-**Why this matters:** Mutating methods cause bugs in shared state and reactive frameworks that rely on reference equality to detect changes.
+The copy is shallow: the new array holds the same element objects, which is why the update above
+spreads before writing.
 
-See [examples/core.md](examples/core.md) for immutable update patterns.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Deep Cloning with structuredClone
-
-Replaces JSON round-trip and lodash `_.cloneDeep`. Handles types JSON cannot.
+### Pattern 3: Object.groupBy and Map.groupBy (ES2024)
 
 ```typescript
-const cloned = structuredClone(complexObject);
-// Preserves: Date, Map, Set, RegExp, ArrayBuffer, circular references
-// Cannot clone: functions, DOM nodes, Error objects with custom properties
+const byStatus = Object.groupBy(orders, (order) => order.status);
+// { pending: [...], shipped: [...] } — null-prototype, values are `T[] | undefined`
+
+const byCustomer = Map.groupBy(orders, (order) => order.customer);
+// Map keyed by the object itself — use this when the key is not a string
 ```
 
-**Why this matters:** `JSON.parse(JSON.stringify())` silently corrupts Date (becomes string), Map/Set (becomes `{}`), and loses `undefined`.
+`Object.groupBy` coerces the key to a string and returns a null-prototype object, so reach for
+`Object.hasOwn(byStatus, key)` rather than `byStatus.hasOwnProperty(key)`.
 
-See [examples/core.md](examples/core.md) for cloning patterns.
+Full code: [examples/arrays.md](examples/arrays.md)
 
 ---
 
-### Pattern 4: Object.groupBy (ES2024)
-
-Replaces verbose reduce-based grouping and lodash `_.groupBy`.
+### Pattern 4: Set operations (ES2025)
 
 ```typescript
-const byCategory = Object.groupBy(products, (p) => p.category);
-const THRESHOLD = 100;
-const byRange = Object.groupBy(items, (item) =>
-  item.price >= THRESHOLD ? "expensive" : "affordable",
+setA.union(setB);
+setA.intersection(setB);
+setA.difference(setB); // in A, not in B
+setA.symmetricDifference(setB);
+setA.isSubsetOf(setB);
+setA.isSupersetOf(setB);
+setA.isDisjointFrom(setB);
+```
+
+Each returns a `Set`, so spread when an array is wanted. The argument is any set-like with `size`,
+`has` and `keys` — a `Map` qualifies, a plain array does not.
+
+Full code: [examples/arrays.md](examples/arrays.md)
+
+---
+
+### Pattern 5: Searching and indexing from the end
+
+```typescript
+logs.findLast((log) => log.level === "error"); // ES2023, single pass
+logs.findLastIndex((log) => log.level === "error");
+items.at(-1); // ES2022, undefined when empty
+"file.backup.txt".split(".").at(-1); // "txt" — strings too
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 6: Object.fromEntries as the transformation pivot
+
+`entries → map/filter → fromEntries` covers pick, omit, invert, mapValues, mapKeys and array-to-lookup
+in one shape, so those helpers are four lines each rather than a dependency.
+
+```typescript
+const keyed = Object.fromEntries(items.map((item) => [item.id, item]));
+const withTax = Object.fromEntries(
+  Object.entries(prices).map(([k, v]) => [k, v * 1.1]),
 );
-// Returns null-prototype object - use Object.hasOwn() not hasOwnProperty
+const passing = Object.fromEntries(
+  Object.entries(scores).filter(([, score]) => score >= 90),
+);
 ```
 
-**Why this matters:** Reduce-based grouping is verbose, error-prone (forgetting key init), and has prototype pollution risk with `{}`.
-
-See [examples/arrays.md](examples/arrays.md) for grouping patterns.
-
----
-
-### Pattern 5: ES2025 Set Methods
-
-Native set operations replace manual filter-based implementations.
-
-```typescript
-const union = setA.union(setB);
-const common = setA.intersection(setB);
-const diff = setA.difference(setB);
-const either = setA.symmetricDifference(setB);
-const isSub = setA.isSubsetOf(setB);
-// Returns Set - spread to array if needed: [...setA.union(setB)]
-```
-
-**Why this matters:** Filter + includes/indexOf is O(n^2). Native Set methods are O(n).
-
-See [examples/arrays.md](examples/arrays.md) for set operations and pre-ES2025 fallbacks.
-
----
-
-### Pattern 6: Finding from End (ES2023)
-
-`findLast` and `findLastIndex` replace reverse-then-find anti-pattern.
-
-```typescript
-const lastError = logs.findLast((log) => log.level === "error");
-const lastErrorIdx = logs.findLastIndex((log) => log.level === "error");
-```
-
-**Why this matters:** `[...arr].reverse().find()` creates unnecessary copy. `findLast` is single-pass.
-
-See [examples/core.md](examples/core.md) for findLast patterns.
+Full code: [examples/objects.md](examples/objects.md)
 
 </patterns>
 
@@ -210,48 +192,24 @@ See [examples/core.md](examples/core.md) for findLast patterns.
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority:**
+**Breaks at runtime:**
 
-- Using `JSON.parse(JSON.stringify())` for deep clone - loses Date, Map, Set, undefined. Use `structuredClone`.
-- Using mutating array methods (`.sort()`, `.reverse()`, `.splice()`) on shared state - causes bugs in reactive frameworks. Use ES2023 immutable versions.
-- Using lodash for operations with native equivalents (`_.get`, `_.last`, `_.uniq`, `_.groupBy`) - unnecessary bundle weight.
-- Using `includes()` or `indexOf()` in loops - O(n) per check. Convert to Set first for O(1) lookups.
+- `structuredClone` on anything holding a function, a DOM node or a Proxy throws `DataCloneError` — clone the data separately from the behaviour.
+- `JSON.parse(JSON.stringify(x))` does not throw; it corrupts. A `Date` becomes a string, a `Map` or `Set` becomes `{}`, `undefined` members vanish, and the first method call on the result is where it surfaces.
+- `Object.groupBy` returns a null-prototype object, so `result.hasOwnProperty(...)` throws. Use `Object.hasOwn`.
+- Set methods reject a plain array — they need something with `size`, `has` and `keys`.
 
-**Medium Priority:**
+**Surprising behaviour:**
 
-- Magic numbers like `arr.slice(-3)` - use named constants: `const RECENT_COUNT = 3`.
-- Reversing arrays to find from end - use `findLast()` instead of `[...arr].reverse().find()`.
-- Reduce-based grouping - use `Object.groupBy()` (ES2024).
-- Using `arr[arr.length - 1]` for last element - use `arr.at(-1)`.
-
-**Gotchas & Edge Cases:**
-
-- `structuredClone` throws on functions, DOM nodes - use manual clone if these are present.
-- `Object.groupBy` returns null-prototype object - no `hasOwnProperty`. Use `Object.hasOwn()`.
-- Set methods return Sets, not arrays - spread to array if needed: `[...setA.union(setB)]`.
-- `toSorted()` with no comparator converts elements to strings (like `sort()`).
-- `at()` returns `undefined` for empty arrays or out-of-bounds indices.
+- `structuredClone` discards the prototype. A class instance clones to a plain object with the same fields and none of the methods.
+- `toSorted()` with no comparator sorts by string, so `[10, 9, 1].toSorted()` is `[1, 10, 9]` — exactly as `sort()` always did.
+- The `to*` methods copy one level. Editing an element of the new array edits the same object in the old one.
+- `arr.at(-1)` types as `T | undefined` whatever the compiler options, so the empty case has to be handled. `arr[arr.length - 1]` types as `T` unless `noUncheckedIndexedAccess` is on — that is the form that lets an `undefined` flow on unchecked.
+- `structuredClone` on an `Error` succeeds and keeps the standard fields, but a `code`, a `status` or anything else attached to it is not in the copy.
+- `filter(Boolean)` drops `0`, `""` and `false` along with the nullish values, and TypeScript does not narrow the result — `filter((x): x is T => x != null)` does both jobs correctly.
+- `Object.freeze` is shallow, and outside strict mode a write to a frozen object fails silently rather than throwing.
+- `Object.keys` returns integer-like keys first in ascending numeric order, whatever the insertion order — only string keys keep insertion order.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use native ES2022+ methods before considering utility libraries - check this skill first)**
-
-**(You MUST use immutable array methods (`toSorted`, `toReversed`, `toSpliced`, `with`) instead of mutating methods)**
-
-**(You MUST use `structuredClone` for deep cloning - NOT JSON.parse/JSON.stringify hacks)**
-
-**(You MUST define named constants for all numeric values - NO magic numbers in utility functions)**
-
-**Failure to follow these rules will cause unnecessary bundle bloat and mutation bugs.**
-
-</critical_reminders>

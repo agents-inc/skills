@@ -101,7 +101,7 @@ export function App() {
 
 ```
 
-**Why good:** modular configuration with named constants, locale validation function prevents invalid locales, error handler distinguishes missing translations from errors, default rich text elements provide consistent markup handling, lazy loading prevents loading all locales upfront
+**Why good:** `isValidLocale` narrows an arbitrary string before it reaches the provider, `onError` separates a missing translation from a real failure, `defaultRichTextElements` defines the common tags once, and the app renders only once messages have arrived
 
 ### Bad Example - Inline Configuration
 
@@ -119,7 +119,7 @@ function App({ children }) {
 }
 ```
 
-**Why bad:** hardcoded locale string prevents type safety and reuse, no defaultLocale means missing messages show raw IDs, no onError causes console noise, no locale switching capability, loads all messages synchronously
+**Why bad:** the locale is fixed at build time so nothing can switch it, no `defaultLocale` means missing messages render raw IDs, no `onError` means every one of them hits the console, and all locales load whether or not they are used
 
 ---
 
@@ -251,7 +251,7 @@ export function SearchForm({ onSearch }: { onSearch: (query: string) => void }) 
 
 ```
 
-**Why good:** useIntl returns strings for HTML attributes, named constant for min length, accessible with aria-label and role, separate message for each translatable string
+**Why good:** useIntl returns strings, which is what `placeholder` and `aria-label` need, and each translatable string is its own message rather than a fragment of one
 
 ### Good Example - Conditional Messages
 
@@ -379,13 +379,6 @@ export function CheckoutPage({ cart }: { cart: Cart }) {
         {/* Cart content */}
       </section>
 
-      <section aria-labelledby="shipping-section">
-        <h2 id="shipping-section">
-          <FormattedMessage {...checkoutMessages.shippingAddress} />
-        </h2>
-        {/* Shipping form */}
-      </section>
-
       <button type="submit">
         <FormattedMessage {...checkoutMessages.placeOrder} />
       </button>
@@ -395,7 +388,7 @@ export function CheckoutPage({ cart }: { cart: Cart }) {
 
 ```
 
-**Why good:** spreads message descriptor with values, useIntl for document.title (string context), FormattedMessage for JSX content, semantic sections with aria-labelledby
+**Why good:** the descriptor is spread rather than restated, and the same message serves both surfaces — `useIntl` where a string is needed, `FormattedMessage` where JSX is
 
 ---
 

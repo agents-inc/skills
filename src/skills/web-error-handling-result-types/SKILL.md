@@ -5,64 +5,61 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 
 # TypeScript Result Type Patterns
 
-> **Quick Guide:** Result types make errors explicit in function signatures, forcing callers to handle both success and failure cases. Use for expected/recoverable errors (validation, API calls, parsing). Keep exceptions for truly exceptional situations (programming bugs, unrecoverable errors). Result types are ~300x faster than exceptions.
+> **Quick Guide:** A `Result<T, E>` is a discriminated union on `ok`, so TypeScript refuses to read `value` until the caller has checked. That moves a function's failure modes into its signature, where an exception hides them. Use it for expected failures — validation, parsing, requests — and keep exceptions for bugs and for conditions nothing downstream can act on. A custom implementation is about forty lines and the recommended default; the whole surface is in this skill.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — the Result module, typed error definitions, wrapping throwing code, pattern matching
+- [examples/async.md](examples/async.md) — `Promise<Result>`, async chaining, retry, converting a promise
+- [examples/combining.md](examples/combining.md) — fail-fast, collect-all, object and sequential combination
+- [reference.md](reference.md) — operation lookup, what Results do not catch, error-type templates
+
+---
+
+## Which path applies
+
+- **Nothing exists yet** — write the module: the union, `ok`, `err`, `map`, `flatMap`, `match`,
+  `tryCatch`. [examples/core.md](examples/core.md) is the whole file.
+- **A library owns the type** — the operations are named differently but compose identically;
+  [reference.md](reference.md) maps the names.
+- **The failing operation is async** — the type is `Promise<Result<T, E>>` and the awaiting is the
+  caller's; see [examples/async.md](examples/async.md).
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing Result code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Check `result.ok` before reading `value` or `error`.** The union narrows only through that check, so TypeScript will refuse either access until it is made — and a runtime `undefined` is what a bypassed check produces.
 
-**(You MUST check result.ok before accessing result.value or result.error - TypeScript enforces this)**
+**Wrap every throwing call inside a Result-returning function in `tryCatch`.** `JSON.parse` and its kin throw past the return type, so one unwrapped call makes the signature a lie and the caller's exhaustive handling incomplete.
 
-**(You MUST wrap ALL throwable operations (JSON.parse, etc.) in tryCatch when inside Result-returning functions)**
+**Give each error a discriminant field — `code` or `type` — rather than typing it as `Error` or `string`.** The discriminant is what lets the caller `switch` and lets TypeScript check the switch is exhaustive; a bare message can only be displayed.
 
-**(You MUST use typed error objects with discriminant properties (code, type) - NOT generic Error or string)**
+**Chain with `flatMap` where each step returns a Result.** The error type unions itself and the first failure short-circuits the rest, which is what nested `if (result.ok)` blocks are reimplementing by hand.
 
-**(You MUST handle ALL Result values - never ignore return value of Result-returning functions)**
-
-**(You MUST use flatMap/andThen for chaining Results - NOT nested if statements)**
+**Do something with every Result you receive.** A discarded one is a failure that never happened as far as the rest of the program is concerned, and no type error marks it.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Result type, Either type, ok err, railway-oriented programming, error as value, flatMap andThen, tryCatch, neverthrow, Effect Either, discriminated union error, typed errors, error handling Result
+**Auto-detection:** Result type, Either type, ok err, railway-oriented programming, error as value, flatMap andThen, tryCatch, unwrapOr, combineWithAllErrors, discriminated union error, typed errors
 
-**When to use:**
+**Applies to:**
 
-- Handling expected, recoverable errors (validation, parsing, API calls)
-- Building APIs where callers need to know all failure modes
-- Performance-critical code (Results are ~300x faster than exceptions)
-- Creating explicit error contracts in function signatures
-- Chaining operations that may fail (railway-oriented programming)
+- Expected, recoverable failures — validation, parsing, requests, business rules
+- Function signatures that have to name every way they can fail
+- Chaining fallible steps so the first failure skips the rest
+- Collecting every failure at once, as form validation needs
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Basic Result type definition and usage
-- Mapping success and error values
-- Chaining operations with flatMap/andThen
-- Combining multiple Results (fail-fast and collect-all)
-- Wrapping throwable operations
-- Async Result patterns
-- Pattern matching on Results
-
-**When NOT to use:**
-
-- Truly exceptional/unexpected situations (use exceptions)
-- Unrecoverable errors (configuration missing at startup)
-- Optional values without error info (use `T | null` or Option type)
-- Simple boolean checks (use plain boolean)
-- Framework boundaries that expect exceptions (framework error handlers)
-
-**Detailed Resources:**
-
-- For code examples, see [examples/core.md](examples/core.md)
-- For async patterns, see [examples/async.md](examples/async.md)
-- For combining multiple Results, see [examples/combining.md](examples/combining.md)
-- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+- Render-phase failures — a component that throws is caught by whatever wraps it, and a Result never reaches that path.
+- Transport and caching — a Result describes the outcome of a request; issuing, retrying and caching it belong to whatever fetches.
+- Schema validation — a validator that reports issues has its own result shape; wrap it at the boundary and carry its report as your error payload.
+- Turning a failure into a response — the status code an error maps to is the API layer's rule, and this skill only guarantees the error arrives typed.
 
 ---
 
@@ -70,18 +67,16 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 
 ## Philosophy
 
-Result types bring **errors into the type system**, making them impossible to ignore. Unlike exceptions which create hidden control flow, Results are values that must be explicitly handled. The key principle is **errors as data** - a function that can fail returns `Result<T, E>` where both success and failure are first-class citizens.
+An exception is invisible control flow: it leaves no trace in the type, so the only way to know a
+function throws is to read it or to be surprised in production. A Result puts the same information in
+the signature, where the compiler enforces it.
 
-**Core principles:**
+The cost is real — every caller handles or propagates, and the error union grows as a chain
+lengthens. That is why the boundary matters: convert throwing code to Results on the way in, and
+convert Results to whatever the outside world wants on the way out. In between, nothing throws.
 
-1. **Explicit over implicit** - Function signatures show exactly what can go wrong
-2. **Composition over nesting** - Chain operations with map/flatMap instead of nested if/try
-3. **Type safety over runtime checks** - TypeScript prevents accessing wrong property
-4. **Performance over convenience** - Results are ~300x faster than throwing exceptions
-
-**The Railway Metaphor:**
-
-Think of operations as railway tracks. Success keeps you on the main track. Errors switch you to the error track. Once on the error track, subsequent operations are skipped until you explicitly handle the error.
+**The railway:** success runs the main line, and the first error switches to the parallel one, where
+every later step is skipped until something explicitly handles it.
 
 ```
      parseNumber     validatePositive     double
@@ -94,122 +89,77 @@ ERR                 ────────────────────
 
 ---
 
+<decision_framework>
+
+## Result, exception, or nullable
+
+```
+Can the caller do something about this failure?
+├─ NO — it is a bug or a condition nothing can act on → throw
+│   ├─ Index out of bounds, invalid internal state
+│   └─ Missing startup configuration, unreachable database at boot
+└─ YES → What does the failure need to carry?
+    ├─ Nothing but its own absence → T | null
+    ├─ A reason the caller branches on → Result<T, E>
+    └─ Several distinct reasons → Result<T, E> with a discriminated E
+```
+
+A `Result<User, NotFoundError>` whose error carries only `code: "NOT_FOUND"` is a nullable wearing a
+costume. Reach for the Result when the caller's next action differs by reason.
+
+**Fail fast or collect everything:** one invalid field in a form is not a reason to hide the other
+four, so form validation collects; a chain where step two consumes step one's output has nothing to
+collect and short-circuits.
+
+Returning a value also costs far less than throwing one, because a thrown error captures a stack
+trace and unwinds; [reference.md](reference.md) carries the measured comparison. That is a tiebreaker
+on a hot path rather than a reason on its own.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic Result Type Definition
+### Pattern 1: The type and its constructors
 
-The minimal Result type uses a discriminated union with `ok` as the discriminant.
-
-#### Type Definition
+`ok` as the discriminant, `readonly` throughout, `never` on the other side so inference stays clean.
 
 ```typescript
-// result.ts - Zero-dependency implementation
 export type Result<T, E = Error> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: E };
 
-// Constructor functions
-export const ok = <T>(value: T): Result<T, never> => ({
-  ok: true,
-  value,
-});
-
-export const err = <E>(error: E): Result<never, E> => ({
-  ok: false,
-  error,
-});
+export const ok = <T>(value: T): Result<T, never> => ({ ok: true, value });
+export const err = <E>(error: E): Result<never, E> => ({ ok: false, error });
 ```
 
-**Why good:** Discriminated union enables TypeScript narrowing, readonly prevents mutation, `never` in constructors enables type inference, zero dependencies
+Full code: [examples/core.md](examples/core.md)
 
-#### Usage
+### Pattern 2: `map` and `mapError`
 
-```typescript
-// ✅ Good Example - Explicit error handling
-interface DivisionError {
-  code: "DIVISION_BY_ZERO";
-  message: string;
-}
-
-const DIVISION_BY_ZERO_ERROR: DivisionError = {
-  code: "DIVISION_BY_ZERO",
-  message: "Cannot divide by zero",
-};
-
-function divide(a: number, b: number): Result<number, DivisionError> {
-  if (b === 0) {
-    return err(DIVISION_BY_ZERO_ERROR);
-  }
-  return ok(a / b);
-}
-
-// TypeScript FORCES handling both cases
-const result = divide(10, 2);
-if (result.ok) {
-  console.log(`Result: ${result.value}`); // TypeScript knows: number
-} else {
-  console.error(`Error: ${result.error.message}`); // TypeScript knows: DivisionError
-}
-```
-
-**Why good:** Error handling is mandatory (not optional), TypeScript narrows types in each branch, error type is known and actionable, pre-created error object avoids allocation in hot paths
+Each transforms one side and passes the other through untouched, which is what makes them safe to
+apply to a Result you have not checked.
 
 ```typescript
-// ❌ Bad Example - Ignoring Result
-function process(input: string): void {
-  divide(10, 0); // Result is discarded!
-  console.log("Done"); // Continues as if nothing went wrong
-}
-```
-
-**Why bad:** Defeats the purpose of Result types - errors are silently ignored, no type error because void function discards all returns
-
----
-
-### Pattern 2: Mapping Values (map and mapError)
-
-Transform success or error values without affecting the other case.
-
-```typescript
-// map - Transform success value
 export const map = <T, U, E>(
   result: Result<T, E>,
   fn: (value: T) => U,
 ): Result<U, E> => (result.ok ? ok(fn(result.value)) : result);
 
-// mapError - Transform error value
 export const mapError = <T, E, F>(
   result: Result<T, E>,
   fn: (error: E) => F,
 ): Result<T, F> => (result.ok ? result : err(fn(result.error)));
 ```
 
-#### Usage
+`mapError` is where context is added — the operation that failed, the input that caused it.
 
-```typescript
-// ✅ Good Example - Chaining transformations
-const DOUBLE_MULTIPLIER = 2;
+### Pattern 3: `flatMap` for chaining
 
-const result = divide(10, 2);
-const doubled = map(result, (n) => n * DOUBLE_MULTIPLIER);
-// Result<number, DivisionError> with value 10
-
-// Transform error to add context
-const withContext = mapError(divide(10, 0), (e) => ({
-  ...e,
-  context: "calculating ratio",
-}));
-```
-
-**Why good:** Transforms only the relevant case, preserves error if already failed, composable with other operations
-
----
-
-### Pattern 3: Chaining Operations (flatMap/andThen)
-
-Chain operations that each return Results. This is the core of railway-oriented programming.
+The step returns a Result of its own, so the error types union and the first failure ends the chain.
 
 ```typescript
 export const flatMap = <T, U, E, F>(
@@ -217,72 +167,16 @@ export const flatMap = <T, U, E, F>(
   fn: (value: T) => Result<U, F>,
 ): Result<U, E | F> => (result.ok ? fn(result.value) : result);
 
-// Alias - some prefer this name
-export const andThen = flatMap;
-```
-
-#### Usage
-
-```typescript
-// ✅ Good Example - Chaining multiple operations
-interface ParseError {
-  code: "PARSE_ERROR";
-  message: string;
-}
-
-interface ValidationError {
-  code: "VALIDATION_ERROR";
-  field: string;
-}
-
-const MIN_VALUE = 0;
-
-function parseNumber(input: string): Result<number, ParseError> {
-  const num = Number(input);
-  if (Number.isNaN(num)) {
-    return err({ code: "PARSE_ERROR", message: `Invalid number: ${input}` });
-  }
-  return ok(num);
-}
-
-function validatePositive(num: number): Result<number, ValidationError> {
-  if (num <= MIN_VALUE) {
-    return err({ code: "VALIDATION_ERROR", field: "number" });
-  }
-  return ok(num);
-}
-
-// Chain operations - error short-circuits the chain
-const result = flatMap(parseNumber("42"), validatePositive);
+const parsed = flatMap(parseNumber(input), validatePositive);
 // Result<number, ParseError | ValidationError>
 ```
 
-**Why good:** Each step can fail with different error type, error in early step skips later steps, error types are unioned automatically
+Full code: [examples/core.md](examples/core.md)
 
-```typescript
-// ❌ Bad Example - Nested if statements
-function processInput(
-  input: string,
-): Result<number, ParseError | ValidationError> {
-  const parseResult = parseNumber(input);
-  if (parseResult.ok) {
-    const validateResult = validatePositive(parseResult.value);
-    if (validateResult.ok) {
-      return ok(validateResult.value);
-    }
-    return validateResult;
-  }
-  return parseResult;
-}
-```
+### Pattern 4: `tryCatch` at the boundary
 
-**Why bad:** Deep nesting, harder to read, doesn't scale with more operations, error handling scattered
-
----
-
-### Pattern 4: Wrapping Throwable Functions
-
-Convert exception-throwing code to Result-returning code at boundaries.
+Throwing code is converted where it enters, and the error is mapped to this domain's type in the
+same call.
 
 ```typescript
 export const tryCatch = <T, E>(
@@ -295,286 +189,112 @@ export const tryCatch = <T, E>(
     return err(onError(error));
   }
 };
+
+const parsed = tryCatch(
+  () => JSON.parse(json) as Config,
+  (error): ParseError => ({
+    code: "PARSE_ERROR",
+    message: String(error),
+    input: json,
+  }),
+);
 ```
 
-#### Usage
+A `JSON.parse` left unwrapped inside a Result-returning function is the commonest way the signature
+stops being true.
 
-```typescript
-// ✅ Good Example - Wrapping JSON.parse
-interface JsonParseError {
-  code: "JSON_PARSE_ERROR";
-  message: string;
-  input: string;
-}
+Full code: [examples/core.md](examples/core.md)
 
-function safeJsonParse<T>(json: string): Result<T, JsonParseError> {
-  return tryCatch(
-    () => JSON.parse(json) as T,
-    (error): JsonParseError => ({
-      code: "JSON_PARSE_ERROR",
-      message: error instanceof Error ? error.message : "Unknown parse error",
-      input: json,
-    }),
-  );
-}
+### Pattern 5: `match` for exhaustive handling
 
-const parsed = safeJsonParse<{ name: string }>('{"name": "John"}');
-if (parsed.ok) {
-  console.log(parsed.value.name); // TypeScript knows shape
-}
-```
-
-**Why good:** Converts exceptions to Results at boundary, error carries context (input), typed error enables proper handling
-
-```typescript
-// ❌ Bad Example - Mixing throw and Result
-function parseUser(json: string): Result<User, ParseError> {
-  const data = JSON.parse(json); // Can throw SyntaxError!
-  if (!data.name) {
-    return err({ code: "PARSE_ERROR", message: "Missing name" });
-  }
-  return ok(data);
-}
-```
-
-**Why bad:** Function signature lies - can throw exceptions despite returning Result, caller doesn't know to wrap in try/catch
-
----
-
-### Pattern 5: Pattern Matching (match)
-
-Handle both cases in a single expression with exhaustive pattern matching.
+Both sides answered in one expression, which is what makes it the natural converter at an outbound
+boundary.
 
 ```typescript
 export const match = <T, E, U>(
   result: Result<T, E>,
   handlers: { ok: (value: T) => U; err: (error: E) => U },
 ): U => (result.ok ? handlers.ok(result.value) : handlers.err(result.error));
-```
 
-#### Usage
-
-```typescript
-// ✅ Good Example - Pattern matching
-const message = match(divide(10, 2), {
-  ok: (value) => `Result: ${value}`,
-  err: (error) => `Error: ${error.message}`,
-});
-
-// For HTTP responses
-const response = match(fetchUser("123"), {
+const response = match(loadUser(id), {
   ok: (user) => ({ status: 200, body: user }),
-  err: (error) => {
-    switch (error.code) {
-      case "NOT_FOUND":
-        return { status: 404, body: { message: `User ${error.id} not found` } };
-      case "UNAUTHORIZED":
-        return { status: 401, body: { message: "Please log in" } };
-      default:
-        return { status: 500, body: { message: "Internal error" } };
-    }
-  },
+  err: (error) => toHttpResponse(error),
 });
 ```
 
-**Why good:** Both cases handled in one expression, TypeScript ensures exhaustiveness, clean transformation to other types
+Full code: [examples/core.md](examples/core.md)
 
----
+### Pattern 6: Discriminated error unions
 
-### Pattern 6: Typed Error Objects
-
-Define specific error types for each failure mode using discriminated unions.
+Each variant carries what its own handler needs, and the union names every way the function fails.
 
 ```typescript
-// ✅ Good Example - Typed error hierarchy
-interface ValidationError {
-  code: "VALIDATION_ERROR";
-  field: string;
-  message: string;
-}
+type UserError =
+  | { readonly code: "NOT_FOUND"; readonly userId: string }
+  | {
+      readonly code: "VALIDATION_ERROR";
+      readonly field: string;
+      readonly message: string;
+    }
+  | { readonly code: "NETWORK_ERROR"; readonly statusCode: number };
 
-interface NotFoundError {
-  code: "NOT_FOUND";
-  resource: string;
-  id: string;
-}
-
-interface NetworkError {
-  code: "NETWORK_ERROR";
-  statusCode: number;
-  message: string;
-}
-
-// Union of all errors for a domain
-type UserError = ValidationError | NotFoundError | NetworkError;
-
-// Function signature documents all failure modes
-function fetchUser(id: string): Promise<Result<User, UserError>> {
-  // Implementation
-}
-
-// Caller can handle each case specifically
-const result = await fetchUser("123");
 if (!result.ok) {
   switch (result.error.code) {
     case "NOT_FOUND":
-      console.log(`User ${result.error.id} not found`);
-      break;
+      return showMissing(result.error.userId);
     case "VALIDATION_ERROR":
-      showFieldError(result.error.field);
-      break;
+      return highlightField(result.error.field);
     case "NETWORK_ERROR":
-      showRetryButton();
-      break;
+      return offerRetry();
   }
 }
 ```
 
-**Why good:** Each error type carries relevant data, switch exhaustiveness checking, callers know exactly what can fail
+Adding a variant reddens every switch that does not handle it, which is the whole return on the
+discriminant.
+
+Full code: [examples/core.md](examples/core.md)
+
+### Pattern 7: Combining several Results
+
+Fail-fast returns the first error; collect-all returns every one.
 
 ```typescript
-// ❌ Bad Example - Generic error types
-function fetchUser(id: string): Result<User, Error> {
-  // Caller can't distinguish error types
-}
-
-function fetchUser(id: string): Result<User, string> {
-  // Even worse - just a message, no structure
-}
+export const combine = <T, E>(results: Result<T, E>[]): Result<T[], E> => {
+  const values: T[] = [];
+  for (const result of results) {
+    if (!result.ok) return result;
+    values.push(result.value);
+  }
+  return ok(values);
+};
 ```
 
-**Why bad:** Caller can't handle different errors differently, error information is lost, defeats type safety benefits
+Full code: [examples/combining.md](examples/combining.md)
 
 </patterns>
 
 ---
 
-<decision_framework>
-
-## Decision Framework
-
-### When to Use Result vs Exceptions
-
-```
-Is this an expected, recoverable error?
-├─ YES → Use Result type
-│   ├─ User input validation
-│   ├─ API call that might fail
-│   ├─ Parsing untrusted data
-│   └─ Business rule violations
-└─ NO → Is it a programming bug?
-    ├─ YES → Use exceptions (let it crash)
-    │   ├─ Index out of bounds (caller bug)
-    │   ├─ Null reference (missing check)
-    │   └─ Invalid state (logic error)
-    └─ NO → Is it unrecoverable?
-        ├─ YES → Use exceptions
-        │   ├─ Missing required config
-        │   └─ Database connection failed
-        └─ NO → Evaluate case by case
-```
-
-### Choosing a Result Library
-
-```
-What are your requirements?
-├─ Zero dependencies, full control → Custom implementation (recommended default)
-├─ Full effect system + error channel → Effect (active ecosystem, steeper learning curve)
-└─ Just learning → Custom implementation (understand the pattern first)
-```
-
-> **Note:** neverthrow and fp-ts are no longer actively maintained. Custom implementations cover most needs. Effect is the modern choice for complex error handling ecosystems.
-
-### Result vs Nullable
-
-```
-What information does failure carry?
-├─ Just "not found" → Use T | null
-├─ Error with details → Use Result<T, E>
-│   ├─ Why it failed
-│   ├─ What to do about it
-│   └─ Context for logging
-└─ Multiple failure modes → Use Result<T, E>
-```
-
-</decision_framework>
-
----
-
-<integration>
-
-## Integration Points
-
-**Result types integrate with your application through:**
-
-- **Function signatures**: Return type documents all failure modes
-- **Error boundaries**: Convert Results to UI at component level
-- **API responses**: Transform Results to HTTP status codes
-- **Logging**: Extract error details for observability
-
-**Results work alongside:**
-
-- **Exceptions**: For truly exceptional situations at outer boundaries
-- **Validation libraries**: Wrap validation results in Result type
-- **Data fetching**: Wrap fetch/API calls in Result-returning functions
-
-**Results do NOT replace:**
-
-- **UI error boundaries**: Framework error boundaries catch render errors; Results handle business logic errors
-- **HTTP error handling**: Convert Results to appropriate status codes at API boundary
-- **Form validation**: Use Results internally, display errors via your form library
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Breaks at runtime:**
 
-- Ignoring Result return values - defeats entire purpose of Result types
-- Mixing throw and Result in same function - signature lies about error contract
-- Using generic `Error` or `string` as error type - loses type safety benefits
-- Unwrapping Result without checking `ok` - runtime crash waiting to happen
-- Not wrapping throwable operations (`JSON.parse`) - hidden exceptions in Result code
+- Reading `result.value` without checking `ok` — `undefined` at the point of use, and a non-null assertion or a cast is what got it past the compiler.
+- A throwing call left unwrapped inside a Result-returning function — the exception escapes a caller who was told there was nothing to catch.
+- Treating an error object as `instanceof Error` — a plain discriminated object is not one, so an `instanceof` check silently takes the wrong branch.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Deep nesting instead of flatMap - hard to read, doesn't compose
-- Creating new error objects in hot paths - pre-create static error constants
-- Error type too generic for domain - caller can't handle specifically
-
-**Gotchas & Edge Cases:**
-
-- `flatMap` unions error types - can grow large with long chains
-- TypeScript narrowing requires checking `result.ok` (not just truthy check on the result object)
-- Error objects are usually not `instanceof Error` - custom comparison needed
-- Result of `void` operation: use `Result<void, E>` not `Result<undefined, E>`
-- Async Results: always await before checking `ok` property
-- Pre-created error constants help performance but lose dynamic context
+- Discarding a Result compiles cleanly. Nothing in the type system marks the failure you dropped.
+- `map` with a function that itself returns a Result gives `Result<Result<T, F>, E>` — it type-checks, and the caller has to unwrap twice to reach anything. That doubling is what `flatMap` exists to prevent.
+- `flatMap` unions error types, so a long chain ends with an error union nobody wants to handle — narrow it with `mapError` at the point the extra variants stop mattering.
+- `Result<void, E>` rather than `Result<undefined, E>` for an operation with no success value; the second forces callers to name a value that does not exist.
+- A `Promise<Result<T, E>>` is truthy while it is pending, so an unawaited one passes an `ok` check that means nothing.
+- Rethrowing at a boundary throws the typed error away — the reason the caller could have branched on becomes a string.
+- `combineWithAllErrors` returning an array whose first element is all anyone displays wastes the work; either show them all or fail fast.
+- A pre-created error constant saves an allocation and loses the context that would have gone in it.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST check result.ok before accessing result.value or result.error - TypeScript enforces this)**
-
-**(You MUST wrap ALL throwable operations (JSON.parse, etc.) in tryCatch when inside Result-returning functions)**
-
-**(You MUST use typed error objects with discriminant properties (code, type) - NOT generic Error or string)**
-
-**(You MUST handle ALL Result values - never ignore return value of Result-returning functions)**
-
-**(You MUST use flatMap/andThen for chaining Results - NOT nested if statements)**
-
-**Failure to follow these rules will result in silent error handling bugs, loss of type safety, and defeats the purpose of using Result types.**
-
-</critical_reminders>
