@@ -1,6 +1,6 @@
 # MobX - Core Examples
 
-> Essential patterns for MobX store creation and React integration. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Store creation and React integration. See [SKILL.md](../SKILL.md) for the decision frameworks and red flags.
 
 **Additional Examples:**
 
@@ -31,17 +31,12 @@ class TodoStore {
   filter: typeof ACTIVE_STATUS | typeof COMPLETED_STATUS | "all" = "all";
 
   constructor() {
-    // Infers: todos -> observable, filter -> observable,
-    // activeTodos -> computed, addTodo/removeTodo/setFilter -> action
+    // todos/filter -> observable, getters -> computed, methods -> action
     makeAutoObservable(this);
   }
 
   get activeTodos(): Todo[] {
     return this.todos.filter((todo) => todo.status === ACTIVE_STATUS);
-  }
-
-  get completedTodos(): Todo[] {
-    return this.todos.filter((todo) => todo.status === COMPLETED_STATUS);
   }
 
   get filteredTodos(): Todo[] {
@@ -50,11 +45,7 @@ class TodoStore {
   }
 
   addTodo(title: string): void {
-    this.todos.push({
-      id: crypto.randomUUID(),
-      title,
-      status: ACTIVE_STATUS,
-    });
+    this.todos.push({ id: crypto.randomUUID(), title, status: ACTIVE_STATUS });
   }
 
   removeTodo(id: string): void {
@@ -68,21 +59,15 @@ class TodoStore {
         todo.status === ACTIVE_STATUS ? COMPLETED_STATUS : ACTIVE_STATUS;
     }
   }
-
-  setFilter(
-    filter: typeof ACTIVE_STATUS | typeof COMPLETED_STATUS | "all",
-  ): void {
-    this.filter = filter;
-  }
 }
 
 const todoStore = new TodoStore();
 export { todoStore, TodoStore };
 ```
 
-**Why good:** `makeAutoObservable` auto-infers all annotations, getters become cached computed values, methods become batched actions, named constants avoid magic strings, named exports follow conventions
+**Why good:** One call infers every annotation, so the getters cache as computed values and the methods batch as actions without a line of annotation to keep in sync.
 
-### Good Example - makeAutoObservable with autoBind
+### Good Example - autoBind for Callback Safety
 
 ```typescript
 // stores/counter-store.ts
@@ -90,27 +75,20 @@ import { makeAutoObservable } from "mobx";
 
 const INITIAL_COUNT = 0;
 const INCREMENT_STEP = 1;
-const DOUBLE_MULTIPLIER = 2;
 
 class CounterStore {
   count = INITIAL_COUNT;
 
   constructor() {
-    // autoBind: true binds all methods to `this` automatically
-    // Safe to pass methods as callbacks: onClick={store.increment}
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
   get doubled(): number {
-    return this.count * DOUBLE_MULTIPLIER;
+    return this.count * 2;
   }
 
   increment(): void {
     this.count += INCREMENT_STEP;
-  }
-
-  decrement(): void {
-    this.count -= INCREMENT_STEP;
   }
 
   reset(): void {
@@ -121,9 +99,9 @@ class CounterStore {
 export { CounterStore };
 ```
 
-**Why good:** `autoBind: true` auto-binds all methods so `store.increment` is safe as a callback without `.bind(this)` or arrow wrappers, named constants for initial values and step
+**Why good:** `autoBind: true` binds every method, so `onClick={store.increment}` keeps its `this` without a `.bind` or an arrow wrapper at each call site.
 
-### Good Example - makeAutoObservable with Overrides
+### Good Example - Excluding an Injected Dependency
 
 ```typescript
 // stores/user-store.ts
@@ -132,14 +110,10 @@ import type { TransportLayer } from "../transport-layer";
 
 class UserStore {
   users: User[] = [];
-  // Not observable - injected dependency
   private transportLayer: TransportLayer;
 
   constructor(transportLayer: TransportLayer) {
-    makeAutoObservable(this, {
-      // Exclude transportLayer from observability
-      transportLayer: false,
-    });
+    makeAutoObservable(this, { transportLayer: false });
     this.transportLayer = transportLayer;
   }
 
@@ -155,52 +129,44 @@ class UserStore {
 export { UserStore };
 ```
 
-**Why good:** Override map excludes non-observable dependencies from tracking, transport layer is injected for testability, explicit exclusion prevents MobX from trying to make non-serializable objects observable
+**Why good:** The override map keeps MobX from deep-converting a transport client that was never meant to be observed, and injecting it keeps the store testable.
 
-### Bad Example - Missing makeAutoObservable
+### Bad Example - No makeAutoObservable Call
 
 ```typescript
-// stores/broken-store.ts
 class BrokenStore {
   count = 0;
 
-  // MISSING: makeAutoObservable(this) in constructor!
   constructor() {
-    // Store properties will NOT be observable
-    // Components using this store will NEVER re-render
+    // MISSING: makeAutoObservable(this)
   }
 
   increment(): void {
     this.count++;
   }
 }
-
-export default BrokenStore; // BAD: default export
 ```
 
-**Why bad:** Without `makeAutoObservable` or `makeObservable`, properties are plain JS (not observable), components will never re-render on changes, default export violates conventions
+**Why bad:** The properties stay plain JavaScript, so nothing subscribes and no component reading this store ever re-renders. The same omission in a factory function fails the same way.
 
 ---
 
 ## Pattern 2: Store Creation with makeObservable
 
-### Good Example - Explicit Annotations (Required for Inheritance)
+### Good Example - Explicit Annotations for a Base Class
 
 ```typescript
 // stores/base-entity-store.ts
 import { makeObservable, observable, computed, action } from "mobx";
-
-const INITIAL_LOADING_STATE = false;
 
 interface Entity {
   id: string;
   name: string;
 }
 
-// Base class MUST use makeObservable (makeAutoObservable forbids super/subclass)
 class BaseEntityStore<T extends Entity> {
   entities: T[] = [];
-  isLoading = INITIAL_LOADING_STATE;
+  isLoading = false;
 
   constructor() {
     makeObservable(this, {
@@ -234,20 +200,19 @@ export { BaseEntityStore };
 export type { Entity };
 ```
 
-**Why good:** Explicit annotations required because class is designed for inheritance, each property/method clearly annotated, generic type parameter for reusable base store, named constant for initial state
+**Why good:** A class meant to be extended has to annotate explicitly — `makeAutoObservable` refuses any class in an inheritance chain.
 
-### Good Example - Subclass Extending Base Store
+### Good Example - Subclass Extending the Base Store
 
 ```typescript
 // stores/product-store.ts
 import { makeObservable, observable, computed, action } from "mobx";
 import { BaseEntityStore } from "./base-entity-store";
+import type { Entity } from "./base-entity-store";
 
 const LOW_STOCK_THRESHOLD = 10;
 
-interface Product {
-  id: string;
-  name: string;
+interface Product extends Entity {
   price: number;
   stock: number;
 }
@@ -256,7 +221,7 @@ class ProductStore extends BaseEntityStore<Product> {
   selectedProductId: string | null = null;
 
   constructor() {
-    super(); // Base class sets up its own observables
+    super();
     makeObservable(this, {
       selectedProductId: observable,
       selectedProduct: computed,
@@ -281,44 +246,32 @@ class ProductStore extends BaseEntityStore<Product> {
 export { ProductStore };
 ```
 
-**Why good:** Subclass uses `makeObservable` (required for inheritance), calls `super()` for base class setup, adds its own annotations for new properties, named constant for stock threshold
+**Why good:** `super()` sets up the base observables and the subclass annotates only what it adds.
 
-> **Note:** If a subclass _overrides_ a parent method/computed/flow, use the `override` annotation instead of `action`/`computed`/`flow`: e.g. `{ removeEntity: override }`. Only members with new implementations need `override`; new properties use normal annotations as shown above.
+> **Overriding a member:** a subclass that replaces a parent method, computed or flow annotates it `override` rather than `action`/`computed`/`flow` — `{ removeEntity: override }`. New members use the normal annotations.
 
-### Bad Example - makeAutoObservable on Subclass
+### Bad Example - makeAutoObservable on a Subclass
 
 ```typescript
-// stores/broken-product-store.ts
-import { makeAutoObservable } from "mobx";
-import { BaseEntityStore } from "./base-entity-store";
-
 class BrokenProductStore extends BaseEntityStore<Product> {
-  selectedProductId: string | null = null;
-
   constructor() {
     super();
-    // THROWS: makeAutoObservable cannot be used on subclasses!
-    makeAutoObservable(this);
+    makeAutoObservable(this); // THROWS at construction
   }
 }
-
-export { BrokenProductStore };
 ```
 
-**Why bad:** `makeAutoObservable` throws at runtime on classes that extend another class, must use `makeObservable` with explicit annotations for any class using inheritance
+**Why bad:** `makeAutoObservable` throws on any class that extends another, and the throw happens at construction rather than at the first observation — so it surfaces as a blank screen rather than a stale one.
 
 ---
 
 ## Pattern 3: Factory Function Stores
-
-### Good Example - Factory Function with makeAutoObservable
 
 ```typescript
 // stores/timer-store.ts
 import { makeAutoObservable } from "mobx";
 
 const INITIAL_SECONDS = 0;
-const TICK_INTERVAL_MS = 1000;
 const SECONDS_PER_MINUTE = 60;
 
 interface TimerStore {
@@ -329,7 +282,7 @@ interface TimerStore {
 }
 
 function createTimerStore(): TimerStore {
-  const store = makeAutoObservable({
+  return makeAutoObservable({
     secondsPassed: INITIAL_SECONDS,
 
     get minutesPassed(): number {
@@ -344,33 +297,13 @@ function createTimerStore(): TimerStore {
       this.secondsPassed = INITIAL_SECONDS;
     },
   });
-
-  return store;
 }
 
 export { createTimerStore };
 export type { TimerStore };
 ```
 
-**Why good:** Factory function avoids `this`/`new` complexity, `makeAutoObservable` infers all annotations on plain objects, getters become computed, methods become actions, named constants, typed return interface
-
-### Bad Example - Factory Without makeAutoObservable
-
-```typescript
-// stores/broken-timer.ts
-function createBrokenTimer() {
-  return {
-    secondsPassed: 0,
-    tick() {
-      this.secondsPassed++; // Not observable - won't trigger re-renders
-    },
-  };
-}
-
-export default createBrokenTimer; // BAD: default export
-```
-
-**Why bad:** Plain object is NOT observable, mutations will not trigger reactions or component re-renders, default export violates conventions, no type annotation on return value
+**Why good:** No `this` binding to get wrong and no `new` at the call site; `makeAutoObservable` infers the same annotations on a plain object as on a class, and a closure can hide members the returned interface does not name.
 
 ---
 
@@ -383,8 +316,6 @@ export default createBrokenTimer; // BAD: default export
 import { observer } from "mobx-react-lite";
 import { todoStore } from "../stores/todo-store";
 
-// observer tracks which observables are read during render
-// and re-renders ONLY when those specific values change
 export const TodoList = observer(function TodoList() {
   return (
     <div>
@@ -399,7 +330,7 @@ export const TodoList = observer(function TodoList() {
 });
 ```
 
-**Why good:** Named function expression gives proper name in React DevTools, `observer` tracks `activeTodos.length` and `filteredTodos` reads, component only re-renders when those specific computed values change
+**Why good:** `observer` records exactly which observables were read during the render — here two computed values — and re-renders on those alone. The named function expression is what React DevTools shows.
 
 ### Good Example - Pass Observable Objects, Not Primitives
 
@@ -410,55 +341,45 @@ import type { Todo } from "../stores/todo-store";
 import { todoStore, COMPLETED_STATUS } from "../stores/todo-store";
 
 interface TodoItemProps {
-  todo: Todo; // Pass the observable object, NOT extracted primitives
+  todo: Todo;
 }
 
-// Each TodoItem only re-renders when ITS todo changes
 export const TodoItem = observer(function TodoItem({ todo }: TodoItemProps) {
   return (
     <li data-completed={todo.status === COMPLETED_STATUS}>
       <span>{todo.title}</span>
       <button onClick={() => todoStore.toggleTodo(todo.id)}>Toggle</button>
-      <button onClick={() => todoStore.removeTodo(todo.id)}>Remove</button>
     </li>
   );
 });
 ```
 
-**Why good:** Receives the observable `todo` object (not destructured primitives), MobX tracks `todo.title` and `todo.status` reads within this specific component, only this item re-renders when its todo changes
+**Why good:** The property reads happen inside this component, so editing one todo re-renders one row instead of the whole list. Passing `todo.title` as a prop would move the read up to the parent and re-render every row.
 
 ### Bad Example - Missing observer
 
 ```typescript
-// components/broken-todo-count.tsx
-
-// MISSING observer wrapper!
 export const BrokenTodoCount = () => {
-  // This reads observables but component is NOT wrapped in observer
-  // It will render once and NEVER update when todos change
   return <span>{todoStore.activeTodos.length} active todos</span>;
 };
 ```
 
-**Why bad:** Without `observer`, MobX has no way to track observable reads or trigger re-renders, component renders once with initial value and never updates
+**Why bad:** Nothing subscribes to the read, so the count renders once and then never changes. This is the most common MobX bug, and it looks like a data problem rather than a wiring one.
 
-### Bad Example - Destructuring Primitives Before observer
+### Bad Example - Dereferencing Outside the Component
 
 ```typescript
-// components/broken-timer-view.tsx
 import { observer } from "mobx-react-lite";
 import { timerStore } from "../stores/timer-store";
 
-// BAD: Destructuring primitive OUTSIDE the observer component
-const secondsPassed = timerStore.secondsPassed; // Captured once, never updates
+const secondsPassed = timerStore.secondsPassed; // read once, at module load
 
 export const BrokenTimerView = observer(function BrokenTimerView() {
-  // `secondsPassed` is a plain number, not a tracked observable read
   return <span>Seconds: {secondsPassed}</span>;
 });
 ```
 
-**Why bad:** Primitive value extracted outside the observer component is a plain number (not an observable reference), MobX cannot track it, display will be frozen at the value when module loaded
+**Why bad:** The read happened at module evaluation, outside any tracked function, so `secondsPassed` is a frozen number. `observer` tracks reads during render, not variables that once held observables.
 
 ### Good Example - Store Access via React Context
 
@@ -469,7 +390,6 @@ import type { ReactNode } from "react";
 import { todoStore } from "../stores/todo-store";
 import type { TodoStore } from "../stores/todo-store";
 
-// Context for dependency injection ONLY (not state management)
 const StoreContext = createContext<TodoStore | null>(null);
 
 function useStore(): TodoStore {
@@ -480,40 +400,14 @@ function useStore(): TodoStore {
   return store;
 }
 
-function StoreProvider({ children }: { children: ReactNode }): JSX.Element {
-  return (
-    <StoreContext.Provider value={todoStore}>
-      {children}
-    </StoreContext.Provider>
-  );
+function StoreProvider({ children }: { children: ReactNode }) {
+  return <StoreContext.Provider value={todoStore}>{children}</StoreContext.Provider>;
 }
 
 export { StoreProvider, useStore };
 ```
 
-**Why good:** Context used purely for dependency injection (the store value never changes), custom hook with error boundary for missing provider, named exports
-
-### Good Example - Using Store via Context Hook
-
-```typescript
-// components/todo-summary.tsx
-import { observer } from "mobx-react-lite";
-import { useStore } from "../context/store-context";
-
-export const TodoSummary = observer(function TodoSummary() {
-  const store = useStore();
-
-  return (
-    <div>
-      <p>Total: {store.todos.length}</p>
-      <p>Active: {store.activeTodos.length}</p>
-      <p>Completed: {store.completedTodos.length}</p>
-    </div>
-  );
-});
-```
-
-**Why good:** Store accessed via dependency injection hook, `observer` tracks all observable reads, component re-renders only when these specific computed values change
+**Why good:** The context value is the store reference, which never changes — so this is injection, and none of Context's re-render cost applies. Reactivity comes from `observer`, not from the provider. The hook throws rather than handing back `null`, so a missing provider fails at the first read.
 
 ---
 
@@ -527,8 +421,6 @@ import { observer, useLocalObservable } from "mobx-react-lite";
 import type { FormEvent } from "react";
 
 const FIRST_STEP = 0;
-const NAME_STEP = 1;
-const EMAIL_STEP = 2;
 const TOTAL_STEPS = 3;
 const PERCENTAGE_MAX = 100;
 
@@ -537,7 +429,6 @@ export const MultiStepForm = observer(function MultiStepForm() {
     currentStep: FIRST_STEP,
     name: "",
     email: "",
-    plan: "free" as "free" | "pro" | "enterprise",
 
     get isFirstStep(): boolean {
       return this.currentStep === FIRST_STEP;
@@ -553,51 +444,32 @@ export const MultiStepForm = observer(function MultiStepForm() {
 
     get isValid(): boolean {
       switch (this.currentStep) {
-        case FIRST_STEP:
+        case 0:
           return this.name.length > 0;
-        case NAME_STEP:
+        case 1:
           return this.email.includes("@");
-        case EMAIL_STEP:
-          return true;
         default:
-          return false;
+          return true;
       }
     },
 
     nextStep(): void {
-      if (this.currentStep < TOTAL_STEPS - 1) {
-        this.currentStep++;
-      }
+      if (this.currentStep < TOTAL_STEPS - 1) this.currentStep++;
     },
 
     prevStep(): void {
-      if (this.currentStep > FIRST_STEP) {
-        this.currentStep--;
-      }
-    },
-
-    setField(field: "name" | "email" | "plan", value: string): void {
-      this[field] = value as never;
+      if (this.currentStep > FIRST_STEP) this.currentStep--;
     },
   }));
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    // Submit form data
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <progress value={formState.progress} max={PERCENTAGE_MAX} />
-      <p>
-        Step {formState.currentStep + 1} of {TOTAL_STEPS}
-      </p>
-      {/* Step content based on formState.currentStep */}
-      <button
-        type="button"
-        onClick={formState.prevStep}
-        disabled={formState.isFirstStep}
-      >
+      <button type="button" onClick={formState.prevStep} disabled={formState.isFirstStep}>
         Back
       </button>
       <button
@@ -612,29 +484,6 @@ export const MultiStepForm = observer(function MultiStepForm() {
 });
 ```
 
-**Why good:** Complex local state with multiple computed derivations (`progress`, `isValid`, `isFirstStep`, `isLastStep`), state is scoped to this component, computed values auto-cache, methods batch mutations, named constants for step configuration
+**Why good:** Four derivations off two fields, each cached and each recomputed only when its own inputs move. The equivalent in `useState` is four values to keep in step by hand.
 
-### Bad Example - useLocalObservable for Simple State
-
-```typescript
-// components/over-engineered-toggle.tsx
-import { observer, useLocalObservable } from "mobx-react-lite";
-
-// BAD: useLocalObservable is overkill for simple boolean state
-export const OverEngineeredToggle = observer(function OverEngineeredToggle() {
-  const state = useLocalObservable(() => ({
-    isOpen: false,
-    toggle(): void {
-      this.isOpen = !this.isOpen;
-    },
-  }));
-
-  return <button onClick={state.toggle}>{state.isOpen ? "Close" : "Open"}</button>;
-});
-```
-
-**Why bad:** `useLocalObservable` adds MobX overhead for a simple boolean toggle, `useState` with a setter is simpler and more idiomatic React, only use `useLocalObservable` when you need computed values or complex local state
-
-**When to use:** Complex local state with multiple computed derivations, wizard/multi-step forms, local state that benefits from MobX reactivity.
-
-**When not to use:** Simple boolean toggles, single-value state, anything that `useState` handles cleanly.
+**Where it stops paying:** a single boolean. `useLocalObservable(() => ({ isOpen: false, toggle() {...} }))` is more machinery than `useState` for the same behaviour. Reach for it when there are computed values to derive.

@@ -60,7 +60,7 @@ export function piniaLoggerPlugin({ store }: PiniaPluginContext): void {
 // pinia.use(piniaLoggerPlugin);
 ```
 
-**Why good:** Named constant for log prefix, logs both state changes and actions, measures action duration, handles errors
+**Why good:** One plugin registration covers every store, present and future, so instrumentation is never something a new store has to remember to opt into. `$subscribe` and `$onAction` are separate hooks because a state change and an action are separate events — a direct `$patch` fires the first and not the second.
 
 ---
 

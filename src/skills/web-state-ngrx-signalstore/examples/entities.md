@@ -141,7 +141,7 @@ export const TodoStore = signalStore(
 );
 ```
 
-**Why good:** withEntities provides normalized state, entity updaters (setAllEntities, addEntity, etc.), computed for filtered views, additional state with withState, type-safe entity operations
+**Why good:** `withEntities` keeps an `entityMap` keyed by id and an `ids` array, so `updateEntity` reaches one record directly instead of rebuilding the collection around it. `entities()` is a computed view over both, which is why the filtered computeds can read it like an array without giving up the indexed writes.
 
 ### Bad Example - Array Instead of withEntities
 
@@ -181,7 +181,7 @@ export const TodoStore = signalStore(
 );
 ```
 
-**Why bad:** No normalized state structure (no entityMap), O(n) lookups for updates, manual immutable operations, loses withEntities benefits like selectId
+**Why bad:** Every update walks the whole array and allocates a new one, so toggling one todo in a list of a thousand copies a thousand references. The immutability is also hand-written, which is the part that goes wrong quietly — a `map` that returns the original object on the matching branch updates nothing and throws nothing.
 
 ---
 
@@ -309,7 +309,7 @@ export const ProjectStore = signalStore(
 );
 ```
 
-**Why good:** Multiple entity collections in one store, named collections with `collection` option, computed signals for cross-collection queries, cascade delete pattern
+**Why good:** Naming a collection prefixes its signals — `projectEntities()`, `taskEntities()` — so two collections coexist in one store and a computed can join across them. The `{ collection: "task" }` option goes on every updater touching that collection; omitting it targets the default unnamed collection instead, which in a store that has none writes state nothing reads.
 
 ---
 
@@ -382,7 +382,7 @@ export const UserStore = signalStore(
 );
 ```
 
-**Why good:** entityConfig for custom ID field, selectId function extracts non-standard ID, consistent config passed to all entity operations
+**Why good:** The config is declared once and passed to `withEntities` _and_ to every updater. That repetition is load-bearing rather than clumsy: an updater called without it falls back to reading `entity.id`, which is `undefined` here — so the write keys on `undefined` and silently overwrites whichever record was stored under it.
 
 ---
 
@@ -482,7 +482,9 @@ export const NotificationStore = signalStore(
 );
 ```
 
-**Why good:** Sorting in computed (not stored), MAX_NOTIFICATIONS named constant, updateAllEntities for batch updates, efficient entity operations
+**Why good:** The sort lives in a computed rather than in stored order, so inserting a notification does not have to find the right position and the sort re-runs only when the collection actually changes. `[...allNotifications]` before sorting matters: `entities()` returns the collection's own array and `sort` mutates in place, which under the v19 development freeze throws outright.
+
+**One caveat this example shows the cost of:** trimming with `removeEntity` per record fires a separate `patchState` each time, so every computed reader recalculates once per removal. `removeEntities(ids)` does the same work in one notification.
 
 ---
 
@@ -617,7 +619,9 @@ export const InventoryStore = signalStore(
 );
 ```
 
-**Why good:** Bulk operations (addEntities, updateEntities, removeEntities), computed for filtering, predicate-based updates, named constant for threshold
+**Why good:** There is no predicate-based updater, so the pattern is to derive the ids first and hand them to the plural updater — one notification for the whole batch. `changes` as a function receives the current entity, which is what `applyDiscount` needs to compute each new price from the old one; the object form cannot express a per-entity value.
+
+`applyDiscount` is the exception that shows the rule: because each product needs its own computed price it loops `updateEntity`, and so notifies once per product. Where the change is the same for every record, `updateEntities` with one `changes` object is a single write.
 
 ---
 
@@ -704,4 +708,6 @@ export const ActivityFeedStore = signalStore(
 );
 ```
 
-**Why good:** `prependEntity` adds to start (ideal for feeds/logs), `upsertEntity` handles add-or-update logic automatically, partial updates preserve existing data, MAX_FEED_ITEMS named constant
+**Why good:** `prependEntity` puts the id at the front of `ids`, so a feed reads newest-first without a sort on every render. `upsertEntity` takes a partial and merges it, which is what makes `markAsRead` a one-field write that cannot accidentally blank the fields it does not mention — `setEntity` with the same partial would replace the whole record.
+
+The merge is shallow, so a nested object in the partial replaces its counterpart rather than merging into it.

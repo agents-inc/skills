@@ -3,252 +3,178 @@ name: web-state-zustand
 description: Zustand stores, client state patterns. Use when deciding between Zustand vs useState, managing global state, or avoiding Context misuse.
 ---
 
-# Client State Management Patterns
+# Zustand Patterns
 
-> **Quick Guide:** Local UI state? useState. Shared UI (2+ components)? Zustand. Server data? Use your data fetching solution. URL-appropriate filters? searchParams. NEVER use Context for state management. Zustand v5: use `useShallow` from `zustand/react/shallow` (not the old equality-fn second arg), selectors must return stable references, and `persist` no longer stores initial state during creation.
+> **Quick Guide:** Zustand owns state two or more components read; `useState` owns state one component reads; the URL owns filters and search; Context injects singletons and holds no state. Zustand v5 changes three things: `useShallow` from `zustand/react/shallow` replaces the old equality-function second argument, selectors must return stable references or they loop, and `persist` no longer captures initial state at creation.
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Store setup, selectors, useShallow, Context anti-patterns, URL state
+- [examples/core.md](examples/core.md) — store setup, atomic selectors, `useShallow`, the Context anti-pattern, URL state
+- [reference.md](reference.md) — middleware lookup, v5 migration notes, peer-dependency requirements
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Managing Client State
+## Before writing Zustand code
 
-**(You MUST use a data fetching solution for ALL server/API data - NEVER useState, Zustand, or Context)**
+**Move a value into a store as soon as a second component reads it.** Passing it down instead couples every component on the path, and relocating it later means unpicking that chain.
 
-**(You MUST use Zustand for ALL shared UI state (2+ components) - NOT Context or prop drilling)**
+**Select one value per `useStore` call.** The component then re-renders when that value changes and at no other time; a call with no selector subscribes to the whole store.
 
-**(You MUST use useState ONLY for truly component-local state - NOT for anything shared)**
+**Return a stable reference from every selector.** An object or function built inside the selector is a new reference on each call, which in v5 re-renders without end.
 
-**(You MUST use atomic selectors or `useShallow` from `zustand/react/shallow` - NEVER destructure the entire store)**
+**Persist preferences and nothing else, through `partialize`.** Transient UI restored from storage — a modal that reopens itself, a sidebar that remembers being closed — reads as a bug.
 
-**(You MUST ensure selectors return stable references - inline object/function creation causes infinite loops in v5)**
+**Keep server data out of the store.** Cached, invalidated, refetched data wants a layer built for it; a store gives you a copy that goes stale silently.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** Zustand, zustand, create from zustand, useShallow, zustand/middleware, zustand store, client state, shared UI state, Context misuse, prop drilling, global state
+**Auto-detection:** `create` from `zustand`, `zustand/middleware`, `zustand/react/shallow`, `useShallow`, `createWithEqualityFn`, `zustand/traditional`, `persist`, `partialize`, `devtools`, store slices
 
-**When to use:**
+**Applies to:**
 
-- Deciding between Zustand or useState for a use case
-- Setting up Zustand for shared UI state (modals, sidebars, preferences)
-- Understanding when NOT to use Context for state management
-- Structuring stores: slices, actions, selectors
+- Choosing between a store, `useState`, the URL and Context for a given value
+- Setting up a store with `devtools` and `persist`
+- Selector shape and re-render behaviour
+- Splitting state across focused stores
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Client state = useState (local) or Zustand (shared, 2+ components)
-- Context for dependency injection only (NEVER for state management)
-- Store setup with devtools and persist middleware
-- Selector patterns: atomic selectors vs useShallow
-- URL params for shareable/bookmarkable state (filters, search)
-
-**When NOT to use:**
-
-- Server/API data (use a dedicated data fetching solution)
-- State that should be shareable via URL (use searchParams)
-- Any Context-based state management approach
+- Server data — caching, invalidation and refetching belong to whatever owns the network, and a store is not that thing
+- Routing mechanics — this skill says which state belongs in the URL, not how a given router reads or writes it
+- Form field state — a form library owns its own field values while the form is open
 
 ---
 
 <philosophy>
 
-## Philosophy
+Zustand is a subscription primitive with a hook attached. Its performance comes entirely from the selector: the store notifies every subscriber on every change, and the selector is what decides whether that notification becomes a render. So store design is selector design.
 
-Zustand is a minimal, hook-based state manager. The key principle: **use the right tool for the right job**. Server data belongs in a dedicated data fetching layer with caching and synchronization. Local UI state stays in useState. Shared UI state lives in Zustand for performance. URL state makes filters shareable. Context is ONLY for dependency injection, never state management.
-
-**Store design principles** (from TkDodo and official docs):
-
-- **Keep stores small** - multiple focused stores beat one monolithic store
-- **Business logic in the store** - components call actions, stores decide what happens
-- **Only export custom hooks** - never expose the raw store creator
-- **Atomic selectors preferred** - return single values, not objects, for best performance
+- **Small stores over one large one** — a store is the unit of subscription as well as the unit of code
+- **Business logic in actions** — components call `toggleSidebar()`; the store decides what toggling means
+- **Export hooks, not the creator** — the raw store is a mutable global, and exporting it invites writes from anywhere
+- **Atomic selectors first** — a single value needs no comparison function at all
 
 </philosophy>
 
 ---
 
-<patterns>
-
-## Core Patterns
-
-### Pattern 1: State Placement Decision
-
-The most critical decision: where does this state belong?
-
-```
-Is it server data (from API)?
-├─ YES → Data fetching solution (not this skill's scope)
-└─ NO → Is it URL-appropriate (filters, search)?
-    ├─ YES → URL params (searchParams)
-    └─ NO → Is it needed in 2+ components?
-        ├─ YES → Zustand
-        └─ NO → Is it truly component-local?
-            ├─ YES → useState
-            └─ NO → Is it a singleton/dependency?
-                └─ YES → Context (ONLY for DI, not state)
-```
-
-For full examples, see [examples/core.md](examples/core.md#pattern-1-state-placement).
-
----
-
-### Pattern 2: Local State with useState
-
-Use ONLY when state is truly component-local and never shared.
-
-- State used ONLY in one component (isExpanded, isOpen)
-- Temporary UI state that never needs to be shared
-- As soon as a second component needs it, move to Zustand
-
-For good/bad comparisons, see [examples/core.md](examples/core.md#pattern-2-local-state-with-usestate).
-
----
-
-### Pattern 3: Zustand Store Setup
-
-Use as soon as state is needed in 2+ components across the tree.
-
-```typescript
-// stores/ui-store.ts
-import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
-
-const UI_STORAGE_KEY = "ui-storage";
-
-interface UIState {
-  sidebarOpen: boolean;
-  theme: "light" | "dark";
-  toggleSidebar: () => void;
-  setTheme: (theme: "light" | "dark") => void;
-}
-
-export const useUIStore = create<UIState>()(
-  devtools(
-    persist(
-      (set) => ({
-        sidebarOpen: true,
-        theme: "light",
-        toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-        setTheme: (theme) => set({ theme }),
-      }),
-      { name: UI_STORAGE_KEY, partialize: (s) => ({ theme: s.theme }) },
-    ),
-  ),
-);
-```
-
-**Key points:** devtools for debugging, persist only what survives sessions (preferences, not transient UI), `partialize` to exclude ephemeral state.
-
-For selectors, useShallow, and v5 stability patterns, see [examples/core.md](examples/core.md#pattern-3-zustand-store-setup).
-
----
-
-### Pattern 4: Context API - Dependency Injection ONLY
-
-Context is NOT a state management solution. It's for dependency injection and singletons ONLY.
-
-**ONLY use Context for:**
-
-- Framework providers (router, query client)
-- Dependency injection (services, API clients, DB connections)
-- Values set once at app initialization that never change
-
-**NEVER use Context for:**
-
-- ANY state management (use Zustand instead)
-- ANY frequently updating values (every consumer re-renders on any change)
-
-For why Context fails for state and acceptable DI usage, see [examples/core.md](examples/core.md#pattern-4-context-api---dependency-injection-only).
-
----
-
-### Pattern 5: URL State for Shareable Filters
-
-Use URL params (searchParams) for state that should be shareable, bookmarkable, or navigable.
-
-- Filter selections, search queries, pagination, sort order
-- Browser back/forward works correctly
-- URLs can be shared with specific filter state
-
-For implementation examples, see [examples/core.md](examples/core.md#pattern-5-url-state-for-shareable-filters).
-
-</patterns>
-
----
-
 <decision_framework>
 
-## Decision Framework
+## Where a value belongs
 
-### Quick Reference Table
+| The value                     | Belongs in     | Because                                                      |
+| ----------------------------- | -------------- | ------------------------------------------------------------ |
+| Read by 2+ components         | a store        | selective re-renders, and no prop chain to unpick later      |
+| Read by 1 component           | `useState`     | nothing else can observe it, so nothing else needs to        |
+| A filter, query, page or sort | the URL        | shareable, bookmarkable, and the back button works           |
+| A singleton set at startup    | Context        | it never changes, so the re-render cost never arises         |
+| Fetched from an API           | not this skill | it needs caching and invalidation, which a store has none of |
 
-| Use Case                        | Solution               | Why                                          |
-| ------------------------------- | ---------------------- | -------------------------------------------- |
-| Server/API data                 | Data fetching solution | Caching, synchronization, loading states     |
-| Shareable filters               | URL params             | Bookmarkable, browser navigation             |
-| Shared UI state (2+ components) | Zustand                | Fast, selective re-renders, no prop drilling |
-| Local UI state (1 component)    | useState               | Simple, component-local                      |
-| Framework providers / DI        | Context                | Singletons that never change                 |
-| **ANY state management**        | **NEVER Context**      | **Causes full re-renders on any change**     |
+Context is the row people get wrong. It is a transport for a value that does not change, and using it for state that does re-renders every consumer on every change with no way to opt out.
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<patterns>
 
-## RED FLAGS
+## Core patterns
 
-**High Priority Issues:**
+### Pattern 1: Store Setup
 
-- **Storing server/API data in client state (useState, Context, Zustand)** - causes stale data, no caching, manual sync complexity
-- **Using Context with useState/useReducer for state management** - every consumer re-renders on any change, performance nightmare
-- **Destructuring the entire store** `const { x, y } = useStore()` - subscribes to all changes, defeats selective re-rendering
-- **Using useState for state needed in 2+ components** - causes prop drilling, tight coupling, refactoring difficulty
+`devtools` for inspection, `persist` for the fields that should outlive the tab, `partialize` to keep everything else out of storage.
 
-**Medium Priority Issues:**
+```typescript
+export const useUIStore = create<UIState>()(
+  devtools(
+    persist(
+      (set) => ({
+        theme: DEFAULT_THEME,
+        sidebarOpen: true,
+        toggleSidebar: () =>
+          set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+      }),
+      { name: UI_STORAGE_KEY, partialize: (state) => ({ theme: state.theme }) },
+    ),
+  ),
+);
+```
 
-- Prop drilling 3+ levels instead of using Zustand
-- Filter state in useState instead of URL params (not shareable/bookmarkable)
-- Creating unnecessary object references in Zustand selectors (causes re-renders)
-- One monolithic store instead of multiple focused stores
+Full code: [examples/core.md](examples/core.md#pattern-1-store-setup)
 
-**Gotchas & Edge Cases:**
+### Pattern 2: Atomic Selectors
 
-- Context re-renders ALL consumers when ANY value changes - no way to select specific values
-- Zustand selectors that return new objects cause re-renders even if values are identical - use `useShallow` from `zustand/react/shallow` or atomic selectors
-- URL params are always strings - need parsing for numbers/booleans
-- Persisting modal/sidebar state across sessions confuses users - only persist preferences
-- **Zustand v5:** Selectors must return stable references - returning new functions/objects inline causes infinite loops
-- **Zustand v5:** The old `shallow` second argument to `create()` is removed - use `useShallow` hook wrapper or `createWithEqualityFn` from `zustand/traditional`
-- **Zustand v5:** The persist middleware no longer stores initial state during creation - set computed/random initial values explicitly with `useStore.setState()`
-- **Zustand v5:** Requires React 18+ and TypeScript 4.5+
-- **Zustand v5:** `use-sync-external-store` is a peer dependency only when using `zustand/traditional`
+One value per call is the default, and the reason the store is fast.
 
-</red_flags>
+```typescript
+const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+const isOpen = useUIStore((state) => state.sidebarOpen);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-2-atomic-selectors)
+
+### Pattern 3: useShallow for Multiple Values
+
+At three or more values from one store, one `useShallow` call beats three subscriptions.
+
+```typescript
+import { useShallow } from "zustand/react/shallow";
+
+const { sidebarOpen, theme } = useUIStore(
+  useShallow((state) => ({
+    sidebarOpen: state.sidebarOpen,
+    theme: state.theme,
+  })),
+);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-3-useshallow-for-multiple-values)
+
+### Pattern 4: Context for Injection, Not State
+
+Context carries a value that never changes — a client, a connection, a configuration read at startup.
+
+```typescript
+const DatabaseContext = createContext<Database | null>(null);
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-4-context-for-injection-not-state)
+
+### Pattern 5: URL State for Shareable Filters
+
+Filters, search, pagination and sort live in the URL, where they survive a reload and a paste into a colleague's chat.
+
+```typescript
+const searchParams = new URLSearchParams(window.location.search);
+const category = searchParams.get("category") ?? undefined;
+```
+
+Full code: [examples/core.md](examples/core.md#pattern-5-url-state-for-shareable-filters)
+
+</patterns>
 
 ---
 
-<critical_reminders>
+<red_flags>
 
-## CRITICAL REMINDERS
+## Red flags
 
-**(You MUST use a data fetching solution for ALL server/API data - NEVER useState, Zustand, or Context)**
+**Breaks at runtime:**
 
-**(You MUST use Zustand for ALL shared UI state (2+ components) - NOT Context or prop drilling)**
+- A selector returning an inline object or function — new reference every call, so v5 re-renders without end. Hoist the fallback to a module constant.
+- `create()` called with a second equality-function argument — removed in v5, so the argument is ignored and the comparison silently never happens. Use `useShallow`, or `createWithEqualityFn` from `zustand/traditional`.
+- Reading a computed initial value back out of a persisted store immediately after creation — v5's `persist` did not store it. Set it with `setState` after creation.
 
-**(You MUST use useState ONLY for truly component-local state - NOT for anything shared)**
+**Surprising behaviour:**
 
-**(You MUST use atomic selectors or `useShallow` from `zustand/react/shallow` - NEVER destructure the entire store)**
+- `useStore()` with no selector subscribes to the entire store, so the component re-renders on changes to fields it never reads.
+- Two atomic selectors returning equal values still render separately if either changes; `useShallow` compares the object, not the individual reads.
+- Context re-renders every consumer whenever the provider's value object is rebuilt, which is every render unless the value is memoised — and even memoised, a change to one field re-renders readers of all of them.
+- Search params are strings. `?page=2` reads back as `"2"`, and `?open=false` is truthy until parsed.
+- One large store means one large subscription surface: every component reading from it competes with every write to it.
 
-**(You MUST ensure selectors return stable references - inline object/function creation causes infinite loops in v5)**
-
-**Failure to follow these rules will cause stale data issues, performance problems, and infinite render loops.**
-
-</critical_reminders>
+</red_flags>

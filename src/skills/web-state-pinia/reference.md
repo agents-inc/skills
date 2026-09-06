@@ -1,72 +1,10 @@
 # Pinia - Reference
 
-Decision frameworks, red flags, and anti-patterns for Pinia state management.
+> Comparison tables, anti-pattern code, TypeScript recipes and performance notes. The decision trees and the red flags are in [SKILL.md](SKILL.md).
 
 ---
 
-## Decision Framework
-
-### Store Syntax Decision Tree
-
-```
-Which store syntax should I use?
-
-Need to use composables (useRoute, useI18n, custom)?
-├─ YES → Setup Store
-└─ NO → Need watchers inside the store?
-    ├─ YES → Setup Store
-    └─ NO → Need built-in $reset() method?
-        ├─ YES → Options Store
-        └─ NO → Prefer Vue Composition API style?
-            ├─ YES → Setup Store
-            └─ NO → Options Store
-```
-
-### State Management Decision Tree
-
-```
-Where should this state live?
-
-Is it server data (from API)?
-├─ YES → Data fetching solution (not Pinia's scope)
-└─ NO → Is it URL-appropriate (filters, search, pagination)?
-    ├─ YES → Route query params
-    └─ NO → Is it needed in 2+ components?
-        ├─ YES → Pinia store
-        └─ NO → Is it component-local UI state?
-            ├─ YES → ref() or reactive() in component
-            └─ NO → Is it a singleton/config value?
-                └─ YES → App-level provide/inject
-```
-
-### Persistence Decision Tree
-
-```
-Should I persist this state?
-
-Is it server data?
-├─ YES → Do NOT persist (refetch on load)
-└─ NO → Is it user preference (theme, locale)?
-    ├─ YES → Persist to localStorage
-    └─ NO → Is it session-specific (cart, form draft)?
-        ├─ YES → Persist to sessionStorage
-        └─ NO → Is it sensitive data?
-            ├─ YES → Do NOT persist
-            └─ NO → Evaluate case by case
-```
-
-### Quick Reference Table
-
-| Use Case              | Solution                   | Why                                      |
-| --------------------- | -------------------------- | ---------------------------------------- |
-| Server/API data       | Data fetching solution     | Caching, synchronization, loading states |
-| Shareable filters     | Route query params         | Bookmarkable, browser navigation         |
-| Shared client state   | Pinia store                | Reactivity, DevTools, persistence        |
-| Component-local state | `ref()` / `reactive()`     | Simpler, no overhead                     |
-| User preferences      | Pinia + persistence plugin | Persists across sessions                 |
-| Session-only state    | Pinia + sessionStorage     | Clears on tab close                      |
-
-### Options Store vs Setup Store Comparison
+## Options Store vs Setup Store
 
 | Feature             | Options Store                     | Setup Store                                |
 | ------------------- | --------------------------------- | ------------------------------------------ |
@@ -205,23 +143,6 @@ persist: true
 persist: {
   pick: ['theme', 'locale', 'preferences'],  // Only user preferences
 }
-```
-
-### Magic Numbers in State
-
-Using raw numbers for thresholds and limits.
-
-```typescript
-// WRONG - Magic numbers
-if (this.items.length >= 100) { ... }
-setTimeout(this.save, 300);
-
-// CORRECT - Named constants
-const MAX_CART_ITEMS = 100;
-const SAVE_DEBOUNCE_MS = 300;
-
-if (this.items.length >= MAX_CART_ITEMS) { ... }
-setTimeout(this.save, SAVE_DEBOUNCE_MS);
 ```
 
 ---

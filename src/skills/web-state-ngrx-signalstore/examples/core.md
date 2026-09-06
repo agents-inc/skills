@@ -1,6 +1,6 @@
 # NgRx SignalStore - Core Examples
 
-Core code examples for NgRx SignalStore setup with signalStore, withState, withComputed, withMethods, and withHooks.
+> Store composition, state updates, hooks, DI and `withProps`. See [SKILL.md](../SKILL.md) for the decision trees and red flags, and [reference.md](../reference.md) for the feature lookup and migration steps.
 
 **Related examples:**
 
@@ -73,32 +73,27 @@ export const CounterStore = signalStore(
 );
 ```
 
-**Why good:** Typed state interface, named constants for all numbers, providedIn for DI, computed signals for derived state, patchState for immutable updates, clear method names, all named exports
+**Why good:** Declaring the state interface is what gives `withComputed` and `withMethods` their parameter types further down the chain, since each feature is typed from the accumulated store above it. `providedIn` settles the lifetime at the declaration rather than at each injection site, and every write goes through `patchState`, so the signals notify and the DevTools timeline has an entry.
 
-### Bad Example - Direct Mutation and Magic Numbers
+### Bad Example - Writing to the Signals Directly
 
 ```typescript
-// WRONG - Direct mutation, magic numbers, default export
 import { signalStore, withState, withMethods } from "@ngrx/signals";
 
-const CounterStore = signalStore(
+export const CounterStore = signalStore(
   withState({ count: 0 }),
   withMethods((store) => ({
     increment() {
-      // WRONG: Magic number, should be named constant
       store.count.set(store.count() + 1);
     },
     setCount(count: number) {
-      // WRONG: Direct assignment
       store.count.set(count);
     },
   })),
 );
-
-export default CounterStore; // WRONG: default export
 ```
 
-**Why bad:** Direct signal mutation bypasses store update mechanism, magic number `1` should be named constant, default export violates conventions, no TypeScript interface for state
+**Why bad:** `set` on the individual signal goes around the store's update path, so the change is not a state transition — nothing records it and the protection added in v18 rejects it outright. `patchState(store, ...)` is the single write path, which is what makes every change one notification and one DevTools entry.
 
 ---
 
@@ -173,7 +168,7 @@ export const UserPreferencesStore = signalStore(
 );
 ```
 
-**Why good:** Multiple patchState patterns shown, updater function for computed updates, partial updates, multiple updaters in single call, all numbers are named constants
+**Why good:** The object form suffices when the new value does not depend on the old; the function form is required when it does, because reading `store.x()` and writing back separately can interleave with another write. Several updaters in one `patchState` apply as a single transition, so readers never observe the store half-updated — `resetToDefaults` cannot leave the theme reset and the locale stale.
 
 ---
 
@@ -249,7 +244,9 @@ export const AppSettingsStore = signalStore(
 );
 ```
 
-**Why good:** onInit for initialization logic, onDestroy for cleanup, hooks have access to store methods and state, persistence pattern demonstrated
+**Why good:** Both hooks are destructured from the store, so they reach the methods and signals declared above them — which is why `withHooks` comes last. `onDestroy` fires when the injector is destroyed, so a `providedIn: "root"` store like this one only saves on page teardown; a component-scoped store would save on every unmount.
+
+Loading in `onInit` means the store is populated before any component reads it, at the cost of running in every test that injects it.
 
 ---
 
@@ -328,7 +325,9 @@ export const UserStore = signalStore(
 );
 ```
 
-**Why good:** inject() used in injection context, HttpClient injected properly, async/await for simple operations, proper error handling, loading state management
+**Why good:** `withMethods` runs inside the store's injection context, so `inject(HttpClient)` works there and the reference is captured once in the closure rather than resolved per call. Plain `async`/`await` is the right weight here — loading the current user happens once, on demand, with nothing to cancel and no stream to debounce.
+
+Both the success and failure paths clear `isLoading`, which is the half that gets forgotten and leaves a spinner running after a failed request.
 
 ---
 
@@ -368,7 +367,7 @@ export class CounterComponent {
 }
 ```
 
-**Why good:** OnPush change detection (signals handle updates), inject() for DI, direct template signal access with `()`, readonly store reference, disabled binding uses computed signal
+**Why good:** Calling the signals in the template is what registers the dependency, so `OnPush` is safe without a single manual check — the signal reads schedule the re-render themselves. The component holds no state of its own; it is a projection of the store plus event handlers, which is why there is nothing to keep in sync.
 
 ### Bad Example - Subscribing and Manual Change Detection
 
@@ -407,7 +406,7 @@ export class CounterComponent implements OnInit, OnDestroy {
 }
 ```
 
-**Why bad:** Unnecessary effect subscription, manual change detection not needed with signals, stores local copy instead of using signal directly, violates signal patterns
+**Why bad:** Copying the signal into a plain field discards the tracking that makes it useful — the template now reads a number, so Angular has no way to know when to re-render and the `markForCheck` is there to paper over that. Reading `store.count()` in the template instead registers the dependency and the copy, the effect and the manual change detection all become unnecessary.
 
 ---
 
@@ -467,7 +466,7 @@ export const SearchStore = signalStore(
 );
 ```
 
-**Why good:** withProps for non-signal properties, toObservable bridges signals to RxJS, constants exposed as props, clear separation of concerns
+**Why good:** `withProps` members are plain values on the store rather than state, so they are neither patched nor frozen. `toObservable` needs an injection context, and `withProps` supplies one — which is what makes this the place to build the bridge rather than the component. Exposing `query$` lets an RxJS consumer subscribe without reaching back into the signal.
 
 ---
 
@@ -528,7 +527,7 @@ export class ModalContainerComponent {
 }
 ```
 
-**Why good:** Component-scoped store (no providedIn), providers array for DI, store destroyed with component, each instance independent
+**Why good:** Listing the store in `providers` rather than declaring `providedIn: "root"` gives each component instance its own store, destroyed with the component — so two modals on a page do not share an open flag, and no state survives to the next time this one mounts. Any `rxMethod` subscription in the store ends at the same moment, with no cleanup code in the component.
 
 ---
 
@@ -619,7 +618,7 @@ export const UserFormStore = signalStore(
 );
 ```
 
-**Why good:** FormGroup in `withProps` (mutable, not frozen), reactive state in `withState` (immutable), clear separation of mutable vs immutable data
+**Why good:** The `FormGroup` manages its own values and mutates itself, so it is not state in this store's sense — `withProps` holds it as a plain reference, out of reach of both `patchState` and the freeze. What _is_ state is the surrounding status: `isSubmitting` and `submitError` are what the template branches on, and those stay signals.
 
 ### Bad Example - FormGroup in withState (v19+ Breaking Change)
 
@@ -646,7 +645,7 @@ export const BrokenFormStore = signalStore(
 
 **Why bad:** v19+ applies `Object.freeze` recursively to state - FormGroup mutations will throw "object is not extensible" error
 
-### withState vs withProps Decision Guide
+### withState vs withProps — worked comparison
 
 | Use Case              | Feature     | Reason                        |
 | --------------------- | ----------- | ----------------------------- |

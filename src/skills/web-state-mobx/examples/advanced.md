@@ -1,6 +1,6 @@
 # MobX - Advanced Examples
 
-> Advanced patterns for computed values, actions, async operations, and reactions. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Computed values, actions, async operations and reactions. See [SKILL.md](../SKILL.md) for the decision frameworks and red flags.
 
 **Additional Examples:**
 
@@ -11,7 +11,7 @@
 
 ## Pattern 6: Computed Values
 
-### Good Example - Derived State with Computed
+### Good Example - Chained Derivations
 
 ```typescript
 // stores/shopping-cart-store.ts
@@ -20,9 +20,6 @@ import { makeAutoObservable } from "mobx";
 const TAX_RATE = 0.08;
 const FREE_SHIPPING_THRESHOLD = 50;
 const STANDARD_SHIPPING_COST = 5.99;
-const EMPTY_CART_SIZE = 0;
-const FREE_SHIPPING_COST = 0;
-const INITIAL_QUANTITY = 1;
 
 interface CartItem {
   id: string;
@@ -38,7 +35,6 @@ class ShoppingCartStore {
     makeAutoObservable(this);
   }
 
-  // Computed: only recalculates when items array changes
   get subtotal(): number {
     return this.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -46,29 +42,20 @@ class ShoppingCartStore {
     );
   }
 
-  // Computed: depends on subtotal (another computed) - MobX chains them
   get tax(): number {
     return this.subtotal * TAX_RATE;
   }
 
-  // Computed: depends on subtotal
   get shippingCost(): number {
     return this.subtotal >= FREE_SHIPPING_THRESHOLD
-      ? FREE_SHIPPING_COST
+      ? 0
       : STANDARD_SHIPPING_COST;
   }
 
-  // Computed: depends on subtotal, tax, and shippingCost (all computed)
   get total(): number {
     return this.subtotal + this.tax + this.shippingCost;
   }
 
-  // Computed: simple derived boolean
-  get isEmpty(): boolean {
-    return this.items.length === EMPTY_CART_SIZE;
-  }
-
-  // Computed: counts total number of items
   get itemCount(): number {
     return this.items.reduce((count, item) => count + item.quantity, 0);
   }
@@ -78,34 +65,27 @@ class ShoppingCartStore {
     if (existing) {
       existing.quantity++;
     } else {
-      this.items.push({ ...item, quantity: INITIAL_QUANTITY });
+      this.items.push({ ...item, quantity: 1 });
     }
   }
 
   removeItem(id: string): void {
     this.items = this.items.filter((i) => i.id !== id);
   }
-
-  clearCart(): void {
-    this.items = [];
-  }
 }
 
 export { ShoppingCartStore };
 ```
 
-**Why good:** Computed values chain naturally (total depends on subtotal + tax + shippingCost), each computed only recalculates when its specific dependencies change, named constants for all business rules, no manual memoization needed
+**Why good:** `total` reads three computeds, each of which reads `items`. Pushing an item recalculates the chain once and notifies once, and nothing here needs memoising by hand.
 
-### Bad Example - Computing Values in Actions
+### Bad Example - Derived State Stored as Observable
 
 ```typescript
-// stores/broken-cart-store.ts
-import { makeAutoObservable } from "mobx";
-
 class BrokenCartStore {
   items: CartItem[] = [];
-  subtotal = 0; // BAD: storing derived state as observable
-  total = 0; // BAD: storing derived state as observable
+  subtotal = 0;
+  total = 0;
 
   constructor() {
     makeAutoObservable(this);
@@ -113,28 +93,22 @@ class BrokenCartStore {
 
   addItem(item: CartItem): void {
     this.items.push(item);
-    // BAD: manually recalculating derived state in action
     this.subtotal = this.items.reduce(
       (sum, i) => sum + i.price * i.quantity,
       0,
     );
-    this.total = this.subtotal * 1.08 + 5.99; // BAD: magic numbers
+    this.total = this.subtotal * 1.08 + 5.99;
   }
 }
-
-export { BrokenCartStore };
 ```
 
-**Why bad:** Derived state stored as observable instead of computed means it can become stale if another action modifies items, manual recalculation in every action is error-prone, magic numbers `1.08` and `5.99` make business rules unclear
+**Why bad:** Every action that touches `items` now owes a recalculation, and `removeItem` forgetting it leaves a total that disagrees with the cart. A computed cannot be forgotten.
 
-### Good Example - Computed with Structural Comparison
+### Good Example - computed.struct
 
 ```typescript
 // stores/filter-store.ts
 import { makeAutoObservable, computed } from "mobx";
-
-const DEFAULT_MIN_PRICE = 0;
-const DEFAULT_MAX_PRICE = Infinity;
 
 interface FilterResult {
   category: string;
@@ -143,15 +117,11 @@ interface FilterResult {
 
 class FilterStore {
   category = "all";
-  minPrice = DEFAULT_MIN_PRICE;
-  maxPrice = DEFAULT_MAX_PRICE;
+  minPrice = 0;
+  maxPrice = Infinity;
 
   constructor() {
-    makeAutoObservable(this, {
-      // Use computed.struct: only notifies observers when the
-      // STRUCTURE of the result changes, not just the reference
-      activeFilters: computed.struct,
-    });
+    makeAutoObservable(this, { activeFilters: computed.struct });
   }
 
   get activeFilters(): FilterResult {
@@ -159,10 +129,6 @@ class FilterStore {
       category: this.category,
       priceRange: { min: this.minPrice, max: this.maxPrice },
     };
-  }
-
-  setCategory(category: string): void {
-    this.category = category;
   }
 
   setPriceRange(min: number, max: number): void {
@@ -174,20 +140,17 @@ class FilterStore {
 export { FilterStore };
 ```
 
-**Why good:** `computed.struct` performs deep structural comparison on the returned object, observers only re-render when actual filter values change (not just when a new object reference is created), prevents unnecessary re-renders from reference inequality
+**Why good:** The getter builds a new object on every evaluation, so reference comparison always reports a change. `computed.struct` compares the contents instead, and observers stay put when the values are the same.
 
 ---
 
 ## Pattern 7: Actions and runInAction
 
-### Good Example - Actions with Batched Mutations
+### Good Example - Batched Mutations
 
 ```typescript
 // stores/user-profile-store.ts
 import { makeAutoObservable } from "mobx";
-
-const INITIAL_LOADING_STATE = false;
-const INITIAL_ERROR_STATE = null;
 
 interface UserProfile {
   name: string;
@@ -197,60 +160,45 @@ interface UserProfile {
 
 class UserProfileStore {
   profile: UserProfile | null = null;
-  isLoading = INITIAL_LOADING_STATE;
-  error: string | null = INITIAL_ERROR_STATE;
+  isLoading = false;
+  error: string | null = null;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
-  // Action: all mutations inside are batched into one transaction
-  // Observers will NOT see intermediate states
   updateProfile(updates: Partial<UserProfile>): void {
     if (!this.profile) return;
-    // All of these mutations are batched - observers see ONE update
     this.profile = { ...this.profile, ...updates };
-    this.error = INITIAL_ERROR_STATE;
-  }
-
-  setLoading(loading: boolean): void {
-    this.isLoading = loading;
-  }
-
-  setError(error: string | null): void {
-    this.error = error;
+    this.error = null;
   }
 
   resetProfile(): void {
-    // Multiple mutations in one action = one re-render
     this.profile = null;
-    this.isLoading = INITIAL_LOADING_STATE;
-    this.error = INITIAL_ERROR_STATE;
+    this.isLoading = false;
+    this.error = null;
   }
 }
 
 export { UserProfileStore };
 ```
 
-**Why good:** Actions batch multiple mutations into one transaction, observers see only the final state (not intermediate states), `autoBind` ensures methods are safe as callbacks, named constants for initial states
+**Why good:** `resetProfile` assigns three times and notifies once, so no observer ever sees the half-reset state.
 
-### Bad Example - Mutating State Outside Actions
+### Bad Example - Mutating Outside an Action
 
 ```typescript
-// BAD: Direct mutation outside an action
 import { configure } from "mobx";
 
-// With enforceActions enabled (recommended for production)
 configure({ enforceActions: "always" });
 
-// This will THROW: modifying observable outside an action
 const store = new UserProfileStore();
 store.profile = { name: "Bob", email: "bob@example.com", avatar: "" };
-// Error: [MobX] Since strict-mode is enabled, changing observed
-// observable values without using an action is not allowed.
+// [MobX] Since strict-mode is enabled, changing observed observable
+// values without using an action is not allowed.
 ```
 
-**Why bad:** MobX strict mode (`enforceActions: "always"`) prevents state mutation outside actions, this catches bugs where state is modified from unexpected places, always use actions to modify state
+**Why bad:** Under `enforceActions: "always"` this throws. Without it the assignment lands but is unbatched, so each write fires reactions on its own.
 
 ---
 
@@ -263,8 +211,6 @@ store.profile = { name: "Bob", email: "bob@example.com", avatar: "" };
 import { makeAutoObservable, runInAction } from "mobx";
 import type { ApiClient } from "../api-client";
 
-const INITIAL_LOADING_STATE = false;
-
 interface User {
   id: string;
   name: string;
@@ -273,24 +219,18 @@ interface User {
 
 class UserStore {
   users: User[] = [];
-  isLoading = INITIAL_LOADING_STATE;
+  isLoading = false;
   error: string | null = null;
 
   constructor(private apiClient: ApiClient) {
-    makeAutoObservable(this, {
-      apiClient: false, // Exclude from observability
-    });
+    makeAutoObservable(this, { apiClient: false });
   }
 
-  // The method itself is an action (inferred by makeAutoObservable)
-  // But code AFTER await runs in a NEW tick - NOT part of this action
   async fetchUsers(): Promise<void> {
-    this.isLoading = true; // OK: still in the action
-    this.error = null; // OK: still in the action
+    this.isLoading = true; // still inside the action
+    this.error = null;
     try {
       const users = await this.apiClient.getUsers();
-      // MUST wrap in runInAction: this code runs AFTER the await
-      // and is therefore outside the original action
       runInAction(() => {
         this.users = users;
         this.isLoading = false;
@@ -302,35 +242,20 @@ class UserStore {
       });
     }
   }
-
-  async deleteUser(id: string): Promise<void> {
-    try {
-      await this.apiClient.deleteUser(id);
-      runInAction(() => {
-        this.users = this.users.filter((u) => u.id !== id);
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = err instanceof Error ? err.message : "Delete failed";
-      });
-    }
-  }
 }
 
 export { UserStore };
 ```
 
-**Why good:** State mutations before `await` are fine (still in the action), state mutations after `await` are properly wrapped in `runInAction`, error handling also wrapped in `runInAction`, apiClient excluded from observability
+**Why good:** The method is an action, but only up to the first `await`. Both continuations — success and failure — get their own `runInAction`, which is the half people forget.
 
-### Good Example - flow with Generator Functions (Recommended)
+### Good Example - flow with Cancellation
 
 ```typescript
 // stores/project-store.ts
 import { makeAutoObservable, flowResult } from "mobx";
 import type { CancellablePromise } from "mobx";
 import type { ApiClient } from "../api-client";
-
-const INITIAL_LOADING_STATE = false;
 
 interface Project {
   id: string;
@@ -340,28 +265,20 @@ interface Project {
 
 class ProjectStore {
   projects: Project[] = [];
-  isLoading = INITIAL_LOADING_STATE;
+  isLoading = false;
   error: string | null = null;
-  // Store reference to the cancellable promise
   private currentFetch: CancellablePromise<void> | null = null;
 
   constructor(private apiClient: ApiClient) {
-    makeAutoObservable(this, {
-      apiClient: false,
-      currentFetch: false,
-    });
+    makeAutoObservable(this, { apiClient: false, currentFetch: false });
   }
 
-  // Generator function -> automatically inferred as `flow` by makeAutoObservable
-  // No need to wrap state mutations in runInAction!
-  // The flow wrapper ensures ALL yields resume within an action context
+  // Inferred as `flow`, so every resumption is already in action context
   *fetchProjects(): Generator<Promise<Project[]>, void, Project[]> {
     this.isLoading = true;
     this.error = null;
     try {
-      // yield instead of await - MobX wraps the continuation in an action
       const projects = yield this.apiClient.getProjects();
-      // This runs in action context automatically - no runInAction needed!
       this.projects = projects;
       this.isLoading = false;
     } catch (err) {
@@ -370,18 +287,8 @@ class ProjectStore {
     }
   }
 
-  // Cancel an in-progress fetch
-  cancelFetch(): void {
-    if (this.currentFetch) {
-      this.currentFetch.cancel();
-      this.currentFetch = null;
-    }
-  }
-
-  // Start fetch with cancellation support
   startFetch(): void {
-    this.cancelFetch(); // Cancel any previous fetch
-    // flowResult casts generator return to CancellablePromise for TypeScript
+    this.currentFetch?.cancel();
     this.currentFetch = flowResult(this.fetchProjects());
   }
 }
@@ -389,41 +296,24 @@ class ProjectStore {
 export { ProjectStore };
 ```
 
-**Why good:** Generator function auto-inferred as `flow` by `makeAutoObservable`, no `runInAction` wrapping needed (flow handles it), `CancellablePromise` imported from `"mobx"` for type-safe cancellation, `flowResult` casts generator return for TypeScript (avoids `as unknown as` double cast), cleaner than async/await + runInAction for complex async operations
+**Why good:** `yield` hands control back inside the action, so no assignment here needs wrapping — including the ones in `catch`. `flowResult` gives TypeScript the `CancellablePromise` the flow actually returns, which is what makes `.cancel()` reachable without a double cast.
 
-### Bad Example - State Mutation After Await Without Wrapping
+### Bad Example - Assigning After Await Unwrapped
 
 ```typescript
-// stores/broken-user-store.ts
-import { makeAutoObservable } from "mobx";
-
-class BrokenUserStore {
-  users: User[] = [];
-  isLoading = false;
-
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  async fetchUsers(): Promise<void> {
-    this.isLoading = true; // OK: before await, in original action
-    try {
-      const users = await fetch("/api/users").then((r) => r.json());
-      // BAD: After await, this code runs in a NEW tick!
-      // NOT inside the original action anymore
-      // Will THROW with enforceActions: "always"
-      this.users = users;
-      this.isLoading = false;
-    } catch (err) {
-      this.isLoading = false; // Also BAD: after await
-    }
+async fetchUsers(): Promise<void> {
+  this.isLoading = true;  // fine: before the await
+  try {
+    const users = await fetch("/api/users").then((r) => r.json());
+    this.users = users;         // new tick, outside the action
+    this.isLoading = false;
+  } catch {
+    this.isLoading = false;     // also outside the action
   }
 }
-
-export { BrokenUserStore };
 ```
 
-**Why bad:** Code after `await` executes in a new microtask, outside the original action context, will throw with `enforceActions: "always"`, intermediate state visible to observers between ticks causing flicker
+**Why bad:** Both continuations run in a later microtask, outside the action that started them. Under `enforceActions: "always"` they throw; otherwise each assignment notifies separately, so observers can see `users` populated while `isLoading` is still true.
 
 ---
 
@@ -438,11 +328,8 @@ import type { SettingsStore } from "../stores/settings-store";
 
 const SETTINGS_STORAGE_KEY = "app-settings";
 
-// autorun runs immediately AND whenever any read observable changes
 function setupSettingsPersistence(settingsStore: SettingsStore): () => void {
-  const disposer = autorun(() => {
-    // MobX tracks: settingsStore.theme, settingsStore.language,
-    // settingsStore.notifications
+  return autorun(() => {
     const settings = {
       theme: settingsStore.theme,
       language: settingsStore.language,
@@ -450,15 +337,12 @@ function setupSettingsPersistence(settingsStore: SettingsStore): () => void {
     };
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   });
-
-  // Return disposer for cleanup
-  return disposer;
 }
 
 export { setupSettingsPersistence };
 ```
 
-**Why good:** `autorun` automatically tracks all observable reads inside the callback, runs on initialization (persists initial state) and on every change, returns disposer for cleanup, named constant for storage key
+**Why good:** The dependency list is whatever the body read — all three fields — and it is re-derived on every run, so adding a field to the object subscribes to it with no other change. Running immediately means the stored copy is correct from the start.
 
 ### Good Example - reaction for Targeted Side Effects
 
@@ -469,13 +353,9 @@ import type { SearchStore } from "../stores/search-store";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-// reaction: only runs when the DATA FUNCTION return value changes
-// Does NOT run on initialization (unlike autorun)
 function setupSearchSync(searchStore: SearchStore): () => void {
-  const disposer = reaction(
-    // Data function: returns the value to track
+  return reaction(
     () => searchStore.query,
-    // Effect function: runs when data function return value changes
     (query) => {
       if (query.length > 0) {
         searchStore.performSearch(query);
@@ -483,51 +363,35 @@ function setupSearchSync(searchStore: SearchStore): () => void {
         searchStore.clearResults();
       }
     },
-    {
-      delay: SEARCH_DEBOUNCE_MS, // Debounce the effect
-    },
+    { delay: SEARCH_DEBOUNCE_MS },
   );
-
-  return disposer;
 }
 
 export { setupSearchSync };
 ```
 
-**Why good:** `reaction` separates what to track (data function) from what to do (effect), does NOT fire on initialization (unlike autorun), `delay` option provides built-in debouncing, disposer returned for cleanup
+**Why good:** Only the data function is tracked, so the effect can touch anything without subscribing to it. It does not fire on setup, which is what stops a search running against an empty query at startup, and `delay` debounces without a timer to manage.
 
-### Good Example - when for One-Time Effects
+### Good Example - when for a One-Time Trigger
 
 ```typescript
 // effects/onboarding-effect.ts
 import { when } from "mobx";
 import type { UserStore } from "../stores/user-store";
 
-const ONBOARDING_TOAST_DELAY_MS = 500;
-
-// when: runs effect ONCE when predicate becomes true, then auto-disposes
 function setupOnboardingTrigger(userStore: UserStore): () => void {
-  const disposer = when(
-    // Predicate: wait until this returns true
+  return when(
     () => userStore.isAuthenticated && !userStore.hasCompletedOnboarding,
-    // Effect: runs once, then reaction auto-disposes
-    () => {
-      setTimeout(() => {
-        userStore.showOnboardingWizard();
-      }, ONBOARDING_TOAST_DELAY_MS);
-    },
+    () => userStore.showOnboardingWizard(),
   );
-
-  // Can still manually dispose if component unmounts before trigger
-  return disposer;
 }
 
 export { setupOnboardingTrigger };
 ```
 
-**Why good:** `when` auto-disposes after the effect runs (no manual cleanup needed for the reaction itself), predicate clearly states the trigger condition, still returns disposer for early cleanup if needed
+**Why good:** Disposes itself once the effect has run, and still returns a disposer for the case where the caller goes away before the predicate ever holds.
 
-### Good Example - when as a Promise (Awaitable)
+### Good Example - when as an Awaitable
 
 ```typescript
 // utils/wait-for-auth.ts
@@ -536,24 +400,16 @@ import type { AuthStore } from "../stores/auth-store";
 
 const AUTH_TIMEOUT_MS = 10000;
 
-// when() without an effect function returns a Promise
 async function waitForAuthentication(authStore: AuthStore): Promise<void> {
-  try {
-    await when(() => authStore.isAuthenticated, {
-      timeout: AUTH_TIMEOUT_MS, // Rejects after timeout
-    });
-    console.log("User is now authenticated");
-  } catch {
-    console.error("Authentication timed out");
-  }
+  await when(() => authStore.isAuthenticated, { timeout: AUTH_TIMEOUT_MS });
 }
 
 export { waitForAuthentication };
 ```
 
-**Why good:** `when` without effect returns a Promise, can be awaited in async code, `timeout` option rejects the promise if condition is not met in time, cleaner than polling
+**Why good:** With no effect function `when` returns a promise, so a condition on the reactive graph becomes something async code can wait on. `timeout` rejects rather than hanging.
 
-### Good Example - Cleanup in React useEffect
+### Good Example - Disposal from a Component
 
 ```typescript
 // components/auto-save-form.tsx
@@ -564,38 +420,28 @@ import { formStore } from "../stores/form-store";
 
 export const AutoSaveForm = observer(function AutoSaveForm() {
   useEffect(() => {
-    // autorun returns a disposer function
-    // Returning it from useEffect ensures cleanup on unmount
-    const disposer = autorun(() => {
+    return autorun(() => {
       if (formStore.isDirty) {
         formStore.saveDraft();
       }
     });
-
-    return disposer; // Cleanup: dispose reaction on unmount
   }, []);
 
   return <form>{/* form fields */}</form>;
 });
 ```
 
-**Why good:** Reaction disposer returned directly as useEffect cleanup, ensures no memory leak on unmount, empty dependency array means reaction is set up once, `observer` tracks observable reads in JSX
+**Why good:** The disposer is the cleanup function, so the two cannot drift apart.
 
-### Bad Example - Missing Disposal
+### Bad Example - Never Disposed
 
 ```typescript
-// effects/broken-persistence.ts
 import { autorun } from "mobx";
 import { settingsStore } from "../stores/settings-store";
 
-// BAD: autorun creates a reaction that is NEVER disposed
-// This will leak memory and keep running even after the
-// component/module that set it up is no longer needed
 autorun(() => {
   localStorage.setItem("settings", JSON.stringify(settingsStore.theme));
 });
-
-// No disposer captured, no cleanup function, memory leak guaranteed
 ```
 
-**Why bad:** Reaction is never disposed, will keep running for the lifetime of the application, causes memory leaks, impossible to stop once started, reactions should always be disposed when no longer needed
+**Why bad:** The disposer is discarded, so the reaction runs for the lifetime of the process and holds `settingsStore` alive with it. There is no handle left to stop it.

@@ -104,7 +104,9 @@ export const SearchStore = signalStore(
 );
 ```
 
-**Why good:** rxMethod for reactive search, debounceTime prevents excessive API calls, switchMap cancels pending requests, error handling with catchError, named constants
+**Why good:** `switchMap` unsubscribes from the previous request when a new query arrives, which is what stops an earlier response landing after a later one and overwriting it — `debounceTime` reduces how often that happens but cannot prevent it.
+
+Two placements are deliberate. The first `tap` sits _before_ `debounceTime`, so the input reflects the keystroke immediately while the request waits. And `catchError` is inside the `switchMap`, on the inner request: an error allowed to reach the outer pipe completes it, and the `rxMethod` then silently ignores every later call for the life of the store.
 
 ### Bad Example - async/await Without Cancellation
 
@@ -142,7 +144,7 @@ export const SearchStore = signalStore(
 );
 ```
 
-**Why bad:** No debounce causes excessive API calls, async/await doesn't cancel previous requests, race conditions when responses arrive out of order
+**Why bad:** Nothing cancels the in-flight request, so typing "ab" leaves two responses racing and whichever returns last wins — which is frequently the one for "a". The bug is intermittent and depends on network timing, so it survives manual testing and appears in production.
 
 ---
 
@@ -268,7 +270,9 @@ export const FlightStore = signalStore(
 );
 ```
 
-**Why good:** rxMethod accepts Signal input, auto-triggers on signal change, filter prevents invalid searches, criteria computed for reactive composition, onInit connects signal to effect
+**Why good:** Passing a signal wires it up once — `loadFlights(criteria)` in `onInit` subscribes to the computed, and every later change to `from` or `to` re-runs the pipe with no call site involved. The store's methods only write state; the fetch follows from the state changing.
+
+The `filter` sits ahead of the loading `tap` on purpose: a criteria change that fails the length check should not flip `isLoading` on for a request that will never be made.
 
 ---
 
@@ -369,7 +373,9 @@ export const DataSyncStore = signalStore(
 );
 ```
 
-**Why good:** Retry with exponential backoff, retry count tracked in state, proper error handling, timer for delay, named constants for configuration
+**Why good:** `retry` takes a `delay` function returning an observable, so returning `timer(delayMs)` is what makes the wait asynchronous and cancellable rather than a blocking sleep. Backing off exponentially matters because the usual cause of a failed sync is a server under load, and retrying at a fixed interval adds to it.
+
+`retry` sits inside the `switchMap` and above `catchError`, so the retries are exhausted before the error is handled — the other order would catch the first failure and never retry at all.
 
 ---
 
@@ -512,7 +518,9 @@ export const DashboardStore = signalStore(
 );
 ```
 
-**Why good:** Multiple independent rxMethods, coordinated via wrapper method, auto-refresh with interval, separate loading states, computed for combined loading state
+**Why good:** Two effects with two loading flags means each panel renders as its own data arrives, and a combined computed still gives the page a single "anything in flight" signal. `loadAll` starts both without waiting, because each `rxMethod` owns its own subscription.
+
+`startAutoRefresh` uses `switchMap` over `interval` so calling it twice replaces the timer instead of stacking a second one — the failure that otherwise doubles the request rate every time a component remounts.
 
 ---
 
@@ -610,7 +618,11 @@ export const NotificationStore = signalStore(
 );
 ```
 
-**Why good:** Polling with interval, takeUntil for cancellation, Subject for stop signal, startWith for immediate first fetch, proper cleanup
+**Why good:** `interval` waits a full period before its first emission, so `startWith(0)` is what stops the panel sitting empty for the whole interval on open. `takeUntil(stopPolling$)` gives an explicit stop that does not depend on the store being destroyed, which is what a "pause updates" control needs.
+
+The inner `catchError` returns `of([])` rather than rethrowing, so one failed poll does not end the interval — the distinction that separates a poller that recovers from one that stops at the first blip.
+
+The `Subject` belongs in `withProps` or the method closure rather than in state: it mutates itself, and the v19 development freeze would reject it.
 
 ---
 
@@ -675,7 +687,9 @@ export const ApiStore = signalStore(
 );
 ```
 
-**Why good:** Demonstrates rxMethod flexibility - accepts static values, signals, or observables as input
+**Why good:** One definition serves three call shapes because `rxMethod` normalises its argument into a stream. The difference that matters is lifetime: a static value runs the pipe once, while a signal or an observable keeps a live subscription that re-runs it on every emission until the store is destroyed.
+
+That makes `fetchFromSignal` misleading as written — the signal is created inside the method, so nothing else can update it and the subscription outlives the call for no benefit. A signal passed in is what makes this shape useful.
 
 ---
 
@@ -745,7 +759,9 @@ export const ThemeStore = signalStore(
 );
 ```
 
-**Why good:** `signalMethod` for simple side effects without RxJS, works with both static values and signals, STORAGE_KEY named constant
+**Why good:** Applying a theme is synchronous and cannot race, so it needs none of what `rxMethod` provides and skips the RxJS dependency. `signalMethod` also runs outside an injection context, which is what lets `loadSavedTheme` call it from anywhere rather than only during construction.
+
+Only the argument is tracked. Reading `store.theme()` inside the processor would not re-run it — the parameter is the sole trigger, which is what keeps a method that also writes state from re-triggering itself.
 
 ### When to Use signalMethod vs rxMethod
 
@@ -794,7 +810,7 @@ export const ComparisonStore = signalStore(
 );
 ```
 
-**Why good:** Shows clear distinction - `signalMethod` for simple sync side effects, `rxMethod` when you need RxJS operators like debounce/switchMap
+**Why good:** The two sit side by side in one store, which is the realistic arrangement — the choice is per effect, not per store. `updateLocalData` cannot race, so it costs nothing to keep simple; `search` can, so it takes the operator pipeline.
 
 ### Important: Race Conditions with signalMethod
 

@@ -92,6 +92,6 @@ export const TodoStats = () => {
 };
 ```
 
-**Why good:** Uses memoized selectors preventing unnecessary recalculations, named export
+**Why good:** The memoised selector returns the same array reference until its inputs change, so the component re-renders when the derived value actually differs rather than on every dispatch.
 
 ---

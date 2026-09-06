@@ -1,6 +1,6 @@
 # Jotai Async Patterns
 
-Patterns for async data fetching with Jotai.
+> Async atoms, Suspense, `loadable`, `unwrap` and atom families. See [core.md](core.md) for the synchronous atom shapes.
 
 ---
 
@@ -19,7 +19,6 @@ interface User {
 
 const userIdAtom = atom(1);
 
-// Async read atom - triggers Suspense
 const userAtom = atom(async (get) => {
   const id = get(userIdAtom);
   const response = await fetch(`/api/users/${id}`);
@@ -29,7 +28,7 @@ const userAtom = atom(async (get) => {
   return response.json() as Promise<User>;
 });
 
-// Async atom with AbortController support
+// The read function's second argument carries an AbortSignal
 const userWithAbortAtom = atom(async (get, { signal }) => {
   const id = get(userIdAtom);
   const response = await fetch(`/api/users/${id}`, { signal });
@@ -42,13 +41,14 @@ const userWithAbortAtom = atom(async (get, { signal }) => {
 export { userIdAtom, userAtom, userWithAbortAtom };
 ```
 
-### Good Example - Suspense Setup
+**Why good:** Writing `userIdAtom` re-runs the read, and the `signal` version aborts the request the new read supersedes — so a fast sequence of id changes leaves one in flight rather than a race.
+
+### Good Example - Suspense Boundaries
 
 ```tsx
 import { Provider } from "jotai";
 import { Suspense } from "react";
 
-// CRITICAL: At least one Suspense must be inside Provider
 function App() {
   return (
     <Provider>
@@ -59,7 +59,6 @@ function App() {
   );
 }
 
-// Multiple Suspense boundaries for granular loading states
 function MainContent() {
   return (
     <>
@@ -76,16 +75,30 @@ function MainContent() {
 export { App };
 ```
 
-**Why good:** Suspense boundary catches async atom loading, granular boundaries allow independent loading states, Provider wraps entire tree
+**Why good:** One boundary per region means a slow header does not hold the content back. At least one boundary has to sit inside the Provider, since that is where the reads happen.
+
+### Bad Example - No Boundary
+
+```tsx
+function App() {
+  return (
+    <Provider>
+      <AsyncComponent />
+    </Provider>
+  );
+}
+```
+
+**Why bad:** The first read of an async atom suspends, and with nothing above it to catch the suspension React raises an error instead of showing a fallback.
 
 ---
 
-## Pattern 2: Loadable Pattern (Non-Suspense)
+## Pattern 2: Handling the States Yourself
 
-### Good Example - Manual Loading States
+### Good Example - loadable
 
 ```typescript
-import { atom, useAtom } from "jotai";
+import { atom, useAtomValue } from "jotai";
 import { loadable } from "jotai/utils";
 
 const asyncDataAtom = atom(async () => {
@@ -93,31 +106,23 @@ const asyncDataAtom = atom(async () => {
   return response.json();
 });
 
-// Convert to loadable - doesn't trigger Suspense
 const loadableDataAtom = loadable(asyncDataAtom);
 
-// Usage - handles loading/error/data states manually
 function DataComponent() {
-  const [state] = useAtom(loadableDataAtom);
+  const state = useAtomValue(loadableDataAtom);
 
-  if (state.state === "loading") {
-    return <div>Loading...</div>;
-  }
+  if (state.state === "loading") return <div>Loading...</div>;
+  if (state.state === "hasError") return <div>Error: {String(state.error)}</div>;
 
-  if (state.state === "hasError") {
-    return <div>Error: {String(state.error)}</div>;
-  }
-
-  // state.state === 'hasData'
   return <div>{JSON.stringify(state.data)}</div>;
 }
 
 export { loadableDataAtom, DataComponent };
 ```
 
-**Why good:** Loadable utility converts async atom to sync, returns discriminated union for type-safe state handling, no Suspense boundary needed
+**Why good:** `loadable` neither suspends nor throws, so no boundary is needed. The union is discriminated on `state`, so `data` and `error` are unreachable until the branch that has them.
 
-### Good Example - Unwrap Pattern (v2 Alternative to Loadable)
+### Good Example - unwrap
 
 ```typescript
 import { atom } from "jotai";
@@ -130,49 +135,32 @@ const delayedCountAtom = atom(async (get) => {
   return get(countAtom);
 });
 
-// unwrap with undefined fallback (default)
+// undefined while pending
 const unwrappedAtom = unwrap(delayedCountAtom);
-// Value is `undefined` while pending
 
-// unwrap with custom fallback - keeps previous value or initial
+// or keep the last value, starting from 0
 const unwrappedWithFallbackAtom = unwrap(delayedCountAtom, (prev) => prev ?? 0);
-// Value is `0` initially, subsequent updates keep previous value
 
 export { delayedCountAtom, unwrappedAtom, unwrappedWithFallbackAtom };
 ```
 
-**Why good:** `unwrap` is simpler than `loadable` when you just need the value with a fallback, errors are thrown directly (not caught like `loadable`), useful for derived atoms in v2 where `get` doesn't auto-resolve promises
+**Why good:** The consumer sees a plain value throughout, which suits a display that can show the previous number while the next one arrives. Errors still throw, unlike `loadable`, so a boundary is still what catches a failure.
 
-### Bad Example - No Suspense Boundary
-
-```tsx
-import { Provider } from "jotai";
-
-function App() {
-  return (
-    <Provider>
-      {/* BAD: No Suspense - will crash if asyncAtom is used */}
-      <AsyncComponent />
-    </Provider>
-  );
-}
-```
-
-**Why bad:** Async atoms trigger Suspense by default, missing boundary causes React error
+`unwrap` also earns its place inside a derived atom: `get()` on an async atom hands back the promise rather than the resolved value, so a derivation that wants to do arithmetic on it reads the unwrapped atom instead.
 
 ---
 
-## Pattern 3: atomFamily for Parameterized Atoms
+## Pattern 3: Parameterised Atoms
 
-> **Deprecation notice:** `atomFamily` from `jotai/utils` is deprecated and will be removed in Jotai v3. For new code, use the [`jotai-family`](https://github.com/jotaijs/jotai-family) package which provides the same API plus `atomTree`. The pattern below still works but should be migrated.
+> `atomFamily` from `jotai/utils` is deprecated and slated for removal in Jotai v3. New code uses the [`jotai-family`](https://github.com/jotaijs/jotai-family) package, which carries the same API plus `atomTree`.
 
-> **Memory leak warning:** `atomFamily` caches every param forever unless you call `myFamily.remove(param)` or `myFamily.setShouldRemove()`. Critical when params are dynamic (e.g., user IDs from a list).
+> A family caches an atom per parameter and keeps it. With dynamic parameters — ids from a list — call `remove(param)` or set an eviction policy with `setShouldRemove()`, or the cache grows for the life of the page.
 
-### Good Example - Creating Atoms On-Demand
+### Good Example - Atoms Created On Demand
 
 ```typescript
 import { atom } from "jotai";
-import { atomFamily } from "jotai-family"; // Use jotai-family, NOT jotai/utils
+import { atomFamily } from "jotai-family";
 
 interface User {
   id: string;
@@ -180,7 +168,6 @@ interface User {
   email: string;
 }
 
-// Create atoms on-demand based on parameters
 const userAtomFamily = atomFamily((userId: string) =>
   atom(async () => {
     const response = await fetch(`/api/users/${userId}`);
@@ -188,7 +175,7 @@ const userAtomFamily = atomFamily((userId: string) =>
   }),
 );
 
-// With custom equality function for complex params
+// A second argument compares non-primitive parameters
 interface ItemParams {
   id: string;
   version: number;
@@ -202,18 +189,16 @@ const itemAtomFamily = atomFamily(
 export { userAtomFamily, itemAtomFamily };
 ```
 
-### Usage Example
+**Why good:** The same parameter returns the same atom, so two components asking for user `"7"` share one piece of state. Object parameters compare by reference by default, which would mint a new atom per render — the equality function is what prevents that.
+
+### Usage
 
 ```tsx
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { Suspense } from "react";
 
-interface UserProfileProps {
-  userId: string;
-}
-
-function UserProfile({ userId }: UserProfileProps) {
-  const [user] = useAtom(userAtomFamily(userId));
+function UserProfile({ userId }: { userId: string }) {
+  const user = useAtomValue(userAtomFamily(userId));
   return <div>{user.name}</div>;
 }
 
@@ -232,4 +217,4 @@ function UserList({ userIds }: { userIds: string[] }) {
 export { UserProfile, UserList };
 ```
 
-**Why good:** Atoms created lazily when needed, same params return same atom instance, custom equality prevents unnecessary atom recreation
+**Why good:** A boundary per row means each profile resolves on its own rather than the list waiting for the slowest.

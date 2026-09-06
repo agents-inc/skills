@@ -95,7 +95,7 @@ export const UserStore = signalStore(
 );
 ```
 
-**Why good:** Reusable feature, encapsulated loading logic, computed signals for status checks, methods for state transitions, clean usage in stores
+**Why good:** The feature is a function returning `signalStoreFeature(...)`, so calling it in a store's feature list splices its state, computeds and methods into that store's type. Four stores get the same `isLoading` without four copies, and widening `LoadingStatus` later widens all of them at once.
 
 ---
 
@@ -184,7 +184,7 @@ export class ProductListComponent {
 }
 ```
 
-**Why good:** ngrx-toolkit withCallState provides standardized loading/error handling, setLoading/setLoaded/setError updaters, template-friendly computed signals
+**Why good:** `setLoading()`, `setLoaded()` and `setError()` are updaters, so they compose into a `patchState` call alongside an entity updater — `setAllEntities(products), setLoaded()` lands both in one notification rather than rendering an empty loaded list first.
 
 ---
 
@@ -277,7 +277,7 @@ export const DashboardStore = signalStore(
 // store.ordersLoading(), store.ordersLoaded(), store.ordersError()
 ```
 
-**Why good:** Named collections for multiple call states, independent loading/error tracking, prefixed signals (usersLoading, ordersLoading)
+**Why good:** Each collection name generates its own prefixed signals — `usersLoading`, `ordersLoading` — so a dashboard renders each panel's spinner independently instead of blocking on the slowest request. The name given to `withCallState` is passed to every updater, and an omitted one writes the store-wide call state rather than the collection's.
 
 ---
 
@@ -395,7 +395,7 @@ export const PaginatedListStore = signalStore(
 );
 ```
 
-**Why good:** Type constraint ensures store has required state, generic type parameter for flexibility, computed signals for derived pagination values, named constants
+**Why good:** `{ state: type<{ items: unknown[] }>() }` declares what the host store must already provide. Applying this feature to a store with no `items` is a compile error at the store definition, rather than an `undefined` read at runtime — and it is also what lets the feature's own computeds resolve their types.
 
 ---
 
@@ -530,7 +530,22 @@ export const CartStore = signalStore(
 );
 ```
 
-**Why good:** withDevtools enables Redux DevTools, named store for easy identification, computed signals for cart calculations, TAX_RATE named constant
+**Why good:** The name passed to `withDevtools` is what labels this store in the Redux DevTools panel, so several stores stay tellable apart in one timeline.
+
+**`withDevtools` goes before `withState`.** Features apply in order and it instruments the state features that follow it, so a `withState` placed above it is not tracked and its updates never reach the panel.
+
+**Sibling computeds cannot read each other**, which is why `subtotal` is recomputed inside `discount`, `tax` and `total` rather than reused. The callback receives the members declared _before_ this `withComputed`, and the ones in the same object literal do not exist yet. Chaining them means a second `withComputed`:
+
+```typescript
+withComputed(({ entities }) => ({
+  subtotal: computed(() =>
+    entities().reduce((sum, item) => sum + item.price * item.quantity, 0),
+  ),
+})),
+withComputed(({ subtotal, discountPercent }) => ({
+  discount: computed(() => subtotal() * (discountPercent() / 100)),
+})),
+```
 
 ---
 
@@ -651,4 +666,6 @@ export const SelectableListStore = signalStore(
 );
 ```
 
-**Why good:** Multiple features composed together (entities, loading, selection, devtools), each feature is independent and reusable, clean store definition
+**Why good:** `withSelection` constrains on `{ ids: string[] }`, which `withEntities` supplies — so it must be listed after it, and the order in this store is a requirement rather than a preference. The features stay independent because each declares what it needs instead of assuming the store around it.
+
+Note the `Set` is replaced rather than mutated on every change. A `Set` added to in place is the same reference, so no signal reading `selectedIds` would see a change.

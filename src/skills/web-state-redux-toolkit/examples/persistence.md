@@ -1,6 +1,6 @@
-# Redux Toolkit - Integration Examples
+# Redux Toolkit - Persistence Examples
 
-Third-party integrations including Redux Persist for state persistence.
+> Persisting the store across sessions, and keeping the query cache out of what is persisted.
 
 **Prerequisites:** Understand [core.md](core.md) (Store Configuration) and [rtk-query.md](rtk-query.md) first.
 
@@ -61,7 +61,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 ```
 
-**Why good:** Blacklists API slice to prevent stale cache restoration, ignores persist actions in serializable check, named constants for config, named exports
+**Why good:** The API slice is excluded, so a rehydrated session starts from the server rather than from a cache of unknown age. The persist lifecycle actions carry non-serialisable values by design, so the serialisability check is told to skip exactly those and stays on for everything else.
 
 ---
 
@@ -82,7 +82,7 @@ export const App = () => (
 );
 ```
 
-**Why good:** PersistGate delays rendering until rehydration completes, provides loading fallback, named exports used
+**Why good:** Rendering waits for rehydration, so no component reads the initial state and then sees it replaced a tick later.
 
 ---
 

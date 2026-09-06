@@ -1,74 +1,6 @@
 # Redux Toolkit - Reference
 
-Decision frameworks, red flags, and anti-patterns for Redux Toolkit state management.
-
----
-
-## Decision Framework
-
-### When to Use Redux Toolkit vs Alternatives
-
-```
-What kind of state do I have?
-
-Is it server data (from API)?
-├─ YES → Do you need sophisticated caching/invalidation?
-│   ├─ YES → RTK Query (if already using RTK) or your data fetching solution
-│   └─ NO → Your data fetching solution or RTK Query
-└─ NO → Is it complex client state with many interactions?
-    ├─ YES → Do you need DevTools/time-travel debugging?
-    │   ├─ YES → Redux Toolkit
-    │   └─ NO → Is state deeply nested or relational?
-    │       ├─ YES → Redux Toolkit with Entity Adapters
-    │       └─ NO → A lighter state management solution
-    └─ NO → Is it needed in 2+ components?
-        ├─ YES → Your state management solution or Redux Toolkit
-        └─ NO → useState (component local)
-```
-
-### RTK Query vs createAsyncThunk
-
-```
-Do I need data fetching?
-
-Is it a standard REST/GraphQL API call?
-├─ YES → Use RTK Query
-│   - Automatic caching and invalidation
-│   - Generated hooks for queries/mutations
-│   - Optimistic updates built-in
-└─ NO → Is it a complex async flow?
-    ├─ YES → Use createAsyncThunk
-    │   - Multiple sequential API calls
-    │   - Conditional logic based on state
-    │   - File uploads with progress
-    └─ NO → Is it a side effect (analytics, logging)?
-        └─ YES → Use middleware
-```
-
-### Entity Adapter vs Plain State
-
-```
-Am I storing a collection of items?
-
-Does each item have a unique ID?
-├─ YES → Is performance critical (large lists)?
-│   ├─ YES → createEntityAdapter (normalized state)
-│   └─ NO → Are items frequently updated individually?
-│       ├─ YES → createEntityAdapter (O(1) lookups)
-│       └─ NO → Array in createSlice (simpler)
-└─ NO → Plain object in createSlice
-```
-
-### Quick Reference Table
-
-| Use Case                     | Solution                      | Why                               |
-| ---------------------------- | ----------------------------- | --------------------------------- |
-| Server/API data with caching | RTK Query                     | Auto caching, invalidation, hooks |
-| Complex client state         | Redux Toolkit createSlice     | DevTools, predictable updates     |
-| Collections with IDs         | createEntityAdapter           | Normalized state, CRUD operations |
-| Complex async flows          | createAsyncThunk              | Lifecycle actions, state access   |
-| Simple UI state              | useState or lightweight store | Less boilerplate                  |
-| Side effects                 | Custom middleware             | Centralized, testable             |
+> Anti-pattern code, TypeScript recipes, migration notes and performance considerations. The decision trees and the red flags are in [SKILL.md](SKILL.md).
 
 ---
 
@@ -495,18 +427,11 @@ Only migrate if you need unified state management with Redux:
 
 ---
 
-## DevTools Usage
+## DevTools
 
-Redux DevTools provides:
-
-- **Action history** - See all dispatched actions
-- **State diff** - Compare state before/after each action
-- **Time-travel** - Jump to any previous state
-- **Action replay** - Re-dispatch recorded actions
-- **Export/import** - Save and restore sessions
+`configureStore` wires the DevTools connection itself; the `devTools` option only exists to turn it off.
 
 ```typescript
-// DevTools are enabled by default in development
 const store = configureStore({
   reducer: {
     /* ... */
@@ -514,3 +439,5 @@ const store = configureStore({
   devTools: process.env.NODE_ENV !== "production",
 });
 ```
+
+What the connection buys: the action history, a state diff per action, jumping to any earlier state, re-dispatching a recorded sequence, and exporting a session to reproduce a report.

@@ -121,7 +121,7 @@ export const selectUsersError = (state: RootState) => state.users.error;
 export const usersReducer = usersSlice.reducer;
 ```
 
-**Why good:** Entity adapter standardizes CRUD operations, sorted entities via sortComparer, typed selectors with RootState, extraReducers handles async thunk lifecycle, status/error in extended state, named exports
+**Why good:** The adapter supplies the CRUD reducers and the selectors, so the `ids`/`entities` shape is never maintained by hand. `sortComparer` keeps `ids` ordered on every insert, which means the sorted read costs nothing at render time. Status and error live alongside the entities in the same slice, so a component reads one selector to know both what it has and whether it is still loading.
 
 ---
 
@@ -180,6 +180,6 @@ export const UsersAdmin = () => {
 };
 ```
 
-**Why good:** Uses entity adapter selectors, dispatch properly typed, status-based rendering, named export
+**Why good:** The adapter's generated selectors are memoised already, so reading the list does not rebuild an array per render, and branching on `status` covers the empty-but-loading case that an array length alone cannot distinguish.
 
 ---

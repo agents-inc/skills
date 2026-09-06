@@ -1,6 +1,6 @@
 # Jotai Persistence Patterns
 
-Patterns for persisting state with Jotai.
+> Storage-backed atoms, selection and array splitting. See [core.md](core.md) for the atom shapes these build on.
 
 ---
 
@@ -32,9 +32,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 // Persists to localStorage by default
 const themeAtom = atomWithStorage<Theme>(STORAGE_KEY_THEME, DEFAULT_THEME);
 
-// With getOnInit option (v2) - immediately returns stored value on first render
-// Without getOnInit (default): renders initialValue first, then stored value
-// With getOnInit: true: renders stored value immediately (may cause hydration issues in SSR)
+// getOnInit reads storage before the first render, at the cost of a server
+// render that cannot agree with it
 const themeWithGetOnInitAtom = atomWithStorage<Theme>(
   STORAGE_KEY_THEME,
   DEFAULT_THEME,
@@ -78,7 +77,7 @@ function ResetButton() {
 export { ResetButton };
 ```
 
-**Why good:** Automatic localStorage sync, RESET symbol for clearing stored values, supports custom storage backends
+**Why good:** Writes go to storage as well as to the atom, so nothing has to remember to save. `RESET` clears the stored entry rather than writing the default over it, and `createJSONStorage` swaps the backend without touching the atom's callers.
 
 ---
 
@@ -139,7 +138,7 @@ const hasNotificationsAtom = selectAtom(
 export { userProfileAtom, nameAtom, themeAtom, hasNotificationsAtom };
 ```
 
-**Why good:** Components only subscribe to specific properties, prevents re-renders when unrelated parts of object change, custom equality for precise control
+**Why good:** A component reading `nameAtom` is untouched when `metadata` changes. The equality function is the reason to reach for `selectAtom` here rather than a derived atom — a derived atom compares by reference and has no hook for anything else.
 
 ### When NOT to Use selectAtom
 
@@ -159,7 +158,7 @@ function LiveDisplay() {
 }
 ```
 
-**Why bad:** When all values update together anyway, selectAtom adds overhead without preventing re-renders
+**Why bad:** Every field changes on every frame, so the selection prevents no render and pays for a comparison on each one.
 
 ---
 
@@ -240,4 +239,4 @@ function TodoList() {
 export { TodoItem, TodoList };
 ```
 
-**Why good:** Updating one item only re-renders that item's component, dispatch handles add/remove operations, keyExtractor ensures stable atom identity
+**Why good:** Ticking one checkbox re-renders one row, because each row holds its own atom rather than an index into a shared array. The `dispatch` returned alongside handles `insert`, `remove` and `move`; the key extractor is what keeps a row's atom identity across a reorder, so the checkbox state follows the item rather than the position.

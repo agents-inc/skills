@@ -62,7 +62,7 @@ export const usePreferencesStore = defineStore("preferences", {
 });
 ```
 
-**Why good:** Named constants for defaults and storage key, `pick` option only persists preferences not transient state, TypeScript types throughout
+**Why good:** `pick` names the fields that go to storage, so a field added to the store later stays out of it until someone decides otherwise — the opposite default from `persist: true`. An explicit storage key keeps two stores from colliding, since the store id is otherwise what identifies the entry.
 
 ---
 
