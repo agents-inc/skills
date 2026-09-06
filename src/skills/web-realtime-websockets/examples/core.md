@@ -4,19 +4,7 @@
 
 **Extended patterns:** See [state-machine.md](state-machine.md), [binary.md](binary.md), and [presence.md](presence.md) for advanced patterns.
 
-**Patterns covered:**
-
-- Pattern 1: Basic WebSocket Connection
-- Pattern 2: Exponential Backoff with Jitter
-- Pattern 3: Heartbeat/Ping-Pong
-- Pattern 4: Message Queuing During Disconnection
-- Pattern 5: Type-Safe Messages with Discriminated Unions
-- Pattern 6: Binary Data Handling
-- Pattern 7: Authentication Over WebSocket
-- Pattern 8: Room/Channel Pattern
-- Pattern 9: Custom React Hook (useWebSocket)
-- Pattern 10: Shared WebSocket Connection (Context Provider)
-- Pattern 11: bfcache Compatibility (pagehide/pageshow)
+Patterns 1–11 here are the full implementations behind the same-numbered patterns in [SKILL.md](../SKILL.md).
 
 ---
 

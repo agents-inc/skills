@@ -5,92 +5,78 @@ description: Native WebSocket API patterns, connection lifecycle, reconnection s
 
 # WebSocket Real-Time Communication Patterns
 
-> **Quick Guide:** Use native WebSocket API for real-time bidirectional communication. Implement exponential backoff with jitter for reconnection. Use discriminated unions for type-safe message handling. Queue messages during disconnection for delivery on reconnect. Close connections on `pagehide` to allow bfcache.
+> **Quick Guide:** The native WebSocket API gives you a full-duplex channel and nothing else — reconnection, liveness detection, delivery during a drop and message typing are all yours to build, and this skill is the shape each of them takes. The facts that change the answer: the API accepts no custom headers, so authentication is a first message rather than a header; `onerror` is always followed by `onclose`, so recovery belongs in one place; an open connection blocks the browser's back/forward cache; and `readyState` changes are not synchronous with the calls that cause them.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — lifecycle, backoff with jitter, heartbeat, queuing, typed messages, binary protocol, auth, rooms, `useWebSocket`, shared connection, bfcache
+- [examples/state-machine.md](examples/state-machine.md) — connection state as a reducer, where booleans stop being enough
+- [examples/binary.md](examples/binary.md) — chunked file upload with progress
+- [examples/presence.md](examples/presence.md) — presence and away detection
+- [reference.md](reference.md) — close-code table with reconnect guidance, readyState values, anti-patterns with code, deployment checklist
+
+---
+
+## Which path applies
+
+- **One component owns the connection** — a hook creates the socket, holds the backoff and heartbeat timers, and closes it on unmount. Start at [examples/core.md](examples/core.md).
+- **Several components share one connection** — a provider owns the socket and routes by message type through a `subscribe(type, handler)` API that returns its own unsubscribe. Opening a socket per component multiplies handshakes and heartbeats against the same server. Also [examples/core.md](examples/core.md).
+
+Once the connection has more than two or three states worth distinguishing — reconnecting-with-attempt-count, failed-permanently — the boolean flags stop composing and [examples/state-machine.md](examples/state-machine.md) is the shape that replaces them.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing WebSocket code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Back off exponentially, with jitter, and cap both the delay and the attempt count.** Every client dropped by one server restart tries to return at the same instant, and the jitter is what spreads them out instead of re-creating the outage.
 
-**(You MUST implement exponential backoff with jitter for ALL reconnection logic)**
+**Give every message a `type` field and model the set as a discriminated union.** A `never` assignment in the default branch then turns a new server message into a compile error rather than a value that falls through.
 
-**(You MUST use discriminated unions with a `type` field for ALL WebSocket message types)**
+**Queue sends attempted while the socket is not `OPEN`, and flush on reconnect.** `send()` on a closed socket throws or drops depending on the state, and a bounded queue is what turns a two-second drop into a delay rather than data loss.
 
-**(You MUST queue messages during disconnection and flush on reconnect)**
+**Run a heartbeat and treat a missing reply as a dead connection.** Proxies and NATs drop idle connections without a close frame, so a socket can read `OPEN` for minutes after it stopped carrying anything.
 
-**(You MUST implement heartbeat/ping-pong to detect dead connections)**
+**Use `wss://` anywhere the page is served over HTTPS.** Browsers block the insecure scheme from a secure origin, localhost aside.
 
-**(You MUST set `binaryType` to 'arraybuffer' when handling binary data)**
-
-**(You MUST use wss:// for secure origins - browsers block ws:// on HTTPS pages except localhost)**
-
-**(You MUST handle bfcache with pagehide/pageshow events)**
+**Close on `pagehide` and reconnect on `pageshow` when `event.persisted`.** An open socket disqualifies the page from the back/forward cache, so this is what keeps instant back-navigation working.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** WebSocket, ws://, wss://, onmessage, onopen, onclose, onerror, reconnect, heartbeat, ping, pong, real-time, bidirectional
+**Auto-detection:** new WebSocket, wss://, ws://, socket.onmessage, socket.onopen, socket.onclose, socket.onerror, readyState, WebSocket.OPEN, bufferedAmount, binaryType, CloseEvent, event.code, pagehide, pageshow, event.persisted, WebSocketStream
 
-**When to use:**
+**Applies to:**
 
-- Building real-time features (chat, notifications, live updates)
-- Implementing bidirectional communication between client and server
-- Creating live dashboards or collaborative editing features
-- Streaming data updates with low latency requirements
+- Bidirectional messaging with low latency — chat, collaborative editing, live dashboards
+- Reconnection with backoff, jitter and a retry ceiling
+- Liveness detection through heartbeats and close-code interpretation
+- Delivery across brief disconnections via a bounded queue
+- Typed message contracts and exhaustive handling
+- Binary frames, including chunked transfers with progress
+- Connection sharing across a component tree
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- One-way server-to-client streaming only (use SSE instead)
-- Simple request-response patterns (use HTTP/REST instead)
-- When library abstractions are required (use a WebSocket wrapper library)
-- When automatic backpressure handling is critical (consider WebSocketStream when widely supported)
-
-**Key patterns covered:**
-
-- WebSocket connection lifecycle management
-- Reconnection with exponential backoff and jitter
-- Heartbeat/ping-pong for connection health
-- Message queuing during disconnection
-- Type-safe message handling with discriminated unions
-- Binary data handling (ArrayBuffer, Blob)
-- Custom React hooks (useWebSocket)
-- Authentication patterns
-- Room/channel subscriptions
-- bfcache compatibility
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Connection lifecycle, reconnection, heartbeat, queuing, auth, rooms, hooks
-- [examples/state-machine.md](examples/state-machine.md) - Connection state machine pattern
-- [examples/binary.md](examples/binary.md) - Binary data and file upload
-- [examples/presence.md](examples/presence.md) - User presence detection
-- [reference.md](reference.md) - Decision frameworks, close codes, anti-patterns
+- Server push where the client never sends — a duplex channel and its whole reconnection apparatus buy nothing there, and a long-lived HTTP response is the lighter answer.
+- Rooms, namespaces, acknowledgments and transport fallback supplied by a protocol layer — the room pattern here is hand-built on the raw API, and a library that provides them is a different subject with a different wire format.
+- The server's connection registry, broadcast fan-out and room membership.
+- Where received messages are stored and how they render.
+- Issuing and refreshing the token the first message carries.
 
 ---
 
 <philosophy>
 
-## Philosophy
+A WebSocket is one TCP connection held open, with framing on top. Everything HTTP gave you for free is gone, and what you now own is what this skill is about.
 
-WebSockets provide full-duplex communication channels over a single TCP connection, enabling real-time bidirectional data flow between client and server. Unlike HTTP, WebSocket connections remain open, eliminating the overhead of repeated handshakes.
-
-**The native WebSocket API is simple but requires careful handling:**
-
-1. **Connection Resilience:** Networks are unreliable. Always implement reconnection with exponential backoff and jitter to prevent thundering herd problems.
-
-2. **Connection Health:** Intermediate proxies and firewalls can silently drop idle connections. Heartbeats detect dead connections and keep connections alive.
-
-3. **Message Integrity:** Messages sent during disconnection are lost. Queue them and flush on reconnect for reliable delivery.
-
-4. **Type Safety:** WebSocket messages are untyped strings. Use discriminated unions with a shared `type` field for compile-time safety.
-
-5. **bfcache Compatibility:** Open WebSocket connections prevent pages from using the browser's back/forward cache, degrading navigation performance. Close connections on `pagehide` and reconnect on `pageshow` when `event.persisted`.
-
-**Connection Lifecycle:**
+- **Networks drop connections.** Reconnection is not an edge case, so backoff and jitter belong in the first version rather than a later one.
+- **A dead connection looks like a quiet one.** Only a heartbeat distinguishes them, because a connection killed by an intermediary sends no close frame.
+- **Messages sent during a drop are gone.** A bounded queue turns that into latency.
+- **Frames are untyped strings.** The type safety is whatever you model on top.
+- **An open connection has a cost beyond bandwidth.** It disqualifies the page from bfcache, which shows up as slow back-navigation rather than as an error.
 
 ```
 CONNECTING -> OPEN <-> (messages) -> CLOSING -> CLOSED
@@ -102,48 +88,52 @@ CONNECTING -> OPEN <-> (messages) -> CLOSING -> CLOSED
 
 ---
 
-<patterns>
+<decision_framework>
 
-## Core Patterns
+## Reading a close event
 
-### Pattern 1: Basic WebSocket Connection
+`event.code` says whether reconnecting is sensible: `1000` is a clean, intentional close and reconnecting fights the user; `1006` is an abnormal close with no frame, which is the ordinary network drop and the case backoff exists for; `1012` and `1013` are the server asking for a longer wait; the `100x` protocol and data errors mean the client is wrong and retrying reproduces it. The full table with a reconnect column is in [reference.md](reference.md).
 
-The native WebSocket API provides four lifecycle events: `onopen`, `onmessage`, `onerror`, and `onclose`. Always handle all four.
+Track intentional closes separately from the code — a user pressing disconnect and a server sending `1000` both arrive as `1000`, but only one of them should stop the retry loop for good.
 
-```typescript
-const WS_URL = "wss://api.example.com/ws";
-const socket = new WebSocket(WS_URL);
+## Choosing a message format
 
-socket.onopen = () => {
-  /* connection ready - safe to send */
-};
-socket.onmessage = (event: MessageEvent) => {
-  /* JSON.parse(event.data) */
-};
-socket.onerror = (event: Event) => {
-  /* always followed by onclose */
-};
-socket.onclose = (event: CloseEvent) => {
-  /* reconnect here */
-};
-```
+JSON with a discriminated union is the default, and being readable on the wire is most of why. Reach for binary frames when payload size actually shows up in a measurement, and keep the mixed shape — JSON for control messages, binary for the payload — rather than encoding everything one way.
 
-**Why good:** All four lifecycle events handled, typed event parameters, named constant for URL
+## Sending large payloads
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 1
+`send()` accepts anything and buffers what the network has not taken, so a fast producer grows `bufferedAmount` without bound. Check it before a large send and chunk the payload, which also makes progress reportable. There is no built-in backpressure signal beyond that number.
+
+</decision_framework>
 
 ---
 
-### Pattern 2: Exponential Backoff with Jitter
+<patterns>
 
-Reconnection attempts must use exponential backoff with jitter to prevent all clients from reconnecting simultaneously (thundering herd problem). Cap delay at a maximum and limit total retry attempts.
+## Core patterns
+
+### Pattern 1: Basic connection
+
+Four handlers, and all four earn their place: `onerror` carries no useful detail and is always followed by `onclose`, so recovery goes in `onclose` alone.
 
 ```typescript
-const INITIAL_BACKOFF_MS = 1000;
-const MAX_BACKOFF_MS = 30000;
-const BACKOFF_MULTIPLIER = 2;
-const JITTER_FACTOR = 0.5;
+const socket = new WebSocket(WS_URL);
 
+socket.onopen = () => flushQueue();
+socket.onmessage = (event: MessageEvent) => handle(event.data);
+socket.onerror = () => markUnhealthy(); // no detail available, onclose follows
+socket.onclose = (event: CloseEvent) => maybeReconnect(event.code);
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 2: Exponential backoff with jitter
+
+The jitter is the part that matters: without it every client dropped together returns together.
+
+```typescript
 function calculateBackoff(attempt: number): number {
   const exponential = Math.min(
     INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, attempt),
@@ -154,55 +144,51 @@ function calculateBackoff(attempt: number): number {
 }
 ```
 
-**Why good:** Jitter prevents thundering herd, capped maximum delay, retry limit prevents infinite loops
-
-> Full reconnecting class: [examples/core.md](examples/core.md) Pattern 2
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Heartbeat/Ping-Pong
+### Pattern 3: Heartbeat and ping-pong
 
-Heartbeats detect dead connections and prevent intermediate infrastructure from closing idle connections. Send a `ping` on an interval; if `pong` is not received within a timeout, consider the connection dead.
+Send on an interval, arm a shorter timeout, and let the reply disarm it. A timeout that fires means the connection is dead however healthy `readyState` looks.
 
 ```typescript
-const HEARTBEAT_INTERVAL_MS = 30000;
-const HEARTBEAT_TIMEOUT_MS = 10000;
+const ping = setInterval(() => {
+  socket.send(JSON.stringify({ type: "ping" }));
+  pongTimer = setTimeout(
+    () => socket.close(4000, "heartbeat timeout"),
+    HEARTBEAT_TIMEOUT_MS,
+  );
+}, HEARTBEAT_INTERVAL_MS);
 
-// Send ping -> start timeout -> if pong received, clear timeout
-// If timeout fires without pong -> connection is dead, close and reconnect
+// on receiving { type: "pong" }: clearTimeout(pongTimer)
 ```
 
-**When to use:** All WebSocket connections, especially those that may be idle for extended periods or pass through NATs/proxies.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 3
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Message Queuing During Disconnection
+### Pattern 4: Message queuing during disconnection
 
-Messages sent during disconnection are lost. Queue them and flush when connection is restored. Limit queue size to prevent unbounded memory growth.
+Check `readyState` before every send, because it changes independently of the calls around it.
 
 ```typescript
-const MAX_QUEUE_SIZE = 100;
-
 public send(data: unknown): void {
   if (this.socket?.readyState === WebSocket.OPEN) {
     this.socket.send(JSON.stringify(data));
   } else {
-    this.queueMessage(data); // Queue with size limit
+    this.queueMessage(data); // bounded — oldest dropped at MAX_QUEUE_SIZE
   }
 }
 ```
 
-**Why good:** Queue has size limit, oldest messages dropped when full, flush on reconnect, readyState check before sending
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 4
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: Type-Safe Messages with Discriminated Unions
+### Pattern 5: Type-safe messages with discriminated unions
 
-Use discriminated unions with a shared `type` field for compile-time type safety and exhaustive handling. Define separate types for client-to-server and server-to-client messages.
+Separate unions per direction, and an exhaustiveness check on the receiving one.
 
 ```typescript
 type ServerMessage =
@@ -213,104 +199,118 @@ type ServerMessage =
 function handleServerMessage(message: ServerMessage): void {
   switch (message.type) {
     case "subscribed":
-      /* ... */ break;
+      return onSubscribed(message);
     case "message":
-      /* ... */ break;
+      return onMessage(message);
     case "error":
-      /* ... */ break;
-    default:
-      const exhaustiveCheck: never = message; // Compile error if case missing
+      return onError(message);
+    default: {
+      const exhaustive: never = message;
+      return exhaustive;
+    }
   }
 }
 ```
 
-**Why good:** Discriminated union enables type narrowing, exhaustiveness check catches missing cases at compile time, separate types for client/server messages
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 5
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 6: Binary Data Handling
+### Pattern 6: Binary data handling
 
-WebSockets support binary data via ArrayBuffer or Blob. Set `binaryType` to `'arraybuffer'` for synchronous processing with DataView. Use `instanceof ArrayBuffer` to distinguish binary from text messages.
+`binaryType = "arraybuffer"` makes a frame readable synchronously through a `DataView`; the default `Blob` forces an async read for every message.
 
 ```typescript
 socket.binaryType = "arraybuffer";
 
 socket.onmessage = (event: MessageEvent) => {
   if (event.data instanceof ArrayBuffer) {
-    const view = new DataView(event.data); // Synchronous
+    const view = new DataView(event.data);
+    const messageType = view.getUint8(0);
   } else {
-    JSON.parse(event.data); // Text message
+    handleJson(JSON.parse(event.data));
   }
 };
 ```
 
-**Why good:** ArrayBuffer enables synchronous DataView access, instanceof check distinguishes binary from text
-
-> Full implementation with binary protocol: [examples/core.md](examples/core.md) Pattern 6
+Full code: [examples/core.md](examples/core.md) · chunked uploads: [examples/binary.md](examples/binary.md)
 
 ---
 
-### Pattern 7: Authentication Over WebSocket
+### Pattern 7: Authentication over WebSocket
 
-WebSocket doesn't support custom HTTP headers. Authenticate via the first message after connection (not query string, which leaks tokens to logs). Queue application messages until auth is confirmed.
+The API sets no custom headers, so the token goes in the first frame — not the URL, which is logged. Everything else waits behind the result.
 
 ```typescript
 socket.onopen = () => {
-  socket.send(JSON.stringify({ type: "auth", token })); // First message
+  socket.send(JSON.stringify({ type: "auth", token }));
 };
-// Queue all other messages until auth_result.success received
+// queue all other sends until { type: "auth_result", success: true } arrives
 ```
 
-**Why good:** Token not in URL (avoids server logs), messages queued until authenticated, explicit auth state
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 7
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 8: Room/Channel Pattern
+### Pattern 8: Rooms and channels
 
-Organize connections into logical channels for targeted message delivery. Track local room state (membership, joined status) and guard against sending to unjoined rooms.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 8
-
----
-
-### Pattern 9: Custom React Hook (useWebSocket)
-
-A comprehensive custom hook encapsulating connection lifecycle, reconnection with backoff, heartbeat, message queuing, and cleanup. Exposes `status`, `send`, `close`, and `reconnect`.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 9
-
----
-
-### Pattern 10: Shared WebSocket Connection (Context Provider)
-
-When multiple components need the same WebSocket, use a context provider with type-based message routing via a `subscribe(type, handler)` API.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 10
-
----
-
-### Pattern 11: bfcache Compatibility
-
-Open WebSocket connections prevent pages from entering the browser's back/forward cache. Close on `pagehide` and reconnect on `pageshow` when `event.persisted`.
+There is no room concept in the protocol — it is a message convention plus local membership state, and the guard against sending to an unjoined room is what makes the state worth keeping.
 
 ```typescript
-window.addEventListener("pagehide", () => {
-  socket?.close(1000, "Page hidden");
-});
+public joinRoom(roomId: string): void {
+  if (this.rooms.has(roomId)) return;
+  this.rooms.set(roomId, { id: roomId, members: new Set(), joined: false });
+  this.send({ type: "join_room", roomId });
+}
+// the server's room_joined reply flips joined to true and seeds members
+```
 
-window.addEventListener("pageshow", (event: PageTransitionEvent) => {
-  if (event.persisted) {
-    // Page restored from bfcache - reconnect
-    connect();
-  }
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 9: Custom React hook
+
+One hook owning the socket, the backoff timer, the heartbeat and the queue, exposing status and the actions.
+
+```typescript
+const { status, send, close, reconnect } = useWebSocket(WS_URL, {
+  onMessage: handleServerMessage,
+  heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
 });
 ```
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 11
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 10: Shared connection via context
+
+The provider owns the socket and dispatches by message type; each subscriber gets back its own unsubscribe to return from an effect.
+
+```typescript
+const { status, send, subscribe } = useWebSocketContext();
+
+useEffect(() => subscribe("notification", handleNotification), [subscribe]);
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 11: bfcache compatibility
+
+Close on `pagehide` so the page stays eligible for the cache, and reconnect on `pageshow` only when it was actually restored from it.
+
+```typescript
+window.addEventListener("pagehide", () => socket?.close(1000, "Page hidden"));
+
+window.addEventListener("pageshow", (event: PageTransitionEvent) => {
+  if (event.persisted) connect();
+});
+```
+
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
@@ -318,65 +318,27 @@ window.addEventListener("pageshow", (event: PageTransitionEvent) => {
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-### High Priority Issues
+**Breaks at runtime:**
 
-- **No reconnection logic** - Connection drops are inevitable, users see permanent disconnection
-- **Immediate reconnection without backoff** - Causes thundering herd, overwhelming server during recovery
-- **No heartbeat/ping-pong** - Dead connections go undetected, users think they're connected
-- **Untyped message handling** - Runtime errors when message shapes change, impossible to refactor safely
-- **Sending messages without readyState check** - Messages silently fail when connection is not open
-- **Missing cleanup on component unmount** - Memory leaks, zombie connections, duplicate handlers
-- **Using ws:// on HTTPS pages** - Browsers block insecure WebSocket on secure origins (except localhost)
-- **Not handling bfcache** - Open connections prevent back/forward cache, degrading navigation performance
+- `ws://` on an HTTPS page — browsers refuse it outside localhost.
+- `send()` without a `readyState` check — the state moves independently of the surrounding code, so the message is lost or throws.
+- No cleanup on unmount — the socket, its heartbeat interval and its retry timer all outlive the component.
+- Reconnecting with no backoff — the clients dropped by one restart return together and repeat the outage.
+- `JSON.parse` on `event.data` with no `try` — one malformed frame takes the handler down for every frame after it.
+- Assuming `event.data` is text — check `instanceof ArrayBuffer` first once any binary is in play.
+- A token in the connection URL — it lands in server and proxy logs — send it as the first frame.
+- `beforeunload` used for cleanup — registering it is itself enough to disqualify the page from bfcache — use `pagehide`.
+- Reconnecting on close code `1000` — that is the clean, intentional close, including the one the user asked for.
 
-### Medium Priority Issues
+**Surprising behaviour:**
 
-- **No message queuing during disconnection** - Messages lost during brief disconnects
-- **Token in WebSocket URL query string** - Security risk: token visible in server logs
-- **Using Blob binaryType for frequent binary messages** - Performance penalty from async processing
-- **Not handling all close event codes** - Missing opportunities for smart reconnection decisions
-- **Single retry interval without randomization** - All clients reconnect at same time after outage
-- **Not monitoring bufferedAmount** - Sending faster than network can handle causes memory issues
-
-### Gotchas & Edge Cases
-
-- **Close code 1000 is normal closure** - Don't reconnect for code 1000
-- **onerror is always followed by onclose** - Don't duplicate error handling logic
-- **WebSocket doesn't support custom HTTP headers** - Use first message for auth, not query string
-- **Use `pagehide` for cleanup, not `beforeunload`** - beforeunload prevents bfcache
-- **Some proxies have WebSocket idle timeouts** - Heartbeats prevent proxy disconnects (20-30s intervals)
-- **readyState changes are not synchronous** - Check readyState before every send
-- **Binary messages need `instanceof ArrayBuffer` check** - Don't assume message type
-- **JSON.parse can throw** - Always wrap in try-catch for incoming messages
-- **No built-in backpressure** - Check `bufferedAmount` before sending large data
-- **WebSocketStream is experimental** - Chrome/Edge 124+ only, no Firefox/Safari support
+- `onerror` carries no diagnostic detail and is always followed by `onclose`; recovery written in both places runs twice.
+- A connection killed by an intermediary sends no close frame, so `readyState` can read `OPEN` for minutes — only a heartbeat notices.
+- `bufferedAmount` is the only backpressure signal there is; nothing throws when a fast producer outruns the network.
+- The default `binaryType` is `Blob`, which forces an async read per message — set `arraybuffer` before the first binary frame arrives.
+- Close code `1006` never appears on the wire; the browser synthesises it for an abnormal close, so it carries no server reason.
+- `WebSocketStream`, which would give real backpressure, is Chromium-only.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST implement exponential backoff with jitter for ALL reconnection logic)**
-
-**(You MUST use discriminated unions with a `type` field for ALL WebSocket message types)**
-
-**(You MUST queue messages during disconnection and flush on reconnect)**
-
-**(You MUST implement heartbeat/ping-pong to detect dead connections)**
-
-**(You MUST set `binaryType` to 'arraybuffer' when handling binary data)**
-
-**(You MUST use wss:// for secure origins - browsers block ws:// on HTTPS pages except localhost)**
-
-**(You MUST handle bfcache with pagehide/pageshow events)**
-
-**Failure to follow these rules will result in connection storms, lost messages, blocked connections, and degraded navigation performance.**
-
-</critical_reminders>

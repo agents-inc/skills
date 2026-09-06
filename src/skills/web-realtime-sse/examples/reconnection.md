@@ -4,17 +4,28 @@
 
 ---
 
+## Shared helper: parsing a payload
+
+Every client below reads `event.data` through this rather than calling `JSON.parse` in the handler. A throw inside `onmessage` takes the handler down for every message after it, and a reconnecting client is exactly where a truncated message is most likely.
+
+```typescript
+// utils/parse-payload.ts
+export function parsePayload(data: string): unknown {
+  try {
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+```
+
+---
+
 ## Pattern 11: Message Recovery with Last-Event-ID
 
 Recover missed messages after reconnection using event IDs.
 
-### Server-Side Requirements
-
-The server must:
-
-1. Include `id:` field in events
-2. Read `Last-Event-ID` header on reconnection
-3. Replay missed events before continuing
+The server side: emit `id:` on every event, read `Last-Event-ID` on reconnection, and replay from it.
 
 ### Client Implementation
 
@@ -54,9 +65,12 @@ class RecoverableSSEClient {
         this.lastEventId = event.lastEventId;
       }
 
+      const payload = parsePayload(event.data);
+      if (payload === null) return;
+
       const message: RecoverableMessage = {
         id: event.lastEventId || `local-${Date.now()}`,
-        ...JSON.parse(event.data),
+        ...(payload as Omit<RecoverableMessage, "id">),
       };
 
       // Deduplicate (server might replay on reconnect)
@@ -86,7 +100,7 @@ class RecoverableSSEClient {
 export { RecoverableSSEClient };
 ```
 
-**Why good:** Tracks lastEventId for recovery awareness, deduplicates replayed messages, EventSource automatically handles Last-Event-ID header, buffer prevents duplicates
+**Why good:** `EventSource` sends the `Last-Event-ID` header itself; tracking the id locally is what lets the client deduplicate the messages the server replays because of it.
 
 ---
 
@@ -155,7 +169,8 @@ class RobustSSEClient {
     };
 
     this.eventSource.onmessage = (event) => {
-      this.onMessage(JSON.parse(event.data));
+      const payload = parsePayload(event.data);
+      if (payload !== null) this.onMessage(payload);
     };
 
     this.eventSource.onerror = () => {
@@ -283,7 +298,8 @@ class HealthAwareSSEClient {
     this.eventSource = new EventSource(this.url);
 
     this.eventSource.onmessage = (event) => {
-      this.onMessage(JSON.parse(event.data));
+      const payload = parsePayload(event.data);
+      if (payload !== null) this.onMessage(payload);
     };
 
     this.eventSource.onerror = () => {
@@ -372,7 +388,8 @@ class VisibilityAwareSSE {
 
     this.eventSource.onmessage = (event) => {
       this.lastEventId = event.lastEventId || null;
-      this.onMessage(JSON.parse(event.data));
+      const payload = parsePayload(event.data);
+      if (payload !== null) this.onMessage(payload);
     };
 
     this.eventSource.onerror = () => {
@@ -435,6 +452,7 @@ const DEFAULT_RECONNECT_INTERVAL_MS = 3000;
 ```typescript
 // hooks/use-sse-with-reconnect.ts
 import { useCallback, useEffect, useRef, useState } from "react";
+import { parsePayload } from "../utils/parse-payload";
 
 type SSEStatus =
   | "connecting"
@@ -499,7 +517,8 @@ export function useSSEWithReconnect(
     };
 
     eventSource.onmessage = (event) => {
-      onMessage?.(JSON.parse(event.data));
+      const payload = parsePayload(event.data);
+      if (payload !== null) onMessage?.(payload);
     };
 
     eventSource.onerror = () => {

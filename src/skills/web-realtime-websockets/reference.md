@@ -1,87 +1,6 @@
 # WebSocket Reference
 
-> Decision frameworks, anti-patterns, and quick-reference tables for WebSocket real-time communication. See [SKILL.md](SKILL.md) for core concepts and red flags, [examples/](examples/) for code examples.
-
----
-
-## Decision Framework
-
-### When to Use WebSocket vs Alternatives
-
-```
-Need real-time communication?
-├─ YES → Is it bidirectional (client sends to server)?
-│   ├─ YES → Is low latency critical?
-│   │   ├─ YES → WebSocket ✓
-│   │   └─ NO → WebSocket or polling (depending on complexity)
-│   └─ NO → Server-Sent Events (SSE) for one-way server→client
-└─ NO → Use HTTP REST for request-response patterns
-```
-
-### Native WebSocket vs Libraries
-
-```
-Building WebSocket features?
-├─ Need library-managed features (rooms, namespaces, auto-transport fallback)?
-│   └─ YES → Use a WebSocket wrapper library (not this skill's scope)
-├─ Need simple bidirectional communication?
-│   └─ YES → Native WebSocket API
-├─ Need to support legacy browsers without WebSocket?
-│   └─ YES → Use a library with fallback transports
-└─ Default → Native WebSocket API for simplicity
-```
-
-### Connection Management Strategy
-
-```
-Managing WebSocket connections?
-├─ Multiple components need same connection?
-│   └─ YES → Use Context Provider (Pattern 10)
-├─ Single component needs connection?
-│   └─ YES → Use custom hook in component
-├─ Complex state transitions?
-│   └─ YES → Use state machine pattern (Pattern 12)
-└─ Simple connection → Basic WebSocket class
-```
-
-### Message Serialization Strategy
-
-```
-Choosing message format?
-├─ Need human-readable debugging?
-│   └─ YES → JSON with discriminated unions
-├─ Bandwidth/performance critical?
-│   └─ YES → Binary with ArrayBuffer (Pattern 6)
-├─ Mixed text and binary data?
-│   └─ YES → JSON for control, binary for data
-└─ Default → JSON with discriminated unions
-```
-
-### Reconnection Strategy
-
-```
-Implementing reconnection?
-├─ Server might be temporarily down?
-│   └─ YES → Exponential backoff with jitter ✓
-├─ Connection drops are expected?
-│   └─ YES → Message queuing + flush on reconnect ✓
-├─ Need to limit server load after outage?
-│   └─ YES → Max retry limit + backoff cap ✓
-└─ All WebSocket connections → Always implement reconnection
-```
-
-### Binary Data Strategy
-
-```
-Handling binary data?
-├─ Need synchronous processing?
-│   └─ YES → binaryType = 'arraybuffer' ✓
-├─ Working with files/blobs?
-│   └─ YES → Consider chunked uploads (Pattern 13)
-├─ Need protocol with headers?
-│   └─ YES → DataView for parsing binary headers
-└─ Default → binaryType = 'arraybuffer' for performance
-```
+> Close codes, readyState values and the anti-patterns whose code is not in the examples. The decisions and the red flags are in [SKILL.md](SKILL.md); the implementations are in [examples/](examples/).
 
 ---
 
@@ -193,37 +112,14 @@ function sendLargeData(data: ArrayBuffer): boolean {
 | 2     | `WebSocket.CLOSING`    | Connection closing                           |
 | 3     | `WebSocket.CLOSED`     | Connection closed                            |
 
-### Connection Checklist
+### Deployment Checklist
 
-- [ ] Implements exponential backoff with jitter
-- [ ] Has maximum retry limit
-- [ ] Has heartbeat/ping-pong mechanism (20-30s intervals recommended)
-- [ ] Queues messages during disconnection
-- [ ] Flushes queue on reconnect
-- [ ] Checks readyState before sending
-- [ ] Cleans up on component unmount
-- [ ] Distinguishes intentional vs unintentional close
-- [ ] Handles bfcache (pagehide/pageshow events)
+Items beyond what SKILL.md's requirements and red flags already cover.
 
-### Message Handling Checklist
-
-- [ ] Uses discriminated unions for message types
-- [ ] Has exhaustive switch with never check
-- [ ] Wraps JSON.parse in try-catch
-- [ ] Checks instanceof for binary vs text
-- [ ] Uses ArrayBuffer for binary data (not Blob)
-
-### Security Checklist
-
-- [ ] Uses wss:// (not ws://) in production
-- [ ] Token sent as first message (not in URL)
-- [ ] Validates server messages before using
-- [ ] Handles authentication expiry/refresh
-
-### Performance Checklist
-
-- [ ] Uses binaryType = 'arraybuffer' for binary data
-- [ ] Chunks large file uploads
-- [ ] Limits message queue size
-- [ ] Uses shared connection when multiple components need same socket
-- [ ] Monitors bufferedAmount for backpressure on large sends
+- [ ] Heartbeat interval short enough for the shortest proxy idle timeout in the path (20–30s is the usual safe range)
+- [ ] Retry ceiling and backoff cap both set, so a permanently unreachable server stops being polled
+- [ ] Intentional closes tracked separately from close code `1000`
+- [ ] Inbound messages validated before use — a discriminated union is a compile-time claim, not a runtime one
+- [ ] Auth expiry handled: the server closes the connection, and the reconnect path fetches a fresh token
+- [ ] Queue size bounded, and the drop policy chosen deliberately (oldest or newest)
+- [ ] `bufferedAmount` consulted before large sends

@@ -5,474 +5,241 @@ description: Server-Sent Events for unidirectional server-to-client streaming, E
 
 # Server-Sent Events (SSE) Patterns
 
-> **Quick Guide:** Use SSE for unidirectional server-to-client real-time updates over HTTP. Use the native EventSource API for automatic reconnection and message parsing. Use fetch streaming when you need custom headers or POST requests.
+> **Quick Guide:** SSE pushes text from server to client over an ordinary HTTP response, so it crosses proxies and firewalls that block anything more exotic. `EventSource` gives reconnection and `Last-Event-ID` replay for free but is GET-only and cannot set headers; fetch streaming gives up both and buys custom headers, POST bodies and an `AbortController`. The facts that change the answer: `EventSource` retries network errors but gives up permanently on an HTTP error status, `retry:` is milliseconds, and `Connection: keep-alive` is prohibited on HTTP/2+.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — EventSource lifecycle, named events, credentials, a state-tracking wrapper, typed messages, and the React hooks built on them
+- [examples/fetch-streaming.md](examples/fetch-streaming.md) — stream reader with buffer handling, field parser, auth headers, POST streaming, token-by-token UI
+- [examples/reconnection.md](examples/reconnection.md) — `Last-Event-ID` recovery, exponential backoff, health checks, visibility-aware pausing
+- [reference.md](reference.md) — message format, field behaviour, readyState values, required response headers, EventSource behaviour table
+
+---
+
+## Which path applies
+
+- **`EventSource`** — the browser reconnects, replays through `Last-Event-ID` and parses the wire format for you. It sends GET only, sets no headers, and authenticates by cookie (`withCredentials: true`). Start at [examples/core.md](examples/core.md).
+- **Fetch streaming** — reach for it when the stream needs an `Authorization` header, a POST body, or cancellation you control. You then own reconnection, backoff, `Last-Event-ID` and the field parsing. See [examples/fetch-streaming.md](examples/fetch-streaming.md).
+
+Both consume the same wire format, so the parser and the message types are shared between them.
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing SSE code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Call `eventSource.close()` when the consumer goes away.** An open stream holds a connection against the browser's per-domain limit and keeps delivering into a handler nothing is watching.
 
-**(You MUST use named constants for ALL timing values - reconnect intervals, keep-alive periods, timeouts)**
+**Branch on `readyState` inside `onerror`.** `CONNECTING` means the browser is already retrying and the right action is to wait; `CLOSED` means it has given up and reconnecting is yours to do.
 
-**(You MUST implement proper cleanup by calling `eventSource.close()` when connections are no longer needed)**
+**Emit an `id:` on each message from the server.** The browser returns the last one as `Last-Event-ID` on the next connection, which is what lets the server resume rather than restart.
 
-**(You MUST use event IDs (`id:` field) to enable message recovery on reconnection)**
+**Respond with `Content-Type: text/event-stream` and `Cache-Control: no-cache`.** Leave `Connection: keep-alive` off — it is prohibited on HTTP/2 and above, and Safari rejects a response carrying it.
 
-**(You MUST handle the `onerror` event and check `readyState` to distinguish reconnection from permanent failure)**
-
-**(You MUST set `Content-Type: text/event-stream` and `Cache-Control: no-cache` on SSE responses — do NOT set `Connection: keep-alive` on HTTP/2+)**
+**Send a comment line (`: keep-alive`) on an interval.** Proxies close streams they read as idle, typically after 60–120 seconds, and a comment resets that clock without reaching any handler.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** SSE, Server-Sent Events, EventSource, text/event-stream, onmessage, server push, one-way streaming, real-time updates
+**Auto-detection:** EventSource, text/event-stream, Last-Event-ID, eventSource.onmessage, eventSource.readyState, EventSource.CONNECTING, withCredentials, addEventListener("message"), retry:, data:, event:, id:, ReadableStream, TextDecoder, response.body.getReader
 
-**When to use:**
+**Applies to:**
 
-- Server-to-client real-time updates (notifications, feeds, dashboards)
-- LLM/AI response streaming (token-by-token output)
-- Live data feeds (stock prices, sports scores, news)
-- Server push notifications without client responses needed
-- Long-polling replacement with better browser support
+- Server-to-client push over plain HTTP — notifications, feeds, dashboards
+- Token-by-token streaming of generated text
+- Live data feeds where the client only listens
+- Resumable streams via `Last-Event-ID`
+- Parsing the SSE wire format by hand when `EventSource` cannot be used
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- EventSource API connection lifecycle
-- Custom event types with addEventListener
-- Fetch-based streaming for custom headers/POST
-- SSE message parsing (data, event, id, retry fields)
-- Reconnection with Last-Event-ID recovery
-- Keep-alive comments to prevent proxy timeouts
-- Custom React hooks (useEventSource, useSSE)
-
-**When NOT to use:**
-
-- Bidirectional communication needed (use WebSocket)
-- Binary data transmission required (use WebSocket)
-- Client needs to send frequent messages (use WebSocket)
-- Sub-millisecond latency required (use WebSocket)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - React hooks (useEventSource, useSSE), shared context, conditional connection
-- [examples/fetch-streaming.md](examples/fetch-streaming.md) - Fetch-based SSE, message parser, auth, POST streaming, LLM pattern
-- [examples/reconnection.md](examples/reconnection.md) - Last-Event-ID recovery, exponential backoff, health checks, visibility-aware
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, message format reference
+- Frequent client-to-server messaging — SSE carries no upstream channel, so a client that needs one either pairs the stream with ordinary requests or wants a bidirectional transport instead of this.
+- Binary payloads — the wire format is UTF-8 text; binary has to be encoded, which costs about a third in size.
+- The server's own stream implementation and its replay store.
+- Where messages are kept once received, and how they render.
+- Issuing and refreshing the token the stream authenticates with.
 
 ---
 
 <philosophy>
 
-## Philosophy
+SSE is an HTTP response that never ends. That is the whole design, and everything follows from it: it works through the infrastructure that already carries HTTP, it is readable on the wire, and the browser can own reconnection because there is no handshake to redo.
 
-Server-Sent Events (SSE) provide a simple, HTTP-based protocol for servers to push real-time updates to clients. Unlike WebSockets, SSE is **unidirectional** (server to client only), built on standard HTTP, and includes automatic reconnection.
-
-**Why SSE exists:**
-
-1. **Simplicity:** Standard HTTP protocol - works through firewalls, proxies, and load balancers without special configuration.
-
-2. **Built-in Reconnection:** The EventSource API automatically reconnects when connections drop, with configurable retry intervals.
-
-3. **Message Recovery:** The `Last-Event-ID` header enables servers to replay missed messages after reconnection.
-
-4. **Text-Based Protocol:** Human-readable format makes debugging straightforward.
-
-**Connection Lifecycle:**
+- **The browser reconnects, not you** — `EventSource` retries on its own schedule, adjustable by the server through `retry:`.
+- **Replay is a header** — the server sees `Last-Event-ID` and decides what to resend.
+- **The format is five fields** — `data:`, `event:`, `id:`, `retry:` and a bare `:` comment.
 
 ```
-CONNECTING (0) → OPEN (1) → messages... → CLOSED (2)
-                    ↓                         ↓
+CONNECTING (0) → OPEN (1) → messages… → CLOSED (2)
+                    ↓                       ↓
                 (error) ← auto-reconnect ← (connection lost)
 ```
-
-**When to Choose SSE over WebSocket:**
-
-- Server sends updates, client only listens
-- Working with HTTP/2 (multiplexing multiple SSE streams)
-- Need automatic reconnection without custom logic
-- Proxies/firewalls block WebSocket but allow HTTP
-- Building LLM streaming interfaces
 
 </philosophy>
 
 ---
 
+<decision_framework>
+
+## Authenticating the stream
+
+A cookie on a same-origin or credentialed cross-origin request is the only mechanism `EventSource` offers — set `withCredentials: true` and have the server allow credentials in CORS. A bearer token needs fetch streaming, because the token belongs in an `Authorization` header rather than the URL. Short-lived tokens additionally need the reconnect path to fetch a fresh one, which is another reason that case lands on fetch streaming.
+
+## Deploying behind infrastructure
+
+On HTTP/1.1 a stream occupies one of roughly six connections per domain, so several concurrent streams starve the rest of the page; HTTP/2 multiplexes them and removes the ceiling. Reverse proxies buffer responses by default and will hold messages until the buffer fills — turn buffering off for the route (`X-Accel-Buffering: no` on nginx) and avoid transformations with `Cache-Control: no-transform`. On a serverless platform, check the response timeout before relying on a long-lived stream at all.
+
+</decision_framework>
+
+---
+
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic EventSource Connection
+### Pattern 1: EventSource lifecycle
 
-The native EventSource API provides automatic connection management, message parsing, and reconnection.
-
-#### Constants
+Three handlers cover the whole surface, and `readyState` in `onerror` is what separates a retry in progress from a dead stream.
 
 ```typescript
-const SSE_URL = "/api/events";
-```
-
-#### Implementation
-
-```typescript
-// ✅ Good Example - Complete lifecycle handling
-const SSE_URL = "/api/events";
-
 const eventSource = new EventSource(SSE_URL);
 
-eventSource.onopen = () => {
-  console.log("SSE connection opened");
-  // Connection is ready - server can now push events
+eventSource.onopen = () => setStatus("open");
+eventSource.onmessage = (event: MessageEvent) =>
+  handle(event.data, event.lastEventId);
+eventSource.onerror = () => {
+  if (eventSource.readyState === EventSource.CLOSED) reconnectManually();
 };
-
-eventSource.onmessage = (event: MessageEvent) => {
-  console.log("Received:", event.data);
-  console.log("Event ID:", event.lastEventId);
-};
-
-eventSource.onerror = (error: Event) => {
-  console.error("SSE error:", error);
-
-  // Check connection state to determine action
-  if (eventSource.readyState === EventSource.CLOSED) {
-    console.log("Connection closed permanently");
-  } else if (eventSource.readyState === EventSource.CONNECTING) {
-    console.log("Reconnecting...");
-  }
-};
-
-// Cleanup when done
-// eventSource.close();
 ```
 
-**Why good:** All three lifecycle events handled, readyState check distinguishes reconnection from permanent failure, named constant for URL, cleanup shown
-
-```typescript
-// ❌ Bad Example - Missing error handling and cleanup
-const eventSource = new EventSource("/api/events");
-
-eventSource.onmessage = (event) => {
-  console.log(event.data);
-};
-// No onerror handler - connection failures are silent
-// No cleanup - connection stays open forever
-```
-
-**Why bad:** Missing onerror means failures are silent, missing cleanup causes memory leaks and zombie connections, hardcoded URL string
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 2: Custom Event Types
+### Pattern 2: Named event types
 
-SSE supports named events via the `event:` field. Use `addEventListener` to handle specific event types.
+A message carrying an `event:` field is delivered to a listener of that name rather than to `onmessage`.
 
 ```typescript
-// ✅ Good Example - Multiple event type handling
-const SSE_URL = "/api/notifications";
-
-const eventSource = new EventSource(SSE_URL);
-
-// Default message event (no event: field in server response)
-eventSource.onmessage = (event: MessageEvent) => {
-  console.log("Generic message:", event.data);
-};
-
-// Named custom events
 eventSource.addEventListener("notification", (event: MessageEvent) => {
-  const notification = JSON.parse(event.data);
-  showNotification(notification.title, notification.body);
+  show(JSON.parse(event.data));
 });
 
-eventSource.addEventListener("user-joined", (event: MessageEvent) => {
-  const user = JSON.parse(event.data);
-  updateUserList(user);
-});
-
-eventSource.addEventListener("heartbeat", (event: MessageEvent) => {
-  // Keep-alive event - connection is healthy
-  console.log("Heartbeat received at:", event.data);
-});
+// messages with no event: field still arrive here
+eventSource.onmessage = (event: MessageEvent) => handleDefault(event.data);
 ```
 
-**Why good:** Separate handlers for different event types, typed MessageEvent parameters, JSON parsing for structured data, heartbeat handling for connection health
-
-**When to use:** When server sends multiple types of events with different handling requirements.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: Credentials and Cross-Origin
+### Pattern 3: Credentials and cross-origin
 
-For cross-origin requests or when cookies are required, configure `withCredentials`.
+`withCredentials` sends cookies to another origin; a CORS misconfiguration surfaces as `onerror` with nothing more specific.
 
 ```typescript
-// ✅ Good Example - Cross-origin with credentials
-const SSE_URL = "https://api.example.com/events";
-
-const eventSource = new EventSource(SSE_URL, {
-  withCredentials: true, // Include cookies for cross-origin
-});
-
-eventSource.onopen = () => {
-  console.log("Connected with credentials");
-};
-
-eventSource.onerror = (error) => {
-  // CORS errors will trigger onerror
-  console.error("Connection error - check CORS configuration");
-};
+const eventSource = new EventSource(SSE_URL, { withCredentials: true });
 ```
 
-**Why good:** withCredentials enables cookie-based authentication, CORS error handling noted
-
-**When to use:** Cross-origin SSE connections that require authentication cookies.
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 4: Connection State Management
+### Pattern 4: Connection state and manual retry
 
-Track connection state for UI feedback and smart reconnection decisions.
-
-#### Constants
+`EventSource` retries network failures by itself but stops permanently on an HTTP error status. Tracking status gives the UI something to show and gives that case somewhere to hook a retry.
 
 ```typescript
-type SSEStatus = "connecting" | "open" | "closed" | "error";
-
-const READY_STATE_MAP: Record<number, SSEStatus> = {
-  [EventSource.CONNECTING]: "connecting",
-  [EventSource.OPEN]: "open",
-  [EventSource.CLOSED]: "closed",
+eventSource.onerror = () => {
+  if (eventSource.readyState === EventSource.CLOSED) {
+    setStatus("closed");
+    scheduleRetry(); // the browser will not do this one
+  } else {
+    setStatus("error"); // CONNECTING — the browser is already on it
+  }
 };
 ```
 
-#### Implementation
-
-```typescript
-// ✅ Good Example - State tracking class
-const MAX_MANUAL_RETRIES = 5;
-const RETRY_DELAY_MS = 3000;
-
-class SSEConnection {
-  private eventSource: EventSource | null = null;
-  private status: SSEStatus = "closed";
-  private manualRetryCount = 0;
-  private onStatusChange?: (status: SSEStatus) => void;
-  private onMessage?: (data: string, eventType: string) => void;
-
-  constructor(
-    private url: string,
-    options?: {
-      onStatusChange?: (status: SSEStatus) => void;
-      onMessage?: (data: string, eventType: string) => void;
-    },
-  ) {
-    this.onStatusChange = options?.onStatusChange;
-    this.onMessage = options?.onMessage;
-  }
-
-  connect(): void {
-    if (this.eventSource) {
-      this.disconnect();
-    }
-
-    this.setStatus("connecting");
-    this.eventSource = new EventSource(this.url);
-
-    this.eventSource.onopen = () => {
-      this.setStatus("open");
-      this.manualRetryCount = 0; // Reset on successful connection
-    };
-
-    this.eventSource.onmessage = (event: MessageEvent) => {
-      this.onMessage?.(event.data, "message");
-    };
-
-    this.eventSource.onerror = () => {
-      if (this.eventSource?.readyState === EventSource.CLOSED) {
-        this.setStatus("closed");
-        // EventSource won't auto-reconnect if server sent HTTP error
-        this.attemptManualReconnect();
-      } else {
-        this.setStatus("error");
-        // EventSource is auto-reconnecting
-      }
-    };
-  }
-
-  private attemptManualReconnect(): void {
-    if (this.manualRetryCount < MAX_MANUAL_RETRIES) {
-      this.manualRetryCount++;
-      console.log(`Manual reconnect attempt ${this.manualRetryCount}`);
-      setTimeout(() => this.connect(), RETRY_DELAY_MS);
-    }
-  }
-
-  disconnect(): void {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
-      this.setStatus("closed");
-    }
-  }
-
-  private setStatus(status: SSEStatus): void {
-    this.status = status;
-    this.onStatusChange?.(status);
-  }
-
-  getStatus(): SSEStatus {
-    return this.status;
-  }
-}
-
-export { SSEConnection };
-```
-
-**Why good:** Named constants for retry values, status tracking enables UI updates, manual retry for HTTP errors (EventSource only auto-retries network errors), cleanup resets state properly
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 5: SSE Message Format
+### Pattern 5: SSE message format
 
-Messages are `\n`-separated fields terminated by `\n\n`. Five field types: `data:` (payload), `event:` (named type), `id:` (recovery ID), `retry:` (reconnect ms), `:` (comment/keep-alive).
+Fields are `\n`-separated and a message ends at `\n\n`. Five field types: `data:` payload, `event:` name, `id:` recovery point, `retry:` reconnect interval in milliseconds, and a bare `:` comment.
 
 ```
 event: notification
 data: {"title": "New message"}
 id: msg-002
 
-: keep-alive comment (ignored by client)
+: keep-alive comment (never delivered to a handler)
 ```
 
-**Key behaviors:** multiple `data:` lines concatenate with `\n`; `id:` persists until changed; `retry:` is remembered for future reconnections; comments (`:`) keep connection alive but are not delivered.
+Repeated `data:` lines join with `\n`; `id:` persists until a later message changes it; `retry:` is remembered for every subsequent reconnection.
 
-See [reference.md](reference.md) for the full field reference and behavior table.
+Full field and behaviour tables: [reference.md](reference.md)
 
 ---
 
-### Pattern 6: Discriminated Unions for Message Types
+### Pattern 6: Typed message handling
 
-Use TypeScript discriminated unions for type-safe message handling.
+A discriminated union over the payload turns the switch into an exhaustive one, so a new server message type becomes a compile error rather than a silently ignored branch.
 
 ```typescript
-// ✅ Good Example - Type-safe SSE message handling
-
-// Server message types
 type SSEMessage =
-  | {
-      type: "notification";
-      title: string;
-      body: string;
-      priority: "low" | "high";
-    }
+  | { type: "notification"; title: string; body: string }
   | { type: "user-update"; userId: string; action: "joined" | "left" }
-  | { type: "data-sync"; payload: unknown; timestamp: number }
   | { type: "heartbeat"; serverTime: number };
 
-function parseSSEMessage(data: string): SSEMessage | null {
-  try {
-    return JSON.parse(data) as SSEMessage;
-  } catch {
-    console.error("Failed to parse SSE message:", data);
-    return null;
-  }
-}
-
-function handleSSEMessage(message: SSEMessage): void {
+function handle(message: SSEMessage): void {
   switch (message.type) {
     case "notification":
-      showNotification(message.title, message.body, message.priority);
-      break;
+      return show(message.title, message.body);
     case "user-update":
-      updateUserPresence(message.userId, message.action);
-      break;
-    case "data-sync":
-      syncData(message.payload, message.timestamp);
-      break;
+      return updatePresence(message.userId, message.action);
     case "heartbeat":
-      updateServerTime(message.serverTime);
-      break;
-    default:
-      // Exhaustiveness check
+      return updateServerTime(message.serverTime);
+    default: {
       const exhaustive: never = message;
-      console.warn("Unknown message type:", exhaustive);
+      return exhaustive;
+    }
   }
 }
-
-// Usage with EventSource
-eventSource.onmessage = (event: MessageEvent) => {
-  const message = parseSSEMessage(event.data);
-  if (message) {
-    handleSSEMessage(message);
-  }
-};
 ```
 
-**Why good:** Discriminated union enables type narrowing, exhaustiveness check catches missing cases at compile time, separate parse and handle functions, error handling for malformed messages
+Full code: [examples/core.md](examples/core.md)
 
 </patterns>
 
 ---
 
-<integration>
-
-## Integration Guide
-
-**SSE is a transport mechanism.** This skill covers the EventSource API and fetch streaming patterns only.
-
-- Components receive SSE data via callbacks/hooks and pass it to your UI layer via props or state
-- Authentication integrates via cookies (`withCredentials: true`) or fetch streaming with custom headers
-- For bidirectional communication, SSE is not the right tool — evaluate WebSocket instead
-
-</integration>
-
----
-
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-- **No cleanup on unmount** - EventSource stays open, memory leaks, zombie connections
-- **Ignoring onerror event** - Connection failures are silent, users see stale data
-- **Not checking readyState in onerror** - Cannot distinguish reconnection from permanent failure
-- **Token in URL query string** - Security risk: visible in server logs, browser history
-- **Missing keep-alive comments** - Proxies may close "idle" connections after 60-120 seconds
-- **JSON.parse without try-catch** - Malformed messages crash the entire handler
-- **Creating new EventSource without closing old one** - Duplicate connections, duplicate messages
-- **Not handling buffer boundaries in fetch streaming** - Messages split across chunks are missed
+**Breaks at runtime:**
 
-**Gotchas & Edge Cases:**
+- No `close()` when the consumer unmounts — the stream stays open, counts against the per-domain connection limit and keeps firing into a dead handler.
+- A new `EventSource` created without closing the previous one — both stay live and every message arrives twice.
+- `onerror` left unhandled — a failed stream is indistinguishable from a quiet one, and the UI shows stale data indefinitely.
+- `JSON.parse` on `event.data` without a `try` — one malformed message takes down the handler for every message after it.
+- A token in the URL query string — it is logged by the server, kept in history and visible to proxies — use a cookie, or fetch streaming with an `Authorization` header.
+- `EventSource` where a POST is needed — it issues GET and nothing else.
+- Fetch streaming that treats each chunk as a whole message — chunk boundaries fall mid-message, so buffer and split on `\n\n`.
+- `TextDecoder` used without `{ stream: true }` — a multi-byte character split across chunks decodes as garbage.
+- Rendering message content without validating it — the payload is attacker-influenced text, and a typed interface is a compile-time claim rather than a runtime one.
 
-- EventSource has no timeout - dead connections may not fire onerror for minutes
-- HTTP/1.1 browsers limit 6 connections per domain (SSE counts against this)
-- `retry:` field is in milliseconds, not seconds
-- Empty `data:\n\n` sends empty string, not undefined
-- `Connection: keep-alive` header is prohibited in HTTP/2+ (Safari rejects it)
+**Surprising behaviour:**
 
-See [reference.md](reference.md) for full anti-pattern examples with code.
+- `EventSource` has no timeout — a connection dead at the network level can stay `OPEN` for minutes before `onerror` fires, which is what keep-alive comments and a client-side health check exist to catch.
+- It retries network errors but treats an HTTP 4xx or 5xx as final, so the case most likely to need a retry is the one it will not perform.
+- `retry:` is milliseconds. A server sending `retry: 5` reconnects every 5ms.
+- `data:\n\n` delivers an empty string rather than nothing — a falsy check treats a real message as absent.
+- Multi-line payloads are several `data:` lines, not escaped newlines in one.
+- A blank `id:` clears `Last-Event-ID` rather than leaving the previous value in place.
+- On reconnection the stream resumes but component state does not reset itself, so anything accumulated before the drop needs reconciling against what the replay delivers.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST use named constants for ALL timing values - reconnect intervals, keep-alive periods, timeouts)**
-
-**(You MUST implement proper cleanup by calling `eventSource.close()` when connections are no longer needed)**
-
-**(You MUST use event IDs (`id:` field) to enable message recovery on reconnection)**
-
-**(You MUST handle the `onerror` event and check `readyState` to distinguish reconnection from permanent failure)**
-
-**(You MUST set `Content-Type: text/event-stream` and `Cache-Control: no-cache` on SSE responses — do NOT set `Connection: keep-alive` on HTTP/2+)**
-
-**Failure to follow these rules will result in memory leaks, missed messages, and silent connection failures.**
-
-</critical_reminders>
