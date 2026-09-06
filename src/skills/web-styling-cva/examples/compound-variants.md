@@ -1,12 +1,14 @@
-# CVA - Compound Variants Examples
+# CVA — Compound Variant Examples
 
-> Multi-condition styles and complex variant combinations. See [SKILL.md](../SKILL.md) for core concepts.
+> Styles that belong to a _combination_ rather than to any single variant. See [core.md](core.md) for the base definitions these build on, [SKILL.md](../SKILL.md) for decision guidance.
+
+**Prerequisites:** basic variant definitions and boolean variants from [core.md](core.md).
 
 ---
 
-## Basic Compound Variants
+## Hover states only where the control is interactive
 
-### Good Example - Hover States When Enabled
+### Good
 
 ```typescript
 import { cva } from "class-variance-authority";
@@ -26,7 +28,6 @@ const buttonVariants = cva(
       },
     },
     compoundVariants: [
-      // Hover states ONLY when not disabled
       {
         intent: "primary",
         disabled: false,
@@ -50,21 +51,18 @@ const buttonVariants = cva(
   },
 );
 
-// Usage
-buttonVariants({ intent: "primary" }); // Includes hover styles
-buttonVariants({ intent: "primary", disabled: true }); // No hover styles
+buttonVariants({ intent: "primary" }); // hover and focus classes present
+buttonVariants({ intent: "primary", disabled: true }); // neither
 ```
 
-**Why good:** Hover/focus styles only when interactive, compound variants express "when X AND Y" cleanly, avoids CSS :not(:disabled) complexity
+**Why good:** the interactive styles depend on two variants at once, and the compound entry is the only place that pairing is written down.
 
-### Bad Example - Nested Ternaries Instead
+### Bad — the same rules as nested ternaries
 
 ```typescript
-// WRONG - Complex ternaries for combined states
 function getButtonClasses(intent: string, disabled: boolean) {
   const base = "font-semibold border rounded";
   const intentClass = intent === "primary" ? "bg-blue-600" : "bg-white";
-  // Nested ternary mess for hover
   const hoverClass = !disabled
     ? intent === "primary"
       ? "hover:bg-blue-700"
@@ -76,13 +74,11 @@ function getButtonClasses(intent: string, disabled: boolean) {
 }
 ```
 
-**Why bad:** Hard to read and maintain, easy to miss cases, no type safety
+**Why bad:** the `intent` list appears twice and the two copies can disagree; a new intent silently falls through to the danger hover, and nothing types the arguments.
 
 ---
 
-## Array Syntax for Multiple Matches
-
-### Good Example - Shared Styles Across Intents
+## Array syntax for several matching values
 
 ```typescript
 import { cva } from "class-variance-authority";
@@ -102,28 +98,19 @@ const alertVariants = cva(["p-4", "rounded-lg", "border"], {
     },
     dismissible: {
       false: null,
-      true: ["pr-10"], // Extra padding for close button
+      true: ["pr-10"], // room for the close control
     },
   },
   compoundVariants: [
-    // Array syntax: applies to info AND success
-    {
-      intent: ["info", "success"],
-      size: "lg",
-      class: ["shadow-lg"],
-    },
-    // Array syntax: warning OR error at medium or large
+    // info OR success, at lg
+    { intent: ["info", "success"], size: "lg", class: ["shadow-lg"] },
+    // warning OR error, at md OR lg
     {
       intent: ["warning", "error"],
       size: ["md", "lg"],
       class: ["font-medium", "shadow-md"],
     },
-    // Dismissible alerts need icon alignment
-    {
-      dismissible: true,
-      size: ["sm", "md"],
-      class: ["relative"],
-    },
+    { dismissible: true, size: ["sm", "md"], class: ["relative"] },
   ],
   defaultVariants: {
     intent: "info",
@@ -133,13 +120,11 @@ const alertVariants = cva(["p-4", "rounded-lg", "border"], {
 });
 ```
 
-**Why good:** Array syntax reduces duplication, "any of these" matching is clear, combines size and intent dimensions
+**Why good:** an array value means "any of these", so four rules collapse into two and stay in step when a fifth intent arrives.
 
 ---
 
-## Size-Specific Intent Styles
-
-### Good Example - Large Primary is Special
+## Progressive emphasis by size
 
 ```typescript
 import { cva } from "class-variance-authority";
@@ -158,18 +143,12 @@ const ctaButtonVariants = cva(["font-semibold", "rounded", "transition-all"], {
     },
   },
   compoundVariants: [
-    // Large and XL primary get special treatment
     {
       intent: "primary",
       size: ["lg", "xl"],
       class: ["uppercase", "tracking-wider", "shadow-lg"],
     },
-    // XL gets even more
-    {
-      intent: "primary",
-      size: "xl",
-      class: ["font-bold"],
-    },
+    { intent: "primary", size: "xl", class: ["font-bold"] },
   ],
   defaultVariants: {
     intent: "primary",
@@ -177,19 +156,15 @@ const ctaButtonVariants = cva(["font-semibold", "rounded", "transition-all"], {
   },
 });
 
-// Usage
-ctaButtonVariants({ size: "md" }); // Normal primary
-ctaButtonVariants({ size: "lg" }); // Uppercase, tracking, shadow
-ctaButtonVariants({ size: "xl" }); // Above + font-bold
+ctaButtonVariants({ size: "lg" }); // uppercase, tracking, shadow
+ctaButtonVariants({ size: "xl" }); // the above, plus font-bold
 ```
 
-**Why good:** Progressive enhancement for larger sizes, multiple compound variants can apply, specific overrides
+**Why good:** several compound entries can match one call, so emphasis stacks rather than needing an entry per size.
 
 ---
 
-## State Combinations
-
-### Good Example - Interactive States Matrix
+## A state matrix
 
 ```typescript
 import { cva } from "class-variance-authority";
@@ -213,23 +188,17 @@ const toggleVariants = cva(
       },
     },
     compoundVariants: [
-      // Enabled + unchecked: hover to darker gray
       {
         checked: false,
         disabled: false,
         class: ["hover:bg-gray-400", "cursor-pointer"],
       },
-      // Enabled + checked: hover to darker blue
       {
         checked: true,
         disabled: false,
         class: ["hover:bg-blue-700", "cursor-pointer"],
       },
-      // Disabled overrides any hover
-      {
-        disabled: true,
-        class: ["hover:bg-current"], // Cancel hover effect
-      },
+      { disabled: true, class: ["hover:bg-current"] }, // cancels any hover
     ],
     defaultVariants: {
       size: "md",
@@ -240,13 +209,11 @@ const toggleVariants = cva(
 );
 ```
 
-**Why good:** Clear state matrix (checked x disabled), hover only when enabled, cursor indicates interactivity
+**Why good:** checked × disabled is a four-cell matrix and every cell is named, so no combination falls through to a default nobody chose.
 
 ---
 
-## Loading State Compounds
-
-### Good Example - Loading Overrides Intent
+## A state that overrides another variant's colours
 
 ```typescript
 import { cva } from "class-variance-authority";
@@ -269,29 +236,18 @@ const submitButtonVariants = cva(
       },
     },
     compoundVariants: [
-      // Loading primary: muted blue
       {
         intent: "primary",
         loading: true,
         class: ["bg-blue-400", "text-blue-100"],
       },
-      // Loading secondary: muted gray
       {
         intent: "secondary",
         loading: true,
         class: ["bg-gray-100", "text-gray-400"],
       },
-      // Non-loading gets hover
-      {
-        loading: false,
-        intent: "primary",
-        class: ["hover:bg-blue-700"],
-      },
-      {
-        loading: false,
-        intent: "secondary",
-        class: ["hover:bg-gray-300"],
-      },
+      { intent: "primary", loading: false, class: ["hover:bg-blue-700"] },
+      { intent: "secondary", loading: false, class: ["hover:bg-gray-300"] },
     ],
     defaultVariants: {
       intent: "primary",
@@ -302,18 +258,69 @@ const submitButtonVariants = cva(
 );
 ```
 
-**Why good:** Loading modifies intent colors, no hover when loading, pointer-events-none prevents interaction
+**Why good:** loading mutes whichever intent is in play instead of introducing a "loading" colour of its own, so a new intent needs two entries rather than a new palette.
 
 ---
 
-## Multi-Part Components
+## A variant whose only job is to trigger compounds
 
-### Good Example - Card with Header Compound
+An icon-only button keeps its height and drops to a square footprint, which is a different width per size.
+
+```typescript
+import { cva, type VariantProps } from "class-variance-authority";
+
+const iconButtonVariants = cva(
+  [
+    "inline-flex",
+    "items-center",
+    "justify-center",
+    "rounded",
+    "font-medium",
+    "transition-colors",
+  ],
+  {
+    variants: {
+      intent: {
+        primary: ["bg-blue-600", "text-white", "hover:bg-blue-700"],
+        secondary: ["bg-gray-200", "text-gray-800", "hover:bg-gray-300"],
+      },
+      size: {
+        sm: ["h-8", "px-2", "text-sm", "gap-1"],
+        md: ["h-10", "px-3", "text-base", "gap-2"],
+        lg: ["h-12", "px-4", "text-lg", "gap-2"],
+      },
+      iconOnly: {
+        false: null,
+        true: null, // every style for this option is size-dependent
+      },
+    },
+    compoundVariants: [
+      { iconOnly: true, size: "sm", class: ["w-8", "px-0"] },
+      { iconOnly: true, size: "md", class: ["w-10", "px-0"] },
+      { iconOnly: true, size: "lg", class: ["w-12", "px-0"] },
+    ],
+    defaultVariants: {
+      intent: "primary",
+      size: "md",
+      iconOnly: false,
+    },
+  },
+);
+
+type IconButtonVariants = VariantProps<typeof iconButtonVariants>;
+```
+
+**Why good:** `iconOnly` is `null` on both sides because it has no size-independent styles — the variant exists to be matched on, and the compounds do the work.
+
+---
+
+## Compounds inside a multi-part component
+
+Each part gets its own definition; the compound lives on the part it affects. See [composition.md](composition.md) for the full multi-part pattern.
 
 ```typescript
 import { cva } from "class-variance-authority";
 
-// Separate cva for each part
 const cardVariants = {
   root: cva(["rounded-lg", "border", "overflow-hidden"], {
     variants: {
@@ -328,10 +335,7 @@ const cardVariants = {
         danger: ["bg-red-50", "border-red-200"],
       },
     },
-    defaultVariants: {
-      elevation: "flat",
-      intent: "default",
-    },
+    defaultVariants: { elevation: "flat", intent: "default" },
   }),
 
   header: cva(["px-4", "py-3", "border-b"], {
@@ -348,34 +352,20 @@ const cardVariants = {
       },
     },
     compoundVariants: [
-      // Large headers in primary/danger get emphasis
-      {
-        intent: ["primary", "danger"],
-        size: "lg",
-        class: ["font-semibold"],
-      },
+      // a large header carries more weight when the card is signalling something
+      { intent: ["primary", "danger"], size: "lg", class: ["font-semibold"] },
     ],
-    defaultVariants: {
-      intent: "default",
-      size: "md",
-    },
+    defaultVariants: { intent: "default", size: "md" },
   }),
 
   body: cva(["p-4"], {
     variants: {
-      size: {
-        sm: ["text-sm"],
-        md: ["text-base"],
-        lg: ["text-lg"],
-      },
+      size: { sm: ["text-sm"], md: ["text-base"], lg: ["text-lg"] },
     },
-    defaultVariants: {
-      size: "md",
-    },
+    defaultVariants: { size: "md" },
   }),
 };
 
-// Usage
 function getCardClasses(
   intent: "default" | "primary" | "danger",
   size: "sm" | "md" | "lg",
@@ -388,22 +378,4 @@ function getCardClasses(
 }
 ```
 
-**Why good:** Each part has own cva, shared variants (intent, size) for consistency, compound for part-specific combinations
-
----
-
-## Quick Reference
-
-| Compound Syntax                                           | Meaning                                   |
-| --------------------------------------------------------- | ----------------------------------------- |
-| `{ intent: "primary", disabled: false, class: [...] }`    | When intent=primary AND disabled=false    |
-| `{ intent: ["primary", "secondary"], class: [...] }`      | When intent=primary OR intent=secondary   |
-| `{ size: ["md", "lg"], intent: "primary", class: [...] }` | When size is md OR lg, AND intent=primary |
-
-| Use Compound Variants For                |
-| ---------------------------------------- |
-| Hover/focus states only when enabled     |
-| Size-specific intent modifications       |
-| Loading states that override intent      |
-| Disabled states that cancel interactions |
-| State combinations (checked + focused)   |
+**Why good:** the compound sits on `header` alone, so the root and body definitions stay unaware of it.

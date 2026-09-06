@@ -48,7 +48,7 @@ Brand and mode are **orthogonal axes**. A brand is chosen by the deployment, the
 }
 ```
 
-**Why good:** adding a brand is one block of brand inputs rather than a full duplicate of every mode, adding a mode does not multiply by the brand count, the mode switcher never needs to know the brand, and `data-brand` can be stamped server-side from the tenant while `data-theme` stays client-owned
+**Why good:** adding a brand is one block of brand inputs rather than a full duplicate of every mode, the mode switcher never needs to know the brand, and `data-brand` can be stamped server-side from the tenant while `data-theme` stays client-owned
 
 ### Good Example - Flattened Names When the Controller Owns One Attribute
 

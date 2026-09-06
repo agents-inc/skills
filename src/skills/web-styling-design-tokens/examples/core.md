@@ -6,7 +6,7 @@
 
 - [scales.md](scales.md) - Generated spacing and type series, density multipliers
 - [pipeline.md](pipeline.md) - DTCG source and build platforms
-- [utility-framework-bridge.md](utility-framework-bridge.md) - Feeding tokens into a utility-class framework
+- [utility-framework-bridge.md](utility-framework-bridge.md) - Projecting tokens into a generated-class layer
 
 ---
 
@@ -405,30 +405,3 @@
 ```
 
 **Why bad:** each of these is dropped whole rather than partially applied, so the property remains unregistered and every capability that depended on registration -- interpolation, type checking, the `initial-value` fallback -- quietly does not happen, with nothing in the console to say so.
-
----
-
-## Auditing an Existing Token Set
-
-> Not a numbered pattern -- a procedure that applies across Patterns 1-3.
-
-### What a Clean Audit Looks For
-
-```css
-/* Run these four questions over any token file:
-
-   1. Does any component selector reference a --palette-* token or a literal?
-      -> tier leak. Introduce a semantic alias.
-
-   2. Does any token name contain a mode word (dark, light, contrast) or a
-      colour/value word (blue, gray, 900, 16px)?
-      -> rename to the role; reassign per scope.
-
-   3. Does any semantic token hold a literal instead of a var()?
-      -> it will not follow a palette regeneration. Alias it.
-
-   4. Does any component token override nothing, anywhere?
-      -> pass-through indirection. Delete it; read the semantic directly. */
-```
-
-**Why good:** the four questions map one-to-one onto the four failure modes that make a token system stop paying for itself, and each has a mechanical fix rather than a judgement call.

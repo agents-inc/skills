@@ -205,8 +205,6 @@ export { LazySection };
 
 ```tsx
 // ✅ Good Example - touch-device-aware component
-const TOUCH_TARGET_SIZE = 44; // minimum touch target in px
-
 function TouchButton({ children }: { children: React.ReactNode }) {
   return (
     <button
@@ -224,7 +222,7 @@ function TouchButton({ children }: { children: React.ReactNode }) {
 export { TouchButton };
 ```
 
-**Why good:** `@slot` marks where utility styles are inserted, `any-hover` prevents phantom hover on touch devices, `pointer-coarse` increases touch targets for mobile, named constant for magic number
+**Why good:** `@slot` marks where the utility's own declarations land inside the block, so one variant wraps any utility. `any-hover` keeps hover styling off devices that cannot hover, and `pointer-coarse` raises the target to the 44px minimum on the ones that are touched rather than pointed at.
 
 ### Multiple Custom Variants for Multi-Theme
 
@@ -334,10 +332,10 @@ function DashboardWidget({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default DashboardWidget;
+export { DashboardWidget };
 ```
 
-**Why bad:** viewport breakpoints don't know widget's actual size, widget in sidebar may still show mobile layout even on desktop, default export violates conventions
+**Why bad:** a viewport breakpoint knows nothing about the space this widget was given, so the same component shows a two-column layout in the main area and the same two-column layout crammed into a 240px sidebar — on the same screen.
 
 ### Max-Width Container Queries
 
@@ -673,7 +671,7 @@ function cn(...inputs: ClassValue[]): string {
 export { cn };
 ```
 
-**Why good:** `clsx` handles conditional class logic, `twMerge` resolves Tailwind class conflicts, composable and reusable across all components, named export
+**Why good:** the two halves solve different problems and both are needed — `clsx` drops the falsy branches, and `twMerge` decides which of two classes governing the same property survives. Concatenation alone gives neither.
 
 ### Component with cn() and Variant Objects
 
@@ -756,68 +754,15 @@ function Page() {
 export { Page };
 ```
 
-**Why good:** `className` is last in `cn()` so caller can override any style, variant/size as named constant objects (not inline strings), `twMerge` resolves `bg-purple-600` overriding `bg-blue-600`, named exports, `import type` for type-only imports
+**Why good:** `className` is last in the `cn()` call, which is what makes an override actually win — `twMerge` keeps the later of two classes governing the same property, so a caller's `bg-purple-600` replaces the variant's `bg-blue-600` instead of sitting beside it and losing to source order.
 
-### Component with Declarative Variants (CVA + cn())
-
-```tsx
-// components/badge.tsx
-// ✅ Good Example - declarative variants with class composition
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../lib/utils";
-
-const badgeVariants = cva(
-  [
-    "inline-flex",
-    "items-center",
-    "rounded-full",
-    "px-2.5",
-    "py-0.5",
-    "text-xs",
-    "font-medium",
-  ],
-  {
-    variants: {
-      variant: {
-        default: ["bg-blue-100", "text-blue-800"],
-        success: ["bg-green-100", "text-green-800"],
-        warning: ["bg-yellow-100", "text-yellow-800"],
-        error: ["bg-red-100", "text-red-800"],
-        outline: ["border", "border-gray-300", "text-gray-700"],
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  },
-);
-
-type BadgeVariants = VariantProps<typeof badgeVariants>;
-
-interface BadgeProps extends BadgeVariants {
-  children: React.ReactNode;
-  className?: string;
-}
-
-function Badge({ variant, className, children }: BadgeProps) {
-  return (
-    <span className={cn(badgeVariants({ variant }), className)}>
-      {children}
-    </span>
-  );
-}
-
-export { Badge, badgeVariants };
-export type { BadgeProps };
-```
-
-**Why good:** CVA handles variant logic declaratively, `cn()` allows className overrides, VariantProps extracts types from cva definition, array syntax for classes (easier to read/diff), named exports
+> Where a component's variants outgrow a lookup object — several dimensions, or combinations needing their own classes — a dedicated variant API is the next step, and `cn()` composes its output exactly as it composes the object above. Which variant API is a separate decision from Tailwind.
 
 ### Bad Component Extraction Examples
 
 ```tsx
 // ❌ Bad Example - @apply for component extraction
-// components/button.module.css
+// components/button.css
 // .btn {
 //   @apply rounded-lg px-4 py-2 font-medium transition-colors;
 // }
@@ -841,40 +786,11 @@ function Button({
   return <button className={classes}>Click</button>;
 }
 
-export default Button;
+export { Button };
 ```
 
-**Why bad:** string concatenation doesn't resolve class conflicts, no type safety for variants, `className || ""` adds trailing space, default export violates conventions
+**Why bad:** the interpolated string cannot resolve a conflict, so a caller passing `px-8` gets `px-4 px-8` and whichever the stylesheet emitted last — `variant: string` accepts any string at all, and `className || ""` leaves a trailing space that makes the class list harder to read in the inspector.
 
 ---
 
-## Migration Notes: v3 to v4
-
-### Quick Reference of Renamed Utilities
-
-| v3              | v4               | Notes                            |
-| --------------- | ---------------- | -------------------------------- |
-| `shadow-sm`     | `shadow-xs`      | Scale shifted down               |
-| `shadow`        | `shadow-sm`      | Scale shifted down               |
-| `rounded-sm`    | `rounded-xs`     | Scale shifted down               |
-| `rounded`       | `rounded-sm`     | Scale shifted down               |
-| `blur-sm`       | `blur-xs`        | Scale shifted down               |
-| `blur`          | `blur-sm`        | Scale shifted down               |
-| `ring`          | `ring-3`         | Default width changed 3px -> 1px |
-| `outline-none`  | `outline-hidden` | Accessibility improvement        |
-| `!flex`         | `flex!`          | Important modifier moved to end  |
-| `bg-[--var]`    | `bg-(--var)`     | Parentheses for CSS variables    |
-| `bg-opacity-50` | `bg-black/50`    | Use opacity modifier syntax      |
-| `flex-shrink`   | `shrink`         | Renamed                          |
-| `flex-grow`     | `grow`           | Renamed                          |
-
-### Automated Migration
-
-```bash
-# Run the official upgrade tool (Node.js 20+ required)
-npx @tailwindcss/upgrade
-```
-
-**What it handles:** dependency updates, config migration to CSS, template utility renames, syntax changes.
-
-**What it does NOT handle:** custom plugin logic (needs manual @utility/@custom-variant conversion), complex JavaScript config transformations, third-party plugin compatibility.
+> Renamed utilities, the upgrade command and what it leaves behind are tabulated in [reference.md](../reference.md).

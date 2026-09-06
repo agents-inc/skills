@@ -1,249 +1,136 @@
 # SCSS Modules Core Examples
 
-> Complete code examples for SCSS Modules core patterns. See [SKILL.md](../SKILL.md) for core concepts and [reference.md](../reference.md) for decision frameworks.
+> Local scoping, cascade layer setup, layered component styles, and unlayered application overrides. See [SKILL.md](../SKILL.md) for decision guidance and [reference.md](../reference.md) for anti-patterns with fixes.
 
-**For additional patterns**: See topic-specific files in this folder:
+**For additional patterns**: see the topic files in this folder:
 
-- [tokens.md](tokens.md) - Spacing and typography systems
-- [theming.md](theming.md) - Dark mode implementation
-- [cva.md](cva.md) - cva integration with SCSS Modules
-- [patterns.md](patterns.md) - SCSS Module structure, data-attributes, mixins, global styles, icons
-- [advanced.md](advanced.md) - Advanced CSS features (:has(), :global(), nesting)
-
----
-
-## Pattern 1: Two-Tier Token System
-
-### Implementation
-
-```scss
-:root {
-  // TIER 1: CORE TOKENS (Raw values - building blocks)
-
-  // Colors - Raw HSL values
-  --color-white: 0 0% 100%;
-  --color-gray-50: 210 40% 98%;
-  --color-gray-100: 214 32% 91%;
-  --color-gray-500: 215 16% 47%;
-  --color-gray-900: 222 47% 11%;
-  --color-red-500: 0 84% 60%;
-
-  // Spacing - Calculated multiples
-  --space-unit: 0.2rem; // 2px
-  --space-1: calc(var(--space-unit) * 1); // 2px
-  --space-2: calc(var(--space-unit) * 2); // 4px
-  --space-6: calc(var(--space-unit) * 6); // 12px
-
-  // Typography - Core sizes
-  --font-size-0-1: 1.6rem; // 16px
-  --font-size-1: 2.56rem; // 25.6px
-
-  // Opacity
-  --opacity-subtle: 0.2;
-  --opacity-medium: 0.5;
-
-  // TIER 2: SEMANTIC TOKENS (Purpose-driven - use these in components)
-
-  // Background colors
-  --color-background-base: var(--color-white);
-  --color-background-surface: var(--color-gray-50);
-  --color-background-muted: var(--color-gray-100);
-
-  // Text colors
-  --color-text-default: var(--color-gray-500);
-  --color-text-inverted: var(--color-white);
-  --color-text-subtle: var(--color-gray-400);
-
-  // Border colors
-  --color-border-default: var(--color-gray-200);
-  --color-border-strong: var(--color-gray-300);
-
-  // Interactive colors (with foreground pairs)
-  --color-primary: var(--color-gray-900);
-  --color-primary-foreground: var(--color-white);
-  --color-primary-hover: color-mix(
-    in srgb,
-    hsl(var(--color-primary)),
-    black 5%
-  );
-
-  --color-destructive: var(--color-red-500);
-  --color-destructive-foreground: var(--color-white);
-  --color-destructive-hover: color-mix(
-    in srgb,
-    hsl(var(--color-destructive)),
-    black 5%
-  );
-
-  // Input colors
-  --color-input: var(--color-gray-200);
-  --color-ring: var(--color-accent);
-
-  // Spacing - Semantic names
-  --space-sm: var(--space-2); // 4px
-  --space-md: var(--space-4); // 8px
-
-  // Typography - Semantic names
-  --font-size-body: var(--font-size-0-1);
-  --font-size-icon: var(--font-size-0-1);
-
-  // Transitions
-  --transition-default: all var(--duration-normal) ease;
-}
-
-// Dark mode overrides (Tier 2 semantic tokens only)
-.dark {
-  --color-background-base: var(--color-gray-600);
-  --color-text-default: var(--color-gray-200);
-  --color-primary: var(--color-gray-50);
-  --color-primary-foreground: var(--color-gray-950);
-}
-```
-
-### Usage in Components
-
-```scss
-// Good Example
-// packages/ui/src/components/button/button.module.scss
-
-.btn {
-  // Use semantic tokens
-  font-size: var(--text-size-body);
-  padding: var(--space-md);
-  border-radius: var(--radius-sm);
-}
-
-.btnDefault {
-  background-color: var(--color-surface-base);
-  color: var(--color-text-default);
-}
-
-.btnSizeDefault {
-  padding: var(--space-md);
-}
-
-.btnSizeLarge {
-  padding: var(--space-xlg) var(--space-xxlg);
-}
-```
-
-**Why good:** Semantic tokens make purpose clear (what the token is for), theme changes only update token values (not component code), components remain theme-agnostic
-
-```scss
-// Bad Example
-
-.btn {
-  // BAD: Using core tokens directly
-  padding: var(--core-space-4);
-  color: var(--gray-7);
-
-  // BAD: Hardcoded values
-  font-size: 16px;
-  border-radius: 4px;
-}
-
-// BAD: Default export
-export default Button;
-```
-
-**Why bad:** Core tokens bypass semantic layer = theme changes require component edits, hardcoded values break design system consistency, default exports violate project conventions and prevent tree-shaking
+- [modules.md](modules.md) - `@use`, `@forward`, built-in modules, migrating off `@import`
+- [tokens.md](tokens.md) - reading tokens from module styles, component-scoped custom properties
+- [theming.md](theming.md) - keeping a module free of theme branching
+- [patterns.md](patterns.md) - module file structure, data-attributes, mixins, global styles, icons
+- [advanced.md](advanced.md) - `:has()`, `:global()`, nesting depth
 
 ---
 
-## Pattern 2: HSL Color Format with CSS Color Functions
+## Local Scoping: From a Stylesheet to a `styles` Object
 
-### Constants
+The `.module.` in the filename is what turns the file into a module. Every class it declares is rewritten to a name that is unique across the whole build, and the file's default export is the map from what you wrote to what was emitted.
 
-```typescript
-const COLOR_OPACITY_SUBTLE = 0.5;
-const COLOR_MIX_HOVER_PERCENTAGE = 5;
-```
-
-### Implementation
+### The Two Halves
 
 ```scss
-// Good Example - Semantic tokens with CSS color functions
+// button.module.scss
+@layer components {
+  .button {
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+  }
 
-.button {
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
+  .sizeSm {
+    padding: var(--space-sm);
+  }
 
-  // Transparency using HSL with alpha (matches token storage format)
-  border: 1px solid hsl(var(--color-primary) / 0.5);
-
-  &:hover {
-    background-color: color-mix(in srgb, hsl(var(--color-primary)), black 5%);
+  .isLoading {
+    pointer-events: none;
+    opacity: 0.5;
   }
 }
+```
 
-// Semantic color categories
-.heading {
-  color: var(--color-text-default); // Primary text
-}
+```tsx
+// button.tsx
+import styles from "./button.module.scss";
 
-.description {
-  color: var(--color-text-muted); // Secondary text
-}
+// The import is an object: { button: "…", sizeSm: "…", isLoading: "…" }
+function Button({ small, loading, children }: ButtonProps) {
+  const classNames = [
+    styles.button,
+    small && styles.sizeSm,
+    loading && styles.isLoading,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-.label {
-  color: var(--color-text-subtle); // Tertiary text
-}
-
-.card {
-  background: var(--color-surface-base); // Default background
-}
-
-.card-hover {
-  background: var(--color-surface-subtle); // Subtle variation
-}
-
-.button-primary {
-  background: var(--color-primary); // Primary brand color
+  return <button className={classNames}>{children}</button>;
 }
 ```
 
-**Why good:** HSL format eliminates Sass dependencies, CSS color functions work natively in browsers, semantic naming clarifies purpose (not just value), theme changes update token values without touching components
+```css
+/* What the browser actually receives — the shape of the generated name is a
+   build setting, so nothing may depend on it beyond "it is unique". */
+@layer components {
+  .button-module__button--x7f2q {
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+  }
+}
+```
+
+**Why good:** the stylesheet gets short, obvious names because uniqueness is the build's problem rather than a naming convention's, two components can both declare `.button` without colliding, and deleting the component deletes its styles — nothing else could have referenced them.
+
+### Bad Example - Writing the Name Instead of Reading It
+
+```tsx
+// BAD: the literal name is not the name in the CSS. This matches no rule,
+// nothing errors, and the element renders unstyled.
+<button className="button" />;
+
+// BAD: for a class authored as `.size-sm`, this parses as `styles.size - sm`
+// — a subtraction, not a lookup. Use styles["size-sm"].
+<button className={styles.size - sm} />;
+```
+
+**Why bad:** the first failure is silent — an unstyled element carrying a class name that looks entirely correct in the inspector. The second is not a lookup at all: the dash is an operator, so the expression either throws on the undefined identifier or produces `NaN`, and neither outcome mentions the class.
+
+### Class Names Are Keys Exactly As Authored
+
+The object's keys are the names in the stylesheet, so a dashed or snake-cased class needs bracket access:
+
+```tsx
+import styles from "./button.module.scss";
+
+styles["size-sm"]; // a class authored as .size-sm
+styles.sizeSm; // a class authored as .sizeSm
+```
+
+Some build setups add camelCase aliases for dashed names; relying on that ties the component to one build configuration. Authoring the class names in camelCase in the first place is why every stylesheet in this skill reads `.sizeSm` and `.btnDefault` rather than `.size-sm` and `.btn-default`.
+
+### What Stays Global
+
+Class names are what the transform rewrites. Element selectors, custom property names and anything inside `:global()` come through unchanged — which is why the reset, the layer declaration and the design tokens live outside the modules entirely.
 
 ```scss
-// Bad Example
-
-:root {
-  // BAD: Hex colors
-  --color-primary: #0f172a;
-
-  // BAD: HSL with wrapper
-  --color-secondary: hsl(222.2 84% 4.9%);
-}
-
+// button.module.scss
 .button {
-  // BAD: Sass color functions
-  background: darken($primary-color, 10%);
+  // A token read: --space-md is global, and is meant to be
+  padding: var(--space-md);
 
-  // BAD: Hardcoded rgba
-  color: rgba(0, 0, 0, 0.8);
-
-  // BAD: Hex colors
-  border: 1px solid #ffffff;
+  // A local class name, rewritten
+  &.sizeSm {
+    padding: var(--space-sm);
+  }
 }
 ```
-
-**Why bad:** Hex colors harder to manipulate with CSS functions, Sass functions require build-time processing and create dependencies, hardcoded values break design system consistency, can't theme dynamically at runtime
 
 ---
 
-## Pattern 3: CSS Cascade Layers for Predictable Precedence
+## Cascade Layers for Predictable Precedence
 
 ### Layer Declaration
 
+The order is established by this one statement, and it applies wherever the layers are later written. Load it before anything it names.
+
 ```scss
-// packages/ui/src/styles/layers.scss
+// styles/layers.scss
 @layer reset, components;
 ```
+
+Everything unlayered ranks above both, which is what makes an application override work without a specificity hack.
 
 ### Reset Layer
 
 ```scss
-// packages/ui/src/styles/reset.scss
+// styles/reset.scss
 @layer reset {
   * {
     margin: unset;
@@ -254,7 +141,6 @@ const COLOR_MIX_HOVER_PERCENTAGE = 5;
 
   html {
     box-sizing: border-box;
-    font-size: 62.5%;
   }
 
   button {
@@ -263,12 +149,13 @@ const COLOR_MIX_HOVER_PERCENTAGE = 5;
 }
 ```
 
+**Why good:** a reset is the one thing every rule should beat, so it goes in the lowest layer rather than being fought with specificity at each call site.
+
 ### Component Layer
 
 ```scss
-// Good Example - UI package component
-
-// packages/ui/src/components/button/button.module.scss
+// Good Example - a library component
+// button.module.scss
 @layer components {
   .button {
     display: inline-flex;
@@ -289,39 +176,84 @@ const COLOR_MIX_HOVER_PERCENTAGE = 5;
 }
 ```
 
-**Why good:** Wrapping in `@layer components {}` ensures app styles can override without specificity wars, loading order becomes irrelevant, predictable precedence across monorepo
+**Why good:** the layer wrapper makes precedence a property of the file rather than of the bundler's ordering, so a consumer can override any of it without knowing how the stylesheets were concatenated.
 
-### App Override Pattern
+### Application Override
 
 ```scss
-// Good Example - App-specific override
-
-// apps/web/src/styles/custom.scss
-// NO @layer wrapper - unlayered = highest priority
-.my-custom-button {
-  // This overrides component layer styles automatically
+// Good Example - an application stylesheet
+// No @layer wrapper: unlayered outranks every layer.
+.myCustomButton {
   background-color: var(--color-accent);
   padding: var(--space-12);
 }
 ```
 
-**Why good:** Unlayered app styles automatically override layered component styles, no specificity hacks needed, works regardless of CSS loading order
+**Why good:** the override needs no `!important`, no extra selector and no assumption about load order — only the absence of a layer.
+
+### Bad Example - The Wrapper on the Wrong Side
 
 ```scss
-// Bad Example
-
-// BAD: Component styles not layered
+// BAD: a library component with no layer. Precedence now depends on which
+// stylesheet the bundler emitted first.
 .button {
-  background: var(--color-primary); // Loading order determines precedence
+  background: var(--color-primary);
 }
 
-// BAD: App styles wrapped in layer
+// BAD: an application override inside the component layer. It sits at library
+// priority, so overriding the library needs a specificity contest after all.
 @layer components {
-  .my-custom-button {
-    // Stuck at component priority, can't override easily
+  .myCustomButton {
     background-color: var(--color-accent);
   }
 }
 ```
 
-**Why bad:** Unlayered component styles create loading order dependency, app styles in layers can't override component styles without specificity wars, defeats the purpose of cascade layers
+**Why bad:** each half defeats the mechanism from one end. The unlayered library rule cannot be overridden predictably, and the layered application rule has given up the rank it needed.
+
+---
+
+## Component Styles That Survive a Theme Change
+
+```scss
+// Good Example
+@layer components {
+  .btn {
+    font-size: var(--font-size-body);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+  }
+
+  .btnDefault {
+    background-color: var(--color-background-surface);
+    color: var(--color-text-default);
+  }
+
+  .btnSizeLarge {
+    padding: var(--space-lg) var(--space-xlg);
+  }
+}
+```
+
+**Why good:** every value is a token read, so a theme swap or a rebrand reaches this file without editing it, and each name says what the rule is for rather than what it currently looks like.
+
+```scss
+// Bad Example
+.btn {
+  // BAD: hard-coded values. Nothing reaches them - not a theme, not a rebrand,
+  // not an audit.
+  font-size: 16px;
+  border-radius: 4px;
+  padding: 8px;
+
+  // BAD: a raw colour, so the dark theme has nothing to reassign
+  background: #0f172a;
+}
+
+// BAD: a name that describes the current appearance
+.blueButton {
+  background: var(--color-primary);
+}
+```
+
+**Why bad:** the literals are invisible to every mechanism the system has, and `.blueButton` becomes a lie the first time the brand colour moves — with the markup that references it spread across the codebase.

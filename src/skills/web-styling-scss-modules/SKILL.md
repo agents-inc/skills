@@ -1,86 +1,67 @@
 ---
 name: web-styling-scss-modules
-description: SCSS Modules, cva, design tokens
+description: SCSS Modules - locally scoped component stylesheets, cascade layers, the Sass module system, mixins, and build-time versus runtime values
 ---
 
-# Styling & Design System
+# SCSS Modules Patterns
 
-> **Quick Guide:** Two-tier token system (Core primitives -> Semantic tokens). Foreground/background color pairs. Components use semantic tokens only. SCSS Modules + CSS Cascade Layers. HSL format. Dark mode via `.dark` class with mixin. Data-attributes for state. Self-contained (no external dependencies).
+> **Quick Guide:** A `*.module.scss` file is a locally scoped stylesheet: its class names are rewritten at build time and reached through an imported object, so a component's styles cannot collide with anyone else's. Wrap library styles in `@layer components {}` so an application overrides them with an unlayered rule and no specificity contest. Load Sass with `@use` and `@forward` — `@import` is deprecated and going away. Style state with attribute selectors rather than a class per state, and keep anything that must change without a rebuild in a custom property rather than a Sass variable.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — local scoping and the `styles` object, cascade layer setup, layered component styles, unlayered application overrides
+- [examples/modules.md](examples/modules.md) — `@use`, `@forward`, namespaces, `with` configuration, built-in modules, migrating off `@import`
+- [examples/patterns.md](examples/patterns.md) — module file structure, data-attribute state, mixins, global styles, icon sizing
+- [examples/tokens.md](examples/tokens.md) — reading design tokens from module styles, component-scoped custom properties
+- [examples/theming.md](examples/theming.md) — keeping a module free of theme branching
+- [examples/advanced.md](examples/advanced.md) — `:has()`, `:global()`, nesting depth
+- [reference.md](reference.md) — anti-patterns with fixes, `@use` versus `@import`, Sass deprecation notes
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing SCSS Modules code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Reach every class through the imported object.** The name in the stylesheet is not the name in the CSS the browser receives, so a literal `className="button"` matches nothing — no error, no styles, no clue.
 
-**(You MUST wrap ALL UI package component styles in `@layer components {}` for proper cascade precedence)**
+**Wrap library component styles in `@layer components {}`.** An application then overrides them with an ordinary unlayered rule, with no specificity contest and regardless of which stylesheet loaded first.
 
-**(You MUST use semantic tokens ONLY in components - NEVER use core tokens directly)**
+**Load Sass files with `@use`.** It namespaces what it loads, evaluates each file once per compilation, and makes `_`-prefixed members private — none of which `@import` does, and `@import` is deprecated as of Dart Sass 1.80.0 and removed in 3.0.0.
 
-**(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
+**Keep any value that must change without a rebuild in a custom property.** A Sass variable and `darken()` are resolved at compile time, so nothing at runtime can reach them.
 
-**(You MUST use data-attributes for state styling - NOT className toggling)**
-
-**(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
+**Style state with attribute selectors on the component's own class.** `&[data-state="open"]` keeps every state in the stylesheet, where a class per state spreads the component's appearance across the markup that chooses between them.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** UI components, styling patterns, design tokens, SCSS modules, CSS Cascade Layers, dark mode theming
+**Auto-detection:** `.module.scss`, `.module.css`, `styles.` class access, `@use`, `@forward`, `@layer components`, `:global()`, `@mixin`, `@include`, `!default`, `sass:math`, `math.div`, `sass:color`, `color.scale`, `@import` in Sass, sass-migrator
 
-**When to use:**
+**Applies to:**
 
-- Implementing design tokens and theming
-- Building component styles with SCSS Modules
-- Ensuring visual consistency across applications
-- Working with colors, spacing, typography
-- Implementing dark mode with class-based theming
-- Setting up CSS Cascade Layers for predictable style precedence
+- Writing component styles in `*.module.scss` with locally scoped class names
+- Organising Sass across files with `@use` and `@forward`, and migrating off `@import`
+- Controlling precedence between library styles and application overrides with cascade layers
+- Deciding what belongs in a build-time Sass value and what belongs in a runtime custom property
+- Extracting repeated declarations into mixins
+- Escaping module scope deliberately with `:global()`
 
-**Key patterns covered:**
+**Handled elsewhere:**
 
-- Two-tier token system (Core -> Semantic)
-- SCSS Module patterns with CSS Cascade Layers
-- Color system (HSL format, semantic naming, foreground/background pairs)
-- Spacing and typography systems
-- Dark mode implementation (`.dark` class with mixin pattern)
-- Component structure and organization
-
-**When NOT to use:**
-
-- One-off prototypes without design system needs (use inline styles or basic CSS)
-- External component libraries with their own theming (Material-UI, Chakra)
-- Projects requiring comprehensive utility classes (use Tailwind CSS instead)
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Token system, HSL colors, cascade layers
-- [examples/tokens.md](examples/tokens.md) - Spacing and typography systems
-- [examples/theming.md](examples/theming.md) - Dark mode implementation
-- [examples/patterns.md](examples/patterns.md) - Module structure, data-attributes, mixins, global styles, icons
-- [examples/cva.md](examples/cva.md) - cva integration with SCSS Modules
-- [examples/advanced.md](examples/advanced.md) - :has(), :global(), nesting patterns
-- [examples/modules.md](examples/modules.md) - Sass module system (@use and @forward)
-- [reference.md](reference.md) - Decision frameworks and anti-patterns
+- Which design tokens exist, how they are tiered and what they are called — module styles read them through `var()` and define none of them
+- How a theme is selected, persisted and applied at runtime — a module's part is to carry no theme branching at all, so it adapts without being told
+- Turning a set of component props into a class list — a module _exports_ class names; what composes them is a separate concern
+- Generated utility classes covering the whole design space — a module system scopes hand-written CSS, which is a different trade
 
 ---
 
 <philosophy>
 
-## Philosophy
+The scoping is the point. Because uniqueness is the build's problem, a stylesheet can use short, obvious names without a naming convention holding the codebase together — no BEM-style prefixes, and deleting a component deletes its styles.
 
-The design system follows a **self-contained, two-tier token architecture** where core primitives (raw HSL values, base sizes) map to semantic tokens (purpose-driven names). Components consume only semantic tokens, enabling theme changes without component modifications.
-
-**Core Principles:**
-
-- **Self-contained:** No external dependencies (no Open Props, no Tailwind for tokens)
-- **Two-tier system:** Core tokens provide raw values, semantic tokens provide meaning
-- **HSL-first:** Use modern CSS color functions, not Sass color manipulation
-- **Layer-based:** CSS Cascade Layers ensure predictable style precedence across monorepo
-- **Theme-agnostic components:** Components use semantic tokens and adapt automatically to light/dark mode
+Two consequences follow, and most of this skill is downstream of them. **Nothing global happens by accident**, so anything genuinely global — a reset, a layer declaration, design tokens — is written deliberately and outside a module. And **a module cannot reach another module's names**, so shared decisions travel as Sass members through `@use`, or as custom properties through the cascade, rather than as a class name two files agree about.
 
 </philosophy>
 
@@ -88,113 +69,253 @@ The design system follows a **self-contained, two-tier token architecture** wher
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Two-Tier Token System
+### Pattern 1: Local scoping — a class name becomes an object key
 
-The design system uses a two-tier token architecture: **Tier 1 (Core tokens)** provides raw values, **Tier 2 (Semantic tokens)** references core tokens with purpose-driven names.
-
-#### Token Architecture
-
-**Location:** `packages/ui/src/styles/design-tokens.scss`
-
-**Tier 1: Core tokens** - Raw HSL values, base sizes, primitives
+Importing a `*.module.scss` file yields an object whose keys are the classes the file declares and whose values are the globally unique names the build emitted. That object is the only route to the name that is actually in the CSS.
 
 ```scss
---color-white: 0 0% 100%;
---color-gray-900: 222 47% 11%;
---color-red-500: 0 84% 60%;
---space-unit: 0.2rem;
+// button.module.scss
+.button {
+  padding: var(--space-md);
+}
+.sizeSm {
+  padding: var(--space-sm);
+}
 ```
 
-**Tier 2: Semantic tokens** - Reference core tokens with purpose-driven names
+```tsx
+// button.tsx
+import styles from "./button.module.scss";
+
+// styles.button is something like "button-module__x7f2q" — never "button"
+<button className={`${styles.button} ${styles.sizeSm}`} />;
+```
+
+The emitted name's shape is a build setting, so nothing may depend on it. The keys are the class names **as authored**: `.size-sm` is reached as `styles["size-sm"]` unless the build is configured to add camelCase aliases — which is why these stylesheets name classes in camelCase to begin with.
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 2: Cascade layers for predictable precedence
+
+Declare the layer order once, and put library component styles inside `@layer components`. Application styles stay unlayered, which the cascade ranks above every layer whatever the load order.
 
 ```scss
---color-background-base: var(--color-white);
---color-text-default: var(--color-gray-500);
---color-primary: var(--color-gray-900);
---color-primary-foreground: var(--color-white);
---color-destructive: var(--color-red-500);
+// layers.scss — loaded first, before anything it names
+@layer reset, components;
 ```
 
-**Why this matters:** Semantic tokens make purpose clear (what the token is for), theme changes only update token values (not component code), components remain theme-agnostic.
+```scss
+// button.module.scss — a library component
+@layer components {
+  .button {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+}
+```
 
-For complete implementation examples, see [examples/core.md](examples/core.md#pattern-1-two-tier-token-system).
+```scss
+// an application stylesheet — no layer, so it wins
+.myCustomButton {
+  background-color: var(--color-accent);
+}
+```
 
----
-
-### Pattern 2: HSL Color Format with CSS Color Functions
-
-Store HSL values without the `hsl()` wrapper in tokens, apply `hsl()` wrapper when using tokens, and use modern CSS color functions for transparency and color mixing.
-
-#### Color Format Rules
-
-- Store HSL values without `hsl()` wrapper: `--color-gray-900: 222 47% 11%;`
-- Use `hsl()` wrapper when applying: `background-color: hsl(var(--color-primary))`
-- Use CSS color functions for derived colors:
-  - Transparency: `hsl(var(--color-primary) / 0.5)` (append alpha to HSL components)
-  - Color mixing: `color-mix(in srgb, hsl(var(--color-primary)), white 10%)`
-  - Channel manipulation: `hsl(from hsl(var(--color-primary)) h s calc(l * 0.8))` (wrap origin in `hsl()` first)
-- **NEVER use Sass color functions:** No `darken()`, `lighten()`, `transparentize()`
-- Always use semantic color tokens (not raw HSL in components)
-
-**Why HSL:** HSL format eliminates Sass dependencies, CSS color functions work natively in browsers, semantic naming clarifies purpose (not just value), theme changes update token values without touching components.
-
-For complete implementation examples, see [examples/core.md](examples/core.md#pattern-2-hsl-color-format-with-css-color-functions).
+Full code: [examples/core.md](examples/core.md)
 
 ---
 
-### Pattern 3: CSS Cascade Layers for Predictable Precedence
+### Pattern 3: The Sass module system
 
-Use CSS Cascade Layers to control style precedence across the monorepo, ensuring UI package components have lower priority than app-specific overrides.
+`@use` loads a file under a namespace, once per compilation. `@forward` re-exports one file's members through another, which is how a directory gets a single entry point.
 
-#### Layer Hierarchy (lowest -> highest priority)
+```scss
+// styles/_index.scss — the public surface
+@forward "layers";
+@forward "design-tokens";
+@forward "mixins";
+```
 
-1. `@layer reset` - Browser resets and normalizations
-2. `@layer components` - Design system component styles (UI package)
-3. Unlayered styles - App-specific overrides (highest priority)
+```scss
+// button.module.scss
+@use "../../styles" as s;
 
-#### Key Rules
+@layer components {
+  .button {
+    padding: s.$space-md;
+    @include s.focus-ring;
+  }
+}
+```
 
-- **UI package components:** Always wrap in `@layer components {}`
-- **App-specific styles:** Never wrap in layers (unlayered = highest priority)
-- **Layer declaration:** Import `layers.scss` first to declare layer order
+`@use "…" as *` drops the namespace and suits only a foundational module used everywhere. A module configured with `with` keeps that configuration for the whole compilation — the first load wins.
 
-**Why layers:** Wrapping in `@layer components {}` ensures app styles can override without specificity wars, loading order becomes irrelevant, predictable precedence across monorepo.
-
-For complete implementation examples, see [examples/core.md](examples/core.md#pattern-3-css-cascade-layers-for-predictable-precedence).
-
----
-
-### Pattern 4: Dark Mode with `.dark` Class and Mixin
-
-Implement dark mode by adding `.dark` class to root element, which overrides semantic tokens. Use mixin pattern for organization.
-
-#### Key Principles
-
-- Components remain **theme-agnostic** (no theme logic in component code)
-- Semantic tokens provide indirection between theme and components
-- Only override **Tier 2 semantic tokens** in `.dark` class, never Tier 1 core tokens
-- Theme switching is instant (just CSS variable changes)
-
-For complete implementation examples, see [examples/theming.md](examples/theming.md#pattern-4-dark-mode-with-dark-class-and-mixin).
+Full code: [examples/modules.md](examples/modules.md)
 
 ---
 
-### Additional Patterns
+### Pattern 4: Build-time Sass values versus runtime custom properties
 
-The following patterns are documented with full examples in the examples/ folder:
+A Sass variable is gone by the time the browser sees the CSS. Anything that must respond to a theme, a density setting or a media condition has to be a custom property.
 
-- **Pattern 5:** SCSS Module Structure with Cascade Layers - [examples/patterns.md](examples/patterns.md#pattern-5-scss-module-structure-with-cascade-layers)
-- **Pattern 6:** Spacing System with Semantic Tokens - [examples/tokens.md](examples/tokens.md#pattern-6-spacing-system-with-semantic-tokens)
-- **Pattern 7:** Typography System with REM-Based Sizing - [examples/tokens.md](examples/tokens.md#pattern-7-typography-system-with-rem-based-sizing)
-- **Pattern 8:** Data-Attributes for State Styling - [examples/patterns.md](examples/patterns.md#pattern-8-data-attributes-for-state-styling)
-- **Pattern 9:** SCSS Mixins for Reusable Patterns - [examples/patterns.md](examples/patterns.md#pattern-9-scss-mixins-for-reusable-patterns)
-- **Pattern 10:** Global Styles Organization - [examples/patterns.md](examples/patterns.md#pattern-10-global-styles-organization)
-- **Pattern 11:** Icon Styling - [examples/patterns.md](examples/patterns.md#pattern-11-icon-styling)
-- **Pattern 12:** cva Integration - [examples/cva.md](examples/cva.md#pattern-12-cva-class-variance-authority-integration)
-- **Pattern 13:** Advanced CSS Features - [examples/advanced.md](examples/advanced.md#pattern-13-advanced-css-features)
-- **Pattern 14:** Sass Module System (@use and @forward) - [examples/modules.md](examples/modules.md#pattern-14-sass-module-system-use-and-forward)
+```scss
+@use "sass:math";
+
+// Build-time: a value computed once, that never changes at runtime
+$column-width: math.div(100%, 12);
+
+.grid {
+  grid-template-columns: repeat(12, $column-width);
+
+  // Runtime: reassigning this token elsewhere re-styles the element
+  gap: var(--space-md);
+  background: color-mix(in srgb, var(--color-primary), black 5%);
+}
+```
+
+`math.div()` replaces `/`, which is ambiguous with the CSS slash separator (`grid-template: 1fr / 2fr`). `color.scale()` replaces `darken()` and `lighten()` for genuine build-time colour maths — but a colour that a theme must be able to change belongs in a custom property, mixed with `color-mix()` or relative colour syntax.
+
+Full code: [examples/modules.md](examples/modules.md)
+
+---
+
+### Pattern 5: Reading tokens, never redeclaring them
+
+A module consumes design tokens through `var()`. It declares a custom property of its own only where a value has to vary _within_ the component — and then on the component's own class, which scopes it to that subtree.
+
+```scss
+@layer components {
+  .button {
+    // Component-scoped: the variants below reassign it
+    --button-accent-bg: transparent;
+
+    padding: var(--space-md);
+    font-size: var(--font-size-body);
+    color: var(--color-text-default);
+    background: var(--button-accent-bg);
+  }
+
+  .outline:hover {
+    --button-accent-bg: var(--color-background-muted);
+  }
+}
+```
+
+Redeclaring a token that already exists (`--card-radius: 0.5rem` beside a `--radius-sm`) creates a second value that no longer follows the first.
+
+Full code: [examples/tokens.md](examples/tokens.md)
+
+---
+
+### Pattern 6: Data-attributes for state
+
+One class carries the component, and attribute selectors carry its states. States then combine without a class for each combination.
+
+```scss
+.dropdown {
+  &[data-open="true"] {
+    display: block;
+  }
+
+  &[data-size="large"][data-variant="primary"] {
+    padding: var(--space-xlg);
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--color-destructive);
+  }
+}
+```
+
+Use string values (`data-state="open"`) rather than bare boolean attributes — an attribute-value selector reads the same for every state, and the DOM shows what the component thinks it is.
+
+Full code: [examples/patterns.md](examples/patterns.md)
+
+---
+
+### Pattern 7: Mixins for repeated declaration blocks
+
+A mixin is the right shape when several components need the same block of declarations — particularly the accessibility ones, where a partial copy is a bug.
+
+```scss
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.button {
+  @include focus-ring;
+}
+```
+
+Extract at the third user, not the first. A mixin used once is a block of CSS with an extra hop.
+
+Full code: [examples/patterns.md](examples/patterns.md)
+
+---
+
+### Pattern 8: Theme-agnostic component styles
+
+A module names roles and never modes. The stylesheet is written once and every theme reaches it through the tokens it already reads.
+
+```scss
+@layer components {
+  .button {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+
+    // No `.dark &`, no theme conditional — the tokens carry the mode
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
+  }
+}
+```
+
+A `.dark &` selector inside a module ties that module to one theme implementation, and a third theme means a third branch in every component that has one.
+
+Full code: [examples/theming.md](examples/theming.md)
+
+---
+
+### Pattern 9: Escaping and nesting deliberately
+
+`:global()` opts a selector out of the scoping, which is what makes third-party class names reachable. Nesting with `&` keeps modifiers beside the thing they modify.
+
+```scss
+.component {
+  padding: var(--space-md);
+
+  // Reach a class this module does not own
+  :global(.third-party-widget) & {
+    padding: 0;
+  }
+
+  // `:has()` styles a parent from its children — no JavaScript needed
+  &:has(input:focus) {
+    background: var(--color-background-muted);
+  }
+}
+```
+
+Keep nesting to about three levels: each level raises specificity and moves the generated selector further from the name that appears in the markup.
+
+Full code: [examples/advanced.md](examples/advanced.md)
 
 </patterns>
 
@@ -202,40 +323,36 @@ The following patterns are documented with full examples in the examples/ folder
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-For complete anti-patterns and red flags, see [reference.md](reference.md#red-flags).
+**Breaks at build time:**
 
-**High Priority Issues:**
+- **`@import` in new Sass** — deprecated as of Dart Sass 1.80.0 and removed in 3.0.0. `@use` replaces it; `sass-migrator module --migrate-deps` does most of the conversion.
+- **`/` for division** (`100% / 2`) — deprecated and ambiguous with the CSS slash separator. `math.div()` from `sass:math` is explicit. `/` inside `calc()` is unaffected.
+- **`@use` after a style rule** — it must precede everything except `@forward` and `@charset`, so a rule above it is a compile error. Variable declarations are the documented exception, because configuring a module with `with` needs them above the load.
+- **A missing layer declaration** — `@layer reset, components;` has to be evaluated before the layered content, or the order is whatever the files happened to establish.
 
-- Using core tokens directly in components (use semantic tokens)
-- Component styles not wrapped in `@layer components {}`
-- Using Sass color functions (`darken()`, `lighten()`)
-- Hardcoded color/spacing values
-- Theme logic in components
-- Using `@import` instead of `@use` (deprecated in Dart Sass 1.80.0, removed in 3.0.0)
-- Using `/` for division instead of `math.div()` (deprecated)
+**Silently applies nothing:**
+
+- **A class name written as a string in markup** (`className="button"`) — the emitted name is generated, so the literal matches no rule. Nothing errors and the element renders unstyled.
+- **A dashed class name read as a property** (`styles.size-sm`) — that parses as a subtraction, not a lookup. Author classes in camelCase, or use `styles["size-sm"]`.
+- **A class declared in a module but never read through the object** — it is scoped to a name nothing references, so it ships as dead CSS that no search for the class name finds.
+
+**Costs a theme or an override:**
+
+- **Component styles with no layer wrapper** — precedence then depends on load order, and an application override needs a specificity hack that the next one has to beat.
+- **Application styles wrapped in `@layer components`** — they land at library priority and can no longer override the library, which is the one thing they exist to do.
+- **Sass colour functions on a themeable colour** (`darken($primary, 10%)`) — resolved at build time, so a runtime theme swap cannot reach the result. `color-mix()` and relative colour syntax stay live.
+- **A theme selector inside a module** (`.dark & { … }`) — couples the component to one theme mechanism, and each further theme adds a branch to every component carrying one.
+- **Hard-coded colours, spacing and radii** — an untracked value that no token change reaches and no audit sees.
+
+**Surprising behaviour:**
+
+- Unlayered styles beat every layer, whatever the load order. That is the mechanism application overrides rely on, and it is also why an accidentally unlayered library rule is hard to override.
+- Within a layer, ordinary specificity applies — layers only rank _between_ themselves.
+- A module configured with `@use "…" with (…)` keeps that configuration even where another file loads it unconfigured. First load wins.
+- Members prefixed `_` or `-` are private to their file and invisible through `@use` and `@forward`.
+- Built-in module variables such as `math.$pi` are read-only.
+- `:global()` removes scoping for the selector it wraps, so a `:global` block deep in a module quietly reintroduces exactly the collisions the module prevents.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST wrap ALL UI package component styles in `@layer components {}` for proper cascade precedence)**
-
-**(You MUST use semantic tokens ONLY in components - NEVER use core tokens directly)**
-
-**(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
-
-**(You MUST use data-attributes for state styling - NOT className toggling)**
-
-**(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
-
-**Failure to follow these rules will break theming, create cascade precedence issues, and violate design system conventions.**
-
-</critical_reminders>

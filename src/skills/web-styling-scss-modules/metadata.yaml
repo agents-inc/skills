@@ -5,4 +5,4 @@ domain: web
 author: "@vince"
 displayName: SCSS Modules
 cliDescription: SCSS Modules styling
-usageGuidance: Use when styling with SCSS Modules, design tokens, or CSS cascade layers.
+usageGuidance: Use when writing scoped component styles in .module.scss, organising Sass with @use and @forward, or ordering styles with CSS cascade layers.

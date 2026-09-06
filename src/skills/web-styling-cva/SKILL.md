@@ -5,99 +5,54 @@ description: Class Variance Authority - type-safe component variant styling with
 
 # CVA (Class Variance Authority) Patterns
 
-> **Quick Guide:** Use CVA to define type-safe component variants with a declarative API. Define base classes, variant groups (size, intent, state), compound variants for combined conditions, and default values. Extract types with `VariantProps`. Works with any CSS approach (utility classes, CSS modules, plain CSS). Always set `defaultVariants`, always define both `true`/`false` for boolean variants, always use `VariantProps` for type extraction.
+> **Quick Guide:** `cva()` turns a component's visual states into one typed configuration object: base classes, variant groups (size, intent, state), `compoundVariants` for combinations that need their own styles, and `defaultVariants` for what a caller omits. `VariantProps<typeof variants>` derives the prop types from that object. It emits class-name strings and settles nothing about what those class names mean, so it works with utility classes, CSS modules or plain CSS alike.
+
+**Detailed Resources:**
+
+- [examples/core.md](examples/core.md) — basic variants, boolean states, multiple variant groups, required variants
+- [examples/compound-variants.md](examples/compound-variants.md) — multi-condition styles, array syntax, state matrices
+- [examples/composition.md](examples/composition.md) — `VariantProps`, class names from a scoped stylesheet, call-site appending and merging, multi-part components, extending variants
+- [reference.md](reference.md) — API signatures, pattern-selection table, pre-ship checklist
 
 ---
 
 <critical_requirements>
 
-## CRITICAL: Before Using This Skill
+## Before writing CVA code
 
-> **All code must follow project conventions in CLAUDE.md** (kebab-case, named exports, import ordering, `import type`, named constants)
+**Define every variant option inside the `variants` object.** Conditional class logic outside `cva()` splits the definition in two, and the derived types stop describing the component.
 
-**(You MUST define all variant options in the `variants` object - NEVER use conditional class logic outside cva)**
+**Extract prop types with `VariantProps<typeof variants>`.** A hand-written variant type drifts the moment a variant is added or renamed; a derived one cannot.
 
-**(You MUST use `VariantProps` to extract types - NEVER manually define variant prop types)**
+**Set `defaultVariants` for every variant a caller may omit.** Calling with no arguments otherwise returns the base classes alone — no intent, no size.
 
-**(You MUST use `defaultVariants` for initial state - NEVER rely on undefined props for defaults)**
-
-**(You MUST use `compoundVariants` for multi-condition styles - NEVER nest ternaries for combined states)**
+**Reach for `compoundVariants` when two variants together need a third style.** It states "when X and Y, also Z" once, in the definition, rather than at each call site.
 
 </critical_requirements>
 
 ---
 
-**Auto-detection:** cva, class-variance-authority, VariantProps, variants, compoundVariants, defaultVariants, component variants, type-safe styling, cx
+**Auto-detection:** cva, class-variance-authority, VariantProps, compoundVariants, defaultVariants, cx
 
-**When to use:**
+**Applies to:**
 
-- Building components with multiple visual variants (size, intent, state)
-- Creating design system components with type-safe props
-- Implementing compound conditions (e.g., "large primary" has special styles)
-- Sharing variant styling across projects or frameworks
+- Components with more than one visual dimension — size, intent, tone, state
+- Combinations that need their own styles ("large primary is uppercase")
+- Deriving component prop types from the style definition
+- Multi-part components whose parts must stay visually in step
 
-**When NOT to use:**
+**Handled elsewhere:**
 
-- Simple components with no variants (just use plain classes)
-- One-off styling without pattern reuse
-- Dynamic styles based on runtime values (use inline styles or CSS variables)
-- Responsive styles that change based on viewport (use CSS media queries)
-
-**Key patterns covered:**
-
-- Basic variant definitions with `cva()`
-- Boolean variants for toggle states
-- Compound variants for combined conditions
-- Type extraction with `VariantProps`
-- Class merging with `cx()` and external utilities
-- Multi-part component patterns
-- Composing and extending variant definitions
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Basic variants, boolean states, default values, required variants
-- [examples/compound-variants.md](examples/compound-variants.md) - Multi-condition styles, array syntax, state combinations
-- [examples/composition.md](examples/composition.md) - VariantProps, class merging, multi-part components, extending variants
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, quick reference
+- What the class names mean — `cva()` emits strings, and the CSS behind them is settled by whatever owns it
+- Conflict resolution between two competing class names — `cx()` concatenates and filters falsy values; deciding which of `px-2` and `px-8` wins is a merge utility's job
+- Styles that change with the viewport — a variant is chosen once per render, so breakpoints belong in the stylesheet
+- Values computed at runtime (a measured width, a colour from data) — a variant is a fixed set of options; runtime values belong in inline styles or custom properties
 
 ---
 
 <philosophy>
 
-## Philosophy
-
-CVA treats component variants as a **type system for UI states**. Instead of scattering conditional class logic throughout components, CVA centralizes variant definitions in a single, typed configuration object.
-
-**Core Principles:**
-
-- **Declarative over imperative:** Define what each variant looks like, not how to compute classes
-- **Type-safe variants:** TypeScript catches invalid variant values at compile time
-- **Framework-agnostic:** Works with any UI framework and any CSS approach
-- **Composition-friendly:** Variants can be combined, extended, and composed
-- **Single source of truth:** Variant definitions live in one place, types are derived
-
-**Why CVA over manual conditional classes:**
-
-```typescript
-// BAD: scattered logic, no type safety, hard to maintain
-function getButtonClasses(size: string, variant: string, disabled: boolean) {
-  let classes = "btn";
-  if (size === "sm") classes += " btn-sm";
-  else if (size === "lg") classes += " btn-lg";
-  if (variant === "primary") classes += " btn-primary";
-  if (disabled) classes += " btn-disabled";
-  return classes;
-}
-
-// GOOD: declarative, type-safe, composable
-const buttonVariants = cva("btn", {
-  variants: {
-    size: { sm: "btn-sm", lg: "btn-lg" },
-    variant: { primary: "btn-primary" },
-    disabled: { true: "btn-disabled" },
-  },
-});
-```
+CVA treats variants as a type system for UI states. The variant table is the single source of truth: the class strings and the prop types both come from it, so adding an option changes one object and TypeScript propagates the rest. What the definition describes is what each state _looks like_, never how to compute a class list — which is why the same definition ports across UI frameworks and CSS approaches unchanged.
 
 </philosophy>
 
@@ -105,92 +60,72 @@ const buttonVariants = cva("btn", {
 
 <patterns>
 
-## Core Patterns
+## Core patterns
 
-### Pattern 1: Basic Variant Definition
+### Pattern 1: Basic variant definition
 
-Define component styles with base classes and variant options. Use array syntax for readability, always set `defaultVariants`.
+Base classes plus one entry per variant group. Arrays read better than space-separated strings once a group has more than two classes.
 
 ```typescript
 import { cva } from "class-variance-authority";
 
-const buttonVariants = cva(
-  ["font-semibold", "border", "rounded"], // base classes as array
-  {
-    variants: {
-      intent: {
-        primary: ["bg-blue-600", "text-white"],
-        secondary: ["bg-white", "text-gray-800"],
-      },
-      size: {
-        sm: ["text-sm", "py-1", "px-2"],
-        md: ["text-base", "py-2", "px-4"],
-      },
-    },
-    defaultVariants: {
-      intent: "primary",
-      size: "md",
-    },
-  },
-);
-
-buttonVariants(); // defaults: primary + md
-buttonVariants({ intent: "secondary" }); // secondary + md
-```
-
-**Key rules:** always provide `defaultVariants` (calling without props returns incomplete classes otherwise), use arrays over space-separated strings for readability.
-
-> See [examples/core.md](examples/core.md) for complete button, badge, and icon button examples.
-
----
-
-### Pattern 2: Boolean Variants
-
-Use `true`/`false` keys for binary states. Always define both sides.
-
-```typescript
-const inputVariants = cva(["border", "rounded", "px-3", "py-2"], {
-  variants: {
-    disabled: {
-      false: ["bg-white", "cursor-text"], // normal state
-      true: ["bg-gray-100", "cursor-not-allowed"], // disabled state
-    },
-    error: {
-      false: ["border-gray-300"],
-      true: ["border-red-500"],
-    },
-  },
-  defaultVariants: { disabled: false, error: false },
-});
-```
-
-**Key rule:** missing `false` case means no styles applied in normal state -- variant logic becomes incomplete.
-
-> See [examples/core.md](examples/core.md) for boolean variant patterns with loading, disabled, and error states.
-
----
-
-### Pattern 3: Compound Variants
-
-Use `compoundVariants` when specific variant combinations need special styles. Array syntax matches multiple values.
-
-```typescript
-const buttonVariants = cva(["font-semibold", "rounded"], {
+const buttonVariants = cva(["font-semibold", "border", "rounded"], {
   variants: {
     intent: {
       primary: ["bg-blue-600", "text-white"],
       secondary: ["bg-white", "text-gray-800"],
     },
-    disabled: {
-      false: null,
-      true: ["opacity-50", "cursor-not-allowed"],
+    size: {
+      sm: ["text-sm", "py-1", "px-2"],
+      md: ["text-base", "py-2", "px-4"],
     },
   },
+  defaultVariants: { intent: "primary", size: "md" },
+});
+
+buttonVariants(); // primary + md
+buttonVariants({ intent: "secondary" }); // secondary + md
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 2: Boolean variants
+
+`true`/`false` keys model a binary state. Define both sides — the `false` branch is where the normal-state styles live.
+
+```typescript
+const inputVariants = cva(["border", "rounded", "px-3", "py-2"], {
+  variants: {
+    disabled: {
+      false: ["bg-white", "cursor-text"],
+      true: ["bg-gray-100", "cursor-not-allowed"],
+    },
+    error: { false: ["border-gray-300"], true: ["border-red-500"] },
+  },
+  defaultVariants: { disabled: false, error: false },
+});
+```
+
+Full code: [examples/core.md](examples/core.md)
+
+---
+
+### Pattern 3: Compound variants
+
+A `compoundVariants` entry fires when every key on it matches. An array value matches any of its members, which collapses near-identical rules.
+
+```typescript
+const buttonVariants = cva(["font-semibold", "rounded"], {
+  variants: {
+    intent: { primary: ["bg-blue-600"], secondary: ["bg-white"] },
+    disabled: { false: null, true: ["opacity-50", "cursor-not-allowed"] },
+  },
   compoundVariants: [
-    // Hover only when enabled
+    // Hover only where the button is interactive
     { intent: "primary", disabled: false, class: ["hover:bg-blue-700"] },
     { intent: "secondary", disabled: false, class: ["hover:bg-gray-100"] },
-    // Array syntax: matches multiple values
     {
       intent: ["primary", "secondary"],
       disabled: true,
@@ -201,15 +136,13 @@ const buttonVariants = cva(["font-semibold", "rounded"], {
 });
 ```
 
-**Key rules:** compound variants express "when X AND Y, also apply Z", array syntax avoids duplicating rules across similar variants.
-
-> See [examples/compound-variants.md](examples/compound-variants.md) for hover states, loading overrides, state matrices, and multi-part compounds.
+Full code: [examples/compound-variants.md](examples/compound-variants.md)
 
 ---
 
-### Pattern 4: Type Extraction with VariantProps
+### Pattern 4: Type extraction with VariantProps
 
-Always use `VariantProps` to extract types from cva definitions -- never manually define variant types.
+`VariantProps` reads the definition and produces one optional, nullable prop per variant group.
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
@@ -222,53 +155,41 @@ const cardVariants = cva(["rounded-lg", "border"], {
   defaultVariants: { elevation: "flat", padding: "md" },
 });
 
-// Extract types -- always in sync with cva definition
 type CardVariants = VariantProps<typeof cardVariants>;
 // { elevation?: "flat" | "raised" | null; padding?: "none" | "sm" | "md" | null }
 
-interface CardProps extends CardVariants {
-  children: unknown;
-  className?: string;
-}
+// Make one variant mandatory: leave it out of defaultVariants, then narrow the type
+type CardProps = Omit<CardVariants, "padding"> &
+  Required<Pick<CardVariants, "padding">>;
 ```
 
-**Key rule:** manual types drift when you add/remove variants. `VariantProps` is always in sync.
-
-To make specific variants required (no default):
-
-```typescript
-type BadgeProps = Omit<BadgeVariants, "color"> &
-  Required<Pick<BadgeVariants, "color">>;
-```
-
-> See [examples/composition.md](examples/composition.md) for complete type extraction and required variant patterns.
+Full code: [examples/composition.md](examples/composition.md)
 
 ---
 
-### Pattern 5: Class Merging with cx()
+### Pattern 5: Class merging with cx()
 
-Use `cx()` (built-in, alias for clsx) for class concatenation. Use an external merge utility for class conflict resolution.
+`cx()` ships with the package (a re-export of clsx): it concatenates and drops falsy values. Conflict resolution is a separate utility's job.
 
 ```typescript
 import { cva, cx } from "class-variance-authority";
 
-// cx() concatenates and filters falsy values
 cx(buttonVariants({ intent: "primary" }), highlighted && "ring-2", className);
 
-// For conflict resolution (e.g., caller overriding variant padding),
-// use a class-merging utility wrapper
+// Where a caller's className must be able to override a variant's own padding,
+// wrap the call in a merging utility instead of concatenating
 function button(variants: ButtonVariants, className?: string): string {
-  return cn(buttonVariants(variants), className); // cn() resolves conflicts
+  return cn(buttonVariants(variants), className);
 }
 ```
 
-> See [examples/composition.md](examples/composition.md) for class merging patterns and conflict resolution.
+Full code: [examples/composition.md](examples/composition.md)
 
 ---
 
-### Pattern 6: Multi-Part Components
+### Pattern 6: Multi-part components
 
-Define separate cva for each styled part of a component (label, input, helper text). Share variant values for visual consistency.
+One `cva()` per styled part, sharing variant names so the parts move together.
 
 ```typescript
 const formFieldVariants = {
@@ -293,13 +214,13 @@ const formFieldVariants = {
 };
 ```
 
-> See [examples/composition.md](examples/composition.md) for multi-part and extending/composing variant patterns.
+Full code: [examples/composition.md](examples/composition.md)
 
 ---
 
-### Pattern 7: Composing and Extending Variants
+### Pattern 7: Composing and extending definitions
 
-Combine multiple cva definitions with `cx()` for shared base + specialized variants.
+Two definitions combined with `cx()` — a shared interactive base plus the component's own variants. Their `VariantProps` intersect into one prop type.
 
 ```typescript
 const interactiveVariants = cva(["transition-colors", "focus:ring-2"], {
@@ -307,24 +228,15 @@ const interactiveVariants = cva(["transition-colors", "focus:ring-2"], {
   defaultVariants: { focusRing: "blue" },
 });
 
-const buttonVariants = cva(["font-semibold", "rounded"], {
-  variants: { intent: { primary: ["bg-blue-600"] } },
-  defaultVariants: { intent: "primary" },
-});
-
-// Compose with cx()
 type ButtonProps = VariantProps<typeof interactiveVariants> &
   VariantProps<typeof buttonVariants>;
 
-function button(props: ButtonProps): string {
-  return cx(
-    interactiveVariants({ focusRing: props.focusRing }),
-    buttonVariants({ intent: props.intent }),
-  );
+function button({ focusRing, intent }: ButtonProps): string {
+  return cx(interactiveVariants({ focusRing }), buttonVariants({ intent }));
 }
 ```
 
-> See [examples/composition.md](examples/composition.md) for composition and extension patterns.
+Full code: [examples/composition.md](examples/composition.md)
 
 </patterns>
 
@@ -332,50 +244,22 @@ function button(props: ButtonProps): string {
 
 <red_flags>
 
-## RED FLAGS
+## Red flags
 
-**High Priority Issues:**
+**Produces the wrong classes:**
 
-- **Manual variant type definitions** -- Types drift from cva definition, defeating type safety. Always use `VariantProps<typeof variants>`.
-- **Conditional class logic outside cva** -- Defeats purpose of centralized variant definitions. Add the condition as a variant.
-- **Missing `defaultVariants`** -- Calling without props returns incomplete classes. Always set defaults.
-- **Nested ternaries for combined states** -- Use `compoundVariants` instead.
-- **Only defining `true` for boolean variants** -- `false` case should provide base/normal styles.
+- **No `defaultVariants`** — `buttonVariants()` returns the base classes and nothing else, so a component rendered without props loses its intent and size. Give every optional variant a default.
+- **Only the `true` key on a boolean variant** — the normal state gets no classes at all. Write the `false` branch with the base styles, or `null` where it genuinely needs none.
+- **Hand-written variant prop types** — they accept a value the definition dropped and reject one it gained. `VariantProps<typeof variants>` cannot drift.
+- **Conditional class logic outside the definition** — the variant table stops being the source of truth and the derived types describe only half the component. Add the condition as a variant.
+- **Nested ternaries for combined states** — an unreachable branch is invisible; `compoundVariants` enumerates the combinations instead.
 
-**Medium Priority Issues:**
+**Surprising behaviour:**
 
-- Space-separated class strings instead of arrays -- arrays are more readable and maintainable
-- Not using `cx()` for class merging -- manual concatenation is error-prone
-- Duplicating variant styles across components -- compose from shared base variants
-- Putting complex responsive logic in cva -- keep cva simple, handle responsiveness in CSS
-
-**Gotchas & Edge Cases:**
-
-- `VariantProps` makes all variants optional (nullable) -- use TypeScript utilities (`Required<Pick<>>`) to make specific ones required
-- `compoundVariants` are applied AFTER regular variants -- order matters for class specificity
-- Empty variant values (`null` or empty string) are valid -- useful for "no additional styles" case
-- Base classes are always applied -- you cannot conditionally remove them via variants
-- Both `class` and `className` work in `compoundVariants` config -- pick one and be consistent (`class` in non-React contexts, `className` if you prefer React conventions)
-- Don't forget `import type` for `VariantProps`: `import { cva, type VariantProps }`
+- `VariantProps` makes every variant optional _and_ nullable. `Required<Pick<T, "color">>` is how one becomes mandatory.
+- `compoundVariants` classes land after the regular variant classes in the returned string. String order is not CSS precedence, so two conflicting class names still need a merge utility.
+- Base classes always apply, and no variant can remove one. A class only some states want belongs in the variants rather than the base.
+- `null` is a valid variant value meaning "this option adds nothing" — distinct from omitting the key, which leaves the option undefined.
+- `class` and `className` both work inside a `compoundVariants` entry. Pick one per project; mixing them makes the entries look like different shapes.
 
 </red_flags>
-
----
-
-<critical_reminders>
-
-## CRITICAL REMINDERS
-
-> **All code must follow project conventions in CLAUDE.md**
-
-**(You MUST define all variant options in the `variants` object - NEVER use conditional class logic outside cva)**
-
-**(You MUST use `VariantProps` to extract types - NEVER manually define variant prop types)**
-
-**(You MUST use `defaultVariants` for initial state - NEVER rely on undefined props for defaults)**
-
-**(You MUST use `compoundVariants` for multi-condition styles - NEVER nest ternaries for combined states)**
-
-**Failure to follow these rules will break type safety, create inconsistent styling, and defeat the purpose of using CVA.**
-
-</critical_reminders>

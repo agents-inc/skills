@@ -1,21 +1,17 @@
-# CVA - Core Variant Examples
+# CVA — Core Variant Examples
 
-> Essential variant patterns: basic definitions, boolean states, multiple groups, required variants. See [SKILL.md](../SKILL.md) for decision guidance.
-
-**Prerequisites**: None - these are the foundational CVA patterns.
+> The foundational definitions: base classes, variant groups, boolean states and deliberately required variants. See [SKILL.md](../SKILL.md) for decision guidance, [compound-variants.md](compound-variants.md) for combinations, [composition.md](composition.md) for types and merging.
 
 ---
 
-## Pattern 1: Basic Variant Structure
+## Basic variant definition
 
-### Good Example - Button Variants
+### Good — button variants
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
 
-// Good: Base classes as array, clear variant structure
 const buttonVariants = cva(
-  // Base classes applied to all variants
   [
     "font-semibold",
     "border",
@@ -66,45 +62,39 @@ const buttonVariants = cva(
   },
 );
 
-// Usage
-buttonVariants(); // Uses defaults: primary + md
-buttonVariants({ intent: "secondary" }); // secondary + md (size from default)
-buttonVariants({ intent: "danger", size: "lg" }); // danger + lg
+buttonVariants(); // primary + md
+buttonVariants({ intent: "secondary" }); // secondary + md
+buttonVariants({ intent: "danger", size: "lg" });
 
-// Extract types
 type ButtonVariants = VariantProps<typeof buttonVariants>;
 // { intent?: "primary" | "secondary" | "danger" | "ghost" | null; size?: "sm" | "md" | "lg" | null }
 ```
 
-**Why good:** Base classes in array for readability, all variants explicit, defaultVariants ensures consistent initial state, VariantProps for type extraction
+**Why good:** every visual dimension is a named group, `defaultVariants` makes a bare call complete, and the prop type is derived rather than restated.
 
-### Bad Example - Missing Defaults
+### Bad — no defaults
 
 ```typescript
-// WRONG - No defaultVariants
 const buttonVariants = cva("font-semibold border rounded", {
   variants: {
     intent: {
       primary: "bg-blue-600 text-white",
       secondary: "bg-white text-gray-800",
     },
-    // No size variant defined
   },
-  // No defaultVariants!
 });
 
-// Caller problems:
-buttonVariants(); // No intent classes applied!
-buttonVariants({ size: "lg" }); // Error: size doesn't exist
+buttonVariants(); // base classes only — no intent applied
+buttonVariants({ size: "lg" }); // type error: no size group exists
 ```
 
-**Why bad:** No defaults means empty variant classes, missing variants cause confusion, string classes harder to read
+**Why bad:** a caller that omits `intent` gets an unstyled button, and there is no size dimension to reach for at all.
 
 ---
 
-## Pattern 2: Boolean Variants
+## Boolean variants
 
-### Good Example - Disabled and Loading States
+### Good — disabled, error and loading states
 
 ```typescript
 import { cva } from "class-variance-authority";
@@ -118,7 +108,6 @@ const inputVariants = cva(
         md: ["text-base", "h-10"],
         lg: ["text-lg", "h-12"],
       },
-      // Boolean variant - define both true and false
       disabled: {
         false: [
           "bg-white",
@@ -133,7 +122,7 @@ const inputVariants = cva(
         true: ["border-red-500", "focus:border-red-600", "text-red-900"],
       },
       loading: {
-        false: null, // No additional classes when not loading
+        false: null, // nothing to add in the resting state
         true: ["animate-pulse", "pointer-events-none"],
       },
     },
@@ -146,38 +135,33 @@ const inputVariants = cva(
   },
 );
 
-// Usage
-inputVariants({ disabled: true }); // Disabled styles
-inputVariants({ error: true }); // Error state
-inputVariants({ loading: true, disabled: true }); // Combined states
+inputVariants({ disabled: true });
+inputVariants({ loading: true, disabled: true }); // both sets apply
 ```
 
-**Why good:** Both true and false cases defined, null for "no additional classes", explicit defaults prevent undefined behavior
+**Why good:** the `false` branch carries the resting styles, `null` says "this state adds nothing" explicitly, and the defaults mean no caller can land in an undefined state.
 
-### Bad Example - Only True Case
+### Bad — only the `true` key
 
 ```typescript
-// WRONG - Only defining true case
 const inputVariants = cva("border rounded px-3 py-2", {
   variants: {
     disabled: {
       true: "bg-gray-100 cursor-not-allowed opacity-60",
-      // Missing false case!
     },
   },
 });
 
-// Problem:
-inputVariants({ disabled: false }); // No enabled styles applied
+inputVariants({ disabled: false }); // no background, no cursor — nothing at all
 ```
 
-**Why bad:** Missing false case means no styles when enabled, must handle enabled state elsewhere
+**Why bad:** the enabled state has to be styled somewhere else, which puts half the component's appearance outside the definition.
 
 ---
 
-## Pattern 3: Multiple Variant Groups
+## Multiple variant groups
 
-### Good Example - Badge Component
+Groups are independent dimensions, and every combination of them is valid.
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
@@ -200,7 +184,7 @@ const badgeVariants = cva(
         lg: ["text-base", "px-3", "py-1"],
       },
       variant: {
-        solid: null, // Uses color's background
+        solid: null, // keeps the colour group's background
         outline: ["bg-transparent", "ring-1", "ring-inset"],
         subtle: ["bg-opacity-50"],
       },
@@ -213,79 +197,23 @@ const badgeVariants = cva(
   },
 );
 
-// Usage
-badgeVariants({ color: "green", size: "sm" }); // Small green badge
-badgeVariants({ color: "red", variant: "outline" }); // Red outline badge
+badgeVariants({ color: "green", size: "sm" });
+badgeVariants({ color: "red", variant: "outline" });
 
 type BadgeVariants = VariantProps<typeof badgeVariants>;
 ```
 
-**Why good:** Multiple variant dimensions, null for no-op variant option, clear naming conventions
+**Why good:** colour, scale and treatment vary independently, so three groups of six, three and three options cover fifty-four appearances without an entry per appearance.
 
 ---
 
-## Pattern 4: Icon Button with Compound Size Adjustment
+## Required variants
+
+Leaving a variant out of `defaultVariants` is how a caller is forced to choose — the type still arrives optional, so narrow it.
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
 
-const iconButtonVariants = cva(
-  [
-    "inline-flex",
-    "items-center",
-    "justify-center",
-    "rounded",
-    "font-medium",
-    "transition-colors",
-  ],
-  {
-    variants: {
-      intent: {
-        primary: ["bg-blue-600", "text-white", "hover:bg-blue-700"],
-        secondary: ["bg-gray-200", "text-gray-800", "hover:bg-gray-300"],
-      },
-      size: {
-        sm: ["h-8", "px-2", "text-sm", "gap-1"],
-        md: ["h-10", "px-3", "text-base", "gap-2"],
-        lg: ["h-12", "px-4", "text-lg", "gap-2"],
-      },
-      // Icon-only variant adjusts width
-      iconOnly: {
-        false: null,
-        true: null, // Handled by compoundVariants
-      },
-    },
-    compoundVariants: [
-      // Icon-only buttons are square
-      { iconOnly: true, size: "sm", class: ["w-8", "px-0"] },
-      { iconOnly: true, size: "md", class: ["w-10", "px-0"] },
-      { iconOnly: true, size: "lg", class: ["w-12", "px-0"] },
-    ],
-    defaultVariants: {
-      intent: "primary",
-      size: "md",
-      iconOnly: false,
-    },
-  },
-);
-
-// Usage
-iconButtonVariants({ size: "sm" }); // Normal button
-iconButtonVariants({ size: "sm", iconOnly: true }); // Square icon button
-
-type IconButtonVariants = VariantProps<typeof iconButtonVariants>;
-```
-
-**Why good:** iconOnly variant with compoundVariants for size-specific adjustments, maintains consistent height
-
----
-
-## Pattern 5: Required Variants (No Defaults)
-
-```typescript
-import { cva, type VariantProps } from "class-variance-authority";
-
-// Status MUST be specified - no default
 const statusIndicatorVariants = cva(
   ["inline-flex", "items-center", "gap-2", "text-sm", "font-medium"],
   {
@@ -297,49 +225,22 @@ const statusIndicatorVariants = cva(
         error: ["text-red-700"],
       },
     },
-    // No defaultVariants for status - caller MUST specify
+    // no defaultVariants: there is no sensible default status
   },
 );
 
-// Type extraction with required variant
 type StatusVariants = VariantProps<typeof statusIndicatorVariants>;
 // { status?: "pending" | "active" | "inactive" | "error" | null }
 
-// Make status required in component props
 type StatusIndicatorProps = Omit<StatusVariants, "status"> &
-  Required<Pick<StatusVariants, "status">> & {
-    label: string;
-  };
+  Required<Pick<StatusVariants, "status">> & { label: string };
 
-// Usage function enforcing required status
 function createStatusClasses(props: StatusIndicatorProps): string {
   return statusIndicatorVariants({ status: props.status });
 }
 
-// Compile error if status not provided
-// createStatusClasses({ label: "Test" }); // Error: status is required
-createStatusClasses({ status: "active", label: "Test" }); // OK
+createStatusClasses({ label: "Test" }); // type error: status is required
+createStatusClasses({ status: "active", label: "Test" });
 ```
 
-**Why good:** No default forces explicit status, TypeScript utility types enforce required prop
-
----
-
-## Quick Reference
-
-| Pattern                      | Use When                                         |
-| ---------------------------- | ------------------------------------------------ |
-| String base                  | Simple, few base classes                         |
-| Array base                   | Many base classes, readability                   |
-| Boolean variant (true/false) | Toggle states (disabled, error, loading)         |
-| null variant value           | No additional classes for that option            |
-| defaultVariants              | Always, unless variant is intentionally required |
-| No defaultVariants           | Caller must always specify                       |
-
-| Naming Convention | Examples                          |
-| ----------------- | --------------------------------- |
-| `intent`          | primary, secondary, danger, ghost |
-| `size`            | sm, md, lg, xl                    |
-| `variant`         | solid, outline, ghost, link       |
-| `color`           | gray, red, green, blue            |
-| Boolean           | disabled, error, loading, active  |
+**Why good:** the missing default and the narrowed type work together — one makes the omission meaningful at runtime, the other makes it a compile error.

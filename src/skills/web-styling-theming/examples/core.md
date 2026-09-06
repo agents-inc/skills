@@ -1,6 +1,6 @@
 # Runtime Theming - Core Examples
 
-> Essential patterns for applying a theme system to a live app. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Essential patterns for applying a theme system to a live app. See [SKILL.md](../SKILL.md) for decision guidance and [reference.md](../reference.md) for the provider contract and the specificity table.
 
 **Additional Examples:**
 
@@ -357,21 +357,7 @@ export function AppThemeProvider({ children, nonce }: AppThemeProviderProps) {
 }
 ```
 
-Verified prop contract:
-
-| Prop                        | Default                             | Notes                                                          |
-| --------------------------- | ----------------------------------- | -------------------------------------------------------------- |
-| `attribute`                 | `"data-theme"`                      | `"class"`, any `data-*`, or an **array** of both               |
-| `defaultTheme`              | `enableSystem ? "system" : "light"` | Conditional -- not literally `"system"`                        |
-| `enableSystem`              | `true`                              | `false` removes `"system"` and makes `systemTheme` `undefined` |
-| `enableColorScheme`         | `true`                              | Sets `documentElement.style.colorScheme`                       |
-| `disableTransitionOnChange` | `false`                             | See [advanced.md](advanced.md#pattern-7-switch-ergonomics)     |
-| `storageKey`                | `"theme"`                           | localStorage only -- there is no cookie mode                   |
-| `themes`                    | `["light", "dark"]`                 | Any list; enables multi-brand names                            |
-| `value`                     | -                                   | Maps theme name to attribute value                             |
-| `forcedTheme`               | -                                   | Per-page lock; does not touch the saved preference             |
-| `nonce`                     | -                                   | Applied to both the injected script **and** style elements     |
-| `scriptProps`               | -                                   | Extra attributes on the injected script                        |
+Every prop above is chosen rather than defaulted, because four of the defaults are not what a reader would guess — the full table is in [reference.md](../reference.md).
 
 ### Good Example - Three-Way Switcher
 
@@ -415,16 +401,6 @@ export function ThemeSwitcher() {
 ```
 
 **Why good:** `theme` reflects the stored preference so "system" stays selectable, `resolvedTheme` reports what is actually on screen, the placeholder reserves layout so the switcher does not shift content in when it mounts, radios express three mutually exclusive states honestly
-
-### Return-Value Contract
-
-| Value           | Meaning                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------ |
-| `theme`         | The stored preference -- can be `"system"`                                                 |
-| `resolvedTheme` | What `"system"` resolved to; **identical to `theme`** for any non-system theme             |
-| `systemTheme`   | The OS preference, regardless of the active theme; `undefined` when `enableSystem={false}` |
-| `themes`        | The configured list                                                                        |
-| `setTheme`      | Accepts a value **or an updater function**                                                 |
 
 ### Bad Example - Branching on Theme During Render
 
@@ -525,7 +501,7 @@ A theme swaps token **values** under **stable names**. Components reference role
 
 **Why good:** any generated or tooling-owned token layer that copies a value at definition time captures the light value once and never changes again; a one-hop `var()` reference defers resolution to use time, which is what makes the swap reach through the generated layer
 
-**Note:** utility frameworks that mirror design tokens into their own variable namespace require exactly this indirection, and each provides its own directive for it -- see that framework's skill for the syntax.
+**Note:** any layer that mirrors design tokens into its own variable namespace to generate classes requires exactly this indirection, and each provides its own directive for it. What to check in its documentation is whether an aliased entry is _resolved into_ each generated class or _emitted as a chained reference_ — only the first follows a runtime scope reassignment.
 
 ### Good Example - Per-Theme Images
 

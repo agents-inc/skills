@@ -1,6 +1,6 @@
 # Tailwind CSS v4+ - Core Examples
 
-> Essential patterns for Tailwind CSS v4+. See [SKILL.md](../SKILL.md) for concepts and decision frameworks.
+> Essential patterns for Tailwind CSS v4+. See [SKILL.md](../SKILL.md) for decision guidance and [reference.md](../reference.md) for the namespace table and migration lookups.
 
 **Additional Examples:**
 
@@ -37,7 +37,7 @@ export default defineConfig({
 }
 ```
 
-**Why good:** single CSS import replaces three `@tailwind` directives, `@theme` replaces `tailwind.config.js`, Vite plugin provides fastest builds
+**Why good:** one import replaces the three `@tailwind` directives, and `@theme` replaces the JavaScript config — so the theme is a stylesheet the browser can also read, not only a build input. The dedicated bundler plugin hooks the build directly rather than going through a PostCSS pass.
 
 ### PostCSS Setup (Non-Vite Projects)
 
@@ -145,7 +145,7 @@ function ProductGrid() {
 export { ProductGrid };
 ```
 
-**Why good:** mobile-first (base styles for smallest screens), breakpoints add complexity progressively, named exports
+**Why good:** the unprefixed classes are the smallest screen's layout, and each breakpoint adds one override — so the mobile case is never a stack of resets.
 
 ```tsx
 // ❌ Bad Example - desktop-first approach (fighting the framework)
@@ -263,7 +263,7 @@ function toggleTheme() {
 export { applyTheme, toggleTheme };
 ```
 
-**Why good:** `@custom-variant` overrides default media query behavior, toggle persists to localStorage, respects system preference as fallback, named constants for strings
+**Why good:** `@custom-variant` redefines what `dark:` matches, so every existing `dark:` utility follows the toggle without being touched. The stored preference wins where it exists and the system preference is the fallback, so a first visit is already correct.
 
 ### Strategy 3: Data-Attribute Toggle
 
@@ -285,7 +285,7 @@ export { applyTheme, toggleTheme };
 </html>
 ```
 
-**Why good:** data attributes are more semantic than class toggling, aligns with CLAUDE.md data-attribute conventions, easy to extend for multi-theme support
+**Why good:** an attribute holds a value rather than a presence, so a third theme is `data-theme="sepia"` and one more variant — where a class-based scheme needs a class per theme and something to remove the previous one.
 
 ### Dark Mode with CSS Variables (Advanced)
 
@@ -503,7 +503,7 @@ function Tab({
 export { Tab };
 ```
 
-**Why good:** data attributes for state styling (CLAUDE.md convention), named constants for state values, variant-driven styling without conditional class logic
+**Why good:** the element declares its state and the stylesheet reacts to it, so every state of the tab is visible in one class list rather than assembled by a conditional at the call site.
 
 ---
 
@@ -673,7 +673,72 @@ export { Modal };
 }
 ```
 
-**Why good:** `inline` resolves the variable at build time, prevents CSS variable scoping issues where child elements can't resolve parent references
+**Why good:** `inline` resolves the reference into each generated utility, so a value reassigned on `.dark` or `[data-theme]` reaches the classes. Without it the utility carries a chained reference that resolves where the theme entry was declared — the reassignment never applies, and there is no build warning and nothing in the console.
+
+### Bad Example - `@theme` Nested Under a Selector
+
+```css
+/* ❌ @theme is top-level only. The classes it generates are emitted at build
+   time, so they cannot be conditional on a runtime selector or media query. */
+[data-theme="dark"] {
+  @theme {
+    --color-canvas: oklch(0.21 0.02 250);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-canvas: oklch(0.21 0.02 250);
+  }
+}
+```
+
+**Why bad:** this restriction is the whole reason the `@theme inline` shape above exists. Mode-conditional values belong in `:root` and `[data-theme]`, where the cascade re-evaluates them; only the mode-independent alias goes in `@theme`.
+
+### Bad Example - The Value Typed Twice
+
+```css
+@import "tailwindcss";
+
+:root {
+  --app-canvas: oklch(0.98 0.003 250);
+}
+
+/* ❌ the same decision written a second time. The copies are free to drift,
+   and nothing fails when they do. */
+@theme {
+  --color-canvas: oklch(0.98 0.003 250);
+}
+```
+
+**Why bad:** the next edit lands in one of them, and the mismatch surfaces as a subtle colour difference between utility-styled and directly-styled elements — a class of bug no type checker or build step catches. Alias with `@theme inline` instead, so the value exists once.
+
+### Good Example - Projecting Only What Needs a Class
+
+```css
+@import "tailwindcss";
+
+:root {
+  --app-canvas: oklch(0.98 0.003 250);
+  --app-action: oklch(0.55 0.19 258);
+  /* Internal plumbing — no utility should exist for these */
+  --app-focus-ring-width: 2px;
+  --app-transition-interaction: 150ms ease-out;
+}
+
+@theme inline {
+  --color-canvas: var(--app-canvas);
+  --color-action: var(--app-action);
+}
+
+.control:focus-visible {
+  /* Read directly — no class, no theme entry */
+  outline: var(--app-focus-ring-width) solid var(--app-action);
+  transition: outline-color var(--app-transition-interaction);
+}
+```
+
+**Why good:** the rule of thumb — an entry goes in `@theme` when it should map to a utility class, and stays in `:root` otherwise — keeps the generated surface to classes anyone would actually write in markup.
 
 ### Bad Theme Examples
 

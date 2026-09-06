@@ -1,113 +1,84 @@
 # CVA Reference
 
-> Decision frameworks, API signatures, and checklists for Class Variance Authority.
+> API signatures, pattern selection, and the pre-ship checklist. Decision guidance and red flags live in [SKILL.md](SKILL.md).
 
 ---
 
-## Decision Framework
+## Choosing a variant pattern
 
-```
-Need component variant styling?
-├─ Does component have visual variants (size, color, state)?
-│   ├─ YES → Use CVA for type-safe variant definitions
-│   └─ NO → Use plain classes (no CVA needed)
-├─ Do multiple variants combine for special styles?
-│   ├─ YES → Use compoundVariants
-│   └─ NO → Regular variants sufficient
-├─ Need boolean states (disabled, loading, active)?
-│   ├─ YES → Use boolean variants with true/false keys
-│   └─ NO → String variants are fine
-├─ Need to share styling across frameworks/projects?
-│   ├─ YES → CVA is excellent for this (framework-agnostic)
-│   └─ NO → CVA still helps with type safety
-└─ Is styling dynamic based on runtime values?
-    ├─ YES → Use CSS variables or inline styles (not CVA)
-    └─ NO → CVA variants work great
-```
+| Pattern           | Use when                                            |
+| ----------------- | --------------------------------------------------- |
+| Basic variants    | One dimension varies (size, intent)                 |
+| Boolean variants  | A binary state (disabled, loading, error)           |
+| Compound variants | A combination needs its own style (large + primary) |
+| Array syntax      | The same style applies to several variant values    |
+| Multi-part        | One component with several styled elements          |
+| Composition       | A base definition shared across several components  |
 
-**Choosing variant patterns:**
+### Compound-variant matching
 
-| Pattern           | When to Use                                           |
-| ----------------- | ----------------------------------------------------- |
-| Basic variants    | Single-dimension variations (size, intent)            |
-| Boolean variants  | Binary states (disabled, loading, error)              |
-| Compound variants | Multi-condition styling (large + primary = uppercase) |
-| Array syntax      | Same style for multiple variant values                |
-| Multi-part        | Components with multiple styled elements              |
-| Composition       | Sharing base styles across components                 |
+| Entry                                                     | Matches when                            |
+| --------------------------------------------------------- | --------------------------------------- |
+| `{ intent: "primary", disabled: false, class: [...] }`    | intent is primary AND disabled is false |
+| `{ intent: ["primary", "secondary"], class: [...] }`      | intent is primary OR secondary          |
+| `{ size: ["md", "lg"], intent: "primary", class: [...] }` | size is md OR lg, AND intent is primary |
+
+### Naming the groups
+
+| Group     | Conventional values               |
+| --------- | --------------------------------- |
+| `intent`  | primary, secondary, danger, ghost |
+| `size`    | sm, md, lg, xl                    |
+| `variant` | solid, outline, ghost, link       |
+| `color`   | gray, red, green, blue            |
+| booleans  | disabled, error, loading, active  |
 
 ---
 
-## Quick Reference
+## API
 
-### cva() Function Signature
+### `cva(base, options)`
 
 ```typescript
 const variants = cva(base, options);
 
-// Parameters:
-// - base: string | string[] - Base classes applied to all variants
-// - options: {
-//     variants: Record<string, Record<string, string | string[]>>,
-//     compoundVariants: Array<{ [variantKey]: value, class: string | string[] }>,
+// base: string | string[] — classes applied to every result
+// options: {
+//     variants: Record<string, Record<string, string | string[] | null>>,
+//     compoundVariants: Array<{ [variantKey]: value | value[], class: string | string[] }>,
 //     defaultVariants: Record<string, string | boolean>
 //   }
-
-// Returns: function that accepts variant props and returns class string
+// Returns: (props?) => string
+//   props: the variant keys, plus an optional `class` or `className`
+//          whose value is appended to the generated string
 ```
 
-### VariantProps Type Helper
+### `VariantProps<typeof variants>`
 
 ```typescript
 import { cva, type VariantProps } from "class-variance-authority";
 
-const buttonVariants = cva(/* ... */);
-
-// Extract types from cva definition
 type ButtonVariants = VariantProps<typeof buttonVariants>;
-
-// All variant props are optional (can be null or undefined)
+// Every variant arrives optional and nullable:
 // { intent?: "primary" | "secondary" | null; size?: "sm" | "md" | null }
 ```
 
-### cx() Function
+### `cx(...classes)`
 
 ```typescript
 import { cx } from "class-variance-authority";
 
-// Concatenates classes (alias for clsx)
 cx("base-class", condition && "conditional-class", { active: isActive });
-// Returns: "base-class conditional-class active" (when conditions true)
+// "base-class conditional-class active" — falsy values dropped, no deduplication
 ```
 
 ---
 
-## Variant Definition Checklist
+## Before shipping a definition
 
-Before shipping a CVA definition:
-
-- [ ] Base classes contain styles shared across ALL variants
-- [ ] All variant options defined (no relying on absent variants)
-- [ ] Boolean variants have both `true` and `false` keys
-- [ ] `defaultVariants` set for all variants that need defaults
-- [ ] `compoundVariants` used for multi-condition styles (not nested ternaries)
-- [ ] Types extracted with `VariantProps` (not manually defined)
-- [ ] Class arrays used for readability (not space-separated strings)
-- [ ] No conditional logic outside the cva definition
-
----
-
-## Best Practices Summary
-
-> For red flags, anti-patterns, and gotchas, see the `<red_flags>` section in [SKILL.md](SKILL.md).
-
-| Practice         | Do                                | Don't                        |
-| ---------------- | --------------------------------- | ---------------------------- |
-| Type extraction  | `VariantProps<typeof variants>`   | Manual interface definitions |
-| Boolean variants | Define both `true` and `false`    | Only define `true` case      |
-| Combined states  | Use `compoundVariants`            | Nested ternaries             |
-| Class format     | Use arrays `["class1", "class2"]` | Space-separated strings      |
-| Defaults         | Always set `defaultVariants`      | Rely on undefined behavior   |
-| Composition      | Use `cx()` to combine             | Manual string concatenation  |
-| Dynamic values   | CSS variables / inline styles     | Runtime variant switching    |
-| Responsive       | CSS breakpoint classes            | Complex runtime logic        |
+- [ ] Base classes hold only what every variant shares
+- [ ] Boolean variants define both `true` and `false`
+- [ ] `defaultVariants` covers every variant a caller may omit
+- [ ] Combinations use `compoundVariants` rather than logic at the call site
+- [ ] Prop types come from `VariantProps`
+- [ ] No class decisions live outside the definition

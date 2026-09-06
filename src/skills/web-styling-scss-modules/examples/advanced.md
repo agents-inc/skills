@@ -1,108 +1,116 @@
-# SCSS Modules Advanced CSS Examples
+# SCSS Modules - Escaping and Nesting
 
-> Advanced CSS features for SCSS Modules including :has(), :global(), and nesting patterns. See [SKILL.md](../SKILL.md) for core concepts and [core.md](core.md) for foundational patterns.
+> `:has()`, `:global()`, and how deep to nest. See [SKILL.md](../SKILL.md) for decision guidance and [core.md](core.md) for the layer setup.
 
 ---
 
-## Pattern 13: Advanced CSS Features
-
-### Supported Patterns
-
-- **`:has()` for conditional styling:** Style parent based on child state
-- **`:global()` for handling global classes:** Escape CSS Modules scoping when needed
-- **Proper nesting with `&`:** SCSS nesting for modifiers and states
-- **CSS classes for variants:** Use `cva` for type-safe variant classes
-- **Data-attributes for state:** `&[data-state="open"]`, `&[data-active="true"]`
-
-### Implementation
+## `:has()` — Styling a Parent from Its Children
 
 ```scss
 // Good Example
-
-// :has() for parent styling based on children
 .form:has(.inputError) {
-  border-color: var(--color-error);
+  border-color: var(--color-destructive);
 }
 
 .formGroup:has(input:focus) {
-  background: var(--color-surface-subtle);
+  background: var(--color-background-muted);
 }
 
-// :global() for global class handling (minimal use)
-.component {
-  padding: var(--space-md);
-
-  :global(.dark-mode) & {
-    background: var(--color-surface-strong);
-  }
-}
-
-// Proper nesting with & (max 3 levels)
-.nav {
-  .navItem {
-    &:hover {
-      background: var(--color-surface-subtle);
-    }
-  }
-}
-
-// Data-attributes for state management
-.dropdown {
-  &[data-open="true"] {
-    display: block;
-  }
-
-  &[data-state="error"] {
-    border-color: var(--color-error);
-  }
-
-  &[data-size="large"][data-variant="primary"] {
-    padding: var(--space-xlg);
-  }
-}
-
-// Variants using CSS classes (used with cva)
-.btnDefault {
-  background: var(--color-surface-base);
-}
-
-.btnGhost {
-  background: transparent;
+.card:has(> img) {
+  padding-block-start: 0;
 }
 ```
 
-**Why good:** `:has()` eliminates JavaScript for parent-child styling, `:global()` enables third-party integration when needed, shallow nesting maintains readability, data-attributes separate state from style concerns
+**Why good:** the relationship is expressed where the styles are, so no component has to observe its own children and set a class to describe them. The rule stays correct when the children change, because it asks about them rather than being told.
+
+---
+
+## `:global()` — Leaving the Scope Deliberately
+
+Class names in a module are rewritten at build time, so a module cannot name a class it does not own. `:global()` is the opt-out.
+
+```scss
+// Good Example - reaching a class applied by something outside this module
+.component {
+  padding: var(--space-md);
+
+  :global(.third-party-widget) & {
+    padding: 0;
+  }
+}
+```
+
+**Why good:** the escape is one selector wide, and the surrounding class is still scoped — so the exception is visible rather than being a whole file quietly opted out.
 
 ```scss
 // Bad Example
-
-// BAD: Deep nesting (4+ levels)
-.nav .navList .navItem .navLink .navIcon {
-  color: var(--color-primary);
-}
-
-// BAD: Overusing :global()
 .component {
   :global {
     .everything {
       .is {
         .global {
-          // Defeats CSS Modules purpose
+          // every name in here is now globally reachable
         }
       }
     }
   }
 }
-
-// BAD: Inline styles in JavaScript instead of CSS classes
-<div style={{ color: isActive ? 'blue' : 'gray' }} />
 ```
 
-**Why bad:** Deep nesting harder to maintain and increases specificity, overusing `:global()` defeats CSS Modules scoping purpose, inline styles in JavaScript bypass design system and theming
+**Why bad:** a `:global` block containing a tree of selectors gives back exactly the collisions the module system exists to prevent, and does it somewhere nobody reading the markup will look.
 
-### Best Practices
+---
 
-- Use data-attributes for boolean states: `data-active`, `data-state`, `data-variant`
-- Prefer `:has()` over JavaScript for simple parent-child relationships
-- Use `:global()` sparingly, only when necessary for third-party integration
-- Keep nesting shallow (max 3 levels) for maintainability
+## Nesting Depth
+
+```scss
+// Good Example - modifiers beside what they modify, about three levels
+.nav {
+  display: flex;
+
+  .navItem {
+    &:hover {
+      background: var(--color-background-muted);
+    }
+  }
+}
+```
+
+```scss
+// Bad Example
+.nav .navList .navItem .navLink .navIcon {
+  color: var(--color-primary);
+}
+```
+
+**Why bad:** five levels of specificity have to be beaten by anything that wants to override the icon colour, and the generated selector no longer resembles the one class name that appears in the markup — so a search for `navIcon` does not find the rule that styles it.
+
+**Rules of thumb:** nest to attach a state or a modifier to the thing above it, and stop at about three levels. A descendant chain that exists only to describe the DOM is specificity paid for nothing — the innermost class alone usually selects the same elements.
+
+---
+
+## Where a Class Ends and an Attribute Begins
+
+```scss
+// Variants are classes: they are alternatives, and exactly one applies
+.btnDefault {
+  background: var(--color-background-surface);
+}
+
+.btnGhost {
+  background: transparent;
+}
+
+// States are attributes: they are independent, and several apply at once
+.button {
+  &[data-loading="true"] {
+    pointer-events: none;
+  }
+
+  &[data-active="true"] {
+    color: var(--color-accent);
+  }
+}
+```
+
+**Why this split:** a variant is a choice between mutually exclusive appearances, which a class expresses exactly. A state is a fact about the component right now, and several are true simultaneously — so an attribute per state combines without a name per combination.
